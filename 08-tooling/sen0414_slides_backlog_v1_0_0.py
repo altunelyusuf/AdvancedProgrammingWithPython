@@ -13,11 +13,12 @@ PLANNED = {1, 2}
 # Started items, at the clock time each began. The kick-off was declared by the owner.
 STARTED = {("Research", 1): "2026-09-24T20:26:42", ("Deck", 1): "2026-09-24T20:55:01"}
 # Re-scoring after the latest completion (BP-D11), at the clock time it was done; components unchanged.
-RESCORED_AT = "2026-09-24T20:50:04"
+RESCORED_AT = "2026-09-24T21:01:30"
 
 # Finished items and the evidence each closed on. Times from the clock or from commits only.
 DONE = {("Research", 1): {"finished": "2026-09-24T20:47:21", "closed": "2026-09-24T20:50:04", "release": "sen0414-v2.7.0 (e49e8f6)",
-    "spec": "RDODI procedure v1.6.0, Stages 1-3 for chapter 1, gates run with RDODI's own validator functions where it has them: Stage1.A-B, Stage2.A and C, Stage3.A, B, E.cov, E.sub, F and src, all PASS; Stage1.C-E, Stage2.B (HermiT, consistent), D-H and Stage3.C, D, E (coverage 27/27), G and H run as direct checks because the validator does not implement them - all PASS."}}
+    "spec": "RDODI procedure v1.6.0, Stages 1-3 for chapter 1, gates run with RDODI's own validator functions where it has them: Stage1.A-B, Stage2.A and C, Stage3.A, B, E.cov, E.sub, F and src, all PASS; Stage1.C-E, Stage2.B (HermiT, consistent), D-H and Stage3.C, D, E (coverage 27/27), G and H run as direct checks because the validator does not implement them - all PASS."}, ("Deck", 1): {"finished": "2026-09-24T21:00:46", "closed": "2026-09-24T21:01:30", "release": "the release carrying 03-materials/ch01/SEN0414_Ch01_PythonBasics_3e.pptx",
+    "spec": "08-tooling/ch01-deck/deck_check.py re-ran all 19 examples shown on the renewed deck under Python 3.14.4, one shell session per slide: 0 mismatches. The fixture fixture_stale.pptx - the same deck with 0.1 + 0.2 shown as 0.3 - was refused, naming slide 10. Slides built by deck.js, which takes every output from examples_out.json, produced by executing the examples rather than typing them. Rendered and inspected; four layout faults fixed before closing. The course still conforms to every CME shape with the new materials described."}}
 
 REFINED = {
     "Research": "Settled: RDODI's four-stage procedure v1.6.0 on the chapter's subject, with its Pedagogy and Professional Standards stage and the Courseware profile; the research record lists every source a later claim rests on.",
@@ -50,29 +51,37 @@ ex:Start_%s_%s a backlog:TransitionEvent ; rdfs:label "%s %s started"@en ; backl
 ''' % (k, cid(n), k, cid(n), k, cid(n), STARTED[(k, n)])
 
 
+REFINE2_TAIL = """
+    backlog:refines ex:ST_Page_%(c)s ; backlog:addressesConcern backlog:Concern_Data ; backlog:refinedAt "%(cl)s"^^xsd:dateTime ;
+    backlog:refinedBy backlog:Owner ; backlog:groomsForIteration ex:Iter_1 ;
+    backlog:hasRefinementOutcome "RDODI's Pedagogy and Professional Standards stage runs its gates over an interactive page's ABox and HTML (its README: --page, --html), so it belongs to the page story, not the research story where the first refinement put it." """
+
+
 def closure_block(k, n):
     if (k, n) not in DONE: return ""
     d = DONE[(k, n)]; c = cid(n)
     return '''
-ex:Ev_%(k)s_%(c)s a backlog:TestEvidence ; rdfs:label "RDODI gates for %(k)s %(c)s"@en ; backlog:belongsToLineage ex:Lineage ;
-    backlog:attestsCriterion ex:AC_Chapter ; backlog:evidenceVerified true ; backlog:hasTestId "rdodi/%(c)s/stages-1-3" ;
+ex:Ev_%(k)s_%(c)s a backlog:TestEvidence ; rdfs:label "Checks for %(k)s %(c)s"@en ; backlog:belongsToLineage ex:Lineage ;
+    backlog:attestsCriterion ex:AC_Chapter ; backlog:evidenceVerified true ; backlog:hasTestId "%(k)s/%(c)s" ;
     backlog:hasTestSpec "%(spec)s" ; backlog:hasVerificationMethod "Gates run over the artefacts as published in %(rel)s." ;
-    backlog:verifiedByTool "rdodi-ecosystem/02-gates/rdodi_pipeline_validator_v1_6_0.py, pyshacl, owlready2 HermiT" ; backlog:verifiedAt "%(fin)s"^^xsd:dateTime .
-ex:Harness_%(k)s_%(c)s a backlog:TestHarness ; rdfs:label "RDODI gates for %(k)s %(c)s"@en ;
+    backlog:verifiedByTool "%(tool)s" ; backlog:verifiedAt "%(fin)s"^^xsd:dateTime .
+ex:Harness_%(k)s_%(c)s a backlog:TestHarness ; rdfs:label "Checks for %(k)s %(c)s"@en ;
     backlog:harnessFor ex:ST_%(k)s_%(c)s ; backlog:harnessComplete true ; backlog:hasHarnessEvidence ex:Ev_%(k)s_%(c)s .
-ex:Obs1_%(k)s_%(c)s a backlog:MetricObservation ; rdfs:label "Chapters with a completed RDODI run, read after %(c)s closed"@en ;
-    backlog:observesMetric ex:Met_ResearchRecorded ; backlog:observationFor ex:Obj_ResearchRecorded ;
+ex:Obs1_%(k)s_%(c)s a backlog:MetricObservation ; rdfs:label "%(k)s count read after %(c)s closed"@en ;
+    backlog:observesMetric ex:%(met)s ; backlog:observationFor ex:%(obj)s ;
     backlog:hasObservedValue "1"^^xsd:decimal ; backlog:observedAt "%(cl)s"^^xsd:dateTime ;
-    backlog:hasObservationMethod "Counted chapters whose Stages 1-3 artefacts are published and pass their gates: chapter 1, in sen0414-v2.7.0." .
+    backlog:hasObservationMethod "%(obsnote)s" .
 ex:Complete_%(k)s_%(c)s a backlog:TransitionEvent ; rdfs:label "%(k)s %(c)s completed"@en ;
     backlog:transitionedItem ex:ST_%(k)s_%(c)s ; backlog:viaTransition backlog:T_Complete ;
     backlog:transitionedAt "%(cl)s"^^xsd:dateTime ; backlog:transitionedBy backlog:Owner ;
-    backlog:hasTransitionNote "Closed on Stages 1-3 of the RDODI procedure. The pedagogy stage, which this story's refinement placed here, runs over a page artefact - its gates take the page's ABox and HTML - so it moves to the chapter's page story; recorded in Refine2_Research_%(c)s rather than claimed here." .
-ex:Refine2_Research_%(c)s a backlog:RefinementEvent ; rdfs:label "Pedagogy stage moved to the page story"@en ;
-    backlog:refines ex:ST_Page_%(c)s ; backlog:addressesConcern backlog:Concern_Data ; backlog:refinedAt "%(cl)s"^^xsd:dateTime ;
-    backlog:refinedBy backlog:Owner ; backlog:groomsForIteration ex:Iter_1 ;
-    backlog:hasRefinementOutcome "RDODI's Pedagogy and Professional Standards stage runs its gates over an interactive page's ABox and HTML (its README: --page, --html), so it belongs to the page story, not the research story where the first refinement put it." .
-''' % dict(k=k, c=c, spec=d["spec"], rel=d["release"], fin=d["finished"], cl=d["closed"])
+    backlog:hasTransitionNote "%(tnote)s" .
+%(extra)s
+''' % dict(k=k, c=c, spec=d["spec"], rel=d["release"], fin=d["finished"], cl=d["closed"],
+                met={"Research": "Met_ResearchRecorded", "Deck": "Met_DecksRenewed", "Page": "Met_PagesBuilt"}[k], obj=OBJ[k],
+                obsnote=("Counted chapters whose Stages 1-3 artefacts are published and pass their gates: chapter 1, in sen0414-v2.7.0." if k == "Research" else "Counted renewed decks passing the chapter check: chapter 1."),
+                tool=("rdodi-ecosystem/02-gates/rdodi_pipeline_validator_v1_6_0.py, pyshacl, owlready2 HermiT" if k == "Research" else "08-tooling/ch01-deck/deck_check.py under Python 3.14.4"),
+                tnote=("Closed on Stages 1-3 of the RDODI procedure. The pedagogy stage, which this story's refinement placed here, runs over a page artefact - its gates take the page's ABox and HTML - so it moves to the chapter's page story; recorded in Refine2_Research_%s rather than claimed here." % c) if k == "Research" else "Closed on the deck check and its refused fixture. Times read from the clock.",
+                extra=(("ex:Obs1_Untaught_%s a backlog:MetricObservation ; rdfs:label \"No renewal item for an untaught chapter, read after the %s deck closed\"@en ; backlog:observesMetric ex:Met_UntaughtWork ; backlog:observationFor ex:Obj_NoUntaughtWork ; backlog:hasObservedValue \"0\"^^xsd:decimal ; backlog:observedAt \"%s\"^^xsd:dateTime ; backlog:hasObservationMethod \"Counted renewal items for chapters outside the scope - command-line programs, untaught chapters, the GUI decks: none.\" ." % (c, c, d["closed"])) if k == "Deck" else "") + ((("ex:Refine2_Research_%s a backlog:RefinementEvent ; rdfs:label \"Pedagogy stage moved to the page story\"@en ;" % c) + REFINE2_TAIL.replace("%(c)s", c).replace("%(cl)s", d["closed"]) + " .") if k == "Research" else ""))
 
 
 def planned_block(k, n):
