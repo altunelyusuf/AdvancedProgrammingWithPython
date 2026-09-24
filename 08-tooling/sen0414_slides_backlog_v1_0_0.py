@@ -126,6 +126,20 @@ ex:Iter_1 a backlog:Iteration ; rdfs:label "First iteration: chapters 1 and 2, b
 '''
 
 
+FEEDBACK = """
+ex:Refine3_Page_Ch01 a backlog:RefinementEvent ; rdfs:label "Chapter 1 page re-refined on the owner's review"@en ;
+    backlog:refines ex:ST_Page_Ch01 ; backlog:addressesConcern backlog:Concern_Data ; backlog:refinedAt "2026-09-24T22:05:38"^^xsd:dateTime ;
+    backlog:refinedBy backlog:Owner ; backlog:groomsForIteration ex:Iter_1 ;
+    backlog:hasRefinementOutcome "The owner reviewed page v1 and asked for, in his words: an iconised Explorer-style left menu with hierarchical expand and collapse; sub-tabs so the page needs less vertical scrolling; Pyodide embedded, as in RDODI's default interaction, to edit, fill, run and display code, with editable example code; an agent per subject of the chapter; a context-sensitive right-click menu; tooltips; diagrams of the code; the chapter taxonomy; an ontology of the concepts with their relationships; a concept card on the right opened by activating any concept; and connections between related subjects for navigation and jumps. Page v2 is built to that list. The agents are grounded retrieval over the chapter's own ontology and document, stated as such on the page - not language models - because a page in a student-readable repository has no model behind it and RDODI's default console is grounded the same way." .
+
+ex:Finding_Ch01Stage1Metadata a backlog:RetrospectiveFinding ;
+    rdfs:label "Chapter 1's research record shipped without its licence and provenance metadata"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Research_Ch01 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "sen0414_ch01_research_v1_0_0 was written by hand before the generic RDODI builder existed, and the metadata check at the time covered only the three Stage 2 files. When the page rebuild ran every file through one gate runner, the research header was found to lack eight of the ten BP-D24 predicates. In the same pass the owner's review exposed labels the camel-case rule had mangled - 'I o function', 'F string' - in the domain ontology and therefore in the document's section titles." ;
+    backlog:hasRemedy "Research re-published as v1.0.1 with the metadata and an rdfs:comment saying why; domain ontology and document re-published as v1.0.1 with the labels fixed at their source; every v1.0.0 file retired in the same release, and every RDODI gate re-run over the new versions - all pass. The research story stays closed: its content did not change, only its header, and the finding says so." .
+"""
+
+
 def backlog_block():
     L = ['''
 ex:Backlog a backlog:Backlog ; rdfs:label "Work admitted for renewing SEN0414's chapters"@en ;
@@ -205,5 +219,6 @@ ex:ST_%s_%s a backlog:Story ; rdfs:label "%s: %s"@en ; backlog:hasIdentifier "ST
                 L.append(planned_block(k, n))
                 L.append(closure_block(k, n))
                 L.append(start_block(k, n))
+    L.append(FEEDBACK)
     L.append(ITER % (PLANNED_AT, ", ".join("ex:ST_%s_%s" % (k, cid(n)) for k, _, _ in KIND for n in sorted(PLANNED))))
     return "".join(L)

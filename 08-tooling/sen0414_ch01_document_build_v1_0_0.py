@@ -7,7 +7,7 @@ sources. Every number quoted was executed (see the Stage 2 resolution environmen
 import os, rdflib
 from rdflib import RDF, RDFS, OWL
 R = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "03-materials", "ch01", "rdodi")
-T = rdflib.Graph(); T.parse(os.path.join(R, "sen0414_ch01_domain_tbox_v1_0_0.ttl"), format="turtle")
+T = rdflib.Graph(); T.parse(os.path.join(R, "sen0414_ch01_domain_tbox_v1_0_1.ttl"), format="turtle")
 CH = "http://example.org/sen0414/ch01#"
 
 BODY = {
@@ -61,11 +61,11 @@ L = ['@prefix doc:     <http://example.org/rdodi/document-ontology#> .', '@prefi
      '@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .', '@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .',
      '@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .', '@prefix dcterms: <http://purl.org/dc/terms/> .', '@prefix prov:    <http://www.w3.org/ns/prov#> .', '',
      '''<http://example.org/sen0414/ch01/document> a owl:Ontology ;
-    rdfs:label "SEN0414 chapter 1 - RDODI Stage 3 document"@en ; owl:versionInfo "1.0.0" ;
+    rdfs:label "SEN0414 chapter 1 - RDODI Stage 3 document"@en ; owl:versionInfo "1.0.1" ; prov:wasRevisionOf <http://example.org/sen0414/ch01/document/1.0.0> ;
     dcterms:license <https://creativecommons.org/licenses/by/4.0/> ; dcterms:rights "Copyright (c) 2026 Yusuf Altunel. Licensed CC BY 4.0."@en ;
     dcterms:rightsHolder <http://example.org/rdodi/agent/YusufAltunel> ; dcterms:publisher <http://example.org/rdodi/agent/IstanbulKulturUniversity> ;
     dcterms:creator <http://example.org/rdodi/agent/YusufAltunel> ; dcterms:created "2026-09-24"^^xsd:date ; dcterms:modified "2026-09-24"^^xsd:date ;
-    dcterms:identifier "sen0414_ch01_document_v1_0_0" ; prov:wasGeneratedBy <http://example.org/sen0414/activity/ch01-rdodi-run> ;
+    dcterms:identifier "sen0414_ch01_document_v1_0_1" ; prov:wasGeneratedBy <http://example.org/sen0414/activity/ch01-rdodi-run> ;
     prov:wasAttributedTo <http://example.org/rdodi/agent/YusufAltunel> .''', '',
      'chd:Document a doc:ReportSection ; rdfs:label "Python basics for an advanced course"@en ; skos:definition "This document renews chapter 1 of the 3rd edition for an advanced course, pairing the book\'s basics with the Python students now run (Sweigart, 2025)." ;',
      '    dcterms:source <http://example.org/sen0414/ch01/research> ;',
@@ -77,5 +77,5 @@ for n, (c, lv, p) in enumerate(ORDER, 1):
     L.append('    skos:definition "%s" ;' % BODY[name].replace('"', "'"))
     if p is not None: L.append('    doc:hasParentSection chd:S_%s ;' % str(p).split('#')[-1])
     L.append('    dcterms:source <%s%s> .' % (CH, name))
-open(os.path.join(R, "sen0414_ch01_document_v1_0_0.ttl"), "w").write("\n".join(L) + "\n")
+open(os.path.join(R, "sen0414_ch01_document_v1_0_1.ttl"), "w").write("\n".join(L) + "\n")
 print("sections:", len(ORDER))

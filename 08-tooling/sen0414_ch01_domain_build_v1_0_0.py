@@ -11,17 +11,17 @@ CREATED = "2026-09-24"
 
 def header(iri, label, ident):
     return '''<%s> a owl:Ontology ;
-    rdfs:label "%s"@en ; owl:versionInfo "1.0.0" ; owl:versionIRI <%s/1.0.0> ;
+    rdfs:label "%s"@en ; owl:versionInfo "1.0.1" ; owl:versionIRI <%s/1.0.1> ;
     dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
     dcterms:rights "Copyright (c) 2026 Yusuf Altunel. Licensed CC BY 4.0."@en ;
     dcterms:rightsHolder <http://example.org/rdodi/agent/YusufAltunel> ;
     dcterms:publisher <http://example.org/rdodi/agent/IstanbulKulturUniversity> ;
     dcterms:creator <http://example.org/rdodi/agent/YusufAltunel> ;
     dcterms:created "%s"^^xsd:date ; dcterms:modified "%s"^^xsd:date ;
-    dcterms:identifier "%s" ;
+    dcterms:identifier "%s" ; prov:wasRevisionOf <%s/1.0.0> ;
     prov:wasGeneratedBy <http://example.org/sen0414/activity/ch01-rdodi-run> ;
     prov:wasAttributedTo <http://example.org/rdodi/agent/YusufAltunel> .
-''' % (iri, label, iri, CREATED, CREATED, ident)
+''' % (iri, label, iri, CREATED, CREATED, ident, iri)
 
 PFX = '''@prefix ch01:    <http://example.org/sen0414/ch01#> .
 @prefix rd:      <http://example.org/rdodi/domain-ontology#> .
@@ -55,14 +55,21 @@ TAX = [
  ("ModernPractice", "Tooling", "PackageManager", "uv", "A tool that installs Python packages and interpreters. uv, built in Rust, was the most admired technology in the 2025 Stack Overflow survey.", None),
 ]
 
+# Labels the camel-case rule mangles ("I o function", "F string", "Built in function"), fixed at source
+# in v1.0.1 after the owner's review of the page showed them to students.
+LABELS = {"BuiltInFunction": "built-in function", "IOFunction": "input-output function", "FString": "f-string",
+          "FreeThreadedBuild": "free-threaded build", "IntegerDivision": "integer division"}
+VER = "1_0_1"
+
+
 def tbox():
-    L = [PFX, header("http://example.org/sen0414/ch01/tbox", "SEN0414 chapter 1 domain ontology - TBox", "sen0414_ch01_domain_tbox_v1_0_0")]
+    L = [PFX, header("http://example.org/sen0414/ch01/tbox", "SEN0414 chapter 1 domain ontology - TBox", "sen0414_ch01_domain_tbox_v%s" % VER)]
     seen = set()
     for top, mid, leaf, *_ in TAX:
         for c, parent in ((top, None), (mid, top), (leaf, mid)):
             if c in seen: continue
             seen.add(c)
-            label = "".join(" " + ch.lower() if ch.isupper() and i else ch for i, ch in enumerate(c)).strip()
+            label = LABELS.get(c) or "".join(" " + ch.lower() if ch.isupper() and i else ch for i, ch in enumerate(c)).strip()
             L.append('ch01:%s a owl:Class ; rdfs:label "%s"@en ;%s rdfs:isDefinedBy <http://example.org/sen0414/ch01/tbox> .' % (
                 c, label[0].upper() + label[1:], (" rdfs:subClassOf ch01:%s ;" % parent) if parent else ""))
     tops = sorted({t[0] for t in TAX})
@@ -73,7 +80,7 @@ def tbox():
     return "\n".join(L) + "\n"
 
 def abox():
-    L = [PFX, header("http://example.org/sen0414/ch01/abox", "SEN0414 chapter 1 domain ontology - ABox", "sen0414_ch01_domain_abox_v1_0_0")]
+    L = [PFX, header("http://example.org/sen0414/ch01/abox", "SEN0414 chapter 1 domain ontology - ABox", "sen0414_ch01_domain_abox_v%s" % VER)]
     for n, (top, mid, leaf, ex, d, io) in enumerate(TAX, 1):
         L.append('ch01:X_%s a owl:NamedIndividual, ch01:%s ; rdfs:label "%s"@en ; skos:definition "%s"@en ; dcterms:source <%s> .' % (
             leaf, leaf, ex.replace('"', "'"), d.replace('"', "'"), RESEARCH))
@@ -107,7 +114,7 @@ ch01:Env a owl:NamedIndividual, rd:ResolutionEnvironment ; rdfs:label "CPython 3
     return "\n".join(L) + "\n"
 
 def shacl():
-    L = [PFX, header("http://example.org/sen0414/ch01/shacl", "SEN0414 chapter 1 domain ontology - shapes", "sen0414_ch01_domain_shacl_v1_0_0")]
+    L = [PFX, header("http://example.org/sen0414/ch01/shacl", "SEN0414 chapter 1 domain ontology - shapes", "sen0414_ch01_domain_shacl_v%s" % VER)]
     L.append('''ch01:ExemplarShape a sh:NodeShape ; sh:targetClass owl:NamedIndividual ;
     sh:property [ sh:path rdfs:label ; sh:minCount 1 ; sh:severity sh:Violation ; sh:message "Every individual needs a label." ] .
 ch01:ExemplarSourcedShape a sh:NodeShape ; sh:targetSubjectsOf skos:definition ;
@@ -118,5 +125,5 @@ ch01:IOShape a sh:NodeShape ; sh:targetClass rd:IOExample ;
     return "\n".join(L) + "\n"
 
 for name, fn in (("tbox", tbox), ("abox", abox), ("shacl", shacl)):
-    open(os.path.join(OUT, "sen0414_ch01_domain_%s_v1_0_0.ttl" % name), "w").write(fn())
+    open(os.path.join(OUT, "sen0414_ch01_domain_%s_v%s.ttl" % (name, VER)), "w").write(fn())
 print("written")
