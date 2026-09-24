@@ -2,7 +2,7 @@
 
 ## Source work
 
-The lecture slides in `slides/` are teaching material prepared by **Yusuf Altunel**
+The lecture slides in `03-materials/slides/` are teaching material prepared by **Yusuf Altunel**
 (İstanbul Kültür University) that follows, adapts and quotes from:
 
 > **Al Sweigart, published by No Starch Press® Inc.** — _Automate the Boring Stuff with Python_.
