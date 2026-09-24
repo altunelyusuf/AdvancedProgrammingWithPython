@@ -11,7 +11,14 @@ PLANNED_AT = "2026-09-24T20:15:47"
 WSJF = {"Research": (13, 20, 13, 3), "Page": (13, 20, 5, 3), "Deck": (20, 20, 8, 5)}
 PLANNED = {1, 2}
 # Started items, at the clock time each began. The kick-off was declared by the owner.
-STARTED = {("Research", 1): "2026-09-24T20:26:42"}
+STARTED = {("Research", 1): "2026-09-24T20:26:42", ("Deck", 1): "2026-09-24T20:55:01"}
+# Re-scoring after the latest completion (BP-D11), at the clock time it was done; components unchanged.
+RESCORED_AT = "2026-09-24T20:50:04"
+
+# Finished items and the evidence each closed on. Times from the clock or from commits only.
+DONE = {("Research", 1): {"finished": "2026-09-24T20:47:21", "closed": "2026-09-24T20:50:04", "release": "sen0414-v2.7.0 (e49e8f6)",
+    "spec": "RDODI procedure v1.6.0, Stages 1-3 for chapter 1, gates run with RDODI's own validator functions where it has them: Stage1.A-B, Stage2.A and C, Stage3.A, B, E.cov, E.sub, F and src, all PASS; Stage1.C-E, Stage2.B (HermiT, consistent), D-H and Stage3.C, D, E (coverage 27/27), G and H run as direct checks because the validator does not implement them - all PASS."}}
+
 REFINED = {
     "Research": "Settled: RDODI's four-stage procedure v1.6.0 on the chapter's subject, with its Pedagogy and Professional Standards stage and the Courseware profile; the research record lists every source a later claim rests on.",
     "Deck": "Settled: rewritten from the 3rd edition's chapter and the research record, restyled with PowerPoint's own capabilities, every code example run under current Python before it is shown, and the deck described as a teaching material aligned to the outcomes it serves.",
@@ -24,9 +31,48 @@ OBJ = {"Deck": "Obj_DecksRenewed", "Research": "Obj_ResearchRecorded", "Page": "
 def planned_tail(k, n):
     if n not in PLANNED:
         return 'backlog:hasState backlog:Proposed ;\n    backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored when its own iteration is planned."'
-    state = ('InProgress ; backlog:startedAt "%s"^^xsd:dateTime' % STARTED[(k, n)]) if (k, n) in STARTED else 'Ready'
+    if (k, n) in DONE:
+        d = DONE[(k, n)]
+        state = ('Done ; backlog:startedAt "%s"^^xsd:dateTime ; backlog:finishedAt "%s"^^xsd:dateTime ; backlog:lastAuditedAt "%s"^^xsd:dateTime ;\n'
+                 '    backlog:hasEvidence ex:Ev_%s_%s ; backlog:hasExecutionModality backlog:Mode_Hybrid' % (STARTED[(k, n)], d["finished"], d["closed"], k, cid(n)))
+    else:
+        state = ('InProgress ; backlog:startedAt "%s"^^xsd:dateTime' % STARTED[(k, n)]) if (k, n) in STARTED else 'Ready'
     return ('backlog:hasState backlog:' + state + ' ; backlog:memberOfContainer ex:Iter_1 ;\n    backlog:hasPriorityScore ex:Score_%s_%s ;\n'
             '    backlog:decomposesInto ex:TK_%s_%s_Build, ex:TK_%s_%s_Verify' % (k, cid(n), k, cid(n), k, cid(n)))
+
+
+def start_block(k, n):
+    if (k, n) not in STARTED or (k, n) == ("Research", 1): return ""
+    return '''
+ex:Start_%s_%s a backlog:TransitionEvent ; rdfs:label "%s %s started"@en ; backlog:transitionedItem ex:ST_%s_%s ;
+    backlog:viaTransition backlog:T_Start ; backlog:transitionedAt "%s"^^xsd:dateTime ; backlog:transitionedBy backlog:Owner ;
+    backlog:hasTransitionNote "Started once its dependency, the chapter's research, was Done. Time read from the clock." .
+''' % (k, cid(n), k, cid(n), k, cid(n), STARTED[(k, n)])
+
+
+def closure_block(k, n):
+    if (k, n) not in DONE: return ""
+    d = DONE[(k, n)]; c = cid(n)
+    return '''
+ex:Ev_%(k)s_%(c)s a backlog:TestEvidence ; rdfs:label "RDODI gates for %(k)s %(c)s"@en ; backlog:belongsToLineage ex:Lineage ;
+    backlog:attestsCriterion ex:AC_Chapter ; backlog:evidenceVerified true ; backlog:hasTestId "rdodi/%(c)s/stages-1-3" ;
+    backlog:hasTestSpec "%(spec)s" ; backlog:hasVerificationMethod "Gates run over the artefacts as published in %(rel)s." ;
+    backlog:verifiedByTool "rdodi-ecosystem/02-gates/rdodi_pipeline_validator_v1_6_0.py, pyshacl, owlready2 HermiT" ; backlog:verifiedAt "%(fin)s"^^xsd:dateTime .
+ex:Harness_%(k)s_%(c)s a backlog:TestHarness ; rdfs:label "RDODI gates for %(k)s %(c)s"@en ;
+    backlog:harnessFor ex:ST_%(k)s_%(c)s ; backlog:harnessComplete true ; backlog:hasHarnessEvidence ex:Ev_%(k)s_%(c)s .
+ex:Obs1_%(k)s_%(c)s a backlog:MetricObservation ; rdfs:label "Chapters with a completed RDODI run, read after %(c)s closed"@en ;
+    backlog:observesMetric ex:Met_ResearchRecorded ; backlog:observationFor ex:Obj_ResearchRecorded ;
+    backlog:hasObservedValue "1"^^xsd:decimal ; backlog:observedAt "%(cl)s"^^xsd:dateTime ;
+    backlog:hasObservationMethod "Counted chapters whose Stages 1-3 artefacts are published and pass their gates: chapter 1, in sen0414-v2.7.0." .
+ex:Complete_%(k)s_%(c)s a backlog:TransitionEvent ; rdfs:label "%(k)s %(c)s completed"@en ;
+    backlog:transitionedItem ex:ST_%(k)s_%(c)s ; backlog:viaTransition backlog:T_Complete ;
+    backlog:transitionedAt "%(cl)s"^^xsd:dateTime ; backlog:transitionedBy backlog:Owner ;
+    backlog:hasTransitionNote "Closed on Stages 1-3 of the RDODI procedure. The pedagogy stage, which this story's refinement placed here, runs over a page artefact - its gates take the page's ABox and HTML - so it moves to the chapter's page story; recorded in Refine2_Research_%(c)s rather than claimed here." .
+ex:Refine2_Research_%(c)s a backlog:RefinementEvent ; rdfs:label "Pedagogy stage moved to the page story"@en ;
+    backlog:refines ex:ST_Page_%(c)s ; backlog:addressesConcern backlog:Concern_Data ; backlog:refinedAt "%(cl)s"^^xsd:dateTime ;
+    backlog:refinedBy backlog:Owner ; backlog:groomsForIteration ex:Iter_1 ;
+    backlog:hasRefinementOutcome "RDODI's Pedagogy and Professional Standards stage runs its gates over an interactive page's ABox and HTML (its README: --page, --html), so it belongs to the page story, not the research story where the first refinement put it." .
+''' % dict(k=k, c=c, spec=d["spec"], rel=d["release"], fin=d["finished"], cl=d["closed"])
 
 
 def planned_block(k, n):
@@ -42,16 +88,17 @@ ex:Refine_%(k)s_%(c)s a backlog:RefinementEvent ; rdfs:label "Refinement that ma
     backlog:refines ex:ST_%(k)s_%(c)s ; backlog:addressesConcern backlog:Concern_Data ; backlog:refinedAt "%(t)s"^^xsd:dateTime ;
     backlog:refinedBy backlog:Owner ; backlog:groomsForIteration ex:Iter_1 ; backlog:hasRefinementOutcome "%(o)s" .
 ex:TK_%(k)s_%(c)s_Build a backlog:ExecutionTask ; rdfs:label "%(k)s for %(c)s: build"@en ; backlog:hasIdentifier "TK_%(k)s_%(c)s_Build" ; backlog:hasTitle "Build %(k)s %(c)s" ;
-    backlog:belongsToLineage ex:Lineage ; backlog:memberOfContainer ex:Backlog ; backlog:admittedByOutput ex:Out_Backlog ; backlog:hasState backlog:Proposed ;
+    backlog:belongsToLineage ex:Lineage ; backlog:memberOfContainer ex:Backlog ; backlog:admittedByOutput ex:Out_Backlog ; backlog:hasState backlog:%(tstate)s ;
     backlog:hasInvestmentCategory backlog:Cat_NewCapability ; backlog:hasTaskType backlog:TaskType_Build ; backlog:effectiveDefinitionOfDone ex:DoD ;
     backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Ranked by its story's score; scoring both would double-count." ;%(dep)s
     backlog:hasAuditNote "Build it." .
 ex:TK_%(k)s_%(c)s_Verify a backlog:ExecutionTask ; rdfs:label "%(k)s for %(c)s: verify"@en ; backlog:hasIdentifier "TK_%(k)s_%(c)s_Verify" ; backlog:hasTitle "Verify %(k)s %(c)s" ;
-    backlog:belongsToLineage ex:Lineage ; backlog:memberOfContainer ex:Backlog ; backlog:admittedByOutput ex:Out_Backlog ; backlog:hasState backlog:Proposed ;
+    backlog:belongsToLineage ex:Lineage ; backlog:memberOfContainer ex:Backlog ; backlog:admittedByOutput ex:Out_Backlog ; backlog:hasState backlog:%(tstate)s ;
     backlog:hasInvestmentCategory backlog:Cat_NewCapability ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:effectiveDefinitionOfDone ex:DoD ;
     backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Ranked by its story's score; scoring both would double-count." ;%(dep)s
     backlog:hasAuditNote "Run the chapter check and require the stale fixture refused." .
-''' % dict(k=k, c=c, bv=bv, tc=tc, rr=rr, js=js, v=(bv + tc + rr) / js, t=PLANNED_AT, o=REFINED[k],
+''' % dict(k=k, c=c, bv=bv, tc=tc, rr=rr, js=js, v=(bv + tc + rr) / js, t=(RESCORED_AT if (RESCORED_AT and (k, n) not in DONE) else PLANNED_AT), o=REFINED[k],
+          tstate=(('Done ; backlog:startedAt "%s"^^xsd:dateTime ; backlog:finishedAt "%s"^^xsd:dateTime ; backlog:hasEvidence ex:Ev_%s_%s' % (STARTED[(k, n)], DONE[(k, n)]["finished"], k, c)) if (k, n) in DONE else 'Proposed'),
           dep=("" if k == "Research" else "\n    backlog:dependsOn ex:ST_Research_%s ;" % c))
 
 
@@ -142,5 +189,7 @@ ex:ST_%s_%s a backlog:Story ; rdfs:label "%s: %s"@en ; backlog:hasIdentifier "ST
 ''' % (k, cid(n), label, src, k, cid(n), label, src.split(":")[0], what, k, cid(n), OBJ[k], dep, planned_tail(k, n)))
             if n in PLANNED:
                 L.append(planned_block(k, n))
+                L.append(closure_block(k, n))
+                L.append(start_block(k, n))
     L.append(ITER % (PLANNED_AT, ", ".join("ex:ST_%s_%s" % (k, cid(n)) for k, _, _ in KIND for n in sorted(PLANNED))))
     return "".join(L)
