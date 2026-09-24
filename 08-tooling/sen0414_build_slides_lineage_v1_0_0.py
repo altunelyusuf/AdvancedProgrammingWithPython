@@ -17,7 +17,7 @@ COMMITS = {"Mission": "PENDING", "Scope": "PENDING", "Goal": "PENDING", "Objecti
 for k in COMMITS:
     COMMITS[k] = os.environ.get("C_" + k.upper(), COMMITS[k])
 ORDER = ["Mission", "Scope", "Goal", "Objective", "Backlog"]
-STATUS = {1: "LS_Opened", 2: "LS_Scoped", 3: "LS_Goaled", 4: "LS_Objectived", 5: "LS_Backlogged"}
+STATUS = {1: "LS_Opened", 2: "LS_Scoped", 3: "LS_Goaled", 4: "LS_Objectived", 5: "LS_Backlogged", 6: "LS_InProgress"}
 BASE_AT = os.environ.get("BASE_AT", "")
 
 HEAD = """@prefix backlog: <http://example.org/backlog#> .
@@ -45,15 +45,15 @@ def main():
     if STAGES >= 2: t += st.scope_block()
     if STAGES >= 3: t += st.goal_block()
     if STAGES >= 4: t += st.objective_block(with_movers=STAGES >= 5).replace("__BASE_AT__", BASE_AT)
-    if STAGES >= 5:
+    if STAGES >= 5 or STAGES == 6:
         import sen0414_slides_backlog_v1_0_0 as bk
         t += bk.backlog_block()
-    for n, name in enumerate(ORDER[:STAGES]):
+    for n, name in enumerate(ORDER[:min(STAGES, 5)]):
         t += '\nex:Out_%s a backlog:StageOutput ;\n    rdfs:label "Closure of the %s stage"@en ;\n    backlog:belongsToLineage ex:Lineage ;\n    backlog:outputOfStage backlog:Stage_%s ;%s\n    backlog:hasStateDigest "__D_%s__" ;\n    backlog:closedAtCommit "%s" .\n' % (
             name, name, name, ("\n    backlog:consumesOutput ex:Out_%s ;" % ORDER[n - 1]) if n else "", name, COMMITS[name])
     g = rdflib.Graph(); g.parse(data=t, format="turtle")
     nt = g.serialize(format="nt").splitlines()
-    for name in ORDER[:STAGES]:
+    for name in ORDER[:min(STAGES, 5)]:
         key = {"Mission": "Mission>", "Scope": "Scope>", "Goal": "G_", "Objective": "Obj_", "Backlog": "Backlog>"}[name]
         t = t.replace("__D_%s__" % name, hashlib.sha256("\n".join(sorted(l for l in nt if ("<%s%s" % (NS, key)) in l)).encode()).hexdigest())
     out = os.path.join(REPO, "07-lineage", "sen0414_slides_lineage_v%s.ttl" % version.replace(".", "_"))

@@ -10,6 +10,8 @@ from sen0414_slides_stages_v1_0_0 import CHAPTERS, KIND, cid
 PLANNED_AT = "2026-09-24T20:15:47"
 WSJF = {"Research": (13, 20, 13, 3), "Page": (13, 20, 5, 3), "Deck": (20, 20, 8, 5)}
 PLANNED = {1, 2}
+# Started items, at the clock time each began. The kick-off was declared by the owner.
+STARTED = {("Research", 1): "2026-09-24T20:26:42"}
 REFINED = {
     "Research": "Settled: RDODI's four-stage procedure v1.6.0 on the chapter's subject, with its Pedagogy and Professional Standards stage and the Courseware profile; the research record lists every source a later claim rests on.",
     "Deck": "Settled: rewritten from the 3rd edition's chapter and the research record, restyled with PowerPoint's own capabilities, every code example run under current Python before it is shown, and the deck described as a teaching material aligned to the outcomes it serves.",
@@ -22,7 +24,8 @@ OBJ = {"Deck": "Obj_DecksRenewed", "Research": "Obj_ResearchRecorded", "Page": "
 def planned_tail(k, n):
     if n not in PLANNED:
         return 'backlog:hasState backlog:Proposed ;\n    backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored when its own iteration is planned."'
-    return ('backlog:hasState backlog:Ready ; backlog:memberOfContainer ex:Iter_1 ;\n    backlog:hasPriorityScore ex:Score_%s_%s ;\n'
+    state = ('InProgress ; backlog:startedAt "%s"^^xsd:dateTime' % STARTED[(k, n)]) if (k, n) in STARTED else 'Ready'
+    return ('backlog:hasState backlog:' + state + ' ; backlog:memberOfContainer ex:Iter_1 ;\n    backlog:hasPriorityScore ex:Score_%s_%s ;\n'
             '    backlog:decomposesInto ex:TK_%s_%s_Build, ex:TK_%s_%s_Verify' % (k, cid(n), k, cid(n), k, cid(n)))
 
 
@@ -66,8 +69,12 @@ def backlog_block():
     L = ['''
 ex:Backlog a backlog:Backlog ; rdfs:label "Work admitted for renewing SEN0414's chapters"@en ;
     backlog:hasIdentifier "Backlog_SEN0414_Slides" ; backlog:belongsToLineage ex:Lineage ; backlog:isRegisterRoot true ;
-    backlog:hasState backlog:Proposed ; backlog:producedByStage ex:Out_Backlog ;
+    backlog:hasState backlog:InProgress ; backlog:producedByStage ex:Out_Backlog ;
     backlog:appliesDefinitionOfDone ex:DoD ; backlog:hasCommitment ex:Commit ; backlog:hasMember ex:Init_Slides .
+ex:Kickoff a backlog:TransitionEvent ; rdfs:label "Kick-off: the owner declared execution begun"@en ;
+    backlog:transitionedItem ex:ST_Research_Ch01 ; backlog:viaTransition backlog:T_Start ;
+    backlog:transitionedAt "2026-09-24T20:26:42"^^xsd:dateTime ; backlog:transitionedBy backlog:Owner ;
+    backlog:hasTransitionNote "Declared by the owner in the words 'kick off', once planning was complete: six stories scored and refined to Ready, an iteration with a real period and goal ending at SEN0414's class, and the roadmap report naming chapter 1's research as the next startable item - its tie with chapter 2's research broken by teaching order. Time read from the clock." .
 ex:DoD a backlog:DefinitionOfDone ; rdfs:label "What finished means for a renewed chapter"@en ; backlog:belongsToLineage ex:Lineage ;
     backlog:hasDoDCriterion ex:DoD_CodeRuns, ex:DoD_Sourced, ex:DoD_TruthfulDates .
 ex:DoD_CodeRuns a backlog:DoDCriterion ; rdfs:label "Every code example runs as the slide shows"@en ;
