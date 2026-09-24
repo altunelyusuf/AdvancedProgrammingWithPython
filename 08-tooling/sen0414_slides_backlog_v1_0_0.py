@@ -11,7 +11,7 @@ PLANNED_AT = "2026-09-24T20:15:47"
 WSJF = {"Research": (13, 20, 13, 3), "Page": (13, 20, 5, 3), "Deck": (20, 20, 8, 5)}
 PLANNED = {1, 2}
 # Started items, at the clock time each began. The kick-off was declared by the owner.
-STARTED = {("Research", 1): "2026-09-24T20:26:42", ("Deck", 1): "2026-09-24T20:55:01"}
+STARTED = {("Research", 1): "2026-09-24T20:26:42", ("Deck", 1): "2026-09-24T20:55:01", ("Research", 2): "2026-09-24T21:17:28"}
 # Re-scoring after the latest completion (BP-D11), at the clock time it was done; components unchanged.
 RESCORED_AT = "2026-09-24T21:01:30"
 
@@ -43,7 +43,7 @@ def planned_tail(k, n):
 
 
 def start_block(k, n):
-    if (k, n) not in STARTED or (k, n) == ("Research", 1): return ""
+    if (k, n) not in STARTED or (k, n) == ("Research", 1): return ""  # chapter 1's research started at the kick-off, recorded there
     return '''
 ex:Start_%s_%s a backlog:TransitionEvent ; rdfs:label "%s %s started"@en ; backlog:transitionedItem ex:ST_%s_%s ;
     backlog:viaTransition backlog:T_Start ; backlog:transitionedAt "%s"^^xsd:dateTime ; backlog:transitionedBy backlog:Owner ;
