@@ -11,7 +11,7 @@ PLANNED_AT = "2026-09-24T20:15:47"
 WSJF = {"Research": (13, 20, 13, 3), "Page": (13, 20, 5, 3), "Deck": (20, 20, 8, 5)}
 PLANNED = {1, 2}
 # Started items, at the clock time each began. The kick-off was declared by the owner.
-STARTED = {("Research", 1): "2026-09-24T20:26:42", ("Deck", 1): "2026-09-24T20:55:01", ("Research", 2): "2026-09-24T21:17:28"}
+STARTED = {("Research", 1): "2026-09-24T20:26:42", ("Deck", 1): "2026-09-24T20:55:01", ("Research", 2): "2026-09-24T21:17:28", ("Page", 1): "2026-09-24T21:26:47"}
 # Re-scoring after the latest completion (BP-D11), at the clock time it was done; components unchanged.
 RESCORED_AT = "2026-09-24T21:22:40"
 
@@ -49,8 +49,10 @@ def start_block(k, n):
     return '''
 ex:Start_%s_%s a backlog:TransitionEvent ; rdfs:label "%s %s started"@en ; backlog:transitionedItem ex:ST_%s_%s ;
     backlog:viaTransition backlog:T_Start ; backlog:transitionedAt "%s"^^xsd:dateTime ; backlog:transitionedBy backlog:Owner ;
-    backlog:hasTransitionNote "Started once its dependency, the chapter's research, was Done. Time read from the clock." .
-''' % (k, cid(n), k, cid(n), k, cid(n), STARTED[(k, n)])
+    backlog:hasTransitionNote "%s" .
+''' % (k, cid(n), k, cid(n), k, cid(n), STARTED[(k, n)], (
+        "Started once its dependency, the chapter's research, was Done. Time read from the clock." if (k, n) != ("Page", 1) else
+        "The start was not recorded when the work began. This is its provable lower bound: the commit time of sen0414-v2.9.1, the last release before any page work - bounded, not composed."))
 
 
 REFINE2_TAIL = """
