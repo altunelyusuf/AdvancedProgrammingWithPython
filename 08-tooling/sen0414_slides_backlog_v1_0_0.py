@@ -2,7 +2,64 @@
 tasks are produced by planning, and only for what is planned into an iteration."""
 from sen0414_slides_stages_v1_0_0 import CHAPTERS, KIND, cid
 
+# Planning of 2026-09-24, approved by the owner: chapters 1 and 2 in the first iteration, until
+# SEN0414's class at 14:00 Istanbul (11:00 UTC) on 2026-09-25. WSJF components are
+# (business value, time criticality, risk reduction, job size). Chapter 1's were proposed and
+# approved; chapter 2 was added by the owner at approval and takes the same components, since it is
+# taught in the same class.
+PLANNED_AT = "2026-09-24T20:15:47"
+WSJF = {"Research": (13, 20, 13, 3), "Page": (13, 20, 5, 3), "Deck": (20, 20, 8, 5)}
+PLANNED = {1, 2}
+REFINED = {
+    "Research": "Settled: RDODI's four-stage procedure v1.6.0 on the chapter's subject, with its Pedagogy and Professional Standards stage and the Courseware profile; the research record lists every source a later claim rests on.",
+    "Deck": "Settled: rewritten from the 3rd edition's chapter and the research record, restyled with PowerPoint's own capabilities, every code example run under current Python before it is shown, and the deck described as a teaching material aligned to the outcomes it serves.",
+    "Page": "Settled: one interactive page for the chapter, carrying the research results; published as a page students can open, and described as a teaching material.",
+}
+
 OBJ = {"Deck": "Obj_DecksRenewed", "Research": "Obj_ResearchRecorded", "Page": "Obj_PagesBuilt"}
+
+
+def planned_tail(k, n):
+    if n not in PLANNED:
+        return 'backlog:hasState backlog:Proposed ;\n    backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored when its own iteration is planned."'
+    return ('backlog:hasState backlog:Ready ; backlog:memberOfContainer ex:Iter_1 ;\n    backlog:hasPriorityScore ex:Score_%s_%s ;\n'
+            '    backlog:decomposesInto ex:TK_%s_%s_Build, ex:TK_%s_%s_Verify' % (k, cid(n), k, cid(n), k, cid(n)))
+
+
+def planned_block(k, n):
+    bv, tc, rr, js = WSJF[k]; c = cid(n)
+    return '''
+ex:Score_%(k)s_%(c)s a backlog:PriorityScore ; backlog:scoredByMethod backlog:Method_WSJF ;
+    backlog:hasScoreValue "%(v).2f"^^xsd:decimal ; backlog:scoredAt "%(t)s"^^xsd:dateTime ; backlog:isAveragedFromMembers false ;
+    backlog:hasScoreRationale "WSJF = (business value %(bv)d + time criticality %(tc)d + risk reduction %(rr)d) / job size %(js)d, approved by the owner. Time criticality is set by the class at 14:00 Istanbul on 2026-09-25." .
+ex:Plan_%(k)s_%(c)s a backlog:PlanningEvent ; rdfs:label "Planning of %(k)s for %(c)s into the first iteration"@en ; backlog:belongsToLineage ex:Lineage ;
+    backlog:plannedAt "%(t)s"^^xsd:dateTime ; backlog:plannedBy backlog:Owner ; backlog:plannedInto ex:Iter_1 ;
+    backlog:plansItem ex:ST_%(k)s_%(c)s ; backlog:producesTask ex:TK_%(k)s_%(c)s_Build, ex:TK_%(k)s_%(c)s_Verify .
+ex:Refine_%(k)s_%(c)s a backlog:RefinementEvent ; rdfs:label "Refinement that made %(k)s for %(c)s ready"@en ;
+    backlog:refines ex:ST_%(k)s_%(c)s ; backlog:addressesConcern backlog:Concern_Data ; backlog:refinedAt "%(t)s"^^xsd:dateTime ;
+    backlog:refinedBy backlog:Owner ; backlog:groomsForIteration ex:Iter_1 ; backlog:hasRefinementOutcome "%(o)s" .
+ex:TK_%(k)s_%(c)s_Build a backlog:ExecutionTask ; rdfs:label "%(k)s for %(c)s: build"@en ; backlog:hasIdentifier "TK_%(k)s_%(c)s_Build" ; backlog:hasTitle "Build %(k)s %(c)s" ;
+    backlog:belongsToLineage ex:Lineage ; backlog:memberOfContainer ex:Backlog ; backlog:admittedByOutput ex:Out_Backlog ; backlog:hasState backlog:Proposed ;
+    backlog:hasInvestmentCategory backlog:Cat_NewCapability ; backlog:hasTaskType backlog:TaskType_Build ; backlog:effectiveDefinitionOfDone ex:DoD ;
+    backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Ranked by its story's score; scoring both would double-count." ;%(dep)s
+    backlog:hasAuditNote "Build it." .
+ex:TK_%(k)s_%(c)s_Verify a backlog:ExecutionTask ; rdfs:label "%(k)s for %(c)s: verify"@en ; backlog:hasIdentifier "TK_%(k)s_%(c)s_Verify" ; backlog:hasTitle "Verify %(k)s %(c)s" ;
+    backlog:belongsToLineage ex:Lineage ; backlog:memberOfContainer ex:Backlog ; backlog:admittedByOutput ex:Out_Backlog ; backlog:hasState backlog:Proposed ;
+    backlog:hasInvestmentCategory backlog:Cat_NewCapability ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:effectiveDefinitionOfDone ex:DoD ;
+    backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Ranked by its story's score; scoring both would double-count." ;%(dep)s
+    backlog:hasAuditNote "Run the chapter check and require the stale fixture refused." .
+''' % dict(k=k, c=c, bv=bv, tc=tc, rr=rr, js=js, v=(bv + tc + rr) / js, t=PLANNED_AT, o=REFINED[k],
+          dep=("" if k == "Research" else "\n    backlog:dependsOn ex:ST_Research_%s ;" % c))
+
+
+ITER = '''
+ex:Iter_1 a backlog:Iteration ; rdfs:label "First iteration: chapters 1 and 2, before the class of 25 September"@en ;
+    backlog:hasIdentifier "Iter_1" ; backlog:belongsToLineage ex:Lineage ;
+    backlog:iterationStart "%s"^^xsd:dateTime ; backlog:iterationEnd "2026-09-25T11:00:00"^^xsd:dateTime ;
+    backlog:hasDurationSource "Owner, 2026-09-24: chapter 1, and chapter 2 added at approval, ready for SEN0414's class at 14:00 Istanbul on 2026-09-25." ;
+    backlog:hasSprintGoal "Chapters 1 and 2 researched, their decks renewed and their interactive pages built, ready to present." ;
+    backlog:hasMember %s .
+'''
 
 
 def backlog_block():
@@ -69,11 +126,14 @@ ex:EP_%s a backlog:Epic ; rdfs:label "%s for every taught chapter"@en ; backlog:
             dep = "" if k == "Research" else "\n    backlog:dependsOn ex:ST_Research_%s ;" % cid(n)
             L.append('''
 ex:ST_%s_%s a backlog:Story ; rdfs:label "%s: %s"@en ; backlog:hasIdentifier "ST_%s_%s" ; backlog:hasTitle "%s for %s" ;
-    backlog:belongsToLineage ex:Lineage ; backlog:memberOfContainer ex:Backlog ; backlog:admittedByOutput ex:Out_Backlog ; backlog:hasState backlog:Proposed ;
+    backlog:belongsToLineage ex:Lineage ; backlog:memberOfContainer ex:Backlog ; backlog:admittedByOutput ex:Out_Backlog ;
     backlog:hasInvestmentCategory backlog:Cat_NewCapability ;
     backlog:asRole "SEN0414 instructor" ; backlog:wantsCapability "%s" ; backlog:soThat "students are taught from the edition they read, on researched ground" ;
     backlog:satisfiesDeliverable ex:Del_%s_%s ; backlog:pursuesObjective ex:%s ; backlog:hasAcceptanceCriterion ex:AC_Chapter ;
     backlog:effectiveDefinitionOfDone ex:DoD ; backlog:hasApplicableConcern backlog:Concern_Data ;%s
-    backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the owner sets business value and time criticality." .
-''' % (k, cid(n), label, src, k, cid(n), label, src.split(":")[0], what, k, cid(n), OBJ[k], dep))
+    %s .
+''' % (k, cid(n), label, src, k, cid(n), label, src.split(":")[0], what, k, cid(n), OBJ[k], dep, planned_tail(k, n)))
+            if n in PLANNED:
+                L.append(planned_block(k, n))
+    L.append(ITER % (PLANNED_AT, ", ".join("ex:ST_%s_%s" % (k, cid(n)) for k, _, _ in KIND for n in sorted(PLANNED))))
     return "".join(L)
