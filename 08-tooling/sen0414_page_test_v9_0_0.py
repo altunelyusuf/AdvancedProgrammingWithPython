@@ -1,0 +1,245 @@
+#!/usr/bin/env python3
+"""Browser tests for version 9 - visualisations computed by Python (evaluation steps, step-through tracer, code pipeline, chapter visualisations) and wheel zoom - on top of version 8 - a seven-item top menu, subject overviews without repeated lists, folded introductions, one rooted taxonomy with fitting labels, zoom on every diagram - on top of version 7 - the RDODI fit-gap views (ontology graph, Code Lab, SPARQL console, question views, About, downloads) on top of version 6 - the conversation view (roster with role icons, guide, handoff, follow-ups, memory) on top of version 5 - version 4's checks, plus: the page's own thread never blocks for long, and an endless program is stopped while the page stays responsive ( (version 3's rule checks plus the agents' toolkit) of a SEN0414 page - the owner's rules of 2026-09-25 made checkable:
+code the student edits really runs (edited code must change the result); agents answer from their own
+slice, so different questions get different answers; a menu click changes the main area and leaves the
+detail card closed; the card opens only on an explicit request; the tab row is the sub-menu of the
+selected top-level item. Every stored result must also equal what the build's interpreter printed."""
+import json, os, sys, time
+PV = os.environ.get("PAGE_VER", "9_0_0")  # generated files carry the page version they were produced for
+from playwright.sync_api import sync_playwright
+N = sys.argv[1]; NUM = N; N = ("ch%s" % N) if N.isdigit() else N
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+page_path = os.environ.get("PAGE", os.path.join(REPO, "03-materials", N, "page", "sen0414_%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "9_0_0"))))
+d = json.load(open(os.path.join(REPO, "08-tooling", "%s-page" % N, "page_data_v%s.json" % PV)))
+AXE = "/home/claude/Ontologies/rdodi-ecosystem/07-pedagogy-professional-stage/lib/axe.min.js"
+R = {"widgets": {}, "features": {}, "gates": {}}
+feat = lambda k, ok, det="": R["features"].__setitem__(k, {"passed": bool(ok), "detail": det})
+nodes = d["nodes"]; tops = [n for n in nodes if n["level"] == 1]
+in_view = "id=>{const e=document.getElementById(id);if(!e)return false;const r=e.getBoundingClientRect();return r.height>0&&r.top<innerHeight&&r.bottom>0&&!e.closest('[hidden]')}"
+with sync_playwright() as p:
+    b = p.chromium.launch(env={"LANG": "en_US.UTF-8", "LC_ALL": "en_US.UTF-8"}); ctx = b.new_context(locale="en-US", viewport={"width": 1400, "height": 900}); pg = ctx.new_page(); errors = []
+    pg.on("console", lambda m: errors.append(m.text) if m.type == "error" else None); pg.on("pageerror", lambda e: errors.append(str(e)))
+    pg.add_init_script("window.__lt=[];new PerformanceObserver(l=>l.getEntries().forEach(e=>window.__lt.push(Math.round(e.duration)))).observe({type:'longtask',buffered:true});")
+    pg.goto("file://" + page_path); pg.wait_for_timeout(400)
+    GROUP = pg.evaluate("GROUP_OF")
+    def view(k):
+        g = GROUP.get(k)
+        if g:
+            view(g); pg.click('[data-pane]:not([hidden]) .viewsub [data-tab="%s"]' % k) if not pg.locator('[data-pane="%s"]' % k).is_visible() else None
+        else:
+            pg.click('#groups [data-tab="%s"]' % k)
+        pg.wait_for_timeout(150)
+    # one top-level menu; tabs inside a subject are its sub-menu
+    labels = [pg.locator("#groups button").nth(k).get_attribute("data-tab") for k in range(pg.locator("#groups button").count())]
+    top2 = next(t for t in tops if len([n for n in nodes if n["parent"] == t["id"]]) >= 2)
+    view(top2["id"])
+    mids = [n for n in nodes if n["parent"] == top2["id"]]
+    sub_in_pane = pg.locator('[data-pane="%s"] .subtabs:not(.viewsub) [data-sub]:not([data-sub^="ov-"])' % top2["id"]).count()
+    pg.click('[data-pane="%s"] [data-sub="%s"]' % (top2["id"], mids[-1]["id"]))
+    learn_tabs = [pg.locator('[data-pane="%s"] .viewsub [data-tab]' % top2["id"]).nth(k).get_attribute("data-tab") for k in range(pg.locator('[data-pane="%s"] .viewsub [data-tab]' % top2["id"]).count())]
+    feat("one top menu; the tab row is the selected item's sub-menu", pg.locator("#tabs").count() == 0 and labels == ["intro", "learn", "maps", "lab", "agents", "practice", "reference", "about"] and all(t["id"] in learn_tabs for t in tops) and sub_in_pane == len(mids)
+         and pg.locator('[data-subpane="%s"]' % mids[-1]["id"]).is_visible() and not pg.locator('[data-subpane="%s"]' % mids[0]["id"]).is_visible(), "top menu: %s" % ", ".join(labels))
+    # the explorer drives the main area; the card stays closed
+    leaf = [n for n in nodes if n["level"] == 3 and n["parent"] != mids[-1]["id"]][0]
+    pg.click("#expandAll"); pg.click('#tree .tn[data-c="%s"]' % leaf["id"]); pg.wait_for_timeout(300)
+    feat("menu click changes the main area first, card stays closed", pg.evaluate(in_view, "s-" + leaf["id"]) and pg.locator("#card").is_hidden(), leaf["label"])
+    pg.click('[data-detail="%s"]' % leaf["id"]); opened = pg.locator("#card").is_visible() and leaf["label"] in pg.text_content("#card")
+    pg.click("#card [data-close]"); closed = pg.locator("#card").is_hidden()
+    pg.click('[data-detail="%s"]' % leaf["id"]); pg.keyboard.press("Escape")
+    feat("detail card only on explicit request; closes by button and Esc", opened and closed and pg.locator("#card").is_hidden())
+    pg.click('#tree .tn[data-c="%s"]' % leaf["id"], button="right"); menu_ok = pg.is_visible("#ctx"); pg.locator('#ctx [data-cmd^="card:"]').click()
+    feat("context menu offers details on request", menu_ok and pg.locator("#card").is_visible()); pg.keyboard.press("Escape")
+    pg.hover('#tree .tn[data-c="%s"]' % leaf["id"]); feat("tooltips", pg.is_visible("#tip"))
+    view("map"); g = pg.locator("#graph g.gn").nth(4); gid = g.get_attribute("data-c"); g.click(); pg.wait_for_timeout(300)
+    feat("map node navigates the main area, card stays closed", pg.evaluate(in_view, "s-" + gid) and pg.locator("#card").is_hidden(), gid)
+    view("taxonomy"); feat("taxonomy diagram", pg.locator("#taxo svg g.n").count() == len(nodes) + 1)
+    # widgets
+    for n in nodes:
+        w = "w-" + n["id"]; ok = False; why = ""
+        try:
+            pg.evaluate("id=>goTo(id)", n["id"])
+            if "io" in n:
+                pg.fill("#%s-code" % w, n["io"]["code"]); pg.fill("#%s-guess" % w, n["io"]["out"]); pg.click('[data-run="%s"]' % n["id"])
+                pg.wait_for_function("id=>{const o=document.getElementById(id);return o&&o.textContent&&o.textContent!=='running...'}", arg=w + "-out", timeout=120000)
+                got = pg.text_content("#%s-out" % w); ok = got == n["io"]["out"] and "matched" in pg.text_content("#%s-verdict" % w); why = "printed %r" % got
+                pg.fill("#%s-code" % w, "2 + 2"); pg.click('[data-run="%s"]' % n["id"])
+                pg.wait_for_function("id=>{const o=document.getElementById(id);return o&&o.textContent!=='running...'}", arg=w + "-out", timeout=60000)
+                edited = pg.text_content("#%s-out" % w); ok = ok and edited == "4"; why += "; edited to 2 + 2 printed %r" % edited
+                pg.click('[data-reset="%s"]' % n["id"]); ok = ok and pg.input_value("#%s-code" % w) == n["io"]["code"]
+                pg.click('[data-detail="%s"]' % n["id"]); shown = pg.locator("#card output.out").first.text_content().split("\n", 1)[-1]; pg.keyboard.press("Escape")
+                ok = ok and shown == n["io"]["out"]; why += "; card shows %r" % shown
+            elif n.get("chart"):
+                pg.wait_for_function("id=>{const c=document.getElementById(id);const ch=c&&window.Chart&&Chart.getChart(c);return ch&&ch.data.datasets.some(x=>x.data&&x.data.length)&&c.offsetWidth>0}", arg=n["chart"], timeout=20000)
+                ok = True; why = "chart %s drawn" % n["chart"]
+            elif n["level"] == 3:
+                pg.click('[data-step="%s"]' % w); ok = pg.locator("#%s li" % w).nth(1).is_visible(); why = "second step revealed"
+            elif n["level"] == 1:
+                card = pg.locator("#%s .ovcard" % w).first; sub = card.get_attribute("data-sub"); card.click(); pg.wait_for_timeout(200)
+                ok = pg.locator('[data-subpane="%s"]' % sub).is_visible() and pg.locator("#%s .ovcard" % w).count() == len([m for m in nodes if m["parent"] == n["id"]]); why = "overview card opens its sub-subject"
+            else:
+                leaves = [m["id"] for m in nodes if m["parent"] == n["id"]]
+                ok = pg.locator("#%s > section.leaf" % w).count() == len(leaves) and pg.locator("#%s" % w).is_visible(); why = "grid shows its %d concepts" % len(leaves)
+        except Exception as e:
+            ok, why = False, "%s: %s" % (type(e).__name__, str(e)[:100])
+        R["widgets"][w] = {"passed": ok, "detail": why}
+    ios = [n for n in nodes if "io" in n]
+    feat("edited code really runs: every example re-run after editing prints the new result", all(R["widgets"]["w-" + n["id"]]["passed"] for n in ios), "%d examples" % len(ios))
+    view("play"); pg.fill("#pcode", "x = 7\nx * 6"); pg.click("#prun")
+    pg.wait_for_function("()=>document.getElementById('pout').textContent!=='running...'", timeout=60000); free = pg.text_content("#pout")
+    feat("playground runs code typed from scratch", free == "42", repr(free))
+    # agents answer from their own slice: different questions, different answers
+    a = max(d["agents"], key=lambda x: len(x["covers"])); view("agents")
+    pg.click('[data-agenttab="%s"]' % a["id"])
+    q1 = [n for n in nodes if n["id"] == a["covers"][0]][0]["label"]; q2 = [n for n in nodes if n["id"] == a["covers"][-2]][0]["label"] if len(a["covers"]) > 2 else a["covers"][-1]
+    def ask(q):
+        before = pg.locator("#%s-log .msg" % a["id"]).count(); pg.fill("#%s-q" % a["id"], q); pg.click('[data-ask="%s"]' % a["id"])
+        pg.wait_for_function("([id,n])=>{const m=document.querySelectorAll('#'+id+'-log .msg');return m.length>=n+2&&!m[m.length-1].classList.contains('typing')}", arg=[a["id"], before], timeout=240000)
+        return pg.locator("#%s-log .msg" % a["id"]).last.text_content()
+    ans1, ans2 = ask("what is " + q1.lower()), ask("what is " + q2.lower() + " used for in a program?"); ans3 = ask("how do I bake bread")
+    feat("agents answer from their own slice; different questions get different answers", ans1 != ans2 and len(ans1) > 40 and len(ans2) > 40 and ("Nothing in the book, course or chapter material answers that" in ans3),
+         "%s | %s | %s" % (ans1[:60], ans2[:60], ans3[:60]))
+    st = pg.text_content(".kitstat"); kinds = pg.evaluate("()=>[...new Set(KIT.chunks.map(c=>c.kind))].sort()")
+    files = pg.evaluate("()=>document.querySelectorAll('script[data-kind]').length")
+    how = pg.locator("#%s-log .msg details pre" % a["id"]).first.text_content(); cites = pg.locator("#%s-log .msg .src" % a["id"]).count()
+    feat("agents search a knowledge graph of the book, course and chapter ontologies, the research record and this page", "Knowledge graph: ready" in st and ("from %d files" % files) in st and kinds == ["book", "chapter", "course", "page", "research"], st + " | kinds " + ",".join(kinds))
+    feat("agents rank by meaning (sentence embeddings) and show how they found the answer", "Semantic search: ready" in st and "SPARQL" in how and "rows:" in how and cites > 0, "%d cited passages" % cites)
+    q_out = pg.evaluate("async(id)=>{const a=D.agents.find(x=>x.id===id);const r=await rank(a,'which course learning outcome is about choosing libraries?',8);return r.top.map(x=>x.c.label).join(' | ')}", a["id"])
+    feat("a course question reaches the course ontology", "LO-1" in q_out, q_out[:150])
+    pg.click("#llmbtn"); pg.wait_for_timeout(1500); llm = pg.text_content(".kitstat").split("Live LLM:")[1].strip()
+    feat("live LLM is capability-checked; without WebGPU the agents keep working and say so", llm.startswith("unavailable") or llm.startswith("ready") or llm.startswith("downloading"), llm[:90])
+    lt = pg.evaluate("window.__lt"); R["gates"]["longest main-thread task (ms)"] = max(lt or [0])
+    feat("no main-thread task over 200 ms through the whole session (graph, embeddings, Python, agents)", max(lt or [0]) <= 200, "longest %d ms over %d long tasks" % (max(lt or [0]), len(lt)))
+    view("play"); pg.fill("#pcode", "while True:\n    pass"); t0 = time.time(); pg.click("#prun"); pg.wait_for_timeout(1500)
+    t1 = time.time(); view("glossary"); responsive = (time.time() - t1) < 1.0 and pg.locator('[data-pane="glossary"]').is_visible()
+    view("play"); pg.wait_for_function("()=>document.getElementById('pout').textContent.startsWith('Stopped after')", timeout=40000); stopped_in = time.time() - t0
+    pg.fill("#pcode", "6 * 7"); pg.click("#prun"); pg.wait_for_function("()=>document.getElementById('pout').textContent==='42'", timeout=90000)
+    feat("an endless program is stopped; the page stays responsive while it runs; Python works again after", responsive, "stopped after %.0f s; menu answered during the loop; fresh Python printed 42" % stopped_in)
+    # ---- the conversation view ----
+    view("agents"); pg.wait_for_timeout(200)
+    roster = pg.locator(".roster .persona"); icons = [roster.nth(k).locator(".av").text_content() for k in range(roster.count())]
+    feat("agents are listed like people: role icons, what each knows, a guide first", roster.count() == len(d["agents"]) + 1 and icons[0] == "🧭" and "🤖" not in icons and all(pg.locator('[data-agenttab="%s"] small' % x["id"]).text_content().startswith("Ask me about") for x in d["agents"]), " ".join(icons))
+    pg.click('[data-agenttab="guide"]'); gl = pg.locator("#guide-log .msg").count(); pg.fill("#guide-q", "why does 2 + 3 * 6 give 20 and not 30?" if NUM == "01" else "does 42 equal the string '42'?"); pg.press("#guide-q", "Enter")
+    pg.wait_for_function("n=>{const m=document.querySelectorAll('#guide-log .msg');return m.length>=n+2&&!m[m.length-1].classList.contains('typing')}", arg=gl, timeout=120000)
+    sugg = [pg.locator("#guide-log .msg").last.locator("[data-handoff]").nth(k).get_attribute("data-handoff") for k in range(pg.locator("#guide-log .msg").last.locator("[data-handoff]").count())]
+    target = "agent-ArithmeticOperation" if NUM == "01" else "agent-EqualityComparison"
+    pg.locator('#guide-log .msg').last.locator('[data-handoff="%s"]' % target).click()
+    pg.wait_for_function("id=>{const m=document.querySelectorAll('#'+id+'-log .msg');return m.length>=3&&!m[m.length-1].classList.contains('typing')}", arg=target, timeout=120000)
+    feat("the guide introduces the right agent and hands the question over", target in sugg and pg.locator('[data-conv="%s"]' % target).is_visible(), "suggested: " + ", ".join(sugg))
+    def say(q):
+        n = pg.locator("#%s-log .msg" % target).count(); pg.fill("#%s-q" % target, q); pg.press("#%s-q" % target, "Enter")
+        pg.wait_for_function("([id,n])=>{const m=document.querySelectorAll('#'+id+'-log .msg');return m.length>=n+2&&!m[m.length-1].classList.contains('typing')}", arg=[target, n], timeout=120000)
+        return pg.locator("#%s-log .msg" % target).last.inner_text()
+    root = "what does floor division do?" if NUM == "01" else "what does the equality operator compare?"
+    r1 = say(root); r2 = say("can you give me an example?"); r3 = say("and why?")
+    feat("follow-up questions are answered in the context of the conversation", ('Following on from "%s"' % root) in r2 and ('Following on from "%s"' % root) in r3 and "For example:" in r2, r2[:90].replace("\n", " "))
+    kept = pg.locator("#%s-log .msg" % target).count(); pg.reload(); view("agents"); pg.wait_for_timeout(400)
+    feat("conversations are remembered across a reload", pg.locator("#%s-log .msg" % target).count() == kept and pg.locator('[data-conv="%s"]' % target).is_visible(), "%d messages kept" % kept)
+    pg.click('[data-newconv="%s"]' % target); feat("a new conversation starts clean", pg.locator("#%s-log .msg" % target).count() == 1)
+    # ---- the fit-gap views ----
+    view("howto"); howto = pg.text_content('[data-pane="howto"] .prose')
+    view("arch"); arch_rows = pg.locator('#archout table').last.locator("tr").count() - 1
+    view("mission"); pg.wait_for_function("()=>!document.getElementById('missionout').textContent.includes('reading the course ontology')", timeout=60000); mission = pg.text_content("#missionout")
+    view("prov"); limits = pg.locator("#provout ul li").count()
+    feat("About: how it works, agents & tools with the corpus, mission & backlog with course outcomes, provenance & known limits", len(howto) > 400 and arch_rows == files and "Mission" in mission and "LO-1" in mission and limits >= 4, "corpus rows %d, limits %d" % (arch_rows, limits))
+    view("sparql"); pg.click("#sqrun"); pg.wait_for_function("()=>/result/.test(document.getElementById('sqstat').textContent)||document.querySelector('#sqres .err')", timeout=60000)
+    rows = pg.locator("#sqres tr").count() - 1
+    with pg.expect_download() as dl: pg.click("#sqcsv")
+    csv_name = dl.value.suggested_filename
+    pg.select_option("#sqsamp", "5"); pg.click("#sqload"); pg.click("#sqrun"); pg.wait_for_function("()=>/result/.test(document.getElementById('sqstat').textContent)", timeout=60000); ask_ans = pg.text_content("#sqres")
+    feat("SPARQL console: editable queries over the knowledge graph, results table, CSV download, ASK", rows > 5 and csv_name.endswith(".csv") and ask_ans.strip() in ("Yes", "No"), "%d rows; ASK -> %s" % (rows, ask_ans.strip()))
+    view("ontograph"); pg.wait_for_function("()=>document.querySelectorAll('#onto g.on').length>0", timeout=60000)
+    n_all = pg.locator("#onto g.on").count(); pg.uncheck('[data-okind="individual"]'); n_cls = pg.locator("#onto g.on").count(); pg.check('[data-okind="individual"]')
+    pg.click("#orelayout"); pg.wait_for_timeout(2500); pg.click("#ofit"); first = pg.locator("#onto g.on").first; first.click(); info = pg.text_content("#ontoinfo")
+    feat("ontology graph: classes, individuals and book concepts from the graph, filter, re-layout, fit, node detail", n_all > 20 and 0 < n_cls < n_all and len(info) > 20, "%d nodes (%d without individuals)" % (n_all, n_cls))
+    view("play"); pg.fill("#pcode", "print('hello')")
+    with pg.expect_download() as dl2: pg.click('[data-dl="pcode"]')
+    code_dl = dl2.value.suggested_filename
+    view("mydata")
+    with pg.expect_download() as dl3: pg.click("#dlconvmd")
+    conv_path = dl3.value.path(); conv_md = open(conv_path).read()
+    feat("downloads: playground code, SPARQL results, conversations", code_dl == "playground.py" and conv_md.startswith("# Conversations") and pg.locator("#mydataout tr").count() >= 1, "%s; conversations file %d bytes" % (code_dl, len(conv_md)))
+    view("browse"); chips = pg.locator("#browse [data-browseq]"); nchips = chips.count(); qtext = chips.first.text_content(); target_b = chips.first.get_attribute("data-browseq")
+    nb = pg.locator("#%s-log .msg" % target_b).count(); chips.first.click()
+    pg.wait_for_function("([id,n])=>{const m=document.querySelectorAll('#'+id+'-log .msg');return m.length>=n+2&&!m[m.length-1].classList.contains('typing')}", arg=[target_b, nb], timeout=120000)
+    feat("browse questions by subject; choosing one asks the right agent", nchips > 10 and pg.locator('[data-conv="%s"]' % target_b).is_visible(), "%d questions; '%s' went to %s" % (nchips, qtext, target_b))
+    view("expert"); pg.click('[data-role="data analyst"]'); pg.wait_for_function("()=>document.querySelectorAll('#exout [data-expertq]').length>0", timeout=60000); ne = pg.locator("#exout [data-expertq]").count()
+    eqt = pg.locator("#exout [data-expertq]").first.text_content(); pg.locator("#exout [data-expertq]").first.click()
+    pg.wait_for_function("q=>{const c=document.querySelector('.conv:not([hidden])');if(!c)return false;const m=c.querySelectorAll('.msg');return m.length>=3&&!m[m.length-1].classList.contains('typing')&&[...c.querySelectorAll('.msg.me')].some(x=>x.textContent===q)}", arg=eqt, timeout=120000)
+    feat("expert questions for a role; choosing one asks the best-fitting agent", ne >= 5 and "data analyst" in eqt, "%d questions, e.g. %s" % (ne, eqt))
+    view("checks"); pg.click("#ckrun"); pg.wait_for_function("()=>/checks pass/.test(document.getElementById('ckstat').textContent)", timeout=240000); ck = pg.text_content("#ckstat")
+    a_, b_ = [int(x) for x in ck.split(" checks")[0].split(" of ")]
+    feat("built-in checks: every stored example re-run, agents' citations, an off-topic refusal - all pass in the page", a_ == b_ and b_ > 10, ck)
+    view("codelab"); pg.select_option("#clsnip", "1"); pg.click("#clload"); pg.click("#clrun"); pg.wait_for_function("()=>{const t=document.getElementById('clout').textContent;return t&&t!=='running...'}", timeout=120000)
+    cl = pg.text_content("#clout"); n_io = len([n for n in nodes if "io" in n])
+    feat("Code Lab: Python over this page's own data re-runs every example", cl.count("same |") == n_io and "DIFFERENT" not in cl, "%d of %d examples the same" % (cl.count("same |"), n_io))
+    # ---- version 8 ----
+    view(tops[0]["id"]); pg.click('[data-pane="%s"] [data-sub="ov-%s"]' % (tops[0]["id"], tops[0]["id"]))
+    dup = pg.evaluate("()=>[...document.querySelectorAll('[data-pane]')].filter(p=>byId[p.dataset.pane]&&byId[p.dataset.pane].level===1).reduce((a,p)=>a+p.querySelectorAll('.chip').length,0)")
+    feat("subject screens carry no repeated lists: an overview sub-tab, one-sentence sub-subject headers", dup == 0 and pg.locator('[data-pane="%s"] .ovcard' % tops[0]["id"]).count() > 0 and pg.locator("details.more").count() == len([n for n in nodes if n["level"] == 2]), "0 duplicate chip rows")
+    view("taxonomy"); tx = pg.evaluate("()=>{const g=[...document.querySelectorAll('#taxo g.n')];return {svgs:document.querySelectorAll('#taxo svg').length,boxes:g.length,root:document.querySelectorAll('#taxo g.n.root').length,overflow:g.filter(x=>x.querySelector('text').getBBox().width>x.querySelector('rect').getBBox().width+0.5).length}}")
+    feat("one taxonomy tree rooted at the chapter, every label inside its box", tx["svgs"] == 1 and tx["root"] == 1 and tx["boxes"] == len(nodes) + 1 and tx["overflow"] == 0, str(tx))
+    helps = pg.evaluate("()=>[...document.querySelectorAll('details.help')].map(d=>d.open)")
+    feat("view introductions are folded until asked for", len(helps) >= 8 and not any(helps), "%d folded" % len(helps))
+    zooms = []
+    for k, sel in (("taxonomy", "#taxo"), ("map", "#graph"), ("ontograph", "#onto")):
+        view(k)
+        if k == "ontograph": pg.wait_for_function("()=>document.querySelector('#onto svg')", timeout=60000)
+        v0 = pg.get_attribute("%s svg" % sel, "viewBox"); pg.click('%s [data-z="in"]' % sel); v1 = pg.get_attribute("%s svg" % sel, "viewBox"); pg.click('%s [data-z="reset"]' % sel); v2 = pg.get_attribute("%s svg" % sel, "viewBox")
+        zooms.append(v1 != v0 and v2 == v0)
+    pg.evaluate("goTo('%s')" % [n for n in nodes if "io" in n][0]["id"]); pg.click('[data-diagram="%s"]' % [n for n in nodes if "io" in n][0]["id"])
+    zooms.append(pg.locator('#w-%s-diagram .zbar' % [n for n in nodes if "io" in n][0]["id"]).count() == 1)
+    feat("zoom in, zoom out and show-all on every diagram (taxonomy, concept map, ontology graph, parse trees)", all(zooms), str(zooms))
+    # ---- version 9: visualisations ----
+    evs = [n for n in nodes if "io" in n and len(n["io"].get("steps", [])) > 1]
+    ok_ev = True
+    for n in evs:
+        pg.evaluate("goTo('%s')" % n["id"]); pg.click('[data-evtoggle="%s"]' % n["id"])
+        for st in n["io"]["steps"]:
+            ok_ev &= st["value"] in pg.text_content("#ev-%s" % n["id"]); pg.click('[data-evnext="%s"]' % n["id"])
+        ok_ev &= pg.text_content("#ev-%s" % n["id"]) == n["io"]["out"]
+    feat("evaluation steps: each example replays Python's own reduction, one operation at a time, ending on the stored result", ok_ev and len(evs) >= 1, "%d multi-step examples" % len(evs))
+    view("trace"); pg.fill("#trcode", "total = 0\nfor n in range(1, 5):\n    total = total + n\nprint(total)"); pg.click("#trgo")
+    pg.wait_for_function("()=>/steps/.test(document.getElementById('trstat').textContent)", timeout=120000); nsteps = int(pg.text_content("#trstat").split()[0])
+    pg.click("#trfirst"); [pg.click("#trnext") for _ in range(nsteps - 1)]; last_out = pg.text_content("#trout").strip(); tot = [r for r in pg.locator("#trvars tr").all_inner_texts() if r.startswith("total")]
+    feat("step through: Python's line tracer records every line, the variables after it and the output", nsteps > 8 and last_out == "10" and tot and "10" in tot[0], "%d steps, output %s" % (nsteps, last_out))
+    view("pipeline"); pg.fill("#ppcode", "x = 2 + 3 * 6\nprint(x)"); pg.click("#ppgo"); pg.wait_for_function("()=>document.querySelector('#ppout pre')", timeout=120000)
+    pg.click('[data-stage="1"]'); ntok = pg.locator("#ppout .tok").count(); pg.click('[data-stage="2"]'); tree_ok = pg.locator("#ppout svg g.n").count() > 5; pg.click('[data-stage="3"]'); nbc = pg.locator("#ppout tr").count() - 1; pg.click('[data-stage="4"]'); res = pg.text_content("#ppout pre").strip()
+    feat("code pipeline: source, tokens, syntax tree, bytecode and result, each from Python's own modules", ntok == 11 and tree_ok and nbc > 3 and res == "20", "%d tokens, %d instructions, result %s" % (ntok, nbc, res))
+    vis_ok = []
+    for cid, v in d.get("visuals", {}).items():
+        w = "wv-" + cid; pg.evaluate("goTo('%s')" % cid); pg.click('[data-vistoggle="%s"]' % cid); ok = False; why = ""
+        try:
+            if v["kind"] == "floatbits":
+                pg.wait_for_function("id=>document.querySelector('#'+id+'-out .bits')", arg=w, timeout=120000); bits = pg.text_content("#%s-out .bits" % w).strip()
+                import struct; x = float(eval(v["start"])); ok = bits == format(struct.unpack(">Q", struct.pack(">d", x))[0], "064b"); why = "64 bits match the build interpreter's"
+            if v["kind"] == "truthtable":
+                pg.wait_for_function("id=>document.querySelector('#'+id+'-out table')", arg=w, timeout=120000); rows = pg.locator("#%s-out tr" % w).count() - 1
+                names = sorted(set(__import__("re").findall(r"\b[abc]\b", v["start"]))); ok = rows == 2 ** len(names); why = "%d rows for %d inputs" % (rows, len(names))
+            if v["kind"] == "branchflow":
+                pg.wait_for_function("id=>/Output/.test(document.getElementById(id+'-out').textContent)", arg=w, timeout=120000); first = pg.text_content("#%s-out" % w)
+                pg.fill("#%s-x" % w, "8"); pg.click('[data-vis="%s"]' % cid); pg.wait_for_function("id=>/child ticket/.test(document.getElementById(id+'-out').textContent)", arg=w, timeout=60000)
+                ok = ("adult ticket" in first or "senior ticket" in first) and pg.locator("#%s-src .tl.now" % w).count() >= 3; why = "path follows the input: %s then child ticket" % ("adult" if "adult" in first else "senior")
+        except Exception as e:
+            why = "%s: %s" % (type(e).__name__, str(e)[:80])
+        R["widgets"][w] = {"passed": ok, "detail": why}; vis_ok.append(ok)
+    feat("chapter visualisations: float bits, truth tables, branch paths - each computed by Python", all(vis_ok), "%d of %d" % (sum(vis_ok), len(vis_ok)))
+    view("taxonomy"); v0 = pg.get_attribute("#taxo svg", "viewBox"); pg.hover("#taxo svg"); pg.mouse.wheel(0, -300); pg.wait_for_timeout(200); v1 = pg.get_attribute("#taxo svg", "viewBox")
+    feat("the mouse wheel zooms diagrams, without a key held", v1 != v0, "viewBox changed on wheel")
+    lt2 = pg.evaluate("window.__lt"); feat("no main-thread task over 200 ms, including the ontology layout", max(lt2 or [0]) <= 200, "longest %d ms" % max(lt2 or [0]))
+    view("quiz"); fs = pg.locator("fieldset"); qok = True
+    for k in range(fs.count()):
+        f = fs.nth(k); f.locator("input").nth(int(f.get_attribute("data-answer"))).check(); f.locator("button").click(); qok &= pg.text_content("#q%d-fb" % k) == "Correct."
+    feat("quiz", qok)
+    R["gates"]["Stage4.C console errors"] = errors
+    R["gates"]["Stage4.D dialogs"] = pg.locator('[role="dialog"],dialog').count()
+    R["gates"]["Stage4.E sections"] = pg.locator("section[data-source]").count()
+    m = ctx.new_page(); m.set_viewport_size({"width": 390, "height": 844}); m.goto("file://" + page_path)
+    R["gates"]["Stage4.F top menu visible on mobile without clicks"] = m.locator("#groups button").first.is_visible()
+    view("intro"); pg.add_script_tag(path=AXE)
+    R["gates"]["WCAG 2 AA (axe-core)"] = pg.evaluate("async()=>{const r=await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa']}});return r.violations.map(v=>[v.id,v.impact,v.nodes.length])}")
+    b.close()
+json.dump(R, open(os.environ.get("RESULTS", os.path.join(REPO, "08-tooling", "%s-page" % N, "test_results_v%s.json" % PV)), "w"), indent=1)
+bad = [k for k, v in R["widgets"].items() if not v["passed"]]
+print("widgets: %d tested, %d passed; failing: %s" % (len(R["widgets"]), len(R["widgets"]) - len(bad), [(k, R["widgets"][k]["detail"][:120]) for k in bad[:3]]))
+for k, v in R["features"].items(): print("  [%s] %s  %s" % ("PASS" if v["passed"] else "FAIL", k, v["detail"][:150]))
+for k, v in R["gates"].items(): print("  %-52s %s" % (k, v))
