@@ -66,6 +66,6 @@ for w in rec["widgets"]:
         L.append('    mp:numericModelStatus mp:Validated ; mp:hasValidationDerivation "Every value the widget reveals was produced by executing the expression under %s at build time, not typed" ; mp:hasConformanceTest "The browser design test requires the revealed value to equal the executed one" ;' % rec["python"])
     L.append('    wp:instantiatesPrimitive wp:%s ; ds:selectionWarrant "%s" ;' % (w["prim"], q(w["warrant"])))
     L.append('    wp:demonstratesConcept <%s> ; dcterms:source <%s> ;' % (w["cls"], w["cls"].replace("#", "/document#S_") if False else "%s/document" % BASE))
-    L.append('    wp:hasDesignTest "Exercised in headless Chromium by 08-tooling/sen0414_page_test_v1_0_0.py: %s" ; wp:designTestPassed %s .' % (q(r["detail"]), "true" if r["passed"] else "false"))
+    L.append('    wp:hasDesignTest "Exercised in headless Chromium by 08-tooling/sen0414_page_test_v2_0_0.py: %s" ; wp:designTestPassed %s .' % (q(r["detail"]), "true" if r["passed"] else "false"))
 open(os.path.join(REPO, "03-materials", "ch%s" % N, "page", "sen0414_ch%s_page_abox_v1_0_0.ttl" % N), "w").write("\n".join(L) + "\n")
 print("page ABox written: %d sections, %d widgets (%d marked tested)" % (len(rec["sections"]), len(rec["widgets"]), sum(1 for w in rec["widgets"] if tr["widgets"][w["id"]]["passed"])))

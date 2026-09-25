@@ -133,6 +133,12 @@ ex:Iter_1 a backlog:Iteration ; rdfs:label "First iteration: chapters 1 and 2, b
 
 
 FEEDBACK = """
+ex:Finding_ChapterAboxTestName a backlog:RetrospectiveFinding ;
+    rdfs:label "The version 2 pages' ABoxes named the version 1 test script"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRemedy "The ABox builder now names 08-tooling/sen0414_page_test_v2_0_0.py, the script that ran every version 2 test; both pages' ABoxes re-issued as v2.0.1 with nothing else changed, and the materials record points at them." ;
+    backlog:hasRootCause "Found in SEN0401, whose tooling was forked from here: regression-checking it showed each widget's design test attributed to the version 1 page test script. The same was true here - SEN0414's version 2 pages were tested by sen0414_page_test_v2_0_0.py, but their ABoxes named sen0414_page_test_v1_0_0.py." .
+
 ex:Refine3_Page_Ch01 a backlog:RefinementEvent ; rdfs:label "Chapter 1 page re-refined on the owner's review"@en ;
     backlog:refines ex:ST_Page_Ch01 ; backlog:addressesConcern backlog:Concern_Data ; backlog:refinedAt "2026-09-24T22:05:38"^^xsd:dateTime ;
     backlog:refinedBy backlog:Owner ; backlog:groomsForIteration ex:Iter_1 ;
