@@ -133,6 +133,12 @@ ex:Iter_1 a backlog:Iteration ; rdfs:label "First iteration: chapters 1 and 2, b
 
 
 FEEDBACK = """
+ex:Finding_WebLLMImportPath a backlog:RetrospectiveFinding ;
+    rdfs:label "The live LLM failed to load for the owner: its import went through an unpinned redirect"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner reported the chapter 1 page's status line: knowledge graph and semantic search ready, live LLM failed - it could not fetch https://esm.run/@mlc-ai/web-llm. The page imported WebLLM through esm.run, as RDODI's template does; esm.run is not a host of its own but an unpinned redirect to cdn.jsdelivr.net. The graph and embedding libraries, loaded from cdn.jsdelivr.net directly, succeeded in the same browser, so the failure was the redirect host, not the network. Checked the same day: every embedded corpus file matches its declared hash, and every URL the page loads from - Brython, Oxigraph, transformers.js and its model, WebLLM and both model variants' weights and libraries - answered." ;
+    backlog:hasRemedy "WebLLM is imported from cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm, pinned, and the model variant is chosen from the GPU's features - the 16-bit build only where the adapter supports shader-f16, otherwise the 32-bit build - both listed in that version's own model table. Pages re-issued as v4.0.1; at 2026-09-25T12:06:20 every version 4 check passed again on both, with the import proven to resolve and expose the engine in a browser. Generation itself remains unverifiable here for want of a WebGPU adapter. RDODI's template imports the same way and should be told." .
+
 ex:Finding_AgentsOnRdodiToolkit a backlog:RetrospectiveFinding ;
     rdfs:label "The chapter pages' agents moved onto RDODI's default toolkit"@en ;
     backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;

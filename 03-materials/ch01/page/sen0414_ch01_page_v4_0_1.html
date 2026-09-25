@@ -168,7 +168,10 @@ const STOP=new Set('what why how is the a an of to in and or does do it i can yo
 const STEM=w=>w.length<=4?w:w.endsWith('ies')?w.slice(0,-3)+'y':w.replace(/(ing|ed|es|s)$/,'');
 const toks=t=>(String(t).toLowerCase().match(/[a-z0-9]+/g)||[]).filter(w=>!STOP.has(w)).map(STEM);
 const KIT={ox:null,graph:null,chunks:null,embed:null,vecs:null,llm:null,state:{graph:'not loaded',embed:'not loaded',llm:'off'}};
-const WEBLLM_MODEL='SmolLM2-360M-Instruct-q4f16_1-MLC', WEBLLM_GEN_CONFIG={temperature:0.3,max_tokens:350,repetition_penalty:1.3};
+// Pinned to jsdelivr's npm path: esm.run is an unpinned redirect to the same file, and a page whose script policy allows
+// cdn.jsdelivr.net but not esm.run - as in the owner's failure of 2026-09-25 - cannot follow it.
+const WEBLLM_URL='https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm';
+const WEBLLM_MODEL_F16='SmolLM2-360M-Instruct-q4f16_1-MLC', WEBLLM_MODEL_F32='SmolLM2-360M-Instruct-q4f32_1-MLC', WEBLLM_GEN_CONFIG={temperature:0.3,max_tokens:350,repetition_penalty:1.3};
 function kitStatus(){document.querySelectorAll('.kitstat').forEach(e=>e.textContent='Knowledge graph: '+KIT.state.graph+' · Semantic search: '+KIT.state.embed+' · Live LLM: '+KIT.state.llm)}
 const KIND_LABEL={book:'Book',course:'Course',chapter:'Chapter ontology',research:'Research',page:'This page'};
 async function ensureGraph(){if(KIT.graph)return KIT.graph;KIT.state.graph='loading (Oxigraph, about 2 MB)';kitStatus();
@@ -223,7 +226,7 @@ async function ask(aid){const a=D.agents.find(x=>x.id===aid),inp=document.getEle
   holder.innerHTML=esc(a.name)+': '+(text?esc(text):composedAnswer(a,q,top))+' <span class="note">('+by+')</span>'+sourcesHtml(top,how)}
  catch(e){holder.innerHTML=esc(a.name)+': the tools could not load ('+esc(e.message||'error')+').'}log.scrollTop=1e9}
 async function enableLLM(){const b=document.getElementById('llmbtn');let adapter=null;try{adapter=navigator.gpu&&await navigator.gpu.requestAdapter()}catch(e){}if(!adapter){KIT.state.llm='unavailable - this browser has no WebGPU; answers use the knowledge graph and semantic search';kitStatus();if(b)b.disabled=true;return}
- KIT.state.llm='loading';kitStatus();if(b)b.disabled=true;try{const webllm=await import('https://esm.run/@mlc-ai/web-llm');KIT.llm=await webllm.CreateMLCEngine(WEBLLM_MODEL,{initProgressCallback:p=>{KIT.state.llm='downloading model '+Math.round((p.progress||0)*100)+'%';kitStatus()}});KIT.state.llm='ready (SmolLM2-360M, fully local)';kitStatus()}catch(e){KIT.state.llm='failed to load ('+(e.message||'error')+')';kitStatus();if(b)b.disabled=false}}
+ KIT.state.llm='loading';kitStatus();if(b)b.disabled=true;try{const webllm=await import(WEBLLM_URL);const model=adapter.features&&adapter.features.has('shader-f16')?WEBLLM_MODEL_F16:WEBLLM_MODEL_F32;KIT.llm=await webllm.CreateMLCEngine(model,{initProgressCallback:p=>{KIT.state.llm='downloading model '+Math.round((p.progress||0)*100)+'%';kitStatus()}});KIT.state.llm='ready ('+model+', fully local)';kitStatus()}catch(e){KIT.state.llm='failed to load ('+(e.message||'error')+')';kitStatus();if(b)b.disabled=false}}
 // ---------- one delegated handler for clicks, context menus and tooltips ----------
 const ctx=document.getElementById('ctx'),tip=document.getElementById('tip');
 document.addEventListener('click',async e=>{const t=e.target;if(!ctx.hidden&&!ctx.contains(t))ctx.hidden=true;
@@ -1323,7 +1326,7 @@ sen0414:TextbookOntology a cme:PinnedReference ;
     cme:pinnedTag "automate-python-book-3e-v0.20.0" ; cme:pinnedCommit "89f68596c1fb713a14ba77e8df3858b6bae2d762" ;
     cme:whyNotHere "Its lineage holds invented timestamps and 106 items still Proposed for work that was done; the package fails today's lineage rules and cannot be published until that history is resolved by BRSF's conventions - appended corrections, retroactive closures with their basis stated, and the pre-plan extraction handled as a bypass. The owner ruled on 2026-09-24 to register SEN0414 with this pinned reference and move the ontology after." .
 </script>
-<script type="text/turtle" data-kind="course" data-name="sen0414_materials_v1_0_0.ttl" data-sha256="01f781551d003d80">@prefix schema:  <https://schema.org/> .
+<script type="text/turtle" data-kind="course" data-name="sen0414_materials_v1_0_0.ttl" data-sha256="7bbc6477140b0cda">@prefix schema:  <https://schema.org/> .
 @prefix cme:     <http://example.org/cme#> .
 @prefix sen0414: <http://example.org/sen0414#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
@@ -1382,13 +1385,13 @@ sen0414:Doc_Ch01 a schema:LearningResource ; dcterms:title "Python basics for an
     dcterms:format "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ;
     cme:fileInPart "03-materials/ch01/rdodi/sen0414_ch01_document_v1_0_1.docx" ;
     dcterms:source "03-materials/ch01/rdodi/sen0414_ch01_document_v1_0_1.ttl" .
-sen0414:Page_Ch01 a schema:LearningResource ; dcterms:title "Chapter 1 interactive page, version 3" ;
-    dcterms:format "text/html" ; cme:fileInPart "03-materials/ch01/page/sen0414_ch01_page_v3_0_0.html" ;
+sen0414:Page_Ch01 a schema:LearningResource ; dcterms:title "Chapter 1 interactive page, version 4" ;
+    dcterms:format "text/html" ; cme:fileInPart "03-materials/ch01/page/sen0414_ch01_page_v4_0_0.html" ;
     cme:servesOutcome sen0414:LO1, sen0414:LO4 ;
-    dcterms:source "03-materials/ch01/page/sen0414_ch01_page_abox_v3_0_0.ttl" .
-sen0414:Page_Ch02 a schema:LearningResource ; dcterms:title "Chapter 2 interactive page, version 3" ;
-    dcterms:format "text/html" ; cme:fileInPart "03-materials/ch02/page/sen0414_ch02_page_v3_0_0.html" ;
-    dcterms:source "03-materials/ch02/page/sen0414_ch02_page_abox_v3_0_0.ttl" .
+    dcterms:source "03-materials/ch01/page/sen0414_ch01_page_abox_v4_0_0.ttl" .
+sen0414:Page_Ch02 a schema:LearningResource ; dcterms:title "Chapter 2 interactive page, version 4" ;
+    dcterms:format "text/html" ; cme:fileInPart "03-materials/ch02/page/sen0414_ch02_page_v4_0_0.html" ;
+    dcterms:source "03-materials/ch02/page/sen0414_ch02_page_abox_v4_0_0.ttl" .
 sen0414:Deck_Ch02_3e a schema:LearningResource ; dcterms:title "Chapter 2: if-else and Flow Control - renewed for the 3rd edition" ;
     dcterms:format "application/vnd.openxmlformats-officedocument.presentationml.presentation" ;
     cme:fileInPart "03-materials/ch02/SEN0414_Ch02_FlowControl_3e.pptx" ;

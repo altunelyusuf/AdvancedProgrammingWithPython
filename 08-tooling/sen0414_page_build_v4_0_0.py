@@ -30,6 +30,6 @@ for part, kind in (("domain_tbox", "chapter"), ("domain_abox", "chapter"), ("doc
 h = (T.replace("__TITLE__", d["title"]).replace("__COURSE__", d["course"]["line"]).replace("__SUB__", d["course"]["chapter_sub"].replace("{n}", str(d["chapter"])))
       .replace("__PY__", d["python"]).replace("__DATA__", safe(d)).replace("__QUIZ__", safe(json.load(open(os.path.join(P, "quiz.json")))))
       .replace("__OBJ__", safe(json.load(open(os.path.join(P, "objectives.json"))))).replace("__CORPUS__", "\n".join(blocks)))
-out = os.path.join(REPO, "03-materials", "ch%s" % N, "page", "sen0414_ch%s_page_v4_0_0.html" % N)
+out = os.path.join(REPO, "03-materials", "ch%s" % N, "page", "sen0414_ch%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "4_0_1")))
 open(out, "w").write(h); json.dump(log, open(os.path.join(P, "corpus_manifest.json"), "w"), indent=1)
 print("written", out, len(h), "bytes; corpus:", "; ".join(log))
