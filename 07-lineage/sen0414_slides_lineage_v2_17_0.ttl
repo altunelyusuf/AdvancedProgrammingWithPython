@@ -7,7 +7,7 @@
 
 <http://example.org/sen0414-slides-lineage> a owl:Ontology ;
     rdfs:label "Delivery lineage for renewing the SEN0414 lecture decks"@en ;
-    owl:versionInfo "2.16.0" ; dcterms:identifier "sen0414_slides_lineage" .
+    owl:versionInfo "2.17.0" ; dcterms:identifier "sen0414_slides_lineage" .
 
 ex:Lineage a backlog:Lineage ;
     rdfs:label "First lineage run for the SEN0414 decks"@en ;
@@ -1393,6 +1393,12 @@ ex:ST_Page_Threads a backlog:Story ; rdfs:label "Page: 2nd edition, chapter 17: 
     backlog:dependsOn ex:ST_Research_Threads ;
     backlog:hasState backlog:Proposed ;
     backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored when its own iteration is planned." .
+
+ex:Finding_AgentsOnRdodiToolkit a backlog:RetrospectiveFinding ;
+    rdfs:label "The chapter pages' agents moved onto RDODI's default toolkit"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner required the agents to consume the page's HTML corpus and the book and course ontologies through an in-page LLM library or tools, pointing to RDODI's template for the right ones. Version 3's agents read only their slice of the page data. RDODI's own interactive template, lcw_kb_interactive v0.109.0, uses Oxigraph 0.5.9 for SPARQL, transformers.js with all-MiniLM-L6-v2 for embeddings, and WebLLM with SmolLM2-360M for generation." ;
+    backlog:hasRemedy "Pages rebuilt as version 4 on that same toolkit, loaded the way the template loads it. Each page embeds, as Turtle with file names and hashes, the book's chapter ontology at the commit SEN0414's textbook part pins (automate-python-book-3e v0.20.0, 89f68596), the course ontology - profile, outcomes, textbook and materials - and the chapter's ontology, document and research record. On a question the agent loads them into Oxigraph, reads its own slice by SPARQL, ranks every passage from the book, course, chapter, research and the page's own text by meaning with its own slice favoured, and answers from the top passages with numbered citations and a 'how I found this' trace of the query and ranking. Generation uses WebLLM when the browser has WebGPU, Claude when the page is published on claude.ai, and the retrieved passages themselves otherwise. Off-topic questions are refused below a measured threshold: on this corpus off-topic questions scored 0.11 to 0.24 and on-topic ones 0.42 to 0.72, so 0.33. At 2026-09-25T11:31:42 every check in 08-tooling/sen0414_page_test_v4_0_0.py passed on both pages: all version 3 rules, every widget (33 and 32), a knowledge graph of 9 files (1,902 and 1,515 triples) with passages of all five kinds, semantic ranking with cited sources, a course question reaching the course's outcomes, and the WebGPU check; 0 console errors, 0 WCAG 2 AA violations; a stale-value fixture refused on each. Not verifiable here: WebLLM's own generation, because this sandbox's browser has no WebGPU adapter - the capability check and the fallback were verified, the same limit RDODI's template records." .
 
 ex:Finding_PagesV3OwnerRules a backlog:RetrospectiveFinding ;
     rdfs:label "Chapter 1 and 2 pages rebuilt to the owner's page rules"@en ;
