@@ -5,7 +5,7 @@ course ontology (profile, outcomes, textbook), and the chapter's RDODI ontology,
 Each block names its file and hash. Usage: sen0414_page_build_v4_0_0.py <NN>"""
 import glob, hashlib, json, os, re, subprocess, sys
 N = sys.argv[1]; REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); ONT = "/home/claude/Ontologies"
-T = open(os.path.join(REPO, "08-tooling", "course_page_template_v4_0_0.html")).read()
+T = open(os.path.join(REPO, "08-tooling", os.environ.get("PAGE_TEMPLATE", "course_page_template_v4_0_0.html"))).read()
 P = os.path.join(REPO, "08-tooling", "ch%s-page" % N)
 d = json.load(open(os.path.join(P, "page_data_v2.json"))); C = d["course"]["corpus"]
 safe = lambda o: json.dumps(o).replace("</", "<\\/")

@@ -7,7 +7,7 @@
 
 <http://example.org/sen0414-slides-lineage> a owl:Ontology ;
     rdfs:label "Delivery lineage for renewing the SEN0414 lecture decks"@en ;
-    owl:versionInfo "2.17.1" ; dcterms:identifier "sen0414_slides_lineage" .
+    owl:versionInfo "2.18.0" ; dcterms:identifier "sen0414_slides_lineage" .
 
 ex:Lineage a backlog:Lineage ;
     rdfs:label "First lineage run for the SEN0414 decks"@en ;
@@ -1393,6 +1393,12 @@ ex:ST_Page_Threads a backlog:Story ; rdfs:label "Page: 2nd edition, chapter 17: 
     backlog:dependsOn ex:ST_Research_Threads ;
     backlog:hasState backlog:Proposed ;
     backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored when its own iteration is planned." .
+
+ex:Finding_PageFreeze a backlog:RetrospectiveFinding ;
+    rdfs:label "The chapter pages froze the browser: heavy work ran on the page's own thread"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner reported the page freezing and the computer becoming unresponsive. Measured in Chromium before any change, on the version 4.0.1 page: the first agent question blocked the page's thread for 19.0 s in a single task - the 250 passages were embedded on that thread - Python's first run for 0.7 s and a 3-million-step program for 1.1 s, and an endless program would have blocked it for ever, with no way to stop it. The language model also loaded and generated on the page's thread; on a machine whose GPU also drives the display, WebGPU work of that size can starve the whole desktop, which fits a computer - not only a tab - going unresponsive, though that part could not be reproduced here without a GPU." ;
+    backlog:hasRemedy "Version 5 moves each kind of heavy work to its own Web Worker and leaves the page's thread only to send messages: Python runs as CPython (Pyodide) in a worker, and a program still running after 15 s is stopped by ending that worker, after which a fresh one starts; Oxigraph, the corpus, the embedding model and all ranking run in a second worker; the language model loads and generates in a third, through WebLLM's own worker engine. All three are classic workers, because a module worker built from a blob failed to start on a page opened as a file while a classic one could still load its library - both measured. Where workers are not allowed, the page falls back to its previous in-page behaviour. Measured after the change, same machine, same four operations: 0 ms of main-thread blocking in each. At 2026-09-25T13:31:49 every check in 08-tooling/sen0414_page_test_v5_0_0.py passed on both pages - every version 4 check, no main-thread task over 200 ms through the whole session, and an endless loop stopped at 15 s while the menu kept answering, with Python working again afterwards; 0 console errors; a stale-value fixture refused on each. Python now reports CPython 3.13.2, so error messages match standard Python again." .
 
 ex:Finding_WebLLMImportPath a backlog:RetrospectiveFinding ;
     rdfs:label "The live LLM failed to load for the owner: its import went through an unpinned redirect"@en ;
