@@ -27,6 +27,14 @@ RD = os.path.join(REPO, "03-materials", "ch%s" % N, "rdodi")
 for part, kind in (("domain_tbox", "chapter"), ("domain_abox", "chapter"), ("document", "chapter"), ("research", "research")):
     f = latest(os.path.join(RD, "sen0414_ch%s_%s_v*.ttl" % (N, part)))
     log.append(add(kind, os.path.basename(f), open(f).read()))
+# The course lineage's own mission, goals and objectives, read from the published register (About > Mission & backlog)
+import rdflib
+LG = rdflib.Graph(); LG.parse(latest(os.path.join(REPO, "07-lineage", "*.ttl")), format="turtle")
+BK = rdflib.Namespace("http://example.org/backlog#")
+mis = next(LG.subjects(rdflib.RDF.type, BK.Mission), None)
+d["mission"] = {"statement": str(LG.value(mis, BK.hasMissionStatement) or ""), "outcome": str(LG.value(mis, BK.hasMissionOutcome) or ""),
+                "goals": sorted(str(LG.value(g, rdflib.RDFS.label)) for g in LG.subjects(rdflib.RDF.type, BK.Goal)),
+                "objectives": sorted(str(LG.value(o, rdflib.RDFS.label)) for o in LG.subjects(rdflib.RDF.type, BK.Objective))}
 h = (T.replace("__TITLE__", d["title"]).replace("__COURSE__", d["course"]["line"]).replace("__SUB__", d["course"]["chapter_sub"].replace("{n}", str(d["chapter"])))
       .replace("__PY__", d["python"]).replace("__DATA__", safe(d)).replace("__QUIZ__", safe(json.load(open(os.path.join(P, "quiz.json")))))
       .replace("__OBJ__", safe(json.load(open(os.path.join(P, "objectives.json"))))).replace("__CORPUS__", "\n".join(blocks)))
