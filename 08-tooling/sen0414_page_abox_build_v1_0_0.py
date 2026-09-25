@@ -5,6 +5,7 @@ import json, os, sys
 N = sys.argv[1]; REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 rec = json.load(open(os.path.join(REPO, "08-tooling", "ch%s-page" % N, "build_record.json")))
 OBJ = json.load(open(os.path.join(REPO, "08-tooling", "ch%s-page" % N, "objectives.json")))
+SERVES = OBJ.pop("_serves", []); OBJ.pop("_note", None)  # metadata keys, not objectives - removed before anything reads OBJ
 tr = json.load(open(os.path.join(REPO, "08-tooling", "ch%s-page" % N, "test_results.json")))
 BASE = "http://example.org/sen0414/ch%s" % N
 q = lambda t: t.replace("\\", "\\\\").replace('"', "'")
@@ -47,7 +48,7 @@ pg:SourceDocument a ipo:SourceDocument ; rdfs:label "Chapter %d Stage 3 document
     ipo:hasLearningObjective %(cos)s .
 ''' .replace('%(cos)s', ', '.join('pg:' + k for k in OBJ)) % (BASE, BASE, int(N), N, N, int(N), BASE, len(rec["sections"]), rec["python"], int(N), BASE)]
 for k, (text, lvl) in OBJ.items():
-    L.append('pg:%s a ipo:LearningObjective, owl:NamedIndividual ; rdfs:label "%s"@en ; ld:bloomLevel ld:%s ; sen0414:servesOutcome <http://example.org/sen0414#LO1>, <http://example.org/sen0414#LO4> .' % (k, q(text), lvl))
+    L.append('pg:%s a ipo:LearningObjective, owl:NamedIndividual ; rdfs:label "%s"@en ; ld:bloomLevel ld:%s %s .' % (k, q(text), lvl, (' ; sen0414:servesOutcome ' + ', '.join('<http://example.org/sen0414#%s>' % o for o in SERVES)) if SERVES else ''))
 for n, it in enumerate(rec['quiz'], 1):
     opts = ', '.join('pg:Q%d_O%d' % (n, j) for j in range(len(it['options'])))
     L.append('pg:Q%d a ld:AssessmentItem, owl:NamedIndividual ; rdfs:label "%s"@en ; ld:hasOption %s ; ld:hasCorrectOption pg:Q%d_O%d ; ld:cognitiveLevel ld:%s ; ld:assessesObjective pg:%s ;' % (n, q(it['q']), opts, n, it['answer'], it['level'], it['objective']))

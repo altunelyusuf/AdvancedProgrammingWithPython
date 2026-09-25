@@ -11,7 +11,7 @@ PLANNED_AT = "2026-09-24T20:15:47"
 WSJF = {"Research": (13, 20, 13, 3), "Page": (13, 20, 5, 3), "Deck": (20, 20, 8, 5)}
 PLANNED = {1, 2}
 # Started items, at the clock time each began. The kick-off was declared by the owner.
-STARTED = {("Research", 1): "2026-09-24T20:26:42", ("Deck", 1): "2026-09-24T20:55:01", ("Research", 2): "2026-09-24T21:17:28", ("Page", 1): "2026-09-24T21:26:47"}
+STARTED = {("Research", 1): "2026-09-24T20:26:42", ("Deck", 1): "2026-09-24T20:55:01", ("Research", 2): "2026-09-24T21:17:28", ("Page", 1): "2026-09-24T21:26:47", ("Page", 2): "2026-09-25T00:16:20"}
 # Re-scoring after the latest completion (BP-D11), at the clock time it was done; components unchanged.
 RESCORED_AT = "2026-09-24T21:22:40"
 
