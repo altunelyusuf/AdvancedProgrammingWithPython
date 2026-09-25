@@ -11,16 +11,18 @@ PLANNED_AT = "2026-09-24T20:15:47"
 WSJF = {"Research": (13, 20, 13, 3), "Page": (13, 20, 5, 3), "Deck": (20, 20, 8, 5)}
 PLANNED = {1, 2}
 # Started items, at the clock time each began. The kick-off was declared by the owner.
-STARTED = {("Research", 1): "2026-09-24T20:26:42", ("Deck", 1): "2026-09-24T20:55:01", ("Research", 2): "2026-09-24T21:17:28", ("Page", 1): "2026-09-24T21:26:47", ("Page", 2): "2026-09-25T00:16:20"}
+STARTED = {("Research", 1): "2026-09-24T20:26:42", ("Deck", 1): "2026-09-24T20:55:01", ("Research", 2): "2026-09-24T21:17:28", ("Page", 1): "2026-09-24T21:26:47", ("Page", 2): "2026-09-25T00:16:20", ("Deck", 2): "2026-09-25T00:20:02"}
 # Re-scoring after the latest completion (BP-D11), at the clock time it was done; components unchanged.
-RESCORED_AT = "2026-09-24T21:22:40"
+RESCORED_AT = "2026-09-25T00:22:07"
 
 # Finished items and the evidence each closed on. Times from the clock or from commits only.
 DONE = {("Research", 1): {"finished": "2026-09-24T20:47:21", "closed": "2026-09-24T20:50:04", "release": "sen0414-v2.7.0 (e49e8f6)",
     "spec": "RDODI procedure v1.6.0, Stages 1-3 for chapter 1, gates run with RDODI's own validator functions where it has them: Stage1.A-B, Stage2.A and C, Stage3.A, B, E.cov, E.sub, F and src, all PASS; Stage1.C-E, Stage2.B (HermiT, consistent), D-H and Stage3.C, D, E (coverage 27/27), G and H run as direct checks because the validator does not implement them - all PASS."}, ("Deck", 1): {"finished": "2026-09-24T21:00:46", "closed": "2026-09-24T21:01:30", "release": "the release carrying 03-materials/ch01/SEN0414_Ch01_PythonBasics_3e.pptx",
     "spec": "08-tooling/ch01-deck/deck_check.py re-ran all 19 examples shown on the renewed deck under Python 3.14.4, one shell session per slide: 0 mismatches. The fixture fixture_stale.pptx - the same deck with 0.1 + 0.2 shown as 0.3 - was refused, naming slide 10. Slides built by deck.js, which takes every output from examples_out.json, produced by executing the examples rather than typing them. Rendered and inspected; four layout faults fixed before closing. The course still conforms to every CME shape with the new materials described."},
     ("Research", 2): {"finished": "2026-09-24T21:22:23", "closed": "2026-09-24T21:22:40", "release": "sen0414-v2.9.0 (b4b107b)",
-    "spec": "RDODI procedure v1.6.0, Stages 1-3 for chapter 2, built by the generic builder 08-tooling/sen0414_rdodi_build_v1_0_0.py from 08-tooling/sen0414_ch02_rdodi_data_v1_0_0.py, all gates PASS on the first run: Stage1.A-B, Stage2.A, C and H, Stage3.A, B, F, E.cov, E.sub and src with RDODI's own validator functions; Stage1.C-E, Stage2.B (HermiT consistent), D-G and Stage3.C-E (coverage 22/25 = 0.88), G and H as direct checks."}}
+    "spec": "RDODI procedure v1.6.0, Stages 1-3 for chapter 2, built by the generic builder 08-tooling/sen0414_rdodi_build_v1_0_0.py from 08-tooling/sen0414_ch02_rdodi_data_v1_0_0.py, all gates PASS on the first run: Stage1.A-B, Stage2.A, C and H, Stage3.A, B, F, E.cov, E.sub and src with RDODI's own validator functions; Stage1.C-E, Stage2.B (HermiT consistent), D-G and Stage3.C-E (coverage 22/25 = 0.88), G and H as direct checks."},
+    ("Deck", 2): {"finished": "2026-09-25T00:21:53", "closed": "2026-09-25T00:22:07", "release": "the release carrying 03-materials/ch02/SEN0414_Ch02_FlowControl_3e.pptx",
+    "spec": "08-tooling/ch02-deck/deck_check.py re-ran all 17 expressions on the deck under Python 3.14.4, and program_check.py re-ran both whole programs with the six inputs the slides show: 0 mismatches. Two fixtures refused, each naming what it broke: an expression result edited on slide 6, and a program transcript edited on slide 10. Building the second fixture exposed a weakness in the new program check - a result's words also occur in the program's own code on the slide - fixed by requiring the whole transcript sequence."}}
 
 REFINED = {
     "Research": "Settled: RDODI's four-stage procedure v1.6.0 on the chapter's subject, with its Pedagogy and Professional Standards stage and the Courseware profile; the research record lists every source a later claim rests on.",
