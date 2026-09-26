@@ -1,10 +1,10 @@
 <!doctype html><html lang="en"><head>
-<!-- course_page_template version 9.2.0 -->
+<!-- course_page_template version 9.3.0 -->
 <meta name="version" content="__PAGEVERSION__"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>__TITLE__</title>
 <style>
 /* 9.2.0: every size below is relative to this root, so the whole page scales with the screen, and with browser zoom */
-html{font-size:clamp(15px, calc(min(.7vw, 1.3vh) + 5px), 26px)}
+html{font-size:calc(var(--fs, 1) * clamp(17px, calc(min(.75vw, 1.4vh) + 7px), 28px))}
 
 :root{--ink:#1F2933;--mute:#5B6B7B;--navy:#1E2A3A;--blue:#306998;--yellow:#FFD43B;--card:#F1F4F8;--line:#D0D7DE;--code:#17202B;--ok:#1A7F37;--bad:#B42318;--bg:#FFFFFF;--panel:#FAFBFC;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#E6EDF3;--mute:#9AA7B4;--card:#1C2531;--line:#30363D;--bg:#0F151C;--panel:#131A22;--blue:#79B8FF;--ok:#56D364;--bad:#FF7B72}}
@@ -100,8 +100,13 @@ button,select,input,textarea{min-height:24px}.info,.jump{min-width:24px;min-heig
  .diagram{height:62vh}.row{flex-wrap:wrap}textarea.code{font-size:.933rem}
 }
 @media (pointer:coarse){button,.btn,.chip,.subtabs button,nav.groups button,select,input:not([type=checkbox]):not([type=radio]){min-height:36px}.info,.jump{min-width:36px;min-height:36px}.zbar button{min-width:40px;min-height:40px}}
+
+/* 9.3.0: text-size control, zoom bar outside the drawing */
+.fsctl{margin-left:auto;display:flex;gap:.25rem;flex:none}.fsctl button{background:transparent;color:#fff;border:1px solid #ffffff66;border-radius:8px;min-width:2.4rem;min-height:2rem;font-weight:700;cursor:pointer;font-size:.9rem}
+.zbar{position:static;display:flex;justify-content:flex-end;flex-wrap:wrap;gap:.3rem;align-items:center;margin:.2rem 0 .35rem;background:transparent;box-shadow:none;padding:0}
+@media (max-width:700px){.fsctl button{min-width:2.2rem}}
 </style></head><body>
-<header class="top"><div class="titlebar"><button class="explore" id="exploreBtn" aria-label="Open the chapter explorer" aria-controls="explorerTree" aria-expanded="false">☰</button><h1>__TITLE__</h1></div><div class="sub">__COURSE__ · __SUB__ · every computed result was produced by __PY__ · code you edit runs in a background thread with CPython (Pyodide)</div>
+<header class="top"><div class="titlebar"><button class="explore" id="exploreBtn" aria-label="Open the chapter explorer" aria-controls="explorerTree" aria-expanded="false">☰</button><h1>__TITLE__</h1><div class="fsctl" role="group" aria-label="Text size"><button id="fsDown" aria-label="Smaller text" title="Smaller text">A−</button><button id="fsReset" aria-label="Default text size" title="Default text size"><span id="fsVal">100%</span></button><button id="fsUp" aria-label="Larger text" title="Larger text">A+</button></div></div><div class="sub">__COURSE__ · __SUB__ · every computed result was produced by __PY__ · code you edit runs in a background thread with CPython (Pyodide)</div>
 <nav class="groups" aria-label="Main menu" id="groups"></nav></header>
 <div class="shell">
 <div class="scrim" id="scrim" hidden></div><aside class="tree" id="explorerTree" aria-label="Chapter explorer"><div class="treebar"><button id="closeExplorer" class="drawerclose" aria-label="Close the explorer" title="Close (Esc)">✕</button><button id="expandAll" title="Expand every branch">⊞ Expand all</button><button id="collapseAll" title="Collapse every branch">⊟ Collapse all</button></div><ul class="tv" id="tree" role="tree"></ul></aside>
@@ -219,6 +224,8 @@ function showTab(k){if(GROUPS[k])k=LAST_IN[k]||GROUPS[k][0][0];const grp=GROUP_O
 document.querySelectorAll('#groups button').forEach(b=>b.dataset.tab===(grp||k)?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));document.querySelectorAll('.viewsub [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===k));panes.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==k);if(k==='map')drawGraph();if(k==='taxonomy')drawTaxo();if(k==='ontograph')drawOnto();if(k==='mission')drawMission();if(k==='arch'||k==='prov')drawProv();if(k==='browse')drawBrowse();if(k==='checks')drawChecks();if(k==='mydata')drawMyData();document.getElementById('center').scrollTop=0}
 function showSub(m){const p=m.startsWith('ov-')?m.slice(3):byId[m].parent;const pane=panes.querySelector('[data-pane="'+p+'"]');pane.querySelectorAll('[data-sub]').forEach(b=>b.setAttribute('aria-selected',b.dataset.sub===m));pane.querySelectorAll('[data-subpane]').forEach(x=>x.hidden=x.dataset.subpane!==m)}
 function goTo(id){if(innerWidth<=1000)toggleExplorer(false);const n=byId[id],t=topOf(id);showTab(t);showSub(n.level>=2?(n.level===2?id:n.parent):'ov-'+id);const el=document.getElementById('s-'+id);if(el){el.scrollIntoView({block:'start'});}select(id);el&&(el.classList.add('flash'),setTimeout(()=>el.classList.remove('flash'),1200))}
+const FS_KEY='course-page-text-size';function setFs(v){v=Math.max(.8,Math.min(1.8,Math.round(v*10)/10));document.documentElement.style.setProperty('--fs',v);const e=document.getElementById('fsVal');if(e)e.textContent=Math.round(v*100)+'%';try{localStorage.setItem(FS_KEY,v)}catch(x){}}
+try{const v=parseFloat(localStorage.getItem(FS_KEY));if(v)setTimeout(()=>setFs(v))}catch(x){}
 function toggleExplorer(open){const tr=document.getElementById('explorerTree'),b=document.getElementById('exploreBtn');open=open===undefined?!tr.classList.contains('open'):open;tr.classList.toggle('open',open);document.getElementById('scrim').hidden=!open;b.setAttribute('aria-expanded',open)}
 function closeCard(){const c=document.getElementById('card');c.classList.remove('open');c.hidden=true}
 function select(id){document.querySelectorAll('.tn').forEach(x=>x.classList.toggle('sel',x.dataset.c===id));let li=document.querySelector('#tree li[data-id="'+id+'"]');while(li){setOpen(li,true);li=li.parentElement.closest('li')}}
@@ -239,7 +246,7 @@ function zoomable(host){const svg=host.querySelector('svg');if(!svg)return;if(!s
  svg.removeAttribute('width');svg.removeAttribute('height');svg.style.width='100%';svg.style.height='100%';
  const vb0=svg.dataset.vb0.split(/\s+/).map(Number);let vb=vb0.slice();const set=()=>svg.setAttribute('viewBox',vb.join(' '));
  const zoom=(f,cx,cy)=>{cx=cx===undefined?vb[0]+vb[2]/2:cx;cy=cy===undefined?vb[1]+vb[3]/2:cy;const w=Math.min(vb0[2]*4,Math.max(vb0[2]/12,vb[2]*f)),h=w*vb[3]/vb[2];vb=[cx-(cx-vb[0])*w/vb[2],cy-(cy-vb[1])*h/vb[3],w,h];set()};
- let bar=host.querySelector(':scope > .zbar');if(!bar){bar=document.createElement('div');bar.className='zbar';bar.innerHTML='<button class="btn g" data-z="in" title="Zoom in" aria-label="Zoom in">＋</button><button class="btn g" data-z="out" title="Zoom out" aria-label="Zoom out">－</button><button class="btn g" data-z="reset" title="Show all" aria-label="Show all">⤢</button><span class="note">wheel or pinch zooms · drag moves</span>';host.prepend(bar)}
+ let bar=host.previousElementSibling&&host.previousElementSibling.classList.contains('zbar')?host.previousElementSibling:null;if(!bar){bar=document.createElement('div');bar.className='zbar';bar.innerHTML='<button class="btn g" data-z="in" title="Zoom in" aria-label="Zoom in">＋</button><button class="btn g" data-z="out" title="Zoom out" aria-label="Zoom out">－</button><button class="btn g" data-z="reset" title="Show all" aria-label="Show all">⤢</button><span class="note">wheel or pinch zooms · drag moves</span>';host.parentNode.insertBefore(bar,host)}
  bar.onclick=e=>{const z=e.target.closest('[data-z]');if(!z)return;if(z.dataset.z==='in')zoom(1/1.3);if(z.dataset.z==='out')zoom(1.3);if(z.dataset.z==='reset'){vb=vb0.slice();set()}};
  svg.onwheel=e=>{e.preventDefault();const r=svg.getBoundingClientRect();zoom(e.deltaY>0?1.15:1/1.15,vb[0]+(e.clientX-r.left)/r.width*vb[2],vb[1]+(e.clientY-r.top)/r.height*vb[3])};
  let drag=null;const touches=new Map();let pinch=null;
@@ -650,18 +657,19 @@ document.addEventListener('click',async e=>{const t=e.target;if(!ctx.hidden&&!ct
  if(t.id==='dlconvmd'){download('conversations.md',convMarkdown(),'text/markdown');return}
  if(t.id==='dlconvjs'){download('conversations.json',JSON.stringify(CONV,null,1),'application/json');return}
  if(t.id==='clrconv'){CONV={};saveConv();document.querySelectorAll('.thread').forEach(l=>{const a=D.agents.find(x=>l.id===x.id+'-log');l.innerHTML='<div class="msg agent greet">'+(a?esc(greeting(a)):'Tell me what you want to know, in your own words, and I will find the right person to ask.')+'</div>'});drawMyData();return}
+ const fsb=t.closest('#fsDown,#fsUp,#fsReset');if(fsb){const cur=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs'))||1;setFs(fsb.id==='fsUp'?cur+.1:fsb.id==='fsDown'?cur-.1:1);return}
  if(t.id==='exploreBtn'){toggleExplorer();return}
  if(t.id==='scrim'){toggleExplorer(false);return}
  if(t.id==='closeExplorer'){toggleExplorer(false);return}
  if(t.closest('[data-close]')){closeCard();return}
  const dt=t.closest('[data-detail]');if(dt){openCard(dt.dataset.detail);return}
- const c=t.closest('[data-c]');if(c){goTo(c.dataset.c);return}
+ const c=t.closest('[data-c]');if(c){if(c.closest('#tree'))goTo(c.dataset.c);else{select(c.dataset.c);openCard(c.dataset.c)}return}
  const ca=t.closest('[data-cmd]');if(ca){ctx.hidden=true;const [cmd,id]=ca.dataset.cmd.split(':');
   if(cmd==='card')openCard(id);if(cmd==='go')goTo(id);if(cmd==='map'){showTab('map');openCard(id)}if(cmd==='tax'){showTab('taxonomy');openCard(id)}
   if(cmd==='play'){showTab('play');document.getElementById('pcode').value=byId[id].io.code}if(cmd==='agent'){const a=D.agents.find(x=>x.covers.includes(id));showTab('agents');document.getElementById(a.id).scrollIntoView()}
   if(cmd==='copy'&&navigator.clipboard)navigator.clipboard.writeText(byId[id].io?byId[id].io.code:byId[id].label);}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){ctx.hidden=true;closeCard();toggleExplorer(false);return}if(e.key==='Enter'&&!e.shiftKey&&e.target.matches('.composer textarea')){e.preventDefault();const id=e.target.id.slice(0,-2);id==='guide'?route():ask(id);return}
- if(e.key==='Enter'){const c=e.target.closest('[data-c]');if(c){goTo(c.dataset.c)}}});
+ if(e.key==='Enter'){const c=e.target.closest('[data-c]');if(c){if(c.closest('#tree'))goTo(c.dataset.c);else{select(c.dataset.c);openCard(c.dataset.c)}}}});
 document.addEventListener('change',e=>{if(e.target.matches('[data-okind]'))renderOnto()});
 document.addEventListener('input',e=>{if(e.target.matches('input[type=range][id^="wv-"]')){document.getElementById(e.target.id.replace(/-x$/,'-v')).textContent=e.target.value}});
 document.addEventListener('contextmenu',e=>{const c=e.target.closest('[data-c],[data-concept]');if(!c)return;e.preventDefault();const id=c.dataset.c||c.dataset.concept,n=byId[id];

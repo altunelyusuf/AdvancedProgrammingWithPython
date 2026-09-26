@@ -1,6 +1,6 @@
 """Backlog stage of the SEN0414 slide lineage: admission only. Every item Proposed; no task yet -
 tasks are produced by planning, and only for what is planned into an iteration."""
-__version__ = "1.1.4"
+__version__ = "1.1.5"
 from sen0414_slides_stages_v1_0_1 import CHAPTERS, KIND, cid
 
 # Planning of 2026-09-24, approved by the owner: chapters 1 and 2 in the first iteration, until
@@ -134,6 +134,12 @@ ex:Iter_1 a backlog:Iteration ; rdfs:label "First iteration: chapters 1 and 2, b
 
 
 FEEDBACK = """
+ex:Finding_ReadabilityV93 a backlog:RetrospectiveFinding ;
+    rdfs:label "Larger text with a reader's size control, zoom controls clear of diagrams, concept taps showing options"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner found the text too small and asked for a way to change it, found the zoom buttons covering the diagrams, and asked that touching an element no longer jump straight to another place but show its options first, in the detail card where possible. The default size had been chosen as the common 15-16 pixel body size, which the owner judged too small in practice; the zoom bar was placed over the drawing's top-right corner; and a tap on any highlighted concept, map node or taxonomy box navigated at once, under the owner's earlier rule that clicks move the main area first - a rule this request narrows to the menus." ;
+    backlog:hasRemedy "Template 9.3.0: the default text starts at 17 pixels and grows to 28 with the screen; a smaller / default / larger text control in the header scales every size from 80 to 180 per cent, remembered in the browser; zoom controls sit in a row above each diagram; tapping a concept in the text, a concept-map node or a taxonomy box opens its detail card with its options - go to its section, open in the playground, ask its agent - while the explorer, menus and sub-tabs still navigate directly. At 2026-09-26T11:48:09 every check in 08-tooling/sen0414_page_test_v9_3_0.py passed on both pages, including new checks that the size control scales the page by 20 per cent a step and survives a reload, that the zoom bar ends above the drawing, and that a concept tap opens its options without leaving the view; root text 17 to 28 pixels from 1280 to 3840; 0 console errors, 0 WCAG 2 AA violations; Stage 4 gates passed; the stale fixture refused. Materials 1.17.0 and configuration 1.2.4 re-issued." .
+
 ex:Finding_AnyScreenV92 a backlog:RetrospectiveFinding ;
     rdfs:label "The pages scale with any screen, not only phones"@en ;
     backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;

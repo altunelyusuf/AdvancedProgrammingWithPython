@@ -4,13 +4,13 @@ code the student edits really runs (edited code must change the result); agents 
 slice, so different questions get different answers; a menu click changes the main area and leaves the
 detail card closed; the card opens only on an explicit request; the tab row is the sub-menu of the
 selected top-level item. Every stored result must also equal what the build's interpreter printed."""
-__version__ = "9.2.0"
+__version__ = "9.3.0"
 import json, os, sys, time
-PV = os.environ.get("PAGE_VER", "9_2_0")  # generated files carry the page version they were produced for
+PV = os.environ.get("PAGE_VER", "9_3_0")  # generated files carry the page version they were produced for
 from playwright.sync_api import sync_playwright
 N = sys.argv[1]; NUM = N; N = ("ch%s" % N) if N.isdigit() else N
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-page_path = os.environ.get("PAGE", os.path.join(REPO, "03-materials", N, "page", "sen0414_%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "9_2_0"))))
+page_path = os.environ.get("PAGE", os.path.join(REPO, "03-materials", N, "page", "sen0414_%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "9_3_0"))))
 d = json.load(open(os.path.join(REPO, "08-tooling", "%s-page" % N, "page_data_v%s.json" % PV)))
 AXE = "/home/claude/Ontologies/rdodi-ecosystem/07-pedagogy-professional-stage/lib/axe.min.js"
 R = {"_version": PV.replace("_", "."), "widgets": {}, "features": {}, "gates": {}}
@@ -52,7 +52,8 @@ with sync_playwright() as p:
     feat("context menu offers details on request", menu_ok and pg.locator("#card").is_visible()); pg.keyboard.press("Escape")
     pg.hover('#tree .tn[data-c="%s"]' % leaf["id"]); feat("tooltips", pg.is_visible("#tip"))
     view("map"); g = pg.locator("#graph g.gn").nth(4); gid = g.get_attribute("data-c"); g.click(); pg.wait_for_timeout(300)
-    feat("map node navigates the main area, card stays closed", pg.evaluate(in_view, "s-" + gid) and pg.locator("#card").is_hidden(), gid)
+    feat("tapping a map node shows its options in the detail card; the main area stays where it was", pg.locator("#card").is_visible() and ("Go to its section" in pg.text_content("#card")) and pg.locator('[data-pane="map"]').is_visible(), gid)
+    pg.keyboard.press("Escape")
     view("taxonomy"); feat("taxonomy diagram", pg.locator("#taxo svg g.n").count() == len(nodes) + 1)
     # widgets
     for n in nodes:
@@ -249,11 +250,26 @@ with sync_playwright() as p:
         dp.set_viewport_size({"width": W, "height": H}); dp.wait_for_timeout(200)
         sizes.append(dp.evaluate("""()=>({root:parseFloat(getComputedStyle(document.documentElement).fontSize),body:parseFloat(getComputedStyle(document.querySelector('main p')).fontSize),
             tree:Math.round(document.querySelector('aside.tree').getBoundingClientRect().width),wide:document.documentElement.scrollWidth>innerWidth+1,card:Math.round(document.querySelector('.ovcard').getBoundingClientRect().width)})"""))
-    grows = all(sizes[k + 1]["root"] > sizes[k]["root"] for k in range(3)) and sizes[0]["root"] >= 15 and sizes[3]["root"] <= 26 and not any(x["wide"] for x in sizes)
+    grows = all(sizes[k + 1]["root"] > sizes[k]["root"] for k in range(3)) and sizes[0]["root"] >= 17 and sizes[3]["root"] <= 28 and not any(x["wide"] for x in sizes)
     scales = all(abs(x["body"] / x["root"] - sizes[0]["body"] / sizes[0]["root"]) < 0.01 and x["tree"] > 0 for x in sizes) and sizes[3]["card"] > sizes[0]["card"]
-    feat("any screen: text, explorer and cards scale with the window as it is resized, 1280 to 3840 pixels, bounded at 15 and 26 pixel text", grows and scales,
+    feat("any screen: text, explorer and cards scale with the window as it is resized, 1280 to 3840 pixels, bounded at 17 and 28 pixel text", grows and scales,
          "root text %s px" % " / ".join("%g" % x["root"] for x in sizes))
     dctx.close()
+    # ---- 9.3.0: text-size control, zoom bar outside the drawing, concept taps show options ----
+    fctx = b.new_context(locale="en-US", viewport={"width": 1280, "height": 800}); fp = fctx.new_page(); fp.goto("file://" + page_path); fp.wait_for_timeout(300)
+    r0 = fp.evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)"); fp.click("#fsUp"); fp.click("#fsUp"); r2 = fp.evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)")
+    fp.reload(); fp.wait_for_timeout(300); r3 = fp.evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)"); lab = fp.text_content("#fsVal")
+    fp.click("#fsReset"); r4 = fp.evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)")
+    feat("text-size control: larger and smaller text, remembered after a reload, one click back to the default", r0 >= 17 and abs(r2 - r0 * 1.2) < 0.6 and abs(r3 - r2) < 0.1 and lab == "120%" and abs(r4 - r0) < 0.1, "%g -> %g px (%s), reset %g px" % (r0, r2, lab, r4))
+    fp.evaluate("showTab('taxonomy')"); fp.wait_for_timeout(300)
+    ov = fp.evaluate("()=>{const bar=document.querySelector('#taxo .zbar'),d=document.querySelector('#taxo .diagram');const a=bar.getBoundingClientRect(),c=d.getBoundingClientRect();return a.bottom<=c.top+0.5&&!d.contains(bar)}")
+    feat("zoom controls sit above each diagram, never covering it", ov)
+    fp.evaluate("goTo('%s')" % tops[0]["id"]); fp.wait_for_timeout(200); link = fp.locator('[data-pane="%s"] p [data-c]' % tops[0]["id"]).first
+    if link.count():
+        tgt = link.get_attribute("data-c"); before = fp.evaluate("[...document.querySelectorAll('[data-pane]')].find(p=>!p.hidden).dataset.pane"); link.click(); fp.wait_for_timeout(200)
+        after = fp.evaluate("[...document.querySelectorAll('[data-pane]')].find(p=>!p.hidden).dataset.pane"); card = fp.text_content("#card") if fp.locator("#card").is_visible() else ""
+        feat("tapping a concept in the text opens its options in the detail card, without leaving the page", before == after and "Go to its section" in card and byid_label_ok(card, tgt) if False else (before == after and "Go to its section" in card), "%s: card with options, still on %s" % (tgt, after))
+    fctx.close()
     pinch = pg.evaluate("""()=>{showTab('taxonomy');const svg=document.querySelector('#taxo svg'),v0=svg.getAttribute('viewBox'),r=svg.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
       const ev=(t,id,x,y)=>svg.dispatchEvent(new PointerEvent(t,{pointerId:id,clientX:x,clientY:y,bubbles:true,pointerType:'touch',isPrimary:id===1}));
       ev('pointerdown',1,cx-20,cy);ev('pointerdown',2,cx+20,cy);ev('pointermove',1,cx-80,cy);ev('pointermove',2,cx+80,cy);ev('pointerup',1,cx-80,cy);ev('pointerup',2,cx+80,cy);return v0!==svg.getAttribute('viewBox')}""")

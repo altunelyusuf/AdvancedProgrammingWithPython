@@ -3,13 +3,13 @@
 its agents search, as Turtle: the book's chapter ontology at the exact commit the course's textbook part pins, the
 course ontology (profile, outcomes, textbook), and the chapter's RDODI ontology, document and research record.
 Each block names its file and hash. Usage: sen0414_page_build_v4_1_1.py <NN>"""
-__version__ = "4.3.0"
+__version__ = "4.4.0"
 import glob, hashlib, json, os, re, subprocess, sys
 import glob as _glob
 latest_input = lambda d, stem: sorted(_glob.glob(os.path.join(d, stem + '_v*.json')), key=lambda x: [int(v) for v in x.rsplit('_v', 1)[1][:-5].split('_')])[-1]  # page inputs are versioned; the newest one is current
-PV = os.environ.get("PAGE_VER", "9_2_0")  # generated files carry the page version they were produced for
+PV = os.environ.get("PAGE_VER", "9_3_0")  # generated files carry the page version they were produced for
 N = sys.argv[1]; REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); ONT = "/home/claude/Ontologies"
-T = open(os.path.join(REPO, "08-tooling", os.environ.get("PAGE_TEMPLATE", "course_page_template_v9_2_0.html"))).read()
+T = open(os.path.join(REPO, "08-tooling", os.environ.get("PAGE_TEMPLATE", "course_page_template_v9_3_0.html"))).read()
 P = os.path.join(REPO, "08-tooling", "ch%s-page" % N)
 d = json.load(open(os.path.join(P, "page_data_v%s.json" % PV))); C = d["course"]["corpus"]
 safe = lambda o: json.dumps(o).replace("</", "<\\/")
