@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head>
-<!-- course_page_template version 9.4.0 -->
+<!-- course_page_template version 9.4.1 -->
 <meta name="version" content="__PAGEVERSION__"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>__TITLE__</title>
 <style>
@@ -230,7 +230,7 @@ document.querySelectorAll('#groups button').forEach(b=>b.dataset.tab===(grp||k)?
 // A subject shows one thing at a time: its overview, one sub-subject with all its concepts, or a single concept.
 function showSub(m,focus){const p=m.startsWith('ov-')?m.slice(3):byId[m].parent;const pane=panes.querySelector('[data-pane="'+p+'"]');
  pane.querySelectorAll('[data-subpane]').forEach(x=>{x.hidden=x.dataset.subpane!==m;if(!x.hidden){x.querySelectorAll('.cards > section.leaf').forEach(sc=>sc.hidden=!!focus&&sc.dataset.concept!==focus);x.classList.toggle('focused',!!focus)}});
- crumbs(p,m,focus)}
+ crumbs(p,m,focus);syncTree()}
 function crumbs(p,m,focus){const el=document.getElementById('crumb-'+p);if(!el)return;const mids=kids(p);
  let h='<span class="cb">'+ICON[1]+' '+esc(byId[p].label)+'</span><span class="sep">›</span><select class="cbsel" data-crumb="'+p+'" aria-label="Choose a part of '+esc(byId[p].label)+'"><option value="ov-'+p+'"'+(m==='ov-'+p?' selected':'')+'>ℹ️ Overview</option>'+mids.map(x=>'<option value="'+x.id+'"'+(m===x.id?' selected':'')+'>'+esc(x.label)+' ('+kids(x.id).length+')</option>').join('')+'</select>';
  if(focus){const sib=kids(byId[focus].parent),i=sib.findIndex(x=>x.id===focus);
@@ -241,6 +241,13 @@ const FS_KEY='course-page-text-size';function setFs(v){v=Math.max(.8,Math.min(1.
 try{const v=parseFloat(localStorage.getItem(FS_KEY));if(v)setTimeout(()=>setFs(v))}catch(x){}
 function toggleExplorer(open){const tr=document.getElementById('explorerTree'),b=document.getElementById('exploreBtn');open=open===undefined?!tr.classList.contains('open'):open;tr.classList.toggle('open',open);document.getElementById('scrim').hidden=!open;b.setAttribute('aria-expanded',open)}
 function closeCard(){const c=document.getElementById('card');c.classList.remove('open');c.hidden=true}
+function syncTree(){const pane=[...panes.querySelectorAll('[data-pane]')].find(p=>!p.hidden);let id=null;
+ if(pane&&byId[pane.dataset.pane]){const sp=pane.querySelector('[data-subpane]:not([hidden])');const m=sp?sp.dataset.subpane:'ov-'+pane.dataset.pane;
+  const f=sp&&sp.classList.contains('focused')?sp.querySelector('.cards > section.leaf:not([hidden])'):null;id=f?f.dataset.concept:(m.startsWith('ov-')?m.slice(3):m)}
+ if(id){select(id);const tn=document.querySelector('#tree .tn[data-c="'+id+'"]');if(tn)tn.scrollIntoView({block:'nearest'})}
+ else document.querySelectorAll('#tree .tn.sel').forEach(x=>x.classList.remove('sel'))}
+// every view change ends by bringing the explorer in step (the original showTab runs first, unchanged)
+const showTabBase=showTab;showTab=function(k){showTabBase(k);syncTree()};
 function select(id){document.querySelectorAll('.tn').forEach(x=>x.classList.toggle('sel',x.dataset.c===id));let li=document.querySelector('#tree li[data-id="'+id+'"]');while(li){setOpen(li,true);li=li.parentElement.closest('li')}}
 // ---------- right card ----------
 function openCard(id){const n=byId[id],c=document.getElementById('card');const r=rel(id);c.hidden=false;
@@ -676,13 +683,13 @@ document.addEventListener('click',async e=>{const t=e.target;if(!ctx.hidden&&!ct
  if(t.id==='closeExplorer'){toggleExplorer(false);return}
  if(t.closest('[data-close]')){closeCard();return}
  const dt=t.closest('[data-detail]');if(dt){openCard(dt.dataset.detail);return}
- const c=t.closest('[data-c]');if(c){if(c.closest('#tree'))goTo(c.dataset.c);else{select(c.dataset.c);openCard(c.dataset.c)}return}
+ const c=t.closest('[data-c]');if(c){if(c.closest('#tree'))goTo(c.dataset.c);else openCard(c.dataset.c);return}
  const ca=t.closest('[data-cmd]');if(ca){ctx.hidden=true;const [cmd,id]=ca.dataset.cmd.split(':');
   if(cmd==='card')openCard(id);if(cmd==='go')goTo(id);if(cmd==='map'){showTab('map');openCard(id)}if(cmd==='tax'){showTab('taxonomy');openCard(id)}
   if(cmd==='play'){showTab('play');document.getElementById('pcode').value=byId[id].io.code}if(cmd==='agent'){const a=D.agents.find(x=>x.covers.includes(id));showTab('agents');document.getElementById(a.id).scrollIntoView()}
   if(cmd==='copy'&&navigator.clipboard)navigator.clipboard.writeText(byId[id].io?byId[id].io.code:byId[id].label);}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){ctx.hidden=true;closeCard();toggleExplorer(false);return}if(e.key==='Enter'&&!e.shiftKey&&e.target.matches('.composer textarea')){e.preventDefault();const id=e.target.id.slice(0,-2);id==='guide'?route():ask(id);return}
- if(e.key==='Enter'){const c=e.target.closest('[data-c]');if(c){if(c.closest('#tree'))goTo(c.dataset.c);else{select(c.dataset.c);openCard(c.dataset.c)}}}});
+ if(e.key==='Enter'){const c=e.target.closest('[data-c]');if(c){if(c.closest('#tree'))goTo(c.dataset.c);else openCard(c.dataset.c)}}});
 document.addEventListener('change',e=>{if(e.target.matches('[data-okind]'))renderOnto();if(e.target.matches('[data-crumb]'))showSub(e.target.value)});
 document.addEventListener('input',e=>{if(e.target.matches('input[type=range][id^="wv-"]')){document.getElementById(e.target.id.replace(/-x$/,'-v')).textContent=e.target.value}});
 document.addEventListener('contextmenu',e=>{const c=e.target.closest('[data-c],[data-concept]');if(!c)return;e.preventDefault();const id=c.dataset.c||c.dataset.concept,n=byId[id];

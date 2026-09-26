@@ -1,6 +1,6 @@
 """Backlog stage of the SEN0414 slide lineage: admission only. Every item Proposed; no task yet -
 tasks are produced by planning, and only for what is planned into an iteration."""
-__version__ = "1.1.6"
+__version__ = "1.1.7"
 from sen0414_slides_stages_v1_0_1 import CHAPTERS, KIND, cid
 
 # Planning of 2026-09-24, approved by the owner: chapters 1 and 2 in the first iteration, until
@@ -134,6 +134,12 @@ ex:Iter_1 a backlog:Iteration ; rdfs:label "First iteration: chapters 1 and 2, b
 
 
 FEEDBACK = """
+ex:Finding_ExplorerInStepV941 a backlog:RetrospectiveFinding ;
+    rdfs:label "The explorer kept in step with the main area"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner found the tabs and the explorer out of step after version 9.4.0. The explorer's selection was set only when a concept was chosen in the explorer itself or reached through a go-to; the new breadcrumb chooser, its previous, next and show-all buttons, and the subject tabs changed the main area without touching it, and a tap on a concept inside the text moved the explorer's selection to that concept although the main area stayed where it was." ;
+    backlog:hasRemedy "Template 9.4.1: every change of view ends by reading what the main area shows - a subject's overview, a sub-subject, or the single concept on view - and selecting, expanding and scrolling to that entry in the explorer; views outside the chapter's subjects clear the selection; a concept tap opens its card and leaves the explorer on the main area's location. At 2026-09-26T13:32:24 every check in 08-tooling/sen0414_page_test_v9_4_1.py passed on both pages, including a new one that walks the breadcrumb chooser, next, show all, the subject tabs and a view outside the subjects, requiring the explorer to match the main area after each; 0 console errors, 0 WCAG 2 AA violations; Stage 4 gates passed; the stale fixture refused." .
+
 ex:Finding_BreadcrumbV94 a backlog:RetrospectiveFinding ;
     rdfs:label "No third row of tabs; the explorer opens one concept at a time"@en ;
     backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;

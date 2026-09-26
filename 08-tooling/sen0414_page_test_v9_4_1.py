@@ -4,13 +4,13 @@ code the student edits really runs (edited code must change the result); agents 
 slice, so different questions get different answers; a menu click changes the main area and leaves the
 detail card closed; the card opens only on an explicit request; the tab row is the sub-menu of the
 selected top-level item. Every stored result must also equal what the build's interpreter printed."""
-__version__ = "9.4.0"
+__version__ = "9.4.1"
 import json, os, sys, time
-PV = os.environ.get("PAGE_VER", "9_4_0")  # generated files carry the page version they were produced for
+PV = os.environ.get("PAGE_VER", "9_4_1")  # generated files carry the page version they were produced for
 from playwright.sync_api import sync_playwright
 N = sys.argv[1]; NUM = N; N = ("ch%s" % N) if N.isdigit() else N
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-page_path = os.environ.get("PAGE", os.path.join(REPO, "03-materials", N, "page", "sen0414_%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "9_4_0"))))
+page_path = os.environ.get("PAGE", os.path.join(REPO, "03-materials", N, "page", "sen0414_%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "9_4_1"))))
 d = json.load(open(os.path.join(REPO, "08-tooling", "%s-page" % N, "page_data_v%s.json" % PV)))
 AXE = "/home/claude/Ontologies/rdodi-ecosystem/07-pedagogy-professional-stage/lib/axe.min.js"
 R = {"_version": PV.replace("_", "."), "widgets": {}, "features": {}, "gates": {}}
@@ -264,6 +264,21 @@ with sync_playwright() as p:
     pg.click('#crumb-%s [data-sub="%s"]' % (mid2["parent"], mid2["id"])); pg.wait_for_timeout(200)
     all_back = pg.evaluate("id=>[...document.querySelectorAll('[data-subpane=\"'+id+'\"] .cards > section.leaf')].filter(s=>!s.hidden).length", mid2["id"])
     feat("the explorer opens a single concept; the breadcrumb shows where it sits, with its neighbours and 'show all' a click away", shown == [sibs[0]["id"]] and sibs[0]["label"] in crumb and sibs[1]["label"] in crumb and all_back == len(sibs), "%s alone, then all %d" % (sibs[0]["label"], all_back))
+    # ---- 9.4.1: the explorer follows every move of the main area ----
+    sel = lambda: pg.evaluate("()=>{const x=document.querySelector('#tree .tn.sel');return x?x.dataset.c:null}")
+    steps = []
+    view(mid2["parent"]); pg.select_option('#crumb-%s select' % mid2["parent"], mid2["id"]); pg.wait_for_timeout(150); steps.append(("breadcrumb chooser", sel() == mid2["id"]))
+    pg.evaluate("goTo('%s')" % sibs[0]["id"]); pg.click('#crumb-%s [data-go="%s"]' % (mid2["parent"], sibs[1]["id"])); pg.wait_for_timeout(150); steps.append(("next concept", sel() == sibs[1]["id"]))
+    pg.click('#crumb-%s [data-sub="%s"]' % (mid2["parent"], mid2["id"])); pg.wait_for_timeout(150); steps.append(("show all", sel() == mid2["id"]))
+    other = next(t_ for t_ in tops if t_["id"] != mid2["parent"]); view(other["id"]); pg.wait_for_timeout(150)
+    shown_at = pg.evaluate("""id=>{const p=document.querySelector('[data-pane="'+id+'"]'),sp=p.querySelector('[data-subpane]:not([hidden])'),m=sp.dataset.subpane;
+        const f=sp.classList.contains('focused')?[...sp.querySelectorAll('.cards > section.leaf')].find(x=>!x.hidden):null;return f?f.dataset.concept:(m.startsWith('ov-')?m.slice(3):m)}""", other["id"])
+    steps.append(("subject tab", sel() == shown_at))
+    view(mid2["parent"]); pg.wait_for_timeout(150); steps.append(("back to the subject", sel() == mid2["id"]))
+    link = pg.locator('[data-subpane="%s"] p [data-c]' % mid2["id"]).first
+    if link.count(): link.click(); pg.wait_for_timeout(150); steps.append(("concept tap keeps the location", sel() == mid2["id"])); pg.keyboard.press("Escape")
+    view("taxonomy"); steps.append(("non-subject view clears it", sel() is None))
+    feat("the explorer stays in step with the main area: chooser, next, show all, subject tabs, concept taps, other views", all(ok for _, ok in steps), ", ".join("%s %s" % (n_, "ok" if ok else "OUT OF STEP") for n_, ok in steps))
     # ---- 9.3.0: text-size control, zoom bar outside the drawing, concept taps show options ----
     fctx = b.new_context(locale="en-US", viewport={"width": 1280, "height": 800}); fp = fctx.new_page(); fp.goto("file://" + page_path); fp.wait_for_timeout(300)
     r0 = fp.evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)"); fp.click("#fsUp"); fp.click("#fsUp"); r2 = fp.evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)")
