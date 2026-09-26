@@ -3,9 +3,9 @@
 Stage 2 ontology and Stage 3 document, with every example executed and every code diagram built from
 Python's own ast module under the given interpreter. Nothing is typed by hand except the agent names.
 Usage: sen0414_page_data_v2_1_1.py <NN> <python>  ->  08-tooling/chNN-page/page_data_v2.json"""
-__version__ = "2.1.2"
+__version__ = "2.1.3"
 import json, os, re, subprocess, sys
-PV = os.environ.get("PAGE_VER", "9_1_0")  # generated files carry the page version they were produced for
+PV = os.environ.get("PAGE_VER", "9_2_0")  # generated files carry the page version they were produced for
 import rdflib
 from rdflib import RDF, RDFS, OWL
 N, PY = sys.argv[1], sys.argv[2]
@@ -137,7 +137,7 @@ refs = sorted((str(R.value(p, RDFS.label)), str(R.value(p, DC.source))) for p in
 title = next(str(o) for s, o in D.subject_objects(RDFS.label) if str(s).endswith("#Document"))
 SEN = rdflib.Namespace("http://example.org/sen0414#")
 findings = sorted(((str(R.value(x, RDFS.label)), str(R.value(x, SEN.findingText))) for x in R.subjects(RDF.type, SEN.Finding)), key=lambda x: x[0])
-COURSE = json.load(open(os.path.join(REPO, "08-tooling", "course_page_config_v1_2_2.json")))
+COURSE = json.load(open(os.path.join(REPO, "08-tooling", "course_page_config_v1_2_3.json")))
 DISC = os.path.join(REPO, "08-tooling", "ch%s-page" % N, "discussion_v1_0_0.json")
 VIS = os.path.join(REPO, "08-tooling", "ch%s-page" % N, "visuals_v1_0_1.json")
 data = {"_version": PV.replace("_", "."), "visuals": {k: v for k, v in (json.load(open(VIS)) if os.path.exists(VIS) else {}).items() if not k.startswith("_")}, "course": COURSE, "discussion": json.load(open(DISC)) if os.path.exists(DISC) else [], "findings": findings, "unit": None,

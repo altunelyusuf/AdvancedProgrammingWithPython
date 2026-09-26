@@ -4,13 +4,13 @@ code the student edits really runs (edited code must change the result); agents 
 slice, so different questions get different answers; a menu click changes the main area and leaves the
 detail card closed; the card opens only on an explicit request; the tab row is the sub-menu of the
 selected top-level item. Every stored result must also equal what the build's interpreter printed."""
-__version__ = "9.1.0"
+__version__ = "9.2.0"
 import json, os, sys, time
-PV = os.environ.get("PAGE_VER", "9_1_0")  # generated files carry the page version they were produced for
+PV = os.environ.get("PAGE_VER", "9_2_0")  # generated files carry the page version they were produced for
 from playwright.sync_api import sync_playwright
 N = sys.argv[1]; NUM = N; N = ("ch%s" % N) if N.isdigit() else N
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-page_path = os.environ.get("PAGE", os.path.join(REPO, "03-materials", N, "page", "sen0414_%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "9_1_0"))))
+page_path = os.environ.get("PAGE", os.path.join(REPO, "03-materials", N, "page", "sen0414_%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "9_2_0"))))
 d = json.load(open(os.path.join(REPO, "08-tooling", "%s-page" % N, "page_data_v%s.json" % PV)))
 AXE = "/home/claude/Ontologies/rdodi-ecosystem/07-pedagogy-professional-stage/lib/axe.min.js"
 R = {"_version": PV.replace("_", "."), "widgets": {}, "features": {}, "gates": {}}
@@ -242,6 +242,18 @@ with sync_playwright() as p:
         closed = m.evaluate("()=>document.getElementById('explorerTree').getBoundingClientRect().right<=0") and m.evaluate(in_view, "s-" + leaf["id"])
         feat("%s (%dpx): no view wider than the screen, every control at least 24px, text at least 14px%s, explorer as a drawer" % (dev, W, "" if W >= 700 else ", header compact"), not bad and drawer and closed and (W >= 700 or header <= 100), "header %dpx; problems: %s" % (header, bad[:2]))
         mctx.close()
+    # ---- 9.2.0: any screen - the page scales with the window, live, without a reload ----
+    dctx = b.new_context(locale="en-US", viewport={"width": 1280, "height": 800}); dp = dctx.new_page(); dp.goto("file://" + page_path); dp.wait_for_timeout(300); dp.evaluate("showTab('%s')" % tops[0]["id"])
+    sizes = []
+    for (W, H) in ((1280, 800), (1920, 1080), (2560, 1440), (3840, 2160), (3440, 1440)):
+        dp.set_viewport_size({"width": W, "height": H}); dp.wait_for_timeout(200)
+        sizes.append(dp.evaluate("""()=>({root:parseFloat(getComputedStyle(document.documentElement).fontSize),body:parseFloat(getComputedStyle(document.querySelector('main p')).fontSize),
+            tree:Math.round(document.querySelector('aside.tree').getBoundingClientRect().width),wide:document.documentElement.scrollWidth>innerWidth+1,card:Math.round(document.querySelector('.ovcard').getBoundingClientRect().width)})"""))
+    grows = all(sizes[k + 1]["root"] > sizes[k]["root"] for k in range(3)) and sizes[0]["root"] >= 15 and sizes[3]["root"] <= 26 and not any(x["wide"] for x in sizes)
+    scales = all(abs(x["body"] / x["root"] - sizes[0]["body"] / sizes[0]["root"]) < 0.01 and x["tree"] > 0 for x in sizes) and sizes[3]["card"] > sizes[0]["card"]
+    feat("any screen: text, explorer and cards scale with the window as it is resized, 1280 to 3840 pixels, bounded at 15 and 26 pixel text", grows and scales,
+         "root text %s px" % " / ".join("%g" % x["root"] for x in sizes))
+    dctx.close()
     pinch = pg.evaluate("""()=>{showTab('taxonomy');const svg=document.querySelector('#taxo svg'),v0=svg.getAttribute('viewBox'),r=svg.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
       const ev=(t,id,x,y)=>svg.dispatchEvent(new PointerEvent(t,{pointerId:id,clientX:x,clientY:y,bubbles:true,pointerType:'touch',isPrimary:id===1}));
       ev('pointerdown',1,cx-20,cy);ev('pointerdown',2,cx+20,cy);ev('pointermove',1,cx-80,cy);ev('pointermove',2,cx+80,cy);ev('pointerup',1,cx-80,cy);ev('pointerup',2,cx+80,cy);return v0!==svg.getAttribute('viewBox')}""")

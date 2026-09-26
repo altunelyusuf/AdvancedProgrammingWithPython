@@ -1,6 +1,6 @@
 """Backlog stage of the SEN0414 slide lineage: admission only. Every item Proposed; no task yet -
 tasks are produced by planning, and only for what is planned into an iteration."""
-__version__ = "1.1.3"
+__version__ = "1.1.4"
 from sen0414_slides_stages_v1_0_1 import CHAPTERS, KIND, cid
 
 # Planning of 2026-09-24, approved by the owner: chapters 1 and 2 in the first iteration, until
@@ -134,6 +134,12 @@ ex:Iter_1 a backlog:Iteration ; rdfs:label "First iteration: chapters 1 and 2, b
 
 
 FEEDBACK = """
+ex:Finding_AnyScreenV92 a backlog:RetrospectiveFinding ;
+    rdfs:label "The pages scale with any screen, not only phones"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner reported that resizing the window did not change how the screen filled. Measured from 1024 to 3840 pixels wide: the containers did stretch, but the text and everything sized from it were fixed in pixels - body text 15 pixels at every width - so on a 1920-pixel screen the content sat small in the top-left with most of the screen empty, and concept cards kept a fixed column width, leaving empty columns beside them." ;
+    backlog:hasRemedy "Template 9.2.0 sets one fluid root size - 15 pixels up to 26, following the smaller of screen width and height - and moves every page font from pixels to sizes relative to it, so text, the explorer, cards and spacing scale together as the window is resized, with browser zoom still working; SVG drawings keep their own units because they already scale. Card grids stretch to fill their row. Phone notes kept at 14 pixels or more. At 2026-09-26T11:28:48 every check in 08-tooling/sen0414_page_test_v9_2_0.py passed on both pages, including a new one that resizes one open page from 1280 to 3840 pixels and requires the root size to grow at each step within its bounds, body text to keep its ratio to it, cards to widen and nothing to overflow - root size 15, 18.4, 22.9 and 26 pixels, 23.7 on a 3440 by 1440 screen; the phone and tablet checks still pass; 0 console errors, 0 WCAG 2 AA violations; Stage 4 gates passed; the stale fixture refused." .
+
 ex:Ruling_ToolFixedNames a backlog:RetrospectiveFinding ;
     rdfs:label "Owner ruling: the five tool-fixed names stay as they are"@en ;
     backlog:belongsToLineage ex:Lineage ; backlog:hasFindingScope backlog:Scope_Methodology ;
