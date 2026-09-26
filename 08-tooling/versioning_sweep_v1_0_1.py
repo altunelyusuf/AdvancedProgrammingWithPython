@@ -6,11 +6,13 @@ declared inside the file. Read from configuration_tbox_v2_7_0.ttl / configuratio
   OntologyFileConvention {prefix}_v{M}_{m}_{p}.ttl  (versionInfo == token)  DocumentationFileConvention {name}_v{M}_{m}.md
 For binaries the sweep does not own (the owner's documents and legacy slides) it renames only, content untouched.
 For text files it owns it also writes the internal declaration; a changed file gets a new version (BP-D7).
-Usage: versioning_sweep_v1_0_0.py <working-copy> <git-clone-for-history> [--apply]"""
-__version__ = "1.0.0"
+Usage: versioning_sweep_v1_0_1.py <working-copy> <git-clone-for-history> [--apply]"""
+__version__ = "1.0.1"
 import os, re, subprocess, sys, json
 WC, HIST = sys.argv[1], sys.argv[2]; APPLY = "--apply" in sys.argv
-TOOL_MANDATED = {".gitattributes", "README.md", "LICENSE", "VERSION.txt", "PUBLISH_RECORD.ttl"}  # names fixed by git, GitHub or the OE publisher
+# Owner ruling, 2026-09-26T11:11:43: "keep GitHub compliancy, never touch them if it is risky" - these five names are fixed by git, GitHub or the
+# OE publisher; they are neither renamed nor edited by this sweep.
+TOOL_MANDATED = {".gitattributes", "README.md", "LICENSE", "VERSION.txt", "PUBLISH_RECORD.ttl"}
 OWNER_INPUTS = ("00-course-profile/", "03-materials/slides/")                                      # the owner's files: rename only
 TOK = re.compile(r"_v(\d+)_(\d+)(?:_(\d+))?(\.[A-Za-z0-9]+)$")
 DECL = {".py": lambda v: '__version__ = "%s"' % v, ".js": lambda v: 'const VERSION = "%s";' % v}

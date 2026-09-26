@@ -1,6 +1,6 @@
 """Backlog stage of the SEN0414 slide lineage: admission only. Every item Proposed; no task yet -
 tasks are produced by planning, and only for what is planned into an iteration."""
-__version__ = "1.1.2"
+__version__ = "1.1.3"
 from sen0414_slides_stages_v1_0_1 import CHAPTERS, KIND, cid
 
 # Planning of 2026-09-24, approved by the owner: chapters 1 and 2 in the first iteration, until
@@ -134,6 +134,12 @@ ex:Iter_1 a backlog:Iteration ; rdfs:label "First iteration: chapters 1 and 2, b
 
 
 FEEDBACK = """
+ex:Ruling_ToolFixedNames a backlog:RetrospectiveFinding ;
+    rdfs:label "Owner ruling: the five tool-fixed names stay as they are"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "After every other file was versioned, five names remained that git, GitHub or the OE publisher require exactly: .gitattributes, README.md, LICENSE, VERSION.txt and PUBLISH_RECORD.ttl. Versioning them would stop GitHub showing the repository's front page and detecting its licence, and would need git and publisher changes. The configuration ontology's EngineeringArtefact rule gives no exemption, so the owner was asked." ;
+    backlog:hasRemedy "Ruled by the owner on 2026-09-26T11:11:43: keep GitHub compliance and never touch these files where that is risky. They are neither renamed nor edited; the versioning sweep, now 1.0.1, excludes them by this ruling, and every other file in the repository stays versioned by name and by declaration." .
+
 ex:Finding_ResponsivePagesV91 a backlog:RetrospectiveFinding ;
     rdfs:label "The chapter pages made usable on phones and tablets"@en ;
     backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
