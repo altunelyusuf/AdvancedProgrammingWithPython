@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head>
-<!-- course_page_template version 9.3.0 -->
+<!-- course_page_template version 9.4.0 -->
 <meta name="version" content="__PAGEVERSION__"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>__TITLE__</title>
 <style>
@@ -105,6 +105,11 @@ button,select,input,textarea{min-height:24px}.info,.jump{min-width:24px;min-heig
 .fsctl{margin-left:auto;display:flex;gap:.25rem;flex:none}.fsctl button{background:transparent;color:#fff;border:1px solid #ffffff66;border-radius:8px;min-width:2.4rem;min-height:2rem;font-weight:700;cursor:pointer;font-size:.9rem}
 .zbar{position:static;display:flex;justify-content:flex-end;flex-wrap:wrap;gap:.3rem;align-items:center;margin:.2rem 0 .35rem;background:transparent;box-shadow:none;padding:0}
 @media (max-width:700px){.fsctl button{min-width:2.2rem}}
+
+/* 9.4.0: breadcrumb instead of a third row of tabs; one concept at a time from the explorer */
+.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin:.1rem 0 .6rem;padding:.35rem .55rem;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.crumbs .sep{color:var(--mute)}.crumbs .cb{font-weight:700}.cbsel{font:inherit;font-weight:600;border:1px solid var(--blue);color:var(--blue);background:var(--bg);border-radius:8px;padding:.15rem .4rem}.cbnav{margin-left:auto;display:flex;flex-wrap:wrap;gap:.3rem}
+.focused .cards{grid-template-columns:1fr}
 </style></head><body>
 <header class="top"><div class="titlebar"><button class="explore" id="exploreBtn" aria-label="Open the chapter explorer" aria-controls="explorerTree" aria-expanded="false">☰</button><h1>__TITLE__</h1><div class="fsctl" role="group" aria-label="Text size"><button id="fsDown" aria-label="Smaller text" title="Smaller text">A−</button><button id="fsReset" aria-label="Default text size" title="Default text size"><span id="fsVal">100%</span></button><button id="fsUp" aria-label="Larger text" title="Larger text">A+</button></div></div><div class="sub">__COURSE__ · __SUB__ · every computed result was produced by __PY__ · code you edit runs in a background thread with CPython (Pyodide)</div>
 <nav class="groups" aria-label="Main menu" id="groups"></nav></header>
@@ -177,7 +182,7 @@ let P='<div role="tabpanel" data-pane="intro"><h2>'+esc(D.title)+'</h2><p>'+(D.u
 const firstSentence=t=>{const m=String(t).match(/^.*?[.!?](?=\s+[A-Z(]|$)/);return m?m[0]:String(t)};
 // a sub-subject's header shows one sentence; the rest opens on request, and the page's text stays whole for the agents
 function midsec(m){return '<section id="s-'+m.id+'" data-source="'+esc(m.section_iri)+'" data-concept="'+m.id+'" class="midhead"><h3>'+ICON[2]+' <span data-c="'+m.id+'" class="c">'+esc(m.label)+'</span> <button class="info" data-detail="'+m.id+'" title="Show details of '+esc(m.label)+'" aria-label="Show details of '+esc(m.label)+'">ⓘ</button></h3><details class="more"><summary>'+linkify(firstSentence(m.body),m.id)+'</summary><p>'+linkify(m.body,m.id)+'</p></details></section>'}
-for(const t of tops){const mids=kids(t.id);P+='<div role="tabpanel" data-pane="'+t.id+'" hidden><div class="subtabs" role="tablist" aria-label="'+esc(t.label)+'"><button role="tab" data-sub="ov-'+t.id+'" aria-selected="true">ℹ️ Overview</button>'+mids.map(m=>'<button role="tab" data-sub="'+m.id+'" aria-selected="false">'+ICON[2]+' '+esc(m.label)+'</button>').join('')+'</div>'
+for(const t of tops){const mids=kids(t.id);P+='<div role="tabpanel" data-pane="'+t.id+'" hidden><nav class="crumbs" id="crumb-'+t.id+'" aria-label="Where you are in '+esc(t.label)+'"></nav>'
  +'<div data-subpane="ov-'+t.id+'">'+sec(t,'h2')+'</div>'
  +mids.map(m=>'<div data-subpane="'+m.id+'" hidden>'+midsec(m)+'<div class="cards widget" id="w-'+m.id+'">'+kids(m.id).map(l=>sec(l,'h4')).join('')+'</div></div>').join('')+'</div>'}
 if(D.discussion.length)P+='<div role="tabpanel" data-pane="discuss" hidden><h2>💬 Discussion</h2><p class="note">Prompts from the course notes. Bring your answers to class.</p>'+D.discussion.map(([h,q])=>'<section class="leaf" style="margin-bottom:.6rem"><h4>'+esc(h)+'</h4><p>'+esc(q)+'</p></section>').join('')+'</div>';
@@ -219,11 +224,19 @@ panes.innerHTML=P;
 panes.querySelectorAll('[data-pane]').forEach(p=>{const g=GROUP_OF[p.dataset.pane];if(g)p.insertAdjacentHTML('afterbegin',subbarHTML(g));
  if(p.dataset.pane==='agents'||byId[p.dataset.pane])return;const h=p.querySelector(':scope > h2');const n=h&&h.nextElementSibling;if(n&&n.matches('p.note')){const d=document.createElement('details');d.className='help';d.innerHTML='<summary>ⓘ About this view</summary>';n.replaceWith(d);d.appendChild(n)}});
 // after the whole script has run, so the conversation store declared further down exists
-setTimeout(()=>{restoreConversations();selectAgent((()=>{try{const t=localStorage.getItem(CKEY+':tab');return t&&document.querySelector('[data-conv="'+t+'"]')?t:'guide'}catch(e){return 'guide'}})())});
-function showTab(k){if(GROUPS[k])k=LAST_IN[k]||GROUPS[k][0][0];const grp=GROUP_OF[k];if(grp)LAST_IN[grp]=k;document.body.classList.toggle('wide',k==='agents');  // conversations get the full width; the explorer returns elsewhere
+setTimeout(()=>{tops.forEach(t=>crumbs(t.id,'ov-'+t.id));restoreConversations();selectAgent((()=>{try{const t=localStorage.getItem(CKEY+':tab');return t&&document.querySelector('[data-conv="'+t+'"]')?t:'guide'}catch(e){return 'guide'}})())});
+function showTab(k){if(byId[k]&&byId[k].level===1&&!panes.querySelector('[data-pane="'+k+'"] [data-subpane]:not([hidden])'))setTimeout(()=>showSub('ov-'+k));if(GROUPS[k])k=LAST_IN[k]||GROUPS[k][0][0];const grp=GROUP_OF[k];if(grp)LAST_IN[grp]=k;document.body.classList.toggle('wide',k==='agents');  // conversations get the full width; the explorer returns elsewhere
 document.querySelectorAll('#groups button').forEach(b=>b.dataset.tab===(grp||k)?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));document.querySelectorAll('.viewsub [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===k));panes.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==k);if(k==='map')drawGraph();if(k==='taxonomy')drawTaxo();if(k==='ontograph')drawOnto();if(k==='mission')drawMission();if(k==='arch'||k==='prov')drawProv();if(k==='browse')drawBrowse();if(k==='checks')drawChecks();if(k==='mydata')drawMyData();document.getElementById('center').scrollTop=0}
-function showSub(m){const p=m.startsWith('ov-')?m.slice(3):byId[m].parent;const pane=panes.querySelector('[data-pane="'+p+'"]');pane.querySelectorAll('[data-sub]').forEach(b=>b.setAttribute('aria-selected',b.dataset.sub===m));pane.querySelectorAll('[data-subpane]').forEach(x=>x.hidden=x.dataset.subpane!==m)}
-function goTo(id){if(innerWidth<=1000)toggleExplorer(false);const n=byId[id],t=topOf(id);showTab(t);showSub(n.level>=2?(n.level===2?id:n.parent):'ov-'+id);const el=document.getElementById('s-'+id);if(el){el.scrollIntoView({block:'start'});}select(id);el&&(el.classList.add('flash'),setTimeout(()=>el.classList.remove('flash'),1200))}
+// A subject shows one thing at a time: its overview, one sub-subject with all its concepts, or a single concept.
+function showSub(m,focus){const p=m.startsWith('ov-')?m.slice(3):byId[m].parent;const pane=panes.querySelector('[data-pane="'+p+'"]');
+ pane.querySelectorAll('[data-subpane]').forEach(x=>{x.hidden=x.dataset.subpane!==m;if(!x.hidden){x.querySelectorAll('.cards > section.leaf').forEach(sc=>sc.hidden=!!focus&&sc.dataset.concept!==focus);x.classList.toggle('focused',!!focus)}});
+ crumbs(p,m,focus)}
+function crumbs(p,m,focus){const el=document.getElementById('crumb-'+p);if(!el)return;const mids=kids(p);
+ let h='<span class="cb">'+ICON[1]+' '+esc(byId[p].label)+'</span><span class="sep">›</span><select class="cbsel" data-crumb="'+p+'" aria-label="Choose a part of '+esc(byId[p].label)+'"><option value="ov-'+p+'"'+(m==='ov-'+p?' selected':'')+'>ℹ️ Overview</option>'+mids.map(x=>'<option value="'+x.id+'"'+(m===x.id?' selected':'')+'>'+esc(x.label)+' ('+kids(x.id).length+')</option>').join('')+'</select>';
+ if(focus){const sib=kids(byId[focus].parent),i=sib.findIndex(x=>x.id===focus);
+  h+='<span class="sep">›</span><span class="cb leafcb">'+ICON[3]+' '+esc(byId[focus].label)+'</span><span class="cbnav">'+(i>0?'<button class="btn g" data-go="'+sib[i-1].id+'" title="'+esc(sib[i-1].label)+'">◀ '+esc(sib[i-1].label)+'</button>':'')+(i<sib.length-1?'<button class="btn g" data-go="'+sib[i+1].id+'" title="'+esc(sib[i+1].label)+'">'+esc(sib[i+1].label)+' ▶</button>':'')+(sib.length>1?'<button class="btn g" data-sub="'+byId[focus].parent+'">Show all '+sib.length+'</button>':'')+'</span>'}
+ el.innerHTML=h}
+function goTo(id){if(innerWidth<=1000)toggleExplorer(false);const n=byId[id],t=topOf(id);showTab(t);showSub(n.level>=2?(n.level===2?id:n.parent):'ov-'+id,n.level===3?id:null);const el=document.getElementById('s-'+id);if(el){el.scrollIntoView({block:'start'});}select(id);el&&(el.classList.add('flash'),setTimeout(()=>el.classList.remove('flash'),1200))}
 const FS_KEY='course-page-text-size';function setFs(v){v=Math.max(.8,Math.min(1.8,Math.round(v*10)/10));document.documentElement.style.setProperty('--fs',v);const e=document.getElementById('fsVal');if(e)e.textContent=Math.round(v*100)+'%';try{localStorage.setItem(FS_KEY,v)}catch(x){}}
 try{const v=parseFloat(localStorage.getItem(FS_KEY));if(v)setTimeout(()=>setFs(v))}catch(x){}
 function toggleExplorer(open){const tr=document.getElementById('explorerTree'),b=document.getElementById('exploreBtn');open=open===undefined?!tr.classList.contains('open'):open;tr.classList.toggle('open',open);document.getElementById('scrim').hidden=!open;b.setAttribute('aria-expanded',open)}
@@ -670,7 +683,7 @@ document.addEventListener('click',async e=>{const t=e.target;if(!ctx.hidden&&!ct
   if(cmd==='copy'&&navigator.clipboard)navigator.clipboard.writeText(byId[id].io?byId[id].io.code:byId[id].label);}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){ctx.hidden=true;closeCard();toggleExplorer(false);return}if(e.key==='Enter'&&!e.shiftKey&&e.target.matches('.composer textarea')){e.preventDefault();const id=e.target.id.slice(0,-2);id==='guide'?route():ask(id);return}
  if(e.key==='Enter'){const c=e.target.closest('[data-c]');if(c){if(c.closest('#tree'))goTo(c.dataset.c);else{select(c.dataset.c);openCard(c.dataset.c)}}}});
-document.addEventListener('change',e=>{if(e.target.matches('[data-okind]'))renderOnto()});
+document.addEventListener('change',e=>{if(e.target.matches('[data-okind]'))renderOnto();if(e.target.matches('[data-crumb]'))showSub(e.target.value)});
 document.addEventListener('input',e=>{if(e.target.matches('input[type=range][id^="wv-"]')){document.getElementById(e.target.id.replace(/-x$/,'-v')).textContent=e.target.value}});
 document.addEventListener('contextmenu',e=>{const c=e.target.closest('[data-c],[data-concept]');if(!c)return;e.preventDefault();const id=c.dataset.c||c.dataset.concept,n=byId[id];
  ctx.innerHTML='<button role="menuitem" data-cmd="card:'+id+'">🔎 Show details of '+esc(n.label)+'</button><button role="menuitem" data-cmd="go:'+id+'">📍 Go to its section</button><button role="menuitem" data-cmd="tax:'+id+'">🌳 Show in taxonomy</button><button role="menuitem" data-cmd="map:'+id+'">🕸 Show in concept map</button>'+(n.io?'<button role="menuitem" data-cmd="play:'+id+'">▶ Open in playground</button><button role="menuitem" data-cmd="copy:'+id+'">📋 Copy example code</button>':'')+'<button role="menuitem" data-cmd="agent:'+id+'">🤖 Ask its agent</button>';

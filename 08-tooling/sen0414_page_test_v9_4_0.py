@@ -4,13 +4,13 @@ code the student edits really runs (edited code must change the result); agents 
 slice, so different questions get different answers; a menu click changes the main area and leaves the
 detail card closed; the card opens only on an explicit request; the tab row is the sub-menu of the
 selected top-level item. Every stored result must also equal what the build's interpreter printed."""
-__version__ = "9.3.0"
+__version__ = "9.4.0"
 import json, os, sys, time
-PV = os.environ.get("PAGE_VER", "9_3_0")  # generated files carry the page version they were produced for
+PV = os.environ.get("PAGE_VER", "9_4_0")  # generated files carry the page version they were produced for
 from playwright.sync_api import sync_playwright
 N = sys.argv[1]; NUM = N; N = ("ch%s" % N) if N.isdigit() else N
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-page_path = os.environ.get("PAGE", os.path.join(REPO, "03-materials", N, "page", "sen0414_%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "9_3_0"))))
+page_path = os.environ.get("PAGE", os.path.join(REPO, "03-materials", N, "page", "sen0414_%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "9_4_0"))))
 d = json.load(open(os.path.join(REPO, "08-tooling", "%s-page" % N, "page_data_v%s.json" % PV)))
 AXE = "/home/claude/Ontologies/rdodi-ecosystem/07-pedagogy-professional-stage/lib/axe.min.js"
 R = {"_version": PV.replace("_", "."), "widgets": {}, "features": {}, "gates": {}}
@@ -35,10 +35,11 @@ with sync_playwright() as p:
     top2 = next(t for t in tops if len([n for n in nodes if n["parent"] == t["id"]]) >= 2)
     view(top2["id"])
     mids = [n for n in nodes if n["parent"] == top2["id"]]
-    sub_in_pane = pg.locator('[data-pane="%s"] .subtabs:not(.viewsub) [data-sub]:not([data-sub^="ov-"])' % top2["id"]).count()
-    pg.click('[data-pane="%s"] [data-sub="%s"]' % (top2["id"], mids[-1]["id"]))
+    third_row = pg.locator('[data-pane="%s"] .subtabs:not(.viewsub)' % top2["id"]).count()
+    sub_in_pane = pg.locator('#crumb-%s option' % top2["id"]).count() - 1 if third_row == 0 else -1
+    pg.select_option('#crumb-%s select' % top2["id"], mids[-1]["id"])
     learn_tabs = [pg.locator('[data-pane="%s"] .viewsub [data-tab]' % top2["id"]).nth(k).get_attribute("data-tab") for k in range(pg.locator('[data-pane="%s"] .viewsub [data-tab]' % top2["id"]).count())]
-    feat("one top menu; the tab row is the selected item's sub-menu", pg.locator("#tabs").count() == 0 and labels == ["intro", "learn", "maps", "lab", "agents", "practice", "reference", "about"] and all(t["id"] in learn_tabs for t in tops) and sub_in_pane == len(mids)
+    feat("one top menu; its tab row is the only row of tabs - sub-subjects are chosen from a breadcrumb", pg.locator("#tabs").count() == 0 and labels == ["intro", "learn", "maps", "lab", "agents", "practice", "reference", "about"] and all(t["id"] in learn_tabs for t in tops) and sub_in_pane == len(mids)
          and pg.locator('[data-subpane="%s"]' % mids[-1]["id"]).is_visible() and not pg.locator('[data-subpane="%s"]' % mids[0]["id"]).is_visible(), "top menu: %s" % ", ".join(labels))
     # the explorer drives the main area; the card stays closed
     leaf = [n for n in nodes if n["level"] == 3 and n["parent"] != mids[-1]["id"]][0]
@@ -175,7 +176,7 @@ with sync_playwright() as p:
     cl = pg.text_content("#clout"); n_io = len([n for n in nodes if "io" in n])
     feat("Code Lab: Python over this page's own data re-runs every example", cl.count("same |") == n_io and "DIFFERENT" not in cl, "%d of %d examples the same" % (cl.count("same |"), n_io))
     # ---- version 8 ----
-    view(tops[0]["id"]); pg.click('[data-pane="%s"] [data-sub="ov-%s"]' % (tops[0]["id"], tops[0]["id"]))
+    view(tops[0]["id"]); pg.select_option('#crumb-%s select' % tops[0]["id"], "ov-" + tops[0]["id"])
     dup = pg.evaluate("()=>[...document.querySelectorAll('[data-pane]')].filter(p=>byId[p.dataset.pane]&&byId[p.dataset.pane].level===1).reduce((a,p)=>a+p.querySelectorAll('.chip').length,0)")
     feat("subject screens carry no repeated lists: an overview sub-tab, one-sentence sub-subject headers", dup == 0 and pg.locator('[data-pane="%s"] .ovcard' % tops[0]["id"]).count() > 0 and pg.locator("details.more").count() == len([n for n in nodes if n["level"] == 2]), "0 duplicate chip rows")
     view("taxonomy"); tx = pg.evaluate("()=>{const g=[...document.querySelectorAll('#taxo g.n')];return {svgs:document.querySelectorAll('#taxo svg').length,boxes:g.length,root:document.querySelectorAll('#taxo g.n.root').length,overflow:g.filter(x=>x.querySelector('text').getBBox().width>x.querySelector('rect').getBBox().width+0.5).length}}")
@@ -255,6 +256,14 @@ with sync_playwright() as p:
     feat("any screen: text, explorer and cards scale with the window as it is resized, 1280 to 3840 pixels, bounded at 17 and 28 pixel text", grows and scales,
          "root text %s px" % " / ".join("%g" % x["root"] for x in sizes))
     dctx.close()
+    # ---- 9.4.0: the explorer opens one concept; its siblings stay a click away ----
+    mid2 = next(m for m in nodes if m["level"] == 2 and len([x for x in nodes if x["parent"] == m["id"]]) >= 2); sibs = [x for x in nodes if x["parent"] == mid2["id"]]
+    pg.click("#expandAll"); pg.click('#tree .tn[data-c="%s"]' % sibs[0]["id"]); pg.wait_for_timeout(250)
+    shown = pg.evaluate("id=>[...document.querySelectorAll('[data-subpane=\"'+id+'\"] .cards > section.leaf')].filter(s=>!s.hidden).map(s=>s.dataset.concept)", mid2["id"])
+    crumb = pg.text_content("#crumb-%s" % [n for n in nodes if n["id"] == mid2["parent"]][0]["id"])
+    pg.click('#crumb-%s [data-sub="%s"]' % (mid2["parent"], mid2["id"])); pg.wait_for_timeout(200)
+    all_back = pg.evaluate("id=>[...document.querySelectorAll('[data-subpane=\"'+id+'\"] .cards > section.leaf')].filter(s=>!s.hidden).length", mid2["id"])
+    feat("the explorer opens a single concept; the breadcrumb shows where it sits, with its neighbours and 'show all' a click away", shown == [sibs[0]["id"]] and sibs[0]["label"] in crumb and sibs[1]["label"] in crumb and all_back == len(sibs), "%s alone, then all %d" % (sibs[0]["label"], all_back))
     # ---- 9.3.0: text-size control, zoom bar outside the drawing, concept taps show options ----
     fctx = b.new_context(locale="en-US", viewport={"width": 1280, "height": 800}); fp = fctx.new_page(); fp.goto("file://" + page_path); fp.wait_for_timeout(300)
     r0 = fp.evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)"); fp.click("#fsUp"); fp.click("#fsUp"); r2 = fp.evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)")

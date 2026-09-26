@@ -1,6 +1,6 @@
 """Backlog stage of the SEN0414 slide lineage: admission only. Every item Proposed; no task yet -
 tasks are produced by planning, and only for what is planned into an iteration."""
-__version__ = "1.1.5"
+__version__ = "1.1.6"
 from sen0414_slides_stages_v1_0_1 import CHAPTERS, KIND, cid
 
 # Planning of 2026-09-24, approved by the owner: chapters 1 and 2 in the first iteration, until
@@ -134,6 +134,12 @@ ex:Iter_1 a backlog:Iteration ; rdfs:label "First iteration: chapters 1 and 2, b
 
 
 FEEDBACK = """
+ex:Finding_BreadcrumbV94 a backlog:RetrospectiveFinding ;
+    rdfs:label "No third row of tabs; the explorer opens one concept at a time"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner judged a third row of tabs - Learn, then the subjects, then each subject's sub-subjects - a poor fit now that the explorer carries the hierarchy, and found that choosing Operation, Arithmetic operation, Precedence in the explorer showed Precedence together with its sibling Integer division, because the explorer opened the sub-subject's whole grid and only scrolled to the chosen concept." ;
+    backlog:hasRemedy "Template 9.4.0: a subject no longer has a row of sub-subject tabs; a breadcrumb shows where the reader is - the subject, a chooser listing its overview and sub-subjects with their concept counts, and the concept when one is open. Choosing a concept in the explorer shows that concept alone; the breadcrumb then offers its neighbours as previous and next and a 'show all' for the sub-subject. Choosing a sub-subject still shows all its concepts. At 2026-09-26T13:19:23 every check in 08-tooling/sen0414_page_test_v9_4_0.py passed on both pages, including new checks that the menu's tab row is the only row of tabs, that the breadcrumb chooser opens a sub-subject, and that the explorer opens one concept with its neighbours and 'show all' a click away; 0 console errors, 0 WCAG 2 AA violations; Stage 4 gates passed; the stale fixture refused. Materials 1.18.0 and configuration 1.2.5 re-issued." .
+
 ex:Finding_ReadabilityV93 a backlog:RetrospectiveFinding ;
     rdfs:label "Larger text with a reader's size control, zoom controls clear of diagrams, concept taps showing options"@en ;
     backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
