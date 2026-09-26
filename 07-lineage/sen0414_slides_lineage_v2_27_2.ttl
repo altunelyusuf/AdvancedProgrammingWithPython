@@ -7,7 +7,7 @@
 
 <http://example.org/sen0414-slides-lineage> a owl:Ontology ;
     rdfs:label "Delivery lineage for renewing the SEN0414 lecture decks"@en ;
-    owl:versionInfo "2.27.1" ; dcterms:identifier "sen0414_slides_lineage" .
+    owl:versionInfo "2.27.2" ; dcterms:identifier "sen0414_slides_lineage" .
 
 ex:Lineage a backlog:Lineage ;
     rdfs:label "First lineage run for the SEN0414 decks"@en ;
@@ -1393,6 +1393,12 @@ ex:ST_Page_Threads a backlog:Story ; rdfs:label "Page: 2nd edition, chapter 17: 
     backlog:dependsOn ex:ST_Research_Threads ;
     backlog:hasState backlog:Proposed ;
     backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored when its own iteration is planned." .
+
+ex:Finding_AntivirusHardeningV942 a backlog:RetrospectiveFinding ;
+    rdfs:label "Page code that antivirus heuristics read as a threat, removed"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner's Windows Defender removed a page as a threat. Scanned the same day with ClamAV and its current signatures (main and daily databases of 2026-09-26), heuristic alerts on: both pages and both decks came back clean - no known malware. An audit of the page's code found two patterns that behaviour-based scanners treat as malicious because malware uses them: code downloaded as text and run with eval - how the Python worker loaded Pyodide - which is how script downloaders work; and a file built inside the page and saved by a scripted click on a hidden link - how the downloads worked - which is the pattern known as HTML smuggling, used to slip malware past mail and web filters. The exact detection name was not available, so which of the two triggered Defender is not proven." ;
+    backlog:hasRemedy "Template 9.4.2 removes both: Pyodide is loaded with importScripts, the browser's standard way for a worker to load a library - proven to start CPython 3.13.2 in a worker - so no fetched code is evaluated; and every download became a copy to the clipboard with a short confirmation, so the page never builds and saves a file. The page keeps no document.write, base64 decoding, new Function or redirect. At 2026-09-26T14:00:30 every check in 08-tooling/sen0414_page_test_v9_4_2.py passed on both pages, including a new check that none of these patterns appears in the page and copy checks for code, results and conversations; ClamAV found both 9.4.2 pages clean; 0 console errors, 0 WCAG 2 AA violations; Stage 4 gates passed; the stale fixture refused." .
 
 ex:Finding_ExplorerInStepV941 a backlog:RetrospectiveFinding ;
     rdfs:label "The explorer kept in step with the main area"@en ;

@@ -4,13 +4,13 @@ code the student edits really runs (edited code must change the result); agents 
 slice, so different questions get different answers; a menu click changes the main area and leaves the
 detail card closed; the card opens only on an explicit request; the tab row is the sub-menu of the
 selected top-level item. Every stored result must also equal what the build's interpreter printed."""
-__version__ = "9.4.1"
-import json, os, sys, time
-PV = os.environ.get("PAGE_VER", "9_4_1")  # generated files carry the page version they were produced for
+__version__ = "9.4.2"
+import json, os, re, sys, time
+PV = os.environ.get("PAGE_VER", "9_4_2")  # generated files carry the page version they were produced for
 from playwright.sync_api import sync_playwright
 N = sys.argv[1]; NUM = N; N = ("ch%s" % N) if N.isdigit() else N
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-page_path = os.environ.get("PAGE", os.path.join(REPO, "03-materials", N, "page", "sen0414_%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "9_4_1"))))
+page_path = os.environ.get("PAGE", os.path.join(REPO, "03-materials", N, "page", "sen0414_%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "9_4_2"))))
 d = json.load(open(os.path.join(REPO, "08-tooling", "%s-page" % N, "page_data_v%s.json" % PV)))
 AXE = "/home/claude/Ontologies/rdodi-ecosystem/07-pedagogy-professional-stage/lib/axe.min.js"
 R = {"_version": PV.replace("_", "."), "widgets": {}, "features": {}, "gates": {}}
@@ -18,7 +18,7 @@ feat = lambda k, ok, det="": R["features"].__setitem__(k, {"passed": bool(ok), "
 nodes = d["nodes"]; tops = [n for n in nodes if n["level"] == 1]
 in_view = "id=>{const e=document.getElementById(id);if(!e)return false;const r=e.getBoundingClientRect();return r.height>0&&r.top<innerHeight&&r.bottom>0&&!e.closest('[hidden]')}"
 with sync_playwright() as p:
-    b = p.chromium.launch(env={"LANG": "en_US.UTF-8", "LC_ALL": "en_US.UTF-8"}); ctx = b.new_context(locale="en-US", viewport={"width": 1400, "height": 900}); pg = ctx.new_page(); errors = []
+    b = p.chromium.launch(env={"LANG": "en_US.UTF-8", "LC_ALL": "en_US.UTF-8"}); ctx = b.new_context(locale="en-US", viewport={"width": 1400, "height": 900}, permissions=["clipboard-read", "clipboard-write"]); pg = ctx.new_page(); errors = []
     pg.on("console", lambda m: errors.append(m.text) if m.type == "error" else None); pg.on("pageerror", lambda e: errors.append(str(e)))
     pg.add_init_script("window.__lt=[];new PerformanceObserver(l=>l.getEntries().forEach(e=>window.__lt.push(Math.round(e.duration)))).observe({type:'longtask',buffered:true});")
     pg.goto("file://" + page_path); pg.wait_for_timeout(400)
@@ -146,21 +146,18 @@ with sync_playwright() as p:
     feat("About: how it works, agents & tools with the corpus, mission & backlog with course outcomes, provenance & known limits", len(howto) > 400 and arch_rows == files and "Mission" in mission and "LO-1" in mission and limits >= 4, "corpus rows %d, limits %d" % (arch_rows, limits))
     view("sparql"); pg.click("#sqrun"); pg.wait_for_function("()=>/result/.test(document.getElementById('sqstat').textContent)||document.querySelector('#sqres .err')", timeout=60000)
     rows = pg.locator("#sqres tr").count() - 1
-    with pg.expect_download() as dl: pg.click("#sqcsv")
-    csv_name = dl.value.suggested_filename
+    pg.click("#sqcsv"); pg.wait_for_timeout(200); csv_copy = pg.evaluate("navigator.clipboard.readText()")
     pg.select_option("#sqsamp", "5"); pg.click("#sqload"); pg.click("#sqrun"); pg.wait_for_function("()=>/result/.test(document.getElementById('sqstat').textContent)", timeout=60000); ask_ans = pg.text_content("#sqres")
-    feat("SPARQL console: editable queries over the knowledge graph, results table, CSV download, ASK", rows > 5 and csv_name.endswith(".csv") and ask_ans.strip() in ("Yes", "No"), "%d rows; ASK -> %s" % (rows, ask_ans.strip()))
+    feat("SPARQL console: editable queries over the knowledge graph, results table, results copied as CSV, ASK", rows > 5 and csv_copy.count("\n") >= rows and ask_ans.strip() in ("Yes", "No"), "%d rows; ASK -> %s" % (rows, ask_ans.strip()))
     view("ontograph"); pg.wait_for_function("()=>document.querySelectorAll('#onto g.on').length>0", timeout=60000)
     n_all = pg.locator("#onto g.on").count(); pg.uncheck('[data-okind="individual"]'); n_cls = pg.locator("#onto g.on").count(); pg.check('[data-okind="individual"]')
     pg.click("#orelayout"); pg.wait_for_timeout(2500); pg.click("#ofit"); first = pg.locator("#onto g.on").first; first.click(); info = pg.text_content("#ontoinfo")
     feat("ontology graph: classes, individuals and book concepts from the graph, filter, re-layout, fit, node detail", n_all > 20 and 0 < n_cls < n_all and len(info) > 20, "%d nodes (%d without individuals)" % (n_all, n_cls))
     view("play"); pg.fill("#pcode", "print('hello')")
-    with pg.expect_download() as dl2: pg.click('[data-dl="pcode"]')
-    code_dl = dl2.value.suggested_filename
+    pg.click('[data-dl="pcode"]'); pg.wait_for_timeout(200); code_copy = pg.evaluate("navigator.clipboard.readText()")
     view("mydata")
-    with pg.expect_download() as dl3: pg.click("#dlconvmd")
-    conv_path = dl3.value.path(); conv_md = open(conv_path).read()
-    feat("downloads: playground code, SPARQL results, conversations", code_dl == "playground.py" and conv_md.startswith("# Conversations") and pg.locator("#mydataout tr").count() >= 1, "%s; conversations file %d bytes" % (code_dl, len(conv_md)))
+    pg.click("#dlconvmd"); pg.wait_for_timeout(200); conv_md = pg.evaluate("navigator.clipboard.readText()")
+    feat("copying out: playground code, SPARQL results, conversations - to the clipboard, with no file built and saved by the page", code_copy == "print('hello')" and conv_md.startswith("# Conversations") and pg.locator("#mydataout tr").count() >= 1, "code, CSV and %d characters of conversation copied" % len(conv_md))
     view("browse"); chips = pg.locator("#browse [data-browseq]"); nchips = chips.count(); qtext = chips.first.text_content(); target_b = chips.first.get_attribute("data-browseq")
     nb = pg.locator("#%s-log .msg" % target_b).count(); chips.first.click()
     pg.wait_for_function("([id,n])=>{const m=document.querySelectorAll('#'+id+'-log .msg');return m.length>=n+2&&!m[m.length-1].classList.contains('typing')}", arg=[target_b, nb], timeout=120000)
@@ -279,6 +276,10 @@ with sync_playwright() as p:
     if link.count(): link.click(); pg.wait_for_timeout(150); steps.append(("concept tap keeps the location", sel() == mid2["id"])); pg.keyboard.press("Escape")
     view("taxonomy"); steps.append(("non-subject view clears it", sel() is None))
     feat("the explorer stays in step with the main area: chooser, next, show all, subject tabs, concept taps, other views", all(ok for _, ok in steps), ", ".join("%s %s" % (n_, "ok" if ok else "OUT OF STEP") for n_, ok in steps))
+    # ---- 9.4.2: nothing an antivirus reads as a downloader or HTML smuggling ----
+    html = open(page_path).read()
+    risky = {k: len(re.findall(p, html)) for k, p in (("evaluated fetched code", r"\(0,\s*eval\)|[^\w.'\"]eval\((?!n\[|compile|_last|e,|'\+)"), ("new Function", r"new Function\("), ("scripted download", r"\.download\s*=|msSaveOrOpenBlob"), ("document.write", r"document\.write"), ("base64 decode", r"\batob\("), ("redirect", r"location\.(href|replace|assign)\s*="))}
+    feat("no evaluated fetched code, no scripted file download, no document.write, base64 decoding or redirect in the page", not any(risky.values()), str(risky))
     # ---- 9.3.0: text-size control, zoom bar outside the drawing, concept taps show options ----
     fctx = b.new_context(locale="en-US", viewport={"width": 1280, "height": 800}); fp = fctx.new_page(); fp.goto("file://" + page_path); fp.wait_for_timeout(300)
     r0 = fp.evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)"); fp.click("#fsUp"); fp.click("#fsUp"); r2 = fp.evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)")

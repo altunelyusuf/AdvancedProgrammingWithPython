@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Derives the page ABox's build record from version 2's page data and browser results, so the ABox writer
 records every v2 widget - and marks it tested only if its v2 browser test passed. Usage: <NN>"""
-__version__ = "2.1.6"
+__version__ = "2.1.7"
 import json, os, sys
-PV = os.environ.get("PAGE_VER", "9_4_1")  # generated files carry the page version they were produced for
+PV = os.environ.get("PAGE_VER", "9_4_2")  # generated files carry the page version they were produced for
 N = sys.argv[1]; P = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ch%s-page" % N)
 d = json.load(open(os.path.join(P, "page_data_v%s.json" % PV))); t = json.load(open(os.path.join(P, "test_results_v%s.json" % PV)))
 W = []
