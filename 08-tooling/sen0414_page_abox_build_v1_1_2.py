@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """The Stage 4 page ABox for a SEN0414 chapter, written from the build record and the browser test
 results: a widget is marked designTestPassed only if its test in test_results.json passed."""
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 import json, os, sys
 import glob as _glob
 latest_input = lambda d, stem: sorted(_glob.glob(os.path.join(d, stem + '_v*.json')), key=lambda x: [int(v) for v in x.rsplit('_v', 1)[1][:-5].split('_')])[-1]  # page inputs are versioned; the newest one is current
-PV = os.environ.get("PAGE_VER", "9_0_1")  # generated files carry the page version they were produced for
+PV = os.environ.get("PAGE_VER", "9_1_0")  # generated files carry the page version they were produced for
 N = sys.argv[1]; REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 rec = json.load(open(os.path.join(REPO, "08-tooling", "ch%s-page" % N, "build_record_v%s.json" % PV)))
 OBJ = json.load(open(latest_input(os.path.join(REPO, "08-tooling", "ch%s-page" % N), "objectives")))

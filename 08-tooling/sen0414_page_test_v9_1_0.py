@@ -4,13 +4,13 @@ code the student edits really runs (edited code must change the result); agents 
 slice, so different questions get different answers; a menu click changes the main area and leaves the
 detail card closed; the card opens only on an explicit request; the tab row is the sub-menu of the
 selected top-level item. Every stored result must also equal what the build's interpreter printed."""
-__version__ = "9.0.1"
+__version__ = "9.1.0"
 import json, os, sys, time
-PV = os.environ.get("PAGE_VER", "9_0_1")  # generated files carry the page version they were produced for
+PV = os.environ.get("PAGE_VER", "9_1_0")  # generated files carry the page version they were produced for
 from playwright.sync_api import sync_playwright
 N = sys.argv[1]; NUM = N; N = ("ch%s" % N) if N.isdigit() else N
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-page_path = os.environ.get("PAGE", os.path.join(REPO, "03-materials", N, "page", "sen0414_%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "9_0_1"))))
+page_path = os.environ.get("PAGE", os.path.join(REPO, "03-materials", N, "page", "sen0414_%s_page_v%s.html" % (N, os.environ.get("PAGE_VER", "9_1_0"))))
 d = json.load(open(os.path.join(REPO, "08-tooling", "%s-page" % N, "page_data_v%s.json" % PV)))
 AXE = "/home/claude/Ontologies/rdodi-ecosystem/07-pedagogy-professional-stage/lib/axe.min.js"
 R = {"_version": PV.replace("_", "."), "widgets": {}, "features": {}, "gates": {}}
@@ -226,6 +226,26 @@ with sync_playwright() as p:
     feat("chapter visualisations: float bits, truth tables, branch paths - each computed by Python", all(vis_ok), "%d of %d" % (sum(vis_ok), len(vis_ok)))
     view("taxonomy"); v0 = pg.get_attribute("#taxo svg", "viewBox"); pg.hover("#taxo svg"); pg.mouse.wheel(0, -300); pg.wait_for_timeout(200); v1 = pg.get_attribute("#taxo svg", "viewBox")
     feat("the mouse wheel zooms diagrams, without a key held", v1 != v0, "viewBox changed on wheel")
+    # ---- 9.1.0: phones and tablets ----
+    for (W, H, dev) in ((360, 740, "small phone"), (390, 844, "phone"), (768, 1024, "tablet")):
+        mctx = b.new_context(locale="en-US", viewport={"width": W, "height": H}, is_mobile=True, has_touch=True, device_scale_factor=2); m = mctx.new_page(); m.goto("file://" + page_path); m.wait_for_timeout(400)
+        bad = []
+        for k in ["intro"] + [x for x in GROUP] + ["agents"]:
+            m.evaluate("k=>showTab(k)", k); m.wait_for_timeout(120)
+            r = m.evaluate("""()=>{const W=innerWidth;return {wide:document.documentElement.scrollWidth>W+1,
+              tiny:[...document.querySelectorAll('button,a,input,select,textarea')].filter(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&!e.closest('[hidden],.tv')&&!(e.tagName==='A'&&e.closest('p,li,td'))&&(r.height<24||r.width<24)}).map(e=>(e.id||e.className||e.textContent).toString().slice(0,20)).slice(0,3),
+              font:Math.min(...[...document.querySelectorAll('main p, main li, .note, .msg')].filter(e=>e.getBoundingClientRect().width>0).map(e=>parseFloat(getComputedStyle(e).fontSize)).concat([99]))}}""")
+            if r["wide"] or r["tiny"] or (W < 700 and r["font"] < 14): bad.append((k, r))
+        header = m.evaluate("()=>Math.round(document.querySelector('header').getBoundingClientRect().height)")
+        m.click("#exploreBtn"); m.wait_for_timeout(350); drawer = m.evaluate("()=>{const r=document.getElementById('explorerTree').getBoundingClientRect();return r.left>=-1&&r.width>200}")
+        leaf = [n for n in nodes if n["level"] == 3][0]; m.click("#expandAll"); m.click('#tree .tn[data-c="%s"]' % leaf["id"]); m.wait_for_timeout(400)
+        closed = m.evaluate("()=>document.getElementById('explorerTree').getBoundingClientRect().right<=0") and m.evaluate(in_view, "s-" + leaf["id"])
+        feat("%s (%dpx): no view wider than the screen, every control at least 24px, text at least 14px%s, explorer as a drawer" % (dev, W, "" if W >= 700 else ", header compact"), not bad and drawer and closed and (W >= 700 or header <= 100), "header %dpx; problems: %s" % (header, bad[:2]))
+        mctx.close()
+    pinch = pg.evaluate("""()=>{showTab('taxonomy');const svg=document.querySelector('#taxo svg'),v0=svg.getAttribute('viewBox'),r=svg.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+      const ev=(t,id,x,y)=>svg.dispatchEvent(new PointerEvent(t,{pointerId:id,clientX:x,clientY:y,bubbles:true,pointerType:'touch',isPrimary:id===1}));
+      ev('pointerdown',1,cx-20,cy);ev('pointerdown',2,cx+20,cy);ev('pointermove',1,cx-80,cy);ev('pointermove',2,cx+80,cy);ev('pointerup',1,cx-80,cy);ev('pointerup',2,cx+80,cy);return v0!==svg.getAttribute('viewBox')}""")
+    feat("pinch zoom: two fingers spreading zoom a diagram", pinch)
     lt2 = pg.evaluate("window.__lt"); feat("no main-thread task over 200 ms, including the ontology layout", max(lt2 or [0]) <= 200, "longest %d ms" % max(lt2 or [0]))
     view("quiz"); fs = pg.locator("fieldset"); qok = True
     for k in range(fs.count()):

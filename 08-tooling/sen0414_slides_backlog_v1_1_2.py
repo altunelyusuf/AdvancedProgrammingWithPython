@@ -1,6 +1,6 @@
 """Backlog stage of the SEN0414 slide lineage: admission only. Every item Proposed; no task yet -
 tasks are produced by planning, and only for what is planned into an iteration."""
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 from sen0414_slides_stages_v1_0_1 import CHAPTERS, KIND, cid
 
 # Planning of 2026-09-24, approved by the owner: chapters 1 and 2 in the first iteration, until
@@ -134,6 +134,12 @@ ex:Iter_1 a backlog:Iteration ; rdfs:label "First iteration: chapters 1 and 2, b
 
 
 FEEDBACK = """
+ex:Finding_ResponsivePagesV91 a backlog:RetrospectiveFinding ;
+    rdfs:label "The chapter pages made usable on phones and tablets"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner asked whether students can read and use the pages on their phones. Measured at 360, 390 and 768 pixels before any change: no view overflowed sideways, but the header took 191 pixels of a phone screen, the chapter explorer was hidden below 1000 pixels with no way to open it, every view had controls under the 24-pixel accessibility minimum (up to 26 per view), note text was 12.8 pixels, and diagrams could not be pinch-zoomed." ;
+    backlog:hasRemedy "Page version 9.1.0 from template 9.1.0: on phones a 96-pixel header with a one-line title and menu and tab rows that scroll sideways; the explorer as a drawer from every view, closed by choosing a concept, its close button or Escape; pinch zoom on every diagram; controls at least 24 pixels everywhere and 36 to 40 on touch screens; phone text at least 14 pixels. The agents' view and behaviour are unchanged; only the page-wide control and text sizes reach them on phones. At 2026-09-26T10:50:16 every check in 08-tooling/sen0414_page_test_v9_1_0.py passed on both pages, including new small-phone, phone and tablet checks over every view and a pinch check; 35 and 37 widgets; 0 console errors, 0 WCAG 2 AA violations; Stage 4 gates passed; a stale-value fixture refused on each; the version audit found every file named with its version and declaring it inside. Materials record re-issued as 1.15.0 and course page configuration as 1.2.2, both changed." .
+
 ex:Finding_EveryFileVersioned a backlog:RetrospectiveFinding ;
     rdfs:label "Every file versioned, with its version also declared inside it"@en ;
     backlog:belongsToLineage ex:Lineage ; backlog:hasFindingScope backlog:Scope_Methodology ;
