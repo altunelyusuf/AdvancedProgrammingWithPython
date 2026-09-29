@@ -1,0 +1,266 @@
+{
+ "_version": "1.0.0",
+ "_deck": "1.0.0",
+ "_python": "3.14.4",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 5: Debugging",
+   "say": "Welcome. Chapter 5 of the book (Sweigart, 2025) is about bugs: how a program tells you it has met one, how you make it tell you sooner, and how you stop it in the middle and look. The chapter page has the same diagrams, and its Lecture tab carries this talk track.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "The program runs, the answer is wrong",
+   "say": "Begin with the feeling everyone has had: the program does not crash, it just gives the wrong answer. Two of this chapter’s own programs do exactly that, a factorial that returns 0 and an adding program that prints 5342 when it should print 50.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "Four instruments, and what surrounds them",
+   "say": "This is the map of the chapter, drawn from the chapter’s ontology; it is the same tree the interactive page uses. Error signalling covers raising exceptions and reading the traceback. Assertion covers assert and, importantly, when it is switched off. Logging covers setting it up, the levels and good practice. Debugger covers the controls and the standard library’s own debugger. Modern practice holds the three bugs the chapter’s programs contain. By the end you should be able to say which instrument a given problem calls for.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "Each instrument answers a different question",
+   "say": "Raise is for an error somebody else can handle: a caller passed a width of 1 to a function that draws boxes. Assert is for a belief of the programmer: if this list is sorted, the first item is not larger than the last, and if that is false the code is wrong and must stop. Logging is for a record: what did the program do, in what order, with which values. The debugger is for a question about state: what are the variables at exactly this line. The rest of the lecture takes them in that order and ends with three real bugs and the instrument that finds each.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "Raise an exception when a call cannot be served",
+   "say": "The function is the book’s box_print (Sweigart, 2025), with the calls that trigger each message. It checks its own arguments and raises an Exception with a message when one is wrong: a symbol that is not one character, a width or a height that is not greater than 2. The loop at the bottom calls it with a good box, a width of 1 and a two-character symbol. The except clause caught each exception, called it err and printed str(err), which is exactly the text given to raise. The caller can decide what to do.",
+   "concept": "RaiseStatement",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "An exception climbs the stack until something handles it",
+   "say": "Nothing in read_age handles it, so the function is left; the same in load, and the same in process. Only the try around the call at the bottom has an except clause that matches, so it is caught there and execution continues with the print. The transcript is the proof: caught, then the message. This is why the chapter says a function should raise and let the caller who knows what to do handle it.",
+   "concept": "ExceptionUnwinding",
+   "visual": "ExceptionUnwinding"
+  },
+  {
+   "n": 7,
+   "title": "Read a traceback from the bottom up",
+   "say": "The lines above go backwards through the calls that led there, so the frame just above the last line is where the exception was raised. Each frame has its file, its line number, its function and the source line itself.",
+   "concept": "TracebackReading",
+   "visual": "ExceptionUnwinding"
+  },
+  {
+   "n": 8,
+   "title": "Since Python 3.11: carets in tracebacks, notes on exceptions",
+   "say": "Two additions since the book’s tracebacks. First, from Python 3.11 the traceback underlines the part of the line that failed. In print(data[‘a’][‘b’][‘c’]) the value at ‘b’ is None, so the third subscript fails, and the carets sit under it; before 3.11 you had to work that out yourself (Galindo Salgado et al., 2021). Second, an exception can carry notes: the program catches a ValueError, adds a note saying which field was being read, and re-raises; the note is kept in __notes__ and printed under the traceback if nobody handles it (Hatfield-Dodds, 2021). Neither is in the book; both are worth a sentence.",
+   "concept": "FineGrainedLocations",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "Predict first: does the program say the list is sorted?",
+   "say": "Prediction first again. The list starts unsorted, is reversed instead of sorted, and the assert says the first item must not be larger than the last. Notice that an assert with no message raises AssertionError with an empty string as its message; the printed line shows repr(str(e)), which is two quotation marks with nothing between them.",
+   "concept": "AssertStatement",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "User errors are handled; programmer errors are asserted",
+   "say": "The distinction the chapter draws is the one to leave with. If the cause is outside your code, a missing file, bad input, a dropped connection, the program can do something sensible, so use exceptions and handle them. If the cause is a mistake in your code, there is nothing sensible to do except stop and fix it, and an assertion states the belief that turned out false.",
+   "concept": "AssertVersusRaise",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "An assertion can say why it failed",
+   "say": "A bare assert tells you a check failed; adding a message tells you what the values were. The message is an expression after a comma and is evaluated only if the condition is false, so it costs nothing on the passing path.",
+   "concept": "AssertMessage",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "Hazard: python -O removes every assert",
+   "say": "Not in the book, and a genuine trap. The reference says the assert statement is equivalent to if __debug__: if not expression: raise AssertionError, and that no code is generated for it when optimisation is requested, as with the -O option (Python Software Foundation, 2026). The program shows both: compiled normally the assert raises and prints the message; compiled with optimize=1 the same source runs straight through to the print. So an assert is a development aid; anything the program depends on for correctness under all conditions must not be one.",
+   "concept": "OptimisedMode",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "What if print calls could be switched off with one line?",
+   "say": "Everyone starts with print statements. They work, and they leave a mess: you must remember to remove them, and you cannot keep some and hide others. Logging solves exactly that problem.",
+   "concept": "Logging",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "basicConfig chooses the threshold, the format and the place",
+   "say": "Three parts: the level says which messages to show, the format says what each line looks like, and the destination is the screen unless you give a file name.",
+   "concept": "BasicConfig",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "Five levels, each with a number",
+   "say": "The chapter’s five levels, lowest to highest importance: DEBUG for the detail you want while developing, INFO for confirmation that things work, WARNING for something unexpected, ERROR for a failure, CRITICAL for one that may stop the program. The threshold is a number, so the rule is simply: shown when the message’s number is at least the threshold’s.",
+   "concept": "LoggingLevels",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "Choose a threshold, see what is shown",
+   "say": "This grid is a simulation you can also run yourself on the page. Every cell is what a real subprocess printed: for each setting the same five logging calls were run under Python 3.14.4 and the output lines were read back. Column one has no basicConfig at all and shows a surprise, taken up next. Columns two to six are the five thresholds; watch the shown cells shrink as the threshold rises. The last column is the disable function, which silences everything at or below the level it is given.",
+   "concept": "LevelThreshold",
+   "visual": "LevelThreshold"
+  },
+  {
+   "n": 17,
+   "title": "Why does logging.debug print nothing?",
+   "say": "The commonest surprise for a beginner: they add logging.debug calls and see nothing. Debug and info are dropped.",
+   "concept": "DefaultLevel",
+   "visual": "LevelThreshold"
+  },
+  {
+   "n": 18,
+   "title": "Hazard: a second basicConfig call is ignored",
+   "say": "Not in the book and a frequent puzzle in notebooks and tests, where something else has already configured logging. The program calls basicConfig with INFO, then again with DEBUG; the debug call after the second setup prints nothing, because the second call was ignored. The third call passes force=True, and now the debug message appears. The logging documentation says basicConfig does nothing if the root logger already has handlers configured unless force is given (Python Software Foundation, 2026).",
+   "concept": "ForceReconfigure",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "Log to a file instead of the screen",
+   "say": "The chapter writes to myProgramLog.txt; this program does the same in a temporary folder so it can be re-run anywhere, then reads the file back and prints it. Two messages were logged and both appear, because the threshold was DEBUG. Nothing was printed to the screen by the logging calls themselves: the record lives in the file (Sweigart, 2025).",
+   "concept": "LogToFile",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "Switch every message off with one line",
+   "say": "This is the answer to the hook. Print calls have to be found and deleted; log calls are silenced by one line. In the real run, the critical message before the disable call appears, the two calls after it print nothing, and after logging.disable(logging.NOTSET) errors show again (Sweigart, 2025; Python Software Foundation, 2026).",
+   "concept": "DisablingLogging",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "Give the arguments to the call, not to an f-string",
+   "say": "A practical point the book does not make. The level here is INFO, so the debug calls are not emitted. In the first call the object is passed as an argument and the logging module only converts it to text if the message will be shown, so its __str__ ran zero times. In the second the f-string builds the text before the call, so the conversion ran once even though nothing was logged. For a cheap value it does not matter; for an expensive one it does, and the logging HOWTO’s own example makes that point (Python Software Foundation, 2026).",
+   "concept": "LazyFormatting",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "Log messages are for the programmer; print is for the user",
+   "say": "The chapter’s practice question 8 asks why logging is better than print for the same message, and its answer is about audience: log messages are for the programmer; messages the user should see, such as file not found or invalid input, use print (Sweigart, 2025).",
+   "concept": "LoggingVersusPrint",
+   "visual": ""
+  },
+  {
+   "n": 23,
+   "title": "Predict first: what does factorial(3) return?",
+   "say": "The debug lines are what make the bug visible without a debugger: you can see the first pass multiply by zero.",
+   "concept": "OffByOneRange",
+   "visual": "OffByOneRange"
+  },
+  {
+   "n": 24,
+   "title": "Trace it: the first pass multiplies by zero",
+   "say": "A trace table is how you reason about a loop without running it. Pass one: i is 0, so total times 0 is 0. From then on total stays 0, whatever i is, because anything times zero is zero. The last row also shows the debug line that closes the function and the value that print shows.",
+   "concept": "OffByOneRange",
+   "visual": "OffByOneRange"
+  },
+  {
+   "n": 25,
+   "title": "The fix is one line, and the log proves it",
+   "say": "Same program with range(1, n + 1). The log now shows i is 1 and total is 1, then 2, then 6, and the call prints 6. Notice how the logging calls stayed in place while the fix went in; when the program is finished you raise the threshold or call disable and they fall silent, rather than deleting them (Sweigart, 2025).",
+   "concept": "OffByOneRange",
+   "visual": ""
+  },
+  {
+   "n": 26,
+   "title": "What if you could freeze the program on one line and look around?",
+   "say": "Logging tells you what happened. That is what a debugger is. The book’s chapter uses the debugger in the Mu editor (Sweigart, 2025); the controls have the same names in most editors, and the standard library has one of its own, which is the last part of this chapter.",
+   "concept": "Debugger",
+   "visual": ""
+  },
+  {
+   "n": 27,
+   "title": "Five controls, and a breakpoint to start from",
+   "say": "Continue runs until it reaches a breakpoint or the end. Step In executes the next line and, if the line calls a function, goes inside it. Step Over executes the next line, running any function it calls at full speed without stopping inside. Step Out runs the rest of the current function and stops when it returns (Sweigart, 2025). Stop ends the program. Under each is the command of the standard library’s debugger, pdb, that does the same job: continue, step, next and return; the page’s simulator has all five buttons.",
+   "concept": "Breakpoint",
+   "visual": "Breakpoint"
+  },
+  {
+   "n": 28,
+   "title": "Continue runs to the next breakpoint",
+   "say": "Both panels are frames from one recorded run of this program under Python 3.14.4: a line event stream, with the variables and the call stack at each stop. There is a breakpoint, the red dot, on line 7. This is the same simulator you get on the page, where you can set your own breakpoints by clicking a line number.",
+   "concept": "ContinueControl",
+   "visual": "Breakpoint"
+  },
+  {
+   "n": 29,
+   "title": "Step In goes inside a call; Step Over runs it whole",
+   "say": "Three frames from the recorded run. Use Step In when you suspect the function you are calling; Step Over when you trust it and want to move on (Sweigart, 2025).",
+   "concept": "StepIn",
+   "visual": "StepIn"
+  },
+  {
+   "n": 30,
+   "title": "Step Out finishes this function and stops in its caller",
+   "say": "The third stepping control. The debugger is stopped at line 2, inside add, with a and b set and three frames on the call stack. Step Out runs the rest of add and stops as soon as it returns, here at line 7 of main, with the call stack back to two frames (Sweigart, 2025). It is the way back after a Step In that turned out to be uninteresting.",
+   "concept": "StepOut",
+   "visual": "StepOut"
+  },
+  {
+   "n": 31,
+   "title": "Any Python has a debugger: breakpoint() and pdb",
+   "say": "Not in the book, which uses an editor’s debugger, but this is the tool every Python installation has. Since Python 3.7 a call to breakpoint() pauses the program in the debugger at that line; it calls sys.breakpointhook, and setting the environment variable PYTHONBREAKPOINT to 0 makes the call do nothing, so you can leave one in and switch it off (Warsaw, 2017; Python Software Foundation, 2026). New in Python 3.14: the debugger can attach to a process that is already running, by its process identifier, using sys.remote_exec (Galindo Salgado, Wozniski and Stojanovic, 2024); the second line confirms that this build has it.",
+   "concept": "BreakpointFunction",
+   "visual": ""
+  },
+  {
+   "n": 32,
+   "title": "Worked case: the sum that prints 5342",
+   "say": "The book’s buggy adding program: input() returns strings, so adding first, second and third joins the text and prints The sum is 5342 (Sweigart, 2025). In the debugger’s variable pane the values would show with quotation marks, which is the clue that they are strings and not numbers. Both transcripts are real runs of these programs with the inputs 5, 3 and 42.",
+   "concept": "StringConcatenation",
+   "visual": ""
+  },
+  {
+   "n": 33,
+   "title": "Worked case: a guess that can never be right",
+   "say": "The practice program in the chapter, cut down to the comparison that is wrong. random.randint(0, 1) gives an integer, the guess from input() is a string, and toss == guess compares the two, so it is always false. The seed is fixed, so the toss is heads in both runs: the run that guessed heads should have won, and it says Nope. The last line prints the two types.",
+   "concept": "TypeMismatchComparison",
+   "visual": ""
+  },
+  {
+   "n": 34,
+   "title": "What you can do now",
+   "say": "Close the loop on the hook: the program runs and prints a wrong answer. Start by asking what you believe, and assert it. Add logging where you cannot tell what happened. Reach for the debugger when the state at one line is the question. Read every traceback from the bottom. Those four verbs are the chapter’s learning objectives on the interactive page.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 35,
+   "title": "Check yourself",
+   "say": "Questions 1 to 3 revisit the assertion and logging material; question 4 the debugger controls from the book’s practice questions; question 5 the bug that ran through the chapter.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 36,
+   "title": "Sources",
+   "say": "Full verified source list in 03-materials/ch05/rdodi/sen0414_ch05_research_v1_0_0.ttl. Visual specifications: 08-tooling/ch05-deck/visuals_make_v1_0_0.py, output visuals_out_v1_0_0.json. The chapter page’s Resources tab lists the links that were opened and checked.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 37,
+   "title": "Next week: Chapter 6, Lists",
+   "say": "Chapter 6 of the 3rd edition is Lists.",
+   "concept": "",
+   "visual": ""
+  }
+ ]
+}

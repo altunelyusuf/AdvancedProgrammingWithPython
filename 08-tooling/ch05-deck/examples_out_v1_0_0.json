@@ -1,0 +1,665 @@
+{
+ "_version": "1.0.0",
+ "_python": "3.14.4",
+ "levels": [
+  [
+   "[(n, getattr(__import__('logging'), n)) for n in ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')]",
+   "[('DEBUG', 10), ('INFO', 20), ('WARNING', 30), ('ERROR', 40), ('CRITICAL', 50)]"
+  ],
+  [
+   "__import__('logging').getLogger().getEffectiveLevel()",
+   "30"
+  ]
+ ],
+ "assertion": [
+  [
+   "issubclass(AssertionError, Exception)",
+   "True"
+  ],
+  [
+   "__debug__",
+   "True"
+  ]
+ ],
+ "hook": [
+  [
+   "__import__('sys').breakpointhook.__name__",
+   "'breakpointhook'"
+  ],
+  [
+   "hasattr(__import__('sys'), 'remote_exec')",
+   "True"
+  ],
+  [
+   "[c for c in ('do_step', 'do_next', 'do_return', 'do_continue', 'do_break', 'do_where') if hasattr(__import__('pdb').Pdb, c)]",
+   "['do_step', 'do_next', 'do_return', 'do_continue', 'do_break', 'do_where']"
+  ],
+  [
+   "hasattr(__import__('pdb').Pdb, 'do_quit')",
+   "True"
+  ]
+ ],
+ "_programs": {
+  "boxprint_v1_0_0.py": {
+   "code": "def box_print(symbol, width, height):\n    if len(symbol) != 1:\n        raise Exception('Symbol must be a single character string.')\n    if width <= 2:\n        raise Exception('Width must be greater than 2.')\n    if height <= 2:\n        raise Exception('Height must be greater than 2.')\n    print(symbol * width)\n    for i in range(height - 2):\n        print(symbol + (' ' * (width - 2)) + symbol)\n    print(symbol * width)\n\nfor sym, w, h in (('*', 4, 4), ('x', 1, 3), ('ZZ', 3, 3)):\n    try:\n        box_print(sym, w, h)\n    except Exception as err:\n        print('An exception happened: ' + str(err))\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "****\n*  *\n*  *\n****\nAn exception happened: Width must be greater than 2.\nAn exception happened: Symbol must be a single character string.",
+     "lines": [
+      [
+       [
+        "****",
+        false
+       ]
+      ],
+      [
+       [
+        "*  *",
+        false
+       ]
+      ],
+      [
+       [
+        "*  *",
+        false
+       ]
+      ],
+      [
+       [
+        "****",
+        false
+       ]
+      ],
+      [
+       [
+        "An exception happened: Width must be greater than 2.",
+        false
+       ]
+      ],
+      [
+       [
+        "An exception happened: Symbol must be a single character string.",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "unwinding_v1_0_0.py": {
+   "code": "def read_age(text):\n    return int(text)\n\ndef load(record):\n    return read_age(record['age'])\n\ndef process(records):\n    return [load(r) for r in records]\n\ntry:\n    process([{'age': '41'}, {'age': 'abc'}])\nexcept ValueError as e:\n    print('caught:', e)\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "caught: invalid literal for int() with base 10: 'abc'",
+     "lines": [
+      [
+       [
+        "caught: invalid literal for int() with base 10: 'abc'",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "notes_v1_0_0.py": {
+   "code": "try:\n    try:\n        int('x')\n    except ValueError as e:\n        e.add_note('while reading the age field')\n        raise\nexcept ValueError as e:\n    print(e.__notes__)\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "['while reading the age field']",
+     "lines": [
+      [
+       [
+        "['while reading the age field']",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "assertdemo_v1_0_0.py": {
+   "code": "ages = [26, 57, 92, 54, 22, 15, 17, 80, 47, 73]\nages.reverse()\ntry:\n    assert ages[0] <= ages[-1]\n    print('the list is sorted')\nexcept AssertionError as e:\n    print(type(e).__name__, repr(str(e)))\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "AssertionError ''",
+     "lines": [
+      [
+       [
+        "AssertionError ''",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "assertmsg_v1_0_0.py": {
+   "code": "x = -1\ntry:\n    assert x > 0, f'x must be positive, got {x}'\nexcept AssertionError as e:\n    print(e)\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "x must be positive, got -1",
+     "lines": [
+      [
+       [
+        "x must be positive, got -1",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "optimised_v1_0_0.py": {
+   "code": "src = \"assert False, 'boom'\\nprint('reached')\"\ntry:\n    exec(compile(src, 'x', 'exec'))\nexcept AssertionError as e:\n    print('normal run:', e)\nexec(compile(src, 'x', 'exec', optimize=1))\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "normal run: boom\nreached",
+     "lines": [
+      [
+       [
+        "normal run: boom",
+        false
+       ]
+      ],
+      [
+       [
+        "reached",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "filelog_v1_0_0.py": {
+   "code": "import logging, os, tempfile\npath = os.path.join(tempfile.mkdtemp(), 'myProgramLog.txt')\nlogging.basicConfig(filename=path, level=logging.DEBUG, format='%(levelname)s - %(message)s')\nlogging.debug('to the file')\nlogging.critical('also to the file')\nprint(open(path).read(), end='')\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "DEBUG - to the file\nCRITICAL - also to the file",
+     "lines": [
+      [
+       [
+        "DEBUG - to the file",
+        false
+       ]
+      ],
+      [
+       [
+        "CRITICAL - also to the file",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "levelsdemo_v1_0_0.py": {
+   "code": "import logging, sys\nlogging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(levelname)s - %(message)s')\nlogging.debug('debug message')\nlogging.info('info message')\nlogging.warning('warning message')\nlogging.error('error message')\nlogging.critical('critical message')\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "INFO - info message\nWARNING - warning message\nERROR - error message\nCRITICAL - critical message",
+     "lines": [
+      [
+       [
+        "INFO - info message",
+        false
+       ]
+      ],
+      [
+       [
+        "WARNING - warning message",
+        false
+       ]
+      ],
+      [
+       [
+        "ERROR - error message",
+        false
+       ]
+      ],
+      [
+       [
+        "CRITICAL - critical message",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "force_v1_0_0.py": {
+   "code": "import logging, sys\nlogging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(levelname)s - %(message)s')\nlogging.basicConfig(level=logging.DEBUG, stream=sys.stdout, format='%(levelname)s - %(message)s')\nlogging.debug('second call ignored')\nlogging.info('first call rules')\nlogging.basicConfig(level=logging.DEBUG, stream=sys.stdout, format='%(levelname)s - %(message)s', force=True)\nlogging.debug('force=True replaces it')\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "INFO - first call rules\nDEBUG - force=True replaces it",
+     "lines": [
+      [
+       [
+        "INFO - first call rules",
+        false
+       ]
+      ],
+      [
+       [
+        "DEBUG - force=True replaces it",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "disable_v1_0_0.py": {
+   "code": "import logging, sys\nlogging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(levelname)s - %(message)s')\nlogging.critical('before disable')\nlogging.disable(logging.CRITICAL)\nlogging.critical('after disable')\nlogging.error('after disable')\nlogging.disable(logging.NOTSET)\nlogging.error('after re-enabling')\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "CRITICAL - before disable\nERROR - after re-enabling",
+     "lines": [
+      [
+       [
+        "CRITICAL - before disable",
+        false
+       ]
+      ],
+      [
+       [
+        "ERROR - after re-enabling",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "lazy_v1_0_0.py": {
+   "code": "import logging\nclass Loud:\n    calls = 0\n    def __str__(self):\n        Loud.calls += 1\n        return 'loud'\nlog = logging.getLogger('demo')\nlog.setLevel(logging.INFO)\nlog.addHandler(logging.NullHandler())\nlog.debug('value is %s', Loud())\nprint('lazy:', Loud.calls)\nlog.debug(f'value is {Loud()}')\nprint('f-string:', Loud.calls)\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "lazy: 0\nf-string: 1",
+     "lines": [
+      [
+       [
+        "lazy: 0",
+        false
+       ]
+      ],
+      [
+       [
+        "f-string: 1",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "factorial_bug_v1_0_0.py": {
+   "code": "import logging, sys\nlogging.basicConfig(level=logging.DEBUG, stream=sys.stdout, format='%(levelname)s - %(message)s')\ndef factorial(n):\n    logging.debug('Start of factorial(%s)', n)\n    total = 1\n    for i in range(n + 1):\n        total *= i\n        logging.debug('i is %s, total is %s', i, total)\n    logging.debug('End of factorial(%s)', n)\n    return total\n\nprint(factorial(3))\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "DEBUG - Start of factorial(3)\nDEBUG - i is 0, total is 0\nDEBUG - i is 1, total is 0\nDEBUG - i is 2, total is 0\nDEBUG - i is 3, total is 0\nDEBUG - End of factorial(3)\n0",
+     "lines": [
+      [
+       [
+        "DEBUG - Start of factorial(3)",
+        false
+       ]
+      ],
+      [
+       [
+        "DEBUG - i is 0, total is 0",
+        false
+       ]
+      ],
+      [
+       [
+        "DEBUG - i is 1, total is 0",
+        false
+       ]
+      ],
+      [
+       [
+        "DEBUG - i is 2, total is 0",
+        false
+       ]
+      ],
+      [
+       [
+        "DEBUG - i is 3, total is 0",
+        false
+       ]
+      ],
+      [
+       [
+        "DEBUG - End of factorial(3)",
+        false
+       ]
+      ],
+      [
+       [
+        "0",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "factorial_fixed_v1_0_0.py": {
+   "code": "import logging, sys\nlogging.basicConfig(level=logging.DEBUG, stream=sys.stdout, format='%(levelname)s - %(message)s')\ndef factorial(n):\n    logging.debug('Start of factorial(%s)', n)\n    total = 1\n    for i in range(1, n + 1):\n        total *= i\n        logging.debug('i is %s, total is %s', i, total)\n    logging.debug('End of factorial(%s)', n)\n    return total\n\nprint(factorial(3))\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "DEBUG - Start of factorial(3)\nDEBUG - i is 1, total is 1\nDEBUG - i is 2, total is 2\nDEBUG - i is 3, total is 6\nDEBUG - End of factorial(3)\n6",
+     "lines": [
+      [
+       [
+        "DEBUG - Start of factorial(3)",
+        false
+       ]
+      ],
+      [
+       [
+        "DEBUG - i is 1, total is 1",
+        false
+       ]
+      ],
+      [
+       [
+        "DEBUG - i is 2, total is 2",
+        false
+       ]
+      ],
+      [
+       [
+        "DEBUG - i is 3, total is 6",
+        false
+       ]
+      ],
+      [
+       [
+        "DEBUG - End of factorial(3)",
+        false
+       ]
+      ],
+      [
+       [
+        "6",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "adding_bug_v1_0_0.py": {
+   "code": "print('Enter the first number to add:')\nfirst = input()\nprint('Enter the second number to add:')\nsecond = input()\nprint('Enter the third number to add:')\nthird = input()\nprint('The sum is ' + first + second + third)\n",
+   "runs": [
+    {
+     "inputs": [
+      "5",
+      "3",
+      "42"
+     ],
+     "transcript": "Enter the first number to add:\n5\nEnter the second number to add:\n3\nEnter the third number to add:\n42\nThe sum is 5342",
+     "lines": [
+      [
+       [
+        "Enter the first number to add:",
+        false
+       ]
+      ],
+      [
+       [
+        "",
+        false
+       ],
+       [
+        "5",
+        true
+       ]
+      ],
+      [
+       [
+        "Enter the second number to add:",
+        false
+       ]
+      ],
+      [
+       [
+        "",
+        false
+       ],
+       [
+        "3",
+        true
+       ]
+      ],
+      [
+       [
+        "Enter the third number to add:",
+        false
+       ]
+      ],
+      [
+       [
+        "",
+        false
+       ],
+       [
+        "42",
+        true
+       ]
+      ],
+      [
+       [
+        "The sum is 5342",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "adding_fixed_v1_0_0.py": {
+   "code": "print('Enter the first number to add:')\nfirst = int(input())\nprint('Enter the second number to add:')\nsecond = int(input())\nprint('Enter the third number to add:')\nthird = int(input())\nprint('The sum is', first + second + third)\n",
+   "runs": [
+    {
+     "inputs": [
+      "5",
+      "3",
+      "42"
+     ],
+     "transcript": "Enter the first number to add:\n5\nEnter the second number to add:\n3\nEnter the third number to add:\n42\nThe sum is 50",
+     "lines": [
+      [
+       [
+        "Enter the first number to add:",
+        false
+       ]
+      ],
+      [
+       [
+        "",
+        false
+       ],
+       [
+        "5",
+        true
+       ]
+      ],
+      [
+       [
+        "Enter the second number to add:",
+        false
+       ]
+      ],
+      [
+       [
+        "",
+        false
+       ],
+       [
+        "3",
+        true
+       ]
+      ],
+      [
+       [
+        "Enter the third number to add:",
+        false
+       ]
+      ],
+      [
+       [
+        "",
+        false
+       ],
+       [
+        "42",
+        true
+       ]
+      ],
+      [
+       [
+        "The sum is 50",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "cointoss_bug_v1_0_0.py": {
+   "code": "import random\nrandom.seed(7)\nguess = input('Guess the coin toss! Enter heads or tails: ')\ntoss = random.randint(0, 1)  # 0 is tails, 1 is heads\nif toss == guess:\n    print('You got it!')\nelse:\n    print('Nope! Guess again!')\nprint(type(toss).__name__, type(guess).__name__)\n",
+   "runs": [
+    {
+     "inputs": [
+      "heads"
+     ],
+     "transcript": "Guess the coin toss! Enter heads or tails: heads\nNope! Guess again!\nint str",
+     "lines": [
+      [
+       [
+        "Guess the coin toss! Enter heads or tails: ",
+        false
+       ],
+       [
+        "heads",
+        true
+       ]
+      ],
+      [
+       [
+        "Nope! Guess again!",
+        false
+       ]
+      ],
+      [
+       [
+        "int str",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    },
+    {
+     "inputs": [
+      "tails"
+     ],
+     "transcript": "Guess the coin toss! Enter heads or tails: tails\nNope! Guess again!\nint str",
+     "lines": [
+      [
+       [
+        "Guess the coin toss! Enter heads or tails: ",
+        false
+       ],
+       [
+        "tails",
+        true
+       ]
+      ],
+      [
+       [
+        "Nope! Guess again!",
+        false
+       ]
+      ],
+      [
+       [
+        "int str",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  },
+  "debugdemo_v1_0_0.py": {
+   "code": "def add(a, b):\n    total = a + b\n    return total\n\ndef main():\n    x = add(2, 3)\n    y = add(x, 10)\n    print(y)\n\nmain()\n",
+   "runs": [
+    {
+     "inputs": [],
+     "transcript": "15",
+     "lines": [
+      [
+       [
+        "15",
+        false
+       ]
+      ]
+     ],
+     "exit": 0,
+     "stderr": ""
+    }
+   ]
+  }
+ }
+}
