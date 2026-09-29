@@ -1,0 +1,2358 @@
+{
+ "ThreeQuestions": {
+  "kind": "classify",
+  "caption": "Each operation was run on a real list and put in the column its evidence names.",
+  "columns": [
+   {
+    "kind": "change",
+    "question": "Did the list itself change?",
+    "head": "It changes in place",
+    "chips": [
+     {
+      "expr": "a.append(4)",
+      "evidence": "returns None; the list itself changed"
+     },
+     {
+      "expr": "a.sort()",
+      "evidence": "returns None; the list itself changed"
+     },
+     {
+      "expr": "random.shuffle(a)",
+      "evidence": "returns None; the list itself changed"
+     }
+    ]
+   },
+   {
+    "kind": "new",
+    "question": "Did it give back a new list?",
+    "head": "It returns a new list",
+    "chips": [
+     {
+      "expr": "sorted(a)",
+      "evidence": "returns a new list; the original is unchanged"
+     },
+     {
+      "expr": "a[1:]",
+      "evidence": "returns a new list; the original is unchanged"
+     },
+     {
+      "expr": "a + [9]",
+      "evidence": "returns a new list; the original is unchanged"
+     },
+     {
+      "expr": "[x for x in a]",
+      "evidence": "returns a new list; the original is unchanged"
+     }
+    ]
+   },
+   {
+    "kind": "share",
+    "question": "Do two names reach one list?",
+    "head": "It only shares the list",
+    "chips": [
+     {
+      "expr": "b = a",
+      "evidence": "both names reach one list"
+     },
+     {
+      "expr": "f(a)",
+      "evidence": "the parameter reaches the caller's list"
+     },
+     {
+      "expr": "[[]] * 3",
+      "evidence": "three items, one inner list"
+     }
+    ]
+   }
+  ]
+ },
+ "Indexing": {
+  "kind": "boxes",
+  "name": "spam",
+  "list": [
+   "'cat'",
+   "'bat'",
+   "'rat'",
+   "'elephant'"
+  ],
+  "len": 4,
+  "picks": [
+   {
+    "expr": "spam[0]",
+    "result": "'cat'",
+    "at": [
+     0
+    ]
+   },
+   {
+    "expr": "spam[-1]",
+    "result": "'elephant'",
+    "at": [
+     3
+    ]
+   },
+   {
+    "expr": "spam[-3]",
+    "result": "'bat'",
+    "at": [
+     1
+    ]
+   }
+  ],
+  "error": {
+   "expr": "spam[10000]",
+   "message": "IndexError: list index out of range"
+  },
+  "caption": "Every item has an index counted from the front and one counted from the back."
+ },
+ "Slicing": {
+  "kind": "slices",
+  "name": "spam",
+  "list": [
+   "'cat'",
+   "'bat'",
+   "'rat'",
+   "'elephant'"
+  ],
+  "rows": [
+   {
+    "expr": "spam[1:3]",
+    "result": "['bat', 'rat']",
+    "picked": [
+     1,
+     2
+    ],
+    "picked_label": "from indexes 1, 2"
+   },
+   {
+    "expr": "spam[:2]",
+    "result": "['cat', 'bat']",
+    "picked": [
+     0,
+     1
+    ],
+    "picked_label": "from indexes 0, 1"
+   },
+   {
+    "expr": "spam[1:]",
+    "result": "['bat', 'rat', 'elephant']",
+    "picked": [
+     1,
+     2,
+     3
+    ],
+    "picked_label": "from indexes 1, 2, 3"
+   },
+   {
+    "expr": "spam[1:10]",
+    "result": "['bat', 'rat', 'elephant']",
+    "picked": [
+     1,
+     2,
+     3
+    ],
+    "picked_label": "from indexes 1, 2, 3"
+   },
+   {
+    "expr": "spam[::2]",
+    "result": "['cat', 'rat']",
+    "picked": [
+     0,
+     2
+    ],
+    "picked_label": "from indexes 0, 2"
+   },
+   {
+    "expr": "spam[::-1]",
+    "result": "['elephant', 'rat', 'bat', 'cat']",
+    "picked": [
+     3,
+     2,
+     1,
+     0
+    ],
+    "picked_label": "from indexes 3, 2, 1, 0"
+   }
+  ],
+  "caption": "A slice is a new list of the items whose indexes it selects; an end outside the list is clipped, not an error."
+ },
+ "AddingAndReplacing": {
+  "kind": "lanes",
+  "lanes": [
+   {
+    "op": "spam.append('moose')",
+    "name": "spam",
+    "before": [
+     "'cat'",
+     "'dog'",
+     "'bat'"
+    ],
+    "after": [
+     "'cat'",
+     "'dog'",
+     "'bat'",
+     "'moose'"
+    ],
+    "returns": "None",
+    "ret_label": "returns None",
+    "category": "in place",
+    "cat_label": "changes the same list in place",
+    "same_object": true,
+    "before_marks": [],
+    "after_marks": [
+     3
+    ]
+   },
+   {
+    "op": "spam.insert(1, 'chicken')",
+    "name": "spam",
+    "before": [
+     "'cat'",
+     "'dog'",
+     "'bat'"
+    ],
+    "after": [
+     "'cat'",
+     "'chicken'",
+     "'dog'",
+     "'bat'"
+    ],
+    "returns": "None",
+    "ret_label": "returns None",
+    "category": "in place",
+    "cat_label": "changes the same list in place",
+    "same_object": true,
+    "before_marks": [],
+    "after_marks": [
+     1
+    ]
+   },
+   {
+    "op": "spam[1] = 'aardvark'",
+    "name": "spam",
+    "before": [
+     "'cat'",
+     "'bat'",
+     "'rat'",
+     "'elephant'"
+    ],
+    "after": [
+     "'cat'",
+     "'aardvark'",
+     "'rat'",
+     "'elephant'"
+    ],
+    "returns": null,
+    "ret_label": "a statement: no value",
+    "category": "in place",
+    "cat_label": "changes the same list in place",
+    "same_object": true,
+    "before_marks": [
+     1
+    ],
+    "after_marks": [
+     1
+    ]
+   },
+   {
+    "op": "letters[2:5] = ['C', 'D', 'E']",
+    "name": "letters",
+    "before": [
+     "'a'",
+     "'b'",
+     "'c'",
+     "'d'",
+     "'e'",
+     "'f'",
+     "'g'"
+    ],
+    "after": [
+     "'a'",
+     "'b'",
+     "'C'",
+     "'D'",
+     "'E'",
+     "'f'",
+     "'g'"
+    ],
+    "returns": null,
+    "ret_label": "a statement: no value",
+    "category": "in place",
+    "cat_label": "changes the same list in place",
+    "same_object": true,
+    "before_marks": [
+     2,
+     3,
+     4
+    ],
+    "after_marks": [
+     2,
+     3,
+     4
+    ]
+   }
+  ],
+  "errors": [],
+  "caption": "Green boxes are new or replaced; red boxes are the ones that were replaced."
+ },
+ "Removing": {
+  "kind": "lanes",
+  "lanes": [
+   {
+    "op": "spam.remove('cat')",
+    "name": "spam",
+    "before": [
+     "'cat'",
+     "'bat'",
+     "'rat'",
+     "'cat'",
+     "'hat'",
+     "'cat'"
+    ],
+    "after": [
+     "'bat'",
+     "'rat'",
+     "'cat'",
+     "'hat'",
+     "'cat'"
+    ],
+    "returns": "None",
+    "ret_label": "returns None",
+    "category": "in place",
+    "cat_label": "changes the same list in place",
+    "same_object": true,
+    "before_marks": [
+     0
+    ],
+    "after_marks": []
+   },
+   {
+    "op": "stack.pop()",
+    "name": "stack",
+    "before": [
+     "3",
+     "4",
+     "5",
+     "6",
+     "7"
+    ],
+    "after": [
+     "3",
+     "4",
+     "5",
+     "6"
+    ],
+    "returns": "7",
+    "ret_label": "returns 7",
+    "category": "in place",
+    "cat_label": "changes the same list in place",
+    "same_object": true,
+    "before_marks": [
+     4
+    ],
+    "after_marks": []
+   },
+   {
+    "op": "del spam[2]",
+    "name": "spam",
+    "before": [
+     "'cat'",
+     "'bat'",
+     "'rat'",
+     "'elephant'"
+    ],
+    "after": [
+     "'cat'",
+     "'bat'",
+     "'elephant'"
+    ],
+    "returns": null,
+    "ret_label": "a statement: no value",
+    "category": "in place",
+    "cat_label": "changes the same list in place",
+    "same_object": true,
+    "before_marks": [
+     2
+    ],
+    "after_marks": []
+   }
+  ],
+  "errors": [
+   {
+    "expr": "spam.remove('chicken')",
+    "message": "ValueError: list.remove(x): x not in list"
+   },
+   {
+    "expr": "[].pop()",
+    "message": "IndexError: pop from empty list"
+   }
+  ],
+  "caption": "Red boxes are the items that leave the list."
+ },
+ "Combining": {
+  "kind": "lanes",
+  "lanes": [
+   {
+    "op": "a + ['A', 'B', 'C']",
+    "name": "a",
+    "before": [
+     "1",
+     "2",
+     "3"
+    ],
+    "after": [
+     "1",
+     "2",
+     "3",
+     "'A'",
+     "'B'",
+     "'C'"
+    ],
+    "returns": "[1, 2, 3, 'A', 'B', 'C']",
+    "ret_label": "returns a new list",
+    "category": "new list",
+    "cat_label": "makes a new list; the original is unchanged",
+    "same_object": false,
+    "before_marks": [],
+    "after_marks": [
+     3,
+     4,
+     5
+    ]
+   },
+   {
+    "op": "a * 3",
+    "name": "a",
+    "before": [
+     "'X'",
+     "'Y'"
+    ],
+    "after": [
+     "'X'",
+     "'Y'",
+     "'X'",
+     "'Y'",
+     "'X'",
+     "'Y'"
+    ],
+    "returns": "['X', 'Y', 'X', 'Y', 'X', 'Y']",
+    "ret_label": "returns a new list",
+    "category": "new list",
+    "cat_label": "makes a new list; the original is unchanged",
+    "same_object": false,
+    "before_marks": [],
+    "after_marks": [
+     2,
+     3,
+     4,
+     5
+    ]
+   }
+  ],
+  "errors": [],
+  "caption": "+ and * leave both operands alone and make new lists."
+ },
+ "AugmentedAssignment": {
+  "kind": "refgraph",
+  "caption": "After b = a, += changes the list both names reach; a = a + other builds a new list and only rebinds a.",
+  "scenarios": [
+   {
+    "title": "+= versus +",
+    "steps": [
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "a",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         }
+        ]
+       }
+      },
+      "code": "a = [1]"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "a",
+          "o1"
+         ],
+         [
+          "b",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         }
+        ]
+       }
+      },
+      "code": "b = a"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "a",
+          "o1"
+         ],
+         [
+          "b",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         }
+        ]
+       }
+      },
+      "code": "a += [2]"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "a",
+          "o2"
+         ],
+         [
+          "b",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o2": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         },
+         {
+          "v": "3"
+         }
+        ]
+       },
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         }
+        ]
+       }
+      },
+      "code": "a = a + [3]"
+     }
+    ]
+   }
+  ]
+ },
+ "IndexMethod": {
+  "kind": "boxes",
+  "name": "spam",
+  "list": [
+   "'Zophie'",
+   "'Pooka'",
+   "'Fat-tail'",
+   "'Pooka'"
+  ],
+  "len": 4,
+  "picks": [
+   {
+    "expr": "spam.index('Pooka')",
+    "result": "1",
+    "at": [
+     1
+    ]
+   },
+   {
+    "expr": "spam.index('Pooka', 2)",
+    "result": "3",
+    "at": [
+     3
+    ]
+   }
+  ],
+  "error": {
+   "expr": "spam.index('howdy howdy howdy')",
+   "message": "ValueError: list.index(x): x not in list"
+  },
+  "caption": "index answers with a position, and raises ValueError when there is no such item."
+ },
+ "MembershipOperators": {
+  "kind": "facts",
+  "facts": [
+   {
+    "label": "On a string: is it inside?",
+    "expr": "'gg' in 'eggs'",
+    "result": "True"
+   },
+   {
+    "label": "On a list: is it an item?",
+    "expr": "'gg' in ['eggs']",
+    "result": "False"
+   },
+   {
+    "label": "and stops at the left operand",
+    "expr": "[] and 'not evaluated'",
+    "result": "[]"
+   },
+   {
+    "label": "so a length test guards an index",
+    "expr": "len(spam) > 0 and spam[0] == 'cat'",
+    "result": "False"
+   }
+  ],
+  "caption": "in tests substrings of a string but only whole items of a list."
+ },
+ "Ordering": {
+  "kind": "lanes",
+  "lanes": [
+   {
+    "op": "spam.sort()",
+    "name": "spam",
+    "before": [
+     "2",
+     "5",
+     "3.14",
+     "1",
+     "-7"
+    ],
+    "after": [
+     "-7",
+     "1",
+     "2",
+     "3.14",
+     "5"
+    ],
+    "returns": "None",
+    "ret_label": "returns None",
+    "category": "in place",
+    "cat_label": "changes the same list in place",
+    "same_object": true,
+    "before_marks": [],
+    "after_marks": []
+   },
+   {
+    "op": "spam.reverse()",
+    "name": "spam",
+    "before": [
+     "'cat'",
+     "'dog'",
+     "'moose'"
+    ],
+    "after": [
+     "'moose'",
+     "'dog'",
+     "'cat'"
+    ],
+    "returns": "None",
+    "ret_label": "returns None",
+    "category": "in place",
+    "cat_label": "changes the same list in place",
+    "same_object": true,
+    "before_marks": [],
+    "after_marks": []
+   },
+   {
+    "op": "sorted(nums)",
+    "name": "nums",
+    "before": [
+     "3",
+     "1",
+     "2"
+    ],
+    "after": [
+     "1",
+     "2",
+     "3"
+    ],
+    "returns": "[1, 2, 3]",
+    "ret_label": "returns a new list",
+    "category": "new list",
+    "cat_label": "makes a new list; the original is unchanged",
+    "same_object": false,
+    "before_marks": [],
+    "after_marks": []
+   },
+   {
+    "op": "spam.sort()",
+    "name": "spam",
+    "before": [
+     "'Alice'",
+     "'ants'",
+     "'Bob'",
+     "'badgers'",
+     "'Carol'",
+     "'cats'"
+    ],
+    "after": [
+     "'Alice'",
+     "'Bob'",
+     "'Carol'",
+     "'ants'",
+     "'badgers'",
+     "'cats'"
+    ],
+    "returns": "None",
+    "ret_label": "returns None",
+    "category": "in place",
+    "cat_label": "changes the same list in place",
+    "same_object": true,
+    "before_marks": [],
+    "after_marks": []
+   }
+  ],
+  "errors": [
+   {
+    "expr": "spam.sort()",
+    "message": "TypeError: '<' not supported between instances of 'str' and 'int'"
+   }
+  ],
+  "caption": "sort() and reverse() return None; sorted() returns a new list. Strings sort with uppercase before lowercase."
+ },
+ "SortKeyAndReverse": {
+  "kind": "keysort",
+  "examples": [
+   {
+    "title": "key=str.lower",
+    "expr": "sorted(['a', 'z', 'A', 'Z'], key=str.lower)",
+    "items": [
+     "'a'",
+     "'z'",
+     "'A'",
+     "'Z'"
+    ],
+    "keys": [
+     "'a'",
+     "'z'",
+     "'a'",
+     "'z'"
+    ],
+    "order": [
+     0,
+     2,
+     1,
+     3
+    ],
+    "result": [
+     "'a'",
+     "'A'",
+     "'z'",
+     "'Z'"
+    ]
+   },
+   {
+    "title": "reverse=True",
+    "expr": "sorted(['Ants', 'Badgers', 'Cats', 'Dogs', 'Elephants'], reverse=True)",
+    "items": [
+     "'Ants'",
+     "'Badgers'",
+     "'Cats'",
+     "'Dogs'",
+     "'Elephants'"
+    ],
+    "keys": null,
+    "order": [
+     4,
+     3,
+     2,
+     1,
+     0
+    ],
+    "result": [
+     "'Elephants'",
+     "'Dogs'",
+     "'Cats'",
+     "'Badgers'",
+     "'Ants'"
+    ]
+   },
+   {
+    "title": "equal keys stay in order",
+    "expr": "sorted([('red', 1), ('blue', 1), ('red', 2), ('blue', 2)], key=lambda t: t[0])",
+    "items": [
+     "('red', 1)",
+     "('blue', 1)",
+     "('red', 2)",
+     "('blue', 2)"
+    ],
+    "keys": [
+     "'red'",
+     "'blue'",
+     "'red'",
+     "'blue'"
+    ],
+    "order": [
+     1,
+     3,
+     0,
+     2
+    ],
+    "result": [
+     "('blue', 1)",
+     "('blue', 2)",
+     "('red', 1)",
+     "('red', 2)"
+    ]
+   }
+  ],
+  "caption": "The key function is called once for each item; the sort is stable, so items with equal keys keep the order they had."
+ },
+ "Looping": {
+  "kind": "passes",
+  "tables": [
+   {
+    "title": "range(len(supplies))",
+    "header": "for i in range(len(supplies)):",
+    "cols": [
+     "i",
+     "supplies[i]"
+    ],
+    "rows": [
+     [
+      "0",
+      "pens"
+     ],
+     [
+      "1",
+      "staplers"
+     ],
+     [
+      "2",
+      "flamethrowers"
+     ],
+     [
+      "3",
+      "binders"
+     ]
+    ]
+   },
+   {
+    "title": "enumerate(supplies)",
+    "header": "for index, item in enumerate(supplies):",
+    "cols": [
+     "index",
+     "item"
+    ],
+    "rows": [
+     [
+      "0",
+      "pens"
+     ],
+     [
+      "1",
+      "staplers"
+     ],
+     [
+      "2",
+      "flamethrowers"
+     ],
+     [
+      "3",
+      "binders"
+     ]
+    ]
+   }
+  ],
+  "printed_label": "both loops printed",
+  "printed": [
+   "Index 0 in supplies is: pens",
+   "Index 1 in supplies is: staplers",
+   "Index 2 in supplies is: flamethrowers",
+   "Index 3 in supplies is: binders"
+  ],
+  "start": {
+   "expr": "list(enumerate(supplies, start=1))[0]",
+   "result": "(1, 'pens')"
+  },
+  "caption": "Both loops visit indexes 0 to 3 and print the same four lines; enumerate needs neither len nor range."
+ },
+ "MutationWhileIterating": {
+  "kind": "mutation",
+  "code": "items = [1, 2, 3, 4]\nfor x in items:\n    if x < 3:\n        items.remove(x)\nprint(items)\n",
+  "original": [
+   "1",
+   "2",
+   "3",
+   "4"
+  ],
+  "final": [
+   "2",
+   "3",
+   "4"
+  ],
+  "printed": "[2, 3, 4]",
+  "passes": [
+   {
+    "n": 1,
+    "pos": 0,
+    "x": "1",
+    "before": [
+     "1",
+     "2",
+     "3",
+     "4"
+    ],
+    "after": [
+     "2",
+     "3",
+     "4"
+    ],
+    "head": "pass 1 · position 0 · x = 1",
+    "action": "removes 1"
+   },
+   {
+    "n": 2,
+    "pos": 1,
+    "x": "3",
+    "before": [
+     "2",
+     "3",
+     "4"
+    ],
+    "after": [
+     "2",
+     "3",
+     "4"
+    ],
+    "head": "pass 2 · position 1 · x = 3",
+    "action": "keeps 3"
+   },
+   {
+    "n": 3,
+    "pos": 2,
+    "x": "4",
+    "before": [
+     "2",
+     "3",
+     "4"
+    ],
+    "after": [
+     "2",
+     "3",
+     "4"
+    ],
+    "head": "pass 3 · position 2 · x = 4",
+    "action": "keeps 4"
+   }
+  ],
+  "skipped": [
+   "2"
+  ],
+  "skip_label": "2 was never visited",
+  "final_label": "after the loop: [2, 3, 4]",
+  "caption": "The loop counts positions. After 1 is removed, 2 moves into position 0, which the loop has already passed."
+ },
+ "Unpacking": {
+  "kind": "unpack",
+  "cases": [
+   {
+    "stmt": "size, color, disposition = cat",
+    "items": [
+     "'fat'",
+     "'gray'",
+     "'loud'"
+    ],
+    "targets": [
+     {
+      "name": "size",
+      "from": 0,
+      "to": 1,
+      "value": "'fat'"
+     },
+     {
+      "name": "color",
+      "from": 1,
+      "to": 2,
+      "value": "'gray'"
+     },
+     {
+      "name": "disposition",
+      "from": 2,
+      "to": 3,
+      "value": "'loud'"
+     }
+    ]
+   },
+   {
+    "stmt": "first, *rest = cat",
+    "items": [
+     "'fat'",
+     "'gray'",
+     "'loud'"
+    ],
+    "targets": [
+     {
+      "name": "first",
+      "from": 0,
+      "to": 1,
+      "value": "'fat'"
+     },
+     {
+      "name": "*rest",
+      "from": 1,
+      "to": 3,
+      "value": "['gray', 'loud']"
+     }
+    ]
+   },
+   {
+    "stmt": "head, *middle, last = range(5)",
+    "items": [
+     "0",
+     "1",
+     "2",
+     "3",
+     "4"
+    ],
+    "targets": [
+     {
+      "name": "head",
+      "from": 0,
+      "to": 1,
+      "value": "0"
+     },
+     {
+      "name": "*middle",
+      "from": 1,
+      "to": 4,
+      "value": "[1, 2, 3]"
+     },
+     {
+      "name": "last",
+      "from": 4,
+      "to": 5,
+      "value": "4"
+     }
+    ]
+   }
+  ],
+  "caption": "Names take items left to right; one starred name takes whatever is left over.",
+  "error": {
+   "expr": "size, color, disposition, name = cat",
+   "message": "ValueError: not enough values to unpack (expected 4, got 3)"
+  }
+ },
+ "ListComprehension": {
+  "kind": "facts",
+  "facts": [
+   {
+    "label": "Build a list from a rule",
+    "expr": "[x**2 for x in range(10)]",
+    "result": "[0, 1, 4, 9, 16, 25, 36, 49, 64, 81]"
+   },
+   {
+    "label": "Keep only some items",
+    "expr": "[x for x in vec if x >= 0]",
+    "result": "[0, 2, 4]"
+   },
+   {
+    "label": "A star splices a list into a list",
+    "expr": "[*[1, 2], *[3]]",
+    "result": "[1, 2, 3]"
+   }
+  ],
+  "caption": "A comprehension builds a new list; its loop variable does not stay behind."
+ },
+ "MutableVersusImmutable": {
+  "kind": "seqtypes",
+  "types": [
+   {
+    "type": "list",
+    "sample": "['A', 'B', 'C']",
+    "mutable": true,
+    "mutable_label": "mutable",
+    "assign": "x[1] = 'X'",
+    "result": "ok: ['A', 'X', 'C']"
+   },
+   {
+    "type": "str",
+    "sample": "'Zophie a cat'",
+    "mutable": false,
+    "mutable_label": "immutable",
+    "assign": "x[7] = 'the'",
+    "result": "TypeError: 'str' object does not support item assignment"
+   },
+   {
+    "type": "tuple",
+    "sample": "('hello', 42, 0.5)",
+    "mutable": false,
+    "mutable_label": "immutable",
+    "assign": "x[1] = 99",
+    "result": "TypeError: 'tuple' object does not support item assignment"
+   },
+   {
+    "type": "range",
+    "sample": "range(3)",
+    "mutable": false,
+    "mutable_label": "immutable",
+    "assign": "x[1] = 5",
+    "result": "TypeError: 'range' object does not support item assignment"
+   }
+  ],
+  "caption": "Among list, str, tuple and range only the list is a mutable sequence."
+ },
+ "TupleType": {
+  "kind": "facts",
+  "facts": [
+   {
+    "label": "A comma makes the tuple",
+    "expr": "type(('hello',))",
+    "result": "<class 'tuple'>"
+   },
+   {
+    "label": "Parentheses alone do not",
+    "expr": "type(('hello'))",
+    "result": "<class 'str'>"
+   },
+   {
+    "label": "A changed string is rebuilt from slices",
+    "expr": "name[0:7] + 'the' + name[8:12]",
+    "result": "'Zophie the cat'"
+   }
+  ],
+  "caption": "A one-item tuple needs its comma."
+ },
+ "ReferencesAndAliasing": {
+  "kind": "refgraph",
+  "caption": "Assignment binds a name to an object and copies nothing. A number is replaced; a list is shared.",
+  "scenarios": [
+   {
+    "title": "a list is shared",
+    "steps": [
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "spam",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "0"
+         },
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         },
+         {
+          "v": "3"
+         }
+        ]
+       }
+      },
+      "code": "spam = [0, 1, 2, 3]"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "spam",
+          "o1"
+         ],
+         [
+          "eggs",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "0"
+         },
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         },
+         {
+          "v": "3"
+         }
+        ]
+       }
+      },
+      "code": "eggs = spam"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "spam",
+          "o1"
+         ],
+         [
+          "eggs",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "0"
+         },
+         {
+          "v": "'Hello!'"
+         },
+         {
+          "v": "2"
+         },
+         {
+          "v": "3"
+         }
+        ]
+       }
+      },
+      "code": "eggs[1] = 'Hello!'"
+     }
+    ]
+   },
+   {
+    "title": "a number is only rebound",
+    "steps": [
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "spam",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "value",
+        "v": "42"
+       }
+      },
+      "code": "spam = 42"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "spam",
+          "o1"
+         ],
+         [
+          "eggs",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "value",
+        "v": "42"
+       }
+      },
+      "code": "eggs = spam"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "spam",
+          "o2"
+         ],
+         [
+          "eggs",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o2": {
+        "type": "value",
+        "v": "99"
+       },
+       "o1": {
+        "type": "value",
+        "v": "42"
+       }
+      },
+      "code": "spam = 99"
+     }
+    ]
+   }
+  ]
+ },
+ "ListArguments": {
+  "kind": "refgraph",
+  "code": "def eggs(some_parameter):\n    some_parameter.append('Hello')\nspam = [1, 2, 3]\neggs(spam)\nprint(spam)\ndef reassign(some_parameter):\n    some_parameter = some_parameter + ['Hello']\nspam = [1, 2, 3]\nreassign(spam)\nprint(spam)",
+  "caption": "The function receives a reference. A method call changes the caller's list; assigning to the parameter only rebinds the local name.",
+  "scenarios": [
+   {
+    "title": "the function calls append",
+    "steps": [
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "spam",
+          "o1"
+         ]
+        ]
+       },
+       {
+        "scope": "eggs()",
+        "names": [
+         [
+          "some_parameter",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         },
+         {
+          "v": "3"
+         }
+        ]
+       }
+      },
+      "code": "inside the function, before append"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "spam",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         },
+         {
+          "v": "3"
+         },
+         {
+          "v": "'Hello'"
+         }
+        ]
+       }
+      },
+      "code": "back in the caller"
+     }
+    ]
+   },
+   {
+    "title": "the function assigns a new list",
+    "steps": [
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "spam",
+          "o1"
+         ]
+        ]
+       },
+       {
+        "scope": "reassign()",
+        "names": [
+         [
+          "some_parameter",
+          "o2"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         },
+         {
+          "v": "3"
+         }
+        ]
+       },
+       "o2": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         },
+         {
+          "v": "3"
+         },
+         {
+          "v": "'Hello'"
+         }
+        ]
+       }
+      },
+      "code": "inside the function, after the assignment"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "spam",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         },
+         {
+          "v": "3"
+         }
+        ]
+       }
+      },
+      "code": "back in the caller"
+     }
+    ]
+   }
+  ]
+ },
+ "Copying": {
+  "kind": "refgraph",
+  "caption": "copy.copy makes a new outer list holding the same inner lists; copy.deepcopy copies the inner lists too.",
+  "scenarios": [
+   {
+    "title": "a flat list: the copy is independent",
+    "steps": [
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "spam",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "'A'"
+         },
+         {
+          "v": "'B'"
+         },
+         {
+          "v": "'C'"
+         }
+        ]
+       }
+      },
+      "code": "spam = ['A', 'B', 'C']"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "spam",
+          "o1"
+         ],
+         [
+          "cheese",
+          "o2"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "'A'"
+         },
+         {
+          "v": "'B'"
+         },
+         {
+          "v": "'C'"
+         }
+        ]
+       },
+       "o2": {
+        "type": "list",
+        "items": [
+         {
+          "v": "'A'"
+         },
+         {
+          "v": "'B'"
+         },
+         {
+          "v": "'C'"
+         }
+        ]
+       }
+      },
+      "code": "cheese = copy.copy(spam)"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "spam",
+          "o1"
+         ],
+         [
+          "cheese",
+          "o2"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "v": "'A'"
+         },
+         {
+          "v": "'B'"
+         },
+         {
+          "v": "'C'"
+         }
+        ]
+       },
+       "o2": {
+        "type": "list",
+        "items": [
+         {
+          "v": "'A'"
+         },
+         {
+          "v": "42"
+         },
+         {
+          "v": "'C'"
+         }
+        ]
+       }
+      },
+      "code": "cheese[1] = 42"
+     }
+    ]
+   },
+   {
+    "title": "a nested list",
+    "steps": [
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "nested",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "ref": "o2"
+         },
+         {
+          "ref": "o3"
+         }
+        ]
+       },
+       "o2": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         }
+        ]
+       },
+       "o3": {
+        "type": "list",
+        "items": [
+         {
+          "v": "3"
+         }
+        ]
+       }
+      },
+      "code": "nested = [[1, 2], [3]]"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "nested",
+          "o1"
+         ],
+         [
+          "shallow",
+          "o4"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "ref": "o2"
+         },
+         {
+          "ref": "o3"
+         }
+        ]
+       },
+       "o2": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         }
+        ]
+       },
+       "o3": {
+        "type": "list",
+        "items": [
+         {
+          "v": "3"
+         }
+        ]
+       },
+       "o4": {
+        "type": "list",
+        "items": [
+         {
+          "ref": "o2"
+         },
+         {
+          "ref": "o3"
+         }
+        ]
+       }
+      },
+      "code": "shallow = copy.copy(nested)"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "nested",
+          "o1"
+         ],
+         [
+          "shallow",
+          "o4"
+         ],
+         [
+          "deep",
+          "o5"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "ref": "o2"
+         },
+         {
+          "ref": "o3"
+         }
+        ]
+       },
+       "o2": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         }
+        ]
+       },
+       "o3": {
+        "type": "list",
+        "items": [
+         {
+          "v": "3"
+         }
+        ]
+       },
+       "o4": {
+        "type": "list",
+        "items": [
+         {
+          "ref": "o2"
+         },
+         {
+          "ref": "o3"
+         }
+        ]
+       },
+       "o5": {
+        "type": "list",
+        "items": [
+         {
+          "ref": "o6"
+         },
+         {
+          "ref": "o7"
+         }
+        ]
+       },
+       "o6": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         }
+        ]
+       },
+       "o7": {
+        "type": "list",
+        "items": [
+         {
+          "v": "3"
+         }
+        ]
+       }
+      },
+      "code": "deep = copy.deepcopy(nested)"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "nested",
+          "o1"
+         ],
+         [
+          "shallow",
+          "o4"
+         ],
+         [
+          "deep",
+          "o5"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "ref": "o2"
+         },
+         {
+          "ref": "o3"
+         }
+        ]
+       },
+       "o2": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         },
+         {
+          "v": "'changed'"
+         }
+        ]
+       },
+       "o3": {
+        "type": "list",
+        "items": [
+         {
+          "v": "3"
+         }
+        ]
+       },
+       "o4": {
+        "type": "list",
+        "items": [
+         {
+          "ref": "o2"
+         },
+         {
+          "ref": "o3"
+         }
+        ]
+       },
+       "o5": {
+        "type": "list",
+        "items": [
+         {
+          "ref": "o6"
+         },
+         {
+          "ref": "o7"
+         }
+        ]
+       },
+       "o6": {
+        "type": "list",
+        "items": [
+         {
+          "v": "1"
+         },
+         {
+          "v": "2"
+         }
+        ]
+       },
+       "o7": {
+        "type": "list",
+        "items": [
+         {
+          "v": "3"
+         }
+        ]
+       }
+      },
+      "code": "nested[0].append('changed')"
+     }
+    ]
+   }
+  ]
+ },
+ "ReplicationAliasing": {
+  "kind": "refgraph",
+  "caption": "* repeats references: [[]] * 3 holds one inner list three times.",
+  "scenarios": [
+   {
+    "title": "[[]] * 3",
+    "steps": [
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "lists",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "ref": "o2"
+         },
+         {
+          "ref": "o2"
+         },
+         {
+          "ref": "o2"
+         }
+        ]
+       },
+       "o2": {
+        "type": "list",
+        "items": []
+       }
+      },
+      "code": "lists = [[]] * 3"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "lists",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "ref": "o2"
+         },
+         {
+          "ref": "o2"
+         },
+         {
+          "ref": "o2"
+         }
+        ]
+       },
+       "o2": {
+        "type": "list",
+        "items": [
+         {
+          "v": "3"
+         }
+        ]
+       }
+      },
+      "code": "lists[0].append(3)"
+     }
+    ]
+   },
+   {
+    "title": "[[] for i in range(3)]",
+    "steps": [
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "lists",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "ref": "o2"
+         },
+         {
+          "ref": "o3"
+         },
+         {
+          "ref": "o4"
+         }
+        ]
+       },
+       "o2": {
+        "type": "list",
+        "items": []
+       },
+       "o3": {
+        "type": "list",
+        "items": []
+       },
+       "o4": {
+        "type": "list",
+        "items": []
+       }
+      },
+      "code": "lists = [[] for i in range(3)]"
+     },
+     {
+      "scopes": [
+       {
+        "scope": "module",
+        "names": [
+         [
+          "lists",
+          "o1"
+         ]
+        ]
+       }
+      ],
+      "objects": {
+       "o1": {
+        "type": "list",
+        "items": [
+         {
+          "ref": "o2"
+         },
+         {
+          "ref": "o3"
+         },
+         {
+          "ref": "o4"
+         }
+        ]
+       },
+       "o2": {
+        "type": "list",
+        "items": [
+         {
+          "v": "3"
+         }
+        ]
+       },
+       "o3": {
+        "type": "list",
+        "items": []
+       },
+       "o4": {
+        "type": "list",
+        "items": []
+       }
+      },
+      "code": "lists[0].append(3)"
+     }
+    ]
+   }
+  ]
+ },
+ "MagicEightBall": {
+  "kind": "hist",
+  "draws": 2000,
+  "seed": 8,
+  "bars": [
+   {
+    "index": 0,
+    "label": "It is certain",
+    "text": "0  It is certain",
+    "count": 211
+   },
+   {
+    "index": 1,
+    "label": "It is decidedly so",
+    "text": "1  It is decidedly so",
+    "count": 238
+   },
+   {
+    "index": 2,
+    "label": "Yes definitely",
+    "text": "2  Yes definitely",
+    "count": 223
+   },
+   {
+    "index": 3,
+    "label": "Reply hazy try again",
+    "text": "3  Reply hazy try again",
+    "count": 204
+   },
+   {
+    "index": 4,
+    "label": "Ask again later",
+    "text": "4  Ask again later",
+    "count": 243
+   },
+   {
+    "index": 5,
+    "label": "Concentrate and ask again",
+    "text": "5  Concentrate and ask again",
+    "count": 218
+   },
+   {
+    "index": 6,
+    "label": "My reply is no",
+    "text": "6  My reply is no",
+    "count": 210
+   },
+   {
+    "index": 7,
+    "label": "Outlook not so good",
+    "text": "7  Outlook not so good",
+    "count": 214
+   },
+   {
+    "index": 8,
+    "label": "Very doubtful",
+    "text": "8  Very doubtful",
+    "count": 239
+   }
+  ],
+  "caption": "randint includes both ends, so every index from 0 to 8, and every answer, can appear."
+ },
+ "RandomShuffle": {
+  "kind": "facts",
+  "facts": [
+   {
+    "label": "choice returns one item and leaves the list alone",
+    "expr": "random.choice(['Dog', 'Cat', 'Moose'])",
+    "result": "'Dog'"
+   },
+   {
+    "label": "shuffle reorders the list itself and returns None",
+    "expr": "(random.shuffle(people), people)",
+    "result": "(None, ['David', 'Alice', 'Carol', 'Bob'])"
+   },
+   {
+    "label": "sample with k = len returns a new shuffled list",
+    "expr": "random.sample(people, k=len(people))",
+    "result": "['Bob', 'Carol', 'Alice', 'David']"
+   }
+  ],
+  "caption": "choice picks an item; shuffle reorders a list in place; sample gives a shuffled new list."
+ },
+ "MatrixScreensaver": {
+  "kind": "matrix",
+  "width": 70,
+  "seed": 5,
+  "code": "import random, sys, time\nWIDTH = 70 # The number of columns\ntry:\n    columns = [0] * WIDTH\n    while True:\n        for i in range(WIDTH):\n            if random.random() < 0.02:\n                columns[i] = random.randint(4, 14)\n            if columns[i] == 0:\n                print(' ', end='')\n            else:\n                print(random.choice([0, 1]), end='')\n                columns[i] -= 1\n        print()\n        time.sleep(0.1)\nexcept KeyboardInterrupt:\n    sys.exit()\n",
+  "frames": [
+   {
+    "label": "rows 1 to 6: streams begin",
+    "first": 1,
+    "rows": [
+     "                1        0                                            ",
+     "                0        1                                            ",
+     "                1        0                                            ",
+     "1               1        1                             1             1",
+     "1       1       1        0                             1             0",
+     "1       1       0     0  1                             0           1 1"
+    ]
+   },
+   {
+    "label": "rows 295 to 300",
+    "first": 295,
+    "rows": [
+     "          0      0   1 0 0    0 0  01     0   01  0             01    ",
+     "         01          1 0 1    1 1  11     0   01  1             10    ",
+     "         01   1        0 1    1 1  10 1   0   01  1             10    ",
+     " 0       01   0        0 1 1  0 0  11 0   0    0  0             10    ",
+     " 0       0    0        0 1 0    1  00 0   0    0  1             10    ",
+     " 0       1    1            1    0  11 1   0    0  0            1 0    "
+    ]
+   }
+  ],
+  "column": 45,
+  "life_cols": [
+   "row",
+   "printed",
+   "counter after the row"
+  ],
+  "life": [
+   {
+    "row": 6,
+    "char": "space",
+    "counter": 0
+   },
+   {
+    "row": 7,
+    "char": "1",
+    "counter": 3
+   },
+   {
+    "row": 8,
+    "char": "0",
+    "counter": 2
+   },
+   {
+    "row": 9,
+    "char": "1",
+    "counter": 1
+   },
+   {
+    "row": 10,
+    "char": "1",
+    "counter": 0
+   },
+   {
+    "row": 11,
+    "char": "space",
+    "counter": 0
+   }
+  ],
+  "hazard": [
+   {
+    "label": "counter decremented only for a column above zero (the chapter)",
+    "row": " 0       1    1            1    0  11 1   0    0  0            1 0    ",
+    "spaces": 57,
+    "spaces_label": "57 spaces"
+   },
+   {
+    "label": "counter decremented for every column",
+    "row": "0100100111001010011101010111100000111101000101110111110000101100001101",
+    "spaces": 0,
+    "spaces_label": "0 spaces"
+   }
+  ],
+  "caption": "Each column keeps a counter: above zero it prints a random 0 or 1 and counts down; at zero it prints a space."
+ },
+ "PracticePrograms": {
+  "kind": "facts",
+  "facts": [
+   {
+    "label": "Practice program 1: comma code",
+    "expr": "comma_code(['apples', 'bananas', 'tofu', 'cats'])",
+    "result": "'apples, bananas, tofu, and cats'"
+   },
+   {
+    "label": "Practice program 2: a streak of six in 100 flips",
+    "expr": "exact chance, by counting run lengths",
+    "result": "0.807"
+   },
+   {
+    "label": "Question 3 of the chapter",
+    "expr": "spam[int(int('3' * 2) // 11)]",
+    "result": "'d'"
+   }
+  ],
+  "caption": "Two practice programs and 17 practice questions close the chapter."
+ },
+ "_kinds": {
+  "classify": "columns of chips: operations grouped by what they do to a list",
+  "boxes": "a row of boxes with positive and negative indexes, picks and an error",
+  "slices": "rows of slices with the indexes they select",
+  "lanes": "an operation with the list before and after, what it returned and whether it is the same object",
+  "refgraph": "snapshots of names and the objects they reach",
+  "facts": "an executed expression and its result",
+  "keysort": "input row, keys, and output row of a sort",
+  "passes": "one row per pass of a loop",
+  "mutation": "a line-traced loop that changes the list it walks",
+  "unpack": "names taking items of a list",
+  "seqtypes": "sequence types with mutability and the result of item assignment",
+  "hist": "counts of 2000 seeded draws",
+  "matrix": "rows printed by the chapter's program, one column's counter life, and a misplaced-decrement variant"
+ },
+ "_meta": {
+  "version": "1.0.0",
+  "python": "3.14.4",
+  "note": "Executed specifications; drawn by the deck and by the page."
+ }
+}
