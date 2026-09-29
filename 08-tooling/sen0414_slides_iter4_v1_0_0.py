@@ -11,7 +11,9 @@ IT = _P.get("iter4", {"started": {}, "done": {}, "start_notes": {}})
 PLANNED_AT_4 = "2026-09-29T07:00:00"   # the owner's message, 10:00 Istanbul, as noted when it arrived; the earliest chapter 5 file is stamped 07:13:03
 WHY = ("Components reused from the same kind of story in chapters 1 and 2, whose scores the owner approved; they were not approved again for this story, so they are a proposal to the owner "
        "(L-116), not an approval. Time criticality is set by the class at 14:00 Istanbul on 2026-10-02.")
-K = ("Template", "Page template 9.7.0 from the owner's feedback on the pages", "the interactive page template changed as the owner asked - no Next-step button, no space wasted above the Lab and Maps views, code areas that use the free space - with a Lecture tab carrying the deck's talk track and a Resources tab of checked links and labelled searches", "Obj_PagesBuilt", "Page", (13, 20, 8, 5), "ex:ST_Page_Ch05")
+K_TEMPLATE = ("Template", "Page template 9.7.0 from the owner's feedback on the pages", "the interactive page template changed as the owner asked - no Next-step button, no space wasted above the Lab and Maps views, code areas that use the free space - with a Lecture tab carrying the deck's talk track and a Resources tab of checked links and labelled searches", "Obj_PagesBuilt", "Page", (13, 20, 8, 5), "ex:ST_Page_Ch05")
+K_REVIEW = ("Review", "Deck 1.0.1 and page 9.8.0 from the owner's review of chapter 5", "the chapter 5 deck opening in PowerPoint without repair, examples that fill the code when chosen, Step through that starts on the first Step, and a Code pipeline with a choice of examples", "Obj_PagesBuilt", "Page", (13, 20, 8, 3), "ex:ST_Page_Ch05")
+OUTCOME_REVIEW = "Settled: the deck's paragraph properties are in the order PowerPoint requires, checked by a new structure check; choosing an example fills the code in the Playground, the Code Lab, Step through and the Code pipeline; Step through traces on the first Step; the Code pipeline offers examples and runs on demand."
 OUTCOME = "Settled: the concept section shows a static example with no button; the sub-page heading and view notes fold into the tab row; code areas take the free height; a Lecture tab shows the deck's talk track with jumps to the concepts and visuals; a Resources tab lists links whose pages were opened and read, with a labelled search for every concept. Applied to the chapter 5 page only: the pages of chapters 1 to 4 stay as published until the owner judges."
 TOOL = "08-tooling/sen0414_page_test_v9_7_0.py in headless Chromium on the chapter 5 page; 08-tooling/template_patch_v9_7_0.py regenerates the template from 9.6.0"
 CLOSE = "Closed on the page's browser tests, which cover every feature the story names. The published chapter 3 page and the pages of chapters 1, 2 and 4 were not changed. Times read from the clock."
@@ -60,15 +62,33 @@ ex:Complete_%(sid)s a backlog:TransitionEvent ; rdfs:label "%(label)s completed"
 
 
 
-def template_story():
-    sid, label, what, obj, kind, (bv, tc, rr, js), dep = K; done = "Template" in IT["done"]; d = IT["done"].get("Template")
-    state = ('Done ; backlog:startedAt "%s"^^xsd:dateTime ; backlog:finishedAt "%s"^^xsd:dateTime ; backlog:lastAuditedAt "%s"^^xsd:dateTime ;\n    backlog:hasEvidence ex:Ev_%s ; backlog:hasExecutionModality backlog:Mode_Hybrid' % (IT["started"]["Template"], d["finished"], d["closed"], sid)) if done else "Ready"
-    tstate = ('Done ; backlog:startedAt "%s"^^xsd:dateTime ; backlog:finishedAt "%s"^^xsd:dateTime ; backlog:hasEvidence ex:Ev_%s' % (IT["started"]["Template"], d["finished"], sid)) if done else "Ready"
-    t = STORY % dict(sid=sid, label=label, what=what, kind=kind, obj=obj, dep=dep, state=state, bv=bv, tc=tc, rr=rr, js=js, v=(bv + tc + rr) / js, t=PLANNED_AT_4, why=WHY, o=OUTCOME)
+TOOL_REVIEW = "08-tooling/ch05-deck/structure_check_v1_0_0.py, deck_check_v1_0_1.py, program_check_v1_0_0.py and visual_check_v1_1_0.py under Python 3.14.4; 08-tooling/sen0414_page_test_v9_8_0.py in headless Chromium"
+CLOSE_REVIEW = "Closed on the deck's four checks and the page's browser tests and refused fixture. That the deck opens in PowerPoint without repair is inferred from the schema order, not observed: PowerPoint could not be run here. Times read from the clock."
+FINDINGS_REVIEW = '''
+ex:Finding_Ch05PowerPointRepair a backlog:RetrospectiveFinding ;
+    rdfs:label "PowerPoint offered to repair the chapter 5 deck on opening"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Deck_Ch05, ex:ST_Review_Ch05 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner reported an error about the content on opening deck 1.0.0, and a repair that removed part of the file. The deck's text boxes built from several runs (the 'On the page' footers and similar) carried a paragraph-properties element after a run; the file format requires it first in the paragraph, and PowerPoint repairs the part when it is not. No deck check looked at the file's structure: all of them read values, so the deck was correct in every value they compared and still malformed. The same fault is in the released decks of chapter 1 (20 paragraphs), chapter 2 (23), chapter 3 (29 in 1.0.0, 25 in 2.0.0) and chapter 4 (7); the owner has reported it only for chapter 5." ;
+    backlog:hasRemedy "Deck 1.0.1 of chapter 5: a build step removes the misplaced elements (64, all repeats of the paragraph's first) and a new structure check refuses a deck with any (42 paragraphs in 1.0.0, 0 in 1.0.1). That it now opens cleanly is inferred, not observed. Proposed to the owner (L-116), not done: the same repair for the released decks of chapters 1 to 4, as new versions, which would replace the decks the owner is using or has yet to review." .
+
+ex:Finding_Ch05ExampleSelectors a backlog:RetrospectiveFinding ;
+    rdfs:label "The page made the learner press a second button after choosing an example, or before stepping"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch05, ex:ST_Review_Ch05 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner's review: a chosen example did not fill the code until Load example was pressed; Step through did nothing until Trace was pressed; the Code pipeline had no examples to choose from. The template built each of these as a two-step control (choose or edit, then press) and its tests pressed both buttons, so they could not see the extra step." ;
+    backlog:hasRemedy "Template 9.8.0 and page 9.8.0: choosing an example fills the code in the Playground, the Code Lab, Step through and the Code pipeline; the Load and Trace buttons are gone; the first Step, Back, First or Play traces, and a change of code or input traces again; the pipeline runs when a stage or Next stage is pressed. The page test now chooses and steps without the extra press, and runs every example of both new lists. Found while testing: chosen examples with the same program kept the earlier step position, so choosing an example now always restarts, and duplicate programs are left out of the lists. Applied to the chapter 5 page only, as with 9.7.0." .
+'''
+
+
+def template_story(K=None, OUTCOME=OUTCOME, TOOL=TOOL, CLOSE=CLOSE):
+    K = K or K_TEMPLATE; key = K[0]
+    sid, label, what, obj, kind, (bv, tc, rr, js), dep = K; done = key in IT["done"]; d = IT["done"].get(key)
+    state = ('Done ; backlog:startedAt "%s"^^xsd:dateTime ; backlog:finishedAt "%s"^^xsd:dateTime ; backlog:lastAuditedAt "%s"^^xsd:dateTime ;\n    backlog:hasEvidence ex:Ev_%s ; backlog:hasExecutionModality backlog:Mode_Hybrid' % (IT["started"][key], d["finished"], d["closed"], sid)) if done else "Ready"
+    tstate = ('Done ; backlog:startedAt "%s"^^xsd:dateTime ; backlog:finishedAt "%s"^^xsd:dateTime ; backlog:hasEvidence ex:Ev_%s' % (IT["started"][key], d["finished"], sid)) if done else "Ready"
+    t = STORY % dict(sid=sid, label=label, what=what, kind=kind, obj=obj, dep=dep, state=state, bv=bv, tc=tc, rr=rr, js=js, v=(bv + tc + rr) / js, t=(IT["started"][key] if key == "Review" else PLANNED_AT_4), why=WHY, o=OUTCOME)
     for tk, tkl, note in (("Build", "build", "Build it."), ("Verify", "verify", "Run the checks on the chapter 5 page.")):
         t += TASK % dict(sid=sid, tk=tk, tkl=tkl, label=label, tstate=tstate, note=note)
     if done:
-        t += CLOSED % dict(sid=sid, label=label, st=IT["started"]["Template"], sn=IT["start_notes"]["Template"], spec=d["spec"], rel=d["release"], fin=d["finished"], cl=d["closed"], tool=TOOL, tn=CLOSE)
+        t += CLOSED % dict(sid=sid, label=label, st=IT["started"][key], sn=IT["start_notes"][key], spec=d["spec"], rel=d["release"], fin=d["finished"], cl=d["closed"], tool=TOOL, tn=CLOSE)
     return t
 
 
@@ -85,8 +105,8 @@ ex:Session_Iter4 a backlog:RegisterSession ; rdfs:label "The session that built 
     backlog:sessionFor ex:Backlog ; backlog:sessionConductedBy "claude-code-course-materials-session" ;
     backlog:sessionStartedAt "%s"^^xsd:dateTime ; backlog:sessionEndedAt "%s"^^xsd:dateTime ;
     backlog:stateVerifiedAtStart true ;
-    backlog:hasSessionScopeNote "Ran the discipline ceremony first from the files on GitHub (governance at Ontologies 087b9c2, knowledge base 2.32.0, OE discipline 2.12.1, lineage discipline 70.0.0), and re-read both discipline files at the release from governance 432507d, where they were byte-identical to the ceremony's (sha ee2052c9 and 7860dc89), then planned chapter 5 and the page-template feedback into the fourth iteration on the owner's request, built chapter 5's research record, lecture deck and page, and revised the page template as the owner asked; wrote version 1.1 of the teaching-device proposal." ;
-    backlog:changedItem ex:ST_Research_Ch05, ex:ST_Deck_Ch05, ex:ST_Page_Ch05, ex:ST_Template_Ch05 .
+    backlog:hasSessionScopeNote "Ran the discipline ceremony first from the files on GitHub (governance at Ontologies 087b9c2, knowledge base 2.32.0, OE discipline 2.12.1, lineage discipline 70.0.0), and re-read both discipline files at the release from governance 432507d, where they were byte-identical to the ceremony's (sha ee2052c9 and 7860dc89), then planned chapter 5 and the page-template feedback into the fourth iteration on the owner's request, built chapter 5's research record, lecture deck and page, and revised the page template as the owner asked; wrote version 1.1 of the teaching-device proposal; then, on the owner's review, repaired the deck (1.0.1) and the page (9.8.0)." ;
+    backlog:changedItem ex:ST_Research_Ch05, ex:ST_Deck_Ch05, ex:ST_Page_Ch05, ex:ST_Template_Ch05, ex:ST_Review_Ch05 .
 '''
 
 FINDINGS4 = '''
@@ -147,8 +167,10 @@ ex:Finding_Ch05TagsNotPushed a backlog:RetrospectiveFinding ;
 
 
 def iter4_block(end_time, chapter_members):
-    members = chapter_members + ["ex:ST_Template_Ch05"]
+    members = chapter_members + ["ex:ST_Template_Ch05"] + (["ex:ST_Review_Ch05"] if "Review" in IT["done"] else [])
     t = template_story() + FINDINGS4
+    if "Review" in IT["done"]:
+        t += template_story(K_REVIEW, OUTCOME_REVIEW, TOOL_REVIEW, CLOSE_REVIEW) + FINDINGS_REVIEW
     t += ITER4 % (PLANNED_AT_4, ", ".join(members))
     t += SESSION4 % (PLANNED_AT_4, end_time)
     return t
