@@ -1,0 +1,459 @@
+"""Backlog stage of the SEN0414 slide lineage: admission only. Every item Proposed; no task yet -
+tasks are produced by planning, and only for what is planned into an iteration."""
+__version__ = "1.12.0"
+# 1.12.0: the fourth iteration also carries the build of the ready proposals (2026-09-30, 12:41 Istanbul).
+# 1.11.0: the fourth iteration also carries the enrichment of the pages (2026-09-30, 10:15 Istanbul).
+# 1.10.0: the fourth iteration also carries the return to chapters 1 to 4 (banks, pages on 9.11.0) of 2026-09-29 (20:19 Istanbul).
+# 1.9.0: chapter 6 (Lists) joins the fourth iteration: planned by the owner's message of 2026-09-29 (17:51 Istanbul); its research, deck and page stories are the generic chapter stories.
+# 1.8.0: the fourth iteration also carries the bank, live-model and repair stories of 2026-09-29 (14:27 Istanbul).
+# 1.7.0: the fourth iteration also carries the second review story of 2026-09-29 (14:01 Istanbul): page 9.9.0. Everything else comes out as 1.6.0 would.
+# 1.6.0: the fourth iteration also carries the review story of 2026-09-29 (11:37 Istanbul): chapter 5 deck 1.0.1 and page 9.8.0. Everything else comes out as 1.5.0 wrote it.
+# 1.5.0: a fourth iteration, from sen0414_slides_iter4_v1_3_0.py: the owner asked on 2026-09-29 (10:00 Istanbul, 07:00 UTC) for the next chapter, chapter 5, to be built with his enhancements (page template feedback, lecture content on the page, links). Chapter 5 takes the generic chapter stories, planned into Iter_4; the template feedback is a new story. Chapters 1-4 and the third iteration come out exactly as 1.4.0 wrote them.
+# 1.4.0: a third iteration, from sen0414_slides_rework_v1_0_0.py: the owner asked on 2026-09-29 (08:54 Istanbul, 05:54 UTC, the message's own timestamp) for the chapter 3 deck and page to be reworked as a lecture with shared visuals. New work is new stories; chapters 1-4 come out exactly as 1.3.0 wrote them.
+# 1.3.0: chapter 4 closed in the same iteration. What happened to its items is read from sen0414_slides_progress_v*.json (the newest); an item's start note may come from that file (start_notes); the second iteration's session, end and findings now cover chapter 4. Chapters 1-3 come out as 1.2.0 wrote them, except the session's note and end.
+# 1.2.0: a second iteration. The owner asked on 2026-09-28 (22:47 Istanbul, 19:47 UTC, the message's own timestamp) for two more chapters
+# of each course, so chapters 3 and 4 are planned into Iter_2, ending at SEN0414's next class, 14:00 Istanbul on 2026-10-02. What
+# happened to those chapters' items - when each started, finished and closed, and what closed it - is read from
+# sen0414_slides_progress_v*.json, written by the release from the clock and the checks it ran, never composed here.
+# Chapters 1 and 2 come out exactly as 1.1.8 wrote them.
+import glob, json, os
+from sen0414_slides_stages_v1_0_1 import CHAPTERS, KIND, cid
+import sen0414_slides_rework_v1_0_0 as rework
+import sen0414_slides_iter4_v1_6_0 as iter4
+
+# Planning of 2026-09-24, approved by the owner: chapters 1 and 2 in the first iteration, until
+# SEN0414's class at 14:00 Istanbul (11:00 UTC) on 2026-09-25. WSJF components are
+# (business value, time criticality, risk reduction, job size). Chapter 1's were proposed and
+# approved; chapter 2 was added by the owner at approval and takes the same components, since it is
+# taught in the same class.
+PLANNED_AT = "2026-09-24T20:15:47"
+WSJF = {"Research": (13, 20, 13, 3), "Page": (13, 20, 5, 3), "Deck": (20, 20, 8, 5)}
+PLANNED_AT_2 = "2026-09-28T19:47:00"
+PLANNED = {1, 2, 3, 4, 5, 6}
+ITER_OF = {1: 1, 2: 1, 3: 2, 4: 2, 5: 4, 6: 4}
+PLAN_TIME = {1: PLANNED_AT, 2: PLANNED_AT, 3: PLANNED_AT_2, 4: PLANNED_AT_2, 5: iter4.PLANNED_AT_4, 6: iter4.PLANNED_AT_6}
+_pf = sorted(glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sen0414_slides_progress_v*.json")), key=lambda x: [int(v) for v in os.path.splitext(x.rsplit("_v", 1)[1])[0].split("_")])
+PROGRESS = json.load(open(_pf[-1])) if _pf else {"started": {}, "done": {}, "rescored": {}}
+# Started items, at the clock time each began. The kick-off was declared by the owner.
+STARTED = {("Research", 1): "2026-09-24T20:26:42", ("Deck", 1): "2026-09-24T20:55:01", ("Research", 2): "2026-09-24T21:17:28", ("Page", 1): "2026-09-24T21:26:47", ("Page", 2): "2026-09-25T00:16:20", ("Deck", 2): "2026-09-25T00:20:02"}
+# Re-scoring after the latest completion (BP-D11), at the clock time it was done; components unchanged.
+RESCORED_AT = "2026-09-25T06:13:08"
+
+# Finished items and the evidence each closed on. Times from the clock or from commits only.
+DONE = {("Research", 1): {"finished": "2026-09-24T20:47:21", "closed": "2026-09-24T20:50:04", "release": "sen0414-v2.7.0 (e49e8f6)",
+    "spec": "RDODI procedure v1.6.0, Stages 1-3 for chapter 1, gates run with RDODI's own validator functions where it has them: Stage1.A-B, Stage2.A and C, Stage3.A, B, E.cov, E.sub, F and src, all PASS; Stage1.C-E, Stage2.B (HermiT, consistent), D-H and Stage3.C, D, E (coverage 27/27), G and H run as direct checks because the validator does not implement them - all PASS."}, ("Deck", 1): {"finished": "2026-09-24T21:00:46", "closed": "2026-09-24T21:01:30", "release": "the release carrying 03-materials/ch01/SEN0414_Ch01_PythonBasics_3e.pptx",
+    "spec": "08-tooling/ch01-deck/deck_check.py re-ran all 19 examples shown on the renewed deck under Python 3.14.4, one shell session per slide: 0 mismatches. The fixture fixture_stale.pptx - the same deck with 0.1 + 0.2 shown as 0.3 - was refused, naming slide 10. Slides built by deck.js, which takes every output from examples_out.json, produced by executing the examples rather than typing them. Rendered and inspected; four layout faults fixed before closing. The course still conforms to every CME shape with the new materials described."},
+    ("Research", 2): {"finished": "2026-09-24T21:22:23", "closed": "2026-09-24T21:22:40", "release": "sen0414-v2.9.0 (b4b107b)",
+    "spec": "RDODI procedure v1.6.0, Stages 1-3 for chapter 2, built by the generic builder 08-tooling/sen0414_rdodi_build_v1_0_0.py from 08-tooling/sen0414_ch02_rdodi_data_v1_0_0.py, all gates PASS on the first run: Stage1.A-B, Stage2.A, C and H, Stage3.A, B, F, E.cov, E.sub and src with RDODI's own validator functions; Stage1.C-E, Stage2.B (HermiT consistent), D-G and Stage3.C-E (coverage 22/25 = 0.88), G and H as direct checks."},
+    ("Deck", 2): {"finished": "2026-09-25T00:21:53", "closed": "2026-09-25T00:22:07", "release": "the release carrying 03-materials/ch02/SEN0414_Ch02_FlowControl_3e.pptx",
+    "spec": "08-tooling/ch02-deck/deck_check.py re-ran all 17 expressions on the deck under Python 3.14.4, and program_check.py re-ran both whole programs with the six inputs the slides show: 0 mismatches. Two fixtures refused, each naming what it broke: an expression result edited on slide 6, and a program transcript edited on slide 10. Building the second fixture exposed a weakness in the new program check - a result's words also occur in the program's own code on the slide - fixed by requiring the whole transcript sequence."},
+    ("Page", 1): {"finished": "2026-09-25T06:12:58", "closed": "2026-09-25T06:13:08", "release": "the release carrying the chapter 1 page",
+    "spec": "08-tooling/sen0414_page_test_v2_0_0.py exercised every widget and feature of the chapter 1 page in headless Chromium at 2026-09-25T06:12:58 - every widget passed, every executable example printed via Pyodide exactly what the build interpreter printed, 0 console errors, 0 WCAG 2 AA violations - and a fixture with one stored value altered was refused. RDODI Stage 4 and every automated pedagogy gate pass. The Courseware profile's pedagogical-soundness attestation is the owner's, is not part of this story's definition of done, and is recorded as pending, not claimed."},
+    ("Page", 2): {"finished": "2026-09-25T06:12:58", "closed": "2026-09-25T06:13:08", "release": "the release carrying the chapter 2 page",
+    "spec": "08-tooling/sen0414_page_test_v2_0_0.py exercised every widget and feature of the chapter 2 page in headless Chromium at 2026-09-25T06:12:58 - every widget passed, every executable example printed via Pyodide exactly what the build interpreter printed, 0 console errors, 0 WCAG 2 AA violations - and a fixture with one stored value altered was refused. RDODI Stage 4 and every automated pedagogy gate pass. The Courseware profile's pedagogical-soundness attestation is the owner's, is not part of this story's definition of done, and is recorded as pending, not claimed."}}
+
+for _k, _v in PROGRESS["started"].items(): STARTED[(_k.split("_")[0], int(_k.split("_")[1]))] = _v
+for _k, _v in PROGRESS["done"].items(): DONE[(_k.split("_")[0], int(_k.split("_")[1]))] = _v
+RESCORED_CH = {int(k): v for k, v in PROGRESS.get("rescored", {}).items()}   # chapter -> time its not-yet-done items were re-scored, after the latest completion
+
+REFINED = {
+    "Research": "Settled: RDODI's four-stage procedure v1.6.0 on the chapter's subject, with its Pedagogy and Professional Standards stage and the Courseware profile; the research record lists every source a later claim rests on.",
+    "Deck": "Settled: rewritten from the 3rd edition's chapter and the research record, restyled with PowerPoint's own capabilities, every code example run under current Python before it is shown, and the deck described as a teaching material aligned to the outcomes it serves.",
+    "Page": "Settled: one interactive page for the chapter, carrying the research results; published as a page students can open, and described as a teaching material.",
+}
+
+REFINED_2 = {
+    "Research": "Settled, from chapters 1 and 2: RDODI's Stages 1-3 on the chapter's subject, gates run with RDODI's own validator; its Pedagogy and Professional Standards stage and the Courseware profile run over the page artefact, so they belong to the chapter's page story.",
+    "Deck": REFINED["Deck"],
+    "Page": "Settled: one interactive page for the chapter, carrying the research results, with the Pedagogy and Professional Standards stage's automated gates run over its ABox and HTML; published as a page students can open, and described as a teaching material.",
+}
+WHY_1 = "approved by the owner. Time criticality is set by the class at 14:00 Istanbul on 2026-09-25."
+WHY_2 = ("Components reused from chapters 1 and 2, whose scores the owner approved - the same kind of story, taught in the same class; they were not approved again for chapters 3 and 4, so they are a proposal to the owner "
+         "(L-116), not an approval. Time criticality is set by the class at 14:00 Istanbul on 2026-10-02.")
+
+OBJ = {"Deck": "Obj_DecksRenewed", "Research": "Obj_ResearchRecorded", "Page": "Obj_PagesBuilt"}
+
+
+def planned_tail(k, n):
+    if n not in PLANNED:
+        return 'backlog:hasState backlog:Proposed ;\n    backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored when its own iteration is planned."'
+    if (k, n) in DONE:
+        d = DONE[(k, n)]
+        state = ('Done ; backlog:startedAt "%s"^^xsd:dateTime ; backlog:finishedAt "%s"^^xsd:dateTime ; backlog:lastAuditedAt "%s"^^xsd:dateTime ;\n'
+                 '    backlog:hasEvidence ex:Ev_%s_%s ; backlog:hasExecutionModality backlog:Mode_Hybrid' % (STARTED[(k, n)], d["finished"], d["closed"], k, cid(n)))
+    else:
+        state = ('InProgress ; backlog:startedAt "%s"^^xsd:dateTime' % STARTED[(k, n)]) if (k, n) in STARTED else 'Ready'
+    return ('backlog:hasState backlog:' + state + ' ; backlog:memberOfContainer ex:Iter_%d ;\n    backlog:hasPriorityScore ex:Score_%s_%s ;\n'
+            '    backlog:decomposesInto ex:TK_%s_%s_Build, ex:TK_%s_%s_Verify' % (ITER_OF[n], k, cid(n), k, cid(n), k, cid(n)))
+
+
+def start_block(k, n):
+    if (k, n) not in STARTED or (k, n) == ("Research", 1): return ""  # chapter 1's research started at the kick-off, recorded there
+    return '''
+ex:Start_%s_%s a backlog:TransitionEvent ; rdfs:label "%s %s started"@en ; backlog:transitionedItem ex:ST_%s_%s ;
+    backlog:viaTransition backlog:T_Start ; backlog:transitionedAt "%s"^^xsd:dateTime ; backlog:transitionedBy backlog:Owner ;
+    backlog:hasTransitionNote "%s" .
+''' % (k, cid(n), k, cid(n), k, cid(n), STARTED[(k, n)], (
+        PROGRESS.get("start_notes", {}).get("%s_%d" % (k, n)) or ("Started once its dependency, the chapter's research, was Done. Time read from the clock." if ITER_OF[n] == 1 else "The start was not recorded when the work began. This is its provable lower bound - the earliest time it could begin: the owner's request (19:47:00, the message's own timestamp) for research, and for a deck or a page the moment its research was first verified, 20:10:54, read from the modification time of the check script whose first run passed - bounded, not composed.") if (k, n) != ("Page", 1) else
+        "The start was not recorded when the work began. This is its provable lower bound: the commit time of sen0414-v2.9.1, the last release before any page work - bounded, not composed."))
+
+
+REFINE2_TAIL = """
+    backlog:refines ex:ST_Page_%(c)s ; backlog:addressesConcern backlog:Concern_Data ; backlog:refinedAt "%(cl)s"^^xsd:dateTime ;
+    backlog:refinedBy backlog:Owner ; backlog:groomsForIteration ex:Iter_1 ;
+    backlog:hasRefinementOutcome "RDODI's Pedagogy and Professional Standards stage runs its gates over an interactive page's ABox and HTML (its README: --page, --html), so it belongs to the page story, not the research story where the first refinement put it." """
+
+
+def closure_block(k, n):
+    if (k, n) not in DONE: return ""
+    d = DONE[(k, n)]; c = cid(n)
+    return '''
+ex:Ev_%(k)s_%(c)s a backlog:TestEvidence ; rdfs:label "Checks for %(k)s %(c)s"@en ; backlog:belongsToLineage ex:Lineage ;
+    backlog:attestsCriterion ex:AC_Chapter ; backlog:evidenceVerified true ; backlog:hasTestId "%(k)s/%(c)s" ;
+    backlog:hasTestSpec "%(spec)s" ; backlog:hasVerificationMethod "Gates run over the artefacts as published in %(rel)s." ;
+    backlog:verifiedByTool "%(tool)s" ; backlog:verifiedAt "%(fin)s"^^xsd:dateTime .
+ex:Harness_%(k)s_%(c)s a backlog:TestHarness ; rdfs:label "Checks for %(k)s %(c)s"@en ;
+    backlog:harnessFor ex:ST_%(k)s_%(c)s ; backlog:harnessComplete true ; backlog:hasHarnessEvidence ex:Ev_%(k)s_%(c)s .
+ex:Obs1_%(k)s_%(c)s a backlog:MetricObservation ; rdfs:label "%(k)s count read after %(c)s closed"@en ;
+    backlog:observesMetric ex:%(met)s ; backlog:observationFor ex:%(obj)s ;
+    backlog:hasObservedValue "%(count)d"^^xsd:decimal ; backlog:observedAt "%(cl)s"^^xsd:dateTime ;
+    backlog:hasObservationMethod "%(obsnote)s" .
+ex:Complete_%(k)s_%(c)s a backlog:TransitionEvent ; rdfs:label "%(k)s %(c)s completed"@en ;
+    backlog:transitionedItem ex:ST_%(k)s_%(c)s ; backlog:viaTransition backlog:T_Complete ;
+    backlog:transitionedAt "%(cl)s"^^xsd:dateTime ; backlog:transitionedBy backlog:Owner ;
+    backlog:hasTransitionNote "%(tnote)s" .
+%(extra)s
+''' % dict(k=k, c=c, spec=d["spec"], rel=d["release"], fin=d["finished"], cl=d["closed"],
+                met={"Research": "Met_ResearchRecorded", "Deck": "Met_DecksRenewed", "Page": "Met_PagesBuilt"}[k], obj=OBJ[k],
+                obsnote=("Counted chapters whose Stages 1-3 artefacts are published and pass their gates: %s." % ", ".join("chapter %d" % m for (kk, m) in DONE if kk == "Research" and m <= n) if k == "Research" else ("Counted renewed decks passing the chapter check: %s." % ", ".join("chapter %d" % m for (kk, m) in DONE if kk == "Deck" and m <= n)) if k == "Deck" else ("Counted interactive pages passing their browser tests and Stage 4 gates: %s." % ", ".join("chapter %d" % m for (kk, m) in DONE if kk == "Page" and m <= n))),
+                count=len([1 for (kk, m) in DONE if kk == k and m <= n]),
+                tool=(("rdodi-ecosystem/02-gates/rdodi_pipeline_validator_v1_6_0.py, pyshacl, owlready2 HermiT" if k == "Research" else ("08-tooling/ch%02d-deck/deck_check.py under Python 3.14.4" % n) if k == "Deck" else "08-tooling/sen0414_page_test_v2_0_0.py in headless Chromium, RDODI Stage 4 and pedagogy gates") if ITER_OF[n] == 1 else
+                      ("08-tooling/sen0414_rdodi_gates_v1_1_0.py (rdodi-ecosystem/02-gates/rdodi_pipeline_validator_v1_6_0.py, Stages 1-3), sen0414_rdodi_checks_v%s.py (every example and claim executed under Python 3.14.4; HermiT)" % ("1_1_0" if n >= 4 else "1_0_0") if k == "Research" else (("08-tooling/ch%02d-deck: deck_check_v1_0_1.py, program_check_v1_0_0.py and visual_check_v1_1_0.py under Python 3.14.4" % n) if n == 5 else ("08-tooling/ch%02d-deck: deck_check_v1_0_1.py and program_check_v1_0_0.py under Python 3.14.4" % n)) if k == "Deck" else "08-tooling/sen0414_page_test_v%s.py in headless Chromium; rdodi-ecosystem/07-pedagogy-professional-stage/02-gates/enriched_acceptance_v1_0_0.py; RDODI Stage 4 gates" % ({4: "9_5_1", 5: "9_10_0", 6: "9_11_0"}.get(n, "9_5_0")))),
+                tnote=(("Closed on Stages 1-3 of the RDODI procedure. The pedagogy stage, which this story's refinement placed here, runs over a page artefact - its gates take the page's ABox and HTML - so it moves to the chapter's page story; recorded in Refine2_Research_%s rather than claimed here." % c) if ITER_OF[n] == 1 else "Closed on Stages 1-3 of the RDODI procedure with every example and claim executed. The pedagogy stage runs over the page and is claimed by the chapter's page story. Times read from the clock.") if k == "Research" else ("Closed on the deck check and its refused fixture. Times read from the clock." if k == "Deck" else "Closed on the page's browser tests, its refused fixture and its Stage 4 gates. The Courseware attestation, the owner's, is pending and not claimed. Times read from the clock."),
+                extra=(("ex:Obs1_Untaught_%s a backlog:MetricObservation ; rdfs:label \"No renewal item for an untaught chapter, read after the %s deck closed\"@en ; backlog:observesMetric ex:Met_UntaughtWork ; backlog:observationFor ex:Obj_NoUntaughtWork ; backlog:hasObservedValue \"0\"^^xsd:decimal ; backlog:observedAt \"%s\"^^xsd:dateTime ; backlog:hasObservationMethod \"Counted renewal items for chapters outside the scope - command-line programs, untaught chapters, the GUI decks: none.\" ." % (c, c, d["closed"])) if k == "Deck" else "") + ((("ex:Refine2_Research_%s a backlog:RefinementEvent ; rdfs:label \"Pedagogy stage moved to the page story\"@en ;" % c) + REFINE2_TAIL.replace("%(c)s", c).replace("%(cl)s", d["closed"]) + " .") if (k == "Research" and ITER_OF[n] == 1) else ""))
+
+
+def planned_block(k, n):
+    bv, tc, rr, js = WSJF[k]; c = cid(n)
+    return '''
+ex:Score_%(k)s_%(c)s a backlog:PriorityScore ; backlog:scoredByMethod backlog:Method_WSJF ;
+    backlog:hasScoreValue "%(v).2f"^^xsd:decimal ; backlog:scoredAt "%(ts)s"^^xsd:dateTime ; backlog:isAveragedFromMembers false ;
+    backlog:hasScoreRationale "WSJF = (business value %(bv)d + time criticality %(tc)d + risk reduction %(rr)d) / job size %(js)d, %(why)s" .
+ex:Plan_%(k)s_%(c)s a backlog:PlanningEvent ; rdfs:label "Planning of %(k)s for %(c)s into the %(itw)s iteration"@en ; backlog:belongsToLineage ex:Lineage ;
+    backlog:plannedAt "%(t)s"^^xsd:dateTime ; backlog:plannedBy backlog:Owner ; backlog:plannedInto ex:Iter_%(it)d ;
+    backlog:plansItem ex:ST_%(k)s_%(c)s ; backlog:producesTask ex:TK_%(k)s_%(c)s_Build, ex:TK_%(k)s_%(c)s_Verify .
+ex:Refine_%(k)s_%(c)s a backlog:RefinementEvent ; rdfs:label "Refinement that made %(k)s for %(c)s ready"@en ;
+    backlog:refines ex:ST_%(k)s_%(c)s ; backlog:addressesConcern backlog:Concern_Data ; backlog:refinedAt "%(t)s"^^xsd:dateTime ;
+    backlog:refinedBy backlog:Owner ; backlog:groomsForIteration ex:Iter_%(it)d ; backlog:hasRefinementOutcome "%(o)s" .
+ex:TK_%(k)s_%(c)s_Build a backlog:ExecutionTask ; rdfs:label "%(k)s for %(c)s: build"@en ; backlog:hasIdentifier "TK_%(k)s_%(c)s_Build" ; backlog:hasTitle "Build %(k)s %(c)s" ;
+    backlog:belongsToLineage ex:Lineage ; backlog:memberOfContainer ex:Backlog ; backlog:admittedByOutput ex:Out_Backlog ; backlog:hasState backlog:%(tstate)s ;
+    backlog:hasInvestmentCategory backlog:Cat_NewCapability ; backlog:hasTaskType backlog:TaskType_Build ; backlog:effectiveDefinitionOfDone ex:DoD ;
+    backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Ranked by its story's score; scoring both would double-count." ;%(dep)s
+    backlog:hasAuditNote "Build it." .
+ex:TK_%(k)s_%(c)s_Verify a backlog:ExecutionTask ; rdfs:label "%(k)s for %(c)s: verify"@en ; backlog:hasIdentifier "TK_%(k)s_%(c)s_Verify" ; backlog:hasTitle "Verify %(k)s %(c)s" ;
+    backlog:belongsToLineage ex:Lineage ; backlog:memberOfContainer ex:Backlog ; backlog:admittedByOutput ex:Out_Backlog ; backlog:hasState backlog:%(tstate)s ;
+    backlog:hasInvestmentCategory backlog:Cat_NewCapability ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:effectiveDefinitionOfDone ex:DoD ;
+    backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Ranked by its story's score; scoring both would double-count." ;%(dep)s
+    backlog:hasAuditNote "Run the chapter check and require the stale fixture refused." .
+''' % dict(k=k, c=c, bv=bv, tc=tc, rr=rr, js=js, v=(bv + tc + rr) / js, t=PLAN_TIME[n], ts=((RESCORED_CH[n] if (n in RESCORED_CH and (k, n) not in DONE) else (RESCORED_AT if (ITER_OF[n] == 1 and RESCORED_AT and (k, n) not in DONE) else PLAN_TIME[n]))),
+          it=ITER_OF[n], itw={1: "first", 2: "second", 4: "fourth"}[ITER_OF[n]], o=(REFINED_2 if ITER_OF[n] >= 2 else REFINED)[k],
+          why=(WHY_1 if ITER_OF[n] == 1 else (WHY_2 if ITER_OF[n] == 2 else iter4.WHY)),
+          tstate=(('Done ; backlog:startedAt "%s"^^xsd:dateTime ; backlog:finishedAt "%s"^^xsd:dateTime ; backlog:hasEvidence ex:Ev_%s_%s' % (STARTED[(k, n)], DONE[(k, n)]["finished"], k, c)) if (k, n) in DONE else 'Proposed'),
+          dep=("" if k == "Research" else ("\n    backlog:dependsOn ex:ST_Research_%s ;" % c)))
+
+
+ITER = '''
+ex:Iter_1 a backlog:Iteration ; rdfs:label "First iteration: chapters 1 and 2, before the class of 25 September"@en ;
+    backlog:hasIdentifier "Iter_1" ; backlog:belongsToLineage ex:Lineage ;
+    backlog:iterationStart "%s"^^xsd:dateTime ; backlog:iterationEnd "2026-09-25T11:00:00"^^xsd:dateTime ;
+    backlog:hasDurationSource "Owner, 2026-09-24: chapter 1, and chapter 2 added at approval, ready for SEN0414's class at 14:00 Istanbul on 2026-09-25." ;
+    backlog:hasSprintGoal "Chapters 1 and 2 researched, their decks renewed and their interactive pages built, ready to present." ;
+    backlog:hasMember %s .
+'''
+SESSION2 = '''
+ex:Session_Iter2 a backlog:RegisterSession ; rdfs:label "The session that planned chapters 3 and 4 and closed both, in the second iteration"@en ;
+    backlog:sessionFor ex:Backlog ; backlog:sessionConductedBy "claude-code-course-materials-session" ;
+    backlog:sessionStartedAt "%s"^^xsd:dateTime ; backlog:sessionEndedAt "%s"^^xsd:dateTime ;
+    backlog:stateVerifiedAtStart true ;
+    backlog:hasSessionScopeNote "Ran the discipline ceremony first (governance at Ontologies c9e0d4d, knowledge base 2.32.0, OE discipline 2.12.1, lineage discipline 70.0.0), then planned chapters 3 and 4 into the second iteration on the owner's request and closed chapter 3's, then chapter 4's, research, deck and page." ;
+    backlog:changedItem ex:ST_Research_Ch03, ex:ST_Deck_Ch03, ex:ST_Page_Ch03, ex:ST_Research_Ch04, ex:ST_Deck_Ch04, ex:ST_Page_Ch04 .
+'''
+FEEDBACK4 = """
+ex:Finding_BookChapter4Output a backlog:RetrospectiveFinding ;
+    rdfs:label "Chapter 4's printed output no longer matches what Python 3.14 prints, and one printed listing does not match its own output"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Research_Ch04, ex:ST_Deck_Ch04, ex:ST_Page_Ch04 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The book prints the UnboundLocalError as 'local variable 'eggs' referenced before assignment'; Python 3.14.4 prints 'cannot access local variable 'eggs' where it is not associated with a value' - the same error, a reworded message. The book's pasted listing of the hello() program also has print(' Good evening!') with a leading space, so its listing and its printed output differ. The NameError and ZeroDivisionError messages the chapter shows are unchanged." ;
+    backlog:hasRemedy "Every program of the chapter was run under Python 3.14.4 and its output recorded; the deck and page show the book's message and the current one side by side and say which is which. The book's text is not altered, and reporting the two points to its author is left to the owner." .
+
+ex:Finding_Ch04PageChecksThreeGaps a backlog:RetrospectiveFinding ;
+    rdfs:label "The chapter 4 page's first checks found three gaps, none in the content"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch04, ex:ST_Research_Ch04 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The page test's concept-tap steps clicked the first term in a subject's text, which for chapter 4 sits in a card that is hidden while one concept is shown, and waited for it until the test timed out; the template's agent icons had none for nine of the chapter's ten agents, so they showed the default robot and the roster check failed; and the evaluation-steps view needs an example built from calls to built-in functions on constants, of which the chapter's taxonomy had none, so the check found no multi-step example. A first guide question also did not route to the agent the test config named." ;
+    backlog:hasRemedy "Page test 9.5.1 clicks a term the reader can see, at both places; template 9.5.1 adds nine icons in front of 9.5.0's, keeping the earlier entries in order; the taxonomy gains one example, len(str(42 / 2)), for the order nested calls are made in - the research record, not yet published, was rebuilt and every gate and check re-run - and the test config names a guide question that routes to an agent with executed examples. The page then passes all 50 checks. The test and the template are forks of shared tooling, to be consolidated by CME." .
+"""
+
+ITER2 = '''
+ex:Iter_2 a backlog:Iteration ; rdfs:label "Second iteration: chapters 3 and 4, before the class of 2 October"@en ;
+    backlog:hasIdentifier "Iter_2" ; backlog:belongsToLineage ex:Lineage ;
+    backlog:iterationStart "%s"^^xsd:dateTime ; backlog:iterationEnd "2026-10-02T11:00:00"^^xsd:dateTime ;
+    backlog:hasDurationSource "Owner, 2026-09-28 (the message's own timestamp, 22:47 Istanbul): two more chapters of each course. The period runs to SEN0414's next class, 14:00 Istanbul on Friday 2026-10-02 - the same length as the first iteration, split from the course timetable, not chosen for the work." ;
+    backlog:hasSprintGoal "Chapters 3 and 4 researched, their decks renewed and their interactive pages built, ready to present." ;
+    backlog:hasMember %s .
+'''
+
+
+FEEDBACK = """
+ex:Finding_SourcesReadWhere a backlog:RetrospectiveFinding ;
+    rdfs:label "Where chapter 3's sources were read, stated"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Research_Ch03 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The book's chapter 3 was read on automatetheboringstuff.com through the web reader. The reader refused every python.org page - the permission for each was not answered in time - so the Python documentation was read instead from the CPython source tree at the tag v3.14.4 (Doc/tutorial, Doc/reference, Doc/library, Doc/whatsnew), the PEPs from the python/peps repository at commit ce48c4e of 2026-09-27, both fetched by git. Chapter 2's publication labels name 'Python 3.14.7 documentation', the website's own version; that label on text read from the source tree at v3.14.4 would have been false." ;
+    backlog:hasRemedy "Chapter 3's publications name what was read: 'Python 3.14.4 documentation source' for the rst files at the tag, with the section numbers checked against the rst headings before they went on a slide (the Looping Techniques section is 5.6, not 5.7 - found and corrected by that check). The two readings are recorded as different, not merged." .
+
+ex:Finding_PageTestNetworkAndChapterQuestions a backlog:RetrospectiveFinding ;
+    rdfs:label "The page test could not run away from its authors' machine, and asked chapter 2's questions of every chapter"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch03 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "Run for chapter 3, test 9.4.2 timed out at its first Python run: it launched the browser with an environment holding only two locale variables, discarding HTTPS_PROXY, so where the network is reached through a proxy Pyodide never loaded. Past that, its agent questions were hard-coded - chapter 1's for chapter 1 and chapter 2's for every other chapter - so a chapter with different subjects would have been tested on questions about equality." ;
+    backlog:hasRemedy "Test 9.5.0 keeps the environment and launches through HTTPS_PROXY when one is set, and reads the questions from the chapter's own test_config file (chapters 1 and 2 keep their old questions). A first config named the agent the test already uses for its earlier questions, and starting a new conversation cleared that agent's history - the test's copy-out check caught it, and the config now names another agent that has executed examples." .
+
+ex:Finding_AgentIconsForLoops a backlog:RetrospectiveFinding ;
+    rdfs:label "Agents for loops had no icon, and the page test refused it"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch03 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The template chooses an agent's icon by matching its name against a table; chapter 3's agents (condition loops, counted loops, range, iteration, early exit, skipping, loop ending, imports, hazards) matched nothing and showed the default robot, which the test 'agents are listed like people' refuses - a robot is not a role." ;
+    backlog:hasRemedy "Template 9.5.0 adds an icon for each of those roles to the table; the same test then passes. The table is shared with SEN0401's pages, so the change is additive and the earlier entries keep their order." .
+
+ex:Finding_BloomCoverageObjectiveFour a backlog:RetrospectiveFinding ;
+    rdfs:label "An objective assessed one level below the level it declares"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch03 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The pedagogy stage's Bloom coverage gate refused the first page: objective CO4 (use the import forms and sys.exit() correctly) is declared at Apply, and its only question was written at Understand." ;
+    backlog:hasRemedy "A question at Apply level was added - what happens when sys.exit() is called inside a try block with a finally clause - whose answer is one of the behaviours the research checks execute; the gate then passes with every objective assessed at or above its level. Found by running the gate, not by reading the page." .
+
+ex:Finding_RetrievalNamesItself a backlog:RetrospectiveFinding ;
+    rdfs:label "A concept section must say what it is, or retrieval prefers its neighbour"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Research_Ch03, ex:ST_Page_Ch03 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The page's built-in checks ask each agent 'what is <concept>?' and require the concept among its cited passages. For the import statement the agent cited the multiple import and the import form instead: its section began with the example, not with the name, so the meaning-based search ranked its neighbours above it." ;
+    backlog:hasRemedy "The section's text now begins 'The import statement makes a module's names available...'; the check passes. Chapter 3's other concept sections already name themselves." .
+
+ex:Finding_Stage4ProposedGatesOnPublishedPages a backlog:RetrospectiveFinding ;
+    rdfs:label "Stage 4's proposed coverage and substance gates, and the navigation gate, fail on the published chapter 2 page too"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch03 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "Run over chapter 3's page ABox, RDODI's pipeline validator passes Stage 4's parse, shapes (0 violations, 3 advisory warnings) and source-validity gates and fails two gates it labels PROPOSED - coverage (10 typed individuals lack a label and content) and substance (86 individuals not substantive) - and its navigation gate reports patterns realised but not declared (tooltip, table of contents, focus indicator, current-location indicator) and one declared but not found (primary navigation). The same gates give the same verdicts on the published chapter 2 page, so the cause lies in the page ABox builder and template, not in chapter 3." ;
+    backlog:hasRemedy "Not remedied here and not claimed as passed: the record says which Stage 4 gates pass and which fail, on both chapters. Left for the page ABox builder's own story, since changing what every page declares is a change to shared tooling and a ruling for the owner." .
+
+ex:Ruling_Ch03Planned a backlog:RetrospectiveFinding ;
+    rdfs:label "Chapters 3 and 4 planned on the owner's request, with proposed scores"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Research_Ch03, ex:ST_Deck_Ch03, ex:ST_Page_Ch03, ex:ST_Research_Ch04, ex:ST_Deck_Ch04, ex:ST_Page_Ch04 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "On 2026-09-28 (22:47 Istanbul) the owner asked for two more chapters of each course, with the full research run, a deck and a page. The chapters were already admitted as Proposed stories. Their planning time is the request's own timestamp, read from the message; their WSJF components are chapter 1's and 2's, which the owner had approved - a stipulation for chapters 3 and 4, since nobody approved them for these." ;
+    backlog:hasRemedy "Planned into a second iteration, Iter_2, ending at SEN0414's next class on 2026-10-02; the score rationale says the components are proposed for the owner's confirmation, per L-116. Started items carry the earliest time they could have begun, named as a bound." .
+
+ex:Finding_AntivirusHardeningV942 a backlog:RetrospectiveFinding ;
+    rdfs:label "Page code that antivirus heuristics read as a threat, removed"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner's Windows Defender removed a page as a threat. Scanned the same day with ClamAV and its current signatures (main and daily databases of 2026-09-26), heuristic alerts on: both pages and both decks came back clean - no known malware. An audit of the page's code found two patterns that behaviour-based scanners treat as malicious because malware uses them: code downloaded as text and run with eval - how the Python worker loaded Pyodide - which is how script downloaders work; and a file built inside the page and saved by a scripted click on a hidden link - how the downloads worked - which is the pattern known as HTML smuggling, used to slip malware past mail and web filters. The exact detection name was not available, so which of the two triggered Defender is not proven." ;
+    backlog:hasRemedy "Template 9.4.2 removes both: Pyodide is loaded with importScripts, the browser's standard way for a worker to load a library - proven to start CPython 3.13.2 in a worker - so no fetched code is evaluated; and every download became a copy to the clipboard with a short confirmation, so the page never builds and saves a file. The page keeps no document.write, base64 decoding, new Function or redirect. At 2026-09-26T14:00:30 every check in 08-tooling/sen0414_page_test_v9_4_2.py passed on both pages, including a new check that none of these patterns appears in the page and copy checks for code, results and conversations; ClamAV found both 9.4.2 pages clean; 0 console errors, 0 WCAG 2 AA violations; Stage 4 gates passed; the stale fixture refused." .
+
+ex:Finding_ExplorerInStepV941 a backlog:RetrospectiveFinding ;
+    rdfs:label "The explorer kept in step with the main area"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner found the tabs and the explorer out of step after version 9.4.0. The explorer's selection was set only when a concept was chosen in the explorer itself or reached through a go-to; the new breadcrumb chooser, its previous, next and show-all buttons, and the subject tabs changed the main area without touching it, and a tap on a concept inside the text moved the explorer's selection to that concept although the main area stayed where it was." ;
+    backlog:hasRemedy "Template 9.4.1: every change of view ends by reading what the main area shows - a subject's overview, a sub-subject, or the single concept on view - and selecting, expanding and scrolling to that entry in the explorer; views outside the chapter's subjects clear the selection; a concept tap opens its card and leaves the explorer on the main area's location. At 2026-09-26T13:32:24 every check in 08-tooling/sen0414_page_test_v9_4_1.py passed on both pages, including a new one that walks the breadcrumb chooser, next, show all, the subject tabs and a view outside the subjects, requiring the explorer to match the main area after each; 0 console errors, 0 WCAG 2 AA violations; Stage 4 gates passed; the stale fixture refused." .
+
+ex:Finding_BreadcrumbV94 a backlog:RetrospectiveFinding ;
+    rdfs:label "No third row of tabs; the explorer opens one concept at a time"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner judged a third row of tabs - Learn, then the subjects, then each subject's sub-subjects - a poor fit now that the explorer carries the hierarchy, and found that choosing Operation, Arithmetic operation, Precedence in the explorer showed Precedence together with its sibling Integer division, because the explorer opened the sub-subject's whole grid and only scrolled to the chosen concept." ;
+    backlog:hasRemedy "Template 9.4.0: a subject no longer has a row of sub-subject tabs; a breadcrumb shows where the reader is - the subject, a chooser listing its overview and sub-subjects with their concept counts, and the concept when one is open. Choosing a concept in the explorer shows that concept alone; the breadcrumb then offers its neighbours as previous and next and a 'show all' for the sub-subject. Choosing a sub-subject still shows all its concepts. At 2026-09-26T13:19:23 every check in 08-tooling/sen0414_page_test_v9_4_0.py passed on both pages, including new checks that the menu's tab row is the only row of tabs, that the breadcrumb chooser opens a sub-subject, and that the explorer opens one concept with its neighbours and 'show all' a click away; 0 console errors, 0 WCAG 2 AA violations; Stage 4 gates passed; the stale fixture refused. Materials 1.18.0 and configuration 1.2.5 re-issued." .
+
+ex:Finding_ReadabilityV93 a backlog:RetrospectiveFinding ;
+    rdfs:label "Larger text with a reader's size control, zoom controls clear of diagrams, concept taps showing options"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner found the text too small and asked for a way to change it, found the zoom buttons covering the diagrams, and asked that touching an element no longer jump straight to another place but show its options first, in the detail card where possible. The default size had been chosen as the common 15-16 pixel body size, which the owner judged too small in practice; the zoom bar was placed over the drawing's top-right corner; and a tap on any highlighted concept, map node or taxonomy box navigated at once, under the owner's earlier rule that clicks move the main area first - a rule this request narrows to the menus." ;
+    backlog:hasRemedy "Template 9.3.0: the default text starts at 17 pixels and grows to 28 with the screen; a smaller / default / larger text control in the header scales every size from 80 to 180 per cent, remembered in the browser; zoom controls sit in a row above each diagram; tapping a concept in the text, a concept-map node or a taxonomy box opens its detail card with its options - go to its section, open in the playground, ask its agent - while the explorer, menus and sub-tabs still navigate directly. At 2026-09-26T11:48:09 every check in 08-tooling/sen0414_page_test_v9_3_0.py passed on both pages, including new checks that the size control scales the page by 20 per cent a step and survives a reload, that the zoom bar ends above the drawing, and that a concept tap opens its options without leaving the view; root text 17 to 28 pixels from 1280 to 3840; 0 console errors, 0 WCAG 2 AA violations; Stage 4 gates passed; the stale fixture refused. Materials 1.17.0 and configuration 1.2.4 re-issued." .
+
+ex:Finding_AnyScreenV92 a backlog:RetrospectiveFinding ;
+    rdfs:label "The pages scale with any screen, not only phones"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner reported that resizing the window did not change how the screen filled. Measured from 1024 to 3840 pixels wide: the containers did stretch, but the text and everything sized from it were fixed in pixels - body text 15 pixels at every width - so on a 1920-pixel screen the content sat small in the top-left with most of the screen empty, and concept cards kept a fixed column width, leaving empty columns beside them." ;
+    backlog:hasRemedy "Template 9.2.0 sets one fluid root size - 15 pixels up to 26, following the smaller of screen width and height - and moves every page font from pixels to sizes relative to it, so text, the explorer, cards and spacing scale together as the window is resized, with browser zoom still working; SVG drawings keep their own units because they already scale. Card grids stretch to fill their row. Phone notes kept at 14 pixels or more. At 2026-09-26T11:28:48 every check in 08-tooling/sen0414_page_test_v9_2_0.py passed on both pages, including a new one that resizes one open page from 1280 to 3840 pixels and requires the root size to grow at each step within its bounds, body text to keep its ratio to it, cards to widen and nothing to overflow - root size 15, 18.4, 22.9 and 26 pixels, 23.7 on a 3440 by 1440 screen; the phone and tablet checks still pass; 0 console errors, 0 WCAG 2 AA violations; Stage 4 gates passed; the stale fixture refused." .
+
+ex:Ruling_ToolFixedNames a backlog:RetrospectiveFinding ;
+    rdfs:label "Owner ruling: the five tool-fixed names stay as they are"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "After every other file was versioned, five names remained that git, GitHub or the OE publisher require exactly: .gitattributes, README.md, LICENSE, VERSION.txt and PUBLISH_RECORD.ttl. Versioning them would stop GitHub showing the repository's front page and detecting its licence, and would need git and publisher changes. The configuration ontology's EngineeringArtefact rule gives no exemption, so the owner was asked." ;
+    backlog:hasRemedy "Ruled by the owner on 2026-09-26T11:11:43: keep GitHub compliance and never touch these files where that is risky. They are neither renamed nor edited; the versioning sweep, now 1.0.1, excludes them by this ruling, and every other file in the repository stays versioned by name and by declaration." .
+
+ex:Finding_ResponsivePagesV91 a backlog:RetrospectiveFinding ;
+    rdfs:label "The chapter pages made usable on phones and tablets"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner asked whether students can read and use the pages on their phones. Measured at 360, 390 and 768 pixels before any change: no view overflowed sideways, but the header took 191 pixels of a phone screen, the chapter explorer was hidden below 1000 pixels with no way to open it, every view had controls under the 24-pixel accessibility minimum (up to 26 per view), note text was 12.8 pixels, and diagrams could not be pinch-zoomed." ;
+    backlog:hasRemedy "Page version 9.1.0 from template 9.1.0: on phones a 96-pixel header with a one-line title and menu and tab rows that scroll sideways; the explorer as a drawer from every view, closed by choosing a concept, its close button or Escape; pinch zoom on every diagram; controls at least 24 pixels everywhere and 36 to 40 on touch screens; phone text at least 14 pixels. The agents' view and behaviour are unchanged; only the page-wide control and text sizes reach them on phones. At 2026-09-26T10:50:16 every check in 08-tooling/sen0414_page_test_v9_1_0.py passed on both pages, including new small-phone, phone and tablet checks over every view and a pinch check; 35 and 37 widgets; 0 console errors, 0 WCAG 2 AA violations; Stage 4 gates passed; a stale-value fixture refused on each; the version audit found every file named with its version and declaring it inside. Materials record re-issued as 1.15.0 and course page configuration as 1.2.2, both changed." .
+
+ex:Finding_EveryFileVersioned a backlog:RetrospectiveFinding ;
+    rdfs:label "Every file versioned, with its version also declared inside it"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner corrected the previous release's account of versioning: any file must be versioned, as the OE ecosystem's configuration management says - to be read from its files, not from a summary. The account had been built from the operating discipline's summary rules (BP-D6, BP-D7), which name only some artefact types. The configuration ontology itself (configuration_tbox_v2_7_0.ttl and configuration_abox_v2_7_0.ttl) is broader: every EngineeringArtefact must have a file name that embeds its version token, and that token must match the version declared inside the file; its conventions cover code modules including JSON ({name}_v{M}_{m}_{p}.{ext}), HTML artifacts, ontologies, shapes, and documentation ({name}_v{M}_{m}.md). Audited against the repository: 48 files had no version token - the owner's outline documents and legacy slides, both renewed decks, all deck tooling, fixtures, NOTICE - and no Python, JavaScript, JSON, HTML, deck or document file declared its version inside; the materials record had changed 14 times under one name." ;
+    backlog:hasRemedy "A configuration-management sweep, 08-tooling/versioning_sweep_v1_0_0.py, written from the configuration ontology's conventions, renamed 57 files with a version token - earlier contents counted as MINOR steps, the owner's documents and legacy slides renamed only and left byte-identical - and wrote the version inside every file this repository owns: __version__ in Python, VERSION in JavaScript, _version in JSON (lists wrapped as items), a version meta element in each page, the version core property in decks and documents; adding a declaration is a fix, so a PATCH. The materials record was re-issued as 1.14.0 with its prior version recorded; pages re-issued as 9.0.1 declaring 9.0.1 inside. The register's own evidence keeps the file names that were true when it was checked (L-112), and renames_v2_23_0.json maps every old name to its new one. Audit after the sweep: 0 files without a version token and 0 declarations differing from the name, apart from five whose names git, GitHub or the OE publisher fix - .gitattributes, README.md, LICENSE, VERSION.txt and PUBLISH_RECORD.ttl - left for the owner's ruling. At 2026-09-26T08:06:12 every version 9 check passed on both 9.0.1 pages, a stale-value fixture refused on each, and Stage 4 gates passed." .
+
+ex:Finding_VisualisationsV9 a backlog:RetrospectiveFinding ;
+    rdfs:label "Visualisations of how Python works, each computed by Python itself"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner asked for more visualisations - concepts, workflows, processing steps, modelling, animation, simulation - without losing the pages' simplicity, and for the mouse wheel to zoom diagrams without a key held." ;
+    backlog:hasRemedy "Version 9 adds, each produced by Python rather than drawn by hand: evaluation steps on every example, computed at build time from the syntax tree in Python's own evaluation order, short-circuits included - 'False and 1/0 == 0' stops at False, as Python does; Step through in the Lab, where Python's line tracer records each executed line, the variables after it and the output, played back with step, back, play and speed; Code pipeline in the Lab - source, tokens, syntax tree, bytecode and result, from Python's tokenize, ast, dis and interpreter; and chapter visualisations declared as data - the 64 bits behind a float (chapter 1), truth tables for and, or and not, and the path through an if/elif/else chain as an input slider moves (chapter 2). All sit behind a button or in a Lab tab, so screens stay as they were until asked. The mouse wheel now zooms every diagram. At 2026-09-25T16:28:13 every check in 08-tooling/sen0414_page_test_v9_0_0.py passed on both pages, including one per visualisation - float bits equal to the build interpreter's, truth tables with 2^n rows, the branch path following the input; 35 and 37 widgets; 0 console errors, 0 WCAG 2 AA violations; the agents' view, behaviour and styles byte-identical to version 6; a stale-value fixture refused on each." .
+
+ex:Finding_ToolingVersionedInPlace a backlog:RetrospectiveFinding ;
+    rdfs:label "Tooling files changed across releases while keeping one versioned name"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner asked why OE's version management was not used and one file name carried every version. Checked against the repository history: ontologies, documents, pages and page ABoxes did follow OE's rename-on-change rule (BP-D6, BP-D7: the version is the file name's last token, and a changed file always gets a new version), but the tooling did not - the register builder carried one name through 20 releases with its content changing each time, the page build through 4, and nine further tools, inputs and generated files likewise; unversioned inputs such as the course page configuration had no version at all; and superseded tools - six template versions and eight test versions - were left beside the current ones, against OE's no-multi-version-clutter rule. Every earlier validation passed because no check compares a tool's content across releases." ;
+    backlog:hasRemedy "Changed tools given new versions (register builder and lineage builder, page build, page data, page record, page ABox builder, chapter 1 domain and document builders); page inputs versioned (course page configuration v1.2.0, each chapter's objectives, quiz and visualisations), and files generated for a page now carry that page's version; superseded templates, builds and tests retired, one current file each. Published ontologies whose provenance names an older tool file were left as they are: that name was true when they were built. From here every change to a tool is a new file version." .
+
+ex:Finding_PageLayoutV8 a backlog:RetrospectiveFinding ;
+    rdfs:label "A lighter menu, one taxonomy tree, zoomable diagrams and screens without repeats"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner confirmed the live LLM works on his machine, and asked for: zoom in and out on diagrams; a less crowded top menu; taxonomy labels that fit their boxes; one connected tree instead of several; an end to repeated lists - a subject's kinds were shown as chips, again as sub-tabs and again as headings; and static explanations moved out of the way. The several trees were the drawing's doing, not the taxonomy's: the chapter ontology has five top-level subjects with no class above them, as OWL allows, and version 7 drew each as its own tree." ;
+    backlog:hasRemedy "Version 8: the top menu has seven items after Start - Learn (the chapter's subjects as its sub-menu), Maps, Lab, Agents, Practice (quiz, questions by subject, expert questions, discussion), Reference (glossary, references), About (with the built-in checks); the taxonomy is one tree with the chapter as its root, laid out left to right with labels wrapped to fit; every diagram - taxonomy, concept map, ontology graph, parse trees - has zoom in, zoom out and show all, Ctrl or Command with the wheel, and drag to move; a subject opens on an Overview sub-tab whose cards summarise its sub-subjects, and a sub-subject shows one sentence with the rest a click away; each view's introduction is folded until asked for. The agents' view, behaviour and styles are byte-identical to version 6. At 2026-09-25T15:51:39 every check in 08-tooling/sen0414_page_test_v8_0_0.py passed on both pages - all earlier checks and one per change: seven menu items with the subjects under Learn, no repeated lists, one rooted tree with 0 overflowing labels, 9 folded introductions, zoom on all four kinds of diagram; 0 console errors, 0 WCAG 2 AA violations; a stale-value fixture refused on each." .
+
+ex:Finding_RdodiFitGapClosed a backlog:RetrospectiveFinding ;
+    rdfs:label "Gaps against RDODI's default interactive page closed, the agents left as they were"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "A fit-gap against RDODI's default page, rdodi_lineage_interactive_v14_0_0.html, found by direct inspection nine sections the course pages lacked. The owner ruled on 2026-09-25: close all of them in the recommended order except the code-generation agent team, and leave the agents' view and interaction untouched - it is to go to RDODI as an improvement to its own template." ;
+    backlog:hasRemedy "Version 7 adds, in that order: About (how it works, agents and tools with the embedded corpus and its hashes, the course lineage's mission, goals and objectives with the course outcomes read by SPARQL, provenance and known limits, and your data); a SPARQL console over the agents' knowledge graph with sample queries, results table, CSV download and ASK; an ontology graph of classes, individuals and the book's concepts read from the graph, laid out by a force-directed layout computed in slices under 12 ms, with filter, fit, re-layout and node detail; downloads of code, output, results and conversations; questions by subject; expert questions for a role - written by the live LLM or Claude when available, otherwise from question patterns and saying so; built-in checks the page runs on itself - every stored example re-run, agents citing their concepts, an off-topic refusal; and a Code Lab where Python sees the page's own data. Related views share a top-level item with their tabs as its sub-menu - Maps, Lab, Questions, About. The agents' view, behaviour, toolkit and styles are byte-identical to version 6 except one added line: the knowledge thread also answers the console's ASK queries. At 2026-09-25T15:14:08 every check in 08-tooling/sen0414_page_test_v7_0_0.py passed on both pages - all version 6 checks and one per new section; in the page itself 27 and 26 built-in checks pass; 0 console errors, 0 WCAG 2 AA violations, no main-thread task over 200 ms. A stale stored value is refused by the external tests and by the page's own built-in checks." .
+
+ex:Finding_AgentsAsConversations a backlog:RetrospectiveFinding ;
+    rdfs:label "The agents became people to ask, with conversations that remember"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "With the pages working, the owner asked for the agents to be used like a chat assistant: a tabbed conversation with room for the question and the answer, icons matching each agent's role, choosing an agent as if choosing a person to ask rather than filling in a prompt, and answers that remember the conversation and follow on from earlier questions. Version 5 showed every agent as a stacked box with a one-line input and no memory." ;
+    backlog:hasRemedy "Version 6 gives the Agents item a roster as its sub-menu - a guide first, then each agent with an icon for its role and a line saying what it knows - and one conversation per agent: a greeting, starter questions drawn from its own concepts, message bubbles, a multi-line composer (Enter sends, Shift+Enter breaks a line) and a new-conversation button; the view takes the full width. The guide ranks every agent by how well its own passages match the question and hands the question to the one chosen; an agent that cannot answer offers the same handoff. Each agent keeps its turns, saved in the browser so they survive a reload; a question that names none of the page's concepts but opens with a linking word or leans on a pronoun is read as a follow-up and searched together with the question that started the chain, and the language models receive the recent turns. Three rules were corrected on evidence during the build: follow-ups were first read against the question being asked rather than the one before; any short question was treated as a follow-up, which stopped an off-topic question from being declined; and a composed answer could repeat a sentence it had already given. At 2026-09-25T14:20:09 every check in 08-tooling/sen0414_page_test_v6_0_0.py passed on both pages - all version 5 checks, plus role icons for every agent, the guide suggesting and handing over to the right agent, a three-turn conversation followed through, memory across a reload, and a clean new conversation; 0 console errors, 0 WCAG 2 AA violations, no main-thread task over 200 ms; a stale-value fixture refused on each." .
+
+ex:Finding_PageFreeze a backlog:RetrospectiveFinding ;
+    rdfs:label "The chapter pages froze the browser: heavy work ran on the page's own thread"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner reported the page freezing and the computer becoming unresponsive. Measured in Chromium before any change, on the version 4.0.1 page: the first agent question blocked the page's thread for 19.0 s in a single task - the 250 passages were embedded on that thread - Python's first run for 0.7 s and a 3-million-step program for 1.1 s, and an endless program would have blocked it for ever, with no way to stop it. The language model also loaded and generated on the page's thread; on a machine whose GPU also drives the display, WebGPU work of that size can starve the whole desktop, which fits a computer - not only a tab - going unresponsive, though that part could not be reproduced here without a GPU." ;
+    backlog:hasRemedy "Version 5 moves each kind of heavy work to its own Web Worker and leaves the page's thread only to send messages: Python runs as CPython (Pyodide) in a worker, and a program still running after 15 s is stopped by ending that worker, after which a fresh one starts; Oxigraph, the corpus, the embedding model and all ranking run in a second worker; the language model loads and generates in a third, through WebLLM's own worker engine. All three are classic workers, because a module worker built from a blob failed to start on a page opened as a file while a classic one could still load its library - both measured. Where workers are not allowed, the page falls back to its previous in-page behaviour. Measured after the change, same machine, same four operations: 0 ms of main-thread blocking in each. At 2026-09-25T13:31:49 every check in 08-tooling/sen0414_page_test_v5_0_0.py passed on both pages - every version 4 check, no main-thread task over 200 ms through the whole session, and an endless loop stopped at 15 s while the menu kept answering, with Python working again afterwards; 0 console errors; a stale-value fixture refused on each. Python now reports CPython 3.13.2, so error messages match standard Python again." .
+
+ex:Finding_WebLLMImportPath a backlog:RetrospectiveFinding ;
+    rdfs:label "The live LLM failed to load for the owner: its import went through an unpinned redirect"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner reported the chapter 1 page's status line: knowledge graph and semantic search ready, live LLM failed - it could not fetch https://esm.run/@mlc-ai/web-llm. The page imported WebLLM through esm.run, as RDODI's template does; esm.run is not a host of its own but an unpinned redirect to cdn.jsdelivr.net. The graph and embedding libraries, loaded from cdn.jsdelivr.net directly, succeeded in the same browser, so the failure was the redirect host, not the network. Checked the same day: every embedded corpus file matches its declared hash, and every URL the page loads from - Brython, Oxigraph, transformers.js and its model, WebLLM and both model variants' weights and libraries - answered." ;
+    backlog:hasRemedy "WebLLM is imported from cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm, pinned, and the model variant is chosen from the GPU's features - the 16-bit build only where the adapter supports shader-f16, otherwise the 32-bit build - both listed in that version's own model table. Pages re-issued as v4.0.1; at 2026-09-25T12:06:20 every version 4 check passed again on both, with the import proven to resolve and expose the engine in a browser. Generation itself remains unverifiable here for want of a WebGPU adapter. RDODI's template imports the same way and should be told." .
+
+ex:Finding_AgentsOnRdodiToolkit a backlog:RetrospectiveFinding ;
+    rdfs:label "The chapter pages' agents moved onto RDODI's default toolkit"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "The owner required the agents to consume the page's HTML corpus and the book and course ontologies through an in-page LLM library or tools, pointing to RDODI's template for the right ones. Version 3's agents read only their slice of the page data. RDODI's own interactive template, lcw_kb_interactive v0.109.0, uses Oxigraph 0.5.9 for SPARQL, transformers.js with all-MiniLM-L6-v2 for embeddings, and WebLLM with SmolLM2-360M for generation." ;
+    backlog:hasRemedy "Pages rebuilt as version 4 on that same toolkit, loaded the way the template loads it. Each page embeds, as Turtle with file names and hashes, the book's chapter ontology at the commit SEN0414's textbook part pins (automate-python-book-3e v0.20.0, 89f68596), the course ontology - profile, outcomes, textbook and materials - and the chapter's ontology, document and research record. On a question the agent loads them into Oxigraph, reads its own slice by SPARQL, ranks every passage from the book, course, chapter, research and the page's own text by meaning with its own slice favoured, and answers from the top passages with numbered citations and a 'how I found this' trace of the query and ranking. Generation uses WebLLM when the browser has WebGPU, Claude when the page is published on claude.ai, and the retrieved passages themselves otherwise. Off-topic questions are refused below a measured threshold: on this corpus off-topic questions scored 0.11 to 0.24 and on-topic ones 0.42 to 0.72, so 0.33. At 2026-09-25T11:31:42 every check in 08-tooling/sen0414_page_test_v4_0_0.py passed on both pages: all version 3 rules, every widget (33 and 32), a knowledge graph of 9 files (1,902 and 1,515 triples) with passages of all five kinds, semantic ranking with cited sources, a course question reaching the course's outcomes, and the WebGPU check; 0 console errors, 0 WCAG 2 AA violations; a stale-value fixture refused on each. Not verifiable here: WebLLM's own generation, because this sandbox's browser has no WebGPU adapter - the capability check and the fallback were verified, the same limit RDODI's template records." .
+
+ex:Finding_PagesV3OwnerRules a backlog:RetrospectiveFinding ;
+    rdfs:label "Chapter 1 and 2 pages rebuilt to the owner's page rules"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "Reviewing SEN0401's Bitcoin in numbers page, which shares this design, the owner found four faults and made them rules for every course page: code on the page must really run - in the published version, running had been replaced by stored results, so edits changed nothing; agents must answer from their own slice of the ontology and corpus - they had given near-identical answers; a menu click must change the main area first, with the detail card only on explicit request; and the tab row must be the sub-menu of the selected top-level item, not a second menu mixed with it. Version 2 of these pages broke the last three as well." ;
+    backlog:hasRemedy "Pages rebuilt as version 3 from one course-neutral template, course_page_template_v3_0_0.html, with each course's text in data: Python runs in Brython, which loads as plain scripts and so also works when published; agents receive only their own concepts, relations, computed results and the research findings - asking Claude when published, retrieving and combining sentences when opened as a file; menu, concept, map and taxonomy clicks move the main area, and details open only from the heading's details button or the context menu; one top menu, with each subject's tabs as its sub-menu. Every rule is a browser check in 08-tooling/sen0414_page_test_v3_0_0.py - edited code must print the new result, different questions must get different answers, a menu click must leave the card closed - and at 2026-09-25T10:53:47 both pages passed all of them, every widget included (33 and 32), with 0 console errors and 0 WCAG 2 AA violations; a stale-value fixture was refused on each. Brython is not CPython: every example prints the same result, but error messages are worded differently, and the page says so." .
+
+ex:Finding_ChapterAboxTestName a backlog:RetrospectiveFinding ;
+    rdfs:label "The version 2 pages' ABoxes named the version 1 test script"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Page_Ch01, ex:ST_Page_Ch02 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRemedy "The ABox builder now names 08-tooling/sen0414_page_test_v2_0_0.py, the script that ran every version 2 test; both pages' ABoxes re-issued as v2.0.1 with nothing else changed, and the materials record points at them." ;
+    backlog:hasRootCause "Found in SEN0401, whose tooling was forked from here: regression-checking it showed each widget's design test attributed to the version 1 page test script. The same was true here - SEN0414's version 2 pages were tested by sen0414_page_test_v2_0_0.py, but their ABoxes named sen0414_page_test_v1_0_0.py." .
+
+ex:Refine3_Page_Ch01 a backlog:RefinementEvent ; rdfs:label "Chapter 1 page re-refined on the owner's review"@en ;
+    backlog:refines ex:ST_Page_Ch01 ; backlog:addressesConcern backlog:Concern_Data ; backlog:refinedAt "2026-09-24T22:05:38"^^xsd:dateTime ;
+    backlog:refinedBy backlog:Owner ; backlog:groomsForIteration ex:Iter_1 ;
+    backlog:hasRefinementOutcome "The owner reviewed page v1 and asked for, in his words: an iconised Explorer-style left menu with hierarchical expand and collapse; sub-tabs so the page needs less vertical scrolling; Pyodide embedded, as in RDODI's default interaction, to edit, fill, run and display code, with editable example code; an agent per subject of the chapter; a context-sensitive right-click menu; tooltips; diagrams of the code; the chapter taxonomy; an ontology of the concepts with their relationships; a concept card on the right opened by activating any concept; and connections between related subjects for navigation and jumps. Page v2 is built to that list. The agents are grounded retrieval over the chapter's own ontology and document, stated as such on the page - not language models - because a page in a student-readable repository has no model behind it and RDODI's default console is grounded the same way." .
+
+ex:Finding_Ch01Stage1Metadata a backlog:RetrospectiveFinding ;
+    rdfs:label "Chapter 1's research record shipped without its licence and provenance metadata"@en ;
+    backlog:belongsToLineage ex:Lineage ; backlog:relatesToWorkItem ex:ST_Research_Ch01 ; backlog:hasFindingScope backlog:Scope_Methodology ;
+    backlog:hasRootCause "sen0414_ch01_research_v1_0_0 was written by hand before the generic RDODI builder existed, and the metadata check at the time covered only the three Stage 2 files. When the page rebuild ran every file through one gate runner, the research header was found to lack eight of the ten BP-D24 predicates. In the same pass the owner's review exposed labels the camel-case rule had mangled - 'I o function', 'F string' - in the domain ontology and therefore in the document's section titles." ;
+    backlog:hasRemedy "Research re-published as v1.0.1 with the metadata and an rdfs:comment saying why; domain ontology and document re-published as v1.0.1 with the labels fixed at their source; every v1.0.0 file retired in the same release, and every RDODI gate re-run over the new versions - all pass. The research story stays closed: its content did not change, only its header, and the finding says so." .
+"""
+
+
+def backlog_block():
+    L = ['''
+ex:Backlog a backlog:Backlog ; rdfs:label "Work admitted for renewing SEN0414's chapters"@en ;
+    backlog:hasIdentifier "Backlog_SEN0414_Slides" ; backlog:belongsToLineage ex:Lineage ; backlog:isRegisterRoot true ;
+    backlog:hasState backlog:InProgress ; backlog:producedByStage ex:Out_Backlog ;
+    backlog:appliesDefinitionOfDone ex:DoD ; backlog:hasCommitment ex:Commit ; backlog:hasMember ex:Init_Slides .
+ex:Kickoff a backlog:TransitionEvent ; rdfs:label "Kick-off: the owner declared execution begun"@en ;
+    backlog:transitionedItem ex:ST_Research_Ch01 ; backlog:viaTransition backlog:T_Start ;
+    backlog:transitionedAt "2026-09-24T20:26:42"^^xsd:dateTime ; backlog:transitionedBy backlog:Owner ;
+    backlog:hasTransitionNote "Declared by the owner in the words 'kick off', once planning was complete: six stories scored and refined to Ready, an iteration with a real period and goal ending at SEN0414's class, and the roadmap report naming chapter 1's research as the next startable item - its tie with chapter 2's research broken by teaching order. Time read from the clock." .
+ex:DoD a backlog:DefinitionOfDone ; rdfs:label "What finished means for a renewed chapter"@en ; backlog:belongsToLineage ex:Lineage ;
+    backlog:hasDoDCriterion ex:DoD_CodeRuns, ex:DoD_Sourced, ex:DoD_TruthfulDates .
+ex:DoD_CodeRuns a backlog:DoDCriterion ; rdfs:label "Every code example runs as the slide shows"@en ;
+    backlog:hasCheckQuery "Extract every code example from the deck and run it under current Python." ;
+    backlog:hasExpectedResult "Each prints what its slide shows; a stale example is named and refused." ; backlog:hasCriterionStatus backlog:NotYetEnforceable .
+ex:DoD_Sourced a backlog:DoDCriterion ; rdfs:label "Every claim beyond the book has a recorded source"@en ;
+    backlog:hasCheckQuery "Compare the deck's and page's claims against the chapter's RDODI research record." ;
+    backlog:hasExpectedResult "No claim beyond the edition without a source in the research record." ; backlog:hasCriterionStatus backlog:NotYetEnforceable .
+ex:DoD_TruthfulDates a backlog:DoDCriterion ; rdfs:label "Every recorded time is read, never composed"@en ;
+    backlog:hasCheckQuery "Compare every start, finish, planning, refinement, scoring and observation time with the clock records and commits." ;
+    backlog:hasExpectedResult "None post-dates the commit that carried it; none was written instead of read." ; backlog:hasCriterionStatus backlog:NotYetEnforceable .
+ex:Commit a backlog:Commitment ; rdfs:label "This register commits to chapters that teach the book students read"@en ;
+    backlog:commitsToGoal ex:G_DecksTeachTheBook ; backlog:commitsToObjective ex:Obj_DecksRenewed ; backlog:commitsToDefinitionOfDone ex:DoD .
+ex:Session_Opening a backlog:RegisterSession ; rdfs:label "The session that built this register"@en ;
+    backlog:sessionFor ex:Backlog ; backlog:sessionConductedBy "cme-session" ;
+    backlog:sessionStartedAt "2026-09-24T19:13:00"^^xsd:dateTime ; backlog:sessionEndedAt "2026-09-24T19:16:12"^^xsd:dateTime ;
+    backlog:stateVerifiedAtStart true ;
+    backlog:hasSessionScopeNote "Built the slide lineage's stages after SEN0414 was registered, as the owner ordered: register SEN0414, then straight to its chapter 1 slides." ;
+    backlog:changedItem ex:Init_Slides .
+ex:Init_Slides a backlog:Initiative ; rdfs:label "Renew SEN0414's taught chapters"@en ; backlog:hasIdentifier "Init_Slides" ; backlog:hasTitle "Renew SEN0414's chapters" ;
+    backlog:belongsToLineage ex:Lineage ; backlog:memberOfContainer ex:Backlog ; backlog:admittedByOutput ex:Out_Backlog ; backlog:hasState backlog:Proposed ;
+    backlog:hasInvestmentCategory backlog:Cat_NewCapability ; backlog:hasInitiativeKind backlog:InitKind_Development ;
+    backlog:producesIncrement "sen0414 2.6.0 onward - one published increment per renewed chapter" ;
+    backlog:effectiveDefinitionOfDone ex:DoD ; backlog:appliesDefinitionOfDone ex:DoD ; backlog:coversEntity ex:DE_Deck ;
+    backlog:pursuesObjective ex:Obj_DecksRenewed ; backlog:hasApplicableConcern backlog:Concern_Data ;
+    backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, through its stories." ;
+    backlog:decomposesInto ex:EP_Deck, ex:EP_Research, ex:EP_Page .
+ex:AC_Chapter a backlog:AcceptanceCriterion ; rdfs:label "A chapter item is accepted when its check passes and a stale fixture is refused"@en ; backlog:belongsToLineage ex:Lineage ;
+    backlog:hasGherkinText "Given a chapter's published deck, research record and page, when every code example is run under current Python and every claim beyond the book is traced to the research record, then all pass - and a deck carrying one stale example is refused, naming it." ;
+    backlog:satisfiedByArtifact "the chapter check, run against the release that carried the chapter" ; backlog:coveredByCase ex:TC_StaleExample .
+ex:TC_StaleExample a backlog:TestCase ; rdfs:label "Put a stale example on a deck and require it refused"@en ; backlog:belongsToLineage ex:Lineage ;
+    backlog:exercisesCriterion ex:AC_Chapter ; backlog:coversScenario ex:Scen_StaleCodeRefused ; backlog:runsOnData ex:Data_Stale ;
+    backlog:hasCaseText "Insert an example whose output under current Python differs from the slide, run the chapter check, expect refusal naming it." .
+ex:Data_Stale a backlog:TestData ; rdfs:label "One example taken from an earlier edition whose output has changed"@en ; backlog:belongsToLineage ex:Lineage ;
+    backlog:hasFixtureState "A single code example with the output its slide shows, chosen so current Python prints something else." .
+ex:Model_Class a backlog:ModelArtifact ; rdfs:label "How a renewed chapter is stored"@en ; backlog:belongsToLineage ex:Lineage ;
+    backlog:hasModelKind backlog:Kind_ClassDiagram ; backlog:hasModelLevel backlog:Level_Design ;
+    backlog:declaresState "A chapter has one ResearchRun, one Deck and one InteractivePage. The Deck and the Page each derive from the ResearchRun. The Deck and the Page are teaching materials in 03-materials, each described by learning-object metadata and aligned to the outcomes it serves. A Deck carries CodeExamples, each with the output its slide shows." ;
+    backlog:describesItem ex:Init_Slides .
+ex:Model_Component a backlog:ModelArtifact ; rdfs:label "What produces a renewed chapter"@en ; backlog:belongsToLineage ex:Lineage ;
+    backlog:hasModelKind backlog:Kind_ComponentDiagram ; backlog:hasModelLevel backlog:Level_Design ;
+    backlog:declaresState "RDODI's four-stage procedure produces the ResearchRun; the textbook ontology and edition supply the content; the deck builder produces the Deck from both; the page builder produces the InteractivePage from the ResearchRun; the chapter check runs examples under current Python and gates publication; the governed publisher releases into the course repository." ;
+    backlog:describesItem ex:Init_Slides .
+''']
+    for k, label, what in KIND:
+        L.append('''
+ex:EP_%s a backlog:Epic ; rdfs:label "%s for every taught chapter"@en ; backlog:hasIdentifier "EP_%s" ; backlog:hasTitle "%s" ;
+    backlog:belongsToLineage ex:Lineage ; backlog:memberOfContainer ex:Backlog ; backlog:admittedByOutput ex:Out_Backlog ; backlog:hasState backlog:Proposed ;
+    backlog:hasInvestmentCategory backlog:Cat_NewCapability ; backlog:effectiveDefinitionOfDone ex:DoD ; backlog:appliesDefinitionOfDone ex:DoD ;
+    backlog:coversEntity ex:%s ; backlog:pursuesObjective ex:%s ; backlog:hasApplicableConcern backlog:Concern_Data ;
+    backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Ranked through its stories' scores at planning." ;
+    backlog:decomposesInto %s .
+''' % (k, label, k, label, {"Deck": "DE_Deck", "Research": "DE_ResearchRun", "Page": "DE_InteractivePage"}[k], OBJ[k],
+       ", ".join("ex:ST_%s_%s" % (k, cid(n)) for n, _ in CHAPTERS)))
+        for n, src in CHAPTERS:
+            dep = "" if k == "Research" else "\n    backlog:dependsOn ex:ST_Research_%s%s ;" % (cid(n), ", ex:ST_Template_Ch05" if (k, n) == ("Page", 5) else "")
+            L.append('''
+ex:ST_%s_%s a backlog:Story ; rdfs:label "%s: %s"@en ; backlog:hasIdentifier "ST_%s_%s" ; backlog:hasTitle "%s for %s" ;
+    backlog:belongsToLineage ex:Lineage ; backlog:memberOfContainer ex:Backlog ; backlog:admittedByOutput ex:Out_Backlog ;
+    backlog:hasInvestmentCategory backlog:Cat_NewCapability ;
+    backlog:asRole "SEN0414 instructor" ; backlog:wantsCapability "%s" ; backlog:soThat "students are taught from the edition they read, on researched ground" ;
+    backlog:satisfiesDeliverable ex:Del_%s_%s ; backlog:pursuesObjective ex:%s ; backlog:hasAcceptanceCriterion ex:AC_Chapter ;
+    backlog:effectiveDefinitionOfDone ex:DoD ; backlog:hasApplicableConcern backlog:Concern_Data ;%s
+    %s .
+''' % (k, cid(n), label, src, k, cid(n), label, src.split(":")[0], what, k, cid(n), OBJ[k], dep, planned_tail(k, n)))
+            if n in PLANNED:
+                L.append(planned_block(k, n))
+                L.append(closure_block(k, n))
+                L.append(start_block(k, n))
+    L.append(FEEDBACK)
+    if "Page_4" in PROGRESS.get("done", {}): L.append(FEEDBACK4)
+    L.append(ITER % (PLANNED_AT, ", ".join("ex:ST_%s_%s" % (k, cid(n)) for k, _, _ in KIND for n in sorted(PLANNED) if ITER_OF[n] == 1)))
+    _end = PROGRESS["done"]["Page_4"]["closed"] if "Page_4" in PROGRESS.get("done", {}) else (PROGRESS["done"]["Page_3"]["closed"] if "Page_3" in PROGRESS.get("done", {}) else PLANNED_AT_2)
+    L.append(SESSION2 % (PLANNED_AT_2, _end))
+    L.append(ITER2 % (PLANNED_AT_2, ", ".join("ex:ST_%s_%s" % (k, cid(n)) for k, _, _ in KIND for n in sorted(PLANNED) if ITER_OF[n] == 2)))
+    if rework.RW["done"]:
+        L.append(rework.rework_block(max(d["closed"] for d in rework.RW["done"].values())))
+    if iter4.IT["done"]:
+        _e4 = max([d["closed"] for d in iter4.IT["done"].values()] + [PROGRESS["done"][x]["closed"] for x in ("Research_5", "Deck_5", "Page_5", "Research_6", "Deck_6", "Page_6") if x in PROGRESS["done"]])
+        L.append(iter4.iter4_block(_e4, ["ex:ST_%s_Ch0%d" % (k, m) for m in (5, 6) for k, _, _ in KIND]))
+    return "".join(L)
