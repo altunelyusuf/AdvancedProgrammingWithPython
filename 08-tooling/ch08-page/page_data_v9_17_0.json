@@ -1,0 +1,6708 @@
+{
+ "_version": "9.17.0",
+ "visuals": {},
+ "course": {
+  "_version": "1.3.3",
+  "name": "SEN0414 Advanced Programming",
+  "line": "SEN0414 Advanced Programming",
+  "chapter_sub": "chapter {n} of Automate the Boring Stuff with Python, 3rd edition",
+  "chapter_intro": "Chapter {n} of <i>Automate the Boring Stuff with Python</i>, 3rd edition (Sweigart, 2025), renewed for an advanced course.",
+  "playground": {
+   "label": "Strings: slicing, formatting and cleaning (uses input)",
+   "code": "text = input('Text: ')\nwords = text.split()\nprint(words)\nprint(' '.join(w.capitalize() for w in words))\nprint(text.strip().upper(), len(text))\nprint(text[::-1])\nfor w in words:\n    print(f'{w:>12}|{w:<12}|{w:^12}|')\nprint(f'{len(words)=}', text.casefold() == text.lower())\nprint(ord(text[0]), chr(ord(text[0]) + 1), text.encode('utf-8'))",
+   "inputs": "  Stra\u00dfe caf\u00e9 am Rhein  "
+  },
+  "corpus": {
+   "book_pin_source": "02-textbook/sen0414_textbook_v1_0_0.ttl",
+   "book": [
+    "automate-python-book-3e/01-ontologies/automate_python_3e_ch{nn}_v1_0_0.ttl"
+   ],
+   "course": [
+    "00-course-profile/sen0414_course_v1_0_0.ttl",
+    "01-outcomes/sen0414_outcomes_v1_0_0.ttl",
+    "02-textbook/sen0414_textbook_v1_0_0.ttl",
+    "03-materials/sen0414_materials_v1_22_0.ttl"
+   ]
+  }
+ },
+ "discussion": [],
+ "findings": [
+  [
+   "Background",
+   "Chapter 8 of the 3rd edition, Strings and Text Editing, teaches string literals in single and double quotes, the five escape sequences of its Table 8-1, raw strings, multiline strings and their use as multiline comments; indexes and slices of strings and the in and not in operators; f-strings and the alternatives %s and format(); the methods upper(), lower(), isupper(), islower(), isalpha(), isalnum(), isdecimal(), isspace(), istitle(), startswith(), endswith(), join(), split(), rjust(), ljust(), center(), strip(), lstrip() and rstrip(); ord() and chr() with a remark on UTF-8; the pyperclip module and the clipboard projects alternatingText.py and bulletPointAdder.py in three steps; the Pig Latin program; and closes with 10 practice questions and the practice program Table Printer."
+  ],
+  [
+   "Comparative analysis",
+   "Nearly everything the chapter prints reproduces under Python 3.14.4: of its 33 interactive-shell blocks, 31 could be run (two use pyperclip) and 28 gave exactly the printed output, two differ only in how the page shows them, and one has two wrong outputs; the programs validateInput.py and feedcat.py print what the chapter shows, pigLat.py prints the chapter's translation of 'My name is AL SWEIGART and I am 4,000 years old.' character for character, bulletPointAdder.py gives the four bulleted lines, and the practice program Table Printer has a solution that prints the chapter's table."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter contains three printing or listing errors that execution exposes: it prints 'Hello'.rjust(20) with 14 leading spaces where Python 3.14.4 gives 15 (the result is 20 characters wide) and 'Hello, World'.rjust(20) with 9 where it gives 8; the walk-through of pigLat.py prints the line suffix_non_letters += word[-1] + suffix_non_letters, which doubles the stored suffix (for 'Wait!!!' it keeps seven exclamation marks instead of three), while the full listing of the program uses suffix_non_letters = word[-1] + suffix_non_letters and is correct; and the output shown for alternatingText.py ends with ThIs: and contains a line break, whereas running the program on the sentence as written ends with tHiS: on one line, so the printed output does not come from the sentence as written, and the cause was not established."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter simplifies three points that the documentation states more widely: its Table 8-1 lists five escape sequences where the language reference lists more, among them \\r, \\a, \\xhh, \\N{name}, \\uxxxx and \\Uxxxxxxxx, and an unrecognised escape keeps its backslash and draws a SyntaxWarning since Python 3.12; the isX() methods are Unicode-aware, so isspace() is True for U+3000, isdecimal() is True for Arabic-Indic digits that int() converts, isdigit() but not isdecimal() is True for a superscript two that int() rejects, and isalnum() is True for an accented letter, which matters for the chapter's password check; and the chapter compares text case-insensitively with lower() while the documentation names casefold() for caseless matching, since upper() turns the German letter sharp s into two letters."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter says the content of an f-string's braces is interpreted as if passed to str(); the documentation says the value is formatted by format() with the text after a colon as format specifier, which for most values equals str() but is different for a class that defines __format__; the same specifier mini-language gives the alignments that rjust(), ljust() and center() give; the chapter's %s and format() alternatives both remain supported, and the documentation warns that printf-style formatting has quirks, such as a tuple being read as the argument list, and names f-strings, str.format() and string.Template as alternatives."
+  ],
+  [
+   "Conclusion",
+   "For an advanced course, chapter 8 is best taught by asking of each string operation whether it makes a new string, tests the string, or is a literal or formatting form, because no operation changes a string in place: the chapter's printed outputs hold under Python 3.14.4 except the two rjust(20) lines and the alternatingText.py output, the pigLat.py walk-through line must be read with the listing, and casefold(), removeprefix(), splitlines(), format specifiers, t-strings, the Unicode behaviour of the isX() methods and the locale encoding of open() are what the chapter leaves for the course to add; the clipboard itself was not executed."
+  ],
+  [
+   "Contemporary developments",
+   "Current Python extends the formatting the chapter presents: the debug specifier = since Python 3.8, the conversions !s, !r and !a, the lifting of f-string restrictions in Python 3.12 so that a field may reuse the f-string's own quote and hold a backslash, and since Python 3.14 the t-string, which has the syntax of an f-string but evaluates to a string.templatelib.Template, not a str, whose strings and interpolations code can process, for example to escape HTML; the t-string is a SyntaxError in Python 3.13."
+  ],
+  [
+   "Contemporary developments",
+   "Current Python has string methods and traps that the chapter leaves out: removeprefix() and removesuffix() since Python 3.9 because strip() removes a set of characters and not a prefix; splitlines(), which splits on all line boundaries where split('\\n') leaves a carriage return on text with Windows line ends and so would leave it in the chapter's bullet adder; split() with no argument against split(' '); partition(); find(), count() and replace(); casefold(); zfill(); and the warning that title() treats an apostrophe as a word boundary, so string.capwords() is offered."
+  ],
+  [
+   "Contemporary developments",
+   "The chapter's advice that 'utf-8' is the correct encoding 99 percent of the time holds, but open() called without an encoding uses the locale encoding in Python 3.14.4, so a file written as UTF-8 cannot be read back in a C locale with UTF-8 mode off, where the decoder reports the ascii codec; PEP 686 makes UTF-8 mode the default only from Python 3.15; the source encoding of a program is UTF-8 by default; chr() accepts only 0 to 0x10FFFF and ord() only a one-character string; and encoding errors can be handled with the errors argument, such as replace, backslashreplace and ignore."
+  ]
+ ],
+ "unit": null,
+ "research_file": "sen0414_ch08_research_v1_0_0.ttl",
+ "chapter": 8,
+ "title": "Strings and text editing for an advanced course: chapter 8 of the 3rd edition and today's Python",
+ "python": "Python 3.14.4",
+ "nodes": [
+  {
+   "id": "StringLiterals",
+   "label": "String literals",
+   "level": 1,
+   "parent": null,
+   "body": "How a program writes text in its source, with quotes, escape sequences and prefixes, opens Chapter 8 (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_StringLiterals",
+   "class_iri": "http://example.org/sen0414/ch08#StringLiterals"
+  },
+  {
+   "id": "StringQuoting",
+   "label": "String quoting",
+   "level": 2,
+   "parent": "StringLiterals",
+   "body": "The chapter shows how to put a quotation mark or another hard-to-type character inside a string literal (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_StringQuoting",
+   "class_iri": "http://example.org/sen0414/ch08#StringQuoting"
+  },
+  {
+   "id": "QuoteStyles",
+   "label": "Quote styles",
+   "level": 3,
+   "parent": "StringQuoting",
+   "body": "A literal may begin and end with single or double quotes, so the chapter's literal about Alice's cat is written with double quotes and needs no escape, and 'Bob\\'s' with an escape has length 5 (Sweigart, 2025); the question about Howl's Moving Castle has the same answer, that the double quotes make the single quote ordinary; the reference adds that the choice of quote does not otherwise change how a literal is read (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_QuoteStyles",
+   "class_iri": "http://example.org/sen0414/ch08#QuoteStyles",
+   "example": "'Bob\\'s'",
+   "definition": "A string literal may begin and end with single or double quotes; the quote that opens it also closes it, so a literal in double quotes can hold a single quote, and inside a single-quoted literal the escape \\' does the same.",
+   "io": {
+    "code": "(__import__('ast').literal_eval('\\x22Alice\\'s cat\\x22') == 'Alice\\'s cat', len('Bob\\'s'), '\\x22' == chr(34))",
+    "out": "(True, 5, True)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'ast'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "'\"Alice\\'s cat\"'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "\"Alice's cat\"",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "\"Bob's\"",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "'\"'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "chr",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "34",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(__import__('ast').literal_eval('\"Alice\\'s cat\"') == \"Alice's cat\", len(\"Bob's\"), '\"' == chr(34))",
+      "focus": "len(\"Bob's\")",
+      "value": "5"
+     }
+    ]
+   }
+  },
+  {
+   "id": "EscapeSequences",
+   "label": "Escape sequences",
+   "level": 3,
+   "parent": "StringQuoting",
+   "body": "Table 8-1 lists five escape sequences, the escapes for a single quote, a double quote, a tab, a newline and a backslash, and 'a\\tb' has three characters because the tab is one; 'line1\\nline2'.split('\\n') is ['line1', 'line2'] and '\\\\' has length 1 (Sweigart, 2025); the language reference lists more, among them \\a \\b \\f \\r \\v, \\ooo, \\xhh, \\N{name}, \\uxxxx and \\Uxxxxxxxx and a backslash at a line end that joins two lines, and '\\x41' and '\\101' are both 'A', '\\N{SNAKE}' is one character, which the chapter as read does not present (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_EscapeSequences",
+   "class_iri": "http://example.org/sen0414/ch08#EscapeSequences",
+   "example": "'Hello there!\\nHow are you?'",
+   "definition": "An escape sequence is a backslash followed by a character that stands for one character that is hard to type, such as \\n for a newline, \\t for a tab, \\' for a single quote and \\\\ for a backslash; it counts as one character of the string.",
+   "io": {
+    "code": "('a\\tb', 'a\\\\b', 'line1\\nline2'.split('\\n'), len('\\\\'), len('\\n'))",
+    "out": "('a\\tb', 'a\\\\b', ['line1', 'line2'], 1, 1)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "'a\\tb'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "'a\\\\b'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'line1\\nline2'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'\\n'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'\\\\'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'\\n'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "('a\\tb', 'a\\\\b', 'line1\\nline2'.split('\\n'), len('\\\\'), len('\\n'))",
+      "focus": "len('\\\\')",
+      "value": "1"
+     },
+     {
+      "expr": "('a\\tb', 'a\\\\b', 'line1\\nline2'.split('\\n'), 1, len('\\n'))",
+      "focus": "len('\\n')",
+      "value": "1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "StringPrefixes",
+   "label": "String prefixes",
+   "level": 3,
+   "parent": "StringQuoting",
+   "body": "The chapter uses the r prefix and the f prefix; the reference lists b, r, f, t and u, where u has no effect, and lets r combine with f, t and b, so type(b'a') is bytes while type(r'a') and type(u'a') are str and len(rb'\\n') is 2 (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_StringPrefixes",
+   "class_iri": "http://example.org/sen0414/ch08#StringPrefixes",
+   "example": "rb'\\n'",
+   "definition": "A letter before the opening quote changes how the literal is read: r for raw, f for formatted, b for bytes, u with no effect, and since Python 3.14 t for template strings; r can be combined with f, t and b.",
+   "io": {
+    "code": "(type(b'a').__name__, type(r'a').__name__, type(u'a').__name__, b'A'[0], len(rb'\\n'))",
+    "out": "('bytes', 'str', 'str', 65, 2)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "type",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "b'a'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "type",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'a'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "type",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'a'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "b'A'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "b'\\\\n'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "UnrecognizedEscapes",
+   "label": "Unrecognized escapes",
+   "level": 3,
+   "parent": "StringQuoting",
+   "body": "In '\\q' the backslash is kept, so list('\\\\q') is ['\\\\', 'q'], and compiling it draws a SyntaxWarning, which Python 3.12 introduced after a DeprecationWarning that began with Python 3.6, and a later version is to make it a SyntaxError; the chapter as read does not present it, and its advice to use raw strings for regular expressions avoids it (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_UnrecognizedEscapes",
+   "class_iri": "http://example.org/sen0414/ch08#UnrecognizedEscapes",
+   "example": "'\\q'",
+   "definition": "A backslash followed by a character that forms no escape sequence stays in the string as a backslash, and since Python 3.12 the compiler draws a SyntaxWarning; writing the backslash twice or using a raw string avoids it.",
+   "io": {
+    "code": "(lambda cw: (cw.__enter__(), __import__('warnings').simplefilter('ignore'), list(__import__('ast').literal_eval('\\'\\\\q\\'')), cw.__exit__(None, None, None))[2])(__import__('warnings').catch_warnings())",
+    "out": "['\\\\', 'q']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "cw",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "__import__",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "'warnings'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "'ignore'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "list",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "call",
+                   "kind": "Call",
+                   "children": [
+                    {
+                     "label": "__import__",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "'ast'",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "label": "\"'\\\\q'\"",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "cw",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "None",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "None",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "None",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'warnings'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "LiteralForms",
+   "label": "Literal forms",
+   "level": 2,
+   "parent": "StringLiterals",
+   "body": "A literal can be raw, spread over several lines or used as a comment (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_LiteralForms",
+   "class_iri": "http://example.org/sen0414/ch08#LiteralForms"
+  },
+  {
+   "id": "RawStrings",
+   "label": "Raw strings",
+   "level": 3,
+   "parent": "LiteralForms",
+   "body": "print(r'The file is in C:\\Users\\Alice\\Desktop') prints the path as written, r'Hello...\\n\\n...world!' prints the backslash pairs where the ordinary literal prints two line breaks, and len(r'\\n') is 2 while len('\\n') is 1 (Sweigart, 2025); the chapter names Windows paths and regular expressions as the uses (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_RawStrings",
+   "class_iri": "http://example.org/sen0414/ch08#RawStrings",
+   "example": "r'C:\\Users\\Alice\\Desktop'",
+   "definition": "A raw string literal, written with an r before the opening quote, treats every backslash as an ordinary character and ignores escape sequences, which suits Windows file paths and regular expressions.",
+   "io": {
+    "code": "(len(r'\\n'), len('\\n'), r'C:\\Users\\Al' == 'C:\\\\Users\\\\Al')",
+    "out": "(2, 1, True)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'\\\\n'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'\\n'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "'C:\\\\Users\\\\Al'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'C:\\\\Users\\\\Al'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(len('\\\\n'), len('\\n'), 'C:\\\\Users\\\\Al' == 'C:\\\\Users\\\\Al')",
+      "focus": "len('\\\\n')",
+      "value": "2"
+     },
+     {
+      "expr": "(2, len('\\n'), 'C:\\\\Users\\\\Al' == 'C:\\\\Users\\\\Al')",
+      "focus": "len('\\n')",
+      "value": "1"
+     },
+     {
+      "expr": "(2, 1, 'C:\\\\Users\\\\Al' == 'C:\\\\Users\\\\Al')",
+      "focus": "'C:\\\\Users\\\\Al' == 'C:\\\\Users\\\\Al'",
+      "value": "True"
+     }
+    ]
+   }
+  },
+  {
+   "id": "MultilineStrings",
+   "label": "Multiline strings",
+   "level": 3,
+   "parent": "LiteralForms",
+   "body": "Triple quotes keep the quotes, tabs and newlines between them: the feedcat.py letter to Alice as a triple-quoted string is equal to the one-line form with \\n, holds five newlines, and needs no escape for the single quote in Eve's (Sweigart, 2025); the indentation rules of blocks do not apply inside it, and eval of a triple-quoted Dear Al, blank line Bob gives the split ['Dear Al,', '', 'Bob']; a backslash right after the opening quotes drops the first newline (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_MultilineStrings",
+   "class_iri": "http://example.org/sen0414/ch08#MultilineStrings",
+   "example": "'''Dear Alice,\\n\\nBob'''",
+   "definition": "A multiline string begins and ends with three single or three double quotes and keeps every quote, tab and newline between them as part of the string; the indentation rules of blocks do not apply inside it.",
+   "io": {
+    "code": "__import__('ast').literal_eval('\\'\\'\\'Dear Al,\\n\\nBob\\'\\'\\'').split('\\n')",
+    "out": "['Dear Al,', '', 'Bob']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'ast'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "\"'''Dear Al,\\n\\nBob'''\"",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'\\n'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "MultilineComments",
+   "label": "Multiline comments",
+   "level": 3,
+   "parent": "LiteralForms",
+   "body": "The chapter uses a multiline string as a comment before a function and as the text under def say_hello() (Sweigart, 2025); Python does not treat it as a comment but as a string, and the one that opens a function body is kept: executing a def whose body starts with a triple-quoted 'Says hi.' gives that text as the function's __doc__, which the chapter as read does not name (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_MultilineComments",
+   "class_iri": "http://example.org/sen0414/ch08#MultilineComments",
+   "example": "def say_hello():\\n    '''This function prints hello.'''",
+   "definition": "A multiline string used as a comment is an ordinary string expression that is evaluated and dropped, except that the string which opens a function body is kept as the function's documentation string.",
+   "io": {
+    "code": "(lambda ns: (exec('def f():\\n    \\'\\'\\'Says hi.\\'\\'\\'\\n', ns), ns['f'].__doc__)[1])({})",
+    "out": "'Says hi.'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"def f():\\n    '''Says hi.'''\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "ns",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "Subscript",
+               "kind": "Subscript",
+               "children": [
+                {
+                 "label": "ns",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'f'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "StringAccess",
+   "label": "String access",
+   "level": 1,
+   "parent": null,
+   "body": "Strings are read like lists and tested with in (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_StringAccess",
+   "class_iri": "http://example.org/sen0414/ch08#StringAccess"
+  },
+  {
+   "id": "Positions",
+   "label": "Positions",
+   "level": 2,
+   "parent": "StringAccess",
+   "body": "An index picks one character and a slice a run of characters (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_Positions",
+   "class_iri": "http://example.org/sen0414/ch08#Positions"
+  },
+  {
+   "id": "StringIndexing",
+   "label": "String indexing",
+   "level": 3,
+   "parent": "Positions",
+   "body": "'Hello, world!' has 13 characters, index 0 is 'H', index 4 is 'o' and -1 is '!', a space before the bracket as in greeting [4] is allowed, and greeting[13] raises IndexError: string index out of range (Sweigart, 2025); there is no separate character type, since 'Hello'[0] is itself a str (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_StringIndexing",
+   "class_iri": "http://example.org/sen0414/ch08#StringIndexing",
+   "example": "greeting[-1]",
+   "definition": "An index in square brackets picks one character, counting from 0 at the front and from -1 at the back; a character is a string of length one, and an index past the end raises IndexError.",
+   "io": {
+    "code": "('Hello, world!'[0], 'Hello, world!'[4], 'Hello, world!'[-1], len('Hello, world!'))",
+    "out": "('H', 'o', '!', 13)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "'Hello, world!'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "'Hello, world!'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "4",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "'Hello, world!'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "UnaryOp",
+         "kind": "UnaryOp",
+         "children": [
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'Hello, world!'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "('Hello, world!'[0], 'Hello, world!'[4], 'Hello, world!'[-1], len('Hello, world!'))",
+      "focus": "-1",
+      "value": "-1"
+     },
+     {
+      "expr": "('Hello, world!'[0], 'Hello, world!'[4], 'Hello, world!'[-1], len('Hello, world!'))",
+      "focus": "len('Hello, world!')",
+      "value": "13"
+     }
+    ]
+   }
+  },
+  {
+   "id": "StringSlicing",
+   "label": "String slicing",
+   "level": 3,
+   "parent": "Positions",
+   "body": "greeting[0:5] and greeting[:5] are 'Hello', greeting[7:-1] is 'world', greeting[7:] is 'world!' and the original stays 'Hello, world!' (Sweigart, 2025); a slice past the end is cut short, so greeting[7:99] is 'world!' and greeting[99:] is '', a step is allowed so greeting[::-1] is '!dlrow ,olleH', and s[:i] + s[i:] equals s for every i (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_StringSlicing",
+   "class_iri": "http://example.org/sen0414/ch08#StringSlicing",
+   "example": "greeting[7:-1]",
+   "definition": "A slice string[start:end] is a new string of the characters from start up to but not including end; omitted ends mean the front or the back, an end past the string is cut short, a step is allowed, and the original string is left as it was.",
+   "io": {
+    "code": "('Hello, world!'[0:5], 'Hello, world!'[:5], 'Hello, world!'[7:-1], 'Hello, world!'[7:], 'Hello, world!'[::-1])",
+    "out": "('Hello', 'Hello', 'world', 'world!', '!dlrow ,olleH')",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "'Hello, world!'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "Slice",
+         "kind": "Slice",
+         "children": [
+          {
+           "label": "0",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "5",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "'Hello, world!'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "Slice",
+         "kind": "Slice",
+         "children": [
+          {
+           "label": "5",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "'Hello, world!'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "Slice",
+         "kind": "Slice",
+         "children": [
+          {
+           "label": "7",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "UnaryOp",
+           "kind": "UnaryOp",
+           "children": [
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "'Hello, world!'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "Slice",
+         "kind": "Slice",
+         "children": [
+          {
+           "label": "7",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "'Hello, world!'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "Slice",
+         "kind": "Slice",
+         "children": [
+          {
+           "label": "UnaryOp",
+           "kind": "UnaryOp",
+           "children": [
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "('Hello, world!'[0:5], 'Hello, world!'[:5], 'Hello, world!'[7:-1], 'Hello, world!'[7:], 'Hello, world!'[::-1])",
+      "focus": "-1",
+      "value": "-1"
+     },
+     {
+      "expr": "('Hello, world!'[0:5], 'Hello, world!'[:5], 'Hello, world!'[7:-1], 'Hello, world!'[7:], 'Hello, world!'[::-1])",
+      "focus": "-1",
+      "value": "-1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "StringProperties",
+   "label": "String properties",
+   "level": 2,
+   "parent": "StringAccess",
+   "body": "A string is immutable, and in tests for a substring (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_StringProperties",
+   "class_iri": "http://example.org/sen0414/ch08#StringProperties"
+  },
+  {
+   "id": "StringImmutability",
+   "label": "String immutability",
+   "level": 3,
+   "parent": "StringProperties",
+   "body": "name[7] = 'the' on 'Zophie a cat' raises TypeError: 'str' object does not support item assignment, and the changed text is built as name[0:7] + 'the' + name[8:12], 'Zophie the cat' (Sweigart, 2025); 'age ' + 4000 raises TypeError and 'age ' + str(4000) is 'age 4000', and the chapter's point that spam.upper() leaves spam alone is the same immutability (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_StringImmutability",
+   "class_iri": "http://example.org/sen0414/ch08#StringImmutability",
+   "example": "name[7] = 'the'",
+   "definition": "A string cannot be changed after it is made: assigning to an index raises TypeError, and methods such as upper() return a new string, so a changed text is built from slices or assigned back to the name.",
+   "io": {
+    "code": "(lambda s: (s.upper(), s))('abc')",
+    "out": "('ABC', 'abc')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "s",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "s",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'abc'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "InOperator",
+   "label": "In operator",
+   "level": 3,
+   "parent": "StringProperties",
+   "body": "'Hello' in 'Hello, World' is True, 'HELLO' in 'Hello, World' is False because capitals count, '' in 'spam' is True and 'cats' not in 'cats and dogs' is False (Sweigart, 2025); on a list the operator tests whole items, so 'gg' in 'eggs' is True while 'gg' in ['eggs'] is False (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_InOperator",
+   "class_iri": "http://example.org/sen0414/ch08#InOperator",
+   "example": "'Hello' in 'Hello, World'",
+   "definition": "The in and not in operators test whether the first string occurs as a run of characters inside the second, with capitalisation counted, and give True or False; the empty string is in every string.",
+   "io": {
+    "code": "('Hello' in 'Hello, World', 'HELLO' in 'Hello, World', '' in 'spam', 'cats' not in 'cats and dogs')",
+    "out": "(True, False, True, False)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "'Hello'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Hello, World'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "'HELLO'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Hello, World'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "''",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'spam'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "'cats'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'cats and dogs'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "('Hello' in 'Hello, World', 'HELLO' in 'Hello, World', '' in 'spam', 'cats' not in 'cats and dogs')",
+      "focus": "'Hello' in 'Hello, World'",
+      "value": "True"
+     },
+     {
+      "expr": "(True, 'HELLO' in 'Hello, World', '' in 'spam', 'cats' not in 'cats and dogs')",
+      "focus": "'HELLO' in 'Hello, World'",
+      "value": "False"
+     },
+     {
+      "expr": "(True, False, '' in 'spam', 'cats' not in 'cats and dogs')",
+      "focus": "'' in 'spam'",
+      "value": "True"
+     },
+     {
+      "expr": "(True, False, True, 'cats' not in 'cats and dogs')",
+      "focus": "'cats' not in 'cats and dogs'",
+      "value": "False"
+     }
+    ]
+   }
+  },
+  {
+   "id": "StringFormatting",
+   "label": "String formatting",
+   "level": 1,
+   "parent": null,
+   "body": "Putting one string inside another is done with f-strings and their predecessors (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_StringFormatting",
+   "class_iri": "http://example.org/sen0414/ch08#StringFormatting"
+  },
+  {
+   "id": "FormatInterpolation",
+   "label": "Format interpolation",
+   "level": 2,
+   "parent": "StringFormatting",
+   "body": "The chapter presents the f-string, and current Python adds specifiers, debug output and template strings (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_FormatInterpolation",
+   "class_iri": "http://example.org/sen0414/ch08#FormatInterpolation"
+  },
+  {
+   "id": "FStrings",
+   "label": "F strings",
+   "level": 3,
+   "parent": "FormatInterpolation",
+   "body": "f'My name is {name}. I am {age} years old. In ten years I will be {age + 10}. {{name}}' with name 'Al' and age 4000 gives 'My name is Al. I am 4000 years old. In ten years I will be 4010. {name}' (Sweigart, 2025); the chapter says the content of the brackets is interpreted as if passed to str(), and the documentation says the value is formatted by format(), which for most values gives the same text (Python Software Foundation, 2026); f-strings came in Python 3.6 (Smith, 2015).",
+   "section_iri": "http://example.org/sen0414/ch08#S_FStrings",
+   "class_iri": "http://example.org/sen0414/ch08#FStrings",
+   "example": "f'My name is {name}. I am {age} years old.'",
+   "definition": "An f-string is a literal with an f before the opening quote in which each expression between curly brackets is evaluated and its value put into the text; doubled brackets stand for one literal bracket.",
+   "io": {
+    "code": "(lambda name, age: f'My name is {name}. I am {age} years old. In ten years I will be {age + 10}. {{name}}')('Al', 4000)",
+    "out": "'My name is Al. I am 4000 years old. In ten years I will be 4010. {name}'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "f-string",
+         "kind": "JoinedStr",
+         "children": [
+          {
+           "label": "'My name is '",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "{ }",
+           "kind": "FormattedValue",
+           "children": [
+            {
+             "label": "name",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'. I am '",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "{ }",
+           "kind": "FormattedValue",
+           "children": [
+            {
+             "label": "age",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "' years old. In ten years I will be '",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "{ }",
+           "kind": "FormattedValue",
+           "children": [
+            {
+             "label": "+",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "age",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "10",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "'. {name}'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'Al'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "4000",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "FormatSpecifiers",
+   "label": "Format specifiers",
+   "level": 3,
+   "parent": "FormatInterpolation",
+   "body": "f'{3.14159:.2f}|{42:>6}|{42:^6}|{42:06}|{1234567:,}|{255:#x}|{0.256:.1%}' gives '3.14|    42|  42  |000042|1,234,567|0xff|25.6%', and f'{s:>10}', f'{s:<10}', f'{s:^20}' and f'{s:*^20}' equal s.rjust(10), s.ljust(10), s.center(20) and s.center(20, '*'); a class with its own __format__ receives the text after the colon, so f'{c:.1f}' can differ from str(c), which is why the chapter's statement about str() holds only by default; the chapter as read does not present specifiers (Sweigart, 2025) (Python Software Foundation, 2026) (Talin, 2006).",
+   "section_iri": "http://example.org/sen0414/ch08#S_FormatSpecifiers",
+   "class_iri": "http://example.org/sen0414/ch08#FormatSpecifiers",
+   "example": "f'{3.14159:.2f}'",
+   "definition": "After a colon in a replacement field comes a format specifier passed to format(), which sets fill, alignment with <, > or ^, width, sign, thousands separator and precision, so it does the work of rjust(), ljust() and center() and more.",
+   "io": {
+    "code": "f'{3.14159:.2f}|{42:>6}|{42:^6}|{42:06}|{1234567:,}|{255:#x}|{0.256:.1%}'",
+    "out": "'3.14|    42|  42  |000042|1,234,567|0xff|25.6%'",
+    "tree": {
+     "label": "f-string",
+     "kind": "JoinedStr",
+     "children": [
+      {
+       "label": "{ }",
+       "kind": "FormattedValue",
+       "children": [
+        {
+         "label": "3.14159",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "f-string",
+         "kind": "JoinedStr",
+         "children": [
+          {
+           "label": "'.2f'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'|'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "{ }",
+       "kind": "FormattedValue",
+       "children": [
+        {
+         "label": "42",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "f-string",
+         "kind": "JoinedStr",
+         "children": [
+          {
+           "label": "'>6'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'|'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "{ }",
+       "kind": "FormattedValue",
+       "children": [
+        {
+         "label": "42",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "f-string",
+         "kind": "JoinedStr",
+         "children": [
+          {
+           "label": "'^6'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'|'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "{ }",
+       "kind": "FormattedValue",
+       "children": [
+        {
+         "label": "42",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "f-string",
+         "kind": "JoinedStr",
+         "children": [
+          {
+           "label": "'06'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'|'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "{ }",
+       "kind": "FormattedValue",
+       "children": [
+        {
+         "label": "1234567",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "f-string",
+         "kind": "JoinedStr",
+         "children": [
+          {
+           "label": "','",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'|'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "{ }",
+       "kind": "FormattedValue",
+       "children": [
+        {
+         "label": "255",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "f-string",
+         "kind": "JoinedStr",
+         "children": [
+          {
+           "label": "'#x'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'|'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "{ }",
+       "kind": "FormattedValue",
+       "children": [
+        {
+         "label": "0.256",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "f-string",
+         "kind": "JoinedStr",
+         "children": [
+          {
+           "label": "'.1%'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "f'{3.14159:.2f}|{42:>6}|{42:^6}|{42:06}|{1234567:,}|{255:#x}|{0.256:.1%}'",
+      "focus": "f'.2f'",
+      "value": "'.2f'"
+     },
+     {
+      "expr": "f'{3.14159:.2f}|{42:>6}|{42:^6}|{42:06}|{1234567:,}|{255:#x}|{0.256:.1%}'",
+      "focus": "f'>6'",
+      "value": "'>6'"
+     },
+     {
+      "expr": "f'{3.14159:.2f}|{42:>6}|{42:^6}|{42:06}|{1234567:,}|{255:#x}|{0.256:.1%}'",
+      "focus": "f'^6'",
+      "value": "'^6'"
+     },
+     {
+      "expr": "f'{3.14159:.2f}|{42:>6}|{42:^6}|{42:06}|{1234567:,}|{255:#x}|{0.256:.1%}'",
+      "focus": "f'06'",
+      "value": "'06'"
+     },
+     {
+      "expr": "f'{3.14159:.2f}|{42:>6}|{42:^6}|{42:06}|{1234567:,}|{255:#x}|{0.256:.1%}'",
+      "focus": "f','",
+      "value": "','"
+     },
+     {
+      "expr": "f'{3.14159:.2f}|{42:>6}|{42:^6}|{42:06}|{1234567:,}|{255:#x}|{0.256:.1%}'",
+      "focus": "f'#x'",
+      "value": "'#x'"
+     },
+     {
+      "expr": "f'{3.14159:.2f}|{42:>6}|{42:^6}|{42:06}|{1234567:,}|{255:#x}|{0.256:.1%}'",
+      "focus": "f'.1%'",
+      "value": "'.1%'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "DebugAndConversions",
+   "label": "Debug and conversions",
+   "level": 3,
+   "parent": "FormatInterpolation",
+   "body": "f'{s=}' with s = 'Al' gives the text s='Al', f'{n + 1 = }' keeps its spaces and gives 'n + 1 = 42', f'{s!r} {s!s}' gives the text 'Al' Al and f'{chr(233)!a}' gives the escaped form of the accented e; since Python 3.12 an f-string written in double quotes may hold a double-quoted dictionary key in a field, and a backslash inside a field is allowed, and the chapter as read does not present these (Sweigart, 2025) (Python Software Foundation, 2026) (Galindo Salgado et al., 2022).",
+   "section_iri": "http://example.org/sen0414/ch08#S_DebugAndConversions",
+   "class_iri": "http://example.org/sen0414/ch08#DebugAndConversions",
+   "example": "f'{name=}'",
+   "definition": "An equals sign after the expression prints the expression text, the sign and the value, and the conversions !s, !r and !a apply str(), repr() or ascii() before formatting; since Python 3.12 a field may also reuse the f-string's own quote and hold a backslash.",
+   "io": {
+    "code": "(lambda s, n: (f'{s=}', f'{n + 1 = }', f'{s!r} {s!s}', f'{chr(233)!a}'))('Al', 41)",
+    "out": "(\"s='Al'\", 'n + 1 = 42', \"'Al' Al\", \"'\\\\xe9'\")",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "f-string",
+           "kind": "JoinedStr",
+           "children": [
+            {
+             "label": "'s='",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "{ }",
+             "kind": "FormattedValue",
+             "children": [
+              {
+               "label": "s",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "f-string",
+           "kind": "JoinedStr",
+           "children": [
+            {
+             "label": "'n + 1 = '",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "{ }",
+             "kind": "FormattedValue",
+             "children": [
+              {
+               "label": "+",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "n",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "f-string",
+           "kind": "JoinedStr",
+           "children": [
+            {
+             "label": "{ }",
+             "kind": "FormattedValue",
+             "children": [
+              {
+               "label": "s",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "' '",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "{ }",
+             "kind": "FormattedValue",
+             "children": [
+              {
+               "label": "s",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "f-string",
+           "kind": "JoinedStr",
+           "children": [
+            {
+             "label": "{ }",
+             "kind": "FormattedValue",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "chr",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "233",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'Al'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "41",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "TemplateStrings",
+   "label": "Template strings",
+   "level": 3,
+   "parent": "FormatInterpolation",
+   "body": "t'Hello {name}, you are {age:>6} years old.' has type Template, isinstance(t, str) is False, t.strings is ('Hello ', ', you are ', ' years old.') and its interpolations hold the expression, value, conversion and specifier, for example ('age', 4000, None, '>6'); a function that escapes the interpolated value of t'<p>{evil}</p>' gives <p>&lt;b&gt;x&lt;/b&gt;</p> where the f-string gives the raw tag; Python 3.13 rejects the t prefix with a SyntaxError, so these examples were run under Python 3.14.4 only and not in the page, and the chapter as read does not present them (Python Software Foundation, 2026) (Baker et al., 2024).",
+   "section_iri": "http://example.org/sen0414/ch08#S_TemplateStrings",
+   "class_iri": "http://example.org/sen0414/ch08#TemplateStrings",
+   "example": "t'Hello {name}'",
+   "definition": "A template string, written with a t prefix since Python 3.14, has the syntax of an f-string but evaluates to a Template object that keeps the literal parts and the interpolations separate, so code can process them, for instance to escape HTML, before making a string."
+  },
+  {
+   "id": "OlderStyles",
+   "label": "Older styles",
+   "level": 2,
+   "parent": "StringFormatting",
+   "body": "Concatenation, the % operator and format() are the ways before the f-string (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_OlderStyles",
+   "class_iri": "http://example.org/sen0414/ch08#OlderStyles"
+  },
+  {
+   "id": "Concatenation",
+   "label": "Concatenation",
+   "level": 3,
+   "parent": "OlderStyles",
+   "body": "'Hello, my name is ' + name + '. I am ' + str(age) + ' years old.' gives 'Hello, my name is Al. I am 4000 years old.' and needs str(age) (Sweigart, 2025); two literals side by side are joined, 'Py' 'thon' being 'Python', and 3 * 'un' + 'ium' is 'unununium' (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_Concatenation",
+   "class_iri": "http://example.org/sen0414/ch08#Concatenation",
+   "example": "'Hello, my name is ' + name + '. I am ' + str(age) + ' years old.'",
+   "definition": "Strings are joined with + and repeated with *, and a number must first be turned into a string with str(); two literals written next to each other are joined at compile time.",
+   "io": {
+    "code": "(lambda name, age: ('Hello, my name is ' + name + '. I am ' + str(age) + ' years old.', 'Py' 'thon', 3 * 'un' + 'ium'))('Al', 4000)",
+    "out": "('Hello, my name is Al. I am 4000 years old.', 'Python', 'unununium')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "+",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "+",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "+",
+                 "kind": "BinOp",
+                 "children": [
+                  {
+                   "label": "'Hello, my name is '",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "name",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "'. I am '",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "str",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "age",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "' years old.'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'Python'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "*",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "3",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'un'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "'ium'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'Al'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "4000",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(lambda name, age: ('Hello, my name is ' + name + '. I am ' + str(age) + ' years old.', 'Python', 3 * 'un' + 'ium'))('Al', 4000)",
+      "focus": "3 * 'un'",
+      "value": "'ununun'"
+     },
+     {
+      "expr": "(lambda name, age: ('Hello, my name is ' + name + '. I am ' + str(age) + ' years old.', 'Python', 'ununun' + 'ium'))('Al', 4000)",
+      "focus": "'ununun' + 'ium'",
+      "value": "'unununium'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "PercentFormatting",
+   "label": "Percent formatting",
+   "level": 3,
+   "parent": "OlderStyles",
+   "body": "'My name is %s. I am %s years old.' % (name, age) gives 'My name is Al. I am 4000 years old.' and '%05.1f|%-4s|%3d%%' % (3.14159, 'ab', 7) gives '003.1|ab  |  7%' (Sweigart, 2025); '%s' % (1, 2) raises TypeError because the tuple is read as two arguments for one specifier, '%s' % ((1, 2),) is '(1, 2)', and the documentation notes the quirks of this style and names f-strings, str.format() and string.Template (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_PercentFormatting",
+   "class_iri": "http://example.org/sen0414/ch08#PercentFormatting",
+   "example": "'My name is %s. I am %s years old.' % (name, age)",
+   "definition": "The % operator on a string replaces conversion specifiers such as %s, %d and %f with the values of a tuple or a mapping; it still works, but a single tuple operand is read as the list of arguments and the documentation names f-strings and format() as alternatives.",
+   "io": {
+    "code": "('My name is %s. I am %s years old.' % ('Al', 4000), '%05.1f|%-4s|%3d%%' % (3.14159, 'ab', 7))",
+    "out": "('My name is Al. I am 4000 years old.', '003.1|ab  |  7%')",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "%",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "'My name is %s. I am %s years old.'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'Al'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "4000",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "%",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "'%05.1f|%-4s|%3d%%'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "3.14159",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'ab'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "7",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "FormatMethod",
+   "label": "Format method",
+   "level": 3,
+   "parent": "OlderStyles",
+   "body": "'{1} years ago, {0} was born and named {0}.'.format(name, age) gives '4000 years ago, Al was born and named Al.' and '{name} is {age}'.format(name='Al', age=4000) gives 'Al is 4000' (Sweigart, 2025); too few arguments raise IndexError: Replacement index 1 out of range for positional args tuple, and format() was specified for Python 3.0 (Talin, 2006) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_FormatMethod",
+   "class_iri": "http://example.org/sen0414/ch08#FormatMethod",
+   "example": "'{1} years ago, {0} was born and named {0}.'.format(name, age)",
+   "definition": "The format() method replaces curly-bracket fields with its arguments, by position, by index or by name, and accepts the same format specifiers as an f-string.",
+   "io": {
+    "code": "('{1} years ago, {0} was born and named {0}.'.format('Al', 4000), '{name} is {age}'.format(name='Al', age=4000))",
+    "out": "('4000 years ago, Al was born and named Al.', 'Al is 4000')",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'{1} years ago, {0} was born and named {0}.'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'Al'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "4000",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'{name} is {age}'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "keyword",
+         "kind": "keyword",
+         "children": [
+          {
+           "label": "'Al'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "keyword",
+         "kind": "keyword",
+         "children": [
+          {
+           "label": "4000",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "StringMethods",
+   "label": "String methods",
+   "level": 1,
+   "parent": null,
+   "body": "A string method returns a new value and never changes the string it is called on (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_StringMethods",
+   "class_iri": "http://example.org/sen0414/ch08#StringMethods"
+  },
+  {
+   "id": "TextCase",
+   "label": "Text case",
+   "level": 2,
+   "parent": "StringMethods",
+   "body": "Methods that convert or test the case of letters (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_TextCase",
+   "class_iri": "http://example.org/sen0414/ch08#TextCase"
+  },
+  {
+   "id": "ChangingCase",
+   "label": "Changing case",
+   "level": 3,
+   "parent": "TextCase",
+   "body": "'Hello, world!'.upper() is 'HELLO, WORLD!' and .lower() is 'hello, world!', the string spam stays unchanged until spam = spam.upper() assigns the result, and 'great' == 'GREat'.lower() is True, which is the chapter's case-insensitive answer to the question How are you? (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_ChangingCase",
+   "class_iri": "http://example.org/sen0414/ch08#ChangingCase",
+   "example": "spam = spam.upper()",
+   "definition": "The upper() and lower() methods return a new string with every letter converted and leave other characters alone; the original is unchanged, so the result is assigned back or compared at once, as in a case-insensitive check.",
+   "io": {
+    "code": "('Hello, world!'.upper(), 'Hello, world!'.lower(), 'great' == 'GREat'.lower())",
+    "out": "('HELLO, WORLD!', 'hello, world!', True)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'Hello, world!'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'Hello, world!'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "'great'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "'GREat'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CaseTests",
+   "label": "Case tests",
+   "level": 3,
+   "parent": "TextCase",
+   "body": "'Hello, world!'.isupper() and islower() are both False, 'HELLO'.isupper() and 'abc12345'.islower() are True, '12345'.islower() and '12345'.isupper() are False, and ''.islower() is False because at least one cased letter is needed (Sweigart, 2025) (Python Software Foundation, 2026); 'Hello'.upper().isupper() is True but '123'.upper().isupper() is False for the same reason (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_CaseTests",
+   "class_iri": "http://example.org/sen0414/ch08#CaseTests",
+   "example": "'HELLO'.isupper()",
+   "definition": "isupper() and islower() return True when the string has at least one cased letter and all its cased letters are upper or lower case, and False for an empty string or one with no letters.",
+   "io": {
+    "code": "('Hello, world!'.isupper(), 'HELLO'.isupper(), 'abc12345'.islower(), '12345'.islower(), ''.islower())",
+    "out": "(False, True, True, False, False)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'Hello, world!'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'HELLO'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'abc12345'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'12345'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "''",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CaseFolding",
+   "label": "Case folding",
+   "level": 3,
+   "parent": "TextCase",
+   "body": "'stra\\xdfe'.lower() == 'strasse' is False and 'stra\\xdfe'.casefold() == 'strasse' is True, and len('stra\\xdfe') is 6 while len('stra\\xdfe'.upper()) is 7 because upper() gives STRASSE; the chapter compares with lower() and as read does not name casefold() (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_CaseFolding",
+   "class_iri": "http://example.org/sen0414/ch08#CaseFolding",
+   "example": "'stra\\xdfe'.casefold() == 'strasse'",
+   "definition": "casefold() is a stronger lower() meant for caseless matching: it turns the German sharp s into ss, so text that differs only by case compares equal, where lower() leaves that letter alone and upper() makes the string longer.",
+   "io": {
+    "code": "('stra\\xdfe'.lower() == 'strasse', 'stra\\xdfe'.casefold() == 'strasse', len('stra\\xdfe'.upper()))",
+    "out": "(False, True, 7)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "'stra\u00dfe'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'strasse'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "'stra\u00dfe'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'strasse'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "'stra\u00dfe'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "MethodChaining",
+   "label": "Method chaining",
+   "level": 3,
+   "parent": "TextCase",
+   "body": "'Hello'.upper().lower().upper() is 'HELLO', 'HELLO'.lower().islower() is True and 'a-b'.upper().replace('-', '+') is 'A+B' (Sweigart, 2025); islower() returns a Boolean, so nothing can be chained after it (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_MethodChaining",
+   "class_iri": "http://example.org/sen0414/ch08#MethodChaining",
+   "example": "'Hello'.upper().lower().upper()",
+   "definition": "A method that returns a string can be followed by another method call on the result, forming a chain; a method that returns a Boolean or a number ends the chain.",
+   "io": {
+    "code": "('Hello'.upper().lower().upper(), 'HELLO'.lower().islower(), 'a-b'.upper().replace('-', '+'))",
+    "out": "('HELLO', True, 'A+B')",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "'Hello'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "'HELLO'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "'a-b'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'-'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'+'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "TextChecks",
+   "label": "Text checks",
+   "level": 2,
+   "parent": "StringMethods",
+   "body": "Methods that test what kind of characters a string holds or how it begins and ends (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_TextChecks",
+   "class_iri": "http://example.org/sen0414/ch08#TextChecks"
+  },
+  {
+   "id": "CharacterTests",
+   "label": "Character tests",
+   "level": 3,
+   "parent": "TextChecks",
+   "body": "'hello'.isalpha() is True, 'hello123'.isalpha() is False, 'hello123'.isalnum() is True, '123'.isdecimal() is True, '    '.isspace() is True and 'This Is Title Case'.istitle() is True (Sweigart, 2025); every one of them is False for the empty string, and '4,000'.isalpha() is False (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_CharacterTests",
+   "class_iri": "http://example.org/sen0414/ch08#CharacterTests",
+   "example": "'hello123'.isalnum()",
+   "definition": "The methods isalpha(), isalnum(), isdecimal(), isspace() and istitle() return True only for a non-empty string whose characters all fit the kind named, so they validate input and are False for an empty string.",
+   "io": {
+    "code": "('hello'.isalpha(), 'hello123'.isalpha(), 'hello123'.isalnum(), '123'.isdecimal(), '    '.isspace(), 'This Is Title Case'.istitle(), ''.isalpha())",
+    "out": "(True, False, True, True, True, True, False)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'hello'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'hello123'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'hello123'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'123'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'    '",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'This Is Title Case'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "''",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "UnicodeDigits",
+   "label": "Unicode digits",
+   "level": 3,
+   "parent": "TextChecks",
+   "body": "'\\xb2'.isdecimal() is False while '\\xb2'.isdigit() is True, '\\u0663'.isdecimal() is True and int('\\u0663') is 3, '\\u3000'.isspace() is True and an accented e is alphabetic but not ASCII, so 'caf\\xe9'.isalnum() is True and 'caf\\xe9'.isascii() is False; the chapter describes isspace() as spaces, tabs and newlines and as read does not mention the Unicode behaviour, so its password check with isalnum() accepts accented letters (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_UnicodeDigits",
+   "class_iri": "http://example.org/sen0414/ch08#UnicodeDigits",
+   "example": "'\\u0663'.isdecimal()",
+   "definition": "The isX() methods use the Unicode database, not ASCII: isdecimal() is True for any decimal digit of any script, isdigit() also for a superscript digit, isspace() for U+3000, and isalpha() and isalnum() for accented letters; isascii() tests for ASCII only.",
+   "io": {
+    "code": "('\\xb2'.isdecimal(), '\\xb2'.isdigit(), '\\u0663'.isdecimal(), int('\\u0663'), '\\u3000'.isspace(), '\\xe9'.isalpha() and not '\\xe9'.isascii())",
+    "out": "(False, True, True, 3, True, True)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'\u00b2'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'\u00b2'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'\u0663'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "int",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'\u0663'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'\\u3000'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "BoolOp",
+       "kind": "BoolOp",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "'\u00e9'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "UnaryOp",
+         "kind": "UnaryOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "'\u00e9'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "('\u00b2'.isdecimal(), '\u00b2'.isdigit(), '\u0663'.isdecimal(), int('\u0663'), '\\u3000'.isspace(), '\u00e9'.isalpha() and (not '\u00e9'.isascii()))",
+      "focus": "int('\u0663')",
+      "value": "3"
+     }
+    ]
+   }
+  },
+  {
+   "id": "StartsEndsWith",
+   "label": "Starts ends with",
+   "level": 3,
+   "parent": "TextChecks",
+   "body": "'Hello, world!'.startswith('Hello') and .endswith('world!') are True, 'abc123'.startswith('abcdef') and .endswith('12') are False (Sweigart, 2025); both accept a tuple, so 'notes.txt'.endswith(('.py', '.txt')) is True (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_StartsEndsWith",
+   "class_iri": "http://example.org/sen0414/ch08#StartsEndsWith",
+   "example": "'Hello, world!'.startswith('Hello') and 'abc'.endswith('c')",
+   "definition": "startswith() and endswith() test only the beginning or the end of a string and also accept a tuple of alternatives, which is shorter than slicing and comparing.",
+   "io": {
+    "code": "('Hello, world!'.startswith('Hello'), 'abc123'.endswith('12'), 'notes.txt'.endswith(('.py', '.txt')))",
+    "out": "(True, False, True)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'Hello, world!'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'Hello'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'abc123'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'12'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'notes.txt'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'.py'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'.txt'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "JoiningAndSplittingText",
+   "label": "Joining and splitting text",
+   "level": 2,
+   "parent": "StringMethods",
+   "body": "join() and split() convert between a list of strings and one string (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_JoiningAndSplittingText",
+   "class_iri": "http://example.org/sen0414/ch08#JoiningAndSplittingText"
+  },
+  {
+   "id": "JoinMethod",
+   "label": "Join method",
+   "level": 3,
+   "parent": "JoiningAndSplittingText",
+   "body": "', '.join(['cats', 'rats', 'bats']) is 'cats, rats, bats' and 'ABC'.join(['My', 'name']) is 'MyABCname' (Sweigart, 2025); join accepts any iterable of strings, so '-'.join('abc') is 'a-b-c', and ', '.join([1, 2]) raises TypeError: sequence item 0: expected str instance, int found (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_JoinMethod",
+   "class_iri": "http://example.org/sen0414/ch08#JoinMethod",
+   "example": "'-'.join(c for c in 'abc')",
+   "definition": "join() is called on the separator string and given an iterable of strings; it returns them concatenated with the separator between, and raises TypeError for an item that is not a string.",
+   "io": {
+    "code": "(', '.join(['cats', 'rats', 'bats']), 'ABC'.join(['My', 'name']), '-'.join('abc'))",
+    "out": "('cats, rats, bats', 'MyABCname', 'a-b-c')",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "', '",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'cats'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'rats'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'bats'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'ABC'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'My'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'name'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'-'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'abc'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SplitMethod",
+   "label": "Split method",
+   "level": 3,
+   "parent": "JoiningAndSplittingText",
+   "body": "'MyABCnameABCisABCSimon'.split('ABC') is ['My', 'name', 'is', 'Simon'] and 'My name is Simon'.split('m') is ['My na', 'e is Si', 'on'], and splitting the chapter's multiline letter on '\\n' gives seven items with an empty string for the blank line (Sweigart, 2025); '1,,2'.split(',') keeps the empty item and ''.split(',') is [''] (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_SplitMethod",
+   "class_iri": "http://example.org/sen0414/ch08#SplitMethod",
+   "example": "'My name is Simon'.split('m')",
+   "definition": "split(sep) cuts a string at each occurrence of the separator and returns a list; consecutive separators give empty strings, and splitting the empty string gives a list holding one empty string.",
+   "io": {
+    "code": "('MyABCnameABCisABCSimon'.split('ABC'), 'My name is Simon'.split('m'), '1,,2'.split(','), ''.split(','))",
+    "out": "(['My', 'name', 'is', 'Simon'], ['My na', 'e is Si', 'on'], ['1', '', '2'], [''])",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'MyABCnameABCisABCSimon'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'ABC'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'My name is Simon'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'m'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'1,,2'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "','",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "''",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "','",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "WhitespaceSplit",
+   "label": "Whitespace split",
+   "level": 3,
+   "parent": "JoiningAndSplittingText",
+   "body": "'My name is Simon'.split() is ['My', 'name', 'is', 'Simon'] (Sweigart, 2025); with no argument runs of whitespace are one separator, so '  a \\t b\\n c  '.split() is ['a', 'b', 'c'] and ''.split() is [], while '  a  b '.split(' ') is ['', '', 'a', '', 'b', ''] (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_WhitespaceSplit",
+   "class_iri": "http://example.org/sen0414/ch08#WhitespaceSplit",
+   "example": "'My name is Simon'.split()",
+   "definition": "split() with no argument cuts at runs of whitespace, ignores whitespace at the ends and gives an empty list for an empty or blank string, unlike split(' ').",
+   "io": {
+    "code": "('My name is Simon'.split(), '  a \\t b\\n c  '.split(), ''.split(), '  a  b '.split(' '))",
+    "out": "(['My', 'name', 'is', 'Simon'], ['a', 'b', 'c'], [], ['', '', 'a', '', 'b', ''])",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'My name is Simon'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'  a \\t b\\n c  '",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "''",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'  a  b '",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "' '",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SplitLines",
+   "label": "Split lines",
+   "level": 3,
+   "parent": "JoiningAndSplittingText",
+   "body": "The chapter splits the clipboard text with split('\\n') (Sweigart, 2025); on 'one\\r\\ntwo\\nthree' that gives ['one\\r', 'two', 'three'] and splitlines() gives ['one', 'two', 'three'], and on 'a\\n\\nb\\n' split gives a trailing empty string and splitlines does not; splitlines() also cuts at \\x0b, \\x1c and \\u2028, and the chapter as read does not present it (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_SplitLines",
+   "class_iri": "http://example.org/sen0414/ch08#SplitLines",
+   "example": "text.splitlines()",
+   "definition": "splitlines() cuts a string at every line boundary, including the carriage-return line feed of Windows text, and drops the final empty item that split('\\n') leaves after a trailing newline.",
+   "io": {
+    "code": "('one\\r\\ntwo\\nthree'.split('\\n'), 'one\\r\\ntwo\\nthree'.splitlines(), 'a\\n\\nb\\n'.split('\\n'), 'a\\n\\nb\\n'.splitlines())",
+    "out": "(['one\\r', 'two', 'three'], ['one', 'two', 'three'], ['a', '', 'b', ''], ['a', '', 'b'])",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'one\\r\\ntwo\\nthree'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'\\n'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'one\\r\\ntwo\\nthree'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'a\\n\\nb\\n'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'\\n'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'a\\n\\nb\\n'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PartitionMethod",
+   "label": "Partition method",
+   "level": 3,
+   "parent": "JoiningAndSplittingText",
+   "body": "'Monty Python'.partition(' ') is ('Monty', ' ', 'Python'), 'Monty Python'.partition('-') is ('Monty Python', '', '') and 'a.b.c'.rpartition('.') is ('a.b', '.', 'c'); the chapter as read does not present it (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_PartitionMethod",
+   "class_iri": "http://example.org/sen0414/ch08#PartitionMethod",
+   "example": "'Monty Python'.partition(' ')",
+   "definition": "partition(sep) cuts at the first occurrence and returns a tuple of the part before, the separator and the part after, or the string and two empty strings when the separator is absent; rpartition() cuts at the last.",
+   "io": {
+    "code": "('Monty Python'.partition(' '), 'Monty Python'.partition('-'), 'a.b.c'.rpartition('.'))",
+    "out": "(('Monty', ' ', 'Python'), ('Monty Python', '', ''), ('a.b', '.', 'c'))",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'Monty Python'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "' '",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'Monty Python'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'-'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'a.b.c'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'.'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "TextSpacing",
+   "label": "Text spacing",
+   "level": 2,
+   "parent": "StringMethods",
+   "body": "Padding and trimming change the width of a string by its ends (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_TextSpacing",
+   "class_iri": "http://example.org/sen0414/ch08#TextSpacing"
+  },
+  {
+   "id": "JustifyMethods",
+   "label": "Justify methods",
+   "level": 3,
+   "parent": "TextSpacing",
+   "body": "'Hello'.rjust(10) is five spaces and Hello, 'Hello'.ljust(10, '-') is 'Hello-----' and 'Hello'.center(20, '=') is '=======Hello========', with the extra padding on the right here, 7 left and 8 right (Sweigart, 2025); 'Hello'.rjust(20) has 15 spaces, which the chapter prints as 14, and 'Hello, World'.rjust(20) has 8, which it prints as 9, so both printed lines disagree with Python 3.14.4; a fill of two characters raises TypeError, a width no larger than the string changes nothing, and the f-string specifiers > < ^ give the same results (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_JustifyMethods",
+   "class_iri": "http://example.org/sen0414/ch08#JustifyMethods",
+   "example": "'Hello'.rjust(20, '*')",
+   "definition": "rjust(), ljust() and center() return a string padded to a given width with spaces or one fill character; a width no larger than the string changes nothing, and the padding is 15 spaces for 'Hello'.rjust(20).",
+   "io": {
+    "code": "('Hello'.rjust(10), 'Hello'.ljust(10, '-'), 'Hello'.center(20, '='), 'Hello'.rjust(20) == ' ' * 15 + 'Hello', 'Hello'.center(4))",
+    "out": "('     Hello', 'Hello-----', '=======Hello========', True, 'Hello')",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'Hello'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "10",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'Hello'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "10",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'-'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'Hello'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "20",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'='",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "'Hello'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "20",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "*",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "' '",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "15",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'Hello'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'Hello'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "4",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "('Hello'.rjust(10), 'Hello'.ljust(10, '-'), 'Hello'.center(20, '='), 'Hello'.rjust(20) == ' ' * 15 + 'Hello', 'Hello'.center(4))",
+      "focus": "' ' * 15",
+      "value": "'               '"
+     },
+     {
+      "expr": "('Hello'.rjust(10), 'Hello'.ljust(10, '-'), 'Hello'.center(20, '='), 'Hello'.rjust(20) == '               ' + 'Hello', 'Hello'.center(4))",
+      "focus": "'               ' + 'Hello'",
+      "value": "'               Hello'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "StripMethods",
+   "label": "Strip methods",
+   "level": 3,
+   "parent": "TextSpacing",
+   "body": "'    Hello, World    '.strip() is 'Hello, World', lstrip() keeps the right spaces, and 'SpamSpamBaconSpamEggsSpamSpam'.strip('ampS') is 'BaconSpamEggs' (Sweigart, 2025); the argument is a set of characters, so strip('mapS') and strip('Spam') give the same result (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_StripMethods",
+   "class_iri": "http://example.org/sen0414/ch08#StripMethods",
+   "example": "'SpamSpamBaconSpamEggsSpamSpam'.strip('ampS')",
+   "definition": "strip(), lstrip() and rstrip() remove whitespace from both ends, the left or the right, or, with an argument, any of the characters in that argument in any order, which is a set and not a prefix.",
+   "io": {
+    "code": "('    Hello, World    '.strip(), '    Hello, World    '.lstrip(), 'SpamSpamBaconSpamEggsSpamSpam'.strip('ampS'), 'SpamSpamBaconSpamEggsSpamSpam'.strip('Spam') == 'SpamSpamBaconSpamEggsSpamSpam'.strip('mapS'))",
+    "out": "('Hello, World', 'Hello, World    ', 'BaconSpamEggs', True)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'    Hello, World    '",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'    Hello, World    '",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'SpamSpamBaconSpamEggsSpamSpam'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'ampS'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "'SpamSpamBaconSpamEggsSpamSpam'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'Spam'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "'SpamSpamBaconSpamEggsSpamSpam'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'mapS'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PrefixSuffixRemoval",
+   "label": "Prefix suffix removal",
+   "level": 3,
+   "parent": "TextSpacing",
+   "body": "'Arthur: three!'.lstrip('Arthur: ') is 'ee!' because the argument is a set of characters, while .removeprefix('Arthur: ') is 'three!', 'report.txt'.removesuffix('.txt') is 'report' and 'report.txt'.removesuffix('.py') is unchanged; the chapter as read does not present them (Python Software Foundation, 2026) (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_PrefixSuffixRemoval",
+   "class_iri": "http://example.org/sen0414/ch08#PrefixSuffixRemoval",
+   "example": "'Arthur: three!'.removeprefix('Arthur: ')",
+   "definition": "removeprefix() and removesuffix(), added in Python 3.9, remove one exact prefix or suffix if present and otherwise return the string unchanged, which is what a programmer who reaches for lstrip() with a word usually wants.",
+   "io": {
+    "code": "('Arthur: three!'.lstrip('Arthur: '), 'Arthur: three!'.removeprefix('Arthur: '), 'report.txt'.removesuffix('.txt'), 'report.txt'.removesuffix('.py'))",
+    "out": "('ee!', 'three!', 'report', 'report.txt')",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'Arthur: three!'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'Arthur: '",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'Arthur: three!'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'Arthur: '",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'report.txt'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'.txt'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'report.txt'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'.py'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "Searching",
+   "label": "Searching",
+   "level": 2,
+   "parent": "StringMethods",
+   "body": "Finding and replacing text inside a string, which the chapter leaves to the course (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_Searching",
+   "class_iri": "http://example.org/sen0414/ch08#Searching"
+  },
+  {
+   "id": "FindAndCount",
+   "label": "Find and count",
+   "level": 3,
+   "parent": "Searching",
+   "body": "'spam eggs spam'.find('spam') is 0, find('spam', 1) is 10, 'spam'.find('x') is -1, 'spam eggs spam'.count('spam') is 2, 'aaaa'.count('aa') is 2 because matches do not overlap and 'spam'.count('') is 5; the chapter as read does not present them (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_FindAndCount",
+   "class_iri": "http://example.org/sen0414/ch08#FindAndCount",
+   "example": "'spam eggs spam'.find('spam', 1) != -1",
+   "definition": "find() returns the index of the first occurrence at or after an optional start, or -1 when there is none, where index() raises ValueError; count() returns the number of non-overlapping occurrences.",
+   "io": {
+    "code": "('spam eggs spam'.find('spam'), 'spam eggs spam'.find('spam', 1), 'spam'.find('x'), 'spam eggs spam'.count('spam'), 'aaaa'.count('aa'))",
+    "out": "(0, 10, -1, 2, 2)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'spam eggs spam'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'spam'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'spam eggs spam'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'spam'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "1",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'spam'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'x'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'spam eggs spam'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'spam'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'aaaa'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'aa'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ReplaceMethod",
+   "label": "Replace method",
+   "level": 3,
+   "parent": "Searching",
+   "body": "'spam, spam, spam'.replace('spam', 'eggs') is 'eggs, eggs, eggs', with a count of 1 it is 'eggs, spam, spam', and 'abc'.replace('b', '') is 'ac'; count can be a keyword since Python 3.13, and the chapter as read does not present it (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_ReplaceMethod",
+   "class_iri": "http://example.org/sen0414/ch08#ReplaceMethod",
+   "example": "'spam, spam'.replace('spam', 'eggs', 1)",
+   "definition": "replace(old, new) returns a new string with every occurrence of old replaced by new, or only the first count of them when count is given; an empty new deletes old.",
+   "io": {
+    "code": "('spam, spam, spam'.replace('spam', 'eggs'), 'spam, spam, spam'.replace('spam', 'eggs', 1), 'abc'.replace('b', ''))",
+    "out": "('eggs, eggs, eggs', 'eggs, spam, spam', 'ac')",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'spam, spam, spam'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'spam'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'eggs'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'spam, spam, spam'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'spam'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'eggs'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "1",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'abc'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'b'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "''",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CharactersAndBytes",
+   "label": "Characters and bytes",
+   "level": 1,
+   "parent": null,
+   "body": "How text becomes numbers and bytes (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_CharactersAndBytes",
+   "class_iri": "http://example.org/sen0414/ch08#CharactersAndBytes"
+  },
+  {
+   "id": "CodePointConversion",
+   "label": "Code point conversion",
+   "level": 2,
+   "parent": "CharactersAndBytes",
+   "body": "Every character has a number in Unicode (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_CodePointConversion",
+   "class_iri": "http://example.org/sen0414/ch08#CodePointConversion"
+  },
+  {
+   "id": "OrdAndChr",
+   "label": "Ord and chr",
+   "level": 3,
+   "parent": "CodePointConversion",
+   "body": "ord('A') is 65, ord('4') is 52, ord('!') is 33, chr(65) is 'A', ord('A') < ord('B') is True and chr(ord('A') + 1) is 'B' (Sweigart, 2025); ord of the euro sign is 8364, ord of the snake emoji is 128013, chr() accepts only 0 to 0x10FFFF and raises ValueError above it, and ord('ab') raises TypeError (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_OrdAndChr",
+   "class_iri": "http://example.org/sen0414/ch08#OrdAndChr",
+   "example": "ord('A')",
+   "definition": "Every character has a Unicode code point, an integer from 0 to 0x10FFFF; ord() gives the code point of a one-character string and chr() gives the character of a code point, so ord('A') is 65 and chr(ord('A') + 1) is 'B'.",
+   "io": {
+    "code": "(ord('A'), ord('4'), ord('!'), chr(65), chr(ord('A') + 1), ord('A') < ord('B'), ord('\\u20ac'), chr(8364) == '\\u20ac', ord('\\U0001f40d'))",
+    "out": "(65, 52, 33, 'A', 'B', True, 8364, True, 128013)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "ord",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'A'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "ord",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'4'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "ord",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'!'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "chr",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "65",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "chr",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "ord",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'A'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "ord",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'A'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "ord",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'B'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "ord",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'\u20ac'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "chr",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "8364",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'\u20ac'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "ord",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'\ud83d\udc0d'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "TextEncodings",
+   "label": "Text encodings",
+   "level": 2,
+   "parent": "CharactersAndBytes",
+   "body": "Encoding and decoding turn text into bytes and back (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_TextEncodings",
+   "class_iri": "http://example.org/sen0414/ch08#TextEncodings"
+  },
+  {
+   "id": "Utf8Encoding",
+   "label": "Utf8 encoding",
+   "level": 3,
+   "parent": "TextEncodings",
+   "body": "'caf\\xe9'.encode('utf-8') is b'caf\\xc3\\xa9', so four characters are five bytes and decoding returns the original; the snake emoji is one character and four bytes in UTF-8 and in UTF-16 (Python Software Foundation, 2026); the chapter says 'utf-8' is the correct choice 99 percent of the time and points to Ned Batchelder's talk and a Computerphile video (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_Utf8Encoding",
+   "class_iri": "http://example.org/sen0414/ch08#Utf8Encoding",
+   "example": "len('caf\\xe9'.encode('utf-8')) == 5",
+   "definition": "Encoding turns text into bytes and decoding turns bytes back into text; in UTF-8 a character takes one to four bytes, so a string of four characters can be five bytes long, and encode() and decode() must use the same encoding.",
+   "io": {
+    "code": "('caf\\xe9'.encode('utf-8'), len('caf\\xe9'), len('caf\\xe9'.encode('utf-8')), 'caf\\xe9'.encode('utf-8').decode('utf-8') == 'caf\\xe9')",
+    "out": "(b'caf\\xc3\\xa9', 4, 5, True)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'caf\u00e9'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'utf-8'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'caf\u00e9'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "'caf\u00e9'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'utf-8'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "'caf\u00e9'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'utf-8'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "'utf-8'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'caf\u00e9'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "('caf\u00e9'.encode('utf-8'), len('caf\u00e9'), len('caf\u00e9'.encode('utf-8')), 'caf\u00e9'.encode('utf-8').decode('utf-8') == 'caf\u00e9')",
+      "focus": "len('caf\u00e9')",
+      "value": "4"
+     }
+    ]
+   }
+  },
+  {
+   "id": "EncodeDecodeErrors",
+   "label": "Encode decode errors",
+   "level": 3,
+   "parent": "TextEncodings",
+   "body": "Encoding 'caf\\xe9' as ascii raises UnicodeEncodeError: 'ascii' codec can't encode character '\\xe9' in position 3, decoding b'caf\\xc3' as utf-8 raises UnicodeDecodeError, errors='replace' gives b'caf?', 'backslashreplace' gives b'caf\\\\xe9' and 'ignore' gives b'caf', and decoding UTF-8 bytes as latin-1 succeeds but gives the wrong text; the chapter as read does not present them (Python Software Foundation, 2026) (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_EncodeDecodeErrors",
+   "class_iri": "http://example.org/sen0414/ch08#EncodeDecodeErrors",
+   "example": "'caf\\xe9'.encode('ascii', errors='replace')",
+   "definition": "A character the encoding cannot represent raises UnicodeEncodeError and bytes that do not form valid text raise UnicodeDecodeError, unless the errors argument names another handler such as replace, backslashreplace or ignore; decoding with the wrong encoding can succeed and give wrong text.",
+   "io": {
+    "code": "(ascii(b'caf\\xc3\\xa9'.decode('latin-1')), 'caf\\xe9'.encode('ascii', errors='replace'))",
+    "out": "(\"'caf\\\\xc3\\\\xa9'\", b'caf?')",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "ascii",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "b'caf\\xc3\\xa9'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'latin-1'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'caf\u00e9'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'ascii'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "keyword",
+         "kind": "keyword",
+         "children": [
+          {
+           "label": "'replace'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "FileEncoding",
+   "label": "File encoding",
+   "level": 3,
+   "parent": "TextEncodings",
+   "body": "Writing 'caf\\xe9' through a text wrapper with encoding='utf-8' leaves b'caf\\xc3\\xa9'; open() without encoding uses the locale encoding in Python 3.14.4, so a file written as UTF-8 was read back in a child process with the C locale and UTF-8 mode off under the ascii codec, which raised UnicodeDecodeError, while encoding='utf-8' read it correctly; PEP 686 makes UTF-8 mode the default from Python 3.15 (Python Software Foundation, 2026) (Inada, 2022); the chapter as read mentions files only as the place where encoding happens (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_FileEncoding",
+   "class_iri": "http://example.org/sen0414/ch08#FileEncoding",
+   "example": "open('note.txt', 'w', encoding='utf-8')",
+   "definition": "A text file is turned into bytes by an encoding; open() called without one uses the locale encoding in Python 3.14, which is why a program should name encoding='utf-8' when it writes or reads text it means to share.",
+   "io": {
+    "code": "(lambda io, b: (lambda w: (w.write('caf\\xe9'), w.flush(), b.getvalue())[2])(io.TextIOWrapper(b, encoding='utf-8')))(__import__('io'), __import__('io').BytesIO())",
+    "out": "b'caf\\xc3\\xa9'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Lambda",
+           "kind": "Lambda",
+           "children": [
+            {
+             "label": "arguments",
+             "kind": "arguments",
+             "children": [
+              {
+               "label": "arg",
+               "kind": "arg",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "Tuple",
+               "kind": "Tuple",
+               "children": [
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "w",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "'caf\u00e9'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "w",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "b",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "2",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "io",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "b",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "keyword",
+             "kind": "keyword",
+             "children": [
+              {
+               "label": "'utf-8'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "__import__",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'io'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'io'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ClipboardAndPrograms",
+   "label": "Clipboard and programs",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter's programs work on text from the clipboard and from the user (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_ClipboardAndPrograms",
+   "class_iri": "http://example.org/sen0414/ch08#ClipboardAndPrograms"
+  },
+  {
+   "id": "ClipboardPrograms",
+   "label": "Clipboard programs",
+   "level": 2,
+   "parent": "ClipboardAndPrograms",
+   "body": "The clipboard lets a program receive and hand over large text (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_ClipboardPrograms",
+   "class_iri": "http://example.org/sen0414/ch08#ClipboardPrograms"
+  },
+  {
+   "id": "ClipboardModule",
+   "label": "Clipboard module",
+   "level": 3,
+   "parent": "ClipboardPrograms",
+   "body": "pyperclip.copy('Hello, world!') and pyperclip.paste() send text to and receive text from the clipboard, and the module does not come with Python, so importing it on the build machine raised ModuleNotFoundError: No module named 'pyperclip' (Sweigart, 2025); the clipboard itself was not executed here, and the chapter's programs were run against a stand-in module that keeps the text in a variable (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_ClipboardModule",
+   "class_iri": "http://example.org/sen0414/ch08#ClipboardModule",
+   "example": "pyperclip.paste()",
+   "definition": "The third-party pyperclip module copies text to and from the computer's clipboard with copy() and paste(); it is not part of Python, so a program that imports it fails with ModuleNotFoundError where it is not installed."
+  },
+  {
+   "id": "ProjectPrograms",
+   "label": "Project programs",
+   "level": 2,
+   "parent": "ClipboardAndPrograms",
+   "body": "The chapter's clipboard projects, its Pig Latin program and its practice program (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_ProjectPrograms",
+   "class_iri": "http://example.org/sen0414/ch08#ProjectPrograms"
+  },
+  {
+   "id": "BulletPointAdder",
+   "label": "Bullet point adder",
+   "level": 3,
+   "parent": "ProjectPrograms",
+   "body": "Run unchanged against a stand-in clipboard, bulletPointAdder.py turns the four lines from Lists of animals to Lists of cultivars into the four lines with a star and a space in front, as printed; it loops with range(len(lines)) and joins with '\\n'.join(lines), and its step 2 listing ends with pyperclip.copy(text) on the unchanged text, which step 3 corrects by joining the lines (Sweigart, 2025); with Windows line ends split('\\n') leaves a carriage return in every line and a trailing newline gives a final line holding only a star, where splitlines() does not (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_BulletPointAdder",
+   "class_iri": "http://example.org/sen0414/ch08#BulletPointAdder",
+   "example": "lines[i] = '* ' + lines[i]",
+   "definition": "The bullet program takes text from the clipboard, splits it into lines, puts a star and a space before each and joins the lines back, so the four lines of the chapter's list come back as four bulleted lines.",
+   "io": {
+    "code": "'\\n'.join('* ' + line for line in 'Lists of animals\\nLists of cultivars'.split('\\n'))",
+    "out": "'* Lists of animals\\n* Lists of cultivars'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "'\\n'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "GeneratorExp",
+       "kind": "GeneratorExp",
+       "children": [
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "'* '",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "line",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "comprehension",
+         "kind": "comprehension",
+         "children": [
+          {
+           "label": "line",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "'Lists of animals\\nLists of cultivars'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "'\\n'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "AlternatingText",
+   "label": "Alternating text",
+   "level": 3,
+   "parent": "ProjectPrograms",
+   "body": "Run unchanged against a stand-in clipboard, alternatingText.py turns 'Hello, world!' into 'hElLo, WoRlD!' by switching on every character, spaces included; on the chapter's sentence the result begins iF YoU CoPy sOmE TeXt and ends with tHiS:, whereas the chapter prints a version that ends with ThIs: and has a line break inside, so its printed output was not reproduced and the cause was not established (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_AlternatingText",
+   "class_iri": "http://example.org/sen0414/ch08#AlternatingText",
+   "example": "make_uppercase = not make_uppercase",
+   "definition": "The alternating-text program walks over the characters of a string and switches between lower and upper case on every character, spaces and punctuation included, so the pattern of a word depends on its position in the text.",
+   "io": {
+    "code": "(lambda text: ''.join(c.upper() if i % 2 else c.lower() for i, c in enumerate(text)))('Hello, world!')",
+    "out": "'hElLo, WoRlD!'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "''",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "GeneratorExp",
+           "kind": "GeneratorExp",
+           "children": [
+            {
+             "label": "IfExp",
+             "kind": "IfExp",
+             "children": [
+              {
+               "label": "%",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "i",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "2",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "c",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "c",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "comprehension",
+             "kind": "comprehension",
+             "children": [
+              {
+               "label": "Tuple",
+               "kind": "Tuple",
+               "children": [
+                {
+                 "label": "i",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "c",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "enumerate",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "text",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'Hello, world!'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "InputValidation",
+   "label": "Input validation",
+   "level": 3,
+   "parent": "ProjectPrograms",
+   "body": "validateInput.py printed exactly the prompts the chapter shows for the inputs forty two, 42, secr3t! and secr3t: it rejected the first, accepted the second, rejected the third and accepted the fourth (Sweigart, 2025); because isdecimal() accepts Arabic-Indic digits and isalnum() accepts accented letters, an age check with int() and a letters-and-numbers rule need isascii() where only ASCII is meant (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_InputValidation",
+   "class_iri": "http://example.org/sen0414/ch08#InputValidation",
+   "example": "if age.isdecimal(): break",
+   "definition": "The validation program repeats a question with a while loop until isdecimal() accepts the age and isalnum() accepts the password, and rejects 'forty two' and 'secr3t!'.",
+   "io": {
+    "code": "('42'.isdecimal(), 'forty two'.isdecimal(), 'secr3t'.isalnum(), 'secr3t!'.isalnum())",
+    "out": "(True, False, True, False)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'42'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'forty two'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'secr3t'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'secr3t!'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PigLatin",
+   "label": "Pig latin",
+   "level": 3,
+   "parent": "ProjectPrograms",
+   "body": "Run unchanged, pigLat.py prints Ymay amenay isyay ALYAY EIGARTSWAY andyay Iyay amyay 4,000 yearsyay oldyay. for the chapter's message, whose split() gives eleven words; it treats y as a vowel, so years becomes yearsyay and rhythm becomes ythmrhay, it loses the capital of a word such as It's because istitle() is False for it, giving it'syay, and it treats an accented e as a consonant, so a word starting with one is moved, which the chapter as read does not say; the walk-through line with += shows seven exclamation marks for Wait!!! where the listing keeps three (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch08#S_PigLatin",
+   "class_iri": "http://example.org/sen0414/ch08#PigLatin",
+   "example": "prefix_consonants += word[0]",
+   "definition": "The Pig Latin program splits a message into words, sets aside punctuation at both ends, moves leading consonants to the end followed by ay, adds yay to words that start with a vowel or y, and restores upper or title case.",
+   "io": {
+    "code": "[(lambda w: (lambda i: w[i:] + (w[:i] + 'ay' if i else 'yay'))(next((k for k, c in enumerate(w) if c in 'aeiouy'), len(w))))(w) for w in ('sweigart', 'old', 'chair', 'years')]",
+    "out": "['eigartsway', 'oldyay', 'airchay', 'yearsyay']",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Lambda",
+         "kind": "Lambda",
+         "children": [
+          {
+           "label": "arguments",
+           "kind": "arguments",
+           "children": [
+            {
+             "label": "arg",
+             "kind": "arg",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Lambda",
+             "kind": "Lambda",
+             "children": [
+              {
+               "label": "arguments",
+               "kind": "arguments",
+               "children": [
+                {
+                 "label": "arg",
+                 "kind": "arg",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "+",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "Subscript",
+                 "kind": "Subscript",
+                 "children": [
+                  {
+                   "label": "w",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "Slice",
+                   "kind": "Slice",
+                   "children": [
+                    {
+                     "label": "i",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "label": "IfExp",
+                 "kind": "IfExp",
+                 "children": [
+                  {
+                   "label": "i",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "+",
+                   "kind": "BinOp",
+                   "children": [
+                    {
+                     "label": "Subscript",
+                     "kind": "Subscript",
+                     "children": [
+                      {
+                       "label": "w",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "Slice",
+                       "kind": "Slice",
+                       "children": [
+                        {
+                         "label": "i",
+                         "kind": "Name",
+                         "children": []
+                        }
+                       ]
+                      }
+                     ]
+                    },
+                    {
+                     "label": "'ay'",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "'yay'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "next",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "GeneratorExp",
+               "kind": "GeneratorExp",
+               "children": [
+                {
+                 "label": "k",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "comprehension",
+                 "kind": "comprehension",
+                 "children": [
+                  {
+                   "label": "Tuple",
+                   "kind": "Tuple",
+                   "children": [
+                    {
+                     "label": "k",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "c",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "call",
+                   "kind": "Call",
+                   "children": [
+                    {
+                     "label": "enumerate",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "w",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "Compare",
+                   "kind": "Compare",
+                   "children": [
+                    {
+                     "label": "c",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "'aeiouy'",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "len",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "w",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "w",
+         "kind": "Name",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "w",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'sweigart'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'old'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'chair'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'years'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "TablePrinter",
+   "label": "Table printer",
+   "level": 3,
+   "parent": "ProjectPrograms",
+   "body": "The chapter asks for printTable(tableData) for three lists of four strings with right-justified columns, and a solution that finds the widths [8, 5, 5] with a loop and prints ' ' + item.rjust(width) for each cell prints the four lines of the chapter's table exactly; the chapter ends with 10 practice questions and this one practice program (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch08#S_TablePrinter",
+   "class_iri": "http://example.org/sen0414/ch08#TablePrinter",
+   "example": "printTable(tableData)",
+   "definition": "The practice program prints a list of lists of strings as a table with right-justified columns, each as wide as its longest string, found first with a loop over the lists.",
+   "io": {
+    "code": "(lambda t: [''.join(' ' + col[r].rjust(max(map(len, col))) for col in t) for r in range(len(t[0]))])([['apples', 'oranges', 'cherries', 'banana'], ['Alice', 'Bob', 'Carol', 'David'], ['dogs', 'cats', 'moose', 'goose']])",
+    "out": "['   apples Alice  dogs', '  oranges   Bob  cats', ' cherries Carol moose', '   banana David goose']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "ListComp",
+         "kind": "ListComp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "''",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "GeneratorExp",
+             "kind": "GeneratorExp",
+             "children": [
+              {
+               "label": "+",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "' '",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "Subscript",
+                     "kind": "Subscript",
+                     "children": [
+                      {
+                       "label": "col",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "r",
+                       "kind": "Name",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "label": "call",
+                   "kind": "Call",
+                   "children": [
+                    {
+                     "label": "max",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "map",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "len",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "col",
+                       "kind": "Name",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "comprehension",
+               "kind": "comprehension",
+               "children": [
+                {
+                 "label": "col",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "t",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "comprehension",
+           "kind": "comprehension",
+           "children": [
+            {
+             "label": "r",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "range",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "len",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "Subscript",
+                 "kind": "Subscript",
+                 "children": [
+                  {
+                   "label": "t",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "0",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'apples'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'oranges'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'cherries'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'banana'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'Alice'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Bob'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Carol'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'David'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'dogs'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'cats'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'moose'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'goose'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  }
+ ],
+ "relations": [
+  {
+   "source": "StringQuoting",
+   "target": "StringLiterals",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "QuoteStyles",
+   "target": "StringQuoting",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "EscapeSequences",
+   "target": "StringQuoting",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "StringPrefixes",
+   "target": "StringQuoting",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "UnrecognizedEscapes",
+   "target": "StringQuoting",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LiteralForms",
+   "target": "StringLiterals",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RawStrings",
+   "target": "LiteralForms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MultilineStrings",
+   "target": "LiteralForms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MultilineComments",
+   "target": "LiteralForms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Positions",
+   "target": "StringAccess",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "StringIndexing",
+   "target": "Positions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "StringSlicing",
+   "target": "Positions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "StringProperties",
+   "target": "StringAccess",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "StringImmutability",
+   "target": "StringProperties",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "InOperator",
+   "target": "StringProperties",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FormatInterpolation",
+   "target": "StringFormatting",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FStrings",
+   "target": "FormatInterpolation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FormatSpecifiers",
+   "target": "FormatInterpolation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DebugAndConversions",
+   "target": "FormatInterpolation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TemplateStrings",
+   "target": "FormatInterpolation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "OlderStyles",
+   "target": "StringFormatting",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Concatenation",
+   "target": "OlderStyles",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PercentFormatting",
+   "target": "OlderStyles",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FormatMethod",
+   "target": "OlderStyles",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TextCase",
+   "target": "StringMethods",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ChangingCase",
+   "target": "TextCase",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CaseTests",
+   "target": "TextCase",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CaseFolding",
+   "target": "TextCase",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MethodChaining",
+   "target": "TextCase",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TextChecks",
+   "target": "StringMethods",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CharacterTests",
+   "target": "TextChecks",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "UnicodeDigits",
+   "target": "TextChecks",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "StartsEndsWith",
+   "target": "TextChecks",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "JoiningAndSplittingText",
+   "target": "StringMethods",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "JoinMethod",
+   "target": "JoiningAndSplittingText",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SplitMethod",
+   "target": "JoiningAndSplittingText",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WhitespaceSplit",
+   "target": "JoiningAndSplittingText",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SplitLines",
+   "target": "JoiningAndSplittingText",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PartitionMethod",
+   "target": "JoiningAndSplittingText",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TextSpacing",
+   "target": "StringMethods",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "JustifyMethods",
+   "target": "TextSpacing",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "StripMethods",
+   "target": "TextSpacing",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PrefixSuffixRemoval",
+   "target": "TextSpacing",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Searching",
+   "target": "StringMethods",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FindAndCount",
+   "target": "Searching",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ReplaceMethod",
+   "target": "Searching",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CodePointConversion",
+   "target": "CharactersAndBytes",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "OrdAndChr",
+   "target": "CodePointConversion",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TextEncodings",
+   "target": "CharactersAndBytes",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Utf8Encoding",
+   "target": "TextEncodings",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "EncodeDecodeErrors",
+   "target": "TextEncodings",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FileEncoding",
+   "target": "TextEncodings",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ClipboardPrograms",
+   "target": "ClipboardAndPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ClipboardModule",
+   "target": "ClipboardPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ProjectPrograms",
+   "target": "ClipboardAndPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "BulletPointAdder",
+   "target": "ProjectPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AlternatingText",
+   "target": "ProjectPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "InputValidation",
+   "target": "ProjectPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PigLatin",
+   "target": "ProjectPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TablePrinter",
+   "target": "ProjectPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "UnrecognizedEscapes",
+   "target": "RawStrings",
+   "type": "mentions",
+   "evidence": "the document's section on Unrecognized escapes names Raw strings"
+  }
+ ],
+ "agents": [
+  {
+   "id": "agent-StringQuoting",
+   "name": "String quoting agent",
+   "subject": "StringQuoting",
+   "covers": [
+    "QuoteStyles",
+    "EscapeSequences",
+    "StringPrefixes",
+    "UnrecognizedEscapes",
+    "StringQuoting"
+   ]
+  },
+  {
+   "id": "agent-LiteralForms",
+   "name": "Literal forms agent",
+   "subject": "LiteralForms",
+   "covers": [
+    "RawStrings",
+    "MultilineStrings",
+    "MultilineComments",
+    "LiteralForms"
+   ]
+  },
+  {
+   "id": "agent-Positions",
+   "name": "Positions agent",
+   "subject": "Positions",
+   "covers": [
+    "StringIndexing",
+    "StringSlicing",
+    "Positions"
+   ]
+  },
+  {
+   "id": "agent-StringProperties",
+   "name": "String properties agent",
+   "subject": "StringProperties",
+   "covers": [
+    "StringImmutability",
+    "InOperator",
+    "StringProperties"
+   ]
+  },
+  {
+   "id": "agent-FormatInterpolation",
+   "name": "Format interpolation agent",
+   "subject": "FormatInterpolation",
+   "covers": [
+    "FStrings",
+    "FormatSpecifiers",
+    "DebugAndConversions",
+    "TemplateStrings",
+    "FormatInterpolation"
+   ]
+  },
+  {
+   "id": "agent-OlderStyles",
+   "name": "Older styles agent",
+   "subject": "OlderStyles",
+   "covers": [
+    "Concatenation",
+    "PercentFormatting",
+    "FormatMethod",
+    "OlderStyles"
+   ]
+  },
+  {
+   "id": "agent-TextCase",
+   "name": "Text case agent",
+   "subject": "TextCase",
+   "covers": [
+    "ChangingCase",
+    "CaseTests",
+    "CaseFolding",
+    "MethodChaining",
+    "TextCase"
+   ]
+  },
+  {
+   "id": "agent-TextChecks",
+   "name": "Text checks agent",
+   "subject": "TextChecks",
+   "covers": [
+    "CharacterTests",
+    "UnicodeDigits",
+    "StartsEndsWith",
+    "TextChecks"
+   ]
+  },
+  {
+   "id": "agent-JoiningAndSplittingText",
+   "name": "Joining and splitting text agent",
+   "subject": "JoiningAndSplittingText",
+   "covers": [
+    "JoinMethod",
+    "SplitMethod",
+    "WhitespaceSplit",
+    "SplitLines",
+    "PartitionMethod",
+    "JoiningAndSplittingText"
+   ]
+  },
+  {
+   "id": "agent-TextSpacing",
+   "name": "Text spacing agent",
+   "subject": "TextSpacing",
+   "covers": [
+    "JustifyMethods",
+    "StripMethods",
+    "PrefixSuffixRemoval",
+    "TextSpacing"
+   ]
+  },
+  {
+   "id": "agent-Searching",
+   "name": "Searching agent",
+   "subject": "Searching",
+   "covers": [
+    "FindAndCount",
+    "ReplaceMethod",
+    "Searching"
+   ]
+  },
+  {
+   "id": "agent-CodePointConversion",
+   "name": "Code point conversion agent",
+   "subject": "CodePointConversion",
+   "covers": [
+    "OrdAndChr",
+    "CodePointConversion"
+   ]
+  },
+  {
+   "id": "agent-TextEncodings",
+   "name": "Text encodings agent",
+   "subject": "TextEncodings",
+   "covers": [
+    "Utf8Encoding",
+    "EncodeDecodeErrors",
+    "FileEncoding",
+    "TextEncodings"
+   ]
+  },
+  {
+   "id": "agent-ClipboardPrograms",
+   "name": "Clipboard programs agent",
+   "subject": "ClipboardPrograms",
+   "covers": [
+    "ClipboardModule",
+    "ClipboardPrograms"
+   ]
+  },
+  {
+   "id": "agent-ProjectPrograms",
+   "name": "Project programs agent",
+   "subject": "ProjectPrograms",
+   "covers": [
+    "BulletPointAdder",
+    "AlternatingText",
+    "InputValidation",
+    "PigLatin",
+    "TablePrinter",
+    "ProjectPrograms"
+   ]
+  }
+ ],
+ "refs": [
+  [
+   "Automate the Boring Stuff with Python, 3rd edition - Chapter 8, Strings and Text Editing (Al Sweigart, No Starch Press, 2025)",
+   "https://automatetheboringstuff.com/3e/chapter8.html"
+  ],
+  [
+   "PEP 3101 - Advanced String Formatting (Talin, 2006; Python 3.0)",
+   "https://peps.python.org/pep-3101/"
+  ],
+  [
+   "PEP 498 - Literal String Interpolation (Smith, 2015; Python 3.6)",
+   "https://peps.python.org/pep-0498/"
+  ],
+  [
+   "PEP 686 - Make UTF-8 mode default (Inada, 2022; Python 3.15)",
+   "https://peps.python.org/pep-0686/"
+  ],
+  [
+   "PEP 701 - Syntactic formalization of f-strings (Galindo Salgado, Taskaya, Nikolaou and Gomez Macias, 2022; Python 3.12)",
+   "https://peps.python.org/pep-0701/"
+  ],
+  [
+   "PEP 750 - Template Strings (Baker, van Rossum, Everitt, Aono, Nikolaou and Peck, 2024; Python 3.14)",
+   "https://peps.python.org/pep-0750/"
+  ],
+  [
+   "The Python Language Reference, 2. Lexical analysis - string and bytes literals, escape sequences, f-strings and t-strings (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/reference/lexical_analysis.html"
+  ],
+  [
+   "The Python Standard Library, Built-in Functions - ord, chr and open (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/functions.html"
+  ],
+  [
+   "The Python Standard Library, Built-in Types - string methods, f-strings, t-strings and printf-style formatting (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/stdtypes.html"
+  ],
+  [
+   "The Python Standard Library, codecs - error handlers for encoding and decoding (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/codecs.html"
+  ],
+  [
+   "The Python Standard Library, string - format specification mini-language, capwords and Template (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/string.html"
+  ],
+  [
+   "The Python Standard Library, string.templatelib - support for template string literals (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/string.templatelib.html"
+  ],
+  [
+   "The Python Tutorial, 3. An Informal Introduction to Python - strings, indexing, slicing, immutability (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/tutorial/introduction.html"
+  ],
+  [
+   "The Python Tutorial, 7. Input and Output - fancier output formatting, str and repr (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/tutorial/inputoutput.html"
+  ],
+  [
+   "Unicode HOWTO - code points, encodings, UTF-8 and the default source encoding (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/howto/unicode.html"
+  ]
+ ],
+ "resources": [
+  {
+   "kind": "documentation",
+   "title": "Automate the Boring Stuff with Python, 3rd edition: Chapter 8, Strings and Text Editing",
+   "url": "https://automatetheboringstuff.com/3e/chapter8.html",
+   "source": "automatetheboringstuff.com",
+   "why": "The course textbook's own chapter, free online: string literals, indexes and slices, f-strings, string methods, code points, the clipboard projects and Pig Latin.",
+   "concept": "StringLiterals"
+  },
+  {
+   "kind": "documentation",
+   "title": "3. An Informal Introduction to Python",
+   "url": "https://docs.python.org/3/tutorial/introduction.html",
+   "source": "Python documentation",
+   "why": "The tutorial's first account of strings: quotes, escapes, raw strings, triple quotes, indexing, slicing and immutability.",
+   "concept": "StringSlicing"
+  },
+  {
+   "kind": "documentation",
+   "title": "7. Input and Output",
+   "url": "https://docs.python.org/3/tutorial/inputoutput.html",
+   "source": "Python documentation",
+   "why": "The tutorial section on fancier output formatting: f-strings, str.format() and the difference between str() and repr().",
+   "concept": "FStrings"
+  },
+  {
+   "kind": "documentation",
+   "title": "Built-in Types",
+   "url": "https://docs.python.org/3/library/stdtypes.html",
+   "source": "Python documentation",
+   "why": "Every string method with its exact rules, plus the sections on f-strings, t-strings and printf-style formatting.",
+   "concept": "CharacterTests"
+  },
+  {
+   "kind": "documentation",
+   "title": "2. Lexical analysis",
+   "url": "https://docs.python.org/3/reference/lexical_analysis.html",
+   "source": "Python documentation",
+   "why": "The language reference for string literals, prefixes, the full table of escape sequences and the grammar of f-strings and t-strings.",
+   "concept": "EscapeSequences"
+  },
+  {
+   "kind": "documentation",
+   "title": "string \u2014 Common string operations",
+   "url": "https://docs.python.org/3/library/string.html",
+   "source": "Python documentation",
+   "why": "The format specification mini-language behind f-string specifiers, plus capwords and string.Template.",
+   "concept": "FormatSpecifiers"
+  },
+  {
+   "kind": "documentation",
+   "title": "string.templatelib \u2014 Support for template string literals",
+   "url": "https://docs.python.org/3/library/string.templatelib.html",
+   "source": "Python documentation",
+   "why": "The Template and Interpolation types that a t-string produces (Python 3.14).",
+   "concept": "TemplateStrings"
+  },
+  {
+   "kind": "documentation",
+   "title": "Unicode HOWTO",
+   "url": "https://docs.python.org/3/howto/unicode.html",
+   "source": "Python documentation",
+   "why": "Code points, encodings, UTF-8 and bytes versus text, explained for Python programmers.",
+   "concept": "Utf8Encoding"
+  },
+  {
+   "kind": "documentation",
+   "title": "codecs \u2014 Codec registry and base classes",
+   "url": "https://docs.python.org/3/library/codecs.html",
+   "source": "Python documentation",
+   "why": "The table of error handlers (strict, ignore, replace, backslashreplace and others) that encode() and decode() accept.",
+   "concept": "EncodeDecodeErrors"
+  },
+  {
+   "kind": "pep",
+   "title": "PEP 498 \u2013 Literal String Interpolation",
+   "url": "https://peps.python.org/pep-0498/",
+   "source": "peps.python.org",
+   "why": "The proposal that added f-strings in Python 3.6.",
+   "concept": "FStrings"
+  },
+  {
+   "kind": "pep",
+   "title": "PEP 701 \u2013 Syntactic formalization of f-strings",
+   "url": "https://peps.python.org/pep-0701/",
+   "source": "peps.python.org",
+   "why": "Why Python 3.12 lifted the restrictions on quotes, backslashes and comments inside f-string fields.",
+   "concept": "DebugAndConversions"
+  },
+  {
+   "kind": "pep",
+   "title": "PEP 750 \u2013 Template Strings",
+   "url": "https://peps.python.org/pep-0750/",
+   "source": "peps.python.org",
+   "why": "The proposal behind t-strings in Python 3.14 and the reasons for a Template object instead of a str.",
+   "concept": "TemplateStrings"
+  },
+  {
+   "kind": "pep",
+   "title": "PEP 686 \u2013 Make UTF-8 mode default",
+   "url": "https://peps.python.org/pep-0686/",
+   "source": "peps.python.org",
+   "why": "Why open() without an encoding is locale-dependent today and the plan to make UTF-8 the default in Python 3.15.",
+   "concept": "FileEncoding"
+  },
+  {
+   "kind": "documentation",
+   "title": "Pragmatic Unicode (Ned Batchelder)",
+   "url": "https://nedbatchelder.com/text/unipain.html",
+   "source": "nedbatchelder.com",
+   "why": "The talk that the chapter recommends on Unicode. It was opened and its title read; none of the chapter's findings rests on it.",
+   "concept": "OrdAndChr"
+  },
+  {
+   "kind": "interactive",
+   "title": "Python Tutor",
+   "url": "https://pythontutor.com/",
+   "source": "pythontutor.com",
+   "why": "A site for stepping through Python programs; it was opened and its title read, and is offered for trying the chapter's string programs line by line.",
+   "concept": "PigLatin"
+  }
+ ],
+ "resources_checked": "2026-10-01"
+}

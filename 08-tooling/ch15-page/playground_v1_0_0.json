@@ -1,0 +1,6 @@
+{
+ "_version": "1.0.0",
+ "label": "Google Sheets: the fake-ledger audit and column letters (uses input)",
+ "code": "text = input('Transactions (sender,recipient,amount separated by |): ')\naccounts = {}\nfor line in text.split('|'):\n    sender, recipient, amount = line.split(',')\n    amount = int(amount)   # cell values are text\n    if sender == 'PRE-MINE':\n        accounts.setdefault(recipient, 0)\n        accounts[recipient] += amount\n    else:\n        accounts.setdefault(sender, 0)\n        accounts.setdefault(recipient, 0)\n        accounts[sender] -= amount\n        accounts[recipient] += amount\nprint(accounts)\ntotal = 0\nfor amount in accounts.values():\n    total += amount\nprint('Total Boringcoins:', total)\n\ndef column_letter(n):\n    letters = ''\n    while n > 0:\n        n, r = divmod(n, 26)\n        if r == 0:\n            r = 26\n            n -= 1\n        letters = chr(64 + r) + letters\n    return letters\nprint(column_letter(len(accounts)), column_letter(999))",
+ "inputs": "PRE-MINE,Alice,1000|Alice,Bob,300|Bob,Carol,50"
+}

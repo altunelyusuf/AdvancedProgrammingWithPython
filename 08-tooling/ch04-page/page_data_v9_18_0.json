@@ -1,0 +1,1468 @@
+{
+ "_version": "9.18.0",
+ "visuals": {},
+ "course": {
+  "_version": "1.3.3",
+  "name": "SEN0414 Advanced Programming",
+  "line": "SEN0414 Advanced Programming",
+  "chapter_sub": "chapter {n} of Automate the Boring Stuff with Python, 3rd edition",
+  "chapter_intro": "Chapter {n} of <i>Automate the Boring Stuff with Python</i>, 3rd edition (Sweigart, 2025), renewed for an advanced course.",
+  "playground": {
+   "label": "Scope and errors (uses input)",
+   "code": "eggs = 'global'\ndef spam():\n    eggs = 'spam local'\n    return eggs\ndef divide(d):\n    try:\n        return 42 / d\n    except ZeroDivisionError:\n        return None\nprint(spam(), eggs)\nprint(divide(int(input('Divisor: '))))",
+   "inputs": "2"
+  },
+  "corpus": {
+   "book_pin_source": "02-textbook/sen0414_textbook_v1_0_0.ttl",
+   "book": [
+    "automate-python-book-3e/01-ontologies/automate_python_3e_ch{nn}_v1_0_0.ttl"
+   ],
+   "course": [
+    "00-course-profile/sen0414_course_v1_0_0.ttl",
+    "01-outcomes/sen0414_outcomes_v1_0_0.ttl",
+    "02-textbook/sen0414_textbook_v1_0_0.ttl",
+    "03-materials/sen0414_materials_v1_22_0.ttl"
+   ]
+  }
+ },
+ "discussion": [],
+ "findings": [
+  [
+   "Background",
+   "Chapter 4 of the 3rd edition teaches functions: the def statement that defines one and the call that runs it, arguments passed into parameters, return values and the None value, named parameters such as print's sep and end, the call stack that remembers where each call returns to, the local and the global scope and four rules for telling them apart, the global statement, and try and except for recovering from an error, closing with two short animation programs."
+  ],
+  [
+   "Comparative analysis",
+   "One printed output of the chapter has changed: it shows UnboundLocalError: local variable 'eggs' referenced before assignment, while Python 3.14.4 says cannot access local variable 'eggs' where it is not associated with a value, the wording the Programming FAQ now prints; the class, its parent NameError and the cause are unchanged, and the chapter's other printed error messages, NameError and ZeroDivisionError, are the same under 3.14.4."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's copy-and-paste listing, which it shows to argue for functions, is not equivalent to the function version it stands for: its last line is print(' Good evening!') with a leading space, so running the two programs gives outputs that differ in exactly that line - which is the maintenance hazard of duplicated code the passage warns about."
+  ],
+  [
+   "Comparative analysis",
+   "The reference documentation explains why the chapter's fourth scope rule and its UnboundLocalError follow from one fact: which names are local is decided by scanning the whole function body for name-binding operations, so an assignment anywhere in a function makes the name local everywhere in it; the standard library's symtable module shows the decision - the same name eggs is global in a function with a global statement, local in one that assigns it, and global in one that only reads it."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's call-stack example reproduces line for line, and the stack itself can be looked at from the program: the standard library's traceback module lists the frames a call is running inside, and the interpreter refuses to grow the stack without end - the recursion limit is 1000 and a function that calls itself forever raises RecursionError, a subclass of RuntimeError, rather than crashing."
+  ],
+  [
+   "Conclusion",
+   "For an advanced course, chapter 4 is best taught as name resolution seen from the function: a call creates a scope, the compiler decides which names in it are local, the call stack holds the scopes that are waiting, and try and except decide where in that stack an error is handled; the book's rules are the four cases of one lookup rule, the printed messages should be regenerated under the Python in use, and parameters, defaults, nonlocal, annotations and the 3.14 except syntax are what the chapter leaves for the course to add."
+  ],
+  [
+   "Contemporary developments",
+   "Beyond the chapter, a function's parameters can be positional-only, with a slash, or keyword-only, with a star, and calling them the wrong way raises a TypeError that names the problem; a default argument value is evaluated once, so a mutable default such as an empty list is shared between calls and the tutorial's remedy is a default of None; and nonlocal lets an inner function rebind a name of the enclosing function, the middle case between local and global that the chapter does not cover."
+  ],
+  [
+   "Contemporary developments",
+   "Python 3.14 changed two things a course on functions meets: annotations on a function are no longer evaluated when it is defined, so a function annotated with names that do not exist yet can be defined and called, and reading its annotations raises NameError until they are evaluated on request; and except may list several exception types without brackets when no as clause is used, which 3.13 and earlier reject."
+  ]
+ ],
+ "unit": null,
+ "research_file": "sen0414_ch04_research_v1_0_0.ttl",
+ "chapter": 4,
+ "title": "Functions for an advanced course: chapter 4 of the 3rd edition and today's Python",
+ "python": "Python 3.14.4",
+ "nodes": [
+  {
+   "id": "Function",
+   "label": "Function",
+   "level": 1,
+   "parent": null,
+   "body": "Chapter 4 is about giving a block of code a name so it can be run from many places, passing values in, getting a value out, and keeping its variables to itself (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_Function",
+   "class_iri": "http://example.org/sen0414/ch04#Function"
+  },
+  {
+   "id": "Definition",
+   "label": "Definition",
+   "level": 2,
+   "parent": "Function",
+   "body": "Creating Functions introduces the def statement and the call that runs it, and the reason for both: not repeating code (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_Definition",
+   "class_iri": "http://example.org/sen0414/ch04#Definition"
+  },
+  {
+   "id": "DefStatement",
+   "label": "Def statement",
+   "level": 3,
+   "parent": "Definition",
+   "body": "A def statement defines a function named hello() and the indented block after it is the body; that code executes when the function is called, not when it is first defined (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_DefStatement",
+   "class_iri": "http://example.org/sen0414/ch04#DefStatement",
+   "example": "def hello():",
+   "definition": "A def statement creates a function and binds its name; the body runs when the function is called, not when it is defined."
+  },
+  {
+   "id": "FunctionCall",
+   "label": "Function call",
+   "level": 3,
+   "parent": "Definition",
+   "body": "A function call is the function's name followed by parentheses, possibly with arguments between them; execution jumps to the first line of the body and returns to the line after the call when the body ends (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_FunctionCall",
+   "class_iri": "http://example.org/sen0414/ch04#FunctionCall",
+   "example": "hello()",
+   "definition": "A call is the function's name followed by parentheses, with any arguments inside, and execution jumps into the body and comes back."
+  },
+  {
+   "id": "Deduplication",
+   "label": "Deduplication",
+   "level": 3,
+   "parent": "Definition",
+   "body": "A major purpose of functions is to group code that gets executed multiple times, because with pasted copies a fix has to be made in every place; the chapter's own pasted listing ends with print(' Good evening!') with a stray leading space, so its output differs from the function version's last line (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_Deduplication",
+   "class_iri": "http://example.org/sen0414/ch04#Deduplication",
+   "example": "one def, three calls",
+   "definition": "A function groups code that runs more than once, so a fix is made in one place instead of in every pasted copy."
+  },
+  {
+   "id": "Parameters",
+   "label": "Parameters",
+   "level": 2,
+   "parent": "Function",
+   "body": "Arguments and Parameters and Named Parameters describe how values get into a function (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_Parameters",
+   "class_iri": "http://example.org/sen0414/ch04#Parameters"
+  },
+  {
+   "id": "ParameterAndArgument",
+   "label": "Parameter and argument",
+   "level": 3,
+   "parent": "Parameters",
+   "body": "Values passed in a call are arguments and the variables that receive them are parameters, as in def say_hello_to(name) called with say_hello_to('Alice'); the value in a parameter is forgotten when the function returns, so print(name) after the call raises an error (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_ParameterAndArgument",
+   "class_iri": "http://example.org/sen0414/ch04#ParameterAndArgument",
+   "example": "say_hello_to('Alice')",
+   "definition": "An argument is the value passed in a call, a parameter is the variable that receives it, and the parameter is forgotten when the function returns."
+  },
+  {
+   "id": "NamedParameter",
+   "label": "Named parameter",
+   "level": 3,
+   "parent": "Parameters",
+   "body": "Python identifies most arguments by position but named parameters by the name placed before them, so print('Hello', end='') prints no newline and print('cats', 'dogs', 'mice', sep=',') prints cats,dogs,mice; print's documentation makes sep, end, file and flush keyword-only (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch04#S_NamedParameter",
+   "class_iri": "http://example.org/sen0414/ch04#NamedParameter",
+   "example": "print('a', 'b', sep=',')",
+   "definition": "A named parameter is identified by its name in the call rather than its position; print's sep and end are two.",
+   "io": {
+    "code": "(lambda b: (print('cats', 'dogs', 'mice', sep=',', file=b), b.getvalue())[1])(__import__('io').StringIO())",
+    "out": "'cats,dogs,mice\\n'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "print",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'cats'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'dogs'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'mice'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "keyword",
+               "kind": "keyword",
+               "children": [
+                {
+                 "label": "','",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "keyword",
+               "kind": "keyword",
+               "children": [
+                {
+                 "label": "b",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "b",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'io'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PositionalOnlyParameter",
+   "label": "Positional only parameter",
+   "level": 3,
+   "parent": "Parameters",
+   "body": "Parameters listed before a slash in a definition can only be passed by position, so calling such a function with the name raises a TypeError that says some positional-only arguments were passed as keyword arguments (Hastings et al., 2018).",
+   "section_iri": "http://example.org/sen0414/ch04#S_PositionalOnlyParameter",
+   "class_iri": "http://example.org/sen0414/ch04#PositionalOnlyParameter",
+   "example": "def f(a, /, b):",
+   "definition": "Parameters before a slash can only be passed by position; passing one by name raises a TypeError.",
+   "io": {
+    "code": "(lambda a, /, b: a * b)(3, b=4)",
+    "out": "12",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "*",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "a",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "b",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "3",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "keyword",
+       "kind": "keyword",
+       "children": [
+        {
+         "label": "4",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "KeywordOnlyParameter",
+   "label": "Keyword only parameter",
+   "level": 3,
+   "parent": "Parameters",
+   "body": "Parameters listed after a star in a definition can only be passed by keyword, so passing one by position raises a TypeError, which turns a call that could be misread into a call that cannot (Talin, 2006).",
+   "section_iri": "http://example.org/sen0414/ch04#S_KeywordOnlyParameter",
+   "class_iri": "http://example.org/sen0414/ch04#KeywordOnlyParameter",
+   "example": "def f(a, *, b=2):",
+   "definition": "Parameters after a star can only be passed by name, so a call cannot get them wrong by position.",
+   "io": {
+    "code": "(lambda a, *, b=2: a + b)(1, b=5)",
+    "out": "6",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "a",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "b",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "1",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "keyword",
+       "kind": "keyword",
+       "children": [
+        {
+         "label": "5",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "DefaultArgument",
+   "label": "Default argument",
+   "level": 3,
+   "parent": "Parameters",
+   "body": "A default value is evaluated only once, when the function is defined, so a default such as an empty list accumulates the arguments of successive calls, and the tutorial's remedy is a default of None that the function replaces with a new list (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch04#S_DefaultArgument",
+   "class_iri": "http://example.org/sen0414/ch04#DefaultArgument",
+   "example": "def f(a, L=None):",
+   "definition": "A default value is evaluated once, when the function is defined, so a mutable default is shared between calls; the tutorial's remedy is a default of None."
+  },
+  {
+   "id": "Result",
+   "label": "Result",
+   "level": 1,
+   "parent": null,
+   "body": "Return Values and return Statements and The None Value describe what a call evaluates to (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_Result",
+   "class_iri": "http://example.org/sen0414/ch04#Result"
+  },
+  {
+   "id": "ReturnValue",
+   "label": "Return value",
+   "level": 2,
+   "parent": "Result",
+   "body": "The value a function call evaluates to is its return value, and because a call is an expression it can be an argument to another call, as in print(get_answer(random.randint(1, 9))) (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_ReturnValue",
+   "class_iri": "http://example.org/sen0414/ch04#ReturnValue"
+  },
+  {
+   "id": "ReturnStatement",
+   "label": "Return statement",
+   "level": 3,
+   "parent": "ReturnValue",
+   "body": "A return statement consists of the return keyword and the value or expression to return; if an expression list is present it is evaluated, else None is substituted, and control leaves the function (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch04#S_ReturnStatement",
+   "class_iri": "http://example.org/sen0414/ch04#ReturnStatement",
+   "example": "return 42 / divide_by",
+   "definition": "A return statement leaves the function with the value of its expression, so a call can be used wherever a value can.",
+   "io": {
+    "code": "(lambda d: 42 / d)(2)",
+    "out": "21.0",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "/",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "42",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "d",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "2",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ImplicitNone",
+   "label": "Implicit none",
+   "level": 3,
+   "parent": "ReturnValue",
+   "body": "Behind the scenes Python adds return None to the end of any function with no return statement, and a bare return also returns None (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_ImplicitNone",
+   "class_iri": "http://example.org/sen0414/ch04#ImplicitNone",
+   "example": "def f(): pass",
+   "definition": "A function without a return statement, or with a bare return, returns None.",
+   "io": {
+    "code": "(lambda: None)() is None",
+    "out": "True",
+    "tree": {
+     "label": "Compare",
+     "kind": "Compare",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Lambda",
+         "kind": "Lambda",
+         "children": [
+          {
+           "label": "arguments",
+           "kind": "arguments",
+           "children": []
+          },
+          {
+           "label": "None",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "None",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "NoneType",
+   "label": "None type",
+   "level": 2,
+   "parent": "Result",
+   "body": "The None value stands for the absence of a value and is the only value of the NoneType data type (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_NoneType",
+   "class_iri": "http://example.org/sen0414/ch04#NoneType"
+  },
+  {
+   "id": "NoneValue",
+   "label": "None value",
+   "level": 3,
+   "parent": "NoneType",
+   "body": "None is the return value of print, so spam = print('Hello!') stores it, and PEP 8 says comparisons to singletons like None should always be done with is or is not, not with equality operators, where the chapter writes None == spam (Sweigart, 2025) (Van Rossum et al., 2001).",
+   "section_iri": "http://example.org/sen0414/ch04#S_NoneValue",
+   "class_iri": "http://example.org/sen0414/ch04#NoneValue",
+   "example": "spam = print('Hello!')",
+   "definition": "None is the only value of NoneType and stands for the absence of a value; print returns it, and PEP 8 says to compare with is.",
+   "io": {
+    "code": "type(None).__name__",
+    "out": "'NoneType'",
+    "tree": {
+     "label": "Attribute",
+     "kind": "Attribute",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "type",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "None",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "Frames",
+   "label": "Frames",
+   "level": 1,
+   "parent": null,
+   "body": "The Call Stack explains where execution goes when a function returns (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_Frames",
+   "class_iri": "http://example.org/sen0414/ch04#Frames"
+  },
+  {
+   "id": "CallStack",
+   "label": "Call stack",
+   "level": 2,
+   "parent": "Frames",
+   "body": "Calling a function does not send execution one way to the top of the body: Python remembers the line that made the call, so abcdCallStack.py prints a() starts, b() starts, c() starts, c() returns, b() returns, d() starts, d() returns, a() returns (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_CallStack",
+   "class_iri": "http://example.org/sen0414/ch04#CallStack"
+  },
+  {
+   "id": "CallStackOrder",
+   "label": "Call stack order",
+   "level": 3,
+   "parent": "CallStack",
+   "body": "Frame objects are added to and removed from the top of the call stack only, the top frame is the function currently executing, and an empty stack means execution is outside all functions (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_CallStackOrder",
+   "class_iri": "http://example.org/sen0414/ch04#CallStackOrder",
+   "example": "a() calls b() calls c()",
+   "definition": "Python remembers which line called a function so that execution returns there, keeping the waiting calls on a stack of frames.",
+   "io": {
+    "code": "len(str(42 / 2))",
+    "out": "4",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "len",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "str",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "/",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "42",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "len(str(42 / 2))",
+      "focus": "42 / 2",
+      "value": "21.0"
+     },
+     {
+      "expr": "len(str(21.0))",
+      "focus": "str(21.0)",
+      "value": "'21.0'"
+     },
+     {
+      "expr": "len('21.0')",
+      "focus": "len('21.0')",
+      "value": "4"
+     }
+    ]
+   }
+  },
+  {
+   "id": "StackInspection",
+   "label": "Stack inspection",
+   "level": 3,
+   "parent": "CallStack",
+   "body": "The interpreter limits the depth of its stack, sys.getrecursionlimit() returns 1000 under Python 3.14.4, and a function that calls itself without end raises RecursionError, a subclass of RuntimeError, instead of overflowing the C stack (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch04#S_StackInspection",
+   "class_iri": "http://example.org/sen0414/ch04#StackInspection",
+   "example": "traceback.extract_stack()",
+   "definition": "A program can list the frames it is running inside, and the interpreter stops a runaway chain of calls with a RecursionError.",
+   "io": {
+    "code": "__import__('sys').getrecursionlimit()",
+    "out": "1000",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "__import__",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'sys'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "Scope",
+   "label": "Scope",
+   "level": 1,
+   "parent": null,
+   "body": "Local and Global Scopes, Scope Rules, The global Statement and Scope Identification say which variable a name refers to (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_Scope",
+   "class_iri": "http://example.org/sen0414/ch04#Scope"
+  },
+  {
+   "id": "Namespaces",
+   "label": "Namespaces",
+   "level": 2,
+   "parent": "Scope",
+   "body": "Variables live in scopes, containers created when a program starts or a function is called (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_Namespaces",
+   "class_iri": "http://example.org/sen0414/ch04#Namespaces"
+  },
+  {
+   "id": "LocalScope",
+   "label": "Local scope",
+   "level": 3,
+   "parent": "Namespaces",
+   "body": "Variables assigned inside a function exist in that call's local scope, which is created when the function is called and destroyed when it returns, so code outside cannot use them and print(eggs) after spam() raises NameError: name 'eggs' is not defined (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_LocalScope",
+   "class_iri": "http://example.org/sen0414/ch04#LocalScope",
+   "example": "eggs = 'sss' inside spam()",
+   "definition": "A variable assigned inside a function exists only in that call's local scope and is destroyed when the call returns."
+  },
+  {
+   "id": "GlobalScope",
+   "label": "Global scope",
+   "level": 3,
+   "parent": "Namespaces",
+   "body": "There is only one global scope, created when the program begins and destroyed when it terminates, and code in a local scope can read global variables when it has no local variable of that name (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_GlobalScope",
+   "class_iri": "http://example.org/sen0414/ch04#GlobalScope",
+   "example": "eggs = 'global' outside all functions",
+   "definition": "There is one global scope, created when the program begins and destroyed when it ends, and code in any function can read its variables."
+  },
+  {
+   "id": "SameNameVariables",
+   "label": "Same name variables",
+   "level": 3,
+   "parent": "Namespaces",
+   "body": "A local variable and a global one may share a name, so three variables named eggs give the output bacon local, spam local, bacon local, global, and the chapter advises giving variables unique names (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_SameNameVariables",
+   "class_iri": "http://example.org/sen0414/ch04#SameNameVariables",
+   "example": "three variables named eggs",
+   "definition": "The same name in different scopes gives different variables; the book advises unique names to keep track of them."
+  },
+  {
+   "id": "Rules",
+   "label": "Rules",
+   "level": 2,
+   "parent": "Scope",
+   "body": "Four rules tell whether a name is local or global, and one further statement reaches the case between them (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_Rules",
+   "class_iri": "http://example.org/sen0414/ch04#Rules"
+  },
+  {
+   "id": "GlobalStatement",
+   "label": "Global statement",
+   "level": 3,
+   "parent": "Rules",
+   "body": "Putting global eggs at the top of a function makes eggs in that function refer to the global variable, so assigning to it changes the global and no local variable is created (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_GlobalStatement",
+   "class_iri": "http://example.org/sen0414/ch04#GlobalStatement",
+   "example": "global eggs",
+   "definition": "A global statement makes a name in the function refer to the global variable, so assigning to it changes the global."
+  },
+  {
+   "id": "ScopeIdentification",
+   "label": "Scope identification",
+   "level": 3,
+   "parent": "Rules",
+   "body": "A variable outside all functions is global, one in a function with a global statement is global, one the function assigns is local, and one the function only uses is global; the compiler decides this by scanning the whole function body for name-binding operations, which the symtable module reports as global, local and global for the chapter's spam, bacon and ham (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch04#S_ScopeIdentification",
+   "class_iri": "http://example.org/sen0414/ch04#ScopeIdentification",
+   "example": "four rules for eggs",
+   "definition": "A name is global if used outside all functions or declared global, local if the function assigns it, and global if the function only reads it."
+  },
+  {
+   "id": "UnboundLocalError",
+   "label": "Unbound local error",
+   "level": 3,
+   "parent": "Rules",
+   "body": "Using a local variable before assigning it raises UnboundLocalError, a subclass of NameError; the chapter prints local variable 'eggs' referenced before assignment, while Python 3.14.4 and the Programming FAQ give cannot access local variable 'eggs' where it is not associated with a value (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch04#S_UnboundLocalError",
+   "class_iri": "http://example.org/sen0414/ch04#UnboundLocalError",
+   "example": "print(eggs) before eggs = 'spam local'",
+   "definition": "Using a local variable before it is assigned raises UnboundLocalError, whose message in 3.14 reads cannot access local variable where it is not associated with a value."
+  },
+  {
+   "id": "NonlocalStatement",
+   "label": "Nonlocal statement",
+   "level": 3,
+   "parent": "Rules",
+   "body": "The nonlocal statement causes the listed names to refer to names previously bound in the nearest enclosing function scope, which lets an inner function rebind them; the chapter does not cover it (Yee, 2006).",
+   "section_iri": "http://example.org/sen0414/ch04#S_NonlocalStatement",
+   "class_iri": "http://example.org/sen0414/ch04#NonlocalStatement",
+   "example": "nonlocal n",
+   "definition": "A nonlocal statement lets an inner function rebind a name of the enclosing function, between the local and the global case."
+  },
+  {
+   "id": "ErrorHandling",
+   "label": "Error handling",
+   "level": 1,
+   "parent": null,
+   "body": "Exception Handling turns an error from a crash into something a program can recover from (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_ErrorHandling",
+   "class_iri": "http://example.org/sen0414/ch04#ErrorHandling"
+  },
+  {
+   "id": "Exceptions",
+   "label": "Exceptions",
+   "level": 2,
+   "parent": "ErrorHandling",
+   "body": "An error in a Python program raises an exception, and try and except statements decide what happens next (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_Exceptions",
+   "class_iri": "http://example.org/sen0414/ch04#Exceptions"
+  },
+  {
+   "id": "TryExcept",
+   "label": "Try except",
+   "level": 3,
+   "parent": "Exceptions",
+   "body": "The try clause runs first; if no exception occurs the except clause is skipped, and if one occurs the rest of the try clause is skipped and, when its type matches, the except clause runs and execution continues after the try statement (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch04#S_TryExcept",
+   "class_iri": "http://example.org/sen0414/ch04#TryExcept",
+   "example": "try: ... except ZeroDivisionError:",
+   "definition": "Code in a try clause that raises an error jumps to the matching except clause, and execution continues after the try statement."
+  },
+  {
+   "id": "ErrorInCall",
+   "label": "Error in call",
+   "level": 3,
+   "parent": "Exceptions",
+   "body": "An error inside a function called from a try clause is caught by that clause, and once execution has jumped to the except clause it does not return to the try clause, so the chapter's second version never prints spam(1) (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_ErrorInCall",
+   "class_iri": "http://example.org/sen0414/ch04#ErrorInCall",
+   "example": "the try block around spam(0)",
+   "definition": "An error raised inside a function called from a try clause is caught by that clause, and execution does not return into the try clause."
+  },
+  {
+   "id": "MultipleExceptTypes",
+   "label": "Multiple except types",
+   "level": 3,
+   "parent": "Exceptions",
+   "body": "Python 3.14 allows except to list several exception types without brackets when there is no as clause, as in except TimeoutError, ConnectionRefusedError:, and rejects the form with as unless the types are in brackets (Galindo Salgado and Cannon, 2024).",
+   "section_iri": "http://example.org/sen0414/ch04#S_MultipleExceptTypes",
+   "class_iri": "http://example.org/sen0414/ch04#MultipleExceptTypes",
+   "example": "except A, B:",
+   "definition": "Since Python 3.14 an except clause can list several exception types without brackets when it has no as clause."
+  },
+  {
+   "id": "ModernPractice",
+   "label": "Modern practice",
+   "level": 1,
+   "parent": null,
+   "body": "An advanced course pairs the chapter's functions with what current Python adds around them (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch04#S_ModernPractice",
+   "class_iri": "http://example.org/sen0414/ch04#ModernPractice"
+  },
+  {
+   "id": "Annotations",
+   "label": "Annotations",
+   "level": 2,
+   "parent": "ModernPractice",
+   "body": "Annotations on a function's parameters and result are the newest of those additions (Hastings, 2021).",
+   "section_iri": "http://example.org/sen0414/ch04#S_Annotations",
+   "class_iri": "http://example.org/sen0414/ch04#Annotations"
+  },
+  {
+   "id": "DeferredAnnotations",
+   "label": "Deferred annotations",
+   "level": 3,
+   "parent": "Annotations",
+   "body": "Since Python 3.14 annotations are stored and evaluated only when necessary, so def f(x: Undefined) can be defined and called, reading f.__annotations__ raises NameError until the names exist, and a forward-reference format returns the unresolved names (Hastings, 2021).",
+   "section_iri": "http://example.org/sen0414/ch04#S_DeferredAnnotations",
+   "class_iri": "http://example.org/sen0414/ch04#DeferredAnnotations",
+   "example": "def f(x: Undefined):",
+   "definition": "Since Python 3.14 a function's annotations are not evaluated at definition, so names that do not exist yet can be used and are looked up only on request."
+  },
+  {
+   "id": "Style",
+   "label": "Style",
+   "level": 2,
+   "parent": "ModernPractice",
+   "body": "How a function is meant to be used matters as much as how it is written (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_Style",
+   "class_iri": "http://example.org/sen0414/ch04#Style"
+  },
+  {
+   "id": "BlackBoxFunction",
+   "label": "Black box function",
+   "level": 3,
+   "parent": "Style",
+   "body": "Often all you need to know about a function is its inputs and its return value, so it can be treated as a black box, and because its variables are local its code cannot affect other functions' variables (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch04#S_BlackBoxFunction",
+   "class_iri": "http://example.org/sen0414/ch04#BlackBoxFunction",
+   "example": "use it without reading it",
+   "definition": "A function can be treated as a black box: its parameters go in, its return value comes out, and its local variables affect nothing else."
+  }
+ ],
+ "relations": [
+  {
+   "source": "Definition",
+   "target": "Function",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DefStatement",
+   "target": "Definition",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FunctionCall",
+   "target": "Definition",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Deduplication",
+   "target": "Definition",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Parameters",
+   "target": "Function",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ParameterAndArgument",
+   "target": "Parameters",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NamedParameter",
+   "target": "Parameters",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PositionalOnlyParameter",
+   "target": "Parameters",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "KeywordOnlyParameter",
+   "target": "Parameters",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DefaultArgument",
+   "target": "Parameters",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ReturnValue",
+   "target": "Result",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ReturnStatement",
+   "target": "ReturnValue",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ImplicitNone",
+   "target": "ReturnValue",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NoneType",
+   "target": "Result",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NoneValue",
+   "target": "NoneType",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CallStack",
+   "target": "Frames",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CallStackOrder",
+   "target": "CallStack",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "StackInspection",
+   "target": "CallStack",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Namespaces",
+   "target": "Scope",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LocalScope",
+   "target": "Namespaces",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GlobalScope",
+   "target": "Namespaces",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SameNameVariables",
+   "target": "Namespaces",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Rules",
+   "target": "Scope",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GlobalStatement",
+   "target": "Rules",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ScopeIdentification",
+   "target": "Rules",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "UnboundLocalError",
+   "target": "Rules",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NonlocalStatement",
+   "target": "Rules",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Exceptions",
+   "target": "ErrorHandling",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TryExcept",
+   "target": "Exceptions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ErrorInCall",
+   "target": "Exceptions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MultipleExceptTypes",
+   "target": "Exceptions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Annotations",
+   "target": "ModernPractice",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DeferredAnnotations",
+   "target": "Annotations",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Style",
+   "target": "ModernPractice",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "BlackBoxFunction",
+   "target": "Style",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  }
+ ],
+ "agents": [
+  {
+   "id": "agent-Definition",
+   "name": "Definition agent",
+   "subject": "Definition",
+   "covers": [
+    "DefStatement",
+    "FunctionCall",
+    "Deduplication",
+    "Definition"
+   ]
+  },
+  {
+   "id": "agent-Parameters",
+   "name": "Parameters agent",
+   "subject": "Parameters",
+   "covers": [
+    "ParameterAndArgument",
+    "NamedParameter",
+    "PositionalOnlyParameter",
+    "KeywordOnlyParameter",
+    "DefaultArgument",
+    "Parameters"
+   ]
+  },
+  {
+   "id": "agent-ReturnValue",
+   "name": "Return value agent",
+   "subject": "ReturnValue",
+   "covers": [
+    "ReturnStatement",
+    "ImplicitNone",
+    "ReturnValue"
+   ]
+  },
+  {
+   "id": "agent-NoneType",
+   "name": "None type agent",
+   "subject": "NoneType",
+   "covers": [
+    "NoneValue",
+    "NoneType"
+   ]
+  },
+  {
+   "id": "agent-CallStack",
+   "name": "Call stack agent",
+   "subject": "CallStack",
+   "covers": [
+    "CallStackOrder",
+    "StackInspection",
+    "CallStack"
+   ]
+  },
+  {
+   "id": "agent-Namespaces",
+   "name": "Namespaces agent",
+   "subject": "Namespaces",
+   "covers": [
+    "LocalScope",
+    "GlobalScope",
+    "SameNameVariables",
+    "Namespaces"
+   ]
+  },
+  {
+   "id": "agent-Rules",
+   "name": "Rules agent",
+   "subject": "Rules",
+   "covers": [
+    "GlobalStatement",
+    "ScopeIdentification",
+    "UnboundLocalError",
+    "NonlocalStatement",
+    "Rules"
+   ]
+  },
+  {
+   "id": "agent-Exceptions",
+   "name": "Exceptions agent",
+   "subject": "Exceptions",
+   "covers": [
+    "TryExcept",
+    "ErrorInCall",
+    "MultipleExceptTypes",
+    "Exceptions"
+   ]
+  },
+  {
+   "id": "agent-Annotations",
+   "name": "Annotations agent",
+   "subject": "Annotations",
+   "covers": [
+    "DeferredAnnotations",
+    "Annotations"
+   ]
+  },
+  {
+   "id": "agent-Style",
+   "name": "Style agent",
+   "subject": "Style",
+   "covers": [
+    "BlackBoxFunction",
+    "Style"
+   ]
+  }
+ ],
+ "refs": [
+  [
+   "Automate the Boring Stuff with Python, 3rd edition - Chapter 4, Functions (Al Sweigart, No Starch Press, 2025)",
+   "https://automatetheboringstuff.com/3e/chapter4.html"
+  ],
+  [
+   "PEP 3102 - Keyword-Only Arguments (Talin, 2006; Python 3.0)",
+   "https://peps.python.org/pep-3102/"
+  ],
+  [
+   "PEP 3104 - Access to Names in Outer Scopes (Yee, 2006; Python 3.0)",
+   "https://peps.python.org/pep-3104/"
+  ],
+  [
+   "PEP 570 - Python Positional-Only Parameters (Hastings et al., 2018; Python 3.8)",
+   "https://peps.python.org/pep-0570/"
+  ],
+  [
+   "PEP 649 - Deferred Evaluation Of Annotations Using Descriptors (Hastings, 2021; Python 3.14)",
+   "https://peps.python.org/pep-0649/"
+  ],
+  [
+   "PEP 758 - Allow except and except* expressions without parentheses (Galindo Salgado and Cannon, 2024; Python 3.14)",
+   "https://peps.python.org/pep-0758/"
+  ],
+  [
+   "PEP 8 - Style Guide for Python Code (van Rossum, Warsaw and Coghlan, 2001)",
+   "https://peps.python.org/pep-0008/"
+  ],
+  [
+   "Python Frequently Asked Questions, Programming FAQ - Why am I getting an UnboundLocalError (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/faq/programming.html"
+  ],
+  [
+   "The Python Language Reference, 4. Execution model - naming and binding, resolution of names (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/reference/executionmodel.html"
+  ],
+  [
+   "The Python Language Reference, 7. Simple statements - return, global and nonlocal (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/reference/simple_stmts.html"
+  ],
+  [
+   "The Python Standard Library, Built-in Exceptions - UnboundLocalError, RecursionError, ZeroDivisionError (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/exceptions.html"
+  ],
+  [
+   "The Python Standard Library, Built-in Functions - print (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/functions.html"
+  ],
+  [
+   "The Python Standard Library, sys - getrecursionlimit (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/sys.html"
+  ],
+  [
+   "The Python Tutorial, 4. More Control Flow Tools - defining functions, default argument values, keyword arguments, special parameters (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/tutorial/controlflow.html"
+  ],
+  [
+   "The Python Tutorial, 8. Errors and Exceptions - handling exceptions (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/tutorial/errors.html"
+  ],
+  [
+   "What's New In Python 3.14 - PEP 649 and PEP 749 deferred annotations, PEP 758 except without brackets (Python documentation source)",
+   "https://docs.python.org/3/whatsnew/3.14.html"
+  ]
+ ],
+ "resources": [
+  {
+   "kind": "documentation",
+   "title": "4. More Control Flow Tools",
+   "url": "https://docs.python.org/3/tutorial/controlflow.html#defining-functions",
+   "source": "Python documentation",
+   "why": "The tutorial's walk through def, default values, keyword arguments, and a function that returns None when it has no return.",
+   "concept": "DefStatement"
+  },
+  {
+   "kind": "pep",
+   "title": "PEP 570 \u2013 Python Positional-Only Parameters",
+   "url": "https://peps.python.org/pep-0570/",
+   "source": "Python Enhancement Proposals",
+   "why": "Introduces the / separator: every parameter to its left can only be passed by position.",
+   "concept": "PositionalOnlyParameter"
+  },
+  {
+   "kind": "pep",
+   "title": "PEP 3102 \u2013 Keyword-Only Arguments",
+   "url": "https://peps.python.org/pep-3102/",
+   "source": "Python Enhancement Proposals",
+   "why": "Explains arguments that can only be supplied by keyword, declared after a bare star in the parameter list.",
+   "concept": "KeywordOnlyParameter"
+  },
+  {
+   "kind": "documentation",
+   "title": "8. Compound statements \u2014 function definitions",
+   "url": "https://docs.python.org/3/reference/compound_stmts.html#function-definitions",
+   "source": "Python documentation",
+   "why": "The formal grammar of def, including default values evaluated once at definition time and parameter annotations.",
+   "concept": "DefaultArgument"
+  },
+  {
+   "kind": "documentation",
+   "title": "7. Simple statements \u2014 the return statement",
+   "url": "https://docs.python.org/3/reference/simple_stmts.html#the-return-statement",
+   "source": "Python documentation",
+   "why": "States that return leaves the call with the given value, or None when no expression is given.",
+   "concept": "ReturnStatement"
+  },
+  {
+   "kind": "documentation",
+   "title": "Built-in Constants",
+   "url": "https://docs.python.org/3/library/constants.html",
+   "source": "Python documentation",
+   "why": "Defines None as the absence of a value and the only instance of NoneType.",
+   "concept": "NoneValue"
+  },
+  {
+   "kind": "documentation",
+   "title": "traceback \u2014 Print or retrieve a stack traceback",
+   "url": "https://docs.python.org/3/library/traceback.html",
+   "source": "Python documentation",
+   "why": "Functions such as print_stack and extract_stack that print or retrieve the current call stack and its frames.",
+   "concept": "StackInspection"
+  },
+  {
+   "kind": "documentation",
+   "title": "9. Classes \u2014 Python scopes and namespaces",
+   "url": "https://docs.python.org/3/tutorial/classes.html#python-scopes-and-namespaces",
+   "source": "Python documentation",
+   "why": "Defines namespaces and scopes and shows how the global and nonlocal statements change where a name is bound.",
+   "concept": "Namespaces"
+  },
+  {
+   "kind": "documentation",
+   "title": "4. Execution model",
+   "url": "https://docs.python.org/3/reference/executionmodel.html",
+   "source": "Python documentation",
+   "why": "Precise rules for binding and resolving names, including the UnboundLocalError raised for a local used before assignment.",
+   "concept": "UnboundLocalError"
+  },
+  {
+   "kind": "documentation",
+   "title": "8. Errors and Exceptions",
+   "url": "https://docs.python.org/3/tutorial/errors.html",
+   "source": "Python documentation",
+   "why": "Covers try and except, several except clauses for different exception types, raising exceptions, and the built-in ones.",
+   "concept": "TryExcept"
+  },
+  {
+   "kind": "pep",
+   "title": "PEP 3107 \u2013 Function Annotations",
+   "url": "https://peps.python.org/pep-3107/",
+   "source": "Python Enhancement Proposals",
+   "why": "The original proposal for annotating parameters and return values, stored in the __annotations__ attribute.",
+   "concept": "Annotations"
+  },
+  {
+   "kind": "pep",
+   "title": "PEP 649 \u2013 Deferred Evaluation Of Annotations Using Descriptors",
+   "url": "https://peps.python.org/pep-0649/",
+   "source": "Python Enhancement Proposals",
+   "why": "Describes delaying evaluation of annotation expressions until they are examined, the mechanism behind Python 3.14 annotations.",
+   "concept": "DeferredAnnotations"
+  },
+  {
+   "kind": "pep",
+   "title": "PEP 8 \u2013 Style Guide for Python Code",
+   "url": "https://peps.python.org/pep-0008/",
+   "source": "Python Enhancement Proposals",
+   "why": "The official conventions for naming functions and formatting function annotations.",
+   "concept": "Style"
+  },
+  {
+   "kind": "interactive",
+   "title": "Python Tutor",
+   "url": "https://pythontutor.com/",
+   "source": "pythontutor.com",
+   "why": "Run code in the browser and step through it line by line with stack frames and variables drawn.",
+   "concept": "CallStack"
+  }
+ ],
+ "resources_checked": "2026-09-30"
+}

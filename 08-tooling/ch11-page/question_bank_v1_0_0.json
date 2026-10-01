@@ -1,0 +1,1422 @@
+[
+ {
+  "concept": "CopyFile",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'a.txt').write_text('Hi')\n(t/'box').mkdir()\nr = shutil.copy(t/'a.txt', t/'box')\nprint(Path(r).name, (t/'a.txt').exists())",
+  "options": [
+   "a.txt True",
+   "box True",
+   "a.txt False",
+   "box False"
+  ],
+  "answer": 0,
+  "why": "A copy into a folder keeps the file's name, and the original stays where it was."
+ },
+ {
+  "concept": "CopyFolderTree",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'src').mkdir()\n(t/'src'/'f.txt').write_text('x')\n(t/'dst').mkdir()\nshutil.copytree(t/'src', t/'dst')\nprint('copied')",
+  "options": [
+   "copied",
+   "FileExistsError",
+   "NotADirectoryError",
+   "IsADirectoryError"
+  ],
+  "answer": 1,
+  "why": "copytree refuses an existing destination with FileExistsError, so the print is never reached."
+ },
+ {
+  "concept": "CopyWithMetadata",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nsrc = t/'a.txt'\nsrc.write_text('x')\nos.utime(src, (1_000_000_000, 1_000_000_000))\nshutil.copy(src, t/'b.txt')\nshutil.copy2(src, t/'c.txt')\nprint(int((t/'b.txt').stat().st_mtime) == 1_000_000_000, int((t/'c.txt').stat().st_mtime) == 1_000_000_000)",
+  "options": [
+   "True True",
+   "True False",
+   "False True",
+   "False False"
+  ],
+  "answer": 2,
+  "why": "Only copy2 carries the old modification time over to the copy."
+ },
+ {
+  "concept": "ExistingDestination",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'src').mkdir()\n(t/'dst').mkdir()\n(t/'src'/'a.txt').write_text('new')\n(t/'dst'/'a.txt').write_text('old')\n(t/'dst'/'k.txt').write_text('kept')\nshutil.copytree(t/'src', t/'dst', dirs_exist_ok=True)\nprint(sorted(p.name for p in (t/'dst').iterdir()), (t/'dst'/'a.txt').read_text())",
+  "options": [
+   "['a.txt'] new",
+   "['a.txt', 'k.txt'] old",
+   "['k.txt'] new",
+   "['a.txt', 'k.txt'] new"
+  ],
+  "answer": 3,
+  "why": "With dirs_exist_ok=True the same-named file is overwritten and the other file stays."
+ },
+ {
+  "concept": "MoveFileOrFolder",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'a').mkdir()\n(t/'b').mkdir()\n(t/'a'/'f.txt').write_text('x')\nr = shutil.move(t/'a'/'f.txt', t/'b')\nprint(Path(r).relative_to(t).as_posix(), (t/'a'/'f.txt').exists())",
+  "options": [
+   "b/f.txt False",
+   "b/f.txt True",
+   "b False",
+   "a/f.txt False"
+  ],
+  "answer": 0,
+  "why": "The file goes inside the existing folder b, and it is no longer in a."
+ },
+ {
+  "concept": "MoveAsRename",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'f.txt').write_text('x')\nshutil.move(t/'f.txt', t/'g.txt')\nprint(sorted(p.name for p in t.iterdir()))",
+  "options": [
+   "['f.txt', 'g.txt']",
+   "['g.txt']",
+   "['f.txt']",
+   "[]"
+  ],
+  "answer": 1,
+  "why": "g.txt is not a folder, so it is the new path: the move is a rename."
+ },
+ {
+  "concept": "MoveCollision",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'a').mkdir()\n(t/'b').mkdir()\n(t/'a'/'f.txt').write_text('new')\n(t/'b'/'f.txt').write_text('old')\ntry:\n    shutil.move(t/'a'/'f.txt', t/'b')\n    state = 'moved'\nexcept shutil.Error:\n    state = 'refused'\nprint(state, (t/'b'/'f.txt').read_text(), (t/'a'/'f.txt').exists())",
+  "options": [
+   "moved new False",
+   "refused new True",
+   "refused old True",
+   "refused old False"
+  ],
+  "answer": 2,
+  "why": "shutil.move refuses to overwrite inside an existing folder, so nothing changes."
+ },
+ {
+  "concept": "DeleteFile",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nf = t/'a.txt'\nf.write_text('x')\nos.unlink(f)\ntry:\n    os.unlink(f)\nexcept FileNotFoundError:\n    print('gone', f.exists())",
+  "options": [
+   "gone True",
+   "kept False",
+   "FileNotFoundError",
+   "gone False"
+  ],
+  "answer": 3,
+  "why": "The first unlink deletes for good; the second finds nothing and raises FileNotFoundError."
+ },
+ {
+  "concept": "DeleteEmptyFolder",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'d').mkdir()\n(t/'d'/'f').write_text('x')\ntry:\n    os.rmdir(t/'d')\nexcept OSError as e:\n    print(type(e).__name__, (t/'d').exists())",
+  "options": [
+   "OSError True",
+   "FileNotFoundError True",
+   "OSError False",
+   "PermissionError True"
+  ],
+  "answer": 0,
+  "why": "rmdir refuses a folder that is not empty, and the folder stays."
+ },
+ {
+  "concept": "DeleteFolderTree",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'d'/'e').mkdir(parents=True)\n(t/'d'/'e'/'f').write_text('x')\nshutil.rmtree(t/'d')\nprint((t/'d').exists(), t.exists())",
+  "options": [
+   "True True",
+   "False True",
+   "False False",
+   "True False"
+  ],
+  "answer": 1,
+  "why": "rmtree removes d with everything inside it, but not the parent folder."
+ },
+ {
+  "concept": "DeletionErrors",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\ntry:\n    shutil.rmtree(t/'missing')\n    first = 'deleted'\nexcept FileNotFoundError:\n    first = 'FileNotFoundError'\nshutil.rmtree(t/'missing', ignore_errors=True)\nprint(first, 'quiet')",
+  "options": [
+   "deleted quiet",
+   "FileNotFoundError FileNotFoundError",
+   "FileNotFoundError quiet",
+   "NotADirectoryError quiet"
+  ],
+  "answer": 2,
+  "why": "A missing folder raises FileNotFoundError unless ignore_errors=True, which stays quiet."
+ },
+ {
+  "concept": "DryRun",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nfor n in ('a.txt', 'b.rxt', 'c.txt'):\n    (t/n).write_text('x')\nwould_delete = [p.name for p in sorted(t.glob('*.txt'))]\nprint(would_delete, len(list(t.iterdir())))",
+  "options": [
+   "['a.txt', 'b.rxt', 'c.txt'] 3",
+   "['a.txt', 'c.txt'] 1",
+   "['b.rxt'] 3",
+   "['a.txt', 'c.txt'] 3"
+  ],
+  "answer": 3,
+  "why": "The list only names the files that would go; nothing was deleted, so all three files remain."
+ },
+ {
+  "concept": "ListDirectory",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'d').mkdir()\n(t/'f.txt').write_text('x')\n(t/'d'/'inner.txt').write_text('y')\nprint(sorted(os.listdir(t)))",
+  "options": [
+   "['d', 'f.txt']",
+   "['d', 'f.txt', 'inner.txt']",
+   "['f.txt']",
+   "['d/inner.txt', 'f.txt']"
+  ],
+  "answer": 0,
+  "why": "listdir gives names of the entries of one folder only, files and folders alike."
+ },
+ {
+  "concept": "IterateDirectory",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'a.txt').write_text('x')\n(t/'b.txt').write_text('y')\nprint([p.name for p in sorted(t.iterdir())], all(isinstance(p, Path) for p in t.iterdir()))",
+  "options": [
+   "['a.txt', 'b.txt'] False",
+   "['a.txt', 'b.txt'] True",
+   "['a.txt'] True",
+   "['a', 'b'] True"
+  ],
+  "answer": 1,
+  "why": "iterdir yields Path objects, so isinstance(p, Path) holds for every entry."
+ },
+ {
+  "concept": "GlobPattern",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'sub').mkdir()\n(t/'a.txt').write_text('x')\n(t/'sub'/'b.txt').write_text('y')\n(t/'c.py').write_text('z')\nprint(sorted(p.name for p in t.glob('*.txt')), sorted(p.name for p in t.rglob('*.txt')))",
+  "options": [
+   "['a.txt', 'b.txt'] ['a.txt', 'b.txt']",
+   "['a.txt'] ['a.txt']",
+   "['a.txt'] ['a.txt', 'b.txt']",
+   "['a.txt', 'c.py'] ['a.txt', 'b.txt']"
+  ],
+  "answer": 2,
+  "why": "glob stays in one folder; rglob also searches the subfolders."
+ },
+ {
+  "concept": "WalkTree",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'a'/'b').mkdir(parents=True)\n(t/'f.txt').write_text('1')\n(t/'a'/'g.txt').write_text('2')\nprint(sum(1 for _ in os.walk(t)), sorted(fn for _, _, fs in os.walk(t) for fn in fs))",
+  "options": [
+   "2 ['f.txt', 'g.txt']",
+   "3 ['f.txt']",
+   "1 ['f.txt', 'g.txt']",
+   "3 ['f.txt', 'g.txt']"
+  ],
+  "answer": 3,
+  "why": "There are three folders to visit (t, a and a/b) and two files in all."
+ },
+ {
+  "concept": "WalkOrder",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'a'/'b').mkdir(parents=True)\ndown = [Path(f).relative_to(t).as_posix() for f, _, _ in os.walk(t)]\nup = [Path(f).relative_to(t).as_posix() for f, _, _ in os.walk(t, topdown=False)]\nprint(down, up)",
+  "options": [
+   "['.', 'a', 'a/b'] ['a/b', 'a', '.']",
+   "['.', 'a', 'a/b'] ['.', 'a', 'a/b']",
+   "['a/b', 'a', '.'] ['.', 'a', 'a/b']",
+   "['.', 'a', 'a/b'] ['a/b', '.', 'a']"
+  ],
+  "answer": 0,
+  "why": "Top-down gives a folder before its subfolders; topdown=False reverses that."
+ },
+ {
+  "concept": "PruneWalk",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nfor n in ('skip', 'keep'):\n    (t/n).mkdir()\n    (t/n/'f.txt').write_text('x')\nseen = []\nfor folder, subs, files in os.walk(t):\n    if 'skip' in subs:\n        subs.remove('skip')\n    seen.append(Path(folder).name)\nprint('keep' in seen, 'skip' in seen)",
+  "options": [
+   "True True",
+   "True False",
+   "False False",
+   "False True"
+  ],
+  "answer": 1,
+  "why": "Removing the name from the subfolder list in place stops the walk from entering it."
+ },
+ {
+  "concept": "WalkAndRename",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'d').mkdir()\n(t/'a.txt').write_text('x')\n(t/'d'/'b.txt').write_text('y')\nfor folder, subs, files in os.walk(t):\n    for name in files:\n        shutil.move(Path(folder)/name, Path(folder)/name.upper())\nprint(sorted(f for _, _, fs in os.walk(t) for f in fs))",
+  "options": [
+   "['a.txt', 'b.txt']",
+   "['A.TXT']",
+   "['A.TXT', 'B.TXT']",
+   "['A.TXT', 'b.txt']"
+  ],
+  "answer": 2,
+  "why": "Every file in every folder is renamed to upper case."
+ },
+ {
+  "concept": "PathWalk",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'a').mkdir()\n(t/'a'/'f.txt').write_text('x')\nrows = [(d.relative_to(t).as_posix(), subs, files) for d, subs, files in t.walk()]\nprint(rows)",
+  "options": [
+   "[('.', ['a'], ['f.txt']), ('a', [], [])]",
+   "[('.', ['a'], []), ('a', [], ['a/f.txt'])]",
+   "[(PosixPath('.'), ['a'], []), (PosixPath('a'), [], ['f.txt'])]",
+   "[('.', ['a'], []), ('a', [], ['f.txt'])]"
+  ],
+  "answer": 3,
+  "why": "Path.walk gives the folder as a Path and the names as plain strings, like os.walk."
+ },
+ {
+  "concept": "CreateZip",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'a.txt').write_text('x')\nwith zipfile.ZipFile(t/'out.zip', 'w') as z:\n    z.write(t/'a.txt', arcname='a.txt')\nprint(zipfile.ZipFile(t/'out.zip').namelist(), z.fp is None)",
+  "options": [
+   "['a.txt'] True",
+   "['a.txt'] False",
+   "[] True",
+   "['out.zip'] True"
+  ],
+  "answer": 0,
+  "why": "The member is a.txt, and leaving the with block closed the file object."
+ },
+ {
+  "concept": "CompressionMethod",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'a.txt').write_text('Hello' * 1000)\nwith zipfile.ZipFile(t/'o.zip', 'w') as z:\n    z.write(t/'a.txt', 'plain.txt')\n    z.write(t/'a.txt', 'packed.txt', compress_type=zipfile.ZIP_DEFLATED)\nprint([i.compress_type for i in zipfile.ZipFile(t/'o.zip').infolist()])",
+  "options": [
+   "[8, 8]",
+   "[0, 8]",
+   "[0, 0]",
+   "[8, 0]"
+  ],
+  "answer": 1,
+  "why": "The default is 0 (ZIP_STORED); ZIP_DEFLATED is 8."
+ },
+ {
+  "concept": "CompressionLevel",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import zlib\ndata = b'abc' * 5000\nprint(len(zlib.compress(data, 0)) > len(zlib.compress(data, 9)), zlib.Z_DEFAULT_COMPRESSION)",
+  "options": [
+   "False -1",
+   "True 6",
+   "True -1",
+   "True 0"
+  ],
+  "answer": 2,
+  "why": "Level 9 packs the repeated bytes smaller than level 0; the default is the marker -1, which zlib reads as level 6."
+ },
+ {
+  "concept": "AppendToZip",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nwith zipfile.ZipFile(t/'z.zip', 'w') as z:\n    z.writestr('one.txt', '1')\nwith zipfile.ZipFile(t/'z.zip', 'a') as z:\n    z.writestr('two.txt', '2')\nwith zipfile.ZipFile(t/'z.zip', 'w') as z:\n    z.writestr('three.txt', '3')\nprint(zipfile.ZipFile(t/'z.zip').namelist())",
+  "options": [
+   "['one.txt', 'two.txt', 'three.txt']",
+   "['one.txt', 'two.txt']",
+   "['two.txt', 'three.txt']",
+   "['three.txt']"
+  ],
+  "answer": 3,
+  "why": "Mode 'a' keeps what is there, but the last 'w' erases the archive first."
+ },
+ {
+  "concept": "NameList",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nwith zipfile.ZipFile(t/'z.zip', 'w') as z:\n    z.writestr('a.txt', '1')\n    z.writestr('sub/b.txt', '2')\n    z.writestr('empty/', '')\nprint(zipfile.ZipFile(t/'z.zip').namelist())",
+  "options": [
+   "['a.txt', 'sub/b.txt', 'empty/']",
+   "['a.txt', 'sub/b.txt']",
+   "['a.txt', 'b.txt', 'empty']",
+   "['a.txt', 'sub', 'sub/b.txt', 'empty']"
+  ],
+  "answer": 0,
+  "why": "namelist gives the members in the order stored; a folder entry ends with a slash."
+ },
+ {
+  "concept": "ZipInfoSizes",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nwith zipfile.ZipFile(t/'z.zip', 'w', zipfile.ZIP_DEFLATED) as z:\n    z.writestr('a.txt', 'A' * 1000)\ni = zipfile.ZipFile(t/'z.zip').getinfo('a.txt')\nprint(i.file_size, i.compress_size < 100)",
+  "options": [
+   "1000 False",
+   "1000 True",
+   "30 True",
+   "36 False"
+  ],
+  "answer": 1,
+  "why": "file_size is the original 1000 bytes; the repeated letter packs far below 100 bytes."
+ },
+ {
+  "concept": "CompressionRatio",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nwith zipfile.ZipFile(t/'z.zip', 'w', zipfile.ZIP_DEFLATED) as z:\n    z.writestr('a', 'Hello' * 10000)\ni = zipfile.ZipFile(t/'z.zip').getinfo('a')\nprint(i.file_size, i.file_size // i.compress_size > 100)",
+  "options": [
+   "50000 False",
+   "5000 True",
+   "50000 True",
+   "10000 True"
+  ],
+  "answer": 2,
+  "why": "Five characters times 10000 is 50000 bytes, and such repetition packs by more than a hundred times."
+ },
+ {
+  "concept": "ExtractAll",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nwith zipfile.ZipFile(t/'z.zip', 'w') as z:\n    z.writestr('a.txt', '1')\n    z.writestr('sub/b.txt', '2')\nout = t/'out'\nzipfile.ZipFile(t/'z.zip').extractall(out)\nprint(sorted(p.relative_to(out).as_posix() for p in out.rglob('*')))",
+  "options": [
+   "['a.txt', 'sub/b.txt']",
+   "['out/a.txt', 'out/sub/b.txt']",
+   "[]",
+   "['a.txt', 'sub', 'sub/b.txt']"
+  ],
+  "answer": 3,
+  "why": "extractall creates the target folder and the subfolder, so sub appears as well as its file."
+ },
+ {
+  "concept": "ExtractOne",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nwith zipfile.ZipFile(t/'z.zip', 'w') as z:\n    z.writestr('a.txt', '1')\nz = zipfile.ZipFile(t/'z.zip')\nr = z.extract('a.txt', t/'new')\ntry:\n    z.extract('nope.txt', t/'new')\n    second = 'extracted'\nexcept KeyError:\n    second = 'KeyError'\nprint(Path(r).relative_to(t).as_posix(), second)",
+  "options": [
+   "new/a.txt KeyError",
+   "a.txt KeyError",
+   "new/a.txt FileNotFoundError",
+   "new/a.txt extracted"
+  ],
+  "answer": 0,
+  "why": "extract returns the path it wrote, and an unknown member name raises KeyError."
+ },
+ {
+  "concept": "ExtractionSafety",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nwith zipfile.ZipFile(t/'z.zip', 'w') as z:\n    z.writestr('../../evil.txt', 'x')\nzipfile.ZipFile(t/'z.zip').extractall(t/'safe')\nprint(sorted(p.relative_to(t/'safe').as_posix() for p in (t/'safe').rglob('*')))",
+  "options": [
+   "['../../evil.txt']",
+   "['evil.txt']",
+   "[]",
+   "['safe/evil.txt']"
+  ],
+  "answer": 1,
+  "why": "The .. parts are removed, so the file lands inside the target folder as evil.txt."
+ },
+ {
+  "concept": "MakeArchive",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'spam').mkdir()\n(t/'spam'/'a.txt').write_text('x')\nr = shutil.make_archive(str(t/'snap'), 'zip', root_dir=t, base_dir='spam')\nprint(Path(r).name, zipfile.ZipFile(r).namelist())",
+  "options": [
+   "snap ['spam/', 'spam/a.txt']",
+   "snap.zip ['spam/a.txt']",
+   "snap.zip ['spam/', 'spam/a.txt']",
+   "snap.zip ['a.txt']"
+  ],
+  "answer": 2,
+  "why": "make_archive adds .zip to the name and records the folder entry as well as its file."
+ },
+ {
+  "concept": "UnpackArchive",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nwith zipfile.ZipFile(t/'z.zip', 'w') as z:\n    z.writestr('a.txt', '1')\nshutil.copy(t/'z.zip', t/'z.bin')\ntry:\n    shutil.unpack_archive(t/'z.bin', t/'o2')\n    r = 'unpacked'\nexcept shutil.ReadError:\n    r = 'ReadError'\nshutil.unpack_archive(t/'z.zip', t/'o')\nprint(sorted(p.name for p in (t/'o').iterdir()), r)",
+  "options": [
+   "['a.txt'] unpacked",
+   "['z.zip'] ReadError",
+   "[] ReadError",
+   "['a.txt'] ReadError"
+  ],
+  "answer": 3,
+  "why": "The .zip extension is understood; the .bin extension is not, so that call raises ReadError."
+ },
+ {
+  "concept": "NextZipName",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nfor n in (1, 2):\n    (t/f'spam_{n}.zip').write_text('')\nnumber = 1\nwhile (t/f'spam_{number}.zip').exists():\n    number = number + 1\nprint(f'spam_{number}.zip')",
+  "options": [
+   "spam_3.zip",
+   "spam_1.zip",
+   "spam_2.zip",
+   "spam_4.zip"
+  ],
+  "answer": 0,
+  "why": "The loop stops at the first number whose file does not exist yet, which is 3."
+ },
+ {
+  "concept": "WalkIntoZip",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'s'/'e').mkdir(parents=True)\n(t/'s'/'sub').mkdir()\n(t/'s'/'f.txt').write_text('1')\n(t/'s'/'sub'/'g.txt').write_text('2')\nwith zipfile.ZipFile(t/'s.zip', 'w') as z:\n    for folder, subs, files in os.walk(t/'s'):\n        for name in files:\n            p = Path(folder)/name\n            z.write(p, arcname=p.relative_to(t))\nprint(sorted(zipfile.ZipFile(t/'s.zip').namelist()))",
+  "options": [
+   "['s/e/', 's/f.txt', 's/sub/g.txt']",
+   "['s/f.txt', 's/sub/g.txt']",
+   "['f.txt', 'g.txt']",
+   "['s/f.txt']"
+  ],
+  "answer": 1,
+  "why": "Only files are written, so the empty folder e is missing from the archive."
+ },
+ {
+  "concept": "ArchiveNames",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'f.txt').write_text('x')\nwith zipfile.ZipFile(t/'z.zip', 'w') as z:\n    z.write(t/'f.txt')\nname = zipfile.ZipFile(t/'z.zip').namelist()[0]\nprint(name == str(t/'f.txt').lstrip('/'), name.startswith('/'))",
+  "options": [
+   "False False",
+   "True True",
+   "True False",
+   "False True"
+  ],
+  "answer": 2,
+  "why": "The whole absolute path is stored, without its leading slash."
+ },
+ {
+  "concept": "StoredByDefault",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'a.txt').write_text('Hello' * 1000)\nwith zipfile.ZipFile(t/'d.zip', 'w') as z:\n    z.write(t/'a.txt', 'a.txt')\ni = zipfile.ZipFile(t/'d.zip').getinfo('a.txt')\nprint(i.compress_type, i.file_size == i.compress_size)",
+  "options": [
+   "8 True",
+   "0 False",
+   "8 False",
+   "0 True"
+  ],
+  "answer": 3,
+  "why": "With no compression argument the member is stored as it is, so the two sizes are equal."
+ },
+ {
+  "concept": "SelfInclusion",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'s').mkdir()\n(t/'s'/'f.txt').write_text('1')\nz = zipfile.ZipFile(t/'s'/'s_1.zip', 'w')\nfor folder, subs, files in os.walk(t/'s'):\n    for name in sorted(files):\n        z.write(Path(folder)/name, arcname=name)\nz.close()\nprint(zipfile.ZipFile(t/'s'/'s_1.zip').namelist())",
+  "options": [
+   "['f.txt', 's_1.zip']",
+   "['f.txt']",
+   "['s_1.zip', 'f.txt']",
+   "[]"
+  ],
+  "answer": 0,
+  "why": "The new archive already exists inside the folder when the walk lists it, so it is added too."
+ },
+ {
+  "concept": "PracticeQuestions",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'d').mkdir()\n(t/'d'/'g.txt').write_text('y')\ntry:\n    shutil.copy(t/'d', t/'dc')\n    r = 'copied'\nexcept IsADirectoryError:\n    r = 'IsADirectoryError'\nshutil.copytree(t/'d', t/'dt')\nprint(r, [p.name for p in (t/'dt').iterdir()])",
+  "options": [
+   "copied ['g.txt']",
+   "IsADirectoryError ['g.txt']",
+   "IsADirectoryError []",
+   "FileExistsError ['g.txt']"
+  ],
+  "answer": 1,
+  "why": "copy is for one file and refuses a folder; copytree copies the folder with its contents."
+ },
+ {
+  "concept": "SelectiveCopy",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\n(t/'src').mkdir()\n(t/'out').mkdir()\nfor n in ('one.pdf', 'two.PDF', 'three.txt'):\n    (t/'src'/n).write_text('x')\nfor folder, subs, files in os.walk(t/'src'):\n    for name in files:\n        if name.lower().endswith('.pdf'):\n            shutil.copy(Path(folder)/name, t/'out')\nprint(sorted(p.name for p in (t/'out').iterdir()))",
+  "options": [
+   "['one.pdf']",
+   "['one.pdf', 'three.txt', 'two.PDF']",
+   "['one.pdf', 'two.PDF']",
+   "['two.PDF']"
+  ],
+  "answer": 2,
+  "why": "Lower-casing the name finds both spellings of the extension."
+ },
+ {
+  "concept": "LargeFiles",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nfor n, s in (('a.bin', 500), ('b.bin', 2000), ('c.bin', 1001)):\n    (t/n).write_bytes(b'x' * s)\nprint(sorted(p.name for p in t.iterdir() if os.path.getsize(p) > 1000))",
+  "options": [
+   "['b.bin']",
+   "['a.bin', 'b.bin', 'c.bin']",
+   "['c.bin']",
+   "['b.bin', 'c.bin']"
+  ],
+  "answer": 3,
+  "why": "Both b.bin (2000) and c.bin (1001) are above the limit of 1000 bytes."
+ },
+ {
+  "concept": "RenumberFiles",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nfor n in (1, 2, 4, 5):\n    (t/f'spam{n:03}.txt').write_text('x')\nexpected = 1\nfor name in sorted(p.name for p in t.glob('spam*.txt')):\n    if int(name[4:7]) != expected:\n        shutil.move(t/name, t/f'spam{expected:03}.txt')\n    expected += 1\nprint(sorted(p.name for p in t.iterdir()))",
+  "options": [
+   "['spam001.txt', 'spam002.txt', 'spam003.txt', 'spam004.txt']",
+   "['spam001.txt', 'spam002.txt', 'spam004.txt', 'spam005.txt']",
+   "['spam001.txt', 'spam002.txt', 'spam003.txt']",
+   "['spam001.txt', 'spam002.txt', 'spam003.txt', 'spam005.txt']"
+  ],
+  "answer": 0,
+  "why": "The gap at 3 is closed by moving 4 to 3 and 5 to 4, so four files remain, numbered 1 to 4."
+ },
+ {
+  "concept": "DateRenaming",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nt = Path(tempfile.mkdtemp())\nimport re\nfor n in ('r12-31-2020.txt', 'notes.txt'):\n    (t/n).write_text('x')\npat = re.compile(r'(\\d\\d)-(\\d\\d)-(\\d{4})')\nfor p in list(t.iterdir()):\n    new = pat.sub(r'\\2-\\1-\\3', p.name)\n    if new != p.name:\n        shutil.move(p, t/new)\nprint(sorted(p.name for p in t.iterdir()))",
+  "options": [
+   "['notes.txt', 'r12-31-2020.txt']",
+   "['notes.txt', 'r31-12-2020.txt']",
+   "['r31-12-2020.txt']",
+   "['notes.txt', 'r2020-31-12.txt']"
+  ],
+  "answer": 1,
+  "why": "The first two groups swap places; the name without a date is left alone."
+ },
+ {
+  "concept": "CopyFile",
+  "level": "Understand",
+  "q": "What does shutil.copy do when the destination is an existing folder?",
+  "options": [
+   "It replaces the whole folder with the one file",
+   "It raises FileExistsError because the folder exists",
+   "It puts a copy inside that folder under the source file's name",
+   "It copies the file's content into a file named like the folder"
+  ],
+  "answer": 2,
+  "why": "A folder destination keeps the file's name; a file name destination becomes the copy's name."
+ },
+ {
+  "concept": "CopyFolderTree",
+  "level": "Understand",
+  "q": "What must be true of the destination of shutil.copytree when no option is given?",
+  "options": [
+   "It must already exist as an empty folder",
+   "It must be on the same drive as the source",
+   "It must have the same name as the source",
+   "It must not exist yet"
+  ],
+  "answer": 3,
+  "why": "copytree raises FileExistsError if the destination exists."
+ },
+ {
+  "concept": "CopyWithMetadata",
+  "level": "Understand",
+  "q": "How does shutil.copy2 differ from shutil.copy?",
+  "options": [
+   "It also tries to keep metadata such as the modification time",
+   "It copies two files at once",
+   "It writes the contents twice for safety",
+   "It refuses to overwrite an existing file"
+  ],
+  "answer": 0,
+  "why": "copy2 keeps metadata where it can; copytree uses it for every file."
+ },
+ {
+  "concept": "ExistingDestination",
+  "level": "Understand",
+  "q": "What does dirs_exist_ok=True change in shutil.copytree?",
+  "options": [
+   "It deletes the existing folder first and then copies",
+   "It continues into an existing folder, overwriting same-named files and leaving the others",
+   "It skips every file whose name already exists there",
+   "It copies, then raises an error at the end"
+  ],
+  "answer": 1,
+  "why": "Files of the same name are overwritten; other files in the destination stay."
+ },
+ {
+  "concept": "MoveFileOrFolder",
+  "level": "Understand",
+  "q": "Where does shutil.move put a file when the destination is an existing folder?",
+  "options": [
+   "In place of the folder",
+   "Next to the folder, under the folder's name",
+   "Inside that folder, under its own name",
+   "Nowhere: it raises ValueError"
+  ],
+  "answer": 2,
+  "why": "Moving into a folder keeps the name; across file systems it is a copy followed by a delete."
+ },
+ {
+  "concept": "MoveAsRename",
+  "level": "Understand",
+  "q": "When does shutil.move act as a rename?",
+  "options": [
+   "Only when the destination is on another drive",
+   "Only when the new name is longer than the old",
+   "Never: renaming needs os.rename",
+   "When the destination is not an existing folder, so it is taken as the new path"
+  ],
+  "answer": 3,
+  "why": "A destination that is not a folder is the new path, so a move inside one folder renames."
+ },
+ {
+  "concept": "MoveCollision",
+  "level": "Analyze",
+  "q": "A folder already holds a file with the name of the file you shutil.move into it. What happens?",
+  "options": [
+   "shutil.Error is raised and nothing is moved",
+   "The old file is silently overwritten, as the chapter says",
+   "The new file gets a number added to its name",
+   "The old file is sent to the recycle bin"
+  ],
+  "answer": 0,
+  "why": "This is a place where Python 3.14.4 differs from the chapter's statement."
+ },
+ {
+  "concept": "PathlibCopyMove",
+  "level": "Remember",
+  "q": "From which Python version can a Path object copy and move itself?",
+  "options": [
+   "3.4",
+   "3.14",
+   "3.6",
+   "3.12"
+  ],
+  "answer": 1,
+  "why": "Path.copy, copy_into, move and move_into arrived in 3.14."
+ },
+ {
+  "concept": "DeleteFile",
+  "level": "Understand",
+  "q": "What is the difference between os.unlink and os.remove?",
+  "options": [
+   "unlink sends the file to the recycle bin",
+   "remove deletes only empty folders",
+   "There is none; they are the same operation",
+   "unlink also deletes folders"
+  ],
+  "answer": 2,
+  "why": "Both delete one file for good."
+ },
+ {
+  "concept": "DeleteEmptyFolder",
+  "level": "Remember",
+  "q": "Which folders can os.rmdir delete?",
+  "options": [
+   "Any folder, with its contents",
+   "Only folders without subfolders",
+   "Only folders the program created",
+   "Only empty ones"
+  ],
+  "answer": 3,
+  "why": "A folder that still holds something raises OSError."
+ },
+ {
+  "concept": "DeleteFolderTree",
+  "level": "Understand",
+  "q": "Which statement about shutil.rmtree is correct?",
+  "options": [
+   "It deletes the folder and everything in it for good",
+   "It moves the folder to the trash",
+   "It deletes the files but keeps the folders",
+   "It asks for confirmation first"
+  ],
+  "answer": 0,
+  "why": "There is no recycle bin and no question; the deletion cannot be undone."
+ },
+ {
+  "concept": "DeletionErrors",
+  "level": "Remember",
+  "q": "Which rmtree parameter replaces the deprecated onerror and receives the exception itself?",
+  "options": [
+   "onfail",
+   "onexc",
+   "ignore_errors",
+   "dir_fd"
+  ],
+  "answer": 1,
+  "why": "onexc exists since Python 3.12."
+ },
+ {
+  "concept": "DryRun",
+  "level": "Understand",
+  "q": "What is a dry run?",
+  "options": [
+   "Running a program with all output switched off",
+   "Running a program twice to compare the results",
+   "Running a program with the dangerous call replaced by a print, to see what it would do",
+   "Running a program on a copy of the disk"
+  ],
+  "answer": 2,
+  "why": "A dry run shows the effect first, which finds a typo such as *.rxt before anything is deleted."
+ },
+ {
+  "concept": "RecycleBin",
+  "level": "Understand",
+  "q": "What does the third-party send2trash module do?",
+  "options": [
+   "Deletes a file securely by overwriting it",
+   "Frees the disk space at once",
+   "Empties the trash from a program",
+   "Moves a file or folder to the trash so it can be restored"
+  ],
+  "answer": 3,
+  "why": "It is not part of the standard library and frees no space."
+ },
+ {
+  "concept": "ListDirectory",
+  "level": "Remember",
+  "q": "What does os.listdir return?",
+  "options": [
+   "A list of the names of the entries in one folder",
+   "A list of the paths of all files below the folder",
+   "A list of Path objects for the files only",
+   "A sorted list of the subfolders"
+  ],
+  "answer": 0,
+  "why": "It looks at one folder only and promises no order."
+ },
+ {
+  "concept": "IterateDirectory",
+  "level": "Remember",
+  "q": "What does Path.iterdir yield?",
+  "options": [
+   "Only the files of the folder",
+   "A Path for each entry of one folder, without looking into subfolders",
+   "Every file in all the subfolders",
+   "The names as sorted strings"
+  ],
+  "answer": 1,
+  "why": "Like listdir it stays in one folder and promises no order."
+ },
+ {
+  "concept": "GlobPattern",
+  "level": "Understand",
+  "q": "How does Path.rglob differ from Path.glob?",
+  "options": [
+   "It matches regular expressions",
+   "It ignores the case of letters",
+   "It also searches the subfolders",
+   "It returns names instead of Path objects"
+  ],
+  "answer": 2,
+  "why": "rglob is glob applied to the folder and all folders below it."
+ },
+ {
+  "concept": "WalkTree",
+  "level": "Remember",
+  "q": "Which three values does os.walk give on each pass?",
+  "options": [
+   "The folder name, its size and its date",
+   "The parent folder, the file path and the extension",
+   "The file name, its folder and its depth",
+   "The current folder, its subfolder names and its file names"
+  ],
+  "answer": 3,
+  "why": "Names come without paths."
+ },
+ {
+  "concept": "WalkOrder",
+  "level": "Remember",
+  "q": "Which os.walk argument gives subfolders before the folder that holds them?",
+  "options": [
+   "topdown=False",
+   "reverse=True",
+   "bottomup=True",
+   "depth=-1"
+  ],
+  "answer": 0,
+  "why": "That is the order needed to delete a tree with rmdir."
+ },
+ {
+  "concept": "PruneWalk",
+  "level": "Understand",
+  "q": "How can a top-down os.walk loop skip a subfolder?",
+  "options": [
+   "By assigning a new list to the subfolder variable",
+   "By removing its name from the subfolder list in place",
+   "By raising StopIteration",
+   "By returning from the loop"
+  ],
+  "answer": 1,
+  "why": "os.walk looks at the same list object again; a new list is ignored."
+ },
+ {
+  "concept": "WalkAndRename",
+  "level": "Analyze",
+  "q": "Why is renaming files during an os.walk loop, as the chapter does, acceptable?",
+  "options": [
+   "os.walk copies the whole tree first",
+   "The documentation guarantees that every rename is listed",
+   "It only renames files and never adds or removes folders",
+   "Renaming never changes a folder"
+  ],
+  "answer": 2,
+  "why": "The documentation leaves it open whether a renamed file is listed."
+ },
+ {
+  "concept": "PathWalk",
+  "level": "Remember",
+  "q": "Since which Python version does Path.walk exist?",
+  "options": [
+   "3.4",
+   "3.8",
+   "3.14",
+   "3.12"
+  ],
+  "answer": 3,
+  "why": "Path.walk was added in Python 3.12."
+ },
+ {
+  "concept": "CreateZip",
+  "level": "Understand",
+  "q": "What does opening a ZipFile in mode 'w' do to an existing ZIP file of that name?",
+  "options": [
+   "It empties it and starts a new archive",
+   "It adds to it",
+   "It refuses with FileExistsError",
+   "It opens it for reading only"
+  ],
+  "answer": 0,
+  "why": "Mode 'a' adds; mode 'x' refuses."
+ },
+ {
+  "concept": "CompressionMethod",
+  "level": "Remember",
+  "q": "Which compression method does ZipFile use when none is given?",
+  "options": [
+   "ZIP_DEFLATED",
+   "ZIP_STORED, which does not compress",
+   "ZIP_BZIP2",
+   "ZIP_LZMA"
+  ],
+  "answer": 1,
+  "why": "The chapter recommends ZIP_DEFLATED."
+ },
+ {
+  "concept": "CompressionLevel",
+  "level": "Understand",
+  "q": "What does a higher compresslevel for ZIP_DEFLATED mean?",
+  "options": [
+   "Faster and larger",
+   "An archive protected by a password",
+   "More effort: slower and usually smaller",
+   "A newer ZIP format"
+  ],
+  "answer": 2,
+  "why": "Levels run from 0 to 9."
+ },
+ {
+  "concept": "AppendToZip",
+  "level": "Remember",
+  "q": "Which ZipFile mode adds to an existing archive and keeps what is there?",
+  "options": [
+   "'w'",
+   "'x'",
+   "'r'",
+   "'a'"
+  ],
+  "answer": 3,
+  "why": "'w' erases first, 'x' refuses an existing file, 'r' reads."
+ },
+ {
+  "concept": "NameList",
+  "level": "Remember",
+  "q": "What does ZipFile.namelist return?",
+  "options": [
+   "The names of the archive's members, as a list of strings",
+   "The names of the files that were not compressed",
+   "A dictionary of names and sizes",
+   "The names of the files on disk that were added"
+  ],
+  "answer": 0,
+  "why": "Folders appear with a closing slash."
+ },
+ {
+  "concept": "ZipInfoSizes",
+  "level": "Remember",
+  "q": "Which ZipInfo attribute holds the size of a member inside the archive?",
+  "options": [
+   "file_size",
+   "compress_size",
+   "archive_size",
+   "packed_bytes"
+  ],
+  "answer": 1,
+  "why": "file_size is the original size."
+ },
+ {
+  "concept": "CompressionRatio",
+  "level": "Understand",
+  "q": "Which kind of data compresses least?",
+  "options": [
+   "The same text repeated many times",
+   "Plain text files",
+   "Data that is already compressed",
+   "A file of only zero bytes"
+  ],
+  "answer": 2,
+  "why": "Repetition packs well; compressed data has little left to remove."
+ },
+ {
+  "concept": "ExtractAll",
+  "level": "Understand",
+  "q": "What does extractall do with a file of the same name in the target folder?",
+  "options": [
+   "It keeps the old file",
+   "It asks for confirmation",
+   "It adds a number to the new name",
+   "It overwrites it without asking"
+  ],
+  "answer": 3,
+  "why": "Check the target folder first."
+ },
+ {
+  "concept": "ExtractOne",
+  "level": "Remember",
+  "q": "What does extract raise for a member name that is not in the archive?",
+  "options": [
+   "KeyError",
+   "FileNotFoundError",
+   "ValueError",
+   "IndexError"
+  ],
+  "answer": 0,
+  "why": "The name must be one that namelist returns."
+ },
+ {
+  "concept": "ExtractionSafety",
+  "level": "Understand",
+  "q": "What does the zipfile module do with a member name that contains .. when it extracts?",
+  "options": [
+   "It extracts the file where the name points",
+   "It removes the dangerous part so the file stays in the target folder",
+   "It raises PermissionError",
+   "It extracts it and marks it read-only"
+  ],
+  "answer": 1,
+  "why": "Even so, the documentation says not to extract untrusted archives without inspecting them."
+ },
+ {
+  "concept": "MakeArchive",
+  "level": "Understand",
+  "q": "How do the zip files of shutil.make_archive differ from ZipFile.write with no compression argument?",
+  "options": [
+   "They are not compressed",
+   "They hold only one file",
+   "They are compressed with deflate",
+   "They cannot hold folders"
+  ],
+  "answer": 2,
+  "why": "One call builds the archive from a whole folder."
+ },
+ {
+  "concept": "UnpackArchive",
+  "level": "Understand",
+  "q": "How does shutil.unpack_archive choose the format?",
+  "options": [
+   "From a format argument that is required",
+   "From the operating system",
+   "From the size of the file",
+   "From the extension of the archive's file name"
+  ],
+  "answer": 3,
+  "why": "An unknown extension raises ReadError."
+ },
+ {
+  "concept": "NextZipName",
+  "level": "Understand",
+  "q": "How does the chapter's backup program choose a new archive name?",
+  "options": [
+   "It counts up from 1 until a name does not exist yet",
+   "It appends the current time",
+   "It overwrites the previous archive",
+   "It asks the user"
+  ],
+  "answer": 0,
+  "why": "Each run makes the next numbered snapshot."
+ },
+ {
+  "concept": "WalkIntoZip",
+  "level": "Understand",
+  "q": "What happens to a folder that holds no files in the walk-and-write backup?",
+  "options": [
+   "It is stored as an empty folder",
+   "It is not recorded in the archive",
+   "It stops the program",
+   "It is stored with a number added"
+  ],
+  "answer": 1,
+  "why": "Only files are written."
+ },
+ {
+  "concept": "ArchiveNames",
+  "level": "Analyze",
+  "q": "What does ZipFile.write store when given an absolute path and no arcname?",
+  "options": [
+   "Only the file's name",
+   "The path relative to the current folder",
+   "The whole path, less the drive letter and leading slash",
+   "The path with each folder replaced by a number"
+  ],
+  "answer": 2,
+  "why": "The arcname argument keeps the archive tidy."
+ },
+ {
+  "concept": "StoredByDefault",
+  "level": "Analyze",
+  "q": "Why can the chapter's snapshot be slightly larger than its files?",
+  "options": [
+   "ZIP files can never be compressed",
+   "The files were already compressed",
+   "ZIP_DEFLATED stores each file twice",
+   "The archive was opened without a compression argument, so ZIP_STORED applies"
+  ],
+  "answer": 3,
+  "why": "Pass compression=zipfile.ZIP_DEFLATED to compress."
+ },
+ {
+  "concept": "SelfInclusion",
+  "level": "Analyze",
+  "q": "What goes wrong if the archive is created inside the folder being backed up?",
+  "options": [
+   "The walk lists the new archive and the program writes it into itself",
+   "The program deletes the folder",
+   "The archive cannot be created",
+   "The walk skips every file"
+  ],
+  "answer": 0,
+  "why": "Put the archive elsewhere or skip it."
+ },
+ {
+  "concept": "PracticeQuestions",
+  "level": "Remember",
+  "q": "Which function copies a folder together with all its contents?",
+  "options": [
+   "shutil.copy",
+   "shutil.copytree",
+   "shutil.move",
+   "os.rename"
+  ],
+  "answer": 1,
+  "why": "shutil.copy is for one file."
+ },
+ {
+  "concept": "SelectiveCopy",
+  "level": "Analyze",
+  "q": "Why test the lower-cased file name when copying all the PDFs?",
+  "options": [
+   "Because pathlib cannot read upper case",
+   "So the copy is stored in lower case",
+   "So that report.PDF is found as well as report.pdf",
+   "Because extensions are always lower case on Windows"
+  ],
+  "answer": 2,
+  "why": "The destination must also lie outside the tree being walked."
+ },
+ {
+  "concept": "LargeFiles",
+  "level": "Remember",
+  "q": "Which function gives a file's size in bytes for the large-files program?",
+  "options": [
+   "os.listdir",
+   "shutil.disk_usage",
+   "zipfile.getinfo",
+   "os.path.getsize"
+  ],
+  "answer": 3,
+  "why": "The chapter's limit is 100MB."
+ },
+ {
+  "concept": "RenumberFiles",
+  "level": "Understand",
+  "q": "What does str.zfill(3) do to the string '7'?",
+  "options": [
+   "It pads it with zeros to '007'",
+   "It repeats it to '777'",
+   "It pads it with spaces",
+   "It converts it to the integer 7"
+  ],
+  "answer": 0,
+  "why": "The width is the width of the numbers in the file names."
+ },
+ {
+  "concept": "DateRenaming",
+  "level": "Understand",
+  "q": "How does the date program turn 12-31-2020 into 31-12-2020?",
+  "options": [
+   "It sorts the digits",
+   "It swaps the first two groups of a regular expression with sub",
+   "It reads the file's modification time",
+   "It walks the name backwards"
+  ],
+  "answer": 1,
+  "why": "A name without a date is left alone."
+ },
+ {
+  "concept": "CopyingAndMoving",
+  "level": "Remember",
+  "q": "Which module does the chapter use for copying, moving and renaming files and folders?",
+  "options": [
+   "os.path",
+   "zipfile",
+   "shutil",
+   "pathlib alone"
+  ],
+  "answer": 2,
+  "why": "shutil is the first subject of the chapter."
+ },
+ {
+  "concept": "Copying",
+  "level": "Understand",
+  "q": "Which two functions does the chapter use to copy?",
+  "options": [
+   "shutil.copy for a folder and shutil.move for a file",
+   "os.copy and os.copytree",
+   "shutil.copy2 and shutil.rmtree",
+   "shutil.copy for a file and shutil.copytree for a folder"
+  ],
+  "answer": 3,
+  "why": "copy is for one file; copytree takes the folder with everything in it."
+ },
+ {
+  "concept": "Moving",
+  "level": "Understand",
+  "q": "How does the chapter treat moving and renaming?",
+  "options": [
+   "As one operation, done with shutil.move",
+   "As two operations in separate modules",
+   "As renaming only, with moving done by os.walk",
+   "As a copy followed by a delete the program must write"
+  ],
+  "answer": 0,
+  "why": "A move whose destination is not a folder is a rename."
+ },
+ {
+  "concept": "Deleting",
+  "level": "Remember",
+  "q": "What are the chapter's two protections against a bug that deletes the wrong files?",
+  "options": [
+   "A backup ZIP and a password",
+   "A dry run and the recycle bin",
+   "A longer file name and a log file",
+   "Running as administrator and a second copy of the program"
+  ],
+  "answer": 1,
+  "why": "Deleting is where the chapter warns most."
+ },
+ {
+  "concept": "PermanentDeletion",
+  "level": "Remember",
+  "q": "Which three calls delete for good?",
+  "options": [
+   "os.walk, os.listdir and shutil.move",
+   "shutil.copy, shutil.copytree and os.unlink",
+   "os.unlink, os.rmdir and shutil.rmtree",
+   "send2trash, os.rmdir and shutil.rmtree"
+  ],
+  "answer": 2,
+  "why": "None of them uses the recycle bin."
+ },
+ {
+  "concept": "SaferDeletion",
+  "level": "Understand",
+  "q": "Which practice makes deletion safer?",
+  "options": [
+   "Calling os.unlink twice",
+   "Using shutil.rmtree instead of os.rmdir",
+   "Deleting only from a folder inside the current folder",
+   "Printing what would be deleted before deleting, or sending files to the recycle bin"
+  ],
+  "answer": 3,
+  "why": "Both protections let a person catch a mistake before it is permanent."
+ },
+ {
+  "concept": "FolderTrees",
+  "level": "Remember",
+  "q": "What are the two ways the chapter reaches the files of a folder?",
+  "options": [
+   "Listing one folder and walking a whole tree of folders",
+   "Copying and moving",
+   "Compressing and extracting",
+   "Reading and writing"
+  ],
+  "answer": 0,
+  "why": "Listing stays in one folder; walking enters every subfolder."
+ },
+ {
+  "concept": "Listing",
+  "level": "Understand",
+  "q": "What do os.listdir and Path.iterdir have in common?",
+  "options": [
+   "Both search all the subfolders",
+   "Both list one folder and do not enter its subfolders",
+   "Both return Path objects",
+   "Both return files only"
+  ],
+  "answer": 1,
+  "why": "Neither promises an order."
+ },
+ {
+  "concept": "Walking",
+  "level": "Remember",
+  "q": "Which tool does the chapter use to do something to every file in a folder and all folders below it?",
+  "options": [
+   "os.listdir",
+   "shutil.copytree",
+   "os.walk",
+   "Path.iterdir"
+  ],
+  "answer": 2,
+  "why": "os.walk gives three values on each pass."
+ },
+ {
+  "concept": "ZipArchives",
+  "level": "Remember",
+  "q": "Which module creates, reads and extracts ZIP archives?",
+  "options": [
+   "gzip",
+   "tarfile",
+   "csv",
+   "zipfile"
+  ],
+  "answer": 3,
+  "why": "The chapter's third section is about zipfile."
+ },
+ {
+  "concept": "WritingZip",
+  "level": "Understand",
+  "q": "What does writing an archive start with?",
+  "options": [
+   "Opening a ZipFile in a mode and writing files into it",
+   "Calling extractall on a folder",
+   "Walking the folder with os.listdir",
+   "Calling getinfo"
+  ],
+  "answer": 0,
+  "why": "Mode 'w' creates, 'a' adds and 'x' refuses an existing file."
+ },
+ {
+  "concept": "ReadingZip",
+  "level": "Understand",
+  "q": "What does reading an archive start with?",
+  "options": [
+   "A call to shutil.make_archive",
+   "A ZipFile object opened on its file name",
+   "A call to os.listdir on the archive",
+   "A call to extractall"
+  ],
+  "answer": 1,
+  "why": "namelist and getinfo are then asked of that object."
+ },
+ {
+  "concept": "ExtractingZip",
+  "level": "Remember",
+  "q": "Which two ZipFile methods take files out of an archive?",
+  "options": [
+   "write and writestr",
+   "namelist and getinfo",
+   "extractall and extract",
+   "open and close"
+  ],
+  "answer": 2,
+  "why": "extractall takes everything; extract takes one member."
+ },
+ {
+  "concept": "ArchiveHelpers",
+  "level": "Analyze",
+  "q": "How do shutil.make_archive and shutil.unpack_archive relate to the chapter?",
+  "options": [
+   "They are the chapter's main tools",
+   "They are third-party modules",
+   "They were removed in Python 3.14",
+   "They are in the Python documentation but not in the chapter"
+  ],
+  "answer": 3,
+  "why": "They are a one-call alternative to the zipfile loops."
+ },
+ {
+  "concept": "BackupProject",
+  "level": "Remember",
+  "q": "What does Project 5 of the chapter do?",
+  "options": [
+   "Backs a folder up into numbered ZIP files",
+   "Copies a folder to a second drive every night",
+   "Deletes the oldest files of a folder",
+   "Renames files by their date"
+  ],
+  "answer": 0,
+  "why": "Each run makes the next numbered snapshot."
+ },
+ {
+  "concept": "ZipNaming",
+  "level": "Remember",
+  "q": "What does the backup program work out first?",
+  "options": [
+   "The size of the folder",
+   "The name of the archive",
+   "The list of files to delete",
+   "The password of the archive"
+  ],
+  "answer": 1,
+  "why": "The name is the folder's last part, an underscore and a number."
+ },
+ {
+  "concept": "ZipBuilding",
+  "level": "Understand",
+  "q": "After choosing a name, what does the backup program do?",
+  "options": [
+   "Compresses the whole disk",
+   "Extracts the previous archive",
+   "Walks the folder and writes every file into the archive",
+   "Deletes the folder"
+  ],
+  "answer": 2,
+  "why": "One loop inside another covers the whole tree."
+ },
+ {
+  "concept": "PracticeWork",
+  "level": "Remember",
+  "q": "What does chapter 11 end with?",
+  "options": [
+   "A quiz and a project",
+   "Only four practice programs",
+   "Six practice questions and one project",
+   "A summary, four practice questions and four practice programs"
+  ],
+  "answer": 3,
+  "why": "The practice work follows the backup project."
+ },
+ {
+  "concept": "Questions",
+  "level": "Understand",
+  "q": "What do the practice questions test?",
+  "options": [
+   "The vocabulary of the chapter",
+   "Programs written from scratch",
+   "Only the Windows file system",
+   "Regular expressions"
+  ],
+  "answer": 0,
+  "why": "They ask what the functions are and how they differ."
+ },
+ {
+  "concept": "Programs",
+  "level": "Understand",
+  "q": "Which topics do the four practice programs apply?",
+  "options": [
+   "Networking, sockets and threads",
+   "Walking, copying, sizes, numbering and regular expressions",
+   "Databases and SQL",
+   "Web scraping only"
+  ],
+  "answer": 1,
+  "why": "They are applications of the chapter's own tools."
+ }
+]

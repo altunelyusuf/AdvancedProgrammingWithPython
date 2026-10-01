@@ -1,0 +1,1437 @@
+[
+ {
+  "concept": "ManualPhoneCheck",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "def is_phone(t):\n    return len(t) == 12 and t[:3].isdecimal() and t[3] == '-' and t[4:7].isdecimal() and t[7] == '-' and t[8:].isdecimal()\nprint(is_phone('415-555-4242'), is_phone('415-555-424'), is_phone('4155554242--'))",
+  "options": [
+   "True False False",
+   "True True False",
+   "False False False",
+   "True False True"
+  ],
+  "answer": 0,
+  "why": "The first text has 12 characters in the exact format; the second has 11 and the third has dashes in the wrong places."
+ },
+ {
+  "concept": "ManualPhoneCheck",
+  "level": "Understand",
+  "q": "What does a hand-written phone check need to find a number inside longer text?",
+  "options": [
+   "Nothing more: the length test alone finds the number anywhere",
+   "A loop over 12-character windows, because it accepts only one exact format",
+   "A call to re.compile",
+   "It cannot find a number inside longer text at all"
+  ],
+  "answer": 1,
+  "why": "The check tests exactly 12 characters, so it must be tried at every starting position."
+ },
+ {
+  "concept": "RawStrings",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(len(r'\\d'), len('\\n'), r'\\d' == '\\\\d')",
+  "options": [
+   "1 1 True",
+   "2 2 True",
+   "2 1 True",
+   "2 1 False"
+  ],
+  "answer": 2,
+  "why": "A raw string keeps the backslash as a character, so r'\\d' has two characters, while '\\n' is one newline character."
+ },
+ {
+  "concept": "RawStrings",
+  "level": "Understand",
+  "q": "Why is a pattern normally written as a raw string?",
+  "options": [
+   "It makes the pattern run faster",
+   "It switches on the IGNORECASE flag",
+   "It lets the re module accept patterns without parentheses",
+   "It keeps each backslash as a character so that \\d reaches the re module intact"
+  ],
+  "answer": 3,
+  "why": "In an ordinary string some backslash sequences are changed or draw a warning before re sees them."
+ },
+ {
+  "concept": "CompileAndSearch",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\np = re.compile(r'\\d{3}-\\d{4}')\nprint(p.search('call 555-1234 now').group(), p.search('no number'))",
+  "options": [
+   "555-1234 None",
+   "555-1234 ''",
+   "call 555-1234 now None",
+   "None None"
+  ],
+  "answer": 0,
+  "why": "search returns a Match object for the first fit, whose group() is the text, and None when the pattern fits nowhere."
+ },
+ {
+  "concept": "CompileAndSearch",
+  "level": "Understand",
+  "q": "What does search return when the pattern fits nowhere in the text?",
+  "options": [
+   "An empty string",
+   "None",
+   "An empty Match object",
+   "It raises re.error"
+  ],
+  "answer": 1,
+  "why": "A failed search gives None, so the result must be tested before it is used."
+ },
+ {
+  "concept": "MatchObjectAccess",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nm = re.search(r'\\d+', 'ab 123 cd')\nprint(m.group(), m.start(), m.end())",
+  "options": [
+   "123 3 5",
+   "123 4 6",
+   "123 3 6",
+   "ab 123 cd 3 6"
+  ],
+  "answer": 2,
+  "why": "The digits 123 sit at positions 3, 4 and 5, so start() is 3 and end() is 6, one past the last character."
+ },
+ {
+  "concept": "MatchObjectAccess",
+  "level": "Understand",
+  "q": "Why must the result of search be tested before group() is called on it?",
+  "options": [
+   "group() raises re.error for a pattern that did not match",
+   "search always raises when nothing matches",
+   "group() would return an empty string and hide the failure",
+   "search returns None on failure and None has no group method"
+  ],
+  "answer": 3,
+  "why": "Calling group() on None raises AttributeError."
+ },
+ {
+  "concept": "MatchVersusSearch",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.match('b', 'abc'), re.search('b', 'abc').span(), re.fullmatch('a.c', 'abc') is not None)",
+  "options": [
+   "None (1, 2) True",
+   "None (1, 2) False",
+   "(1, 2) (1, 2) True",
+   "None (0, 1) True"
+  ],
+  "answer": 0,
+  "why": "match looks only at the start, where 'a' is, so it gives None; search finds b at (1, 2); fullmatch covers the whole text."
+ },
+ {
+  "concept": "MatchVersusSearch",
+  "level": "Understand",
+  "q": "Which function requires the pattern to cover the whole text?",
+  "options": [
+   "match",
+   "fullmatch",
+   "search",
+   "findall"
+  ],
+  "answer": 1,
+  "why": "match anchors only at the start; fullmatch needs the whole text to fit."
+ },
+ {
+  "concept": "PatternError",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\ntry:\n    re.compile('(abc')\nexcept re.error as e:\n    print(e.msg, e.pos)",
+  "options": [
+   "unbalanced parenthesis 0",
+   "missing ), unterminated subpattern 4",
+   "missing ), unterminated subpattern 0",
+   "nothing is printed"
+  ],
+  "answer": 2,
+  "why": "An unclosed parenthesis is reported when the pattern is compiled, with the message and the position of the opening parenthesis."
+ },
+ {
+  "concept": "PatternError",
+  "level": "Understand",
+  "q": "What happens when a pattern string is not valid, for example with an unclosed parenthesis?",
+  "options": [
+   "Nothing; the pattern simply never matches",
+   "A SyntaxError is raised when the module is imported",
+   "A ValueError is raised only when the text is searched",
+   "re.compile raises re.PatternError, for which re.error is an alias"
+  ],
+  "answer": 3,
+  "why": "The error is raised at compile time, and re.error is kept as the old name."
+ },
+ {
+  "concept": "GroupingParentheses",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nm = re.search(r'(\\d{3})-(\\d{4})', 'tel 555-1234')\nprint(m.group(1), m.group(2), m.group(0), m.groups())",
+  "options": [
+   "555 1234 555-1234 ('555', '1234')",
+   "555-1234 555 1234 ('555', '1234')",
+   "555 1234 555-1234 555-1234",
+   "555 1234 555 ('555', '1234')"
+  ],
+  "answer": 0,
+  "why": "Group 0 is the whole match; groups 1 and 2 are the parenthesised parts."
+ },
+ {
+  "concept": "GroupingParentheses",
+  "level": "Understand",
+  "q": "How are groups numbered?",
+  "options": [
+   "From 0, by their closing parenthesis",
+   "From 1, by their opening parenthesis, from left to right",
+   "Alphabetically by the text they matched",
+   "In the order in which they matched text"
+  ],
+  "answer": 1,
+  "why": "Group 0 is reserved for the whole match."
+ },
+ {
+  "concept": "EscapedMetacharacters",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'\\(\\d+\\)|\\d+\\.\\d+', 'a (12) b 3.5 c 3x5'))",
+  "options": [
+   "['12', '3.5']",
+   "['(12)', '3.5', '3x5']",
+   "['(12)', '3.5']",
+   "['(12)']"
+  ],
+  "answer": 2,
+  "why": "The escaped parentheses and the escaped dot match themselves, so 3x5 does not fit."
+ },
+ {
+  "concept": "EscapedMetacharacters",
+  "level": "Understand",
+  "q": "How is a literal opening parenthesis matched in a pattern?",
+  "options": [
+   "Write it twice",
+   "Write it as it is; parentheses are never special",
+   "Put it in curly brackets",
+   "Put a backslash before it"
+  ],
+  "answer": 3,
+  "why": "A backslash removes the special meaning of a metacharacter."
+ },
+ {
+  "concept": "Alternation",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.search('a|ab', 'ab').group(), re.search('ab|a', 'ab').group(), re.search(r'Bat(man|mobile)', 'Batmobile fast').group(1))",
+  "options": [
+   "a ab mobile",
+   "ab ab mobile",
+   "a a man",
+   "ab a mobile"
+  ],
+  "answer": 0,
+  "why": "Alternatives are tried left to right and the first that fits wins, even when a later one is longer."
+ },
+ {
+  "concept": "Alternation",
+  "level": "Understand",
+  "q": "With the pattern a|ab on the text ab, which alternative decides the match?",
+  "options": [
+   "The longest one, so the match is ab",
+   "The first one that fits from the left, so the match is a",
+   "The shortest one in every case",
+   "Neither; Python raises an error for ambiguous alternatives"
+  ],
+  "answer": 1,
+  "why": "The pipe is ordered, not longest-match."
+ },
+ {
+  "concept": "NamedGroups",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nm = re.match(r'(?P<y>\\d{4})-(?P<m>\\d\\d)', '2026-10-01')\nprint(m['y'], m.group('m'), m.groupdict())",
+  "options": [
+   "2026 10 ('2026', '10')",
+   "2026-10 10 {'y': '2026', 'm': '10'}",
+   "2026 10 {'y': '2026', 'm': '10'}",
+   "y m {'y': '2026', 'm': '10'}"
+  ],
+  "answer": 2,
+  "why": "A named group is read by name with m['y'], group('m') or groupdict()."
+ },
+ {
+  "concept": "NamedGroups",
+  "level": "Understand",
+  "q": "Which syntax creates a named group?",
+  "options": [
+   "{name}(...)",
+   "(name=...)",
+   "[?P<name>...]",
+   "(?P<name>...)"
+  ],
+  "answer": 3,
+  "why": "The name goes in angle brackets after ?P."
+ },
+ {
+  "concept": "BackReferenceInPattern",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'\\b(\\w+) \\1\\b', 'it is is the the end'))",
+  "options": [
+   "['is', 'the']",
+   "['is is', 'the the']",
+   "['is']",
+   "[('is', 'is'), ('the', 'the')]"
+  ],
+  "answer": 0,
+  "why": "One group in the pattern makes findall return that group's text, which is the repeated word."
+ },
+ {
+  "concept": "BackReferenceInPattern",
+  "level": "Understand",
+  "q": "What does \\1 inside a pattern match?",
+  "options": [
+   "Any text that the pattern of group 1 could match",
+   "The same text that group 1 matched",
+   "The first character of the text",
+   "The whole match so far"
+  ],
+  "answer": 1,
+  "why": "A back reference repeats the text, not the pattern."
+ },
+ {
+  "concept": "CharacterClass",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'[0-9a-c]', 'a1d9bz'))",
+  "options": [
+   "['a', 'd', 'b', 'z']",
+   "['a', '1', 'd', '9', 'b', 'z']",
+   "['a', '1', '9', 'b']",
+   "['a1', '9b']"
+  ],
+  "answer": 2,
+  "why": "The class holds one character from 0-9 or a-c, so d and z are skipped."
+ },
+ {
+  "concept": "CharacterClass",
+  "level": "Understand",
+  "q": "What does the class [A-Za-z] fail to cover?",
+  "options": [
+   "Uppercase ASCII letters",
+   "Lowercase ASCII letters",
+   "The letter z",
+   "Accented letters such as e with an acute accent"
+  ],
+  "answer": 3,
+  "why": "A range covers only the characters between its ends in code order."
+ },
+ {
+  "concept": "NegativeClass",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(''.join(re.findall(r'[^0-9]', 'a1b22c')))",
+  "options": [
+   "abc",
+   "122",
+   "a1b22c",
+   "['a', 'b', 'c']"
+  ],
+  "answer": 0,
+  "why": "The caret after the bracket inverts the class, so only non-digits are kept."
+ },
+ {
+  "concept": "NegativeClass",
+  "level": "Understand",
+  "q": "What does [^abc] match?",
+  "options": [
+   "The text ^abc",
+   "One character that is none of a, b and c",
+   "The text abc at the start of the line",
+   "A caret followed by a, b or c"
+  ],
+  "answer": 1,
+  "why": "Inside a class, a leading caret means not."
+ },
+ {
+  "concept": "ShorthandClasses",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'\\w+\\s\\d', 'ab 1 cd 22 e'))",
+  "options": [
+   "['ab 1', 'cd 22']",
+   "['ab 1']",
+   "['ab 1', 'cd 2']",
+   "['ab', 'cd']"
+  ],
+  "answer": 2,
+  "why": "\\d is a single digit, so 'cd 22' gives 'cd 2'."
+ },
+ {
+  "concept": "ShorthandClasses",
+  "level": "Understand",
+  "q": "What does \\S match?",
+  "options": [
+   "Any run of spaces",
+   "Only the letter S",
+   "A digit",
+   "Any one character that is not whitespace"
+  ],
+  "answer": 3,
+  "why": "Capital letters negate the shorthand classes."
+ },
+ {
+  "concept": "UnicodeShorthand",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(len(re.findall(r'\\d', '1\\u0663')), len(re.findall(r'\\d', '1\\u0663', re.ASCII)))",
+  "options": [
+   "2 1",
+   "1 1",
+   "2 2",
+   "1 2"
+  ],
+  "answer": 0,
+  "why": "For text patterns \\d matches any Unicode decimal digit; re.ASCII narrows it to 0-9."
+ },
+ {
+  "concept": "UnicodeShorthand",
+  "level": "Understand",
+  "q": "What does the re.ASCII flag change for \\d?",
+  "options": [
+   "It lets \\d match letters too",
+   "It restricts \\d to the digits 0 to 9",
+   "It makes \\d match only one digit",
+   "Nothing; \\d is always ASCII only"
+  ],
+  "answer": 1,
+  "why": "Without the flag \\d reaches other scripts' digits."
+ },
+ {
+  "concept": "DotCharacter",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'.at', 'cat\\nat flat'))",
+  "options": [
+   "['cat', '\\nat', 'lat']",
+   "['cat', 'flat']",
+   "['cat', 'lat']",
+   "['cat', 'at', 'lat']"
+  ],
+  "answer": 2,
+  "why": "The dot does not match the newline, so only cat and the lat of flat fit."
+ },
+ {
+  "concept": "DotCharacter",
+  "level": "Understand",
+  "q": "What does the dot not match by default?",
+  "options": [
+   "A space",
+   "A digit",
+   "A period",
+   "A newline"
+  ],
+  "answer": 3,
+  "why": "re.DOTALL changes this."
+ },
+ {
+  "concept": "OptionalQuantifier",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'colou?r', 'color colour colouur'))",
+  "options": [
+   "['color', 'colour']",
+   "['color', 'colour', 'colouur']",
+   "['colour']",
+   "['color']"
+  ],
+  "answer": 0,
+  "why": "The question mark makes only the u optional; two u's do not fit."
+ },
+ {
+  "concept": "OptionalQuantifier",
+  "level": "Understand",
+  "q": "In the pattern 42?! which item is optional?",
+  "options": [
+   "The 4",
+   "The 2",
+   "The exclamation mark",
+   "Both the 2 and the exclamation mark"
+  ],
+  "answer": 1,
+  "why": "A question mark applies only to the item directly before it."
+ },
+ {
+  "concept": "StarQuantifier",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'ab*', 'a abbb b'))",
+  "options": [
+   "['a', 'abbb', 'b']",
+   "['abbb']",
+   "['a', 'abbb']",
+   "['a', 'ab']"
+  ],
+  "answer": 2,
+  "why": "b* may match zero b's, so the lone a fits, but a lone b does not."
+ },
+ {
+  "concept": "StarQuantifier",
+  "level": "Understand",
+  "q": "How many times does the star let the preceding item match?",
+  "options": [
+   "One or more times",
+   "At most once",
+   "Exactly zero times",
+   "Zero or more times"
+  ],
+  "answer": 3,
+  "why": "The plus is the one that needs one or more."
+ },
+ {
+  "concept": "PlusQuantifier",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'ab+', 'a abbb ab'))",
+  "options": [
+   "['abbb', 'ab']",
+   "['a', 'abbb', 'ab']",
+   "['abbb']",
+   "['ab', 'ab']"
+  ],
+  "answer": 0,
+  "why": "b+ needs at least one b, so the lone a is skipped."
+ },
+ {
+  "concept": "PlusQuantifier",
+  "level": "Understand",
+  "q": "Which pattern requires the repeated part to appear at least once?",
+  "options": [
+   "Eggs( and spam)*",
+   "Eggs( and spam)+",
+   "Eggs( and spam)?",
+   "Eggs( and spam){0}"
+  ],
+  "answer": 1,
+  "why": "Only the plus demands one or more."
+ },
+ {
+  "concept": "BraceQuantifier",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'\\d{2,3}', '1 22 333 4444'))",
+  "options": [
+   "['22', '333']",
+   "['22', '333', '4444']",
+   "['22', '333', '444']",
+   "['22', '333', '444', '4']"
+  ],
+  "answer": 2,
+  "why": "A run of four digits gives 444, and the single digit left over is too short."
+ },
+ {
+  "concept": "BraceQuantifier",
+  "level": "Understand",
+  "q": "What does {2,4} after an item mean?",
+  "options": [
+   "Two or four repetitions only",
+   "More than two and fewer than four repetitions",
+   "Two groups of four characters",
+   "From two to four repetitions, inclusive"
+  ],
+  "answer": 3,
+  "why": "Both ends of the range are included."
+ },
+ {
+  "concept": "GreedyAndLazy",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.search(r'a{2,4}', 'aaaaaa').group(), re.search(r'a{2,4}?', 'aaaaaa').group())",
+  "options": [
+   "aaaa aa",
+   "aaaaaa aa",
+   "aaaa aaaa",
+   "aa aaaa"
+  ],
+  "answer": 0,
+  "why": "The greedy form takes the most (4) and the lazy form the fewest (2)."
+ },
+ {
+  "concept": "GreedyAndLazy",
+  "level": "Understand",
+  "q": "What does a question mark after a quantifier such as + or {2,4} do?",
+  "options": [
+   "It makes the quantifier optional",
+   "It makes the quantifier lazy: as few repetitions as let the pattern match",
+   "It turns off case sensitivity",
+   "It requires at least two repetitions"
+  ],
+  "answer": 1,
+  "why": "Greedy is the default."
+ },
+ {
+  "concept": "DotStar",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.search(r'\".*?\"', 'say \"a\" and \"b\"').group(), re.search(r'\".*\"', 'say \"a\" and \"b\"').group())",
+  "options": [
+   "\"a\" \"a\"",
+   "\"a\" and \"b\" \"a\"",
+   "\"a\" \"a\" and \"b\"",
+   "\"a\" and \"b\" \"a\" and \"b\""
+  ],
+  "answer": 2,
+  "why": "Lazy .*? stops at the first closing quote; greedy .* runs to the last."
+ },
+ {
+  "concept": "DotStar",
+  "level": "Understand",
+  "q": "Which pattern stops at the first closing angle bracket?",
+  "options": [
+   "<.*>",
+   "<.+>",
+   "<.>",
+   "<.*?>"
+  ],
+  "answer": 3,
+  "why": "The lazy .*? takes as little as possible."
+ },
+ {
+  "concept": "StartEndAnchors",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(bool(re.search(r'^\\d+$', '123')), bool(re.search(r'^\\d+$', '12a')), bool(re.search(r'^\\d', 'a1')))",
+  "options": [
+   "True False False",
+   "True False True",
+   "True True False",
+   "False False False"
+  ],
+  "answer": 0,
+  "why": "Both anchors force the whole text to be digits; the caret alone requires a digit at the start."
+ },
+ {
+  "concept": "StartEndAnchors",
+  "level": "Understand",
+  "q": "What do ^ and $ at the two ends of a pattern ask for?",
+  "options": [
+   "Any part of the text may fit",
+   "The whole text must fit the pattern",
+   "The pattern is matched twice",
+   "The text must contain a caret and a dollar sign"
+  ],
+  "answer": 1,
+  "why": "They tie the match to the start and the end."
+ },
+ {
+  "concept": "WordBoundary",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'\\bcat\\b', 'cat concat cat. cats'))",
+  "options": [
+   "['cat', 'cat', 'cat']",
+   "['cat']",
+   "['cat', 'cat']",
+   "['cat', 'cat', 'cat', 'cat']"
+  ],
+  "answer": 2,
+  "why": "The boundary on both sides excludes concat and cats; the period ends the word."
+ },
+ {
+  "concept": "WordBoundary",
+  "level": "Understand",
+  "q": "Which pattern matches cat as a whole word but not inside concat?",
+  "options": [
+   "\\Bcat\\B",
+   "cat",
+   "^cat",
+   "\\bcat\\b"
+  ],
+  "answer": 3,
+  "why": "\\B is the opposite of \\b."
+ },
+ {
+  "concept": "DollarBeforeNewline",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(bool(re.search(r'^\\d+$', '12\\n')), bool(re.search(r'^\\d+\\Z', '12\\n')), re.findall(r'^\\w', 'a\\nb', re.M))",
+  "options": [
+   "True False ['a', 'b']",
+   "False False ['a', 'b']",
+   "True True ['a']",
+   "True False ['a']"
+  ],
+  "answer": 0,
+  "why": "The dollar also fits before a final newline, \\Z does not, and re.M lets the caret fit at each line."
+ },
+ {
+  "concept": "DollarBeforeNewline",
+  "level": "Understand",
+  "q": "Which anchor matches only at the very end of the text, not before a final newline?",
+  "options": [
+   "$",
+   "\\Z",
+   "\\b",
+   "^"
+  ],
+  "answer": 1,
+  "why": "The dollar sign is more lenient."
+ },
+ {
+  "concept": "LookAround",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'\\w+(?=!)', 'hi! yo? ok!'), re.findall(r'(?<=#)\\w+', '#a b #c'))",
+  "options": [
+   "['hi!', 'ok!'] ['#a', '#c']",
+   "['hi', 'yo', 'ok'] ['a', 'c']",
+   "['hi', 'ok'] ['a', 'c']",
+   "['hi', 'ok'] ['#a', '#c']"
+  ],
+  "answer": 2,
+  "why": "Lookahead and lookbehind check their neighbour without including it."
+ },
+ {
+  "concept": "LookAround",
+  "level": "Understand",
+  "q": "Why is the text checked by a lookahead not part of the match?",
+  "options": [
+   "It is deleted from the text afterwards",
+   "It is only a comment",
+   "It can match only empty text",
+   "It looks at the text next to a position without using it up"
+  ],
+  "answer": 3,
+  "why": "Look-arounds are zero-width."
+ },
+ {
+  "concept": "FindallMethod",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'(\\w)(\\d)', 'a1 b2'), re.findall(r'(\\d)', 'a1 b2'), re.findall(r'\\w\\d', 'a1 b2'))",
+  "options": [
+   "[('a', '1'), ('b', '2')] ['1', '2'] ['a1', 'b2']",
+   "['a1', 'b2'] ['1', '2'] ['a1', 'b2']",
+   "[('a', '1'), ('b', '2')] [('1',), ('2',)] ['a1', 'b2']",
+   "[('a', '1'), ('b', '2')] ['a1', 'b2'] ['a1', 'b2']"
+  ],
+  "answer": 0,
+  "why": "Two groups give tuples, one group gives that group's text, no group gives whole matches."
+ },
+ {
+  "concept": "FindallMethod",
+  "level": "Understand",
+  "q": "What does findall return when the pattern has two groups?",
+  "options": [
+   "A list of whole-match strings",
+   "A list of tuples holding the two group texts",
+   "A list of Match objects",
+   "A single tuple"
+  ],
+  "answer": 1,
+  "why": "The number of groups decides the shape of the result."
+ },
+ {
+  "concept": "FindallNoOverlap",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'aa', 'aaaaa'), re.findall(r'(?=(aa))', 'aaaaa'))",
+  "options": [
+   "['aa', 'aa', 'aa', 'aa'] ['aa', 'aa']",
+   "['aa', 'aa'] ['aa', 'aa']",
+   "['aa', 'aa'] ['aa', 'aa', 'aa', 'aa']",
+   "['aa', 'aa'] ['aa', 'aa', 'aa']"
+  ],
+  "answer": 2,
+  "why": "findall resumes after each match; a lookahead around a group finds overlapping fits."
+ },
+ {
+  "concept": "FindallNoOverlap",
+  "level": "Understand",
+  "q": "Where does findall resume searching after a match?",
+  "options": [
+   "One character after its start",
+   "At the start of the text",
+   "After the next whitespace",
+   "At the end of the previous match"
+  ],
+  "answer": 3,
+  "why": "Matches never overlap."
+ },
+ {
+  "concept": "FinditerMethod",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint([(m.start(), m.group()) for m in re.finditer(r'\\d+', 'a12 b345')])",
+  "options": [
+   "[(1, '12'), (5, '345')]",
+   "[(1, '12'), (4, '345')]",
+   "[('12', 1), ('345', 5)]",
+   "[(0, '12'), (4, '345')]"
+  ],
+  "answer": 0,
+  "why": "finditer gives Match objects, so positions are available: 12 starts at 1 and 345 at 5."
+ },
+ {
+  "concept": "FinditerMethod",
+  "level": "Understand",
+  "q": "What does finditer yield?",
+  "options": [
+   "Strings only",
+   "Match objects",
+   "Tuples of group texts",
+   "Line numbers"
+  ],
+  "answer": 1,
+  "why": "Unlike findall, it keeps the positions."
+ },
+ {
+  "concept": "SubMethod",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\ns = 'a1b2'\nprint(re.sub(r'\\d', '#', s), s)",
+  "options": [
+   "a#b# a#b#",
+   "a1b2 a#b#",
+   "a#b# a1b2",
+   "#1#2 a1b2"
+  ],
+  "answer": 2,
+  "why": "sub returns a new string and leaves the original alone."
+ },
+ {
+  "concept": "SubMethod",
+  "level": "Understand",
+  "q": "Does sub change the text it searches?",
+  "options": [
+   "Yes, in place",
+   "Only when count is given",
+   "Only for raw strings",
+   "No: strings are immutable, and sub returns a new string"
+  ],
+  "answer": 3,
+  "why": "Assign the result to keep it."
+ },
+ {
+  "concept": "SubBackReference",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.sub(r'(\\w+) (\\w+)', r'\\2 \\1', 'hello world'))",
+  "options": [
+   "world hello",
+   "hello world",
+   "\\2 \\1",
+   "world world"
+  ],
+  "answer": 0,
+  "why": "\\2 and \\1 insert the second and first group, swapping the words."
+ },
+ {
+  "concept": "SubBackReference",
+  "level": "Understand",
+  "q": "In a replacement string, what does \\g<0> insert?",
+  "options": [
+   "The first group",
+   "The whole match",
+   "The text before the match",
+   "A literal zero"
+  ],
+  "answer": 1,
+  "why": "Group 0 is the whole match."
+ },
+ {
+  "concept": "SubWithFunction",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.sub(r'\\d+', lambda m: str(int(m.group()) + 1), 'a9 b19'))",
+  "options": [
+   "a9 b19",
+   "a10 b19",
+   "a10 b20",
+   "a1 b1"
+  ],
+  "answer": 2,
+  "why": "The function gets each Match object and returns the new text."
+ },
+ {
+  "concept": "SubWithFunction",
+  "level": "Understand",
+  "q": "What is passed to a replacement function given to sub?",
+  "options": [
+   "The whole text",
+   "Only the matched string",
+   "A list of all matches",
+   "The Match object for each match"
+  ],
+  "answer": 3,
+  "why": "It can read groups and positions."
+ },
+ {
+  "concept": "EscapeFunction",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.escape('1+1'), bool(re.search('1+1', '1+1')), bool(re.search(re.escape('1+1'), '1+1')))",
+  "options": [
+   "1\\+1 False True",
+   "1+1 True True",
+   "1\\+1 True True",
+   "1\\+1 False False"
+  ],
+  "answer": 0,
+  "why": "Unescaped, the plus is a quantifier and 1+1 does not match the text 1+1; escaped it does."
+ },
+ {
+  "concept": "EscapeFunction",
+  "level": "Understand",
+  "q": "What is re.escape for?",
+  "options": [
+   "Ending a program on a pattern error",
+   "Matching text from a user literally, by escaping special characters",
+   "Turning a pattern into a raw string",
+   "Removing backslashes from text"
+  ],
+  "answer": 1,
+  "why": "It protects metacharacters."
+ },
+ {
+  "concept": "IgnoreCaseFlag",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall('abc', 'ABC abc Abc', re.I), re.findall('(?i)a', 'Aa'))",
+  "options": [
+   "['abc'] ['a']",
+   "['ABC', 'abc', 'Abc'] ['a']",
+   "['ABC', 'abc', 'Abc'] ['A', 'a']",
+   "['abc', 'abc', 'abc'] ['a', 'a']"
+  ],
+  "answer": 2,
+  "why": "The flag and the inline (?i) make letters match in either case."
+ },
+ {
+  "concept": "IgnoreCaseFlag",
+  "level": "Understand",
+  "q": "Which inline form of re.IGNORECASE exists?",
+  "options": [
+   "(?c) at the start of the pattern",
+   "(!i) at the end",
+   "\\i anywhere",
+   "(?i) at the start of the pattern"
+  ],
+  "answer": 3,
+  "why": "Inline flags are letters after (?."
+ },
+ {
+  "concept": "DotAllFlag",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(len(re.search('a.*', 'a\\nb').group()), len(re.search('a.*', 'a\\nb', re.S).group()))",
+  "options": [
+   "1 3",
+   "3 3",
+   "1 1",
+   "3 1"
+  ],
+  "answer": 0,
+  "why": "Without the flag the dot stops at the newline; with it, the dot matches the newline too."
+ },
+ {
+  "concept": "DotAllFlag",
+  "level": "Understand",
+  "q": "What does re.DOTALL change?",
+  "options": [
+   "Anchors match at each line",
+   "The dot also matches a newline",
+   "Letters match in either case",
+   "Whitespace in the pattern is ignored"
+  ],
+  "answer": 1,
+  "why": "re.S is the short form."
+ },
+ {
+  "concept": "VerboseMode",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\np = re.compile(r'''\\d+  # digits\n  [a-z]  # letter''', re.X)\nprint(p.fullmatch('12a') is not None, p.fullmatch('12 a') is not None)",
+  "options": [
+   "True True",
+   "False False",
+   "True False",
+   "False True"
+  ],
+  "answer": 2,
+  "why": "In verbose mode the whitespace and comments in the pattern are ignored, so no space is matched."
+ },
+ {
+  "concept": "VerboseMode",
+  "level": "Understand",
+  "q": "What does re.VERBOSE let you do?",
+  "options": [
+   "Print each matching step",
+   "Match across newlines",
+   "Ignore case",
+   "Write a pattern over several lines with comments"
+  ],
+  "answer": 3,
+  "why": "A needed space must be escaped or put in a class."
+ },
+ {
+  "concept": "CombiningFlags",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.I | re.S == re.S | re.I, re.search('A.B', 'a\\nb', re.I | re.S) is not None, re.search('A.B', 'a\\nb', re.I) is not None)",
+  "options": [
+   "True True False",
+   "True False False",
+   "True True True",
+   "False True False"
+  ],
+  "answer": 0,
+  "why": "The pipe combines flags; both are needed for A.B to match a, newline, b."
+ },
+ {
+  "concept": "CombiningFlags",
+  "level": "Understand",
+  "q": "How are two flags combined for compile?",
+  "options": [
+   "As two separate arguments",
+   "With the bitwise or operator: re.I | re.S",
+   "With the and keyword",
+   "In a list: [re.I, re.S]"
+  ],
+  "answer": 1,
+  "why": "compile takes one flags value."
+ },
+ {
+  "concept": "PhoneRegex",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\np = re.compile(r'(\\(\\d{3}\\)|\\d{3})?[ .-]?\\d{3}[ .-]\\d{4}')\nprint([m.group() for m in p.finditer('800-555-7240, (415) 555-9900, 555.1234, 5551234')])",
+  "options": [
+   "['800-555-7240', '(415) 555-9900', '555.1234', '5551234']",
+   "['800-555-7240', '(415) 555-9900']",
+   "['800-555-7240', '(415) 555-9900', ' 555.1234']",
+   "['800-555-7240', '415) 555-9900', '555.1234']"
+  ],
+  "answer": 2,
+  "why": "The area code is optional but the separator before the last four digits is not, so 5551234 does not fit."
+ },
+ {
+  "concept": "PhoneRegex",
+  "level": "Understand",
+  "q": "Which parts of the chapter's phone pattern are optional?",
+  "options": [
+   "The four-digit ending",
+   "The second separator",
+   "The three-digit start",
+   "The area code, the first separator and the extension"
+  ],
+  "answer": 3,
+  "why": "The rest must appear."
+ },
+ {
+  "concept": "EmailRegex",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'[\\w.+-]+@[\\w-]+\\.[a-z]{2,4}', 'a.b@x.com, bad@x, c+d@y-z.org'))",
+  "options": [
+   "['a.b@x.com', 'c+d@y-z.org']",
+   "['a.b@x.com', 'bad@x', 'c+d@y-z.org']",
+   "['a.b@x.com']",
+   "['b@x.com', 'd@y-z.org']"
+  ],
+  "answer": 0,
+  "why": "The domain needs a dot and two to four letters, so bad@x is skipped."
+ },
+ {
+  "concept": "EmailRegex",
+  "level": "Understand",
+  "q": "Why does the chapter's e-mail pattern cut an address ending in .museum short?",
+  "options": [
+   "It forbids dots in the domain",
+   "Its last part allows only two to four letters",
+   "It accepts only .com",
+   "It requires a digit"
+  ],
+  "answer": 1,
+  "why": "It matches typical addresses, not every valid one."
+ },
+ {
+  "concept": "ExtensionGroupIndex",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nm = re.search(r'((\\d{3})-(\\d{4}))( x(\\d+))?', '555-1234 x99')\nprint(m.groups())",
+  "options": [
+   "('555-1234', '555', '1234', 'x99', '99')",
+   "('555', '1234', ' x99', '99')",
+   "('555-1234', '555', '1234', ' x99', '99')",
+   "('555-1234 x99', '555', '1234', ' x99', '99')"
+  ],
+  "answer": 2,
+  "why": "Groups are numbered by opening parenthesis, so the nested groups follow their parent."
+ },
+ {
+  "concept": "ExtensionGroupIndex",
+  "level": "Understand",
+  "q": "Why does counting group indexes need care in the phone pattern?",
+  "options": [
+   "findall lists groups alphabetically",
+   "findall drops the outer group",
+   "findall lists only the last group",
+   "findall lists groups by opening parenthesis, so nested groups appear as separate entries"
+  ],
+  "answer": 3,
+  "why": "The outer group comes first, then the groups inside it."
+ },
+ {
+  "concept": "PracticeQuestions",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.sub(r'\\d+', 'X', '12 drummers, five rings, 3 hens'), re.compile(r'\\d+').groups)",
+  "options": [
+   "X drummers, five rings, X hens 0",
+   "X drummers, X rings, X hens 0",
+   "X drummers, five rings, X hens 1",
+   "12 drummers, five rings, 3 hens 0"
+  ],
+  "answer": 0,
+  "why": "five is not made of digits and the pattern has no groups."
+ },
+ {
+  "concept": "PracticeQuestions",
+  "level": "Remember",
+  "q": "How many practice questions close the chapter?",
+  "options": [
+   "17",
+   "19",
+   "12",
+   "25"
+  ],
+  "answer": 1,
+  "why": "The chapter's end matter lists 19 questions and 2 programs."
+ },
+ {
+  "concept": "StrongPassword",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint([all(re.search(p, s) for p in (r'.{8}', r'[a-z]', r'[A-Z]', r'\\d')) for s in ('Passw0rdOK', 'password1')])",
+  "options": [
+   "[True, True]",
+   "[False, False]",
+   "[True, False]",
+   "[False, True]"
+  ],
+  "answer": 2,
+  "why": "The second text has no uppercase letter, so one of the four rules fails."
+ },
+ {
+  "concept": "StrongPassword",
+  "level": "Understand",
+  "q": "Why check a password rule by rule with small patterns?",
+  "options": [
+   "One pattern cannot contain a digit and a letter",
+   "Small patterns run in parallel",
+   "The re module accepts only four patterns",
+   "Each rule is simple and all must match, which is easier than one long pattern"
+  ],
+  "answer": 3,
+  "why": "The rules can be in any order in the text."
+ },
+ {
+  "concept": "RegexStrip",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(repr(re.sub(r'^\\s+|\\s+$', '', '  hi there \\n')))",
+  "options": [
+   "'hi there'",
+   "'hithere'",
+   "'  hi there'",
+   "'hi there '"
+  ],
+  "answer": 0,
+  "why": "The anchored whitespace at both ends is removed; the space inside stays."
+ },
+ {
+  "concept": "RegexStrip",
+  "level": "Understand",
+  "q": "Why must characters given to a regex strip be escaped?",
+  "options": [
+   "They would otherwise be sorted",
+   "They are put into a pattern, where some characters have a special meaning",
+   "The re module rejects letters",
+   "They must be raw strings"
+  ],
+  "answer": 1,
+  "why": "re.escape does this."
+ },
+ {
+  "concept": "StringMethodsInstead",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "print('spam' in 'eggs and spam', 'a-b-c'.replace('-', '+'), 'x.txt'.endswith('.txt'))",
+  "options": [
+   "True a-b-c True",
+   "False a+b+c True",
+   "True a+b+c True",
+   "True a+b+c False"
+  ],
+  "answer": 2,
+  "why": "Fixed text needs no pattern: in, replace and endswith do the work."
+ },
+ {
+  "concept": "StringMethodsInstead",
+  "level": "Understand",
+  "q": "When does the Regular expression HOWTO advise string methods instead of re?",
+  "options": [
+   "When the text has digits",
+   "When the pattern has groups",
+   "Never",
+   "When the text to find is fixed, where they are simpler and faster"
+  ],
+  "answer": 3,
+  "why": "Use re when the text varies in form."
+ },
+ {
+  "concept": "HumreFunctions",
+  "level": "Understand",
+  "q": "What do Humre's functions and constants return?",
+  "options": [
+   "Ordinary pattern strings that are passed to re.compile",
+   "Match objects",
+   "Compiled Pattern objects",
+   "Lists of matches"
+  ],
+  "answer": 0,
+  "why": "Humre builds patterns; re still does the matching."
+ },
+ {
+  "concept": "HumreCompatibility",
+  "level": "Understand",
+  "q": "What does humre.parse() do in the current Humre release the chapter study ran?",
+  "options": [
+   "It returns a compiled pattern",
+   "It is not implemented and returns None",
+   "It raises ValueError",
+   "It prints the pattern"
+  ],
+  "answer": 1,
+  "why": "The current release differs from the chapter."
+ },
+ {
+  "concept": "ClipboardRoundTrip",
+  "level": "Understand",
+  "q": "Why was the chapter's clipboard program not run here?",
+  "options": [
+   "Python 3.14 removed the clipboard",
+   "The re module cannot read text",
+   "It needs the third-party pyperclip module and a clipboard",
+   "It needs a network connection to the book"
+  ],
+  "answer": 2,
+  "why": "It was read, not executed."
+ },
+ {
+  "concept": "FindingPatterns",
+  "level": "Remember",
+  "q": "Which sub-subject belongs to Finding patterns?",
+  "options": [
+   "Replacing",
+   "Flags",
+   "Anchors",
+   "Pattern objects"
+  ],
+  "answer": 3,
+  "why": "Finding patterns holds manual checking and pattern objects."
+ },
+ {
+  "concept": "ManualChecking",
+  "level": "Remember",
+  "q": "What does the Manual checking subject show?",
+  "options": [
+   "A phone number tested by hand with string methods and a loop",
+   "How to write a pattern with Humre",
+   "How to replace text with sub",
+   "How to use look-arounds"
+  ],
+  "answer": 0,
+  "why": "It is the starting point that regular expressions improve on."
+ },
+ {
+  "concept": "PatternObjects",
+  "level": "Remember",
+  "q": "What does the Pattern objects subject cover?",
+  "options": [
+   "Quantifiers and anchors",
+   "Raw strings, compiling, searching, match objects and pattern errors",
+   "Flags and replacement",
+   "The contact extractor"
+  ],
+  "answer": 1,
+  "why": "It is the re module's basic workflow."
+ },
+ {
+  "concept": "PatternSyntax",
+  "level": "Remember",
+  "q": "Which sub-subject belongs to Pattern syntax?",
+  "options": [
+   "Replacing",
+   "Finding",
+   "Repetition",
+   "Humre module"
+  ],
+  "answer": 2,
+  "why": "Pattern syntax holds grouping, character sets, repetition and anchors."
+ },
+ {
+  "concept": "Grouping",
+  "level": "Remember",
+  "q": "What does the Grouping subject cover?",
+  "options": [
+   "Quantifiers",
+   "Flags",
+   "Word boundaries",
+   "Parentheses, escapes, alternation, named groups and back references"
+  ],
+  "answer": 3,
+  "why": "These are the ways to structure a pattern."
+ },
+ {
+  "concept": "CharacterSets",
+  "level": "Remember",
+  "q": "What does the Character sets subject cover?",
+  "options": [
+   "Classes, negative classes, shorthand classes, Unicode and the dot",
+   "Greedy and lazy matching",
+   "Sub with a function",
+   "Verbose mode"
+  ],
+  "answer": 0,
+  "why": "These say which one character may fit."
+ },
+ {
+  "concept": "Repetition",
+  "level": "Remember",
+  "q": "What does the Repetition subject cover?",
+  "options": [
+   "Named groups",
+   "The quantifiers ?, *, + and braces, and greedy versus lazy matching",
+   "Start and end anchors",
+   "The sub method"
+  ],
+  "answer": 1,
+  "why": "These say how many times an item may repeat."
+ },
+ {
+  "concept": "Anchors",
+  "level": "Remember",
+  "q": "What does the Anchors subject cover?",
+  "options": [
+   "Quantifiers",
+   "Flags",
+   "Start and end anchors, word boundaries, the dollar before a newline and look-around",
+   "findall"
+  ],
+  "answer": 2,
+  "why": "Anchors fix a position, not a character."
+ },
+ {
+  "concept": "PatternOperations",
+  "level": "Remember",
+  "q": "Which sub-subject belongs to Pattern operations?",
+  "options": [
+   "Anchors",
+   "Grouping",
+   "Character sets",
+   "Replacing"
+  ],
+  "answer": 3,
+  "why": "Pattern operations holds finding, replacing and flags."
+ },
+ {
+  "concept": "Finding",
+  "level": "Remember",
+  "q": "What does the Finding subject cover?",
+  "options": [
+   "findall, its no-overlap rule and finditer",
+   "sub and escape",
+   "Verbose mode",
+   "Raw strings"
+  ],
+  "answer": 0,
+  "why": "These return all the matches."
+ },
+ {
+  "concept": "Replacing",
+  "level": "Remember",
+  "q": "What does the Replacing subject cover?",
+  "options": [
+   "findall and finditer",
+   "sub, replacement references, replacement functions and escape",
+   "Anchors",
+   "Humre"
+  ],
+  "answer": 1,
+  "why": "These produce new text."
+ },
+ {
+  "concept": "Flags",
+  "level": "Remember",
+  "q": "What does the Flags subject cover?",
+  "options": [
+   "Greedy and lazy matching",
+   "Named groups",
+   "Ignore case, dot all, verbose and combining flags",
+   "findall"
+  ],
+  "answer": 2,
+  "why": "Flags change how the whole pattern is read."
+ },
+ {
+  "concept": "PatternPrograms",
+  "level": "Remember",
+  "q": "Which sub-subject belongs to Pattern programs?",
+  "options": [
+   "Anchors",
+   "Flags",
+   "Finding",
+   "Humre module"
+  ],
+  "answer": 3,
+  "why": "Pattern programs holds the contact extractor, Humre and the practice work."
+ },
+ {
+  "concept": "ContactExtractor",
+  "level": "Remember",
+  "q": "What does the Contact extractor subject cover?",
+  "options": [
+   "The phone and e-mail patterns, group indexes and the clipboard round trip",
+   "Lookahead and lookbehind",
+   "Flags only",
+   "Raw strings only"
+  ],
+  "answer": 0,
+  "why": "It is the chapter's project."
+ },
+ {
+  "concept": "HumreModule",
+  "level": "Remember",
+  "q": "What does the Humre module subject cover?",
+  "options": [
+   "The re module's flags",
+   "The third-party Humre module and how the current release differs from the chapter",
+   "The practice questions",
+   "The phone pattern"
+  ],
+  "answer": 1,
+  "why": "Humre is not in the standard library."
+ },
+ {
+  "concept": "PracticeWork",
+  "level": "Remember",
+  "q": "What does the Practice work subject cover?",
+  "options": [
+   "Look-arounds",
+   "Humre functions",
+   "The practice questions, a strong-password check, a regex strip and string methods instead",
+   "Named groups"
+  ],
+  "answer": 2,
+  "why": "It is the end matter of the chapter."
+ }
+]

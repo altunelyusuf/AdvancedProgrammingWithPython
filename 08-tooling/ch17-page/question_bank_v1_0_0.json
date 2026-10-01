@@ -1,0 +1,954 @@
+[
+ {
+  "concept": "PdfReaderObject",
+  "level": "Remember",
+  "q": "What does the pages attribute of a PdfReader hold?",
+  "options": [
+   "A list-like collection of page objects whose length is the page count",
+   "The text of the whole file as one string",
+   "A dictionary from page names to page numbers",
+   "The page numbers that are encrypted"
+  ],
+  "answer": 0,
+  "why": "In the library run the six-page stand-in file gave 6 for the length of reader.pages."
+ },
+ {
+  "concept": "TextExtraction",
+  "level": "Understand",
+  "q": "What happens when the strings returned by extract_text() of two pages are added one after the other?",
+  "options": [
+   "Python inserts a form feed between the pages",
+   "The last word of one page is joined to the first word of the next, with no separator",
+   "pypdf raises an error at the second page",
+   "The page numbers are placed between the strings"
+  ],
+  "answer": 1,
+  "why": "The library run printed 'Page one textPage two textPage threePage', so the program must add its own separator."
+ },
+ {
+  "concept": "TextExtraction",
+  "level": "Apply",
+  "q": "What does this stand-in print? It finds the text-showing operator of a content stream.",
+  "code": "import re\nprint(re.findall(rb'\\((.*?)\\) Tj', b'BT /F1 18 Tf 72 720 Td (Hello) Tj ET'))",
+  "options": [
+   "[b'BT']",
+   "['Hello']",
+   "[b'Hello']",
+   "[b'Hello', b'ET']"
+  ],
+  "answer": 2,
+  "why": "The regular expression keeps what is inside the parentheses before Tj, as bytes."
+ },
+ {
+  "concept": "ExtractionFallback",
+  "level": "Understand",
+  "q": "When pypdf cannot extract the text of a file, which package does the chapter fall back on?",
+  "options": [
+   "PyMuPDF, which returns a list of pages",
+   "pdfkit, which needs a running browser",
+   "reportlab, which reads files made by pypdf",
+   "pdfminer.six, whose extract_text() returns the whole file as one string"
+  ],
+  "answer": 3,
+  "why": "The chapter names pdfminer.six; on the stand-in file its text separated the pages with a form feed."
+ },
+ {
+  "concept": "TextPostProcessing",
+  "level": "Understand",
+  "q": "Extracted PDF text often ends a row with a hyphen and a newline in the middle of a word. Whose job is it to repair that?",
+  "options": [
+   "The program's, as a separate text clean-up step",
+   "pypdf's, which repairs it when extract_text() is called",
+   "The PDF viewer's, when the file is opened",
+   "python-docx's, when the text is saved to a Word file"
+  ],
+  "answer": 0,
+  "why": "pypdf returns the rows as printed; cleaning them is left to the program, for example with a regular expression."
+ },
+ {
+  "concept": "TextPostProcessing",
+  "level": "Apply",
+  "q": "What does this regular expression print for the split word?",
+  "code": "import re\nprint(repr(re.sub(r' ?-\\n(\\w+)', r'\\1', 'follow -\\ning the execution')))",
+  "options": [
+   "'follow -\\ning the execution'",
+   "'following the execution'",
+   "'follow ing the execution'",
+   "'following\\nthe execution'"
+  ],
+  "answer": 1,
+  "why": "The pattern removes the hyphen, the newline and the space before them, joining the two halves of the word."
+ },
+ {
+  "concept": "ImageExtraction",
+  "level": "Understand",
+  "q": "What must be installed before page.images works in pypdf 6.19.0?",
+  "options": [
+   "The pdfminer.six package",
+   "The cryptography package",
+   "The optional Pillow package, as pypdf[image]",
+   "The python-docx package"
+  ],
+  "answer": 2,
+  "why": "Without Pillow the library run raised ImportError and named pip install pypdf[image]."
+ },
+ {
+  "concept": "PdfWriterObject",
+  "level": "Understand",
+  "q": "With what content does a new PdfWriter start?",
+  "options": [
+   "One blank page of letter size",
+   "The pages of the first file opened",
+   "An empty page that text can be typed into",
+   "No pages; pages are copied in from other files"
+  ],
+  "answer": 3,
+  "why": "A writer has no pages and no page size; on an empty writer add_blank_page raised PageSizeNotDefinedError."
+ },
+ {
+  "concept": "PageSelection",
+  "level": "Understand",
+  "q": "In writer.append('a.pdf', (0, 5)) which pages are copied?",
+  "options": [
+   "Page indexes 0 to 4, five pages",
+   "Page indexes 0 to 5, six pages",
+   "Only page indexes 0 and 5",
+   "Pages numbered 1 to 5 counted from one but five from the end"
+  ],
+  "answer": 0,
+  "why": "The tuple selects pages the way range() does, so the last number is not included; the run copied 5 pages."
+ },
+ {
+  "concept": "PageSelection",
+  "level": "Apply",
+  "q": "What does this print?",
+  "code": "print((list(range(0, 5)), list(range(0, 5, 2))))",
+  "options": [
+   "([0, 1, 2, 3, 4, 5], [0, 2, 4])",
+   "([0, 1, 2, 3, 4], [0, 2, 4])",
+   "([1, 2, 3, 4, 5], [1, 3, 5])",
+   "([0, 1, 2, 3, 4], [0, 2])"
+  ],
+  "answer": 1,
+  "why": "range(0, 5) stops before 5, and range(0, 5, 2) steps by two."
+ },
+ {
+  "concept": "TupleVersusList",
+  "level": "Understand",
+  "q": "For append(), what is the difference between the tuple (0, 5) and the list [0, 5]?",
+  "options": [
+   "There is none; both copy pages 0 to 4",
+   "The list is a range; the tuple names two pages",
+   "The tuple is a range of indexes (5 pages); the list names exactly page indexes 0 and 5 (2 pages)",
+   "Both copy 6 pages, from 0 to 5"
+  ],
+  "answer": 2,
+  "why": "The library run copied 5 pages for the tuple and 2 for the list."
+ },
+ {
+  "concept": "TupleVersusList",
+  "level": "Apply",
+  "q": "What does this stand-in print for a list selection?",
+  "code": "sel = [0, 5]\nprint(list(range(*sel)) if isinstance(sel, tuple) else list(sel))",
+  "options": [
+   "[0, 1, 2, 3, 4]",
+   "[0, 1, 2, 3, 4, 5]",
+   "[5]",
+   "[0, 5]"
+  ],
+  "answer": 3,
+  "why": "A list is used as it is, so it names exactly the pages in it."
+ },
+ {
+  "concept": "AppendVersusMerge",
+  "level": "Understand",
+  "q": "How does merge() differ from append() on a PdfWriter?",
+  "options": [
+   "merge() takes a position first and inserts the pages there; append() adds them at the end",
+   "merge() joins two pages into one; append() keeps them apart",
+   "merge() removes the pages that were there; append() keeps them",
+   "merge() works only on encrypted files"
+  ],
+  "answer": 0,
+  "why": "Pages that were at and after the position move back; the library run gave 11 pages after merge(2, file, (0, 5))."
+ },
+ {
+  "concept": "AppendVersusMerge",
+  "level": "Apply",
+  "q": "What does this stand-in for inserting at position 2 print?",
+  "code": "pages = ['p0', 'p1', 'p2']\nprint(pages[:2] + ['new'] + pages[2:])",
+  "options": [
+   "['p0', 'p1', 'p2', 'new']",
+   "['p0', 'p1', 'new', 'p2']",
+   "['new', 'p0', 'p1', 'p2']",
+   "['p0', 'new', 'p1', 'p2']"
+  ],
+  "answer": 1,
+  "why": "Slicing at 2 puts the new item after p1 and before p2."
+ },
+ {
+  "concept": "PageRotation",
+  "level": "Understand",
+  "q": "What does page.rotate(45) do in pypdf 6.19.0?",
+  "options": [
+   "It rotates by 45 degrees clockwise",
+   "It rotates by the nearest multiple of 90",
+   "It raises ValueError, because the angle must be a multiple of 90",
+   "It does nothing and returns None"
+  ],
+  "answer": 2,
+  "why": "The library run printed ValueError: Rotation angle must be a multiple of 90."
+ },
+ {
+  "concept": "PageRotation",
+  "level": "Apply",
+  "q": "Which of these angles does the rotate() rule accept? This prints the test for 90, 180, 270, -90 and 45.",
+  "code": "print([a % 90 == 0 for a in (90, 180, 270, -90, 45)])",
+  "options": [
+   "[True, True, True, True, True]",
+   "[True, True, False, True, False]",
+   "[False, True, True, False, False]",
+   "[True, True, True, True, False]"
+  ],
+  "answer": 3,
+  "why": "Only multiples of 90 pass; 45 does not."
+ },
+ {
+  "concept": "BlankPages",
+  "level": "Understand",
+  "q": "What size is the page added by add_blank_page() on a writer that already has pages?",
+  "options": [
+   "The size of the preceding page",
+   "Always A4",
+   "Always letter size",
+   "The size of the first file ever opened"
+  ],
+  "answer": 0,
+  "why": "The library run showed the media box [0.0, 0.0, 612, 792] copied from the previous page."
+ },
+ {
+  "concept": "WatermarkAndStamp",
+  "level": "Understand",
+  "q": "What does page.merge_page(other, over=False) do?",
+  "options": [
+   "It puts the other page's content on top, as a stamp",
+   "It puts the other page's content underneath, as a watermark",
+   "It replaces the page with the other page",
+   "It deletes the other page from its file"
+  ],
+  "answer": 1,
+  "why": "The underlay text came first in the extracted text ('DRAFTPage one text'); with over=True it came last."
+ },
+ {
+  "concept": "PdfEncryption",
+  "level": "Understand",
+  "q": "What did writer.encrypt('pw') write when no algorithm was named, and with algorithm='AES-256'?",
+  "options": [
+   "AES-256 in both calls",
+   "RC4 in both calls",
+   "Older RC4 (version 2, revision 3), and version 5, revision 6",
+   "Nothing, until write() is called twice"
+  ],
+  "answer": 2,
+  "why": "The library run printed V = 2 R = 3 without an algorithm and V = 5 R = 6 with AES-256; AES needs the cryptography package."
+ },
+ {
+  "concept": "PdfDecryption",
+  "level": "Understand",
+  "q": "What does reader.decrypt() return for a wrong password?",
+  "options": [
+   "False",
+   "The value None",
+   "It raises ValueError",
+   "A value whose name is NOT_DECRYPTED"
+  ],
+  "answer": 3,
+  "why": "The library run printed NOT_DECRYPTED for the wrong password and OWNER_PASSWORD for the right one."
+ },
+ {
+  "concept": "PasswordStrength",
+  "level": "Understand",
+  "q": "Why is a dictionary word such as swordfish a poor password for a PDF?",
+  "options": [
+   "A program can try every word of a dictionary, and a PDF has no password reset",
+   "pypdf refuses words that appear in a dictionary",
+   "A word with fewer than ten letters cannot be used",
+   "The chapter says RC4 only accepts numbers"
+  ],
+  "answer": 0,
+  "why": "The chapter's third practice program does exactly that, trying word forms in decrypt()."
+ },
+ {
+  "concept": "PasswordStrength",
+  "level": "Apply",
+  "q": "The password breaker tries each word in lower case and in upper case. For 44,000 words, how many tries is that?",
+  "code": "print(2 * 44000)",
+  "options": [
+   "44000",
+   "88000",
+   "44000 ** 2",
+   "4400"
+  ],
+  "answer": 1,
+  "why": "Two forms of each word give 2 * 44000 tries."
+ },
+ {
+  "concept": "DocxPackage",
+  "level": "Understand",
+  "q": "What kind of file is a .docx file?",
+  "options": [
+   "A single XML file",
+   "A PDF with a Word label",
+   "A ZIP archive of XML parts",
+   "A binary file in a private Microsoft format that only Word reads"
+  ],
+  "answer": 2,
+  "why": "The library run listed '[Content_Types].xml' and 'word/document.xml' among its parts."
+ },
+ {
+  "concept": "DocxPackage",
+  "level": "Apply",
+  "q": "What does zipfile.is_zipfile() say about the 22 bytes of an empty ZIP archive?",
+  "code": "import io, zipfile\nprint(zipfile.is_zipfile(io.BytesIO(b'PK\\x05\\x06' + bytes(18))))",
+  "options": [
+   "False",
+   "None",
+   "It raises BadZipFile",
+   "True"
+  ],
+  "answer": 3,
+  "why": "The empty archive's end-of-directory record starts with PK, which is_zipfile() recognises."
+ },
+ {
+  "concept": "DocumentObject",
+  "level": "Understand",
+  "q": "What does Document() with no filename return?",
+  "options": [
+   "A blank document built on the default template",
+   "An error, since a filename is required",
+   "A document read from the last file saved",
+   "A list of paragraphs"
+  ],
+  "answer": 0,
+  "why": "Given a filename it opens that file; with none it starts from the default template."
+ },
+ {
+  "concept": "ParagraphObject",
+  "level": "Remember",
+  "q": "Where does a Paragraph object begin?",
+  "options": [
+   "At every full stop",
+   "Where the user pressed Enter",
+   "At every new line break inside it",
+   "At every change of style"
+  ],
+  "answer": 1,
+  "why": "A paragraph is one block of text; a style change starts a new run, not a new paragraph."
+ },
+ {
+  "concept": "RunObject",
+  "level": "Understand",
+  "q": "A paragraph holds plain text, a bold word, plain text and an italic word. How many runs does it have?",
+  "options": [
+   "Two",
+   "One",
+   "Four",
+   "Five"
+  ],
+  "answer": 2,
+  "why": "A run is a contiguous stretch in one style; the library run counted 4 runs for such a paragraph."
+ },
+ {
+  "concept": "ParagraphList",
+  "level": "Understand",
+  "q": "What is the type of a document's paragraphs attribute?",
+  "options": [
+   "A single string of all the text",
+   "A dictionary of styles",
+   "A tuple of Run objects",
+   "A list of Paragraph objects in order"
+  ],
+  "answer": 3,
+  "why": "len() counts them and an index picks one; each paragraph's runs attribute is a list of Run objects."
+ },
+ {
+  "concept": "RunText",
+  "level": "Analyze",
+  "q": "Why is a search for a phrase safer in paragraph.text than in the text of single runs?",
+  "options": [
+   "The phrase may be split across runs whose styles differ",
+   "Run text is always empty",
+   "Runs cannot be read",
+   "The text of a run is encrypted"
+  ],
+  "answer": 0,
+  "why": "A run holds only its own stretch of text."
+ },
+ {
+  "concept": "FullText",
+  "level": "Apply",
+  "q": "What does '\\n'.join() print for these two paragraph texts?",
+  "code": "print(repr('\\n'.join(['Document Title', 'A plain paragraph'])))",
+  "options": [
+   "'Document Title A plain paragraph'",
+   "'Document Title\\nA plain paragraph'",
+   "'Document Title\\n\\nA plain paragraph'",
+   "['Document Title', 'A plain paragraph']"
+  ],
+  "answer": 1,
+  "why": "One newline between the texts, and no styling."
+ },
+ {
+  "concept": "FullText",
+  "level": "Understand",
+  "q": "What is lost when the chapter's get_text() joins the paragraph texts?",
+  "options": [
+   "The order of the paragraphs",
+   "The words themselves",
+   "The styling",
+   "The number of paragraphs"
+  ],
+  "answer": 2,
+  "why": "Only each paragraph's text is collected; styles and run boundaries are dropped."
+ },
+ {
+  "concept": "StyleKinds",
+  "level": "Understand",
+  "q": "Which kinds of style are there?",
+  "options": [
+   "Page styles and font styles",
+   "Run styles and table styles only",
+   "Heading styles and body styles only",
+   "Paragraph styles, character styles and linked styles"
+  ],
+  "answer": 3,
+  "why": "Linked styles exist in both forms; an unknown style name raised KeyError in the library run."
+ },
+ {
+  "concept": "LinkedStyle",
+  "level": "Understand",
+  "q": "Which name applies the linked style Quote to a Run?",
+  "options": [
+   "Quote Char",
+   "Quote",
+   "Quote Run",
+   "Run Quote"
+  ],
+  "answer": 0,
+  "why": "The library run set the run style to Quote Char; giving the paragraph style itself raised ValueError."
+ },
+ {
+  "concept": "DefaultStyleNames",
+  "level": "Understand",
+  "q": "Which two names from the chapter's list are not in the default template of python-docx 1.2.0?",
+  "options": [
+   "'Title' and 'Heading 1'",
+   "'List Number ' with a trailing space, and 'MacroText'",
+   "'Quote' and 'List Number'",
+   "'Normal' and 'Heading 9'"
+  ],
+  "answer": 1,
+  "why": "The library run printed ['List Number ', 'MacroText'] as the names that are not present."
+ },
+ {
+  "concept": "CustomStyles",
+  "level": "Understand",
+  "q": "How can a custom style be created in python-docx?",
+  "options": [
+   "Only in Word, never in code",
+   "By assigning a new name to paragraph.style",
+   "In code with the document's styles.add_style(), as well as in Word",
+   "By editing the template file by hand"
+  ],
+  "answer": 2,
+  "why": "The library run added a style named Citation as a paragraph style."
+ },
+ {
+  "concept": "RunAttributes",
+  "level": "Analyze",
+  "q": "What happens when run.strike = True is set on a Run object?",
+  "options": [
+   "The text is struck through",
+   "AttributeError is raised",
+   "A character style named strike is created",
+   "No error, and no w:strike element is written; the font attribute must be used"
+  ],
+  "answer": 3,
+  "why": "The library run showed w:strike present in the XML only after run.font.strike = True."
+ },
+ {
+  "concept": "TriStateAttribute",
+  "level": "Understand",
+  "q": "What does None mean for a run's bold attribute?",
+  "options": [
+   "The setting is taken from the run's style",
+   "Bold is always off",
+   "Bold is always on",
+   "The run is deleted"
+  ],
+  "answer": 0,
+  "why": "True is always on, False always off, None hands the decision back to the style."
+ },
+ {
+  "concept": "TriStateAttribute",
+  "level": "Apply",
+  "q": "A run shows bold when its attribute is True, or when it is None and the style is bold. With the style bold, what does this print for True, False and None?",
+  "code": "print([(lambda r, s: s if r is None else r)(v, True) for v in (True, False, None)])",
+  "options": [
+   "[True, False, False]",
+   "[True, False, True]",
+   "[True, True, True]",
+   "[False, False, True]"
+  ],
+  "answer": 1,
+  "why": "None takes the style's value, so only False turns bold off."
+ },
+ {
+  "concept": "NewDocument",
+  "level": "Remember",
+  "q": "How is a document written to disk in python-docx?",
+  "options": [
+   "With write() on a binary file",
+   "With close()",
+   "With save() and a filename string",
+   "With export() and a format name"
+  ],
+  "answer": 2,
+  "why": "A blank document from Document() is saved by naming its file."
+ },
+ {
+  "concept": "AddParagraph",
+  "level": "Understand",
+  "q": "What does add_paragraph() return?",
+  "options": [
+   "The document",
+   "The text that was added",
+   "Nothing",
+   "The new Paragraph object, to which add_run() can add text"
+  ],
+  "answer": 3,
+  "why": "The paragraph is added at the end of the document and returned."
+ },
+ {
+  "concept": "AddHeading",
+  "level": "Understand",
+  "q": "What does doc.add_heading('Top', 0) add?",
+  "options": [
+   "A paragraph in the Title style",
+   "A paragraph in the Heading 0 style",
+   "A paragraph in the Normal style",
+   "An error"
+  ],
+  "answer": 0,
+  "why": "Level 0 is Title and 1 to 9 are Heading 1 to Heading 9; level 10 raised ValueError."
+ },
+ {
+  "concept": "AddHeading",
+  "level": "Apply",
+  "q": "What does this stand-in print for the levels 0, 1, 4 and 9?",
+  "code": "print(['Title' if n == 0 else 'Heading %d' % n for n in (0, 1, 4, 9)])",
+  "options": [
+   "['Heading 0', 'Heading 1', 'Heading 4', 'Heading 9']",
+   "['Title', 'Heading 1', 'Heading 4', 'Heading 9']",
+   "['Title', 'Heading 1', 'Heading 4', 'Heading 4']",
+   "['Title', 'Heading 0', 'Heading 3', 'Heading 8']"
+  ],
+  "answer": 1,
+  "why": "Level 0 is the Title style; the others use their number."
+ },
+ {
+  "concept": "BreaksInDocument",
+  "level": "Understand",
+  "q": "How does a run add a page break?",
+  "options": [
+   "add_break() with no argument",
+   "add_run('page')",
+   "add_break(WD_BREAK.PAGE) on the Run",
+   "insert_page() on the Paragraph"
+  ],
+  "answer": 2,
+  "why": "With no argument add_break() makes a line break; the library run found one w:br of type page."
+ },
+ {
+  "concept": "AddPicture",
+  "level": "Understand",
+  "q": "What units does Word store for the lengths Inches() and Cm() give?",
+  "options": [
+   "Pixels, 96 to the inch",
+   "Points, 72 to the inch",
+   "Twips, 1440 to the inch",
+   "English metric units, 914400 to the inch"
+  ],
+  "answer": 3,
+  "why": "The library run showed Inches(1) as 914400 and Cm(4) as 1440000."
+ },
+ {
+  "concept": "AddPicture",
+  "level": "Apply",
+  "q": "How many English metric units are 1 inch and 4 centimetres? This prints 914400 * 1 and 360000 * 4.",
+  "code": "print((914400 * 1, 360000 * 4))",
+  "options": [
+   "(914400, 1440000)",
+   "(914400, 144000)",
+   "(96, 151)",
+   "(72, 113)"
+  ],
+  "answer": 0,
+  "why": "914400 per inch and 360000 per centimetre."
+ },
+ {
+  "concept": "FindPdfFiles",
+  "level": "Analyze",
+  "q": "Why does the project sort the names with key=str.lower?",
+  "options": [
+   "str.lower removes the .pdf ending",
+   "A plain sort puts every uppercase name before every lowercase one",
+   "A plain sort raises an error on capitals",
+   "It makes os.listdir return names in order"
+  ],
+  "answer": 1,
+  "why": "The documentation says os.listdir returns names in arbitrary order, so the program sorts them."
+ },
+ {
+  "concept": "FindPdfFiles",
+  "level": "Apply",
+  "q": "Both names are PDF files. What does this print?",
+  "code": "names = ['alpha.pdf', 'Zeta.pdf']\nprint(sorted(names, key=str.lower) == ['alpha.pdf', 'Zeta.pdf'] and sorted(names) == ['Zeta.pdf', 'alpha.pdf'])",
+  "options": [
+   "['Zeta.pdf', 'alpha.pdf']",
+   "['alpha.pdf', 'Zeta.pdf'] and then ['alpha.pdf', 'Zeta.pdf']",
+   "True",
+   "False"
+  ],
+  "answer": 2,
+  "why": "With key=str.lower the order is alpha, Zeta; plain sort gives Zeta first, so the comparison is True."
+ },
+ {
+  "concept": "CopyAfterFirstPage",
+  "level": "Understand",
+  "q": "In the project, writer.append(name, (1, len(reader.pages))) is run on a one-page file. What does it add?",
+  "options": [
+   "The first page",
+   "One blank page",
+   "An error is raised",
+   "No pages"
+  ],
+  "answer": 3,
+  "why": "range(1, 1) is empty, so a one-page file adds nothing."
+ },
+ {
+  "concept": "CopyAfterFirstPage",
+  "level": "Apply",
+  "q": "Which page indexes are copied from files of 3, 2 and 1 pages?",
+  "code": "print([list(range(1, n)) for n in (3, 2, 1)])",
+  "options": [
+   "[[1, 2], [1], []]",
+   "[[0, 1, 2], [0, 1], [0]]",
+   "[[1, 2, 3], [1, 2], [1]]",
+   "[[1, 2], [1], [0]]"
+  ],
+  "answer": 0,
+  "why": "range(1, n) skips index 0 and is empty for n = 1."
+ },
+ {
+  "concept": "RerunTrap",
+  "level": "Analyze",
+  "q": "The project writes combined.pdf into the folder it reads. Why does a second run give a longer result?",
+  "options": [
+   "pypdf appends to the old file instead of replacing it",
+   "The first result is listed as an input, and its pages after the first are copied in too",
+   "The files are read twice by os.listdir",
+   "The cover pages are added back"
+  ],
+  "answer": 1,
+  "why": "In the library run the result grew from 3 to 5 pages until the output name was skipped."
+ },
+ {
+  "concept": "PdfParanoia",
+  "level": "Understand",
+  "q": "In the first practice program, when is the original PDF deleted?",
+  "options": [
+   "Before the copy is written",
+   "As soon as encrypt() is called",
+   "After the encrypted copy has been read and decrypted successfully",
+   "Never; the program only copies"
+  ],
+  "answer": 2,
+  "why": "The program checks the copy first, so a failed encryption does not lose the file."
+ },
+ {
+  "concept": "PdfParanoia",
+  "level": "Apply",
+  "q": "The encrypted name adds _encrypted.pdf before the extension. What does this print?",
+  "code": "import os\nprint(repr(os.path.splitext('sub/c.pdf')[0] + '_encrypted.pdf'))",
+  "options": [
+   "'sub/c.pdf_encrypted'",
+   "'sub/c_encrypted'",
+   "'sub_encrypted/c.pdf'",
+   "'sub/c_encrypted.pdf'"
+  ],
+  "answer": 3,
+  "why": "os.path.splitext separates '.pdf', and the program builds the new name from the part before it."
+ },
+ {
+  "concept": "CustomInvitations",
+  "level": "Analyze",
+  "q": "A page break follows every invitation, the last included. What is the effect for 5 guests?",
+  "options": [
+   "5 page breaks, so one blank page more than needed",
+   "4 page breaks and no extra page",
+   "5 page breaks and no extra page",
+   "10 page breaks"
+  ],
+  "answer": 0,
+  "why": "The library run counted 5 guests and 5 page breaks."
+ },
+ {
+  "concept": "PasswordBreaker",
+  "level": "Understand",
+  "q": "What kind of attack is the third practice program?",
+  "options": [
+   "A man-in-the-middle attack",
+   "A brute-force attack with a dictionary",
+   "A phishing attack",
+   "A denial-of-service attack"
+  ],
+  "answer": 1,
+  "why": "It tries over 44,000 dictionary words in lower and upper case in decrypt()."
+ },
+ {
+  "concept": "PasswordBreaker",
+  "level": "Apply",
+  "q": "How many tries does the program make for 44,000 words in two forms? This prints the product.",
+  "code": "print(44000 * 2)",
+  "options": [
+   "44000",
+   "22000",
+   "88000",
+   "176000"
+  ],
+  "answer": 2,
+  "why": "88,000 tries in all."
+ },
+ {
+  "concept": "PresentationFormat",
+  "level": "Understand",
+  "q": "Why does the chapter say PDF and Word files are hard to parse?",
+  "options": [
+   "Their formats are secret",
+   "They are always encrypted",
+   "They cannot be opened by Python at all",
+   "They are made for people to read, print and edit, not for programs to parse"
+  ],
+  "answer": 3,
+  "why": "The next chapter's CSV, JSON and XML formats are the answer to that."
+ },
+ {
+  "concept": "HumanReview",
+  "level": "Understand",
+  "q": "The chapter suggests a language model to clean extracted text. What must follow?",
+  "options": [
+   "A person reviews the result",
+   "Nothing, since the model is exact",
+   "A second model, with no person",
+   "The file is deleted"
+  ],
+  "answer": 0,
+  "why": "The chapter's own trial removed a chapter number that was meant to stay. The model step was not run here."
+ },
+ {
+  "concept": "OtherPdfLibraries",
+  "level": "Remember",
+  "q": "Which package is among those the chapter's summary names for other PDF tasks?",
+  "options": [
+   "numpy",
+   "reportlab",
+   "flask",
+   "requests"
+  ],
+  "answer": 1,
+  "why": "The summary names six: pdfplumber, reportlab, pdfrw, PyMuPDF, pdfkit and borb."
+ },
+ {
+  "concept": "PackageNames",
+  "level": "Remember",
+  "q": "Which package is installed and which module is imported for Word files?",
+  "options": [
+   "Install docx, import python_docx",
+   "Install python-docx, import python_docx",
+   "Install python-docx, import docx",
+   "Install docx, import docx2"
+  ],
+  "answer": 2,
+  "why": "An older, different package named docx exists on PyPI; the one to install is python-docx."
+ },
+ {
+  "concept": "PdfFiles",
+  "level": "Remember",
+  "q": "Which package does chapter 17 use to read, write and protect PDF files?",
+  "options": [
+   "Python-Docx",
+   "pdfkit",
+   "Pillow",
+   "PyPDF, through its reader and writer objects"
+  ],
+  "answer": 3,
+  "why": "The chapter presents the PyPDF package; python-docx is its Word counterpart."
+ },
+ {
+  "concept": "PdfReading",
+  "level": "Understand",
+  "q": "What does reading a PDF with PyPDF involve?",
+  "options": [
+   "Opening it with a reader and asking each page for its text or images, accepting an imperfect result",
+   "Editing the text of a page in place",
+   "Decoding the file with the zipfile module",
+   "Copying every page into a writer first"
+  ],
+  "answer": 0,
+  "why": "A reader gives pages; what they return can be incomplete or oddly arranged."
+ },
+ {
+  "concept": "PdfWriting",
+  "level": "Understand",
+  "q": "How does the chapter build a new PDF with PyPDF?",
+  "options": [
+   "By typing the text of each page into a writer",
+   "By copying, rotating, inserting and merging pages from other files into a writer, then saving it",
+   "By converting a Word file with save()",
+   "By editing pages of the original file in place"
+  ],
+  "answer": 1,
+  "why": "A writer starts empty and receives pages from other files before write() saves it."
+ },
+ {
+  "concept": "PdfProtection",
+  "level": "Remember",
+  "q": "How is a PDF protected with a password in the chapter?",
+  "options": [
+   "It is renamed with a .lock extension",
+   "It is zipped with a password",
+   "It is encrypted, and read again only by giving that password",
+   "It is split into pages, each with a password"
+  ],
+  "answer": 2,
+  "why": "encrypt() on a writer makes the written file unreadable without the password."
+ },
+ {
+  "concept": "WordFiles",
+  "level": "Remember",
+  "q": "Which three data types does the chapter's Python-Docx package use for Word files?",
+  "options": [
+   "Document, Page and Line",
+   "File, Section and Word",
+   "Package, Style and Font",
+   "Document, Paragraph and Run"
+  ],
+  "answer": 3,
+  "why": "A Document holds Paragraph objects and each Paragraph holds Run objects."
+ },
+ {
+  "concept": "WordStructure",
+  "level": "Understand",
+  "q": "How is a .docx file structured for python-docx?",
+  "options": [
+   "A Document holds Paragraph objects and each Paragraph holds Run objects",
+   "A Document holds Run objects and each Run holds Paragraph objects",
+   "A Document holds one long string of text",
+   "A Document holds Page objects and each Page holds Word objects"
+  ],
+  "answer": 0,
+  "why": "Paragraph and run are the two levels below the document."
+ },
+ {
+  "concept": "WordReading",
+  "level": "Understand",
+  "q": "What does reading a Word document with python-docx mean?",
+  "options": [
+   "Rendering its pages as images",
+   "Listing its paragraphs, their runs and their text",
+   "Converting it to PDF",
+   "Decrypting its ZIP archive"
+  ],
+  "answer": 1,
+  "why": "The paragraphs and runs attributes are lists, and each has a text attribute."
+ },
+ {
+  "concept": "WordStyling",
+  "level": "Understand",
+  "q": "What are styles and run attributes for in a Word document?",
+  "options": [
+   "They encrypt the text of a paragraph",
+   "They split a paragraph into pages",
+   "They give the same look to many paragraphs or runs, and are read and set by name",
+   "They count the words in a run"
+  ],
+  "answer": 2,
+  "why": "python-docx reads and sets them by name, for example a style name or run.bold."
+ },
+ {
+  "concept": "WordWriting",
+  "level": "Understand",
+  "q": "What does writing a Word document with python-docx mean?",
+  "options": [
+   "Editing the middle of the XML of an existing file by hand",
+   "Printing the document to a PDF printer",
+   "Typing the text into Word with the keyboard",
+   "Creating a blank document, adding paragraphs, runs, headings, breaks and pictures to its end, and saving it"
+  ],
+  "answer": 3,
+  "why": "The add_ methods all add at the end; save() writes the file."
+ },
+ {
+  "concept": "Automation",
+  "level": "Understand",
+  "q": "What do the programs in the last part of the chapter do?",
+  "options": [
+   "Combine, protect and produce PDF and Word files, inside limits that the formats impose",
+   "Translate PDF files into other languages",
+   "Convert every Word file to a PDF",
+   "Scan paper documents with a camera"
+  ],
+  "answer": 0,
+  "why": "They put the chapter's objects to work: the project, three practice programs and a section on limits."
+ },
+ {
+  "concept": "CombineProject",
+  "level": "Understand",
+  "q": "What does Project 12 do?",
+  "options": [
+   "It copies only the first page of each PDF into combined.pdf",
+   "It combines all the PDFs of the working folder, sorted alphabetically and without each first page, into combined.pdf",
+   "It encrypts every PDF of the folder",
+   "It converts each PDF to a Word file"
+  ],
+  "answer": 1,
+  "why": "The cover sheets are dropped; the sorting uses key=str.lower."
+ },
+ {
+  "concept": "PracticePrograms",
+  "level": "Remember",
+  "q": "What does the chapter end with?",
+  "options": [
+   "Three practice questions and twelve programs",
+   "One large project and no questions",
+   "Twelve practice questions and three practice programs",
+   "A list of packages and no programs"
+  ],
+  "answer": 2,
+  "why": "The three programs are the PDF paranoia, the custom invitations and the PDF password breaker."
+ },
+ {
+  "concept": "Limits",
+  "level": "Understand",
+  "q": "What does the last section of the chapter discuss?",
+  "options": [
+   "How to print a document on paper",
+   "How to sell Word documents",
+   "How to install Python on a phone",
+   "Why PDF and Word are hard to automate and where the reader can go next"
+  ],
+  "answer": 3,
+  "why": "It gives the reason (formats made for people) and points to other packages and to the next chapter."
+ }
+]

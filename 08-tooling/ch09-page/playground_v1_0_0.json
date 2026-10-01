@@ -1,0 +1,5 @@
+{
+ "_version": "1.0.0",
+ "label": "Contact extractor: phone numbers and e-mail addresses in a text (no input)",
+ "code": "import re\nphone_re = re.compile(r'''(\n    (\\d{3}|\\(\\d{3}\\))?  # Area code\n    (\\s|-|\\.)?  # Separator\n    (\\d{3})  # First three digits\n    (\\s|-|\\.)  # Separator\n    (\\d{4})  # Last four digits\n    (\\s*(ext|x|ext\\.)\\s*(\\d{2,5}))?  # Extension\n    )''', re.VERBOSE)\nemail_re = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}')\ntext = '''Call 800-555-7240 or (415) 555-9900 or 415.555.9950 ext. 123.\nAlso 555-1234 x99. Write to info@nostarch.com or media@nostarch.com.'''\nmatches = []\nfor groups in phone_re.findall(text):\n    area = groups[1].strip('()')\n    number = '-'.join(part for part in (area, groups[3], groups[5]) if part)\n    if groups[8] != '':\n        number += ' x' + groups[8]\n    matches.append(number)\nmatches += email_re.findall(text)\nif matches:\n    print('Found:')\n    print('\\n'.join(matches))\nelse:\n    print('No phone numbers or email addresses found.')"
+}

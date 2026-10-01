@@ -1,0 +1,4213 @@
+{
+ "_version": "9.17.0",
+ "visuals": {},
+ "course": {
+  "_version": "1.3.3",
+  "name": "SEN0414 Advanced Programming",
+  "line": "SEN0414 Advanced Programming",
+  "chapter_sub": "chapter {n} of Automate the Boring Stuff with Python, 3rd edition",
+  "chapter_intro": "Chapter {n} of <i>Automate the Boring Stuff with Python</i>, 3rd edition (Sweigart, 2025), renewed for an advanced course.",
+  "playground": {
+   "label": "Reading the output of OCR: language codes, the NAPS2 call, hyphens and a correction (uses input)",
+   "code": "import difflib, re, shlex\n\nraw = (\"Iv was on a dreary night of November, that I beheld the\\n\"\n       \"accomplishment of my toils. With an anxiety that almost\\n\"\n       \"amounted to agony, I collected the instruments of life\\n\"\n       \"around me, that I might infuse a spark of being into the\\n\"\n       \"life-\\nless thing that lay at my feet.\")\nfixed_by_reader = \"It was on a dreary night of November, that I beheld the accomplishment of my toils.\"\n\nlangs = input('Languages (codes joined with +): ').strip()\ncodes = langs.split('+')\nfor code in codes:\n    ok = bool(re.fullmatch(r'[a-z]{3}(_[a-z]+)?', code))\n    print(code, 'looks like a language code' if ok else 'does NOT look like a language code')\n\nargv = ['naps2', 'console', '-i', 'my scan.png', '-o', 'output.pdf',\n        '--ocrlang', langs, '-n', '0', '-f']\nprint(shlex.join(argv))\n\njoined = re.sub(r'-\\n(\\w)', r'\\1', raw)\nparagraph = ' '.join(joined.split())\nprint(paragraph)\n\nfirst_sentence = paragraph.split('. ')[0] + '.'\nratio = difflib.SequenceMatcher(None, first_sentence, fixed_by_reader).ratio()\nprint('similarity to the reader\\'s correction:', round(ratio, 3))\nfor a, b in zip(first_sentence.split(), fixed_by_reader.split()):\n    if a != b:\n        print('check this word:', a, '->', b)",
+   "inputs": "eng+jpn"
+  },
+  "corpus": {
+   "book_pin_source": "02-textbook/sen0414_textbook_v1_0_0.ttl",
+   "book": [
+    "automate-python-book-3e/01-ontologies/automate_python_3e_ch{nn}_v1_0_0.ttl"
+   ],
+   "course": [
+    "00-course-profile/sen0414_course_v1_0_0.ttl",
+    "01-outcomes/sen0414_outcomes_v1_0_0.ttl",
+    "02-textbook/sen0414_textbook_v1_0_0.ttl",
+    "03-materials/sen0414_materials_v1_22_0.ttl"
+   ]
+  }
+ },
+ "discussion": [],
+ "findings": [
+  [
+   "Background",
+   "Chapter 22 of the 3rd edition, Recognizing Text in Images, defines optical character recognition and teaches the PyTesseract package with the Tesseract engine: installing the engine on Windows, macOS and Linux, the four lines that open an image with Pillow and pass it to image_to_string(), the flaws of OCR text and the preprocessing that reduces them, correction of the text with a large language model, the lang argument and get_languages() for non-English text, and the NAPS2 application run through subprocess to build a PDF with embedded text; it closes with 7 practice questions and the practice program Browser Text Scraper."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's four lines run under Python 3.14.4 with current packages: with PyTesseract 0.3.13 (released in August 2024, for Python 3.8 and later), Pillow 12.3.0 and Tesseract 5.3.4 a rendered line of text comes back as 'Hello OCR world 2026' followed by a newline, the function takes a Pillow image or a file path with the same result, PyTesseract declares Pillow as a requirement so installing it installs Pillow, and its result equals what the tesseract program itself prints. The book's own images (ocr-example.png, frankenstein.png, frankenstein_jpn.png) are served from a resources page that refused this study with an access error, so the chapter's printed OCR results were not reproduced; only text rendered for this study was read."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's list of flaws and of preprocessing steps agrees with the Tesseract documentation, which adds that dark text on a light background is advice for version 4 and later, that a missing border and a border that is too large both cause trouble, that the default page mode expects a page of text so a small region may need --psm, and that Tesseract binarises internally and since 5.0.0 also offers Adaptive Otsu and Sauvola. Executed on rendered text with Tesseract 5.3.4: a line cropped tight to its letters gave an empty string until a 10-pixel white border or --psm 7 was added, and --psm 7 read the C of OCR as G; a slant of 12 degrees gave an empty string, 8 degrees misread one letter and 5 degrees read correctly; two columns were read across the page as one line each; and white text on a black background was read correctly, where the documentation advises dark text for version 4."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's claim that Tesseract assumes English holds: the lang parameter of image_to_string() has the default None in the signature and the documentation says the language defaults to eng. get_languages() returned ['eng', 'osd'] on the machine of this study, not the long list the chapter prints, because only English and orientation data are installed. A language whose pack is missing raises TesseractError (a RuntimeError) for lang='jpn', but lang='eng+jpn' raised nothing: the program wrote a warning to standard error, exited with status 0 and read with English alone, so a missing pack beside a present one can go unnoticed. Codes are mostly three letters with exceptions such as aze_cyrl, and ISO 639-2 gives some languages two codes (fre and fra, ger and deu), of which the chapter's fra and deu are the ones Tesseract uses."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's NAPS2 call is the documented one: -i imports, -o names the output, -n 0 scans nothing, -f overwrites, -v prints progress, --install ocr-eng installs a pack and --ocrlang sets the language and implies --enableocr; the documented slice notation starts at 0 and accepts [0], [-1], [:2], [2:] and [2:-2] with the meaning of Python slices, as the chapter says. The documentation adds --disableocr, --deskew and --rotate, that imported files are prepended to the output in the order given, and deb and rpm installers for Linux with the command naps2 console besides the Flatpak the chapter names; the download page lists release 8.3.2. The OCRmyPDF package the chapter recommends as an alternative adds an OCR text layer to existing PDF files. Neither NAPS2 nor OCRmyPDF is installed on the machine of this study, so no call to them was run."
+  ],
+  [
+   "Conclusion",
+   "For an advanced course, chapter 22 is best taught as a pipeline in which each step has a check: prepare the image (border, upright, contrast), choose the language and confirm the pack is installed, read the text, and then test the result with what a program can test (patterns for numbers, differences against a correction) before a person reviews it; the chapter's programs are correct for the tools they name, and what it leaves for the course to add is the page mode, the border and slant limits, the silent missing pack, the result and encoding checks around subprocess and open, and the plain statement that the book's images, NAPS2 and the language model were not reproduced here."
+  ],
+  [
+   "Contemporary developments",
+   "The chapter calls subprocess.run() and does not look at the result; the documentation describes the returned CompletedProcess, and with check=True a non-zero exit status raises CalledProcessError. Executed with a stand-in program, since NAPS2 is not installed: the arguments of a list reach the program unsplit ('my scan.png' stays one argument), the exit status 3 is in returncode, check=True raises CalledProcessError, and a program that is not found raises FileNotFoundError. The practice program appends with open() in mode 'a', whose encoding is the locale's unless encoding is given, and with -X warn_default_encoding an EncodingWarning is issued, so text that may hold non-ASCII characters is appended with encoding='utf-8'; run twice, the appending program kept both pages of recognised text in one file."
+  ],
+  [
+   "Contemporary developments",
+   "The chapter's correction with a large language model was not executed, since it needs a network service and an account. What a program can do for itself was executed: a dictionary test accepts 'modem' where the text should read 'modern', so a spellcheck finds the wrong kind of mistake; a regular expression removes an end-of-line hyphen but joins 'half-' and 'extinguished' into one word although the hyphen belongs to the word; and the words that differ between the raw and the corrected text can be listed and scored, which gives the human reviewer the chapter asks for what to look at."
+  ],
+  [
+   "Contemporary developments",
+   "The link the chapter gives for preprocessing with OpenCV, autbor.com/preprocessingocr, opens a page titled Image Preprocessing for Tesseract OCR that calls itself a placeholder blog post and lists OpenCV functions for binarising, inverting, removing noise with a median blur, adding a border and finding the skew angle; OpenCV's own site answered this study with an access check, and OpenCV is not installed, so preprocessing is shown here with Pillow and with small grids of pixel values. The address autbor.com/embeddedfrankenstein that the practice program names opens a page titled Frankenstein."
+  ]
+ ],
+ "unit": null,
+ "research_file": "sen0414_ch22_research_v1_0_0.ttl",
+ "chapter": 22,
+ "title": "Recognizing text in images for an advanced course: chapter 22 of the 3rd edition and today's Python",
+ "python": "Python 3.14.4",
+ "nodes": [
+  {
+   "id": "OcrConcepts",
+   "label": "Ocr concepts",
+   "level": 1,
+   "parent": null,
+   "body": "Chapter 22 starts from what OCR is, the engine and packages that do it, and what they cannot do (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_OcrConcepts",
+   "class_iri": "http://example.org/sen0414/ch22#OcrConcepts"
+  },
+  {
+   "id": "CoreTools",
+   "label": "Core tools",
+   "level": 2,
+   "parent": "OcrConcepts",
+   "body": "OCR, the Tesseract engine, PyTesseract and Pillow are the four parts the chapter's four lines use (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_CoreTools",
+   "class_iri": "http://example.org/sen0414/ch22#CoreTools"
+  },
+  {
+   "id": "OpticalCharacterRecognition",
+   "label": "Optical character recognition",
+   "level": 3,
+   "parent": "CoreTools",
+   "body": "The chapter defines text recognition, more formally optical character recognition, as the extraction of text from an image, and gives street signs, the writing on checks deposited at an ATM and scanned receipts as uses; the string methods and regular expressions of the earlier chapters work only once the text is a string (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_OpticalCharacterRecognition",
+   "class_iri": "http://example.org/sen0414/ch22#OpticalCharacterRecognition",
+   "example": "the extraction of text from an image",
+   "definition": "Optical character recognition, OCR, is the extraction of text from an image, so that string methods and regular expressions can then be applied to it."
+  },
+  {
+   "id": "TesseractEngine",
+   "label": "Tesseract engine",
+   "level": 3,
+   "parent": "CoreTools",
+   "body": "The chapter names Tesseract as the open source OCR engine and PyTesseract as the package that works with it; the engine is a program that the package starts, and on the machine of this study 'tesseract' is version 5.3.4 with English and orientation data, and the text PyTesseract returned for a rendered line equalled what the program printed on its own for the same file (Sweigart, 2025) (Tesseract contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_TesseractEngine",
+   "class_iri": "http://example.org/sen0414/ch22#TesseractEngine",
+   "example": "the tesseract program",
+   "definition": "Tesseract is the open source OCR engine that does the recognition; it is a separate program installed on the computer, and Python only starts it and reads what it returns."
+  },
+  {
+   "id": "PyTesseractWrapper",
+   "label": "Py tesseract wrapper",
+   "level": 3,
+   "parent": "CoreTools",
+   "body": "The chapter installs PyTesseract after the engine and says it also installs the Pillow image library; the metadata of pytesseract 0.3.13 lists packaging>=21.3 and Pillow>=8.0.0 as requirements, and the version was released in August 2024 for Python 3.8 and later, and ran under Python 3.14.4 (Sweigart, 2025) (PyTesseract contributors, 2024).",
+   "section_iri": "http://example.org/sen0414/ch22#S_PyTesseractWrapper",
+   "class_iri": "http://example.org/sen0414/ch22#PyTesseractWrapper",
+   "example": "import pytesseract as tess",
+   "definition": "PyTesseract is the Python package that calls the tesseract program for a script; it lists Pillow among its requirements."
+  },
+  {
+   "id": "PillowImage",
+   "label": "Pillow image",
+   "level": 3,
+   "parent": "CoreTools",
+   "body": "The chapter opens the image with Image.open() from the Pillow library, which the next chapters treat at length; the Pillow documentation gives the box for Image.crop() as a tuple of left, upper, right and lower pixel coordinates (Sweigart, 2025) (Pillow contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_PillowImage",
+   "class_iri": "http://example.org/sen0414/ch22#PillowImage",
+   "example": "Image.open('ocr-example.png')",
+   "definition": "Pillow opens an image file as an object that can be passed to PyTesseract, cropped, rotated and given a border."
+  },
+  {
+   "id": "TextLimits",
+   "label": "Text limits",
+   "level": 2,
+   "parent": "OcrConcepts",
+   "body": "The chapter says what OCR cannot be expected to do, and tells the reader to treat the text as imperfect (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_TextLimits",
+   "class_iri": "http://example.org/sen0414/ch22#TextLimits"
+  },
+  {
+   "id": "PrintedTextOnly",
+   "label": "Printed text only",
+   "level": 3,
+   "parent": "TextLimits",
+   "body": "The chapter says Tesseract is intended for print documents rather than photos or handwritten text, and that a photo of the back of a car cannot be expected to yield the license plate number unless the image is cropped around the plate first, and even then it may be unreadable (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_PrintedTextOnly",
+   "class_iri": "http://example.org/sen0414/ch22#PrintedTextOnly",
+   "example": "a photo of a license plate",
+   "definition": "Tesseract is meant for printed documents; photographs of scenes and handwriting are not its task, and a photographed object must be cropped to its text first."
+  },
+  {
+   "id": "ImperfectResult",
+   "label": "Imperfect result",
+   "level": 3,
+   "parent": "TextLimits",
+   "body": "The chapter lists what to expect even from a screenshot: the end-of-line hyphenation is kept, font and size are lost, the whitespace may not match, characters such as a lowercase j and i may be confused, columns and tables may be mixed and out of order, and numbers deserve special attention (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ImperfectResult",
+   "class_iri": "http://example.org/sen0414/ch22#ImperfectResult",
+   "example": "always consider OCR text imperfect",
+   "definition": "Recognised text is a draft: it keeps hyphenation, loses font and size, may space words wrongly, may confuse characters and may mix columns."
+  },
+  {
+   "id": "Installation",
+   "label": "Installation",
+   "level": 1,
+   "parent": null,
+   "body": "Installing means the engine, optionally the language packs, and then the Python package (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_Installation",
+   "class_iri": "http://example.org/sen0414/ch22#Installation"
+  },
+  {
+   "id": "EngineSetup",
+   "label": "Engine setup",
+   "level": 2,
+   "parent": "Installation",
+   "body": "The engine is installed with the tools of each operating system (Sweigart, 2025) (Tesseract contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_EngineSetup",
+   "class_iri": "http://example.org/sen0414/ch22#EngineSetup"
+  },
+  {
+   "id": "EngineInstall",
+   "label": "Engine install",
+   "level": 3,
+   "parent": "EngineSetup",
+   "body": "The chapter installs Tesseract with the installer of the UB Mannheim wiki on Windows, with brew install tesseract on macOS and with sudo apt install tesseract-ocr on Linux, and the Tesseract documentation names the same Debian and Ubuntu package and adds that the engine and the language data are two separate parts of an installation; none of these commands was run here, where Tesseract was already installed (Sweigart, 2025) (Tesseract contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_EngineInstall",
+   "class_iri": "http://example.org/sen0414/ch22#EngineInstall",
+   "example": "sudo apt install tesseract-ocr",
+   "definition": "The engine is installed outside Python: with an installer on Windows, with Homebrew on macOS and with the package manager on Linux; language packs are installed apart from it."
+  },
+  {
+   "id": "LanguagePackFile",
+   "label": "Language pack file",
+   "level": 3,
+   "parent": "EngineSetup",
+   "body": "The chapter says language packs have the extension .traineddata, with jpn.traineddata for Japanese, and that installing all languages adds about 600MB on Windows; the Tesseract documentation lists the files of the packs as, for example, deu.traineddata, fra.traineddata and jpn.traineddata, and the file name without its extension is the language code (Sweigart, 2025) (Tesseract contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_LanguagePackFile",
+   "class_iri": "http://example.org/sen0414/ch22#LanguagePackFile",
+   "example": "jpn.traineddata",
+   "definition": "A language pack is a file named for its language code with the extension .traineddata.",
+   "io": {
+    "code": "'jpn.traineddata'.removesuffix('.traineddata')",
+    "out": "'jpn'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "'jpn.traineddata'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "'.traineddata'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PathVariable",
+   "label": "Path variable",
+   "level": 3,
+   "parent": "EngineSetup",
+   "body": "The chapter tells the Windows user to add the folder C:\\Program Files\\Tesseract-OCR to the PATH environment variable so that PyTesseract can reach tesseract.exe; the PyTesseract documentation gives the alternative of setting pytesseract.pytesseract.tesseract_cmd to the full path, and on the machine of this study the program was found on the PATH (Sweigart, 2025) (PyTesseract contributors, 2024).",
+   "section_iri": "http://example.org/sen0414/ch22#S_PathVariable",
+   "class_iri": "http://example.org/sen0414/ch22#PathVariable",
+   "example": "C:\\Program Files\\Tesseract-OCR on PATH",
+   "definition": "PyTesseract starts the program named tesseract, so the program's folder must be on the PATH, or its full path must be given to PyTesseract."
+  },
+  {
+   "id": "ReadingText",
+   "label": "Reading text",
+   "level": 1,
+   "parent": null,
+   "body": "Reading text takes four lines, and PyTesseract offers more outputs than the chapter shows (Sweigart, 2025) (PyTesseract contributors, 2024).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ReadingText",
+   "class_iri": "http://example.org/sen0414/ch22#ReadingText"
+  },
+  {
+   "id": "ShortProgram",
+   "label": "Short program",
+   "level": 2,
+   "parent": "ReadingText",
+   "body": "The four lines import the two libraries, open the image and pass it to image_to_string() (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ShortProgram",
+   "class_iri": "http://example.org/sen0414/ch22#ShortProgram"
+  },
+  {
+   "id": "ImageOpen",
+   "label": "Image open",
+   "level": 3,
+   "parent": "ShortProgram",
+   "body": "The chapter opens ocr-example.png with img = Image.open('ocr-example.png') after import pytesseract as tess and from PIL import Image; the book's images come from its online resources page, which refused this study with an access error, so a line of text was rendered with Pillow 12.3.0 instead and read the same way (Sweigart, 2025) (Pillow contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ImageOpen",
+   "class_iri": "http://example.org/sen0414/ch22#ImageOpen",
+   "example": "img = Image.open('ocr-example.png')",
+   "definition": "Image.open() reads an image file into a Pillow image; the chapter imports pytesseract as tess and Image from PIL first."
+  },
+  {
+   "id": "ImageToString",
+   "label": "Image to string",
+   "level": 3,
+   "parent": "ShortProgram",
+   "body": "text = tess.image_to_string(img) returned 'Hello OCR world 2026' followed by a newline for a rendered line of text, which print() shows as a line and a blank line; the same call with the path of the saved file and with the image opened again from that file gave the identical string, and the PyTesseract documentation adds that an image given as an object is converted to RGB and that lang defaults to eng (Sweigart, 2025) (PyTesseract contributors, 2024).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ImageToString",
+   "class_iri": "http://example.org/sen0414/ch22#ImageToString",
+   "example": "tess.image_to_string(img)",
+   "definition": "image_to_string() takes an image, or the path of one, and returns the recognised text as one string with line breaks; its lang argument names the language."
+  },
+  {
+   "id": "OtherOutputs",
+   "label": "Other outputs",
+   "level": 2,
+   "parent": "ReadingText",
+   "body": "PyTesseract returns more than the text of the chapter (PyTesseract contributors, 2024).",
+   "section_iri": "http://example.org/sen0414/ch22#S_OtherOutputs",
+   "class_iri": "http://example.org/sen0414/ch22#OtherOutputs"
+  },
+  {
+   "id": "WordConfidenceTable",
+   "label": "Word confidence table",
+   "level": 3,
+   "parent": "OtherOutputs",
+   "body": "image_to_data() returned a table whose header row has the twelve columns level, page_num, block_num, par_num, line_num, word_num, left, top, width, height, conf and text, and for the rendered line its words were Hello, OCR, world and 2026, each with a confidence between 0 and 100; with output_type set to Output.DICT it returned a dictionary with those columns as keys; the chapter does not present it (PyTesseract contributors, 2024).",
+   "section_iri": "http://example.org/sen0414/ch22#S_WordConfidenceTable",
+   "class_iri": "http://example.org/sen0414/ch22#WordConfidenceTable",
+   "example": "tess.image_to_data(img)",
+   "definition": "image_to_data() returns a tab-separated table with one row per recognised word, its box, a confidence from 0 to 100 and its text, so a program can tell which words to distrust.",
+   "io": {
+    "code": "[(r.split('\\t')[-1], float(r.split('\\t')[-2])) for r in 'level\\tword_num\\tconf\\ttext\\n5\\t1\\t96.5\\tHello\\n5\\t2\\t88.0\\tworld'.splitlines()[1:]]",
+    "out": "[('Hello', 96.5), ('world', 88.0)]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "r",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "'\\t'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "UnaryOp",
+           "kind": "UnaryOp",
+           "children": [
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "float",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "r",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'\\t'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "UnaryOp",
+             "kind": "UnaryOp",
+             "children": [
+              {
+               "label": "2",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "r",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "'level\\tword_num\\tconf\\ttext\\n5\\t1\\t96.5\\tHello\\n5\\t2\\t88.0\\tworld'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Slice",
+           "kind": "Slice",
+           "children": [
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "[(r.split('\\t')[-1], float(r.split('\\t')[-2])) for r in 'level\\tword_num\\tconf\\ttext\\n5\\t1\\t96.5\\tHello\\n5\\t2\\t88.0\\tworld'.splitlines()[1:]]",
+      "focus": "-1",
+      "value": "-1"
+     },
+     {
+      "expr": "[(r.split('\\t')[-1], float(r.split('\\t')[-2])) for r in 'level\\tword_num\\tconf\\ttext\\n5\\t1\\t96.5\\tHello\\n5\\t2\\t88.0\\tworld'.splitlines()[1:]]",
+      "focus": "-2",
+      "value": "-2"
+     }
+    ]
+   }
+  },
+  {
+   "id": "PageSegmentationMode",
+   "label": "Page segmentation mode",
+   "level": 3,
+   "parent": "OtherOutputs",
+   "body": "The tesseract program printed 14 page segmentation modes; mode 3 is fully automatic page segmentation and the default, mode 7 treats the image as a single text line, and the option is passed to PyTesseract as config='--psm 7'; a line cropped tight to its letters gave an empty string in the default mode and 'Hello OGR world 2026' in mode 7, which reads the C of OCR as G; the chapter does not present it (PyTesseract contributors, 2024) (Tesseract contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_PageSegmentationMode",
+   "class_iri": "http://example.org/sen0414/ch22#PageSegmentationMode",
+   "example": "config='--psm 7'",
+   "definition": "The page segmentation mode tells Tesseract how the image is laid out; the default expects a page of text, and a single line or a single word has modes of its own."
+  },
+  {
+   "id": "SearchablePdfOutput",
+   "label": "Searchable pdf output",
+   "level": 3,
+   "parent": "OtherOutputs",
+   "body": "image_to_pdf_or_hocr(img, extension='pdf') returned bytes that begin with %PDF-1.5, contain the name of the invisible font GlyphLessFont and end with %%EOF, which is a searchable PDF made by Tesseract alone; the chapter makes such files with NAPS2 and does not present this function (PyTesseract contributors, 2024).",
+   "section_iri": "http://example.org/sen0414/ch22#S_SearchablePdfOutput",
+   "class_iri": "http://example.org/sen0414/ch22#SearchablePdfOutput",
+   "example": "image_to_pdf_or_hocr(img, extension='pdf')",
+   "definition": "PyTesseract can return a PDF with the recognised text placed under the image, which is the kind of file the chapter makes with NAPS2."
+  },
+  {
+   "id": "ImageQuality",
+   "label": "Image quality",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter names the flaws of OCR text and the steps that reduce them (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ImageQuality",
+   "class_iri": "http://example.org/sen0414/ch22#ImageQuality"
+  },
+  {
+   "id": "OutputFlaws",
+   "label": "Output flaws",
+   "level": 2,
+   "parent": "ImageQuality",
+   "body": "Five kinds of flaw follow the chapter's list of issues (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_OutputFlaws",
+   "class_iri": "http://example.org/sen0414/ch22#OutputFlaws"
+  },
+  {
+   "id": "EndOfLineHyphenation",
+   "label": "End of line hyphenation",
+   "level": 3,
+   "parent": "OutputFlaws",
+   "body": "The chapter points at 'dig-' and 'ital' and 'pro-' and 'grams' in the output for its example, where the hyphen and the line break of the printed book remain; the expression re.sub(r'-\\n(\\w)', r'\\1', text) joined them into 'digital art programs' (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_EndOfLineHyphenation",
+   "class_iri": "http://example.org/sen0414/ch22#EndOfLineHyphenation",
+   "example": "'-' in 'dig-'",
+   "definition": "Text recognised from a page keeps a hyphen where a word was broken at the end of a line; a program can join the halves, but it cannot tell from the text alone whether the hyphen belonged to the word.",
+   "io": {
+    "code": "__import__('re').sub(r'-\\n(\\w)', r'\\1', 'dig-\\nital art pro-\\ngrams')",
+    "out": "'digital art programs'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "__import__",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'re'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'-\\\\n(\\\\w)'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "'\\\\1'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "'dig-\\nital art pro-\\ngrams'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ConfusedCharacters",
+   "label": "Confused characters",
+   "level": 3,
+   "parent": "OutputFlaws",
+   "body": "The chapter's Frankenstein scan read 'Iv' for 'It' and 'Motion' for 'motion', and the chapter warns of characters such as j and i being confused; in this study a line cropped tight and read in single-line mode gave 'Hello OGR world 2026' for 'Hello OCR world 2026', and a comparison with the text that should be there finds the position of the difference (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ConfusedCharacters",
+   "class_iri": "http://example.org/sen0414/ch22#ConfusedCharacters",
+   "example": "'Iv' != 'It'",
+   "definition": "A character can be read as another that looks like it, and the result may be a valid word, so the mistake is found only by comparing with what the text should be.",
+   "io": {
+    "code": "[i for i, (a, b) in enumerate(zip('It was', 'Iv was')) if a != b]",
+    "out": "[1]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "i",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "i",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "a",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "b",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "enumerate",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "zip",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'It was'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'Iv was'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "Compare",
+         "kind": "Compare",
+         "children": [
+          {
+           "label": "a",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "b",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ColumnMixing",
+   "label": "Column mixing",
+   "level": 3,
+   "parent": "OutputFlaws",
+   "body": "The chapter says the string may mix the text of columns and put it out of order; a rendered image with two columns of two lines was read as 'Left column first line Right one' and 'Left column second Right two', each line running across both columns, while the left half and the right half cropped apart were read as 'Left column first line' and 'Left column second' and as 'Right one' and 'Right two' (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ColumnMixing",
+   "class_iri": "http://example.org/sen0414/ch22#ColumnMixing",
+   "example": "two columns in one image",
+   "definition": "When an image holds columns or a table, the recognised lines run across the columns and the text comes out in the wrong order; each column goes into its own image.",
+   "io": {
+    "code": "['%s %s' % p for p in zip(['Left one', 'Left two'], ['Right one', 'Right two'])]",
+    "out": "['Left one Right one', 'Left two Right two']",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "%",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "'%s %s'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "p",
+         "kind": "Name",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "p",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "zip",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "'Left one'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'Left two'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "'Right one'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'Right two'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "NumberErrors",
+   "label": "Number errors",
+   "level": 3,
+   "parent": "OutputFlaws",
+   "body": "The chapter says mistakes in numbers are harder to spot than misspelled words; a pattern check for an amount with thousands and two decimals accepted '1,250.75' and rejected '1,25O.75', which has a letter O, but it cannot reject a wrong digit, for which only a person or a second source helps (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_NumberErrors",
+   "class_iri": "http://example.org/sen0414/ch22#NumberErrors",
+   "example": "1,25O.75",
+   "definition": "A misread digit, or a letter O for a zero, is harder to see than a misspelled word, so numbers are checked against the pattern they must have.",
+   "io": {
+    "code": "[bool(__import__('re').fullmatch(r'[\\d,]+\\.\\d\\d', n)) for n in ('1,250.75', '1,25O.75')]",
+    "out": "[True, False]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "bool",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'re'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "'[\\\\d,]+\\\\.\\\\d\\\\d'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "n",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "n",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'1,250.75'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'1,25O.75'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "InputPreparation",
+   "label": "Input preparation",
+   "level": 2,
+   "parent": "ImageQuality",
+   "body": "The chapter lists preparation steps to do with an image editing program, and says some can be done with OpenCV (Sweigart, 2025) (Tesseract contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_InputPreparation",
+   "class_iri": "http://example.org/sen0414/ch22#InputPreparation"
+  },
+  {
+   "id": "SeparateColumns",
+   "label": "Separate columns",
+   "level": 3,
+   "parent": "InputPreparation",
+   "body": "The chapter's first preparation advice is to put each column of text into a separate image; Image.crop((0, 0, 450, 200)) takes the left half of a 900 by 200 image, and the two halves were read apart as in the section on mixed columns (Sweigart, 2025) (Pillow contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_SeparateColumns",
+   "class_iri": "http://example.org/sen0414/ch22#SeparateColumns",
+   "example": "img.crop((0, 0, 450, 200))",
+   "definition": "Cropping an image to one column, a box of left, upper, right and lower pixel coordinates, gives Tesseract one column at a time.",
+   "io": {
+    "code": "[row[:2] for row in [[1, 2, 3, 4], [5, 6, 7, 8]]]",
+    "out": "[[1, 2], [5, 6]]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "row",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Slice",
+         "kind": "Slice",
+         "children": [
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "row",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "2",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "3",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "4",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "5",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "6",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "7",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "8",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "DarkOnLight",
+   "label": "Dark on light",
+   "level": 3,
+   "parent": "InputPreparation",
+   "body": "The chapter advises dark text on a light background and not white text on black; the Tesseract documentation says version 3.05 and older handled inverted images, and that for version 4 dark text on a light background should be used; in this study white text on a black background, made by inverting the rendered line, was read as 'Hello OCR world 2026' by Tesseract 5.3.4, so the advice is a safe rule and not a failure seen on this image (Sweigart, 2025) (Tesseract contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_DarkOnLight",
+   "class_iri": "http://example.org/sen0414/ch22#DarkOnLight",
+   "example": "white text on a black background",
+   "definition": "The documentation advises dark text on a light background; inverting an image swaps every pixel value v for 255 - v.",
+   "io": {
+    "code": "[[255 - p for p in row] for row in [[0, 255], [255, 0]]]",
+    "out": "[[255, 0], [0, 255]]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "ListComp",
+       "kind": "ListComp",
+       "children": [
+        {
+         "label": "-",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "255",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "p",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "comprehension",
+         "kind": "comprehension",
+         "children": [
+          {
+           "label": "p",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "row",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "row",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "0",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "255",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "255",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "0",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "UprightText",
+   "label": "Upright text",
+   "level": 3,
+   "parent": "InputPreparation",
+   "body": "The chapter advises rotating the image so the lines are upright; the rendered line, turned by 2, 5, 8 and 12 degrees with its corners filled white, was read correctly at 2 and 5 degrees, as 'Hello OcR world 2026' at 8 degrees and as an empty string at 12 degrees, and each one turned back was read correctly again; the Tesseract documentation says the quality of line segmentation falls off if a page is too skewed (Sweigart, 2025) (Tesseract contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_UprightText",
+   "class_iri": "http://example.org/sen0414/ch22#UprightText",
+   "example": "rotate the image so that lines are level",
+   "definition": "Lines of text should be level, because a slanted line drifts from the row Tesseract expects; at 2 degrees a line 100 pixels long ends 3.5 pixels off the level.",
+   "io": {
+    "code": "round(100 * __import__('math').tan(__import__('math').radians(2)), 1)",
+    "out": "3.5",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "round",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "*",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "100",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'math'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'math'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "2",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "1",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "WhiteBorder",
+   "label": "White border",
+   "level": 3,
+   "parent": "InputPreparation",
+   "body": "The chapter advises removing dark borders and adding a small white border if the text runs against the edge; the Tesseract documentation suggests about 10 pixels, warns that a border that is too big can give an empty page, and in this study a tight crop read as an empty string became 'Hello OCR world 2026' with ImageOps.expand(tight, border=10, fill=255) (Sweigart, 2025) (Tesseract contributors, 2026) (Pillow contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_WhiteBorder",
+   "class_iri": "http://example.org/sen0414/ch22#WhiteBorder",
+   "example": "a small white border around the text",
+   "definition": "A margin of light pixels around the text helps when the text touches the edge, and a margin that is too large can make the page look empty.",
+   "io": {
+    "code": "[[255] * 4] + [[255] + row + [255] for row in [[0, 0], [0, 0]]] + [[255] * 4]",
+    "out": "[[255, 255, 255, 255], [255, 0, 0, 255], [255, 0, 0, 255], [255, 255, 255, 255]]",
+    "tree": {
+     "label": "+",
+     "kind": "BinOp",
+     "children": [
+      {
+       "label": "+",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "*",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "List",
+             "kind": "List",
+             "children": [
+              {
+               "label": "255",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "4",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "ListComp",
+         "kind": "ListComp",
+         "children": [
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "+",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "List",
+               "kind": "List",
+               "children": [
+                {
+                 "label": "255",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "row",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "List",
+             "kind": "List",
+             "children": [
+              {
+               "label": "255",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "comprehension",
+           "kind": "comprehension",
+           "children": [
+            {
+             "label": "row",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "List",
+             "kind": "List",
+             "children": [
+              {
+               "label": "List",
+               "kind": "List",
+               "children": [
+                {
+                 "label": "0",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "0",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "List",
+               "kind": "List",
+               "children": [
+                {
+                 "label": "0",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "0",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "*",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "255",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "4",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ContrastThreshold",
+   "label": "Contrast threshold",
+   "level": 3,
+   "parent": "InputPreparation",
+   "body": "The chapter advises adjusting brightness and contrast so the text stands out; a line drawn in grey 170 on grey 200 has pixel values between 170 and 200, and ImageOps.autocontrast() stretched them to 0 to 255, and both versions were read correctly by Tesseract, which binarises internally with the Otsu method and since version 5.0.0 offers Adaptive Otsu and Sauvola (Sweigart, 2025) (Tesseract contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ContrastThreshold",
+   "class_iri": "http://example.org/sen0414/ch22#ContrastThreshold",
+   "example": "brightness and contrast",
+   "definition": "Raising contrast makes the text stand out; a threshold turns every pixel below a level to black and the others to white.",
+   "io": {
+    "code": "[[0 if p < 128 else 255 for p in row] for row in [[30, 200], [120, 250]]]",
+    "out": "[[0, 255], [0, 255]]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "ListComp",
+       "kind": "ListComp",
+       "children": [
+        {
+         "label": "IfExp",
+         "kind": "IfExp",
+         "children": [
+          {
+           "label": "Compare",
+           "kind": "Compare",
+           "children": [
+            {
+             "label": "p",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "128",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "0",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "255",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "comprehension",
+         "kind": "comprehension",
+         "children": [
+          {
+           "label": "p",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "row",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "row",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "30",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "200",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "120",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "250",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "NoiseRemoval",
+   "label": "Noise removal",
+   "level": 3,
+   "parent": "InputPreparation",
+   "body": "The chapter advises removing small bits of noise pixels; a rendered line with 1500 random black and white pixels was read as 'Hello OCR world 2026' with and without a 3-pixel median filter from Pillow, so on this image the filter changed nothing in the result, and the Tesseract documentation says some kinds of noise survive its own binarisation (Sweigart, 2025) (Tesseract contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_NoiseRemoval",
+   "class_iri": "http://example.org/sen0414/ch22#NoiseRemoval",
+   "example": "small bits of noise pixels",
+   "definition": "Stray pixels are removed before scanning; a median of each pixel and its two neighbours removes a lone dark pixel and keeps a run of three.",
+   "io": {
+    "code": "(lambda r: [r[0]] + [sorted(r[i - 1:i + 2])[1] for i in range(1, len(r) - 1)] + [r[-1]])([255, 255, 0, 255, 255, 0, 0, 0, 255])",
+    "out": "[255, 255, 255, 255, 255, 0, 0, 0, 255]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "List",
+             "kind": "List",
+             "children": [
+              {
+               "label": "Subscript",
+               "kind": "Subscript",
+               "children": [
+                {
+                 "label": "r",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "0",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "ListComp",
+             "kind": "ListComp",
+             "children": [
+              {
+               "label": "Subscript",
+               "kind": "Subscript",
+               "children": [
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "sorted",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "Subscript",
+                   "kind": "Subscript",
+                   "children": [
+                    {
+                     "label": "r",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "Slice",
+                     "kind": "Slice",
+                     "children": [
+                      {
+                       "label": "-",
+                       "kind": "BinOp",
+                       "children": [
+                        {
+                         "label": "i",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "1",
+                         "kind": "Constant",
+                         "children": []
+                        }
+                       ]
+                      },
+                      {
+                       "label": "+",
+                       "kind": "BinOp",
+                       "children": [
+                        {
+                         "label": "i",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "2",
+                         "kind": "Constant",
+                         "children": []
+                        }
+                       ]
+                      }
+                     ]
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "comprehension",
+               "kind": "comprehension",
+               "children": [
+                {
+                 "label": "i",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "range",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "1",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "-",
+                   "kind": "BinOp",
+                   "children": [
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "len",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "r",
+                       "kind": "Name",
+                       "children": []
+                      }
+                     ]
+                    },
+                    {
+                     "label": "1",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "r",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "UnaryOp",
+               "kind": "UnaryOp",
+               "children": [
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "255",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "255",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "255",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "255",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "255",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(lambda r: [r[0]] + [sorted(r[i - 1:i + 2])[1] for i in range(1, len(r) - 1)] + [r[-1]])([255, 255, 0, 255, 255, 0, 0, 0, 255])",
+      "focus": "-1",
+      "value": "-1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "Correction",
+   "label": "Correction",
+   "level": 1,
+   "parent": null,
+   "body": "Correction looks at the text after recognition (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_Correction",
+   "class_iri": "http://example.org/sen0414/ch22#Correction"
+  },
+  {
+   "id": "RepairTools",
+   "label": "Repair tools",
+   "level": 2,
+   "parent": "Correction",
+   "body": "Two automatic fixes are compared: a dictionary and a language model (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_RepairTools",
+   "class_iri": "http://example.org/sen0414/ch22#RepairTools"
+  },
+  {
+   "id": "SpellcheckBlindSpot",
+   "label": "Spellcheck blind spot",
+   "level": 3,
+   "parent": "RepairTools",
+   "body": "The chapter says a spellcheck algorithm will not find OCR errors, because it points out the correctly recognised characters of words misspelled in the original and misses errors that give correctly spelled words; a dictionary test accepted 'modem' where 'modern' was meant and flagged 'Iv' (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_SpellcheckBlindSpot",
+   "class_iri": "http://example.org/sen0414/ch22#SpellcheckBlindSpot",
+   "example": "modem for modern",
+   "definition": "A spellchecker looks for words that are not in a dictionary, but an OCR error often produces another real word, so it cannot find the mistakes OCR makes.",
+   "io": {
+    "code": "('modem' in {'modem', 'modern', 'the'}, 'Iv' in {'It', 'is', 'the'})",
+    "out": "(True, False)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "'modem'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "Set",
+         "kind": "Set",
+         "children": [
+          {
+           "label": "'modem'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'modern'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'the'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "'Iv'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "Set",
+         "kind": "Set",
+         "children": [
+          {
+           "label": "'It'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'is'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'the'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "HyphenAmbiguity",
+   "label": "Hyphen ambiguity",
+   "level": 3,
+   "parent": "RepairTools",
+   "body": "The chapter's prompt asks the model to undo the hyphenated words that are broken across the end of a line; the same expression that gave 'digital art programs' turned 'the half-' and 'extinguished light' into 'the halfextinguished light', because it cannot know that the hyphen of 'half-extinguished' is part of the word (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_HyphenAmbiguity",
+   "class_iri": "http://example.org/sen0414/ch22#HyphenAmbiguity",
+   "example": "half-, extinguished",
+   "definition": "An end-of-line hyphen is either a break in a word or part of a hyphenated word, and removing every one of them joins words that should stay apart.",
+   "io": {
+    "code": "__import__('re').sub(r'-\\n(\\w)', r'\\1', 'the half-\\nextinguished light')",
+    "out": "'the halfextinguished light'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "__import__",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'re'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'-\\\\n(\\\\w)'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "'\\\\1'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "'the half-\\nextinguished light'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "LlmCorrection",
+   "label": "Llm correction",
+   "level": 3,
+   "parent": "RepairTools",
+   "body": "The chapter gives a prompt that asks a large language model to correct spacing and characters, not spelling or grammar, to put paragraphs on one line and to undo hyphenation, and shows the result for the Frankenstein text; it warns that models are overconfident and may miss mistakes, fix the wrong kind or add new ones, so a human must review the output; it needs an online service and an account, so it was not run and its output is the book's (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_LlmCorrection",
+   "class_iri": "http://example.org/sen0414/ch22#LlmCorrection",
+   "example": "a prompt and the OCR text",
+   "definition": "A large language model given the recognised text and a prompt can repair spacing, missing characters and hyphenation from context; it needs an online service and an account, and it was not run here."
+  },
+  {
+   "id": "MatchingChecks",
+   "label": "Matching checks",
+   "level": 2,
+   "parent": "Correction",
+   "body": "This group shows what a program can check about a correction, and what only a person can check (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_MatchingChecks",
+   "class_iri": "http://example.org/sen0414/ch22#MatchingChecks"
+  },
+  {
+   "id": "ReviewByDifference",
+   "label": "Review by difference",
+   "level": 3,
+   "parent": "MatchingChecks",
+   "body": "A list of the word pairs that differ between the raw text and the corrected text, such as ('Iv', 'It'), shows a reviewer exactly what the correction changed, which serves the chapter's advice that a human reviews machine output (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ReviewByDifference",
+   "class_iri": "http://example.org/sen0414/ch22#ReviewByDifference",
+   "example": "Iv became It",
+   "definition": "Listing the words that differ between the raw and the corrected text shows the reviewer where the correction changed the text.",
+   "io": {
+    "code": "[(a, b) for a, b in zip('Iv was on'.split(), 'It was on'.split()) if a != b]",
+    "out": "[('Iv', 'It')]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "a",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "b",
+         "kind": "Name",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "a",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "b",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "zip",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "'Iv was on'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "'It was on'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "Compare",
+         "kind": "Compare",
+         "children": [
+          {
+           "label": "a",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "b",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CharacterSimilarity",
+   "label": "Character similarity",
+   "level": 3,
+   "parent": "MatchingChecks",
+   "body": "difflib.SequenceMatcher gave a ratio of 0.958 between 'Iv was on a dreary night' and 'It was on a dreary night', one character apart; a low ratio would mean the correction rewrote the text and deserves a closer look, and the ratio does not say whether a change is right (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_CharacterSimilarity",
+   "class_iri": "http://example.org/sen0414/ch22#CharacterSimilarity",
+   "example": "how close the correction is",
+   "definition": "A similarity ratio between the raw and the corrected text gives a number for how much was changed, and a large change is a reason for a closer look.",
+   "io": {
+    "code": "round(__import__('difflib').SequenceMatcher(None, 'Iv was on a dreary night', 'It was on a dreary night').ratio(), 3)",
+    "out": "0.958",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "round",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'difflib'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "None",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'Iv was on a dreary night'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'It was on a dreary night'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "3",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "Languages",
+   "label": "Languages",
+   "level": 1,
+   "parent": null,
+   "body": "The lang argument chooses the language of the recognition (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_Languages",
+   "class_iri": "http://example.org/sen0414/ch22#Languages"
+  },
+  {
+   "id": "PackFormats",
+   "label": "Pack formats",
+   "level": 2,
+   "parent": "Languages",
+   "body": "This group covers the installed packs and the codes that name them (Sweigart, 2025) (Tesseract contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_PackFormats",
+   "class_iri": "http://example.org/sen0414/ch22#PackFormats"
+  },
+  {
+   "id": "InstalledLanguages",
+   "label": "Installed languages",
+   "level": 3,
+   "parent": "PackFormats",
+   "body": "The chapter prints a long list from tess.get_languages(); on the machine of this study it returned ['eng', 'osd'], since only English and orientation data are installed, and the chapter's practice question asks which function returns the list of installed language packs (Sweigart, 2025) (PyTesseract contributors, 2024).",
+   "section_iri": "http://example.org/sen0414/ch22#S_InstalledLanguages",
+   "class_iri": "http://example.org/sen0414/ch22#InstalledLanguages",
+   "example": "'jpn' in tess.get_languages()",
+   "definition": "get_languages() returns the language packs Tesseract can find; the list depends on what was installed, and it includes osd, the orientation data.",
+   "io": {
+    "code": "'List of available languages in (2):\\neng\\nosd'.splitlines()[1:]",
+    "out": "['eng', 'osd']",
+    "tree": {
+     "label": "Subscript",
+     "kind": "Subscript",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'List of available languages in (2):\\neng\\nosd'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Slice",
+       "kind": "Slice",
+       "children": [
+        {
+         "label": "1",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "LanguageCode",
+   "label": "Language code",
+   "level": 3,
+   "parent": "PackFormats",
+   "body": "The chapter says the strings are mostly three-character ISO 639-3 codes with a few exceptions such as 'aze_cyrl' for Azeri in Cyrillic letters; the Tesseract documentation lists aze and aze_cyrl as separate files, and the Library of Congress list of ISO 639-2 gives some languages two codes, fre (B) and fra (T) for French and ger (B) and deu (T) for German, where Tesseract uses fra and deu (Sweigart, 2025) (Tesseract contributors, 2026) (Library of Congress, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_LanguageCode",
+   "class_iri": "http://example.org/sen0414/ch22#LanguageCode",
+   "example": "'aze_cyrl'",
+   "definition": "A language is named by a three-letter code with a few exceptions that add a script, such as aze_cyrl for Azeri in Cyrillic letters.",
+   "io": {
+    "code": "[bool(__import__('re').fullmatch(r'[a-z]{3}(_[a-z]+)?', c)) for c in ('jpn', 'aze_cyrl', 'japanese', 'en')]",
+    "out": "[True, True, False, False]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "bool",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'re'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "'[a-z]{3}(_[a-z]+)?'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "c",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "c",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'jpn'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'aze_cyrl'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'japanese'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'en'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ChoiceRules",
+   "label": "Choice rules",
+   "level": 2,
+   "parent": "Languages",
+   "body": "This group covers choosing one language or several, and what happens when a pack is missing (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ChoiceRules",
+   "class_iri": "http://example.org/sen0414/ch22#ChoiceRules"
+  },
+  {
+   "id": "LangKeyword",
+   "label": "Lang keyword",
+   "level": 3,
+   "parent": "ChoiceRules",
+   "body": "The chapter passes lang='jpn' to image_to_string() for the Japanese page and says English is assumed without it; the signature shows the default None and the PyTesseract documentation says the language defaults to eng (Sweigart, 2025) (PyTesseract contributors, 2024).",
+   "section_iri": "http://example.org/sen0414/ch22#S_LangKeyword",
+   "class_iri": "http://example.org/sen0414/ch22#LangKeyword",
+   "example": "lang='jpn'",
+   "definition": "The lang keyword names the language to recognise; left out, it means English."
+  },
+  {
+   "id": "CombiningLanguages",
+   "label": "Combining languages",
+   "level": 3,
+   "parent": "ChoiceRules",
+   "body": "The chapter combines language codes with '+', for example lang='eng+jpn'; the Tesseract documentation gives -l eng+deu on the command line and says the order of the languages can change the time and the output (Sweigart, 2025) (Tesseract contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_CombiningLanguages",
+   "class_iri": "http://example.org/sen0414/ch22#CombiningLanguages",
+   "example": "lang='eng+jpn'",
+   "definition": "Two or more codes joined with + make Tesseract recognise all of those languages in one image.",
+   "io": {
+    "code": "'eng+jpn'.split('+')",
+    "out": "['eng', 'jpn']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "'eng+jpn'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "'+'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "WrongLanguage",
+   "label": "Wrong language",
+   "level": 3,
+   "parent": "ChoiceRules",
+   "body": "The chapter says that text scanned with the wrong language comes back as gibberish, the closest English letters; this was not reproduced, because the book's Japanese image was not available and no Japanese pack is installed here (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_WrongLanguage",
+   "class_iri": "http://example.org/sen0414/ch22#WrongLanguage",
+   "example": "lang='eng'",
+   "definition": "Text scanned in the wrong language comes back as the closest letters of that language, which is gibberish."
+  },
+  {
+   "id": "MissingLanguagePack",
+   "label": "Missing language pack",
+   "level": 3,
+   "parent": "ChoiceRules",
+   "body": "With no Japanese pack installed, lang='jpn' raised pytesseract.TesseractError, a subclass of RuntimeError, with status 1 and the message 'Failed loading language', but lang='eng+jpn' raised nothing and returned 'Hello OCR world 2026' followed by a newline, while the tesseract program wrote the warning to standard error and exited with status 0 (PyTesseract contributors, 2024) (Tesseract contributors, 2026); a separator other than +, as in lang='eng,jpn', or a language name as in lang='english', was read as the name of one pack and raised TesseractError with status 1 and a message naming the file eng,jpn.traineddata or english.traineddata, which does not exist.",
+   "section_iri": "http://example.org/sen0414/ch22#S_MissingLanguagePack",
+   "class_iri": "http://example.org/sen0414/ch22#MissingLanguagePack",
+   "example": "'jpn' not in tess.get_languages()",
+   "definition": "A language whose pack is not installed is an error when it is the only one named, and only a warning on standard error when another language is named with it.",
+   "io": {
+    "code": "sorted(set('eng+jpn'.split('+')) - {'eng', 'osd'})",
+    "out": "['jpn']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "sorted",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "-",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "set",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "'eng+jpn'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "'+'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "Set",
+         "kind": "Set",
+         "children": [
+          {
+           "label": "'eng'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'osd'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "Naps2",
+   "label": "Naps2",
+   "level": 1,
+   "parent": null,
+   "body": "NAPS2 builds a PDF with embedded text from a Python script through the command line (Sweigart, 2025) (Not Another PDF Scanner project, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_Naps2",
+   "class_iri": "http://example.org/sen0414/ch22#Naps2"
+  },
+  {
+   "id": "Program",
+   "label": "Program",
+   "level": 2,
+   "parent": "Naps2",
+   "body": "This group covers the application, the way Python starts it and its options (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_Program",
+   "class_iri": "http://example.org/sen0414/ch22#Program"
+  },
+  {
+   "id": "Naps2App",
+   "label": "Naps2 app",
+   "level": 3,
+   "parent": "Program",
+   "body": "The chapter recommends NAPS2 for its ability to run Tesseract and add text to PDF documents, free, on Windows, macOS and Linux, and usable from a script without a scanner; the NAPS2 download page offered release 8.3.2 for Windows, Mac and Linux at the date of reading, and NAPS2 was not installed, so none of its calls was run (Sweigart, 2025) (Not Another PDF Scanner project, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_Naps2App",
+   "class_iri": "http://example.org/sen0414/ch22#Naps2App",
+   "example": "NAPS2",
+   "definition": "NAPS2, Not Another PDF Scanner 2, is an open source scanning application whose command-line form combines images into a PDF and runs Tesseract on them."
+  },
+  {
+   "id": "SubprocessInvocation",
+   "label": "Subprocess invocation",
+   "level": 3,
+   "parent": "Program",
+   "body": "The chapter starts NAPS2 with subprocess.run(naps2_path + ['-i', 'frankenstein.png', '-o', 'output.pdf', ...], capture_output=True), with a different path for Windows, macOS and Linux; in a run with a stand-in program, a file name with a space reached the program as one argument, capture_output gave the printed list ['-i', 'my scan.png', '-o', 'output.pdf', '-f'] as standard output, with no output on standard error, and 3 as the return code, check=True raised CalledProcessError for the exit status 3, and a program that is not installed raised FileNotFoundError; the chapter's call reads none of these (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_SubprocessInvocation",
+   "class_iri": "http://example.org/sen0414/ch22#SubprocessInvocation",
+   "example": "subprocess.run(naps2_path + [...], capture_output=True)",
+   "definition": "Python starts NAPS2 with subprocess.run and a list of arguments, one list item for each argument, so no quoting is needed even if a name holds a space.",
+   "io": {
+    "code": "(lambda a: __import__('shlex').split(__import__('shlex').join(a)) == a)(['naps2', 'console', '-i', 'my scan.png'])",
+    "out": "True",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Compare",
+         "kind": "Compare",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'shlex'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "__import__",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "'shlex'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "a",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "a",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'naps2'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'console'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'-i'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'my scan.png'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ValueOptions",
+   "label": "Value options",
+   "level": 3,
+   "parent": "Program",
+   "body": "The chapter explains -i, -o, --install, --ocrlang, -n 0, -f and -v one by one; the NAPS2 documentation gives the same meanings, adds that --ocrlang implies --enableocr and that several codes may be joined with '+', and lists --disableocr, --deskew and --rotate besides; -f and -v take no value (Sweigart, 2025) (Not Another PDF Scanner project, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ValueOptions",
+   "class_iri": "http://example.org/sen0414/ch22#ValueOptions",
+   "example": "'-i', 'frankenstein.png', '-o', 'output.pdf'",
+   "definition": "Most NAPS2 options come as a pair of an option and its value, such as -i and the input, -o and the output, --ocrlang and the language, and -n and the number of scans; -f and -v take no value.",
+   "io": {
+    "code": "dict(zip(*[iter(['-i', 'frankenstein.png', '-o', 'output.pdf', '--ocrlang', 'eng', '-n', '0'])] * 2))",
+    "out": "{'-i': 'frankenstein.png', '-o': 'output.pdf', '--ocrlang': 'eng', '-n': '0'}",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "dict",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "zip",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Starred",
+         "kind": "Starred",
+         "children": [
+          {
+           "label": "*",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "List",
+             "kind": "List",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "iter",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "List",
+                 "kind": "List",
+                 "children": [
+                  {
+                   "label": "'-i'",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "'frankenstein.png'",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "'-o'",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "'output.pdf'",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "'--ocrlang'",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "'eng'",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "'-n'",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "'0'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "2",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "InputSpecification",
+   "label": "Input specification",
+   "level": 2,
+   "parent": "Naps2",
+   "body": "This group covers how the -i option names files and pages (Sweigart, 2025) (Not Another PDF Scanner project, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_InputSpecification",
+   "class_iri": "http://example.org/sen0414/ch22#InputSpecification"
+  },
+  {
+   "id": "InputList",
+   "label": "Input list",
+   "level": 3,
+   "parent": "InputSpecification",
+   "body": "The chapter separates the inputs of -i with semicolons, so 'cat.png;dog.png;moose.png' gives a PDF of three pages; the NAPS2 documentation says imported files are prepended to the output in the order given (Sweigart, 2025) (Not Another PDF Scanner project, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_InputList",
+   "class_iri": "http://example.org/sen0414/ch22#InputList",
+   "example": "'cat.png;dog.png;moose.png'",
+   "definition": "Several inputs are given to -i as one argument with the names separated by semicolons, and each becomes the next page.",
+   "io": {
+    "code": "'cat.png;dog.png;moose.png'.split(';')",
+    "out": "['cat.png', 'dog.png', 'moose.png']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "'cat.png;dog.png;moose.png'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "';'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "InputItem",
+   "label": "Input item",
+   "level": 3,
+   "parent": "InputSpecification",
+   "body": "The chapter follows a PDF name with square brackets holding the page, with 0 as the first page, in the example 'spam.pdf[0];spam.pdf[5];eggs.pdf', where the last item takes all pages of eggs.pdf (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_InputItem",
+   "class_iri": "http://example.org/sen0414/ch22#InputItem",
+   "example": "spam.pdf[5]",
+   "definition": "A file name may be followed by square brackets with the page or pages to take from it; without them all pages are taken.",
+   "io": {
+    "code": "[__import__('re').fullmatch(r'(.+?)(?:\\[(.*)\\])?', s).groups() for s in ('spam.pdf[5]', 'eggs.pdf')]",
+    "out": "[('spam.pdf', '5'), ('eggs.pdf', None)]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'re'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "'(.+?)(?:\\\\[(.*)\\\\])?'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "s",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "s",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'spam.pdf[5]'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'eggs.pdf'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PageSlices",
+   "label": "Page slices",
+   "level": 3,
+   "parent": "InputSpecification",
+   "body": "The chapter says the brackets take a range with slice notation and negative numbers, so 'spam.pdf[0:2];eggs.pdf[-1]' gives the first two pages of spam.pdf and the last of eggs.pdf; on a list of five page numbers [0:2] gives [0, 1], [-1] gives 4 and [:-2] gives [0, 1, 2]; the NAPS2 documentation lists [0], [1], [2], [-1], [-2], [:2], [2:], [-2:], [:-2] and [2:-2], and says page numbers start at 0 (Sweigart, 2025) (Not Another PDF Scanner project, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_PageSlices",
+   "class_iri": "http://example.org/sen0414/ch22#PageSlices",
+   "example": "spam.pdf[0:2];eggs.pdf[-1]",
+   "definition": "The text in the brackets is read as a Python index or slice starting at 0, so [0:2] is the first two pages, [-1] the last page and [:-2] all but the last two.",
+   "io": {
+    "code": "([*range(5)][0:2], [*range(5)][-1], [*range(5)][:-2])",
+    "out": "([0, 1], 4, [0, 1, 2])",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "Starred",
+           "kind": "Starred",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "range",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "5",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "Slice",
+         "kind": "Slice",
+         "children": [
+          {
+           "label": "0",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "Starred",
+           "kind": "Starred",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "range",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "5",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "UnaryOp",
+         "kind": "UnaryOp",
+         "children": [
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "Starred",
+           "kind": "Starred",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "range",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "5",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "Slice",
+         "kind": "Slice",
+         "children": [
+          {
+           "label": "UnaryOp",
+           "kind": "UnaryOp",
+           "children": [
+            {
+             "label": "2",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "([*range(5)][0:2], [*range(5)][-1], [*range(5)][:-2])",
+      "focus": "-1",
+      "value": "-1"
+     },
+     {
+      "expr": "([*range(5)][0:2], [*range(5)][-1], [*range(5)][:-2])",
+      "focus": "-2",
+      "value": "-2"
+     }
+    ]
+   }
+  },
+  {
+   "id": "AlternativeTools",
+   "label": "Alternative tools",
+   "level": 2,
+   "parent": "Naps2",
+   "body": "This group names what to use if NAPS2 does not fit (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_AlternativeTools",
+   "class_iri": "http://example.org/sen0414/ch22#AlternativeTools"
+  },
+  {
+   "id": "OcrmypdfAlternative",
+   "label": "Ocrmypdf alternative",
+   "level": 3,
+   "parent": "AlternativeTools",
+   "body": "The chapter recommends the ocrmypdf package for creating PDFs with embedded text if NAPS2 is unsuitable; its documentation says it adds an optical character recognition text layer to scanned PDF files so they can be searched; it is not installed here and was not run (Sweigart, 2025) (OCRmyPDF contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_OcrmypdfAlternative",
+   "class_iri": "http://example.org/sen0414/ch22#OcrmypdfAlternative",
+   "example": "ocrmypdf",
+   "definition": "OCRmyPDF is a Python package that adds a text layer to scanned PDF files so they can be searched; the chapter names it as the alternative if NAPS2 does not suit."
+  },
+  {
+   "id": "PracticeProgram",
+   "label": "Practice program",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter closes with seven practice questions and the program Browser Text Scraper (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_PracticeProgram",
+   "class_iri": "http://example.org/sen0414/ch22#PracticeProgram"
+  },
+  {
+   "id": "ScreenScraperProgram",
+   "label": "Screen scraper program",
+   "level": 2,
+   "parent": "PracticeProgram",
+   "body": "The program ocrscreen.py takes a screenshot, crops it, recognises the text and appends it to a file (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ScreenScraperProgram",
+   "class_iri": "http://example.org/sen0414/ch22#ScreenScraperProgram"
+  },
+  {
+   "id": "ScreenCapture",
+   "label": "Screen capture",
+   "level": 3,
+   "parent": "ScreenScraperProgram",
+   "body": "The template of ocrscreen.py takes the screenshot with pyautogui.screenshot(), a library of chapter 23 that needs a screen, so it was not run; for this study a screen was drawn with Pillow, 1400 by 900 pixels with a white rectangle at the crop box holding a line of text, and the rest of the program was run on it; the address autbor.com/embeddedfrankenstein that the chapter names opened a page titled Frankenstein (Sweigart, 2025) (Autbor site, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_ScreenCapture",
+   "class_iri": "http://example.org/sen0414/ch22#ScreenCapture",
+   "example": "pyautogui.screenshot()",
+   "definition": "The practice program takes a screenshot with PyAutoGUI, which needs a screen and was not run here; the rest of the program needs only an image."
+  },
+  {
+   "id": "CropBox",
+   "label": "Crop box",
+   "level": 3,
+   "parent": "ScreenScraperProgram",
+   "body": "The template sets LEFT = 400, TOP = 200, RIGHT = 1000 and BOTTOM = 800 and calls img.crop((LEFT, TOP, RIGHT, BOTTOM)); the crop of the drawn screen had the size (600, 600), which is right minus left and bottom minus top (Sweigart, 2025) (Pillow contributors, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_CropBox",
+   "class_iri": "http://example.org/sen0414/ch22#CropBox",
+   "example": "LEFT, TOP, RIGHT, BOTTOM",
+   "definition": "The box given to crop() is left, upper, right, lower, so its width is right minus left and its height bottom minus top.",
+   "io": {
+    "code": "(lambda b: (b[2] - b[0], b[3] - b[1]))((400, 200, 1000, 800))",
+    "out": "(600, 600)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "-",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "b",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "2",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "b",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "-",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "b",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "3",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "b",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "400",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "200",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "1000",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "800",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "AppendToOutputFile",
+   "label": "Append to output file",
+   "level": 3,
+   "parent": "ScreenScraperProgram",
+   "body": "The template leaves open() in append mode to the student; two runs of the recognition on two drawn pages, each appended, left 'Page one of the scroll' and 'Page two of the scroll' on two lines of one file; open() without an encoding uses the locale's, and with -X warn_default_encoding an EncodingWarning was issued, while encoding='utf-8' wrote and read back '\u7b2c5\u7ae0' (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch22#S_AppendToOutputFile",
+   "class_iri": "http://example.org/sen0414/ch22#AppendToOutputFile",
+   "example": "open('output.txt', 'a')",
+   "definition": "Mode 'a' adds to the end of the file instead of replacing it, so each run of the program adds the text of one more page.",
+   "io": {
+    "code": "(lambda p: (p.write_text('first\\n'), p.open('a').write('second\\n'), p.read_text())[2])(__import__('pathlib').Path(__import__('tempfile').mkdtemp()) / 'output.txt')",
+    "out": "'first\\nsecond\\n'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "p",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'first\\n'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "p",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "'a'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "'second\\n'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "p",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "/",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'pathlib'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'tempfile'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'output.txt'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  }
+ ],
+ "relations": [
+  {
+   "source": "CoreTools",
+   "target": "OcrConcepts",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "OpticalCharacterRecognition",
+   "target": "CoreTools",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TesseractEngine",
+   "target": "CoreTools",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PyTesseractWrapper",
+   "target": "CoreTools",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PillowImage",
+   "target": "CoreTools",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TextLimits",
+   "target": "OcrConcepts",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PrintedTextOnly",
+   "target": "TextLimits",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ImperfectResult",
+   "target": "TextLimits",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "EngineSetup",
+   "target": "Installation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "EngineInstall",
+   "target": "EngineSetup",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LanguagePackFile",
+   "target": "EngineSetup",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PathVariable",
+   "target": "EngineSetup",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ShortProgram",
+   "target": "ReadingText",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ImageOpen",
+   "target": "ShortProgram",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ImageToString",
+   "target": "ShortProgram",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "OtherOutputs",
+   "target": "ReadingText",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WordConfidenceTable",
+   "target": "OtherOutputs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PageSegmentationMode",
+   "target": "OtherOutputs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SearchablePdfOutput",
+   "target": "OtherOutputs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "OutputFlaws",
+   "target": "ImageQuality",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "EndOfLineHyphenation",
+   "target": "OutputFlaws",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ConfusedCharacters",
+   "target": "OutputFlaws",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ColumnMixing",
+   "target": "OutputFlaws",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NumberErrors",
+   "target": "OutputFlaws",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "InputPreparation",
+   "target": "ImageQuality",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SeparateColumns",
+   "target": "InputPreparation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DarkOnLight",
+   "target": "InputPreparation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "UprightText",
+   "target": "InputPreparation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WhiteBorder",
+   "target": "InputPreparation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ContrastThreshold",
+   "target": "InputPreparation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NoiseRemoval",
+   "target": "InputPreparation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RepairTools",
+   "target": "Correction",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SpellcheckBlindSpot",
+   "target": "RepairTools",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "HyphenAmbiguity",
+   "target": "RepairTools",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LlmCorrection",
+   "target": "RepairTools",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MatchingChecks",
+   "target": "Correction",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ReviewByDifference",
+   "target": "MatchingChecks",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CharacterSimilarity",
+   "target": "MatchingChecks",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PackFormats",
+   "target": "Languages",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "InstalledLanguages",
+   "target": "PackFormats",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LanguageCode",
+   "target": "PackFormats",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ChoiceRules",
+   "target": "Languages",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LangKeyword",
+   "target": "ChoiceRules",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CombiningLanguages",
+   "target": "ChoiceRules",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WrongLanguage",
+   "target": "ChoiceRules",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MissingLanguagePack",
+   "target": "ChoiceRules",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Program",
+   "target": "Naps2",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Naps2App",
+   "target": "Program",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SubprocessInvocation",
+   "target": "Program",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ValueOptions",
+   "target": "Program",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "InputSpecification",
+   "target": "Naps2",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "InputList",
+   "target": "InputSpecification",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "InputItem",
+   "target": "InputSpecification",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PageSlices",
+   "target": "InputSpecification",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AlternativeTools",
+   "target": "Naps2",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "OcrmypdfAlternative",
+   "target": "AlternativeTools",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ScreenScraperProgram",
+   "target": "PracticeProgram",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ScreenCapture",
+   "target": "ScreenScraperProgram",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CropBox",
+   "target": "ScreenScraperProgram",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AppendToOutputFile",
+   "target": "ScreenScraperProgram",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LanguagePackFile",
+   "target": "LanguageCode",
+   "type": "mentions",
+   "evidence": "the document's section on Language pack file names Language code"
+  },
+  {
+   "source": "OcrmypdfAlternative",
+   "target": "OpticalCharacterRecognition",
+   "type": "mentions",
+   "evidence": "the document's section on Ocrmypdf alternative names Optical character recognition"
+  }
+ ],
+ "agents": [
+  {
+   "id": "agent-CoreTools",
+   "name": "Core tools agent",
+   "subject": "CoreTools",
+   "covers": [
+    "OpticalCharacterRecognition",
+    "TesseractEngine",
+    "PyTesseractWrapper",
+    "PillowImage",
+    "CoreTools"
+   ]
+  },
+  {
+   "id": "agent-TextLimits",
+   "name": "Text limits agent",
+   "subject": "TextLimits",
+   "covers": [
+    "PrintedTextOnly",
+    "ImperfectResult",
+    "TextLimits"
+   ]
+  },
+  {
+   "id": "agent-EngineSetup",
+   "name": "Engine setup agent",
+   "subject": "EngineSetup",
+   "covers": [
+    "EngineInstall",
+    "LanguagePackFile",
+    "PathVariable",
+    "EngineSetup"
+   ]
+  },
+  {
+   "id": "agent-ShortProgram",
+   "name": "Short program agent",
+   "subject": "ShortProgram",
+   "covers": [
+    "ImageOpen",
+    "ImageToString",
+    "ShortProgram"
+   ]
+  },
+  {
+   "id": "agent-OtherOutputs",
+   "name": "Other outputs agent",
+   "subject": "OtherOutputs",
+   "covers": [
+    "WordConfidenceTable",
+    "PageSegmentationMode",
+    "SearchablePdfOutput",
+    "OtherOutputs"
+   ]
+  },
+  {
+   "id": "agent-OutputFlaws",
+   "name": "Output flaws agent",
+   "subject": "OutputFlaws",
+   "covers": [
+    "EndOfLineHyphenation",
+    "ConfusedCharacters",
+    "ColumnMixing",
+    "NumberErrors",
+    "OutputFlaws"
+   ]
+  },
+  {
+   "id": "agent-InputPreparation",
+   "name": "Input preparation agent",
+   "subject": "InputPreparation",
+   "covers": [
+    "SeparateColumns",
+    "DarkOnLight",
+    "UprightText",
+    "WhiteBorder",
+    "ContrastThreshold",
+    "NoiseRemoval",
+    "InputPreparation"
+   ]
+  },
+  {
+   "id": "agent-RepairTools",
+   "name": "Repair tools agent",
+   "subject": "RepairTools",
+   "covers": [
+    "SpellcheckBlindSpot",
+    "HyphenAmbiguity",
+    "LlmCorrection",
+    "RepairTools"
+   ]
+  },
+  {
+   "id": "agent-MatchingChecks",
+   "name": "Matching checks agent",
+   "subject": "MatchingChecks",
+   "covers": [
+    "ReviewByDifference",
+    "CharacterSimilarity",
+    "MatchingChecks"
+   ]
+  },
+  {
+   "id": "agent-PackFormats",
+   "name": "Pack formats agent",
+   "subject": "PackFormats",
+   "covers": [
+    "InstalledLanguages",
+    "LanguageCode",
+    "PackFormats"
+   ]
+  },
+  {
+   "id": "agent-ChoiceRules",
+   "name": "Choice rules agent",
+   "subject": "ChoiceRules",
+   "covers": [
+    "LangKeyword",
+    "CombiningLanguages",
+    "WrongLanguage",
+    "MissingLanguagePack",
+    "ChoiceRules"
+   ]
+  },
+  {
+   "id": "agent-Program",
+   "name": "Program agent",
+   "subject": "Program",
+   "covers": [
+    "Naps2App",
+    "SubprocessInvocation",
+    "ValueOptions",
+    "Program"
+   ]
+  },
+  {
+   "id": "agent-InputSpecification",
+   "name": "Input specification agent",
+   "subject": "InputSpecification",
+   "covers": [
+    "InputList",
+    "InputItem",
+    "PageSlices",
+    "InputSpecification"
+   ]
+  },
+  {
+   "id": "agent-AlternativeTools",
+   "name": "Alternative tools agent",
+   "subject": "AlternativeTools",
+   "covers": [
+    "OcrmypdfAlternative",
+    "AlternativeTools"
+   ]
+  },
+  {
+   "id": "agent-ScreenScraperProgram",
+   "name": "Screen scraper program agent",
+   "subject": "ScreenScraperProgram",
+   "covers": [
+    "ScreenCapture",
+    "CropBox",
+    "AppendToOutputFile",
+    "ScreenScraperProgram"
+   ]
+  }
+ ],
+ "refs": [
+  [
+   "Automate the Boring Stuff with Python, 3rd edition - Chapter 22, Recognizing Text in Images (Al Sweigart, No Starch Press, 2025)",
+   "https://automatetheboringstuff.com/3e/chapter22.html"
+  ],
+  [
+   "Frankenstein (autbor.com, the page behind the chapter's link autbor.com/embeddedfrankenstein)",
+   "https://autbor.com/embeddedfrankenstein/"
+  ],
+  [
+   "ISO 639 Code Tables (ISO 639-3 registration authority, SIL International)",
+   "https://iso639-3.sil.org/code_tables/639/data"
+  ],
+  [
+   "ISO 639-2 Language Code List - Codes for the representation of names of languages (Library of Congress)",
+   "https://www.loc.gov/standards/iso639-2/php/code_list.php"
+  ],
+  [
+   "Image Preprocessing for Tesseract OCR (autbor.com, the page behind the chapter's link autbor.com/preprocessingocr)",
+   "https://autbor.com/preprocessingocr/"
+  ],
+  [
+   "Image module - Pillow (PIL Fork) 12.3.0 documentation",
+   "https://pillow.readthedocs.io/en/stable/reference/Image.html"
+  ],
+  [
+   "NAPS2 - Command Line Usage",
+   "https://www.naps2.com/doc/command-line"
+  ],
+  [
+   "NAPS2 - Download (release 8.3.2 at the date of reading)",
+   "https://www.naps2.com/download"
+  ],
+  [
+   "OCRmyPDF documentation (version 17.13.0 at the date of reading)",
+   "https://ocrmypdf.readthedocs.io/en/latest/"
+  ],
+  [
+   "Tesseract User Manual - Command Line Usage (tessdoc)",
+   "https://tesseract-ocr.github.io/tessdoc/Command-Line-Usage.html"
+  ],
+  [
+   "Tesseract User Manual - Improving the quality of the output (tessdoc)",
+   "https://tesseract-ocr.github.io/tessdoc/ImproveQuality.html"
+  ],
+  [
+   "Tesseract User Manual - Installation (tessdoc)",
+   "https://tesseract-ocr.github.io/tessdoc/Installation.html"
+  ],
+  [
+   "Tesseract User Manual - Traineddata Files for Version 4.00 + (tessdoc)",
+   "https://tesseract-ocr.github.io/tessdoc/Data-Files.html"
+  ],
+  [
+   "The Python Standard Library, Built-in Functions - open() (python.org documentation, 3.14 series)",
+   "https://docs.python.org/3/library/functions.html"
+  ],
+  [
+   "The Python Standard Library, subprocess - Subprocess management (python.org documentation, 3.14 series)",
+   "https://docs.python.org/3/library/subprocess.html"
+  ],
+  [
+   "pytesseract 0.3.13 - Python-tesseract is a python wrapper for Google's Tesseract-OCR (PyPI project page)",
+   "https://pypi.org/project/pytesseract/"
+  ]
+ ],
+ "resources": [
+  {
+   "kind": "documentation",
+   "title": "Automate the Boring Stuff with Python, 3rd edition: Chapter 22, Recognizing Text in Images",
+   "url": "https://automatetheboringstuff.com/3e/chapter22.html",
+   "source": "automatetheboringstuff.com",
+   "why": "The course textbook's own chapter, free online: installing Tesseract, the four lines, preprocessing, language models, languages, NAPS2 and the practice program.",
+   "concept": "ImageToString"
+  },
+  {
+   "kind": "documentation",
+   "title": "pytesseract 0.3.13 on PyPI",
+   "url": "https://pypi.org/project/pytesseract/",
+   "source": "pypi.org",
+   "why": "The functions PyTesseract offers besides image_to_string: image_to_data, image_to_boxes, image_to_pdf_or_hocr, config, lang and timeout.",
+   "concept": "WordConfidenceTable"
+  },
+  {
+   "kind": "documentation",
+   "title": "Tesseract User Manual: Improving the quality of the output",
+   "url": "https://tesseract-ocr.github.io/tessdoc/ImproveQuality.html",
+   "source": "tesseract-ocr.github.io",
+   "why": "The engine's own advice on rescaling, binarisation, noise, rotation, borders, page segmentation modes and dictionaries.",
+   "concept": "WhiteBorder"
+  },
+  {
+   "kind": "documentation",
+   "title": "Tesseract User Manual: Command Line Usage",
+   "url": "https://tesseract-ocr.github.io/tessdoc/Command-Line-Usage.html",
+   "source": "tesseract-ocr.github.io",
+   "why": "How the tesseract program is called, with -l for one or several languages joined by +, and what the order of languages does.",
+   "concept": "CombiningLanguages"
+  },
+  {
+   "kind": "documentation",
+   "title": "Tesseract User Manual: Traineddata Files for Version 4.00 +",
+   "url": "https://tesseract-ocr.github.io/tessdoc/Data-Files.html",
+   "source": "tesseract-ocr.github.io",
+   "why": "The list of language and script data files, with their codes such as jpn and aze_cyrl.",
+   "concept": "LanguageCode"
+  },
+  {
+   "kind": "documentation",
+   "title": "NAPS2: Command Line Usage",
+   "url": "https://www.naps2.com/doc/command-line",
+   "source": "www.naps2.com",
+   "why": "Every option of the NAPS2 command line, including -i with its slice notation, --ocrlang and -n 0.",
+   "concept": "PageSlices"
+  },
+  {
+   "kind": "documentation",
+   "title": "OCRmyPDF documentation",
+   "url": "https://ocrmypdf.readthedocs.io/en/latest/",
+   "source": "ocrmypdf.readthedocs.io",
+   "why": "The package the chapter suggests when NAPS2 does not suit: it adds a text layer to scanned PDF files.",
+   "concept": "OcrmypdfAlternative"
+  },
+  {
+   "kind": "documentation",
+   "title": "Image module: Pillow documentation",
+   "url": "https://pillow.readthedocs.io/en/stable/reference/Image.html",
+   "source": "pillow.readthedocs.io",
+   "why": "Image.open, Image.crop and the other methods used to prepare an image before recognition.",
+   "concept": "CropBox"
+  },
+  {
+   "kind": "documentation",
+   "title": "subprocess: Subprocess management",
+   "url": "https://docs.python.org/3/library/subprocess.html",
+   "source": "docs.python.org",
+   "why": "What subprocess.run returns, capture_output and check, which the chapter's NAPS2 call does not use.",
+   "concept": "SubprocessInvocation"
+  },
+  {
+   "kind": "documentation",
+   "title": "Built-in Functions: open()",
+   "url": "https://docs.python.org/3/library/functions.html",
+   "source": "docs.python.org",
+   "why": "The modes of open(), including 'a' for appending, and the encoding argument.",
+   "concept": "AppendToOutputFile"
+  },
+  {
+   "kind": "documentation",
+   "title": "ISO 639-2 Language Code List (Library of Congress)",
+   "url": "https://www.loc.gov/standards/iso639-2/php/code_list.php",
+   "source": "www.loc.gov",
+   "why": "The code list NAPS2 points to, with the two codes some languages have.",
+   "concept": "LanguageCode"
+  }
+ ],
+ "resources_checked": "2026-10-01"
+}

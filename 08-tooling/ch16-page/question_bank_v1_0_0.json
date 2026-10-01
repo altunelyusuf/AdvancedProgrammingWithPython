@@ -1,0 +1,982 @@
+[
+ {
+  "concept": "SpreadsheetVersusTable",
+  "level": "Understand",
+  "q": "How does the chapter relate a database table to a spreadsheet?",
+  "options": [
+   "A table is a list of records: one row per record and one column per attribute, with rules for each column",
+   "A table is a single cell that holds a whole list of values",
+   "A table is a spreadsheet file that Python opens with the csv module",
+   "A table is a formula that is recalculated each time the file is saved"
+  ],
+  "answer": 0,
+  "why": "A table holds one row per record and one named, typed column per attribute, which is the spreadsheet layout with rules added."
+ },
+ {
+  "concept": "RowidKey",
+  "level": "Understand",
+  "q": "What is the rowid of an ordinary SQLite table?",
+  "options": [
+   "The number of rows in the table at the moment",
+   "A hidden integer key that SELECT * leaves out unless it is named",
+   "A column that must be declared by the programmer",
+   "A text column that holds a random identifier"
+  ],
+  "answer": 1,
+  "why": "Every ordinary table has a hidden integer rowid; naming rowid in the SELECT shows it."
+ },
+ {
+  "concept": "EmbeddedSingleFile",
+  "level": "Remember",
+  "q": "Where does the SQLite engine run?",
+  "options": [
+   "On a remote machine reached through a port number",
+   "Inside the operating system as a driver",
+   "Inside the Python program, as a library working on one file",
+   "In a separate server process the program must start first"
+  ],
+  "answer": 2,
+  "why": "SQLite is a library linked into the program and the whole database is one file; no server is involved."
+ },
+ {
+  "concept": "ConnectCall",
+  "level": "Understand",
+  "q": "What does sqlite3.connect('cats.db') do when cats.db does not exist?",
+  "options": [
+   "It raises FileNotFoundError at once",
+   "It returns None and the program must create the file",
+   "It waits until another program creates the file",
+   "It creates an empty database file with that name"
+  ],
+  "answer": 3,
+  "why": "connect opens the file and creates an empty database when there is none."
+ },
+ {
+  "concept": "StorageClasses",
+  "level": "Remember",
+  "q": "Which list names the five SQLite storage classes?",
+  "options": [
+   "NULL, INTEGER, REAL, TEXT, BLOB",
+   "NULL, INT, FLOAT, STR, BYTES",
+   "INTEGER, REAL, TEXT, DATE, BLOB",
+   "BOOLEAN, INTEGER, REAL, TEXT, BLOB"
+  ],
+  "answer": 0,
+  "why": "SQLite values are NULL, INTEGER, REAL, TEXT or BLOB; there is no separate boolean or date class."
+ },
+ {
+  "concept": "StrictTable",
+  "level": "Understand",
+  "q": "What does the STRICT table option add?",
+  "options": [
+   "The table is stored in memory only",
+   "Each column must have a type, and a value that does not fit it is refused",
+   "Every column is made NOT NULL automatically",
+   "Rows can no longer be deleted from the table"
+  ],
+  "answer": 1,
+  "why": "STRICT (SQLite 3.37.0 and later) requires a type for each column and rejects values that cannot be converted to it."
+ },
+ {
+  "concept": "DateAsText",
+  "level": "Understand",
+  "q": "How does SQLite store a date?",
+  "options": [
+   "Always as the number of days since 1900",
+   "As a Python datetime object, pickled",
+   "As TEXT, REAL or INTEGER, since it has no date type; text in YYYY-MM-DD form sorts correctly",
+   "In a dedicated DATE storage class"
+  ],
+  "answer": 2,
+  "why": "There is no date class; ISO 8601 text compares and sorts in date order."
+ },
+ {
+  "concept": "CreateTable",
+  "level": "Remember",
+  "q": "Which statement makes a new table?",
+  "options": [
+   "MAKE TABLE",
+   "INSERT TABLE",
+   "NEW TABLE",
+   "CREATE TABLE"
+  ],
+  "answer": 3,
+  "why": "CREATE TABLE names the table and lists its columns."
+ },
+ {
+  "concept": "SchemaTable",
+  "level": "Understand",
+  "q": "Where does SQLite keep the list of the tables of a database?",
+  "options": [
+   "In the built-in table sqlite_schema",
+   "In a file called tables.txt beside the database",
+   "In the Python module sqlite3",
+   "In the first row of every table"
+  ],
+  "answer": 0,
+  "why": "sqlite_schema holds one row for each table, index, view and trigger."
+ },
+ {
+  "concept": "InsertStatement",
+  "level": "Remember",
+  "q": "Which statement adds a row to a table?",
+  "options": [
+   "PUT INTO",
+   "INSERT INTO",
+   "ADD ROW",
+   "APPEND TO"
+  ],
+  "answer": 1,
+  "why": "INSERT INTO table VALUES (...) adds one row."
+ },
+ {
+  "concept": "Placeholders",
+  "level": "Understand",
+  "q": "Why are values passed with ? placeholders rather than built into the SQL text?",
+  "options": [
+   "Python refuses f-strings in SQL statements",
+   "Placeholders make the table STRICT",
+   "The value is never read as SQL, so it cannot change the statement",
+   "The statement then runs about ten times faster"
+  ],
+  "answer": 2,
+  "why": "A bound value is data, not SQL; building the text by hand lets a value such as x' OR '1'='1 change the statement (SQL injection)."
+ },
+ {
+  "concept": "DeleteStatement",
+  "level": "Understand",
+  "q": "What does DELETE FROM cats do with no WHERE clause?",
+  "options": [
+   "It raises an error to protect the table",
+   "It removes the table and its rows",
+   "It removes only the first row",
+   "It removes every row but keeps the table"
+  ],
+  "answer": 3,
+  "why": "Without WHERE the condition is true for every row; the table itself stays (DROP TABLE removes it)."
+ },
+ {
+  "concept": "SelectStatement",
+  "level": "Remember",
+  "q": "What does SELECT * leave out of an ordinary table?",
+  "options": [
+   "The hidden rowid",
+   "The first column",
+   "Rows that contain NULL",
+   "The column names"
+  ],
+  "answer": 0,
+  "why": "* means every declared column; rowid is shown only when named."
+ },
+ {
+  "concept": "FetchAndIterate",
+  "level": "Understand",
+  "q": "What does a cursor do after fetchall() has returned its rows?",
+  "options": [
+   "It holds the rows until commit",
+   "It has no rows left; a second fetchall() returns an empty list",
+   "It starts again from the first row",
+   "It raises sqlite3.ProgrammingError"
+  ],
+  "answer": 1,
+  "why": "A cursor yields each row once; to read again, run the query again."
+ },
+ {
+  "concept": "LikeAndGlob",
+  "level": "Understand",
+  "q": "Which of the two, LIKE or GLOB, ignores the case of ASCII letters?",
+  "options": [
+   "Both",
+   "Neither",
+   "LIKE",
+   "GLOB"
+  ],
+  "answer": 2,
+  "why": "LIKE is case-insensitive for ASCII; GLOB is case-sensitive and uses * and ?."
+ },
+ {
+  "concept": "OrderByClause",
+  "level": "Understand",
+  "q": "In what order does ORDER BY sort when no direction is given?",
+  "options": [
+   "Descending",
+   "In the order the rows were inserted",
+   "Randomly",
+   "Ascending"
+  ],
+  "answer": 3,
+  "why": "ASC is the default; DESC must be written."
+ },
+ {
+  "concept": "LimitClause",
+  "level": "Understand",
+  "q": "What is the point of LIMIT 5?",
+  "options": [
+   "The database stops after five rows instead of reading everything",
+   "The result is cut to five rows by Python after the full read",
+   "The table can never hold more than five rows",
+   "The cursor is closed after five seconds"
+  ],
+  "answer": 0,
+  "why": "LIMIT is applied by the database engine, so it can stop early."
+ },
+ {
+  "concept": "RowFactory",
+  "level": "Understand",
+  "q": "What does setting row_factory to sqlite3.Row allow?",
+  "options": [
+   "Returning dictionaries from execute",
+   "Reading a column by its name as well as by its position",
+   "Writing rows without INSERT",
+   "Rows that cannot be changed by SQL"
+  ],
+  "answer": 1,
+  "why": "sqlite3.Row rows can be indexed by position or by column name; they are not dictionaries."
+ },
+ {
+  "concept": "CreateIndex",
+  "level": "Understand",
+  "q": "What is the purpose of CREATE INDEX?",
+  "options": [
+   "To rename the column",
+   "To copy the table into memory",
+   "To let a search on that column find rows without reading the whole table",
+   "To make the column unique"
+  ],
+  "answer": 2,
+  "why": "An index is a sorted structure that speeds up WHERE and ORDER BY on its columns, at some cost on writes."
+ },
+ {
+  "concept": "BeginCommitRollback",
+  "level": "Understand",
+  "q": "What does rollback() do?",
+  "options": [
+   "Makes the changes permanent",
+   "Closes the connection",
+   "Undoes every transaction since the file was created",
+   "Discards the changes of the open transaction"
+  ],
+  "answer": 3,
+  "why": "commit keeps a transaction's changes; rollback discards them."
+ },
+ {
+  "concept": "ContextManagerTransaction",
+  "level": "Understand",
+  "q": "Does a with block close the connection when it ends?",
+  "options": [
+   "No: it commits or rolls back the transaction, and the connection stays open",
+   "Yes, it closes it after the commit",
+   "Yes, but only when an error occurred",
+   "No, and it also does not commit"
+  ],
+  "answer": 0,
+  "why": "Used in a with statement, a connection commits on success and rolls back on an exception, but close() must still be called."
+ },
+ {
+  "concept": "AcidProperties",
+  "level": "Remember",
+  "q": "What do the letters ACID stand for?",
+  "options": [
+   "Atomic, committed, indexed, durable",
+   "Atomic, consistent, isolated, durable",
+   "Accurate, complete, indexed, distributed",
+   "Automatic, cached, independent, deleted"
+  ],
+  "answer": 1,
+  "why": "A transaction is atomic, consistent, isolated and durable."
+ },
+ {
+  "concept": "RenameTableColumn",
+  "level": "Remember",
+  "q": "Which statement renames a column?",
+  "options": [
+   "RENAME COLUMN a OF t TO b",
+   "ALTER COLUMN t.a NAME b",
+   "ALTER TABLE t RENAME COLUMN a TO b",
+   "UPDATE TABLE t RENAME a b"
+  ],
+  "answer": 2,
+  "why": "RENAME COLUMN is a form of ALTER TABLE."
+ },
+ {
+  "concept": "DropTable",
+  "level": "Understand",
+  "q": "What can undo DROP TABLE after it has been committed?",
+  "options": [
+   "rollback()",
+   "The undo() method",
+   "Nothing needs undoing: the rows stay in the file",
+   "Only a backup"
+  ],
+  "answer": 3,
+  "why": "A committed DROP TABLE cannot be undone except by restoring a backup."
+ },
+ {
+  "concept": "ForeignKey",
+  "level": "Understand",
+  "q": "What is a foreign key?",
+  "options": [
+   "A column whose values must match the parent key of another table",
+   "A column that is hidden from SELECT *",
+   "A key that encrypts a table",
+   "The first column of every table"
+  ],
+  "answer": 0,
+  "why": "A foreign key links a child row to a parent row in another table."
+ },
+ {
+  "concept": "InnerJoin",
+  "level": "Understand",
+  "q": "Which rows does an inner join return?",
+  "options": [
+   "Rows that have no partner",
+   "Only pairs of rows for which the join condition is true",
+   "Every row of the left table",
+   "Every combination of rows of the two tables"
+  ],
+  "answer": 1,
+  "why": "Rows without a partner are dropped; that is the difference from a left join."
+ },
+ {
+  "concept": "LeftJoin",
+  "level": "Understand",
+  "q": "What does a left join put in the right-hand columns of a left row that has no partner?",
+  "options": [
+   "The value 0",
+   "The row is left out",
+   "NULL, which Python reads as None",
+   "An empty string"
+  ],
+  "answer": 2,
+  "why": "A left join keeps every left row and fills the right-hand columns with NULL."
+ },
+ {
+  "concept": "ForeignKeyEnforcement",
+  "level": "Understand",
+  "q": "When does SQLite check foreign keys?",
+  "options": [
+   "Always, from the moment the table is created",
+   "Only when the database is closed",
+   "Only for STRICT tables",
+   "Only after PRAGMA foreign_keys = ON has been run on that connection"
+  ],
+  "answer": 3,
+  "why": "Enforcement is off by default and is a per-connection setting."
+ },
+ {
+  "concept": "InMemoryDatabase",
+  "level": "Understand",
+  "q": "What happens to a ':memory:' database when its connection is closed?",
+  "options": [
+   "It is gone",
+   "It is written to a file called memory.db",
+   "It is kept until the program ends",
+   "It is committed to the last used file"
+  ],
+  "answer": 0,
+  "why": "A ':memory:' database lives only as long as its connection."
+ },
+ {
+  "concept": "BackupMethod",
+  "level": "Understand",
+  "q": "What does source.backup(target) copy?",
+  "options": [
+   "The Python connection object",
+   "The whole database, also while it is in use",
+   "Only the schema",
+   "Only the rows added since the last backup"
+  ],
+  "answer": 1,
+  "why": "backup copies a complete database into the target connection's database."
+ },
+ {
+  "concept": "DumpMethod",
+  "level": "Understand",
+  "q": "What does iterdump() produce?",
+  "options": [
+   "A CSV file",
+   "A copy of the file in binary form",
+   "The SQL statements that would re-create the database",
+   "A list of the rows as tuples"
+  ],
+  "answer": 2,
+  "why": "iterdump yields text lines of SQL; writing them to a file gives a text backup."
+ },
+ {
+  "concept": "WhereFilter",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.executescript(\"CREATE TABLE cats (name TEXT, fur TEXT, kg REAL); INSERT INTO cats VALUES ('Zophie','black',5.6), ('Miguel','siamese',6.2), ('Toby','black',6.8);\")\nprint(c.execute(\"SELECT name FROM cats WHERE fur = 'black' AND kg > 6\").fetchall())",
+  "options": [
+   "[('Zophie',), ('Toby',)]",
+   "[('Toby', 'black')]",
+   "[]",
+   "[('Toby',)]"
+  ],
+  "answer": 3,
+  "why": "Only Toby is black and heavier than 6 kg; fetchall returns a list of one-item tuples."
+ },
+ {
+  "concept": "OrderByClause",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.executescript(\"CREATE TABLE cats (name TEXT, fur TEXT, kg REAL); INSERT INTO cats VALUES ('Zophie','black',5.6), ('Miguel','siamese',6.2), ('Toby','black',6.8);\")\nprint(c.execute('SELECT name FROM cats ORDER BY kg DESC').fetchall())",
+  "options": [
+   "[('Miguel',), ('Zophie',), ('Toby',)]",
+   "[('Toby',), ('Miguel',), ('Zophie',)]",
+   "[('Miguel',), ('Toby',), ('Zophie',)]",
+   "[('Zophie',), ('Miguel',), ('Toby',)]"
+  ],
+  "answer": 1,
+  "why": "ORDER BY kg DESC puts the heaviest cat first."
+ },
+ {
+  "concept": "GroupAndCount",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.executescript(\"CREATE TABLE cats (name TEXT, fur TEXT, kg REAL); INSERT INTO cats VALUES ('Zophie','black',5.6), ('Miguel','siamese',6.2), ('Toby','black',6.8);\")\nprint(c.execute('SELECT fur, count(*) FROM cats GROUP BY fur ORDER BY fur').fetchall())",
+  "options": [
+   "[('black', 1), ('siamese', 1)]",
+   "[('black', 2), ('siamese', 1)]",
+   "[('black', 3)]",
+   "[('siamese', 1), ('black', 2)]"
+  ],
+  "answer": 1,
+  "why": "GROUP BY fur makes two groups; ORDER BY fur lists black before siamese."
+ },
+ {
+  "concept": "UpdateStatement",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.executescript(\"CREATE TABLE cats (name TEXT, fur TEXT, kg REAL); INSERT INTO cats VALUES ('Zophie','black',5.6), ('Miguel','siamese',6.2), ('Toby','black',6.8);\")\nprint((c.execute(\"UPDATE cats SET fur = 'gray' WHERE name = 'Toby'\").rowcount, c.execute(\"UPDATE cats SET fur = 'gray'\").rowcount))",
+  "options": [
+   "(3, 3)",
+   "(3, 1)",
+   "(1, 3)",
+   "(1, 1)"
+  ],
+  "answer": 2,
+  "why": "The first UPDATE has a WHERE and changes one row; the second has none and changes all three."
+ },
+ {
+  "concept": "ManyRows",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.executescript(\"CREATE TABLE cats (name TEXT, fur TEXT, kg REAL); INSERT INTO cats VALUES ('Zophie','black',5.6), ('Miguel','siamese',6.2), ('Toby','black',6.8);\")\nc.executemany('INSERT INTO cats VALUES (?, ?, ?)', [('Iris','bengal',6.8), ('Ruby','bengal',5.0)])\nprint(c.execute('SELECT count(*) FROM cats').fetchone()[0])",
+  "options": [
+   "2",
+   "3",
+   "None",
+   "5"
+  ],
+  "answer": 3,
+  "why": "executemany inserted two rows into a table that held three."
+ },
+ {
+  "concept": "TypeAffinity",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.executescript(\"CREATE TABLE loose (n INTEGER); INSERT INTO loose VALUES ('42'), ('Hello');\")\nprint(c.execute('SELECT n, typeof(n) FROM loose').fetchall())",
+  "options": [
+   "[(42, 'integer'), ('Hello', 'text')]",
+   "[('42', 'text'), ('Hello', 'text')]",
+   "sqlite3.IntegrityError",
+   "[(42, 'integer')]"
+  ],
+  "answer": 0,
+  "why": "An INTEGER column converts '42' losslessly and keeps 'Hello' as text, because an ordinary table has only an affinity."
+ },
+ {
+  "concept": "BeginCommitRollback",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:', isolation_level=None)\nc.executescript(\"CREATE TABLE cats (name TEXT, fur TEXT, kg REAL); INSERT INTO cats VALUES ('Zophie','black',5.6), ('Miguel','siamese',6.2), ('Toby','black',6.8);\")\nc.execute('BEGIN'); c.execute(\"INSERT INTO cats VALUES ('Socks','white',4.2)\"); c.rollback()\na = c.execute('SELECT count(*) FROM cats').fetchone()[0]\nc.execute('BEGIN'); c.execute(\"INSERT INTO cats VALUES ('Socks','white',4.2)\"); c.commit()\nprint((a, c.execute('SELECT count(*) FROM cats').fetchone()[0]))",
+  "options": [
+   "(4, 3)",
+   "(3, 4)",
+   "(4, 4)",
+   "(3, 3)"
+  ],
+  "answer": 1,
+  "why": "The rolled-back insert is discarded; the committed one stays."
+ },
+ {
+  "concept": "LeftJoin",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.executescript(\"CREATE TABLE owner (id INTEGER PRIMARY KEY, name TEXT); CREATE TABLE toy (name TEXT, owner_id INTEGER); INSERT INTO owner VALUES (1,'Ann'), (2,'Bo'); INSERT INTO toy VALUES ('ball',1);\")\nprint(c.execute('SELECT owner.name, toy.name FROM owner LEFT JOIN toy ON toy.owner_id = owner.id ORDER BY owner.id').fetchall())",
+  "options": [
+   "[('Ann', 'ball'), ('Bo', '')]",
+   "[('Ann', 'ball'), ('Ann', None)]",
+   "[('Ann', 'ball'), ('Bo', None)]",
+   "[('Ann', 'ball')]"
+  ],
+  "answer": 2,
+  "why": "Bo has no toy, so a left join keeps Bo with None."
+ },
+ {
+  "concept": "ForeignKeyEnforcement",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.execute('CREATE TABLE p (id INTEGER PRIMARY KEY)'); c.execute('CREATE TABLE ch (p_id INTEGER REFERENCES p(id))')\ntry:\n    c.execute('INSERT INTO ch VALUES (99)'); print('no error')\nexcept sqlite3.Error as e:\n    print(type(e).__name__)",
+  "options": [
+   "IntegrityError",
+   "OperationalError",
+   "ProgrammingError",
+   "no error"
+  ],
+  "answer": 3,
+  "why": "Foreign keys are off by default, so the orphan row is accepted."
+ },
+ {
+  "concept": "Placeholders",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.executescript(\"CREATE TABLE cats (name TEXT, fur TEXT, kg REAL); INSERT INTO cats VALUES ('Zophie','black',5.6), ('Miguel','siamese',6.2), ('Toby','black',6.8);\")\ne = \"x' OR '1'='1\"\nprint((len(c.execute(\"SELECT * FROM cats WHERE name = '\" + e + \"'\").fetchall()), len(c.execute('SELECT * FROM cats WHERE name = ?', (e,)).fetchall())))",
+  "options": [
+   "(3, 0)",
+   "(0, 0)",
+   "(3, 3)",
+   "(0, 3)"
+  ],
+  "answer": 0,
+  "why": "The pasted text becomes SQL and matches every row; the bound value is only a name nobody has."
+ },
+ {
+  "concept": "StrictTable",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.execute('CREATE TABLE s (n INTEGER) STRICT')\ntry:\n    c.execute(\"INSERT INTO s VALUES ('abc')\")\n    print(c.execute('SELECT n, typeof(n) FROM s').fetchall())\nexcept sqlite3.Error as e:\n    print(type(e).__name__)",
+  "options": [
+   "[('abc', 'text')]",
+   "IntegrityError",
+   "[(42, 'integer')]",
+   "OperationalError"
+  ],
+  "answer": 1,
+  "why": "A STRICT INTEGER column refuses 'abc' with sqlite3.IntegrityError."
+ },
+ {
+  "concept": "DatabaseIdea",
+  "level": "Understand",
+  "q": "What does the first part of the chapter set a database table against?",
+  "options": [
+   "A CSV file that is read line by line",
+   "A Python list of dictionaries kept in memory only",
+   "A spreadsheet, with SQLite as an engine that runs inside the program",
+   "A web server that must be installed first"
+  ],
+  "answer": 2,
+  "why": "The chapter compares table, row and key with a spreadsheet and presents SQLite as an embedded engine."
+ },
+ {
+  "concept": "Comparison",
+  "level": "Understand",
+  "q": "What is the key of a table for?",
+  "options": [
+   "It encrypts the table",
+   "It sorts the table",
+   "It counts the columns",
+   "It names one row so that the row can be found and referred to"
+  ],
+  "answer": 3,
+  "why": "A key identifies a row; the rowid and a primary key are examples."
+ },
+ {
+  "concept": "Engine",
+  "level": "Understand",
+  "q": "What limit follows from SQLite running inside the program?",
+  "options": [
+   "One writer at a time per database file",
+   "No more than one table per file",
+   "No text values longer than 255 characters",
+   "No way to read the data from another program"
+  ],
+  "answer": 0,
+  "why": "Because there is no server to arrange writers, a second writer must wait for the first."
+ },
+ {
+  "concept": "WriterLimit",
+  "level": "Remember",
+  "q": "How long does a second writer wait by default before sqlite3 raises OperationalError: database is locked?",
+  "options": [
+   "Until the first writer finishes, however long",
+   "5 seconds",
+   "0 seconds: it fails at once",
+   "30 seconds"
+  ],
+  "answer": 1,
+  "why": "The timeout of sqlite3.connect is 5.0 seconds by default; a run here with a second connection blocked by BEGIN EXCLUSIVE raised the error after 5.0 seconds."
+ },
+ {
+  "concept": "ConnectionAndSchema",
+  "level": "Understand",
+  "q": "What does the second part of the chapter describe?",
+  "options": [
+   "Backing up a database",
+   "Writing a web server",
+   "Opening a database, choosing column types and reading what tables exist",
+   "Joining tables with foreign keys"
+  ],
+  "answer": 2,
+  "why": "It covers connect, column types and the schema."
+ },
+ {
+  "concept": "Connecting",
+  "level": "Remember",
+  "q": "Which call returns a Connection to a SQLite database?",
+  "options": [
+   "sqlite3.open",
+   "sqlite3.Database",
+   "sqlite3.login",
+   "sqlite3.connect"
+  ],
+  "answer": 3,
+  "why": "sqlite3.connect(database) returns a Connection."
+ },
+ {
+  "concept": "ConnectionClose",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.close()\ntry:\n    c.execute('SELECT 1')\nexcept sqlite3.Error as e:\n    print(type(e).__name__)",
+  "options": [
+   "ProgrammingError",
+   "OperationalError",
+   "None",
+   "ValueError"
+  ],
+  "answer": 0,
+  "why": "Using a closed connection raises sqlite3.ProgrammingError."
+ },
+ {
+  "concept": "Typing",
+  "level": "Understand",
+  "q": "What do column types decide in SQLite?",
+  "options": [
+   "Which user may read the column",
+   "How the stored values are converted and checked",
+   "Which rows are visible",
+   "How big the file is allowed to be"
+  ],
+  "answer": 1,
+  "why": "A column's declared type gives an affinity (or, in a STRICT table, a rule) that controls conversion and checking."
+ },
+ {
+  "concept": "Schema",
+  "level": "Understand",
+  "q": "How does a SQLite database describe itself?",
+  "options": [
+   "Only in the Python program that made it",
+   "It cannot be asked",
+   "In the built-in table sqlite_schema and in PRAGMA statements",
+   "In a separate .schema file"
+  ],
+  "answer": 2,
+  "why": "sqlite_schema and PRAGMA table_info answer questions about tables and columns."
+ },
+ {
+  "concept": "TableInfo",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.execute('CREATE TABLE cats (name TEXT NOT NULL, fur TEXT)')\nprint(c.execute('PRAGMA table_info(cats)').fetchall())",
+  "options": [
+   "[('name', 'TEXT'), ('fur', 'TEXT')]",
+   "[(1, 'name', 'TEXT', 1, None, 0), (2, 'fur', 'TEXT', 0, None, 0)]",
+   "[(0, 'name', 'TEXT', 0, None, 0), (1, 'fur', 'TEXT', 1, None, 0)]",
+   "[(0, 'name', 'TEXT', 1, None, 0), (1, 'fur', 'TEXT', 0, None, 0)]"
+  ],
+  "answer": 3,
+  "why": "table_info counts columns from 0 and shows 1 for NOT NULL."
+ },
+ {
+  "concept": "CrudOperations",
+  "level": "Remember",
+  "q": "Which four statements carry out CRUD?",
+  "options": [
+   "INSERT, SELECT, UPDATE, DELETE",
+   "CREATE, SORT, UNION, DROP",
+   "INSERT, SORT, UPDATE, DROP",
+   "COPY, READ, UPDATE, DEFINE"
+  ],
+  "answer": 0,
+  "why": "Create, read, update and delete correspond to INSERT, SELECT, UPDATE and DELETE."
+ },
+ {
+  "concept": "Writing",
+  "level": "Understand",
+  "q": "Which three statements change the data of a database?",
+  "options": [
+   "JOIN, GROUP BY, WHERE",
+   "INSERT, UPDATE, DELETE",
+   "SELECT, ORDER BY, LIMIT",
+   "SELECT, INSERT, LIKE"
+  ],
+  "answer": 1,
+  "why": "SELECT only reads; the other three change rows."
+ },
+ {
+  "concept": "Reading",
+  "level": "Understand",
+  "q": "Which statement reads rows without changing them?",
+  "options": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "answer": 2,
+  "why": "SELECT reads, and WHERE, ORDER BY and LIMIT shape the result."
+ },
+ {
+  "concept": "Speed",
+  "level": "Understand",
+  "q": "What is the price of an index?",
+  "options": [
+   "Rows can no longer be deleted",
+   "The column is made read-only",
+   "Queries on other columns stop working",
+   "Slower writes and more space, because the index must be kept up to date"
+  ],
+  "answer": 3,
+  "why": "An index speeds up reads on its column but every INSERT, UPDATE or DELETE must also update it."
+ },
+ {
+  "concept": "TransactionControl",
+  "level": "Understand",
+  "q": "What does a transaction guarantee about its statements?",
+  "options": [
+   "They are kept together or undone together",
+   "They run in separate threads",
+   "They are run twice for safety",
+   "They are copied to a backup file"
+  ],
+  "answer": 0,
+  "why": "A transaction groups statements so that they all take effect or none does."
+ },
+ {
+  "concept": "Boundaries",
+  "level": "Understand",
+  "q": "What decides when a transaction begins and ends?",
+  "options": [
+   "The operating system's clock",
+   "The connection's mode together with BEGIN, commit() and rollback()",
+   "The length of the SQL text",
+   "The number of rows changed"
+  ],
+  "answer": 1,
+  "why": "The chapter shows BEGIN, commit and rollback, and the isolation_level or autocommit setting decides what happens without them."
+ },
+ {
+  "concept": "AutocommitModes",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nprint(tuple(sqlite3.connect(':memory:', autocommit=a).in_transaction for a in (False, True)))",
+  "options": [
+   "(True, True)",
+   "(False, False)",
+   "(True, False)",
+   "(False, True)"
+  ],
+  "answer": 2,
+  "why": "autocommit=False keeps a transaction always open; autocommit=True leaves none open."
+ },
+ {
+  "concept": "Guarantees",
+  "level": "Understand",
+  "q": "What do the ACID properties describe?",
+  "options": [
+   "The order of columns in a table",
+   "The size of an index",
+   "The types SQLite stores",
+   "What a transaction promises"
+  ],
+  "answer": 3,
+  "why": "ACID lists the promises of a transaction: atomic, consistent, isolated, durable."
+ },
+ {
+  "concept": "TableStructure",
+  "level": "Understand",
+  "q": "What can be done to a table after it exists?",
+  "options": [
+   "It can be renamed, given or stripped of a column, dropped, or linked to another table",
+   "Nothing; it must be recreated",
+   "Only its rows can be changed",
+   "Only its name can be changed"
+  ],
+  "answer": 0,
+  "why": "ALTER TABLE and DROP TABLE change structure, and foreign keys link tables."
+ },
+ {
+  "concept": "Changing",
+  "level": "Understand",
+  "q": "Do ALTER TABLE and DROP TABLE change rows?",
+  "options": [
+   "They only work on empty tables",
+   "They change the structure; only DROP TABLE and DROP COLUMN also remove data with it",
+   "They only change rows",
+   "They change nothing until commit"
+  ],
+  "answer": 1,
+  "why": "They change the structure of the table; dropping a table or a column also discards its data."
+ },
+ {
+  "concept": "AddDropColumn",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.executescript(\"CREATE TABLE cats (name TEXT, fur TEXT); INSERT INTO cats VALUES ('Zophie','black');\")\nc.execute('ALTER TABLE cats ADD COLUMN is_loved INTEGER DEFAULT 1')\nprint(c.execute('SELECT * FROM cats').fetchall())",
+  "options": [
+   "[('Zophie', 'black')]",
+   "OperationalError",
+   "[('Zophie', 'black', 1)]",
+   "[('Zophie', 'black', None)]"
+  ],
+  "answer": 2,
+  "why": "Existing rows receive the column's default value, here 1."
+ },
+ {
+  "concept": "Linking",
+  "level": "Understand",
+  "q": "What does a join do that a foreign key alone does not?",
+  "options": [
+   "It enforces the link",
+   "It deletes orphan rows",
+   "It renames the key",
+   "It reads the rows of the linked tables together in one result"
+  ],
+  "answer": 3,
+  "why": "A foreign key states and may enforce the link; a join reads the linked rows together."
+ },
+ {
+  "concept": "CopiesAndTools",
+  "level": "Understand",
+  "q": "Which of these can be done with a SQLite database?",
+  "options": [
+   "Keep it in memory, copy it to a file, write it out as SQL, view it in another program",
+   "Only open it with Python",
+   "Only copy it while no one uses it",
+   "Only export it as CSV"
+  ],
+  "answer": 0,
+  "why": "The chapter lists :memory:, backup(), iterdump() and graphical or command-line tools."
+ },
+ {
+  "concept": "Copying",
+  "level": "Understand",
+  "q": "Which three ways of copying a database does the chapter give?",
+  "options": [
+   "commit, rollback and savepoint",
+   "backup() from an in-memory database, a copy of the file, and iterdump()",
+   "pickle, json and csv",
+   "fork, clone and mirror"
+  ],
+  "answer": 1,
+  "why": "An in-memory database saved with backup(), a file copy, and iterdump() as SQL text."
+ },
+ {
+  "concept": "Tools",
+  "level": "Understand",
+  "q": "How can a SQLite file be looked at without writing Python?",
+  "options": [
+   "Only through a web browser",
+   "It cannot be looked at without Python",
+   "With the sqlite3 shell or a graphical program such as DB Browser for SQLite",
+   "Only by opening it in a text editor"
+  ],
+  "answer": 2,
+  "why": "The command-line shell and graphical programs show tables and rows."
+ },
+ {
+  "concept": "SqliteApps",
+  "level": "Understand",
+  "q": "How does the command-line shell end an SQL statement?",
+  "options": [
+   "With a full stop",
+   "With a blank line",
+   "With the word GO",
+   "With a semicolon"
+  ],
+  "answer": 3,
+  "why": "SQL typed into the shell ends with a semicolon; dot-commands do not need one."
+ },
+ {
+  "concept": "ChapterPractice",
+  "level": "Understand",
+  "q": "What does the chapter end with?",
+  "options": [
+   "16 practice questions and 2 practice programs",
+   "A final exam",
+   "A list of web links only",
+   "Nothing"
+  ],
+  "answer": 0,
+  "why": "The chapter closes with practice questions and two programs."
+ },
+ {
+  "concept": "Programs",
+  "level": "Understand",
+  "q": "What do the two practice programs use that a single table cannot give?",
+  "options": [
+   "Threads",
+   "Several tables linked by a key and queries across them",
+   "Network access",
+   "A graphical window"
+  ],
+  "answer": 1,
+  "why": "The vaccination checker and the meal program each use two linked tables."
+ },
+ {
+  "concept": "VaccinationChecker",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.executescript(\"CREATE TABLE cats (id INTEGER PRIMARY KEY, name TEXT); CREATE TABLE vacc (cat_id INTEGER, vaccine TEXT); INSERT INTO cats VALUES (1,'Zophie'), (2,'Toby'); INSERT INTO vacc VALUES (1,'rabies');\")\nprint([r[0] for r in c.execute(\"SELECT name FROM cats LEFT JOIN vacc ON vacc.cat_id = cats.id AND vacc.vaccine = 'rabies' WHERE vacc.cat_id IS NULL\")])",
+  "options": [
+   "['Zophie']",
+   "[]",
+   "['Toby']",
+   "['Zophie', 'Toby']"
+  ],
+  "answer": 2,
+  "why": "Only Toby has no rabies row; LEFT JOIN keeps Toby with NULL, which IS NULL finds."
+ },
+ {
+  "concept": "MealIngredients",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.executescript(\"CREATE TABLE meals (id INTEGER PRIMARY KEY, name TEXT UNIQUE); CREATE TABLE ingredients (name TEXT, meal_id INTEGER); INSERT INTO meals VALUES (1,'onigiri'); INSERT INTO ingredients VALUES ('rice',1), ('nori',1);\")\nprint([r[0] for r in c.execute(\"SELECT ingredients.name FROM ingredients JOIN meals ON meals.id = ingredients.meal_id WHERE meals.name = ? ORDER BY ingredients.rowid\", ['onigiri'])])",
+  "options": [
+   "['onigiri']",
+   "['nori', 'rice']",
+   "[]",
+   "['rice', 'nori']"
+  ],
+  "answer": 3,
+  "why": "The join lists the ingredients of onigiri in the order they were inserted."
+ },
+ {
+  "concept": "Questions",
+  "level": "Understand",
+  "q": "What do the 16 practice questions ask for?",
+  "options": [
+   "The terms and commands of the chapter",
+   "Long programs",
+   "Only definitions of ACID",
+   "Setting up a server"
+  ],
+  "answer": 0,
+  "why": "They ask for commands and terms from connect to backup."
+ },
+ {
+  "concept": "PracticeQuestions",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sqlite3\nprint(sqlite3.connect(':memory:').execute('SELECT typeof(5), typeof(5.0), 5 = 5.0').fetchone())",
+  "options": [
+   "('integer', 'real', 0)",
+   "('integer', 'real', 1)",
+   "('integer', 'integer', 1)",
+   "('real', 'real', 0)"
+  ],
+  "answer": 1,
+  "why": "5 is an integer, 5.0 a real, and SQLite compares them as equal."
+ }
+]

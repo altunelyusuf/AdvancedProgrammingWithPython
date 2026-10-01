@@ -1,0 +1,6 @@
+{
+ "_version": "1.0.0",
+ "label": "CSV to JSON to XML: one table, three formats (uses input)",
+ "code": "import csv, json\nimport xml.etree.ElementTree as ET\nraw = input('Rows (; between rows): ')\nheader, *data = csv.reader(raw.split(';'))\nrecords = [dict(zip(header, row)) for row in data]\nfor record in records:\n    record['qty'] = int(record['qty'])\nprint(json.dumps(records, indent=2))\nroot = ET.Element('fruits')\nfor record in records:\n    item = ET.SubElement(root, 'fruit', name=record['fruit'])\n    item.text = str(record['qty'])\nET.indent(root)\nprint(ET.tostring(root, encoding='unicode'))\nback = json.loads(json.dumps(records))\nprint(back == records, type(back[0]['qty']).__name__, type(root[0].text).__name__)",
+ "inputs": "fruit,qty;Apples,73;\"Cherries, red\",85"
+}

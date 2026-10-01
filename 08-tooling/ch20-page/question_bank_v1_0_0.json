@@ -1,0 +1,1364 @@
+[
+ {
+  "concept": "CredentialsAndToken",
+  "level": "Remember",
+  "q": "What are the two files that EZGmail needs before a program can reach Gmail?",
+  "options": [
+   "A credentials file that identifies the program and a token file that records the owner's permission",
+   "A username file and a password file that the program reads at every start",
+   "A certificate file and a log file that Google writes after every sent message",
+   "A contacts file and a labels file that are downloaded from the Gmail website"
+  ],
+  "answer": 0,
+  "why": "The credentials file is made once in the Google Cloud console and the token file records the permission the owner gave."
+ },
+ {
+  "concept": "CredentialsAndToken",
+  "level": "Understand",
+  "q": "Why must the token file be kept private?",
+  "options": [
+   "It is large, and a public copy would slow down every program that reads it",
+   "It works like a password: whoever holds it can use the owner's Gmail through the program",
+   "It holds the text of all sent mail, which Gmail would delete if it were shared",
+   "It expires the moment a second person looks at it, so it must stay unread"
+  ],
+  "answer": 1,
+  "why": "The token records the owner's permission, so anyone with the file acts with that permission."
+ },
+ {
+  "concept": "DryRun",
+  "level": "Remember",
+  "q": "What does a dry run change in a program that sends or deletes mail?",
+  "options": [
+   "The program is run twice, and only the second run sends the mail",
+   "The mail is sent but marked as a test so that the recipient ignores it",
+   "The line that sends or deletes is replaced by a print, so nothing real is touched",
+   "The program waits until the owner confirms each message by hand"
+  ],
+  "answer": 2,
+  "why": "A dry run prints what would be done and leaves the real mailbox alone."
+ },
+ {
+  "concept": "DryRun",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "def notify(text, send=None):\n    return 'DRY RUN: ' + text if send is None else send(text)\nprint(notify('done', send=str.upper))",
+  "options": [
+   "DRY RUN: done",
+   "SENT: done",
+   "None",
+   "DONE"
+  ],
+  "answer": 3,
+  "why": "With send left as None the function returns the DRY RUN text; the second call would pass send and return what send returns."
+ },
+ {
+  "concept": "SendCall",
+  "level": "Understand",
+  "q": "What does one call of the send function need to give, and what does the library build from it?",
+  "options": [
+   "The recipient, subject and body; the library builds a text message with those header fields and hands it to the Gmail API",
+   "Only the body; the library asks for the recipient and subject while it runs",
+   "The recipient and a file name; the library reads the body from that file",
+   "A finished MIME text that the library sends without looking at it"
+  ],
+  "answer": 0,
+  "why": "send takes recipient, subject and body, and the message with its To and Subject fields is built for the caller."
+ },
+ {
+  "concept": "SendCall",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "from email.mime.text import MIMEText\nm = MIMEText('Body of the email', 'plain')\nm['Subject'] = 'Subject line'\nprint(m.get_content_type())",
+  "options": [
+   "text/html",
+   "text/plain",
+   "multipart/mixed",
+   "text/plain Subject line"
+  ],
+  "answer": 1,
+  "why": "MIMEText with the subtype plain has the content type text/plain, and the header fields are set like dictionary entries."
+ },
+ {
+  "concept": "AttachmentSend",
+  "level": "Understand",
+  "q": "What happens to the message when files are named as attachments?",
+  "options": [
+   "It stays a single text message and the files are pasted into the body",
+   "It is split into one separate message for each file",
+   "It becomes a multipart message: the text is the first part and each file is a further part carrying the file's name",
+   "It is sent as HTML so that the files can be shown as links"
+  ],
+  "answer": 2,
+  "why": "A message with attachments is multipart, with the text first and one part per file."
+ },
+ {
+  "concept": "AttachmentSend",
+  "level": "Apply",
+  "q": "How many parts does the message have, counting the multipart container itself?",
+  "code": "from email.message import EmailMessage\nm = EmailMessage()\nm.set_content('Body')\nm.add_attachment(b'xyz', maintype='application', subtype='octet-stream', filename='notes.bin')\nprint(len(list(m.walk())))",
+  "options": [
+   "2",
+   "1",
+   "4",
+   "3"
+  ],
+  "answer": 3,
+  "why": "walk() yields the container (multipart/mixed), the text part and the attachment part: three."
+ },
+ {
+  "concept": "CcBccFields",
+  "level": "Understand",
+  "q": "In what form are the cc and bcc arguments given to the send function?",
+  "options": [
+   "As strings of comma-separated addresses that become header fields of the message",
+   "As lists of contact names that Gmail looks up in the address book",
+   "As numbers that count how many extra copies are sent",
+   "As file names of text files that hold one address per line"
+  ],
+  "answer": 0,
+  "why": "The two keyword arguments are comma-separated address strings."
+ },
+ {
+  "concept": "CcBccFields",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "from email.utils import getaddresses\nprint(len(getaddresses(['otherfriend@example.com,someoneelse@example.com'])))",
+  "options": [
+   "1",
+   "2",
+   "3",
+   "4"
+  ],
+  "answer": 1,
+  "why": "getaddresses splits the comma-separated string into two address pairs."
+ },
+ {
+  "concept": "HtmlSubtype",
+  "level": "Understand",
+  "q": "How does a program send a body that is HTML?",
+  "options": [
+   "It names the file with the extension .html and the library detects it",
+   "It wraps the body in angle brackets and leaves the subtype alone",
+   "It gives the subtype as 'html'; the default is 'plain' and any other string is refused",
+   "It sends the body twice, once as plain text and once as HTML"
+  ],
+  "answer": 2,
+  "why": "mimeSubtype is plain by default and html makes the body HTML."
+ },
+ {
+  "concept": "HtmlSubtype",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "from email.mime.text import MIMEText\nprint(MIMEText('<b>Hello</b>', 'html').get_content_type())",
+  "options": [
+   "text/plain",
+   "html",
+   "multipart/alternative",
+   "text/html"
+  ],
+  "answer": 3,
+  "why": "The subtype argument becomes the second half of the content type text/<subtype>."
+ },
+ {
+  "concept": "ThreadVersusMessage",
+  "level": "Understand",
+  "q": "What do ezgmail.unread(), recent() and search() return?",
+  "options": [
+   "Threads, each holding a list of message objects, and not single messages",
+   "Single messages, each holding the list of its replies",
+   "Only the subject lines of the matching mail",
+   "The number of matching messages as one integer"
+  ],
+  "answer": 0,
+  "why": "Gmail groups replies into conversation threads, and these functions return threads."
+ },
+ {
+  "concept": "ThreadVersusMessage",
+  "level": "Analyze",
+  "q": "A search matches one conversation of five replies. How many thread objects does it give back?",
+  "options": [
+   "Five threads, each holding one message",
+   "One thread, whose list holds five message objects",
+   "Five threads, each holding all five messages",
+   "No thread, because only single messages can be searched"
+  ],
+  "answer": 1,
+  "why": "The unit of the result is the conversation: one thread with its messages inside."
+ },
+ {
+  "concept": "MessageAttributes",
+  "level": "Remember",
+  "q": "Which attribute of a message object holds the sender, and what does it keep in front of the address?",
+  "options": [
+   "The from attribute; it keeps only the bare address",
+   "The owner attribute; it keeps the phone number",
+   "The sender attribute; it keeps the display name in front of the address",
+   "The reply attribute; it keeps the address of the last reply"
+  ],
+  "answer": 2,
+  "why": "Sender and recipient keep the display name in front of the address."
+ },
+ {
+  "concept": "MessageAttributes",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import email\nm = email.message_from_string('From: Al Sweigart <al@inventwithpython.com>\\nSubject: RoboCop\\n\\nBody')\nprint(m['from'])",
+  "options": [
+   "al@inventwithpython.com",
+   "Al Sweigart",
+   "RoboCop",
+   "Al Sweigart <al@inventwithpython.com>"
+  ],
+  "answer": 3,
+  "why": "The header value is returned as it was written, with the display name and the address."
+ },
+ {
+  "concept": "InternalDateTimestamp",
+  "level": "Understand",
+  "q": "Gmail gives a message's date as a number of milliseconds. What must be done before datetime.fromtimestamp can use it?",
+  "options": [
+   "Divide by 1000, because fromtimestamp takes seconds",
+   "Multiply by 1000, because fromtimestamp takes microseconds",
+   "Convert it to a string, because fromtimestamp reads text",
+   "Nothing, because fromtimestamp takes milliseconds"
+  ],
+  "answer": 0,
+  "why": "The Unix timestamp functions of datetime count seconds."
+ },
+ {
+  "concept": "InternalDateTimestamp",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import datetime\nms = 1797823712000\nprint(datetime.datetime.fromtimestamp(ms // 1000, tz=datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S'))",
+  "options": [
+   "2026-12-20 21:28:32",
+   "2026-12-21 03:28:32",
+   "1797823712",
+   "2026-12-21T03:28:32Z"
+  ],
+  "answer": 1,
+  "why": "1797823712 seconds after the epoch is 2026-12-21 03:28:32 in UTC; the zone is given, so the result does not depend on the computer."
+ },
+ {
+  "concept": "SummaryLine",
+  "level": "Understand",
+  "q": "How does the summary of a thread get the first name of a sender?",
+  "options": [
+   "It reads the first name from the address book of the owner",
+   "It takes the part of the address before the at sign",
+   "It takes the sender text up to the first space",
+   "It takes the last word of the sender text"
+  ],
+  "answer": 2,
+  "why": "A first name is the sender text up to the first space."
+ },
+ {
+  "concept": "SummaryLine",
+  "level": "Apply",
+  "q": "What does this program print for a sender text with no space?",
+  "code": "n = 'Alice'\nprint(n[:n.find(' ')])",
+  "options": [
+   "Alice",
+   "-1",
+   "Al",
+   "Alic"
+  ],
+  "answer": 3,
+  "why": "find returns -1 when there is no space, so the slice [:-1] drops the last character."
+ },
+ {
+  "concept": "SearchOperators",
+  "level": "Understand",
+  "q": "What query text does search() accept?",
+  "options": [
+   "The same text as the Gmail search box, including operators such as label:UNREAD, from:, subject: and has:attachment",
+   "Only a list of exact subject lines",
+   "A regular expression that is matched against every message",
+   "A Python function that returns True for the messages wanted"
+  ],
+  "answer": 0,
+  "why": "search takes Gmail's own query language."
+ },
+ {
+  "concept": "SearchOperators",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "print(' '.join(['from:al@example.com', 'has:attachment']))",
+  "options": [
+   "has:attachment from:al@example.com",
+   "from:al@example.com has:attachment",
+   "from:al@example.com,has:attachment",
+   "from:al@example.com+has:attachment"
+  ],
+  "answer": 1,
+  "why": "Operators are plain text and are joined by spaces."
+ },
+ {
+  "concept": "AttachmentDownload",
+  "level": "Understand",
+  "q": "In what encoding does the Gmail API deliver an attachment's contents?",
+  "options": [
+   "Plain text in UTF-8, saved without change",
+   "ZIP compression, which the library unpacks",
+   "URL-safe base64, which the library decodes before the file is saved",
+   "Hexadecimal digits, one pair for each byte"
+  ],
+  "answer": 2,
+  "why": "The API delivers file contents in URL-safe base64."
+ },
+ {
+  "concept": "AttachmentDownload",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import base64\nprint(base64.urlsafe_b64encode(bytes([251, 255, 254])).decode())",
+  "options": [
+   "+//+",
+   "-_8=",
+   "+//+=",
+   "-__-"
+  ],
+  "answer": 3,
+  "why": "In the URL-safe alphabet the bytes 251, 255, 254 become -__- where the standard alphabet has +//+."
+ },
+ {
+  "concept": "OverwriteDefault",
+  "level": "Understand",
+  "q": "A file with the name of an attachment already exists in the folder. What does the download do?",
+  "options": [
+   "It overwrites the file without asking, and nothing of the old content remains",
+   "It asks the owner whether to keep the old file",
+   "It saves the new one under a name with a number added",
+   "It appends the new content after the old content"
+  ],
+  "answer": 0,
+  "why": "The file is opened for writing, which empties it."
+ },
+ {
+  "concept": "OverwriteDefault",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os, tempfile\nd = tempfile.mkdtemp()\np = os.path.join(d, 'a.txt')\nopen(p, 'wb').write(b'one')\nopen(p, 'wb').write(b'two')\nprint(open(p, 'rb').read())",
+  "options": [
+   "b'onetwo'",
+   "b'two'",
+   "b'one'",
+   "b''"
+  ],
+  "answer": 1,
+  "why": "Opening a file for writing ('wb') discards the old content, so the second write leaves only b'two'."
+ },
+ {
+  "concept": "SmtpPorts",
+  "level": "Remember",
+  "q": "Which standard library module sends mail, and what are its two named port constants?",
+  "options": [
+   "imaplib, with port 25 for a plain connection and 465 for an encrypted one",
+   "smtplib, with port 143 for a plain connection and 993 for an encrypted one",
+   "smtplib, with port 25 for a plain connection and 465 for an encrypted one",
+   "poplib, with port 80 for a plain connection and 443 for an encrypted one"
+  ],
+  "answer": 2,
+  "why": "smtplib is the SMTP client; SMTP_PORT is 25 and SMTP_SSL_PORT is 465."
+ },
+ {
+  "concept": "SmtpPorts",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import smtplib\nprint(smtplib.SMTP_PORT)",
+  "options": [
+   "587",
+   "465",
+   "4",
+   "25"
+  ],
+  "answer": 3,
+  "why": "SMTP_PORT is the plain port, 25."
+ },
+ {
+  "concept": "ImapPorts",
+  "level": "Remember",
+  "q": "Which standard library module reads mail, and which port is its encrypted one?",
+  "options": [
+   "imaplib, with 993 as the encrypted port",
+   "imaplib, with 465 as the encrypted port",
+   "smtplib, with 993 as the encrypted port",
+   "imaplib, with 143 as the encrypted port"
+  ],
+  "answer": 0,
+  "why": "imaplib is the IMAP client; IMAP4_PORT is 143 and IMAP4_SSL_PORT is 993."
+ },
+ {
+  "concept": "ImapPorts",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import imaplib\nprint(imaplib.IMAP4_SSL_PORT)",
+  "options": [
+   "143",
+   "993",
+   "25",
+   "4"
+  ],
+  "answer": 1,
+  "why": "IMAP4_SSL_PORT is the encrypted port, 993."
+ },
+ {
+  "concept": "SendMessageMethod",
+  "level": "Understand",
+  "q": "What does send_message do with the Bcc field of the message?",
+  "options": [
+   "It sends the Bcc field to every recipient so that all can see it",
+   "It ignores the Bcc recipients and sends only to To and Cc",
+   "It sends to the Bcc recipients but leaves the Bcc field out of the text that is sent",
+   "It refuses the message because Bcc fields are not allowed"
+  ],
+  "answer": 2,
+  "why": "Blind copies are delivered but not shown."
+ },
+ {
+  "concept": "SendMessageMethod",
+  "level": "Analyze",
+  "q": "A message has To, Cc and Bcc fields. Which statement about the delivery is right?",
+  "options": [
+   "Only the To recipients are read from the message; the others must be listed again",
+   "The Cc and Bcc recipients are read, but the Bcc field is shown to the To recipient",
+   "The Bcc field is the only one read, and the others are ignored",
+   "The sender and all three kinds of recipient come from the message; the Bcc recipients get a copy that does not show the Bcc field"
+  ],
+  "answer": 3,
+  "why": "send_message reads From, To, Cc and Bcc and removes Bcc from the sent text."
+ },
+ {
+  "concept": "EmailMessageClass",
+  "level": "Remember",
+  "q": "Which class is the current one for building and reading messages?",
+  "options": [
+   "email.message.EmailMessage, where fields are set like dictionary entries and set_content sets the body",
+   "email.mime.text.MIMEText, because it is the newest",
+   "email.header.Header, which holds a whole message",
+   "smtplib.SMTP, which stores a message after it is sent"
+  ],
+  "answer": 0,
+  "why": "EmailMessage is the current interface; MIMEText belongs to the older one."
+ },
+ {
+  "concept": "EmailMessageClass",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "from email.message import EmailMessage\nm = EmailMessage()\nm.set_content('Body')\nprint(m.get_content_type(), m.get_content_charset())",
+  "options": [
+   "text/html utf-8",
+   "text/plain utf-8",
+   "text/plain us-ascii",
+   "text/plain ascii"
+  ],
+  "answer": 1,
+  "why": "set_content with a str makes a text/plain part; with this policy the charset is utf-8."
+ },
+ {
+  "concept": "AddressParsing",
+  "level": "Understand",
+  "q": "What do parseaddr and formataddr do?",
+  "options": [
+   "parseaddr checks that the address exists, and formataddr sends the message",
+   "parseaddr removes the display name, and formataddr removes the address",
+   "parseaddr splits a header value into display name and address, and formataddr puts the two together again",
+   "parseaddr reads a file of addresses, and formataddr writes it"
+  ],
+  "answer": 2,
+  "why": "They are the two directions of one conversion."
+ },
+ {
+  "concept": "AddressParsing",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "from email.utils import parseaddr\nprint(parseaddr('Al Sweigart <al@inventwithpython.com>')[1])",
+  "options": [
+   "Al Sweigart",
+   "Al",
+   "<al@inventwithpython.com>",
+   "al@inventwithpython.com"
+  ],
+  "answer": 3,
+  "why": "parseaddr returns a pair (name, address); index 1 is the address."
+ },
+ {
+  "concept": "LegacyMimeClasses",
+  "level": "Understand",
+  "q": "What is the position of MIMEText and the other email.mime classes in the documentation?",
+  "options": [
+   "They belong to the older interface with the compat32 policy, kept for existing code",
+   "They are the only classes that can send HTML",
+   "They are the newest interface and replace EmailMessage",
+   "They were removed from Python and no longer import"
+  ],
+  "answer": 0,
+  "why": "EZGmail still builds on them, but the documentation prefers EmailMessage."
+ },
+ {
+  "concept": "LegacyMimeClasses",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "from email.mime.text import MIMEText\nprint(type(MIMEText('x').policy).__name__)",
+  "options": [
+   "EmailPolicy",
+   "Compat32",
+   "default",
+   "Policy"
+  ],
+  "answer": 1,
+  "why": "A MIMEText object uses the Compat32 policy."
+ },
+ {
+  "concept": "GatewayAddress",
+  "level": "Understand",
+  "q": "How is a text sent through an SMS gateway?",
+  "options": [
+   "By calling the number from the program with the modem module",
+   "By posting the text to the carrier's website with the requests module",
+   "By mailing the phone number at the carrier's gateway domain; the subject and body appear in the text",
+   "By mailing the carrier's name at the domain of the phone number"
+  ],
+  "answer": 2,
+  "why": "The address has the form number@gateway-domain."
+ },
+ {
+  "concept": "GatewayAddress",
+  "level": "Apply",
+  "q": "What address does this program build for a Verizon customer?",
+  "code": "gateways = {'Verizon': 'vtext.com', 'T-Mobile': 'tmomail.net'}\nprint('2125551234@' + gateways['Verizon'])",
+  "options": [
+   "vtext.com@2125551234",
+   "2125551234@tmomail.net",
+   "vtext.com/2125551234",
+   "2125551234@vtext.com"
+  ],
+  "answer": 3,
+  "why": "The table gives vtext.com as Verizon's SMS gateway domain, placed after the number and an at sign."
+ },
+ {
+  "concept": "ProviderTable",
+  "level": "Understand",
+  "q": "How should the provider table of the chapter be treated?",
+  "options": [
+   "As a snapshot that goes out of date; a provider's address is found by a web search",
+   "As a permanent list that the carriers must keep",
+   "As a list of the only carriers that exist",
+   "As a table that the program downloads at every run"
+  ],
+  "answer": 0,
+  "why": "Carriers change or end their gateways, and the table is only a snapshot."
+ },
+ {
+  "concept": "SmsLengthLimit",
+  "level": "Remember",
+  "q": "What is the length limit of a text through an SMS gateway, and which gateway has no character limit?",
+  "options": [
+   "140 characters; the MMS gateway has no character limit",
+   "160 characters; the MMS gateway has no character limit",
+   "160 characters; the SMS gateway has no character limit",
+   "1,000 characters; the MMS gateway allows only photos"
+  ],
+  "answer": 1,
+  "why": "A photo has to go through the MMS gateway."
+ },
+ {
+  "concept": "SmsLengthLimit",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import textwrap\ntext = 'The backup finished on all servers and the report is ready. ' * 4\nprint([len(p) for p in textwrap.wrap(text, width=160)])",
+  "options": [
+   "[160, 78]",
+   "[238]",
+   "[158, 80]",
+   "[160, 160]"
+  ],
+  "answer": 2,
+  "why": "textwrap.wrap breaks at word boundaries, so the first piece is 158 characters rather than 160."
+ },
+ {
+  "concept": "GatewayDisadvantages",
+  "level": "Remember",
+  "q": "Which of these is one of the five disadvantages of an SMS gateway?",
+  "options": [
+   "It costs a fee for each text",
+   "It needs a credentials file from Google",
+   "It cannot send text shorter than 160 characters",
+   "There is no way for the recipient to reply"
+  ],
+  "answer": 3,
+  "why": "The gateways are free; the disadvantages are about reliability, failure notice, reply, blocking and continuity."
+ },
+ {
+  "concept": "GatewayDisadvantages",
+  "level": "Analyze",
+  "q": "A program texts an alarm through a gateway and relies on it to be noticed. Which disadvantage matters most?",
+  "options": [
+   "No guarantee that the text arrives promptly or at all, and no way to learn that it failed",
+   "The 160 character limit, because alarms are long",
+   "The need for a token file, because the alarm cannot be sent without it",
+   "The higher priority of gateway texts, which wakes the owner too often"
+  ],
+  "answer": 0,
+  "why": "An unreliable and silent channel is a poor fit for an alarm."
+ },
+ {
+  "concept": "PaidApiProviders",
+  "level": "Understand",
+  "q": "For reliable or bulk texts, what does the chapter point to?",
+  "options": [
+   "More gateway addresses, sent to in turn until one works",
+   "The API of a telecom service provider such as Twilio, which usually needs a subscription or fees",
+   "The free ntfy service, which delivers every text to a phone number",
+   "The imaplib module, which can send texts to carriers"
+  ],
+  "answer": 1,
+  "why": "A paid API gives the reliability the free gateway lacks."
+ },
+ {
+  "concept": "TopicAsSecret",
+  "level": "Understand",
+  "q": "Why does a topic meant for one person need a long random suffix?",
+  "options": [
+   "The service charges for short names",
+   "The service encrypts only topics with random names",
+   "Anyone may publish to a topic and anyone may subscribe, so the name is the only protection and is treated like a password",
+   "A topic name must be unique for each message"
+  ],
+  "answer": 2,
+  "why": "Whoever learns the name can read and write the topic."
+ },
+ {
+  "concept": "TopicAsSecret",
+  "level": "Apply",
+  "q": "How many characters does this program print as the length of the token?",
+  "code": "import secrets\nprint(len(secrets.token_urlsafe(8)))",
+  "options": [
+   "8",
+   "16",
+   "4",
+   "11"
+  ],
+  "answer": 3,
+  "why": "token_urlsafe(8) uses 8 random bytes, which URL-safe base64 writes as 11 characters."
+ },
+ {
+  "concept": "SensitiveData",
+  "level": "Understand",
+  "q": "Which content belongs in a notification?",
+  "options": [
+   "Short status text; never a password or a card number",
+   "Passwords, because a topic is private",
+   "Card numbers, if the topic name is long enough",
+   "The complete mailbox, split into several messages"
+  ],
+  "answer": 0,
+  "why": "A topic is open to whoever learns its name, and the sender is not identified."
+ },
+ {
+  "concept": "PostRequest",
+  "level": "Understand",
+  "q": "How does urllib.request tell a POST from a GET?",
+  "options": [
+   "The program must set the method name in an argument every time",
+   "A request that carries data is a POST, and one without data is a GET",
+   "A request to a URL ending in /json is a POST",
+   "A request is a POST only when it has headers"
+  ],
+  "answer": 1,
+  "why": "Request.get_method() gives POST when data is present."
+ },
+ {
+  "concept": "PostRequest",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import urllib.request as r\nprint(r.Request('https://ntfy.sh/example-topic', data=b'Hello').get_method())",
+  "options": [
+   "GET",
+   "PUT",
+   "POST",
+   "HEAD"
+  ],
+  "answer": 2,
+  "why": "The data argument makes the method POST."
+ },
+ {
+  "concept": "MessageSizeLimit",
+  "level": "Understand",
+  "q": "What does the limit of 4,096 bytes count?",
+  "options": [
+   "Characters, so any 4,096 letters fit",
+   "Words, with a limit of 4,096 words",
+   "Bytes, but every letter is one byte in UTF-8",
+   "Bytes, not characters: a letter such as ı or ş takes two bytes in UTF-8"
+  ],
+  "answer": 3,
+  "why": "A byte count is not a character count outside ASCII."
+ },
+ {
+  "concept": "MessageSizeLimit",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "t = 'Kırmızı alarm'\nprint((len(t), len(t.encode('utf-8'))))",
+  "options": [
+   "(13, 16)",
+   "(13, 13)",
+   "(16, 13)",
+   "(16, 16)"
+  ],
+  "answer": 0,
+  "why": "Kırmızı alarm has 13 characters; the two letters ı take two bytes each, so 16 bytes."
+ },
+ {
+  "concept": "MetadataHeaders",
+  "level": "Understand",
+  "q": "How do a title, tags and a priority travel with a notification?",
+  "options": [
+   "As extra lines at the start of the message text",
+   "As HTTP headers next to the message text",
+   "As parts of the topic name",
+   "As a second request sent after the first"
+  ],
+  "answer": 1,
+  "why": "In requests they are a dictionary passed as headers."
+ },
+ {
+  "concept": "MetadataHeaders",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import urllib.request as r\nq = r.Request('https://ntfy.sh/example-topic', data=b'x', headers={'title': 'Disk full'})\nprint(q.header_items())",
+  "options": [
+   "[('title', 'Disk full')]",
+   "{'Title': 'Disk full'}",
+   "[('Title', 'Disk full')]",
+   "[('Disk full', 'Title')]"
+  ],
+  "answer": 2,
+  "why": "Request capitalises the header name and header_items() gives a list of pairs."
+ },
+ {
+  "concept": "PriorityLevels",
+  "level": "Remember",
+  "q": "What are the range and the default of a priority?",
+  "options": [
+   "A whole number from 0 to 10, with 5 as the default",
+   "A word: low, normal or urgent, with normal as the default",
+   "A whole number from 1 (max) to 5 (min), with 1 as the default",
+   "A whole number from 1 (min) to 5 (max), with 3 as the default"
+  ],
+  "answer": 3,
+  "why": "Priority 3 is called default."
+ },
+ {
+  "concept": "PriorityLevels",
+  "level": "Understand",
+  "q": "What does a higher priority do?",
+  "options": [
+   "It lets a subscriber choose which messages make a sound; it does not deliver the message faster",
+   "It delivers the message before all others",
+   "It keeps the message on the server longer",
+   "It encrypts the message"
+  ],
+  "answer": 0,
+  "why": "Priority is about attention on the phone and not about speed."
+ },
+ {
+  "concept": "PriorityLevels",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "names = dict(zip(range(1, 6), ['min', 'low', 'default', 'high', 'max']))\nprint(names[5])",
+  "options": [
+   "min",
+   "max",
+   "default",
+   "4"
+  ],
+  "answer": 1,
+  "why": "Priority 5 is the highest, called max; 3 is the default."
+ },
+ {
+  "concept": "HeaderEncoding",
+  "level": "Understand",
+  "q": "Why can a title such as Şifre fail as a plain header?",
+  "options": [
+   "Header values must be in capital letters",
+   "Header values may not contain letters at all",
+   "HTTP libraries send header values as Latin-1, which has no Ş; an RFC 2047 encoded word avoids this",
+   "The topic name must contain the same letters"
+  ],
+  "answer": 2,
+  "why": "email.header.Header makes an encoded word out of any text."
+ },
+ {
+  "concept": "HeaderEncoding",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "from email.header import Header\nprint(Header('Şifre', 'utf-8').encode())",
+  "options": [
+   "=?utf-8?q?Sifre?=",
+   "Şifre",
+   "=?utf-8?q?=C5=9Eifre?=",
+   "=?utf-8?b?xZ5pZnJl?="
+  ],
+  "answer": 3,
+  "why": "The title is UTF-8 bytes written in base64 as an RFC 2047 encoded word."
+ },
+ {
+  "concept": "ResponseStatus",
+  "level": "Remember",
+  "q": "What do the status numbers 200 and 403 mean for a notification?",
+  "options": [
+   "200 means accepted, and 403 means the sender is refused, as for a reserved topic",
+   "200 means refused, and 403 means accepted",
+   "200 means queued for later, and 403 means the message was too long",
+   "Both mean accepted, with 403 for a priority message"
+  ],
+  "answer": 0,
+  "why": "http.HTTPStatus names the codes."
+ },
+ {
+  "concept": "ResponseStatus",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import http\nprint(http.HTTPStatus(403).phrase)",
+  "options": [
+   "Not Found",
+   "Forbidden",
+   "OK",
+   "Accepted"
+  ],
+  "answer": 1,
+  "why": "http.HTTPStatus(403).phrase is Forbidden."
+ },
+ {
+  "concept": "StructuredPayload",
+  "level": "Understand",
+  "q": "Why does the chapter suggest labels such as To and From in the text, and what is better?",
+  "options": [
+   "The service removes the sender, so the labels are required by the service; plain text is better",
+   "Labels make the message shorter; JSON is longer and so is refused",
+   "The service does not tell who posted; JSON is better, because a receiving program can parse it",
+   "Labels are required for priority 5; JSON is not allowed there"
+  ],
+  "answer": 2,
+  "why": "A structured payload can be read by a program without guessing."
+ },
+ {
+  "concept": "StructuredPayload",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import json\nmsg = json.loads(json.dumps({'to': 'Yusuf', 'from': 'backup', 'text': 'done'}))\nprint(msg['from'])",
+  "options": [
+   "from",
+   "done",
+   "{'from': 'backup'}",
+   "backup"
+  ],
+  "answer": 3,
+  "why": "json.dumps and json.loads give back the same dictionary, and ['from'] is its sender."
+ },
+ {
+  "concept": "PollRequest",
+  "level": "Understand",
+  "q": "What does a GET of the topic's /json address with poll=1 do?",
+  "options": [
+   "It returns every message the server still holds and then ends the connection",
+   "It keeps the connection open and streams new messages for ever",
+   "It deletes the messages that it returns",
+   "It returns only the latest message"
+  ],
+  "answer": 0,
+  "why": "Without poll=1 the request would stay open."
+ },
+ {
+  "concept": "PollRequest",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "from urllib.parse import parse_qs, urlsplit\nprint(parse_qs(urlsplit('https://ntfy.sh/example-topic/json?poll=1').query))",
+  "options": [
+   "{'poll': '1'}",
+   "{'poll': ['1']}",
+   "['poll=1']",
+   "{'poll': 1}"
+  ],
+  "answer": 1,
+  "why": "parse_qs returns a dictionary whose values are lists."
+ },
+ {
+  "concept": "SinceParameter",
+  "level": "Understand",
+  "q": "What may the since option of a poll be?",
+  "options": [
+   "Only a message id",
+   "Only a date written as year-month-day",
+   "A time span such as 10m, a Unix timestamp or a message id",
+   "Only a number of messages"
+  ],
+  "answer": 2,
+  "why": "since limits the poll to what came after that point."
+ },
+ {
+  "concept": "SinceParameter",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "from urllib.parse import urlencode\nprint(urlencode({'poll': 1, 'since': '10m'}))",
+  "options": [
+   "poll=1,since=10m",
+   "?poll=1&since=10m",
+   "poll:1&since:10m",
+   "poll=1&since=10m"
+  ],
+  "answer": 3,
+  "why": "urlencode joins key=value pairs with an ampersand and adds no question mark."
+ },
+ {
+  "concept": "LineJsonParsing",
+  "level": "Understand",
+  "q": "Why is the text of a poll response not given to json.loads as a whole?",
+  "options": [
+   "It holds one JSON object per line, which taken together is not valid JSON, so each line is parsed alone",
+   "It is encrypted, and each line is a separate key",
+   "It is XML and needs another module",
+   "It is too long for json.loads"
+  ],
+  "answer": 0,
+  "why": "The chapter splits with splitlines() and parses every line."
+ },
+ {
+  "concept": "LineJsonParsing",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import json\ntext = '{\"id\": \"a\"}\\n{\"id\": \"b\"}\\n'\nprint(len([json.loads(l) for l in text.splitlines()]))",
+  "options": [
+   "1",
+   "2",
+   "Error",
+   "4"
+  ],
+  "answer": 1,
+  "why": "Two lines give two parsed objects."
+ },
+ {
+  "concept": "EpochTimestamp",
+  "level": "Understand",
+  "q": "Why does the same timestamp print as different clock times on two computers?",
+  "options": [
+   "The timestamps are changed by the server for each computer",
+   "One of the computers counts in milliseconds",
+   "fromtimestamp without a zone shows the local clock time; with a zone argument the result is the same everywhere",
+   "Timestamps change every hour"
+  ],
+  "answer": 2,
+  "why": "The book's 21:28:32 is six hours behind the UTC 03:28:32."
+ },
+ {
+  "concept": "EpochTimestamp",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import datetime\nprint(datetime.datetime.fromtimestamp(1797823712, tz=datetime.timezone.utc))",
+  "options": [
+   "2026-12-20 21:28:32",
+   "2026-12-21 03:28:32",
+   "2026-12-21 03:28:32+03:00",
+   "2026-12-21 03:28:32+00:00"
+  ],
+  "answer": 3,
+  "why": "With tz set to UTC the result carries the +00:00 offset."
+ },
+ {
+  "concept": "EventTypes",
+  "level": "Understand",
+  "q": "Which events does a reading program keep?",
+  "options": [
+   "Only the message events; open, keepalive and poll_request are about the connection",
+   "Only the open events",
+   "All events, because each holds a notification",
+   "Only the keepalive events"
+  ],
+  "answer": 0,
+  "why": "The current documentation adds message_delete and message_clear."
+ },
+ {
+  "concept": "EventTypes",
+  "level": "Apply",
+  "q": "How many messages does this program keep?",
+  "code": "import json\nlines = ['{\"event\": \"open\"}', '{\"event\": \"message\", \"message\": \"Hi\"}', '{\"event\": \"keepalive\"}']\nprint(len([m for m in map(json.loads, lines) if m['event'] == 'message']))",
+  "options": [
+   "3",
+   "1",
+   "2",
+   "4"
+  ],
+  "answer": 1,
+  "why": "Only the line whose event is message is kept."
+ },
+ {
+  "concept": "OptionalKeys",
+  "level": "Understand",
+  "q": "Why does indexing notification['title'] sometimes raise KeyError?",
+  "options": [
+   "The title key is removed after the first read",
+   "The key is named Title and not title in every case",
+   "The title key exists only when the sender set a title; get returns a default instead",
+   "KeyError comes from a priority below 3"
+  ],
+  "answer": 2,
+  "why": "Title, priority and tags are optional keys."
+ },
+ {
+  "concept": "OptionalKeys",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "n = {'id': '1', 'event': 'message', 'message': 'Hello'}\nprint((n.get('title'), n.get('priority', 3)))",
+  "options": [
+   "KeyError",
+   "('', 3)",
+   "(None, None)",
+   "(None, 3)"
+  ],
+  "answer": 3,
+  "why": "get returns None for the missing title and the given default 3 for the missing priority."
+ },
+ {
+  "concept": "PollingEtiquette",
+  "level": "Understand",
+  "q": "How should a program that polls ask the server?",
+  "options": [
+   "Once a minute or less often, passing the id of the last handled message as since so that only new messages return",
+   "As often as possible without since so that nothing is missed",
+   "Once a second, with since set to the topic name",
+   "Once a day, with since set to 0"
+  ],
+  "answer": 0,
+  "why": "Polling without since re-reads the topic's whole history."
+ },
+ {
+  "concept": "PollingEtiquette",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "ids = ['a', 'b', 'c']\nprint(ids[-1])",
+  "options": [
+   "a",
+   "c",
+   "['a', 'b', 'c']",
+   "b"
+  ],
+  "answer": 1,
+  "why": "The id of the last message is the since value for the next poll."
+ },
+ {
+  "concept": "PracticeQuestions",
+  "level": "Remember",
+  "q": "What do the five practice questions of the chapter ask about?",
+  "options": [
+   "Only the Gmail functions, five of them",
+   "Only ntfy, with five request types",
+   "Credentials and token files, thread against message, finding attachments, drawbacks of an SMS gateway, and the library for ntfy",
+   "Five programs to write from the start"
+  ],
+  "answer": 2,
+  "why": "They test the vocabulary of the three channels."
+ },
+ {
+  "concept": "UmbrellaReminder",
+  "level": "Understand",
+  "q": "Which part of the umbrella program can be tested without the network?",
+  "options": [
+   "The download of the forecast from weather.gov",
+   "The delivery of the text to the phone",
+   "The time the program starts in the morning",
+   "The decision on a forecast string, written as a function that returns True or False"
+  ],
+  "answer": 3,
+  "why": "The decision is plain string logic."
+ },
+ {
+  "concept": "UmbrellaReminder",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "words = ('rain', 'showers')\nfor f in ('Sunny, with a high near 75.', 'Showers likely, mainly after 2pm.'):\n    print(any(w in f.lower() for w in words), end=' ')",
+  "options": [
+   "False True",
+   "[False, True]",
+   "[True, False]",
+   "[False, False]"
+  ],
+  "answer": 0,
+  "why": "Showers contains one of the words; the sunny forecast does not."
+ },
+ {
+  "concept": "AutoUnsubscriber",
+  "level": "Understand",
+  "q": "Which part of the auto unsubscriber stays manual in the chapter's design?",
+  "options": [
+   "Finding the links in the HTML",
+   "Opening the links and completing the forms",
+   "Reading the mail",
+   "Searching for the word unsubscribe"
+  ],
+  "answer": 1,
+  "why": "The finding can be done with html.parser; the rest needs a person."
+ },
+ {
+  "concept": "CommandByMail",
+  "level": "Analyze",
+  "q": "Why does the command program check a password in the message text and not the From address?",
+  "options": [
+   "The From address is always empty in Gmail",
+   "A password is shorter than an address",
+   "A From address is easily faked, so it proves nothing about who sent the mail",
+   "The From address is encrypted and cannot be read"
+  ],
+  "answer": 2,
+  "why": "Only listed commands are run, and what was done is logged and confirmed."
+ },
+ {
+  "concept": "CommandByMail",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import hmac\nprint(hmac.compare_digest(b'open-sesame', b'open-sesamE'))",
+  "options": [
+   "True",
+   "None",
+   "b'False'",
+   "False"
+  ],
+  "answer": 3,
+  "why": "compare_digest compares in constant time and returns True only for equal values."
+ },
+ {
+  "concept": "PracticeQuestions",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "print(len(['credentials','threads','search','gateway','ntfy']))",
+  "options": [
+   "5",
+   "3",
+   "4",
+   "0"
+  ],
+  "answer": 0,
+  "why": "The chapter's practice questions are five."
+ },
+ {
+  "concept": "GmailService",
+  "level": "Understand",
+  "q": "Which part of the Gmail channel can be run without a Google account?",
+  "options": [
+   "The consent screen and the token",
+   "The message handling of the standard library that EZGmail sits on",
+   "The sending and reading of real mail",
+   "The search of a real mailbox"
+  ],
+  "answer": 1,
+  "why": "Everything that needs an account or a mailbox was read from the chapter and not run."
+ },
+ {
+  "concept": "GmailSetup",
+  "level": "Understand",
+  "q": "What does the program need before its first real Gmail call, and what should come before that?",
+  "options": [
+   "A phone number, and a test with a real recipient",
+   "A paid licence, and a test with ten recipients",
+   "The owner's permission, and a test without any permission, by a dry run",
+   "A copy of the mailbox, and a test on the copy"
+  ],
+  "answer": 2,
+  "why": "Setup means permission first for real calls, and a dry run for tests."
+ },
+ {
+  "concept": "GmailSending",
+  "level": "Remember",
+  "q": "Which single function sends mail in EZGmail, and what can it carry besides the text?",
+  "options": [
+   "write(), with nothing but the text",
+   "post(), with a photo only",
+   "deliver(), with a phone number",
+   "send(), with attachments, carbon copies and an HTML body"
+  ],
+  "answer": 3,
+  "why": "One function covers all of the sending options."
+ },
+ {
+  "concept": "GmailReading",
+  "level": "Understand",
+  "q": "What does reading mail mean in Gmail's terms?",
+  "options": [
+   "Working with threads and the messages inside them",
+   "Working with single messages that have no replies",
+   "Working with files in a folder of the computer",
+   "Working with port numbers of the mail server"
+  ],
+  "answer": 0,
+  "why": "unread(), recent() and search() give threads."
+ },
+ {
+  "concept": "GmailSearching",
+  "level": "Understand",
+  "q": "Which two things finish the reading side of the Gmail channel?",
+  "options": [
+   "Sending with cc and writing the token file",
+   "Searching with Gmail's query text and downloading attachments",
+   "Parsing addresses and choosing a port",
+   "Polling a topic and reading its JSON"
+  ],
+  "answer": 1,
+  "why": "Search finds the mail, and download saves its attachments."
+ },
+ {
+  "concept": "StandardLibraryMail",
+  "level": "Understand",
+  "q": "What does the standard library offer in this chapter beside the protocol clients?",
+  "options": [
+   "A complete Gmail login that needs no credentials",
+   "A texting service for all carriers",
+   "The email package, which builds and parses messages, and which can be run without an account",
+   "A topic service for notifications"
+  ],
+  "answer": 2,
+  "why": "The chapter sets EZGmail against smtplib and imaplib, while the email package handles the messages."
+ },
+ {
+  "concept": "MailProtocols",
+  "level": "Remember",
+  "q": "Which protocol sends mail and which one reads it, in the standard library?",
+  "options": [
+   "IMAP sends mail and SMTP reads it",
+   "SMTP both sends and reads it",
+   "IMAP sends and a third module reads",
+   "SMTP sends mail and IMAP reads it"
+  ],
+  "answer": 3,
+  "why": "smtplib is the SMTP client and imaplib the IMAP client."
+ },
+ {
+  "concept": "MailMessages",
+  "level": "Remember",
+  "q": "Which package builds and takes apart a message in the standard library?",
+  "options": [
+   "The email package",
+   "The smtplib module",
+   "The imaplib module",
+   "The urllib package"
+  ],
+  "answer": 0,
+  "why": "Building and parsing messages is the work of email, not of the protocol clients."
+ },
+ {
+  "concept": "SmsGateways",
+  "level": "Understand",
+  "q": "What is a text through an SMS gateway, in the chapter's second channel?",
+  "options": [
+   "A call made by the program to the phone",
+   "An email sent to the carrier's gateway address, which the carrier turns into a text",
+   "A notification posted to a topic",
+   "A message sent through IMAP to the phone's own mailbox"
+  ],
+  "answer": 1,
+  "why": "No gateway was contacted in this study, because it needs a real number and a live carrier."
+ },
+ {
+  "concept": "GatewayUse",
+  "level": "Remember",
+  "q": "What is a gateway?",
+  "options": [
+   "A program on the phone that reads mail",
+   "A web page where a text is typed",
+   "An email server of a carrier that turns a message into a text",
+   "A topic on the ntfy service"
+  ],
+  "answer": 2,
+  "why": "The gateway is the carrier's side of the email-to-text route."
+ },
+ {
+  "concept": "PushNotifications",
+  "level": "Remember",
+  "q": "Which service does the chapter use for push notifications, and how is it reached?",
+  "options": [
+   "The Gmail API, reached with EZGmail",
+   "A carrier's gateway, reached by email",
+   "A paid Twilio account, reached with a token",
+   "The free ntfy service, reached with plain HTTP requests"
+  ],
+  "answer": 3,
+  "why": "ntfy needs no account for the chapter's use."
+ },
+ {
+  "concept": "NotificationTopics",
+  "level": "Remember",
+  "q": "What is a topic?",
+  "options": [
+   "The address of a notification",
+   "The title line of a notification",
+   "The priority of a notification",
+   "The password of a notification"
+  ],
+  "answer": 0,
+  "why": "A topic is the channel name that senders post to and readers subscribe to."
+ },
+ {
+  "concept": "NotificationSending",
+  "level": "Understand",
+  "q": "How is a notification sent, and how is it extended?",
+  "options": [
+   "By one GET request with the text in the address, extended by cookies",
+   "By one POST request with the text as its body, extended by headers",
+   "By an email to the topic, extended by attachments",
+   "By two requests, one for the title and one for the text"
+  ],
+  "answer": 1,
+  "why": "A title, tags and a priority are headers."
+ },
+ {
+  "concept": "NotificationReceiving",
+  "level": "Understand",
+  "q": "How does a program receive notifications in the chapter?",
+  "options": [
+   "By a POST to the topic with the word receive",
+   "By an email from the topic",
+   "By a GET of the topic's JSON address, by polling",
+   "By reading the token file"
+  ],
+  "answer": 2,
+  "why": "Polling asks the server at intervals for what it holds."
+ },
+ {
+  "concept": "PracticeWork",
+  "level": "Remember",
+  "q": "What does the chapter end with?",
+  "options": [
+   "Three questions and five programs",
+   "Ten questions and no programs",
+   "Five programs and a quiz of ten items",
+   "Five questions and three programs"
+  ],
+  "answer": 3,
+  "why": "The programs are the umbrella reminder, the auto unsubscriber and the command by mail."
+ },
+ {
+  "concept": "ChapterQuestions",
+  "level": "Remember",
+  "q": "What do the chapter's five questions test?",
+  "options": [
+   "The vocabulary of the three channels",
+   "Only the speed of the programs",
+   "Only the ports of the servers",
+   "Only the use of the requests module"
+  ],
+  "answer": 0,
+  "why": "They ask about credentials, threads, search, gateway drawbacks and the ntfy library."
+ },
+ {
+  "concept": "ChapterPrograms",
+  "level": "Understand",
+  "q": "What do the three practice programs combine?",
+  "options": [
+   "Only the channels, with nothing from earlier chapters",
+   "The chapter's channels with earlier chapters",
+   "Only earlier chapters, with no channel",
+   "Three new modules the chapter does not teach"
+  ],
+  "answer": 1,
+  "why": "For example the umbrella reminder uses web access from an earlier chapter and a text."
+ }
+]

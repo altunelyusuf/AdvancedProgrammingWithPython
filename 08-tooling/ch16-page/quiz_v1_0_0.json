@@ -1,0 +1,197 @@
+{
+ "_version": "1.0.0",
+ "items": [
+  {
+   "q": "A table cats holds three rows. After UPDATE cats SET fur = 'gray' (no WHERE clause), how many rows did the statement change?",
+   "options": [
+    "1",
+    "3",
+    "0"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO2",
+   "rationales": [
+    "A statement without WHERE is not limited to one row.",
+    "",
+    "Zero rows are changed only when a WHERE clause matches nothing."
+   ]
+  },
+  {
+   "q": "What does SELECT * FROM cats leave out that SELECT rowid, * FROM cats shows?",
+   "options": [
+    "The last column of the table",
+    "The hidden integer key of each row",
+    "Rows whose values are all equal"
+   ],
+   "answer": 1,
+   "level": "Understand",
+   "objective": "CO1",
+   "rationales": [
+    "* means every declared column.",
+    "",
+    "Rows with equal values are still returned; the rowid is what tells them apart."
+   ]
+  },
+  {
+   "q": "In an ordinary table (no STRICT) a column is declared INTEGER. After INSERT INTO t VALUES ('42'), ('Hello'), what does SELECT n, typeof(n) FROM t give?",
+   "options": [
+    "[(42, 'integer'), ('Hello', 'text')]",
+    "[(42, 'integer')] and an error for 'Hello'",
+    "[('42', 'text'), ('Hello', 'text')]"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO1",
+   "rationales": [
+    "Only a STRICT table refuses 'Hello'.",
+    "",
+    "The text '42' can be converted losslessly, so it is stored as the integer 42."
+   ]
+  },
+  {
+   "q": "A query is built as \"SELECT * FROM cats WHERE name = '\" + e + \"'\" and, separately, as SELECT * FROM cats WHERE name = ? with (e,), where e is x' OR '1'='1 and the table has 3 cats. How many rows do they return?",
+   "options": [
+    "3 and 0",
+    "0 and 0",
+    "3 and 3"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO2",
+   "rationales": [
+    "",
+    "The first query's text was changed by the input, so it matches every row.",
+    "The placeholder binds the whole input as one value, so nothing matches."
+   ]
+  },
+  {
+   "q": "A connection is made with isolation_level=None. One INSERT is run with no BEGIN, then conn.rollback() is called. Is the new row still in the table?",
+   "options": [
+    "Yes, the INSERT was its own transaction and was already kept",
+    "No, rollback() undoes the last statement",
+    "No, the table is emptied"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO3",
+   "rationales": [
+    "",
+    "rollback() undoes only an open transaction, and there is none.",
+    "Nothing empties a table here."
+   ]
+  },
+  {
+   "q": "A file database is opened with sqlite3.connect(path) and its default settings. A row is inserted, and close() is called without commit(). What does a new connection to the file see for that row?",
+   "options": [
+    "The row, because close() saves",
+    "Nothing: the uncommitted change was discarded",
+    "An error, because the file is damaged"
+   ],
+   "answer": 1,
+   "level": "Analyze",
+   "objective": "CO3",
+   "rationales": [
+    "In the default mode close() does not commit.",
+    "",
+    "The file is fine; the transaction was simply never committed."
+   ]
+  },
+  {
+   "q": "The chapter declares FOREIGN KEY(cat_id) REFERENCES cats(rowid). With PRAGMA foreign_keys = ON, what happens when a row is inserted into the vaccinations table?",
+   "options": [
+    "It is accepted when the cat exists and refused when it does not",
+    "OperationalError: foreign key mismatch, for every insert",
+    "It is accepted and the rowid is copied"
+   ],
+   "answer": 1,
+   "level": "Analyze",
+   "objective": "CO4",
+   "rationales": [
+    "That is what a declared parent key would do, but the rowid cannot be one.",
+    "",
+    "Nothing is copied; the constraint cannot even be checked."
+   ]
+  },
+  {
+   "q": "Tables cats and vaccinations are joined with cats LEFT JOIN vaccinations ON cats.id = vaccinations.cat_id WHERE vaccinations.vaccine IS NULL. Which cats does this return?",
+   "options": [
+    "Cats with at least one vaccination",
+    "Cats with no vaccination at all",
+    "Vaccinations that point to no cat"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO4",
+   "rationales": [
+    "That is what an inner join shows.",
+    "",
+    "That needs the tables the other way round."
+   ]
+  },
+  {
+   "q": "A table without an INTEGER PRIMARY KEY holds rows with rowids 1, 2, 3. The row with rowid 3 is deleted and a new row is inserted. What rowid does the new row get?",
+   "options": [
+    "4, because rowids are never reused",
+    "3, the largest number in use plus one",
+    "1, the first free number"
+   ],
+   "answer": 1,
+   "level": "Analyze",
+   "objective": "CO1",
+   "rationales": [
+    "Only AUTOINCREMENT prevents reuse.",
+    "",
+    "SQLite picks one more than the largest rowid in use, not the first gap."
+   ]
+  },
+  {
+   "q": "Two separate connections are opened with sqlite3.connect(':memory:'). The first creates a table t. What does a query on t through the second connection do?",
+   "options": [
+    "Returns the rows of t",
+    "Raises OperationalError: no such table: t",
+    "Waits until the first connection closes"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO5",
+   "rationales": [
+    "Each ':memory:' connection has its own private database.",
+    "",
+    "There is nothing to wait for; the databases are unrelated."
+   ]
+  },
+  {
+   "q": "The cats table holds Zophie 5.6 kg, Miguel 6.2 kg and Toby 6.8 kg. What does SELECT name FROM cats ORDER BY weight_kg DESC LIMIT 2 return?",
+   "options": [
+    "[('Miguel',), ('Toby',)]",
+    "[('Toby',), ('Miguel',)]",
+    "[('Toby',), ('Zophie',)]"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO2",
+   "rationales": [
+    "ORDER BY weight_kg DESC starts with the largest.",
+    "",
+    "Zophie is the lightest of the three."
+   ]
+  },
+  {
+   "q": "What limit of SQLite does the chapter name, and what rule in the SQLite documentation lies behind it?",
+   "options": [
+    "Databases cannot exceed 1 GB; every table holds one writer's rows",
+    "It cannot efficiently handle hundreds of simultaneous writes; a database file has one writer at a time",
+    "It cannot read from two programs at once; files are locked for reading"
+   ],
+   "answer": 1,
+   "level": "Understand",
+   "objective": "CO5",
+   "rationales": [
+    "The chapter says SQLite handles gigabytes and even terabytes.",
+    "",
+    "Readers can work at the same time; the limit is on writing."
+   ]
+  }
+ ]
+}

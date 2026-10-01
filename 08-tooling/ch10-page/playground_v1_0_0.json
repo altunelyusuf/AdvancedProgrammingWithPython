@@ -1,0 +1,6 @@
+{
+ "_version": "1.0.0",
+ "label": "Files: Mad Libs with a text file and a replacement function (uses input)",
+ "code": "import re, tempfile\nfrom pathlib import Path\nwith tempfile.TemporaryDirectory() as folder:\n    source = Path(folder) / 'panda.txt'\n    source.write_text('The ADJECTIVE panda walked to the NOUN and then VERB. A nearby NOUN was\\nunaffected by these events.', encoding='utf-8')\n    text = source.read_text(encoding='utf-8')\n    def ask(match):\n        word = match.group(1)\n        return input('Enter ' + ('an ' if word[0] in 'AEIOU' else 'a ') + word.lower() + ': ')\n    result = re.sub(r'\\b(ADJECTIVE|NOUN|ADVERB|VERB)\\b', ask, text)\n    target = Path(folder) / 'panda_filled.txt'\n    target.write_text(result, encoding='utf-8')\n    print(result)\n    print(target.name, target.stat().st_size, target.read_text(encoding='utf-8') == result)\n",
+ "inputs": "silly|chandelier|screamed|pickup truck"
+}

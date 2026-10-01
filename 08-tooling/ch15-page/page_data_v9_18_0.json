@@ -1,0 +1,5428 @@
+{
+ "_version": "9.18.0",
+ "visuals": {},
+ "course": {
+  "_version": "1.3.3",
+  "name": "SEN0414 Advanced Programming",
+  "line": "SEN0414 Advanced Programming",
+  "chapter_sub": "chapter {n} of Automate the Boring Stuff with Python, 3rd edition",
+  "chapter_intro": "Chapter {n} of <i>Automate the Boring Stuff with Python</i>, 3rd edition (Sweigart, 2025), renewed for an advanced course.",
+  "playground": {
+   "label": "Google Sheets: the fake-ledger audit and column letters (uses input)",
+   "code": "text = input('Transactions (sender,recipient,amount separated by |): ')\naccounts = {}\nfor line in text.split('|'):\n    sender, recipient, amount = line.split(',')\n    amount = int(amount)   # cell values are text\n    if sender == 'PRE-MINE':\n        accounts.setdefault(recipient, 0)\n        accounts[recipient] += amount\n    else:\n        accounts.setdefault(sender, 0)\n        accounts.setdefault(recipient, 0)\n        accounts[sender] -= amount\n        accounts[recipient] += amount\nprint(accounts)\ntotal = 0\nfor amount in accounts.values():\n    total += amount\nprint('Total Boringcoins:', total)\n\ndef column_letter(n):\n    letters = ''\n    while n > 0:\n        n, r = divmod(n, 26)\n        if r == 0:\n            r = 26\n            n -= 1\n        letters = chr(64 + r) + letters\n    return letters\nprint(column_letter(len(accounts)), column_letter(999))",
+   "inputs": "PRE-MINE,Alice,1000|Alice,Bob,300|Bob,Carol,50"
+  },
+  "corpus": {
+   "book_pin_source": "02-textbook/sen0414_textbook_v1_0_0.ttl",
+   "book": [
+    "automate-python-book-3e/01-ontologies/automate_python_3e_ch{nn}_v1_0_0.ttl"
+   ],
+   "course": [
+    "00-course-profile/sen0414_course_v1_0_0.ttl",
+    "01-outcomes/sen0414_outcomes_v1_0_0.ttl",
+    "02-textbook/sen0414_textbook_v1_0_0.ttl",
+    "03-materials/sen0414_materials_v1_22_0.ttl"
+   ]
+  }
+ },
+ "discussion": [],
+ "findings": [
+  [
+   "Background",
+   "Chapter 15 of the 3rd edition, Google Sheets, teaches the third-party EZSheets library in eight sections: installing and setting up (a Google Cloud project, the Sheets and Drive APIs, the OAuth consent screen, a credentials file and token files, and revoking them), spreadsheet objects (creating, opening by id or URL, uploading, listing, the attributes title, id, url, sheetTitles and sheets, downloading in six formats, deleting), sheet objects (reading and writing cells by address, whole rows and columns, the sizes rowCount and columnCount, creating, moving, deleting, clearing and copying sheets), Google Forms with Project 11, a fake blockchain kept in a sheet with an audit program and a transaction program, working with quotas, a summary, 10 practice questions and 3 practice programs."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's results that can be checked without Google's servers hold: the audit program of Project 11, run on the public Boringcoin sheet as exported on 2026-10-01 (1001 rows of three columns), prints the same 20 balances in the same order as the chapter and the total 1000000000; practice program 3, run on the export of the Bean Count sheet (15000 rows under a header), finds one wrong total, in row 14399, where 804 times 623 is 500892 and the sheet shows 500891; and getColumnLetterOf(999) is ALK and getColumnNumberOf('ZZZ') is 18278, both for the library's functions and for a version written for this study, which agree for the column numbers 1 to 200000."
+  ],
+  [
+   "Comparative analysis",
+   "Three printed transcripts of the chapter differ in EZSheets 2026.4.28, the newest release on 2026-10-01, run against a stand-in for Google's servers: ss.Sheet('New blank sheet') prints nothing because Spreadsheet.Sheet returns None, while createSheet returns the new Sheet object; a number just written, sheet['B2'] = 30, reads back as the number 30 and becomes the text '30' only after a refresh, where the chapter prints '30'; and the default file name of a download is made from the title with spaces replaced, so the title Sweigart Books (DO NOT DELETE) of the chapter's own transcript gives Sweigart_Books_(DO_NOT_DELETE).xlsx and not the printed Sweigart_Books.xlsx."
+  ],
+  [
+   "Comparative analysis",
+   "Two behaviours of the library are not in the chapter: updateRow and updateRows pad the list they are given with empty strings in place, and updateRows also extends the list of rows to the sheet's size, so the caller's list has grown after the call (a list of 4 became a list of 26, and a list of 2 rows one of 1001), which the source of updateColumn and updateColumns does in the same way but was not executed; and getIdFromUrl, which opens a spreadsheet given by URL, cuts the id by position and drops the id's last character when nothing follows the id in the URL, so the chapter's rule that the id lies between spreadsheets/d/ and /edit is safer written as a pattern match on the id's characters."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's account of quotas differs from the newest library and from Google's current page: the chapter says that EZSheets catches the quota exception and retries and that setting ezsheets.IGNORE_QUOTA to True makes the methods raise it, but in EZSheets 2026.4.28 the setting only switches off the library's own throttle of 90 requests in a window of 101 seconds, and the retry stays, with pauses of 10, 15, 20, 25, 30, 35, 40 and 45 seconds over nine attempts before the HttpError is raised, the same with the setting False and True; Google's page gives 300 read and 300 write requests a minute per project and 60 of each per user per project, asks for exponential backoff on HTTP 429, and states no daily limit when the per-minute quotas are respected, and the chapter's 250 new spreadsheets a day is not on it."
+  ],
+  [
+   "Conclusion",
+   "For an advanced course, chapter 15 is best taught as a conversation with a remote system in which every name, address and write has a cost: a Spreadsheet and its Sheet objects are local copies refreshed on request, addresses count from 1 where lists count from 0, values are text, and the number of requests, not the number of lines, decides speed and quota; the chapter's outputs that do not depend on Google hold, but the printed returns of Sheet() and of a just-written number, the IGNORE_QUOTA account, the token files and the scopes differ in the newest library and in Google's pages, the library changes list arguments in place and cuts an id from a URL without a closing slash, and all the steps that need a browser login, an account or a form were read and not run."
+  ],
+  [
+   "Contemporary developments",
+   "The chapter's set-up differs from current Google practice in three ways: the chapter's introduction speaks of two token JSON files while naming token-drive.pickle and token-sheets.pickle, which is what the library 2026.4.28 writes, where Google's Python quickstart keeps a token.json and needs Python 3.10.7 or later; unpickling can execute code, and the documentation says the pickle module is not secure, so a token file is as sensitive as a program, which the chapter's advice to treat it like a password covers only in part; and Google's scope table lists the Sheets scope as sensitive, the Drive scope as restricted and drive.file, which gives access only to the specific Drive files the user uses with the app, as the recommended non-sensitive scope, while the chapter asks for the full Drive and Sheets scopes."
+  ],
+  [
+   "Contemporary developments",
+   "The programs of Project 11 rest on Python facts the chapter does not spell out: cell values are text, so an amount needs int and an empty cell cannot be converted, which stops the audit loop on a blank row; the transaction program's check len(sys.argv) < 4 lets extra arguments through and they fail later with ValueError at the unpacking, and a name with a space is one argument only when quoted, as shlex.split shows; sheets is a tuple, so it is read and not changed in place; dict.setdefault creates an account at 0; a chained comparison ss1 == ss2 == ss3 means ss1 == ss2 and ss2 == ss3 with the compared-by-id equality the Spreadsheet class defines; and each write is a web request, so 100 single-cell writes are 100 requests where one updateColumn is one, while reads from a loaded sheet make none and setting rowCount makes three."
+  ]
+ ],
+ "unit": null,
+ "research_file": "sen0414_ch15_research_v1_0_0.ttl",
+ "chapter": 15,
+ "title": "Google Sheets for an advanced course: chapter 15 of the 3rd edition and today's Python",
+ "python": "Python 3.14.4",
+ "nodes": [
+  {
+   "id": "AccountAccess",
+   "label": "Account access",
+   "level": 1,
+   "parent": null,
+   "body": "Before a script can reach a spreadsheet, the chapter has it prove who it acts for, through a Google Cloud project, two enabled APIs, a consent screen, a credentials file and token files (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_AccountAccess",
+   "class_iri": "http://example.org/sen0414/ch15#AccountAccess"
+  },
+  {
+   "id": "CloudSetup",
+   "label": "Cloud setup",
+   "level": 2,
+   "parent": "AccountAccess",
+   "body": "The chapter starts in Google's console with a project and the two APIs the library needs (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_CloudSetup",
+   "class_iri": "http://example.org/sen0414/ch15#CloudSetup"
+  },
+  {
+   "id": "GoogleCloudProject",
+   "label": "Google cloud project",
+   "level": 3,
+   "parent": "CloudSetup",
+   "body": "The chapter has the reader sign in at console.cloud.google.com, choose Select a project and New Project, accept the generated project name and the random project ID, which cannot be changed later, leave the location at No organization and press Create; free accounts can have up to 12 projects, which no page read for this study confirms, but one project serves every script (Sweigart, 2025). None of this was run here.",
+   "section_iri": "http://example.org/sen0414/ch15#S_GoogleCloudProject",
+   "class_iri": "http://example.org/sen0414/ch15#GoogleCloudProject",
+   "example": "console.cloud.google.com, New Project",
+   "definition": "A Google Cloud project is the place in Google's console that owns a script's access to Google's APIs; the chapter makes one, leaves the location at No organization, and needs only one project for all its scripts."
+  },
+  {
+   "id": "ApiEnablement",
+   "label": "Api enablement",
+   "level": 3,
+   "parent": "CloudSetup",
+   "body": "In APIs & Services, Library, the reader finds the Google Sheets API and presses Enable, then does the same for the Google Drive API, which the library uses to upload and download spreadsheet files (Sweigart, 2025); the library's code requests the Sheets service and the Drive service separately, with one token file each (Sweigart, 2026). The console steps were not run.",
+   "section_iri": "http://example.org/sen0414/ch15#S_ApiEnablement",
+   "class_iri": "http://example.org/sen0414/ch15#ApiEnablement",
+   "example": "Enable the Google Sheets API and the Google Drive API",
+   "definition": "The project must have the Google Sheets API and the Google Drive API switched on, because the library uses the Drive API to upload and download spreadsheet files."
+  },
+  {
+   "id": "Authorisation",
+   "label": "Authorisation",
+   "level": 2,
+   "parent": "AccountAccess",
+   "body": "Authorisation has four parts in the chapter: a consent screen, scopes, a credentials file and the token files the first login produces (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_Authorisation",
+   "class_iri": "http://example.org/sen0414/ch15#Authorisation"
+  },
+  {
+   "id": "OAuthConsentScreen",
+   "label": "O auth consent screen",
+   "level": 3,
+   "parent": "Authorisation",
+   "body": "The reader configures the consent screen with the user type External, an app name such as Python Google API Script and an e-mail address, then the scopes, then the Gmail address of the account as a test user, because unless the app goes through Google's approval the script can reach only the accounts listed there (Sweigart, 2025); Google's current guide for the consent screen also has the steps of choosing External and adding test users (Google, 2026). Not run.",
+   "section_iri": "http://example.org/sen0414/ch15#S_OAuthConsentScreen",
+   "class_iri": "http://example.org/sen0414/ch15#OAuthConsentScreen",
+   "example": "External, App Name, Test users",
+   "definition": "The OAuth consent screen is the page Google shows a person when a script first asks for access; the chapter chooses External, names the app, lists the scopes and adds the account's Gmail address as a test user, since without Google's app approval a script may reach only the test users' accounts."
+  },
+  {
+   "id": "AuthScope",
+   "label": "Auth scope",
+   "level": 3,
+   "parent": "Authorisation",
+   "body": "The chapter has the reader tick .../auth/drive and .../auth/spreadsheets (Sweigart, 2025); Google's table of Sheets scopes, read on 2026-10-01, classes spreadsheets as sensitive, drive as restricted and drive.file, access to only the specific Drive files a user uses with the app, as the recommended non-sensitive scope, and advises the narrowest scope that works; the newest library asks for the two scopes the chapter names, https://www.googleapis.com/auth/spreadsheets and https://www.googleapis.com/auth/drive (Google, 2026) (Sweigart, 2026), and keeping the last part of each address, as the example does, gives drive and spreadsheets.",
+   "section_iri": "http://example.org/sen0414/ch15#S_AuthScope",
+   "class_iri": "http://example.org/sen0414/ch15#AuthScope",
+   "example": "auth/drive and auth/spreadsheets",
+   "definition": "A scope is one permission a project asks for; the chapter ticks the Drive scope and the Sheets scope, which Google's scope table classes as restricted and sensitive, and Google recommends the narrower non-sensitive drive.file where it is enough.",
+   "io": {
+    "code": "[s.rsplit('/', 1)[1] for s in ('https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets')]",
+    "out": "['drive', 'spreadsheets']",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "s",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'/'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "1",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "s",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'https://www.googleapis.com/auth/drive'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'https://www.googleapis.com/auth/spreadsheets'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CredentialsFile",
+   "label": "Credentials file",
+   "level": 3,
+   "parent": "Authorisation",
+   "body": "The reader downloads the JSON file of an OAuth client of the type Desktop app, named like client_secret_282792235794-....apps.googleusercontent.com.json, into the script's folder, and may rename it credentials-sheets.json; EZSheets looks for either name, and needs the file even for public spreadsheets (Sweigart, 2025); in the library a folder with several matching files raises EZSheetsException and asks for the file to be named, and the example applies the same name rule to four file names and keeps two (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_CredentialsFile",
+   "class_iri": "http://example.org/sen0414/ch15#CredentialsFile",
+   "example": "client_secret_*.json, credentials-sheets.json",
+   "definition": "The credentials file is the JSON file of an OAuth client of the type Desktop app that Google lets you download; the library looks in the folder for credentials-sheets.json or a name that matches client_secret_*.json, and needs it even for public spreadsheets.",
+   "io": {
+    "code": "[n for n in ('client_secret_282792235794.apps.googleusercontent.com.json', 'credentials-sheets.json', 'notes.txt', 'client_secret_x.txt') if (n.startswith('client_secret_') and n.endswith('.json')) or n == 'credentials-sheets.json']",
+    "out": "['client_secret_282792235794.apps.googleusercontent.com.json', 'credentials-sheets.json']",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "n",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "n",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'client_secret_282792235794.apps.googleusercontent.com.json'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'credentials-sheets.json'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'notes.txt'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'client_secret_x.txt'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "BoolOp",
+           "kind": "BoolOp",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "n",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'client_secret_'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "n",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'.json'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Compare",
+           "kind": "Compare",
+           "children": [
+            {
+             "label": "n",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'credentials-sheets.json'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "TokenFile",
+   "label": "Token file",
+   "level": 3,
+   "parent": "Authorisation",
+   "body": "After the login the folder holds token-drive.pickle and token-sheets.pickle, which later runs read instead of asking again (Sweigart, 2025); the chapter's introduction calls them two token JSON files while naming pickle files, and EZSheets 2026.4.28 writes pickle files and reads them back with pickle.load, whereas Google's Python quickstart keeps one token.json (Sweigart, 2026) (Google, 2026). The example writes and reads a small token-like dictionary with pickle.",
+   "section_iri": "http://example.org/sen0414/ch15#S_TokenFile",
+   "class_iri": "http://example.org/sen0414/ch15#TokenFile",
+   "example": "token-sheets.pickle, token-drive.pickle",
+   "definition": "A token file holds the tokens that the first login obtained, one for Sheets and one for Drive, and the library writes it with the pickle module so that later runs need no login; the chapter says to treat such files like passwords.",
+   "io": {
+    "code": "sorted(__import__('pickle').loads(__import__('pickle').dumps({'scopes': 2, 'refresh_token': 'x'})).items())",
+    "out": "[('refresh_token', 'x'), ('scopes', 2)]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "sorted",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'pickle'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "__import__",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "'pickle'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "Dict",
+               "kind": "Dict",
+               "children": [
+                {
+                 "label": "'scopes'",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "'refresh_token'",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "2",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "'x'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "FirstRunLogin",
+   "label": "First run login",
+   "level": 3,
+   "parent": "Authorisation",
+   "body": "Running import ezsheets in a folder with a credentials file opens the browser, asks the reader to sign in with the test user's account, shows the warning that Google has not verified the app, asks for consent and ends with the page saying the authentication flow has completed; this is repeated for the Drive API and happens once (Sweigart, 2025). The login needs a browser and a real account and was not run.",
+   "section_iri": "http://example.org/sen0414/ch15#S_FirstRunLogin",
+   "class_iri": "http://example.org/sen0414/ch15#FirstRunLogin",
+   "example": "import ezsheets opens the browser",
+   "definition": "The first import with a credentials file in the folder opens the browser for the Google sign-in, the warning that Google has not verified the app, and the consent for Sheets and then for Drive; it is a one-time step that needs a browser and a real account and was not run."
+  },
+  {
+   "id": "RevokingCredentials",
+   "label": "Revoking credentials",
+   "level": 3,
+   "parent": "Authorisation",
+   "body": "If the credentials or token files reach someone else, the holder cannot change the account's password but can reach its spreadsheets; the reader deletes the OAuth client with the trash can icon in the Credentials page of the console, after which the files are useless and new ones are made (Sweigart, 2025). Not run.",
+   "section_iri": "http://example.org/sen0414/ch15#S_RevokingCredentials",
+   "class_iri": "http://example.org/sen0414/ch15#RevokingCredentials",
+   "example": "trash can in the OAuth 2.0 Client IDs table",
+   "definition": "If a credentials or token file is shared by accident, deleting the OAuth client in the console makes the files useless, and new ones must be made; this was not run."
+  },
+  {
+   "id": "TokenFileSecurity",
+   "label": "Token file security",
+   "level": 3,
+   "parent": "Authorisation",
+   "body": "The chapter says to treat the token files like passwords (Sweigart, 2025). Because the library reads them with pickle.load (Sweigart, 2026), and the documentation warns that the pickle module is not secure and that unpickling can execute arbitrary code (Python Software Foundation, 2026), a file from someone else must never be loaded: the example unpickles a small object whose reduce method names print, and the print runs while the file is being loaded.",
+   "section_iri": "http://example.org/sen0414/ch15#S_TokenFileSecurity",
+   "class_iri": "http://example.org/sen0414/ch15#TokenFileSecurity",
+   "example": "pickle.loads(data)",
+   "definition": "Because a token file is read back with pickle and unpickling can run code, a token file from another person must never be loaded and one's own must not be shared; the documentation says the pickle module is not secure."
+  },
+  {
+   "id": "SpreadsheetObjects",
+   "label": "Spreadsheet objects",
+   "level": 1,
+   "parent": null,
+   "body": "A Spreadsheet object stands for a whole Google Sheets spreadsheet, and the functions around it create, find, upload, download and delete spreadsheets (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_SpreadsheetObjects",
+   "class_iri": "http://example.org/sen0414/ch15#SpreadsheetObjects"
+  },
+  {
+   "id": "SpreadsheetHandle",
+   "label": "Spreadsheet handle",
+   "level": 2,
+   "parent": "SpreadsheetObjects",
+   "body": "A script gets a Spreadsheet object by opening, creating, uploading or listing (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_SpreadsheetHandle",
+   "class_iri": "http://example.org/sen0414/ch15#SpreadsheetHandle"
+  },
+  {
+   "id": "OpeningSpreadsheet",
+   "label": "Opening spreadsheet",
+   "level": 3,
+   "parent": "SpreadsheetHandle",
+   "body": "Opening a spreadsheet gives a script a Spreadsheet object for an existing spreadsheet, by its id, its URL or a short URL (Sweigart, 2025). ezsheets.Spreadsheet takes an id, a full URL or a URL that redirects to it, so the chapter says the three variables of its example are equal, ss1 == ss2 == ss3 being True (Sweigart, 2025); the library compares two Spreadsheet objects by id, and a chained comparison a == b == c means a == b and b == c, so the example prints True for three objects of one id, False for the test that they are the same object, False for another id and False for a string (Python Software Foundation, 2026) (Sweigart, 2026). The id of https://docs.google.com/spreadsheets/d/1TzOJxhNKr15tzdZxTqtQ3EmDP6em_elnbtmZIcyu8vI/edit#gid=0/ is 1TzOJxhNKr15tzdZxTqtQ3EmDP6em_elnbtmZIcyu8vI (Sweigart, 2025). Opening a real spreadsheet needs Google's servers and was not run.",
+   "section_iri": "http://example.org/sen0414/ch15#S_OpeningSpreadsheet",
+   "class_iri": "http://example.org/sen0414/ch15#OpeningSpreadsheet",
+   "example": "ezsheets.Spreadsheet(url or id)",
+   "definition": "A Spreadsheet object opens an existing spreadsheet from its id, its URL or a short URL that redirects to it, and has the attributes title, id, url, sheetTitles and sheets; the id is the part of the URL between spreadsheets/d/ and /edit.",
+   "io": {
+    "code": "(lambda u: (lambda i: (i[:4], len(i)))(u.split('/d/')[1].split('/')[0]))('https://docs.google.com/spreadsheets/d/1TzOJxhNKr15tzdZxTqtQ3EmDP6em_elnbtmZIcyu8vI/edit#gid=0/')",
+    "out": "('1TzO', 44)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Lambda",
+           "kind": "Lambda",
+           "children": [
+            {
+             "label": "arguments",
+             "kind": "arguments",
+             "children": [
+              {
+               "label": "arg",
+               "kind": "arg",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "Subscript",
+               "kind": "Subscript",
+               "children": [
+                {
+                 "label": "i",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "Slice",
+                 "kind": "Slice",
+                 "children": [
+                  {
+                   "label": "4",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "len",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "i",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "Subscript",
+                 "kind": "Subscript",
+                 "children": [
+                  {
+                   "label": "call",
+                   "kind": "Call",
+                   "children": [
+                    {
+                     "label": "Attribute",
+                     "kind": "Attribute",
+                     "children": [
+                      {
+                       "label": "u",
+                       "kind": "Name",
+                       "children": []
+                      }
+                     ]
+                    },
+                    {
+                     "label": "'/d/'",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "1",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "'/'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "0",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'https://docs.google.com/spreadsheets/d/1TzOJxhNKr15tzdZxTqtQ3EmDP6em_elnbtmZIcyu8vI/edit#gid=0/'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "UrlSliceTrap",
+   "label": "Url slice trap",
+   "level": 3,
+   "parent": "SpreadsheetHandle",
+   "body": "The library cuts the id out of a URL that starts with https://docs.google.com/spreadsheets/d/, 39 characters, by slicing from position 39 to the next slash; run on the chapter's id, the result is the whole id when a slash follows it and loses the last character when the URL ends right after the id, while a regular expression for the id's characters gives the whole id in all three forms (Sweigart, 2026) (Python Software Foundation, 2026). The chapter's rule, between spreadsheets/d/ and /edit, is stated for URLs that have an /edit part (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_UrlSliceTrap",
+   "class_iri": "http://example.org/sen0414/ch15#UrlSliceTrap",
+   "example": "url[39:url.find('/', 39)]",
+   "definition": "Cutting an id out of a URL by position works only when a slash follows the id: in EZSheets 2026.4.28 a URL that ends right after the id loses the id's last character, while a pattern match on the id's characters does not.",
+   "io": {
+    "code": "(lambda u: (len(u[39:u.find('/', 39)]), len(u.split('/d/')[1].split('/')[0])))('https://docs.google.com/spreadsheets/d/1TzOJxhNKr15tzdZxTqtQ3EmDP6em_elnbtmZIcyu8vI')",
+    "out": "(43, 44)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "len",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "u",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "Slice",
+               "kind": "Slice",
+               "children": [
+                {
+                 "label": "39",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "u",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "'/'",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "39",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "len",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "Subscript",
+                   "kind": "Subscript",
+                   "children": [
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "Attribute",
+                       "kind": "Attribute",
+                       "children": [
+                        {
+                         "label": "u",
+                         "kind": "Name",
+                         "children": []
+                        }
+                       ]
+                      },
+                      {
+                       "label": "'/d/'",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    },
+                    {
+                     "label": "1",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "label": "'/'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'https://docs.google.com/spreadsheets/d/1TzOJxhNKr15tzdZxTqtQ3EmDP6em_elnbtmZIcyu8vI'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "NewSpreadsheet",
+   "label": "New spreadsheet",
+   "level": 3,
+   "parent": "SpreadsheetHandle",
+   "body": "Spreadsheet() with no argument creates a new blank spreadsheet, and the chapter shows its title being set, then read back, and its url and id being read only (Sweigart, 2025); the library's default title is Untitled spreadsheet, the chapter says every new spreadsheet starts with a sheet named Sheet1, and its transcripts show new sheets of 1000 rows and 26 columns; the object built for this study against a stand-in had the title Untitled spreadsheet, the sheet titles ('Sheet1',) and a tuple of sheets (Sweigart, 2026). A real spreadsheet was not created.",
+   "section_iri": "http://example.org/sen0414/ch15#S_NewSpreadsheet",
+   "class_iri": "http://example.org/sen0414/ch15#NewSpreadsheet",
+   "example": "ss = ezsheets.Spreadsheet()",
+   "definition": "Spreadsheet() with no argument creates a blank spreadsheet, titled Untitled spreadsheet by the library and starting with one sheet, Sheet1; it needs the network and an account and was not run."
+  },
+  {
+   "id": "UploadSpreadsheet",
+   "label": "Upload spreadsheet",
+   "level": 3,
+   "parent": "SpreadsheetHandle",
+   "body": "ezsheets.upload('my_spreadsheet.xlsx') returns a Spreadsheet whose title is the file name without its extension, the chapter says (Sweigart, 2025); the library accepts the extensions .xlsx, .ods, .csv and .tsv in any letter case, raises ValueError for another one and FileNotFoundError for a missing file, and sends the file's base name to Drive (Sweigart, 2026). Nothing was uploaded.",
+   "section_iri": "http://example.org/sen0414/ch15#S_UploadSpreadsheet",
+   "class_iri": "http://example.org/sen0414/ch15#UploadSpreadsheet",
+   "example": "ezsheets.upload('my_spreadsheet.xlsx')",
+   "definition": "upload sends a local .xlsx, .ods, .csv or .tsv file to Google Drive, where it becomes a Google Sheets spreadsheet, and returns the Spreadsheet object; the library raises ValueError for any other extension.",
+   "io": {
+    "code": "[n for n in ('a.xlsx', 'b.ODS', 'c.csv', 'd.tsv', 'e.pdf') if n.lower().endswith(('.xlsx', '.ods', '.csv', '.tsv'))]",
+    "out": "['a.xlsx', 'b.ODS', 'c.csv', 'd.tsv']",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "n",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "n",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'a.xlsx'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'b.ODS'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'c.csv'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'d.tsv'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'e.pdf'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "n",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "'.xlsx'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'.ods'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'.csv'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'.tsv'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ListSpreadsheets",
+   "label": "List spreadsheets",
+   "level": 3,
+   "parent": "SpreadsheetHandle",
+   "body": "listSpreadsheets returns a dictionary such as {'1J-Jx6Ne2K_vqI9J2SO-TAXOFbxx_9tUjwnkPC22LjeU': 'Education Data'} and includes spreadsheets in the Trash (Sweigart, 2025); when a string given to Spreadsheet is not an id or URL the library looks it up among these titles and raises EZSheetsException when none or several match, and a search of the example dictionary for the title Budget finds two ids (Sweigart, 2026). Not run against an account.",
+   "section_iri": "http://example.org/sen0414/ch15#S_ListSpreadsheets",
+   "class_iri": "http://example.org/sen0414/ch15#ListSpreadsheets",
+   "example": "ezsheets.listSpreadsheets()",
+   "definition": "listSpreadsheets returns a dictionary from spreadsheet id to title for the account, trashed spreadsheets included according to the chapter; titles need not be unique, so a search by title can find several ids.",
+   "io": {
+    "code": "(lambda d, t: [i for i, n in d.items() if n == t])({'id1': 'Budget', 'id2': 'Budget', 'id3': 'Plan'}, 'Budget')",
+    "out": "['id1', 'id2']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "ListComp",
+         "kind": "ListComp",
+         "children": [
+          {
+           "label": "i",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "comprehension",
+           "kind": "comprehension",
+           "children": [
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "i",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "n",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "d",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "Compare",
+             "kind": "Compare",
+             "children": [
+              {
+               "label": "n",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "t",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'id1'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'id2'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'id3'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Budget'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Budget'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Plan'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "'Budget'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SpreadsheetRefresh",
+   "label": "Spreadsheet refresh",
+   "level": 3,
+   "parent": "SpreadsheetHandle",
+   "body": "If someone changes the spreadsheet in a browser, refresh makes the object match it, for the spreadsheet's attributes and for the data of its sheets (Sweigart, 2025); in the library a loaded sheet keeps its cells in a dictionary, reading getRow, getColumn, getRows and sheet['A1'] made no request against the stand-in, and refresh made two, and the cached-copy example shows the old text until the copy is rebuilt (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_SpreadsheetRefresh",
+   "class_iri": "http://example.org/sen0414/ch15#SpreadsheetRefresh",
+   "example": "ss.refresh()",
+   "definition": "refresh reads the title, the list of sheets and the data of every sheet again; a loaded sheet is a local copy, so a change made in the browser meanwhile is not seen until refresh, and reading from the copy makes no request."
+  },
+  {
+   "id": "SheetTitlesTuple",
+   "label": "Sheet titles tuple",
+   "level": 3,
+   "parent": "SpreadsheetHandle",
+   "body": "The chapter calls sheets a tuple of Sheet objects in order and sheetTitles a tuple of their titles, such as ('Sheet1', 'Spam', 'Eggs') (Sweigart, 2025); a tuple is an immutable sequence, so titles[0] = 'X' raises TypeError: 'tuple' object does not support item assignment, and a list made from it can take a new first item without changing the tuple (Python Software Foundation, 2026). Changes go through the library, as the executed examples of the sheet group show.",
+   "section_iri": "http://example.org/sen0414/ch15#S_SheetTitlesTuple",
+   "class_iri": "http://example.org/sen0414/ch15#SheetTitlesTuple",
+   "example": "ss.sheetTitles",
+   "definition": "sheetTitles and sheets are tuples, which can be read, indexed and looped over but not changed in place; the order and the names of sheets are changed through each sheet's index and title and through the spreadsheet's methods.",
+   "io": {
+    "code": "(type(('Sheet1', 'Spam')).__name__, ('Sheet1', 'Spam') + ('Eggs',))",
+    "out": "('tuple', ('Sheet1', 'Spam', 'Eggs'))",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "type",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "'Sheet1'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'Spam'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "+",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'Sheet1'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Spam'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'Eggs'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SpreadsheetFiles",
+   "label": "Spreadsheet files",
+   "level": 2,
+   "parent": "SpreadsheetObjects",
+   "body": "A spreadsheet leaves Google as a file through the download methods and leaves the account through delete (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_SpreadsheetFiles",
+   "class_iri": "http://example.org/sen0414/ch15#SpreadsheetFiles"
+  },
+  {
+   "id": "DownloadFormats",
+   "label": "Download formats",
+   "level": 3,
+   "parent": "SpreadsheetFiles",
+   "body": "downloadAsExcel, downloadAsODS, downloadAsCSV, downloadAsTSV, downloadAsPDF and downloadAsHTML return the local file name, and CSV and TSV files hold only the first sheet; the chapter's transcript prints 'Sweigart_Books.xlsx' after a title it prints as 'Sweigart Books (DO NOT DELETE)' (Sweigart, 2025). The library replaces space, slash, backslash, colon, asterisk, question mark, quotes, angle brackets and bar with underscores and leaves parentheses alone, so that title gives Sweigart_Books_(DO_NOT_DELETE).xlsx, which the example and the study both give (Sweigart, 2026). Nothing was downloaded.",
+   "section_iri": "http://example.org/sen0414/ch15#S_DownloadFormats",
+   "class_iri": "http://example.org/sen0414/ch15#DownloadFormats",
+   "example": "ss.downloadAsExcel()",
+   "definition": "Six methods download a spreadsheet as Excel, OpenOffice, CSV, TSV, PDF or a ZIP of HTML files and return the file name; CSV and TSV hold only the first sheet, and the default name is the title with space, slash, backslash, colon, asterisk, question mark, quote, angle brackets and bar replaced by underscores, plus the extension.",
+   "io": {
+    "code": "(lambda t: ''.join('_' if c in ' /:*?<>|' + chr(92) + chr(34) else c for c in t))('Sweigart Books (DO NOT DELETE)') + '.xlsx'",
+    "out": "'Sweigart_Books_(DO_NOT_DELETE).xlsx'",
+    "tree": {
+     "label": "+",
+     "kind": "BinOp",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Lambda",
+         "kind": "Lambda",
+         "children": [
+          {
+           "label": "arguments",
+           "kind": "arguments",
+           "children": [
+            {
+             "label": "arg",
+             "kind": "arg",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "''",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "GeneratorExp",
+             "kind": "GeneratorExp",
+             "children": [
+              {
+               "label": "IfExp",
+               "kind": "IfExp",
+               "children": [
+                {
+                 "label": "Compare",
+                 "kind": "Compare",
+                 "children": [
+                  {
+                   "label": "c",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "+",
+                   "kind": "BinOp",
+                   "children": [
+                    {
+                     "label": "+",
+                     "kind": "BinOp",
+                     "children": [
+                      {
+                       "label": "' /:*?<>|'",
+                       "kind": "Constant",
+                       "children": []
+                      },
+                      {
+                       "label": "call",
+                       "kind": "Call",
+                       "children": [
+                        {
+                         "label": "chr",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "92",
+                         "kind": "Constant",
+                         "children": []
+                        }
+                       ]
+                      }
+                     ]
+                    },
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "chr",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "34",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "label": "'_'",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "c",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "comprehension",
+               "kind": "comprehension",
+               "children": [
+                {
+                 "label": "c",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "t",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'Sweigart Books (DO NOT DELETE)'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "'.xlsx'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "TrashAndPermanentDelete",
+   "label": "Trash and permanent delete",
+   "level": 3,
+   "parent": "SpreadsheetFiles",
+   "body": "delete() moves the spreadsheet to the Trash, where listSpreadsheets still shows it, and delete(permanent=True) deletes it for good, which the chapter calls not a good idea in automated scripts because a bug cannot be undone (Sweigart, 2025); in the library the two calls are an update that sets trashed to true and a delete of the file (Sweigart, 2026). Not run.",
+   "section_iri": "http://example.org/sen0414/ch15#S_TrashAndPermanentDelete",
+   "class_iri": "http://example.org/sen0414/ch15#TrashAndPermanentDelete",
+   "example": "ss.delete(permanent=True)",
+   "definition": "delete() moves a spreadsheet to the Drive trash and delete(permanent=True) removes it for good; the chapter advises against permanent deletion in scripts, since a bug cannot be undone; this was not run."
+  },
+  {
+   "id": "SheetObjects",
+   "label": "Sheet objects",
+   "level": 1,
+   "parent": null,
+   "body": "A Sheet object holds the rows and columns of one sheet, and most of a script's work is done on it (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_SheetObjects",
+   "class_iri": "http://example.org/sen0414/ch15#SheetObjects"
+  },
+  {
+   "id": "CellAddressing",
+   "label": "Cell addressing",
+   "level": 2,
+   "parent": "SheetObjects",
+   "body": "Cells are named by letters and numbers that start at A and 1, where Python counts from 0 (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_CellAddressing",
+   "class_iri": "http://example.org/sen0414/ch15#CellAddressing"
+  },
+  {
+   "id": "OneBasedAddressing",
+   "label": "One based addressing",
+   "level": 3,
+   "parent": "CellAddressing",
+   "body": "The first column is A and the first row is 1, unlike list indexes that start at 0, so B1 of a list of rows is rows[0][1] (Sweigart, 2025); the library raises IndexError for column 0 or row 0 and does not accept negative indexes, and the example reads column 2 of row 1 from the rows [['Name', 'Age'], ['Alice', '30']] as 'Age' (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_OneBasedAddressing",
+   "class_iri": "http://example.org/sen0414/ch15#OneBasedAddressing",
+   "example": "sheet['A1'], sheet[1, 1]",
+   "definition": "Columns and rows of a sheet are counted from 1 and columns also have letters, so A1 is column 1 of row 1 and is the item rows[0][0] of a list of rows; the library raises IndexError for column 0 or row 0.",
+   "io": {
+    "code": "(lambda rows, col, row: rows[row - 1][col - 1])([['Name', 'Age'], ['Alice', '30']], 2, 1)",
+    "out": "'Age'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "rows",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "-",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "row",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "-",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "col",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'Name'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Age'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'Alice'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'30'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "2",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "1",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "AddressConversion",
+   "label": "Address conversion",
+   "level": 3,
+   "parent": "CellAddressing",
+   "body": "convertAddress('A2') gives (1, 2) and convertAddress(1, 2) gives 'A2' (Sweigart, 2025); the function written for this study gives the same, and so do the library's functions, run against the stand-in (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_AddressConversion",
+   "class_iri": "http://example.org/sen0414/ch15#AddressConversion",
+   "example": "ezsheets.convertAddress('A2')",
+   "definition": "convertAddress turns the text 'A2' into the pair (1, 2) and the pair back into 'A2'; the text form suits addresses typed into code and the number form suits loops over columns.",
+   "io": {
+    "code": "(lambda a: (ord(a[0]) - 64, int(a[1:])))('A2')",
+    "out": "(1, 2)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "-",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "ord",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "Subscript",
+               "kind": "Subscript",
+               "children": [
+                {
+                 "label": "a",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "0",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "64",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "int",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "a",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "Slice",
+               "kind": "Slice",
+               "children": [
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'A2'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ColumnLetters",
+   "label": "Column letters",
+   "level": 3,
+   "parent": "CellAddressing",
+   "body": "getColumnLetterOf(2) is 'B', getColumnNumberOf('B') is 2, getColumnLetterOf(999) is 'ALK' and getColumnNumberOf('ZZZ') is 18278 (Sweigart, 2025); column 26 is Z, 27 is AA, 702 is ZZ and 703 is AAA, because there is no zero digit, so the conversion adjusts when the remainder of divmod by 26 is 0 (Python Software Foundation, 2026), and the library's and the course's functions agree for every number from 1 to 200000 (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_ColumnLetters",
+   "class_iri": "http://example.org/sen0414/ch15#ColumnLetters",
+   "example": "ezsheets.getColumnLetterOf(999)",
+   "definition": "Column letters are a base-26 numbering without a zero digit, so 26 is Z, 27 is AA, 999 is ALK and ZZZ is column 18278; getColumnLetterOf and getColumnNumberOf convert between letters and numbers.",
+   "io": {
+    "code": "((lambda f: f(f, 999))(lambda f, n: '' if n == 0 else f(f, (n - 1) // 26) + chr(65 + (n - 1) % 26)), __import__('functools').reduce(lambda n, c: n * 26 + ord(c) - 64, 'ZZZ', 0))",
+    "out": "('ALK', 18278)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Lambda",
+         "kind": "Lambda",
+         "children": [
+          {
+           "label": "arguments",
+           "kind": "arguments",
+           "children": [
+            {
+             "label": "arg",
+             "kind": "arg",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "f",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "f",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "999",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "Lambda",
+         "kind": "Lambda",
+         "children": [
+          {
+           "label": "arguments",
+           "kind": "arguments",
+           "children": [
+            {
+             "label": "arg",
+             "kind": "arg",
+             "children": []
+            },
+            {
+             "label": "arg",
+             "kind": "arg",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "IfExp",
+           "kind": "IfExp",
+           "children": [
+            {
+             "label": "Compare",
+             "kind": "Compare",
+             "children": [
+              {
+               "label": "n",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "''",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "+",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "f",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "f",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "//",
+                 "kind": "BinOp",
+                 "children": [
+                  {
+                   "label": "-",
+                   "kind": "BinOp",
+                   "children": [
+                    {
+                     "label": "n",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "1",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "26",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "chr",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "+",
+                 "kind": "BinOp",
+                 "children": [
+                  {
+                   "label": "65",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "%",
+                   "kind": "BinOp",
+                   "children": [
+                    {
+                     "label": "-",
+                     "kind": "BinOp",
+                     "children": [
+                      {
+                       "label": "n",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "1",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    },
+                    {
+                     "label": "26",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'functools'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "Lambda",
+         "kind": "Lambda",
+         "children": [
+          {
+           "label": "arguments",
+           "kind": "arguments",
+           "children": [
+            {
+             "label": "arg",
+             "kind": "arg",
+             "children": []
+            },
+            {
+             "label": "arg",
+             "kind": "arg",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "-",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "+",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "*",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "n",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "26",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "ord",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "c",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "64",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'ZZZ'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CellAccess",
+   "label": "Cell access",
+   "level": 2,
+   "parent": "SheetObjects",
+   "body": "Cells, rows, columns and the whole sheet can be read and written, one request per write (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_CellAccess",
+   "class_iri": "http://example.org/sen0414/ch15#CellAccess"
+  },
+  {
+   "id": "ReadWriteCell",
+   "label": "Read write cell",
+   "level": 3,
+   "parent": "CellAccess",
+   "body": "After sheet['A1'] = 'Name', sheet['A1'] is 'Name', sheet['A2'] is the empty string and sheet[2, 1] is the same cell as B1 (Sweigart, 2025); all the data of a sheet is loaded when the Spreadsheet is, so reading is immediate, and writing needs a network connection and takes about a second, the chapter says, which is why it turns to whole rows and columns (Sweigart, 2025). The cell dictionary of the example, keyed by (column, row), gives ('Name', '') for A1 and A2 (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_ReadWriteCell",
+   "class_iri": "http://example.org/sen0414/ch15#ReadWriteCell",
+   "example": "sheet['B1'] = 'Age'",
+   "definition": "Square brackets read and write one cell by its text address or by (column, row); an empty cell reads as an empty string, and every write is a web request.",
+   "io": {
+    "code": "(lambda cells: (cells.get((1, 1), ''), cells.get((1, 2), '')))({(1, 1): 'Name'})",
+    "out": "('Name', '')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "cells",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "''",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "cells",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "2",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "''",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'Name'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "StringValues",
+   "label": "String values",
+   "level": 3,
+   "parent": "CellAccess",
+   "body": "The chapter says that all data is returned as strings, so sheet['B2'] after sheet['B2'] = 30 prints '30' (Sweigart, 2025); in EZSheets 2026.4.28, run against a stand-in that keeps text, the value read straight after the write is the number 30 and is the text '30' after refresh, and int and float are what arithmetic needs, as '30' + '1' is '301' and int('30') + 1 is 31, and an empty cell cannot be converted, int('') raising ValueError: invalid literal for int() with base 10: '' (Sweigart, 2026) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_StringValues",
+   "class_iri": "http://example.org/sen0414/ch15#StringValues",
+   "example": "sheet['B2']",
+   "definition": "A sheet returns cell values as strings, so '30' + '1' is '301' and arithmetic needs int or float first; in EZSheets 2026.4.28 a number just written is held as given until the next refresh, after which it reads as text.",
+   "io": {
+    "code": "('30' + '1', int('30') + 1)",
+    "out": "('301', 31)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "+",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "'30'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'1'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "+",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "int",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'30'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "1",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "('30' + '1', int('30') + 1)",
+      "focus": "'30' + '1'",
+      "value": "'301'"
+     },
+     {
+      "expr": "('301', int('30') + 1)",
+      "focus": "int('30')",
+      "value": "30"
+     },
+     {
+      "expr": "('301', 30 + 1)",
+      "focus": "30 + 1",
+      "value": "31"
+     }
+    ]
+   }
+  },
+  {
+   "id": "RowAndColumnRead",
+   "label": "Row and column read",
+   "level": 3,
+   "parent": "CellAccess",
+   "body": "getRow(1) is ['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL', '', ''] for the uploaded produceSales3 sheet of six columns, and getColumn(1) equals getColumn('A') (Sweigart, 2025); in the library a row has one item per column and a column one per row, so 26 and 1000 for a new sheet, and the list is built from the local copy (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_RowAndColumnRead",
+   "class_iri": "http://example.org/sen0414/ch15#RowAndColumnRead",
+   "example": "sheet.getRow(1)",
+   "definition": "getRow(n) and getColumn(n or letter) return a whole row or column as a list with one item per cell and an empty string for an empty cell; they read the loaded copy and make no request, and a row is as long as the sheet's column count.",
+   "io": {
+    "code": "(lambda cells, ncol: [cells.get((c, 1), '') for c in range(1, ncol + 1)])({(1, 1): 'PRODUCE', (2, 1): 'COST PER POUND'}, 6)",
+    "out": "['PRODUCE', 'COST PER POUND', '', '', '', '']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "ListComp",
+         "kind": "ListComp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "cells",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "c",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "''",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "comprehension",
+           "kind": "comprehension",
+           "children": [
+            {
+             "label": "c",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "range",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "+",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "ncol",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'PRODUCE'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'COST PER POUND'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "6",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "RowAndColumnWrite",
+   "label": "Row and column write",
+   "level": 3,
+   "parent": "CellAccess",
+   "body": "updateRow(3, ['Pumpkin', '11.50', '20', '230']) makes getRow(3) ['Pumpkin', '11.50', '20', '230', '', ''], and updateColumn sends a whole column at once, which is much faster than single cells because it is one request (Sweigart, 2025); the library extends the list it is given to the sheet's size, so a list of 4 had 26 items after updateRow on a new sheet, and the stand-in sheet of the example does the same with 6 (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_RowAndColumnWrite",
+   "class_iri": "http://example.org/sen0414/ch15#RowAndColumnWrite",
+   "example": "sheet.updateRow(3, [...])",
+   "definition": "updateRow and updateColumn overwrite a whole row or column from a list in one request; the library pads the list with empty strings to the size of the sheet and does so in place, so the list the caller passed has grown afterwards.",
+   "io": {
+    "code": "(lambda vals, n: vals + [''] * (n - len(vals)))(['Pumpkin', '11.50', '20', '230'], 6)",
+    "out": "['Pumpkin', '11.50', '20', '230', '', '']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "vals",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "*",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "List",
+             "kind": "List",
+             "children": [
+              {
+               "label": "''",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "-",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "n",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "len",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "vals",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'Pumpkin'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'11.50'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'20'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'230'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "6",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "WholeSheetRead",
+   "label": "Whole sheet read",
+   "level": 3,
+   "parent": "CellAccess",
+   "body": "getRows returns a list of lists that can be changed and passed to updateRows, which updates the whole sheet in one request (Sweigart, 2025); in the library getRows covers every row of the sheet, the empty ones as rows of empty strings, and updateRows pads the rows it is given and extends the list of rows itself in place to the sheet's row count, a list of 2 rows having 1001 rows after the call on a stand-in sheet of 1001 rows (Sweigart, 2026). The example takes the first column without the header row.",
+   "section_iri": "http://example.org/sen0414/ch15#S_WholeSheetRead",
+   "class_iri": "http://example.org/sen0414/ch15#WholeSheetRead",
+   "example": "rows = sheet.getRows()",
+   "definition": "getRows returns a list with one list per row for the whole sheet, empty rows included, and updateRows writes such a list back in one request.",
+   "io": {
+    "code": "(lambda rows: [r[0] for r in rows[1:]])([['PRODUCE', 'COST'], ['Potatoes', '0.86'], ['Okra', '2.26']])",
+    "out": "['Potatoes', 'Okra']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "ListComp",
+         "kind": "ListComp",
+         "children": [
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "r",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "0",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "comprehension",
+           "kind": "comprehension",
+           "children": [
+            {
+             "label": "r",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "rows",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "Slice",
+               "kind": "Slice",
+               "children": [
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'PRODUCE'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'COST'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'Potatoes'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'0.86'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'Okra'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'2.26'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SheetSize",
+   "label": "Sheet size",
+   "level": 3,
+   "parent": "CellAccess",
+   "body": "rowCount and columnCount read and set the size, and setting columnCount to 4 deletes the fifth and sixth columns; Google Sheets spreadsheets can have up to 10 million cells by Google's documentation, the chapter says, which no page read here confirms (Sweigart, 2025); against the stand-in a row had 4 items after columnCount = 4, and rowCount += 1 made three requests, two reads and one write (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_SheetSize",
+   "class_iri": "http://example.org/sen0414/ch15#SheetSize",
+   "example": "sheet.columnCount = 4",
+   "definition": "rowCount and columnCount give the size of a sheet and can be assigned to resize it, dropping the columns beyond a smaller count; assigning one of them makes the library read the sheet again and then send one write.",
+   "io": {
+    "code": "(lambda row, n: (len(row), len(row[:n])))(['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL', '', ''], 4)",
+    "out": "(6, 4)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "len",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "row",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "len",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "row",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "Slice",
+               "kind": "Slice",
+               "children": [
+                {
+                 "label": "n",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'PRODUCE'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'COST PER POUND'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'POUNDS SOLD'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'TOTAL'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "''",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "''",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "4",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SheetManagement",
+   "label": "Sheet management",
+   "level": 2,
+   "parent": "SheetObjects",
+   "body": "Sheets are created, moved, deleted, cleared and copied through the Spreadsheet and Sheet objects (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_SheetManagement",
+   "class_iri": "http://example.org/sen0414/ch15#SheetManagement"
+  },
+  {
+   "id": "CreateSheet",
+   "label": "Create sheet",
+   "level": 3,
+   "parent": "SheetManagement",
+   "body": "ss.Sheet('Spam') adds a sheet at the end, ss.Sheet('Bacon', 0) puts one at index 0 and moves the others one place, like the insert method of a list, so ('Sheet1', 'Spam', 'Eggs') becomes ('Bacon', 'Sheet1', 'Spam', 'Eggs'); the chapter prints a Sheet object after each call (Sweigart, 2025) (Python Software Foundation, 2026). The library's Sheet method returns nothing, and createSheet returns the Sheet object, so the printed lines do not appear in 2026.4.28 (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_CreateSheet",
+   "class_iri": "http://example.org/sen0414/ch15#CreateSheet",
+   "example": "ss.Sheet('Bacon', 0)",
+   "definition": "A new sheet is added with the Sheet method, at the end or at a given index, much as list.insert places an item; in EZSheets 2026.4.28 Sheet returns nothing, while createSheet returns the new Sheet object.",
+   "io": {
+    "code": "(lambda t: (t.insert(0, 'Bacon'), tuple(t))[1])(['Sheet1', 'Spam', 'Eggs'])",
+    "out": "('Bacon', 'Sheet1', 'Spam', 'Eggs')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "t",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'Bacon'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "tuple",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "t",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'Sheet1'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Spam'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Eggs'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ReorderSheet",
+   "label": "Reorder sheet",
+   "level": 3,
+   "parent": "SheetManagement",
+   "body": "Assigning sheets[0].index = 2 turns ('Bacon', 'Sheet1', 'Spam', 'Eggs') into ('Sheet1', 'Spam', 'Bacon', 'Eggs') and sheets[2].index = 0 turns it back (Sweigart, 2025); against the stand-in the library gave the same two results, and the example reproduces them with t.insert(2, t.pop(0)) on a list (Sweigart, 2026) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_ReorderSheet",
+   "class_iri": "http://example.org/sen0414/ch15#ReorderSheet",
+   "example": "ss.sheets[0].index = 2",
+   "definition": "Assigning an index to a sheet moves it so that it ends at that index, as list.insert(2, list.pop(0)) would move an item, and the spreadsheet's sheets are read again.",
+   "io": {
+    "code": "(lambda t: (t.insert(2, t.pop(0)), tuple(t))[1])(['Bacon', 'Sheet1', 'Spam', 'Eggs'])",
+    "out": "('Sheet1', 'Spam', 'Bacon', 'Eggs')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "t",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "2",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "t",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "0",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "tuple",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "t",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'Bacon'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Sheet1'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Spam'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Eggs'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "DeleteAndClear",
+   "label": "Delete and clear",
+   "level": 3,
+   "parent": "SheetManagement",
+   "body": "sheets[0].delete(), ss['Spam'].delete() and sheet.delete() remove sheets by index, by title and through a variable, deleting is permanent, and clear() leaves an empty sheet that still exists (Sweigart, 2025); the library raises ValueError: Cannot delete all sheets; spreadsheets must have at least one sheet when one sheet is left (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_DeleteAndClear",
+   "class_iri": "http://example.org/sen0414/ch15#DeleteAndClear",
+   "example": "sheet.delete(), sheet.clear()",
+   "definition": "delete removes a sheet for good and clear empties its cells but keeps the sheet; a spreadsheet cannot lose its last sheet, for which the library raises ValueError.",
+   "io": {
+    "code": "(lambda t: (t.remove('Bacon'), tuple(t))[1])(['Bacon', 'Sheet1', 'Spam', 'Eggs'])",
+    "out": "('Sheet1', 'Spam', 'Eggs')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "t",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'Bacon'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "tuple",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "t",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'Bacon'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Sheet1'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Spam'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Eggs'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CopySheet",
+   "label": "Copy sheet",
+   "level": 3,
+   "parent": "SheetManagement",
+   "body": "ss1[0].copyTo(ss2) leaves ss2.sheetTitles as ('Eggs', 'Copy of Spam'), the copy coming at the end, and the copy's index can be changed to reorder it (Sweigart, 2025); the library gave the same against the stand-in (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_CopySheet",
+   "class_iri": "http://example.org/sen0414/ch15#CopySheet",
+   "example": "ss1[0].copyTo(ss2)",
+   "definition": "copyTo copies a sheet into another Spreadsheet object, where the copy is titled Copy of and the old title and comes last; the chapter offers copying as the way to back up a sheet.",
+   "io": {
+    "code": "(lambda t, name: t + ['Copy of ' + name])(['Eggs'], 'Spam')",
+    "out": "['Eggs', 'Copy of Spam']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "t",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "+",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "'Copy of '",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "name",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'Eggs'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "'Spam'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SheetPrograms",
+   "label": "Sheet programs",
+   "level": 1,
+   "parent": null,
+   "body": "Project 11 and the practice programs apply the objects to a fake ledger, a form and a check of totals (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_SheetPrograms",
+   "class_iri": "http://example.org/sen0414/ch15#SheetPrograms"
+  },
+  {
+   "id": "Blockchain",
+   "label": "Blockchain",
+   "level": 2,
+   "parent": "SheetPrograms",
+   "body": "Project 11 keeps a fake blockchain in a sheet of three columns, sender, recipient and amount, and uses two programs on it (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_Blockchain",
+   "class_iri": "http://example.org/sen0414/ch15#Blockchain"
+  },
+  {
+   "id": "AuditLedger",
+   "label": "Audit ledger",
+   "level": 3,
+   "parent": "Blockchain",
+   "body": "auditBoringcoin.py loops over ss.sheets[0].getRows(), converts row[2] with int, and prints the dictionary of balances and the line Total Boringcoins (Sweigart, 2025). Run for this study on the public sheet as exported on 2026-10-01, 1001 rows of three columns, the program built the same 20 balances in the same order as the chapter, from 'Al Sweigart': 999058553 to 'David': 41828, and the total 1000000000; run on a small ledger of four lines read from text it gives {'Alice': 550, 'Bob': 400, 'Carol': 50} and the total 1000; an empty row in the sheet would stop it at int('') with a ValueError (Python Software Foundation, 2026) (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_AuditLedger",
+   "class_iri": "http://example.org/sen0414/ch15#AuditLedger",
+   "example": "auditBoringcoin.py",
+   "definition": "The audit program loops over the ledger's rows, reads sender, recipient and amount, converts the amount with int and keeps a dictionary of balances; run on the public ledger exported on 2026-10-01 it gives the chapter's 20 balances and the total 1000000000.",
+   "io": {
+    "code": "(lambda rows: dict(sorted((n, sum(int(a) if r == n else -int(a) if s == n else 0 for s, r, a in rows)) for n in {x for s, r, a in rows for x in (s, r)} if n != 'PRE-MINE')))([('PRE-MINE', 'Alice', '1000'), ('Alice', 'Bob', '300'), ('Bob', 'Carol', '50')])",
+    "out": "{'Alice': 700, 'Bob': 250, 'Carol': 50}",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "dict",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "sorted",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "GeneratorExp",
+             "kind": "GeneratorExp",
+             "children": [
+              {
+               "label": "Tuple",
+               "kind": "Tuple",
+               "children": [
+                {
+                 "label": "n",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "sum",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "GeneratorExp",
+                   "kind": "GeneratorExp",
+                   "children": [
+                    {
+                     "label": "IfExp",
+                     "kind": "IfExp",
+                     "children": [
+                      {
+                       "label": "Compare",
+                       "kind": "Compare",
+                       "children": [
+                        {
+                         "label": "r",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "n",
+                         "kind": "Name",
+                         "children": []
+                        }
+                       ]
+                      },
+                      {
+                       "label": "call",
+                       "kind": "Call",
+                       "children": [
+                        {
+                         "label": "int",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "a",
+                         "kind": "Name",
+                         "children": []
+                        }
+                       ]
+                      },
+                      {
+                       "label": "IfExp",
+                       "kind": "IfExp",
+                       "children": [
+                        {
+                         "label": "Compare",
+                         "kind": "Compare",
+                         "children": [
+                          {
+                           "label": "s",
+                           "kind": "Name",
+                           "children": []
+                          },
+                          {
+                           "label": "n",
+                           "kind": "Name",
+                           "children": []
+                          }
+                         ]
+                        },
+                        {
+                         "label": "UnaryOp",
+                         "kind": "UnaryOp",
+                         "children": [
+                          {
+                           "label": "call",
+                           "kind": "Call",
+                           "children": [
+                            {
+                             "label": "int",
+                             "kind": "Name",
+                             "children": []
+                            },
+                            {
+                             "label": "a",
+                             "kind": "Name",
+                             "children": []
+                            }
+                           ]
+                          }
+                         ]
+                        },
+                        {
+                         "label": "0",
+                         "kind": "Constant",
+                         "children": []
+                        }
+                       ]
+                      }
+                     ]
+                    },
+                    {
+                     "label": "comprehension",
+                     "kind": "comprehension",
+                     "children": [
+                      {
+                       "label": "Tuple",
+                       "kind": "Tuple",
+                       "children": [
+                        {
+                         "label": "s",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "r",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "a",
+                         "kind": "Name",
+                         "children": []
+                        }
+                       ]
+                      },
+                      {
+                       "label": "rows",
+                       "kind": "Name",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "comprehension",
+               "kind": "comprehension",
+               "children": [
+                {
+                 "label": "n",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "SetComp",
+                 "kind": "SetComp",
+                 "children": [
+                  {
+                   "label": "x",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "comprehension",
+                   "kind": "comprehension",
+                   "children": [
+                    {
+                     "label": "Tuple",
+                     "kind": "Tuple",
+                     "children": [
+                      {
+                       "label": "s",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "r",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "a",
+                       "kind": "Name",
+                       "children": []
+                      }
+                     ]
+                    },
+                    {
+                     "label": "rows",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "comprehension",
+                   "kind": "comprehension",
+                   "children": [
+                    {
+                     "label": "x",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "Tuple",
+                     "kind": "Tuple",
+                     "children": [
+                      {
+                       "label": "s",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "r",
+                       "kind": "Name",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "label": "Compare",
+                 "kind": "Compare",
+                 "children": [
+                  {
+                   "label": "n",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "'PRE-MINE'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'PRE-MINE'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Alice'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'1000'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'Alice'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Bob'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'300'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'Bob'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Carol'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'50'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SetdefaultAccumulate",
+   "label": "Setdefault accumulate",
+   "level": 3,
+   "parent": "Blockchain",
+   "body": "accounts.setdefault(recipient, 0) sets the account to 0 when it is not in the dictionary (Sweigart, 2025); the documentation says setdefault returns the value of the key when it is there and otherwise inserts the key with the default and returns it, and the example gives {'Eve': 2000} on an empty dictionary (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_SetdefaultAccumulate",
+   "class_iri": "http://example.org/sen0414/ch15#SetdefaultAccumulate",
+   "example": "accounts.setdefault(recipient, 0)",
+   "definition": "dict.setdefault inserts a key with a start value only when the key is missing and returns the value, so an account is created at 0 when it first appears and is then added to.",
+   "io": {
+    "code": "(lambda d: (d.setdefault('Eve', 0), d.__setitem__('Eve', d['Eve'] + 2000), d)[2])({})",
+    "out": "{'Eve': 2000}",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "d",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'Eve'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "d",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'Eve'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "+",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "Subscript",
+                 "kind": "Subscript",
+                 "children": [
+                  {
+                   "label": "d",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "'Eve'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "2000",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "d",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "AppendTransaction",
+   "label": "Append transaction",
+   "level": 3,
+   "parent": "Blockchain",
+   "body": "addBoringcoinTransaction.py reads sender, recipient and amount from sys.argv, raises sheet.rowCount by one and writes the three values with sheet[1, sheet.rowCount], sheet[2, sheet.rowCount] and sheet[3, sheet.rowCount]; a name that contains a space needs double quotes (Sweigart, 2025). With the check len(argv) < 4 a call with four arguments gives ValueError: too many values to unpack (expected 3, got 4) at sender, recipient, amount = argv[1:], and shlex.split keeps 'Al Sweigart' as one argument and splits it into two when unquoted; sys.argv[0] is the script name (Python Software Foundation, 2026). Against the stand-in, sheet.rowCount += 1 makes three requests and each of the three cell writes one (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_AppendTransaction",
+   "class_iri": "http://example.org/sen0414/ch15#AppendTransaction",
+   "example": "addBoringcoinTransaction.py",
+   "definition": "The second program takes sender, recipient and amount from sys.argv, raises the row count by one and writes the three texts into the last row; its check len(sys.argv) < 4 lets extra arguments through, which then fail at the unpacking with ValueError, and a name with a space is one argument only when quoted.",
+   "io": {
+    "code": "(lambda argv: argv[1:])(['addBoringcoinTransaction.py', 'Al Sweigart', 'Eve', '2000'])",
+    "out": "['Al Sweigart', 'Eve', '2000']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "argv",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "Slice",
+           "kind": "Slice",
+           "children": [
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'addBoringcoinTransaction.py'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Al Sweigart'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Eve'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'2000'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PracticeTasks",
+   "label": "Practice tasks",
+   "level": 2,
+   "parent": "SheetPrograms",
+   "body": "The chapter ends with Google Forms and three practice programs (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_PracticeTasks",
+   "class_iri": "http://example.org/sen0414/ch15#PracticeTasks"
+  },
+  {
+   "id": "GoogleForms",
+   "label": "Google forms",
+   "level": 3,
+   "parent": "PracticeTasks",
+   "body": "Google Forms, at forms.google.com, makes surveys, registrations and feedback forms whose answers arrive in a Google Sheets spreadsheet that EZSheets can read, and the chapter mentions running a check on a schedule in chapter 19 and a text message in chapter 20 (Sweigart, 2025). No form was made for this study.",
+   "section_iri": "http://example.org/sen0414/ch15#S_GoogleForms",
+   "class_iri": "http://example.org/sen0414/ch15#GoogleForms",
+   "example": "forms.google.com",
+   "definition": "Google Forms collects answers into a Google Sheets spreadsheet that a script reads like any other; the chapter points to chapters 19 and 20 for running such a script on a schedule and for sending a text when a form is filled."
+  },
+  {
+   "id": "FormsResponses",
+   "label": "Forms responses",
+   "level": 3,
+   "parent": "PracticeTasks",
+   "body": "Practice program 1 asks for a list of the e-mail addresses in the responses sheet of a form; the example assumes a header row and takes the third column from row 2 on of three example rows, and gives ['ann@example.org', 'bo@example.org'] (Sweigart, 2025). The form and the real sheet were not made, and the addresses are invented for the example.",
+   "section_iri": "http://example.org/sen0414/ch15#S_FormsResponses",
+   "class_iri": "http://example.org/sen0414/ch15#FormsResponses",
+   "example": "collect the e-mail addresses of the responses",
+   "definition": "Practice program 1 makes a form, creates its response spreadsheet and collects the e-mail addresses from it, which is the e-mail column without its header; no form was made for this study and the row handling was run on example rows.",
+   "io": {
+    "code": "(lambda rows: [r[2] for r in rows[1:]])([['Timestamp', 'Name', 'Email'], ['t1', 'Ann', 'ann@example.org'], ['t2', 'Bo', 'bo@example.org']])",
+    "out": "['ann@example.org', 'bo@example.org']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "ListComp",
+         "kind": "ListComp",
+         "children": [
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "r",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "2",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "comprehension",
+           "kind": "comprehension",
+           "children": [
+            {
+             "label": "r",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "rows",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "Slice",
+               "kind": "Slice",
+               "children": [
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'Timestamp'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Name'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Email'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'t1'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Ann'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'ann@example.org'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'t2'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Bo'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'bo@example.org'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "FormatConversion",
+   "label": "Format conversion",
+   "level": 3,
+   "parent": "PracticeTasks",
+   "body": "Practice program 2 uploads a file and downloads it with downloadAsExcel, downloadAsODS and the other download methods, six in the chapter's list, which the example names by format (Sweigart, 2025). It needs a Google account and was not run.",
+   "section_iri": "http://example.org/sen0414/ch15#S_FormatConversion",
+   "class_iri": "http://example.org/sen0414/ch15#FormatConversion",
+   "example": "upload() then downloadAsExcel() and the others",
+   "definition": "Practice program 2 uploads a file and downloads it in the other formats with the six download methods; it needs Google's servers and was not run.",
+   "io": {
+    "code": "sorted({'xlsx': 'downloadAsExcel', 'ods': 'downloadAsODS', 'csv': 'downloadAsCSV', 'tsv': 'downloadAsTSV', 'pdf': 'downloadAsPDF', 'zip': 'downloadAsHTML'})",
+    "out": "['csv', 'ods', 'pdf', 'tsv', 'xlsx', 'zip']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "sorted",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'xlsx'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'ods'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'csv'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'tsv'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'pdf'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'zip'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'downloadAsExcel'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'downloadAsODS'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'downloadAsCSV'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'downloadAsTSV'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'downloadAsPDF'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'downloadAsHTML'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "FindingMistakes",
+   "label": "Finding mistakes",
+   "level": 3,
+   "parent": "PracticeTasks",
+   "body": "Practice program 3 opens the spreadsheet 1jDZEdvSIh4TmZxccyy0ZXrH-ELlrwq8_YYiZrEOB4jg, whose columns are BEANS PER JAR, JARS and TOTAL BEANS over 15000 rows, and looks for the one row where the product is wrong, using getRow and int (Sweigart, 2025). Run on the export of 2026-10-01 with row numbers counted from 1, the program finds row 14399 only, ['804', '623', '500891'], where 804 times 623 is 500892 (Python Software Foundation, 2026). A call of getRow for each of 15000 rows is a read of the local copy, and the export, not Google's servers, was the source here.",
+   "section_iri": "http://example.org/sen0414/ch15#S_FindingMistakes",
+   "class_iri": "http://example.org/sen0414/ch15#FindingMistakes",
+   "example": "int(a) * int(b) != int(t)",
+   "definition": "Practice program 3 checks a product column over the 15000 rows of the Bean Count sheet with row numbers counted from 1 and a header in row 1; run on the export of 2026-10-01 it finds row 14399, where 804 times 623 is 500892 and the sheet shows 500891.",
+   "io": {
+    "code": "[n for n, (a, b, t) in enumerate([('3', '4', '12'), ('804', '623', '500891'), ('2', '5', '10')], 2) if int(a) * int(b) != int(t)]",
+    "out": "[3]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "n",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "n",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "a",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "b",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "t",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "enumerate",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "'3'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'4'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'12'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "'804'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'623'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'500891'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "'2'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'5'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'10'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Compare",
+         "kind": "Compare",
+         "children": [
+          {
+           "label": "*",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "int",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "a",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "int",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "b",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "int",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "t",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "UsageLimits",
+   "label": "Usage limits",
+   "level": 1,
+   "parent": null,
+   "body": "Google limits how fast a script may read and write, and the library limits itself too (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch15#S_UsageLimits",
+   "class_iri": "http://example.org/sen0414/ch15#UsageLimits"
+  },
+  {
+   "id": "Quotas",
+   "label": "Quotas",
+   "level": 2,
+   "parent": "UsageLimits",
+   "body": "The chapter's section on quotas, Google's current page and the newest library differ in their numbers and rules (Sweigart, 2025) (Google, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_Quotas",
+   "class_iri": "http://example.org/sen0414/ch15#Quotas"
+  },
+  {
+   "id": "RequestQuota",
+   "label": "Request quota",
+   "level": 3,
+   "parent": "Quotas",
+   "body": "The chapter says that users may create 250 new spreadsheets a day and that free accounts can make a few hundred requests a minute, and that exceeding the quota raises googleapiclient.errors.HttpError, Quota exceeded for quota group (Sweigart, 2025). Google's usage limits page, read on 2026-10-01, gives 300 read requests and 300 write requests a minute per project, 60 of each a minute per user per project, says a batch request counts as one, asks for truncated exponential backoff after HTTP 429, and says there is no daily limit while the per-minute quotas are kept; the figure 250 a day is not on it (Google, 2026). At 60 writes a minute per user, 1000 single-cell writes take 17 minutes, by the example's arithmetic.",
+   "section_iri": "http://example.org/sen0414/ch15#S_RequestQuota",
+   "class_iri": "http://example.org/sen0414/ch15#RequestQuota",
+   "example": "Quota exceeded for quota group",
+   "definition": "Google limits the requests a project and a user may make per minute: its page read on 2026-10-01 gives 300 reads and 300 writes a minute per project and 60 of each per user per project, and asks for exponential backoff after HTTP 429; the chapter's 250 new spreadsheets a day is not on that page.",
+   "io": {
+    "code": "-(-1000 // 60)",
+    "out": "17",
+    "tree": {
+     "label": "UnaryOp",
+     "kind": "UnaryOp",
+     "children": [
+      {
+       "label": "//",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "UnaryOp",
+         "kind": "UnaryOp",
+         "children": [
+          {
+           "label": "1000",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "60",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "-(-1000 // 60)",
+      "focus": "-1000",
+      "value": "-1000"
+     },
+     {
+      "expr": "-(-1000 // 60)",
+      "focus": "-1000 // 60",
+      "value": "-17"
+     },
+     {
+      "expr": "--17",
+      "focus": "--17",
+      "value": "17"
+     }
+    ]
+   }
+  },
+  {
+   "id": "QuotaRetry",
+   "label": "Quota retry",
+   "level": 3,
+   "parent": "Quotas",
+   "body": "The chapter says EZSheets catches the quota exception, retries, and may take several seconds or a minute or two to return, and raises the exception again if the requests keep failing (Sweigart, 2025). In EZSheets 2026.4.28 a quota error (status RESOURCE_EXHAUSTED) is retried after 10, 15, 20, 25, 30, 35, 40 and 45 seconds, nine attempts in all and 220 seconds of waiting, before the HttpError is raised; an error of another status was raised at the first attempt (Sweigart, 2026). Google asks for exponential backoff, and these pauses grow by a fixed step, so they are not exponential (Google, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_QuotaRetry",
+   "class_iri": "http://example.org/sen0414/ch15#QuotaRetry",
+   "example": "HttpError, RESOURCE_EXHAUSTED",
+   "definition": "When Google answers that a quota is used up, EZSheets 2026.4.28 waits 10 seconds and tries again, adding 5 seconds each time, and raises the HttpError after the ninth attempt, 220 seconds of waiting in all; any other HTTP error is raised at once.",
+   "io": {
+    "code": "(list(range(10, 50, 5)), sum(range(10, 50, 5)))",
+    "out": "([10, 15, 20, 25, 30, 35, 40, 45], 220)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "list",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "range",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "10",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "50",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "5",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "sum",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "range",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "10",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "50",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "5",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "IgnoreQuota",
+   "label": "Ignore quota",
+   "level": 3,
+   "parent": "Quotas",
+   "body": "The chapter says that if the reader would rather handle the HttpError exceptions, setting ezsheets.IGNORE_QUOTA to True makes the methods raise them (Sweigart, 2025). In EZSheets 2026.4.28 the name is tested only in the two functions that log read and write requests, where it decides whether to throttle the library's own requests, which happens when more than 89 of the same kind were made in the last 101 seconds; the retry loop does not read it, and against the stand-in a quota error with the setting False and with True gave nine attempts, the same pauses and then the HttpError (Sweigart, 2026). The library's documentation page lists the name with a note of the library's authors on throttling and retrying (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_IgnoreQuota",
+   "class_iri": "http://example.org/sen0414/ch15#IgnoreQuota",
+   "example": "ezsheets.IGNORE_QUOTA = True",
+   "definition": "The chapter says that setting this name to True makes the methods raise the quota exception; in EZSheets 2026.4.28 it only switches off the library's own throttle of 90 requests in a window of 101 seconds, and the retry on a quota error stays, as executed with the setting False and True."
+  },
+  {
+   "id": "BatchingRequests",
+   "label": "Batching requests",
+   "level": 3,
+   "parent": "Quotas",
+   "body": "The chapter says that getting a row or column as a list, changing it and updating it in one request is much faster than updating cells one at a time (Sweigart, 2025). Against the stand-in, 100 single-cell writes were 100 requests and one updateColumn of 100 values was 1, three single-cell writes were three, reads from a loaded sheet were none and refresh was two; the stand-in counts requests only, so the speed claim itself was not timed (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_BatchingRequests",
+   "class_iri": "http://example.org/sen0414/ch15#BatchingRequests",
+   "example": "updateColumn instead of 100 single writes",
+   "definition": "Every write is a web request, so 100 single-cell writes are 100 requests and one updateColumn is one; against a stand-in service, reading from a loaded sheet made no request and setting rowCount made three."
+  },
+  {
+   "id": "Safeguards",
+   "label": "Safeguards",
+   "level": 2,
+   "parent": "UsageLimits",
+   "body": "The chapter and the API reference give two cautions about what a script writes and whose account it uses (Sweigart, 2025) (Google, 2026).",
+   "section_iri": "http://example.org/sen0414/ch15#S_Safeguards",
+   "class_iri": "http://example.org/sen0414/ch15#Safeguards"
+  },
+  {
+   "id": "SeparateAccount",
+   "label": "Separate account",
+   "level": 3,
+   "parent": "Safeguards",
+   "body": "The chapter strongly recommends a new Google account for the scripts so that a bug cannot affect the personal spreadsheets, and warns that permanently deleted spreadsheets cannot be recovered, and that the Boringcoin sheet is for fun and not a secure design (Sweigart, 2025). These are recommendations, and none was tested.",
+   "section_iri": "http://example.org/sen0414/ch15#S_SeparateAccount",
+   "class_iri": "http://example.org/sen0414/ch15#SeparateAccount",
+   "example": "a new Google account for scripts",
+   "definition": "The chapter recommends a separate Google account for scripts, so that a bug cannot touch personal spreadsheets, and warns that a deleted spreadsheet cannot be recovered; it is advice, not something a program can check."
+  },
+  {
+   "id": "UserEnteredParsing",
+   "label": "User entered parsing",
+   "level": 3,
+   "parent": "Safeguards",
+   "body": "The library sends every write with valueInputOption USER_ENTERED, and the API reference says such values are parsed as if typed into the interface, so strings may become numbers, dates and so on, whereas RAW stores them as they are (Sweigart, 2026) (Google, 2026). Whether a text that starts with = becomes a formula in a real sheet was not run, and the example only picks such texts out of a list.",
+   "section_iri": "http://example.org/sen0414/ch15#S_UserEnteredParsing",
+   "class_iri": "http://example.org/sen0414/ch15#UserEnteredParsing",
+   "example": "valueInputOption USER_ENTERED",
+   "definition": "The library writes every value with the USER_ENTERED option, which the API reference says parses the value as if typed into the interface, so a text can become a number or a date; what this does to a text that starts with = was not run.",
+   "io": {
+    "code": "[v for v in ('=SUM(A1:A2)', 'Alice', '30') if v.startswith('=')]",
+    "out": "['=SUM(A1:A2)']",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "v",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "v",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'=SUM(A1:A2)'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Alice'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'30'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "v",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'='",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  }
+ ],
+ "relations": [
+  {
+   "source": "CloudSetup",
+   "target": "AccountAccess",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GoogleCloudProject",
+   "target": "CloudSetup",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ApiEnablement",
+   "target": "CloudSetup",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Authorisation",
+   "target": "AccountAccess",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "OAuthConsentScreen",
+   "target": "Authorisation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AuthScope",
+   "target": "Authorisation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CredentialsFile",
+   "target": "Authorisation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TokenFile",
+   "target": "Authorisation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FirstRunLogin",
+   "target": "Authorisation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RevokingCredentials",
+   "target": "Authorisation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TokenFileSecurity",
+   "target": "Authorisation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SpreadsheetHandle",
+   "target": "SpreadsheetObjects",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "OpeningSpreadsheet",
+   "target": "SpreadsheetHandle",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "UrlSliceTrap",
+   "target": "SpreadsheetHandle",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NewSpreadsheet",
+   "target": "SpreadsheetHandle",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "UploadSpreadsheet",
+   "target": "SpreadsheetHandle",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ListSpreadsheets",
+   "target": "SpreadsheetHandle",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SpreadsheetRefresh",
+   "target": "SpreadsheetHandle",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SheetTitlesTuple",
+   "target": "SpreadsheetHandle",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SpreadsheetFiles",
+   "target": "SpreadsheetObjects",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DownloadFormats",
+   "target": "SpreadsheetFiles",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TrashAndPermanentDelete",
+   "target": "SpreadsheetFiles",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CellAddressing",
+   "target": "SheetObjects",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "OneBasedAddressing",
+   "target": "CellAddressing",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AddressConversion",
+   "target": "CellAddressing",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ColumnLetters",
+   "target": "CellAddressing",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CellAccess",
+   "target": "SheetObjects",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ReadWriteCell",
+   "target": "CellAccess",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "StringValues",
+   "target": "CellAccess",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RowAndColumnRead",
+   "target": "CellAccess",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RowAndColumnWrite",
+   "target": "CellAccess",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WholeSheetRead",
+   "target": "CellAccess",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SheetSize",
+   "target": "CellAccess",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SheetManagement",
+   "target": "SheetObjects",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CreateSheet",
+   "target": "SheetManagement",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ReorderSheet",
+   "target": "SheetManagement",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DeleteAndClear",
+   "target": "SheetManagement",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CopySheet",
+   "target": "SheetManagement",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Blockchain",
+   "target": "SheetPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AuditLedger",
+   "target": "Blockchain",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SetdefaultAccumulate",
+   "target": "Blockchain",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AppendTransaction",
+   "target": "Blockchain",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PracticeTasks",
+   "target": "SheetPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GoogleForms",
+   "target": "PracticeTasks",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FormsResponses",
+   "target": "PracticeTasks",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FormatConversion",
+   "target": "PracticeTasks",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FindingMistakes",
+   "target": "PracticeTasks",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Quotas",
+   "target": "UsageLimits",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RequestQuota",
+   "target": "Quotas",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "QuotaRetry",
+   "target": "Quotas",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "IgnoreQuota",
+   "target": "Quotas",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "BatchingRequests",
+   "target": "Quotas",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Safeguards",
+   "target": "UsageLimits",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SeparateAccount",
+   "target": "Safeguards",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "UserEnteredParsing",
+   "target": "Safeguards",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ApiEnablement",
+   "target": "TokenFile",
+   "type": "mentions",
+   "evidence": "the document's section on Api enablement names Token file"
+  }
+ ],
+ "agents": [
+  {
+   "id": "agent-CloudSetup",
+   "name": "Cloud setup agent",
+   "subject": "CloudSetup",
+   "covers": [
+    "GoogleCloudProject",
+    "ApiEnablement",
+    "CloudSetup"
+   ]
+  },
+  {
+   "id": "agent-Authorisation",
+   "name": "Authorisation agent",
+   "subject": "Authorisation",
+   "covers": [
+    "OAuthConsentScreen",
+    "AuthScope",
+    "CredentialsFile",
+    "TokenFile",
+    "FirstRunLogin",
+    "RevokingCredentials",
+    "TokenFileSecurity",
+    "Authorisation"
+   ]
+  },
+  {
+   "id": "agent-SpreadsheetHandle",
+   "name": "Spreadsheet handle agent",
+   "subject": "SpreadsheetHandle",
+   "covers": [
+    "OpeningSpreadsheet",
+    "UrlSliceTrap",
+    "NewSpreadsheet",
+    "UploadSpreadsheet",
+    "ListSpreadsheets",
+    "SpreadsheetRefresh",
+    "SheetTitlesTuple",
+    "SpreadsheetHandle"
+   ]
+  },
+  {
+   "id": "agent-SpreadsheetFiles",
+   "name": "Spreadsheet files agent",
+   "subject": "SpreadsheetFiles",
+   "covers": [
+    "DownloadFormats",
+    "TrashAndPermanentDelete",
+    "SpreadsheetFiles"
+   ]
+  },
+  {
+   "id": "agent-CellAddressing",
+   "name": "Cell addressing agent",
+   "subject": "CellAddressing",
+   "covers": [
+    "OneBasedAddressing",
+    "AddressConversion",
+    "ColumnLetters",
+    "CellAddressing"
+   ]
+  },
+  {
+   "id": "agent-CellAccess",
+   "name": "Cell access agent",
+   "subject": "CellAccess",
+   "covers": [
+    "ReadWriteCell",
+    "StringValues",
+    "RowAndColumnRead",
+    "RowAndColumnWrite",
+    "WholeSheetRead",
+    "SheetSize",
+    "CellAccess"
+   ]
+  },
+  {
+   "id": "agent-SheetManagement",
+   "name": "Sheet management agent",
+   "subject": "SheetManagement",
+   "covers": [
+    "CreateSheet",
+    "ReorderSheet",
+    "DeleteAndClear",
+    "CopySheet",
+    "SheetManagement"
+   ]
+  },
+  {
+   "id": "agent-Blockchain",
+   "name": "Blockchain agent",
+   "subject": "Blockchain",
+   "covers": [
+    "AuditLedger",
+    "SetdefaultAccumulate",
+    "AppendTransaction",
+    "Blockchain"
+   ]
+  },
+  {
+   "id": "agent-PracticeTasks",
+   "name": "Practice tasks agent",
+   "subject": "PracticeTasks",
+   "covers": [
+    "GoogleForms",
+    "FormsResponses",
+    "FormatConversion",
+    "FindingMistakes",
+    "PracticeTasks"
+   ]
+  },
+  {
+   "id": "agent-Quotas",
+   "name": "Quotas agent",
+   "subject": "Quotas",
+   "covers": [
+    "RequestQuota",
+    "QuotaRetry",
+    "IgnoreQuota",
+    "BatchingRequests",
+    "Quotas"
+   ]
+  },
+  {
+   "id": "agent-Safeguards",
+   "name": "Safeguards agent",
+   "subject": "Safeguards",
+   "covers": [
+    "SeparateAccount",
+    "UserEnteredParsing",
+    "Safeguards"
+   ]
+  }
+ ],
+ "refs": [
+  [
+   "Automate the Boring Stuff with Python, 3rd edition - Chapter 15, Google Sheets (Al Sweigart, No Starch Press, 2025)",
+   "https://automatetheboringstuff.com/3e/chapter15.html"
+  ],
+  [
+   "Bean Count (DO NOT DELETE) - the public Google Sheet of practice program 3, exported as CSV on 2026-10-01",
+   "https://docs.google.com/spreadsheets/d/1jDZEdvSIh4TmZxccyy0ZXrH-ELlrwq8_YYiZrEOB4jg/"
+  ],
+  [
+   "Boringcoin (no backup, please do not delete) - the public Google Sheet of Project 11, exported as CSV on 2026-10-01",
+   "https://docs.google.com/spreadsheets/d/1sVCG1b3pfOAzuaFItLj4I8aN8kjvVDO0S78SIP1KNZQ/"
+  ],
+  [
+   "Choose Google Sheets API scopes (Google for Developers)",
+   "https://developers.google.com/workspace/sheets/api/scopes"
+  ],
+  [
+   "Configure the OAuth consent screen and choose scopes (Google Workspace, Google for Developers)",
+   "https://developers.google.com/workspace/guides/configure-oauth-consent"
+  ],
+  [
+   "EZSheets 2026.4.28 - source distribution and release list (Al Sweigart; PyPI metadata and source read 2026-10-01)",
+   "https://pypi.org/pypi/ezsheets/2026.4.28/json"
+  ],
+  [
+   "EZSheets documentation (Read the Docs; installation, token files, IGNORE_QUOTA)",
+   "https://ezsheets.readthedocs.io/"
+  ],
+  [
+   "Python quickstart - Google Sheets API (Google for Developers)",
+   "https://developers.google.com/workspace/sheets/api/quickstart/python"
+  ],
+  [
+   "The Python Language Reference, 6. Expressions - chained comparisons (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/reference/expressions.html"
+  ],
+  [
+   "The Python Standard Library, Built-in Functions - divmod and enumerate (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/functions.html"
+  ],
+  [
+   "The Python Standard Library, Built-in Types - dict.setdefault and tuples (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/stdtypes.html"
+  ],
+  [
+   "The Python Standard Library, csv - reader (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/csv.html"
+  ],
+  [
+   "The Python Standard Library, pickle - the warning that the module is not secure (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/pickle.html"
+  ],
+  [
+   "The Python Standard Library, shlex - split (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/shlex.html"
+  ],
+  [
+   "The Python Standard Library, sys - argv (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/sys.html"
+  ],
+  [
+   "The Python Tutorial, 5. Data Structures - list.insert (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/tutorial/datastructures.html"
+  ],
+  [
+   "Usage limits - Google Sheets API (Google for Developers)",
+   "https://developers.google.com/workspace/sheets/api/limits"
+  ],
+  [
+   "ValueInputOption - Google Sheets API reference (Google for Developers)",
+   "https://developers.google.com/workspace/sheets/api/reference/rest/v4/ValueInputOption"
+  ]
+ ],
+ "resources": [
+  {
+   "kind": "documentation",
+   "title": "Chapter 15 - Google Sheets, Automate the Boring Stuff with Python, 3rd Ed",
+   "url": "https://automatetheboringstuff.com/3e/chapter15.html",
+   "source": "automatetheboringstuff.com",
+   "why": "The course textbook's own chapter, free online: set-up, Spreadsheet and Sheet objects, Google Forms, Project 11 and the quota section."
+  },
+  {
+   "kind": "documentation",
+   "title": "EZSheets - documentation",
+   "url": "https://ezsheets.readthedocs.io/",
+   "source": "ezsheets.readthedocs.io",
+   "why": "The library's own documentation: installation, the credentials and token file names, and the IGNORE_QUOTA name."
+  },
+  {
+   "kind": "documentation",
+   "title": "Usage limits - Google Sheets API",
+   "url": "https://developers.google.com/workspace/sheets/api/limits",
+   "source": "developers.google.com",
+   "why": "Google's current per-minute quotas for reads and writes, the HTTP 429 answer and the advice on exponential backoff."
+  },
+  {
+   "kind": "documentation",
+   "title": "Choose Google Sheets API scopes",
+   "url": "https://developers.google.com/workspace/sheets/api/scopes",
+   "source": "developers.google.com",
+   "why": "Which scope is sensitive, restricted or non-sensitive, and why the narrowest scope that works is recommended."
+  },
+  {
+   "kind": "documentation",
+   "title": "Python quickstart - Google Sheets API",
+   "url": "https://developers.google.com/workspace/sheets/api/quickstart/python",
+   "source": "developers.google.com",
+   "why": "Google's own Python walk-through of the consent screen, the desktop credentials file and the token.json file."
+  },
+  {
+   "kind": "documentation",
+   "title": "Configure the OAuth consent screen and choose scopes",
+   "url": "https://developers.google.com/workspace/guides/configure-oauth-consent",
+   "source": "developers.google.com",
+   "why": "The consent screen steps in Google's current console: user type, scopes and test users."
+  },
+  {
+   "kind": "documentation",
+   "title": "ValueInputOption - Google Sheets API reference",
+   "url": "https://developers.google.com/workspace/sheets/api/reference/rest/v4/ValueInputOption",
+   "source": "developers.google.com",
+   "why": "What RAW and USER_ENTERED mean for a value a script writes into a cell."
+  },
+  {
+   "kind": "documentation",
+   "title": "Boringcoin (no backup, please do not delete) - Google Sheets",
+   "url": "https://docs.google.com/spreadsheets/d/1sVCG1b3pfOAzuaFItLj4I8aN8kjvVDO0S78SIP1KNZQ/",
+   "source": "docs.google.com",
+   "why": "The public ledger of Project 11, three columns of sender, recipient and amount, that the audit program reads."
+  },
+  {
+   "kind": "documentation",
+   "title": "Bean Count (DO NOT DELETE) - Google Sheets",
+   "url": "https://docs.google.com/spreadsheets/d/1jDZEdvSIh4TmZxccyy0ZXrH-ELlrwq8_YYiZrEOB4jg/",
+   "source": "docs.google.com",
+   "why": "The public sheet of practice program 3: 15000 rows of beans per jar, jars and total beans, one of them wrong."
+  },
+  {
+   "kind": "documentation",
+   "title": "pickle - Python object serialization",
+   "url": "https://docs.python.org/3/library/pickle.html",
+   "source": "Python documentation",
+   "why": "The warning that the pickle module is not secure, which is why a token file must be kept private."
+  },
+  {
+   "kind": "documentation",
+   "title": "Built-in Types (dict.setdefault, tuples)",
+   "url": "https://docs.python.org/3/library/stdtypes.html",
+   "source": "Python documentation",
+   "why": "How setdefault creates an account at 0, and why a tuple of sheet titles cannot be changed in place."
+  },
+  {
+   "kind": "documentation",
+   "title": "shlex - Simple lexical analysis",
+   "url": "https://docs.python.org/3/library/shlex.html",
+   "source": "Python documentation",
+   "why": "shlex.split shows how a shell splits a command line, so why a name with a space needs quotes."
+  }
+ ],
+ "resources_checked": "2026-10-01"
+}

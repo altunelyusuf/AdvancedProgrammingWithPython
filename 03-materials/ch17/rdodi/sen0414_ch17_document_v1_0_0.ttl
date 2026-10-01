@@ -1,0 +1,192 @@
+@prefix chx:     <http://example.org/sen0414/ch17#> .
+@prefix res:     <http://example.org/rdodi/research-ontology#> .
+@prefix rd:      <http://example.org/rdodi/domain-ontology#> .
+@prefix doc:     <http://example.org/rdodi/document-ontology#> .
+@prefix sen0414: <http://example.org/sen0414#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov:    <http://www.w3.org/ns/prov#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+
+<http://example.org/sen0414/ch17/document> a owl:Ontology ;
+    rdfs:label "SEN0414 chapter 17 - RDODI Stage 3 document"@en ; owl:versionInfo "1.0.0" ; owl:versionIRI <http://example.org/sen0414/ch17/document/1.0.0> ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
+    dcterms:rights "Copyright (c) 2026 Yusuf Altunel. Licensed CC BY 4.0."@en ;
+    dcterms:rightsHolder <http://example.org/rdodi/agent/YusufAltunel> ;
+    dcterms:publisher <http://example.org/rdodi/agent/IstanbulKulturUniversity> ;
+    dcterms:creator <http://example.org/rdodi/agent/YusufAltunel> ;
+    dcterms:created "2026-10-01"^^xsd:date ; dcterms:modified "2026-10-01"^^xsd:date ;
+    dcterms:identifier "sen0414_ch17_document_v1_0_0" ;
+    prov:wasGeneratedBy <http://example.org/sen0414/activity/ch17-rdodi-run> ;
+    prov:wasAttributedTo <http://example.org/rdodi/agent/YusufAltunel> .
+
+chx:Document a doc:ReportSection ; rdfs:label "PDF and Word documents for an advanced course: chapter 17 of the 3rd edition and today's Python"@en ; skos:definition "This document renews chapter 17 of the 3rd edition for an advanced course (Sweigart, 2025)." ; dcterms:source <http://example.org/sen0414/ch17/research> ;
+    doc:hasSection chx:S_PdfFiles, chx:S_WordFiles, chx:S_Automation .
+chx:S_PdfFiles a doc:TaxonomicSection ; rdfs:label "Pdf files"@en ; doc:sectionTitle "Pdf files" ; doc:hierarchyLevel 1 ; doc:sectionOrder 1 ;
+    skos:definition "PDF files are read, written and protected through the PyPDF package, whose reader and writer objects the chapter presents (Sweigart, 2025) (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PdfFiles> .
+chx:S_PdfReading a doc:TaxonomicSection ; rdfs:label "Pdf reading"@en ; doc:sectionTitle "Pdf reading" ; doc:hierarchyLevel 2 ; doc:sectionOrder 2 ;
+    doc:hasParentSection chx:S_PdfFiles ;
+    skos:definition "Reading a PDF means opening it with a reader, asking each page for its text or images, and accepting that the result may be imperfect (Sweigart, 2025) (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PdfReading> .
+chx:S_PdfReaderObject a doc:ConceptSection ; rdfs:label "Pdf reader object"@en ; doc:sectionTitle "Pdf reader object" ; doc:hierarchyLevel 3 ; doc:sectionOrder 3 ;
+    doc:hasParentSection chx:S_PdfReading ;
+    skos:definition "pypdf.PdfReader('Recursion_Chapter1.pdf') returns a reader whose pages attribute is list-like and can be measured with len(), 18 for the book's sample file (Sweigart, 2025); in the chapter 17 library run a stand-in file of six pages gave 6 with pypdf 6.19.0 under Python 3.14.4, and the book's own sample file was not opened (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PdfReaderObject> .
+chx:S_TextExtraction a doc:ConceptSection ; rdfs:label "Text extraction"@en ; doc:sectionTitle "Text extraction" ; doc:hierarchyLevel 3 ; doc:sectionOrder 4 ;
+    doc:hasParentSection chx:S_PdfReading ;
+    skos:definition "The program extractpdftext.py loops over reader.pages and adds page.extract_text() to a string, then writes the string with open(TEXT_FILENAME, 'w', encoding='utf-8') (Sweigart, 2025); joining the pages this way leaves no separator, 'Page one textPage two text' for two stand-in pages, whereas '\\n'.join keeps them apart, and the pypdf documentation adds extraction modes, a visitor function and a memory warning for very large content streams (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#TextExtraction> .
+chx:S_ExtractionFallback a doc:ConceptSection ; rdfs:label "Extraction fallback"@en ; doc:sectionTitle "Extraction fallback" ; doc:hierarchyLevel 3 ; doc:sectionOrder 5 ;
+    doc:hasParentSection chx:S_PdfReading ;
+    skos:definition "If pypdf raises an exception on a file, the program calls pdfminer.high_level.extract_text(PDF_FILENAME), which returns the whole text as one string (Sweigart, 2025); on the stand-in file it returned the two pages separated by a form feed (pdfminer.six 20260107), and its documentation describes the package as one for extracting information from PDF documents (pdfminer.six contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#ExtractionFallback> .
+chx:S_TextPostProcessing a doc:ConceptSection ; rdfs:label "Text post processing"@en ; doc:sectionTitle "Text post processing" ; doc:hierarchyLevel 3 ; doc:sectionOrder 6 ;
+    doc:hasParentSection chx:S_PdfReading ;
+    skos:definition "The extracted text keeps a newline after each row and hyphenated words such as follow -\\ning, and the chapter asks a language model to clean it up and a person to review the result (Sweigart, 2025); the pypdf documentation says post-processing is outside its scope and gives a dehyphenation recipe that, run on the chapter's row, leaves follow ing, while a regular expression that also takes the space gives following (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#TextPostProcessing> .
+chx:S_ImageExtraction a doc:ConceptSection ; rdfs:label "Image extraction"@en ; doc:sectionTitle "Image extraction" ; doc:hierarchyLevel 3 ; doc:sectionOrder 7 ;
+    doc:hasParentSection chx:S_PdfReading ;
+    skos:definition "Each page's images attribute gives objects with a name and data, which extractpdfimages.py writes to files named from a counter, the page number and the image name, catching exceptions so that one failing page does not stop the program (Sweigart, 2025); in pypdf 6.19.0 reading page.images without Pillow raised ImportError asking for pypdf[image], and the documentation warns that image names can contain arbitrary characters and must be sanitised before they become file names (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#ImageExtraction> .
+chx:S_PdfWriting a doc:TaxonomicSection ; rdfs:label "Pdf writing"@en ; doc:sectionTitle "Pdf writing" ; doc:hierarchyLevel 2 ; doc:sectionOrder 8 ;
+    doc:hasParentSection chx:S_PdfFiles ;
+    skos:definition "Writing a PDF with PyPDF means copying, rotating, inserting and merging pages from other files into a writer and then saving it (Sweigart, 2025) (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PdfWriting> .
+chx:S_PdfWriterObject a doc:ConceptSection ; rdfs:label "Pdf writer object"@en ; doc:sectionTitle "Pdf writer object" ; doc:hierarchyLevel 3 ; doc:sectionOrder 9 ;
+    doc:hasParentSection chx:S_PdfWriting ;
+    skos:definition "pypdf.PdfWriter() is a blank document with no pages, PyPDF cannot write arbitrary text to it, and write() saves it to a file opened with 'wb', returning a tuple that the chapter prints as (False, <_io.BufferedWriter name='first_five_pages.pdf'>), which the library run reproduced (Sweigart, 2025); add_blank_page() on an empty writer raised PageSizeNotDefinedError (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PdfWriterObject> .
+chx:S_PageSelection a doc:ConceptSection ; rdfs:label "Page selection"@en ; doc:sectionTitle "Page selection" ; doc:hierarchyLevel 3 ; doc:sectionOrder 10 ;
+    doc:hasParentSection chx:S_PdfWriting ;
+    skos:definition "writer.append('Recursion_Chapter1.pdf', (0, 5)) copies the first five pages, and (0, 5, 2) skips like range(), so list(range(0, 5)) is [0, 1, 2, 3, 4] and list(range(0, 5, 2)) is [0, 2, 4] (Sweigart, 2025); the library run gave 5 and 3 pages, and in pypdf 6.19.0 the second positional parameter is called outline_item while pages is the keyword for the selection (pypdf contributors, 2026) (Python Software Foundation, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PageSelection> .
+chx:S_TupleVersusList a doc:ConceptSection ; rdfs:label "Tuple versus list"@en ; doc:sectionTitle "Tuple versus list" ; doc:hierarchyLevel 3 ; doc:sectionOrder 11 ;
+    doc:hasParentSection chx:S_PdfWriting ;
+    skos:definition "append() reads the tuple (0, 5) as a range and the list [0, 1, 2, 3, 4] as the pages to copy, so the list [0, 5] copies page index 0 and page index 5 only (Sweigart, 2025); the library run gave 2 pages, 'Page one text' and 'Page six', and the pypdf documentation shows a list that repeats a page, [0, 1, 0, 2, 0] (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#TupleVersusList> .
+chx:S_AppendVersusMerge a doc:ConceptSection ; rdfs:label "Append versus merge"@en ; doc:sectionTitle "Append versus merge" ; doc:hierarchyLevel 3 ; doc:sectionOrder 12 ;
+    doc:hasParentSection chx:S_PdfWriting ;
+    skos:definition "append() adds the copied pages at the end and merge() inserts them at a position, shifting the original pages back (Sweigart, 2025); merge(2, 'a.pdf', (0, 5)) on a five-page writer gave 11 pages in the library run with no warning, and the documentation still shows merge with a position and a pages keyword (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#AppendVersusMerge> .
+chx:S_PageRotation a doc:ConceptSection ; rdfs:label "Page rotation"@en ; doc:sectionTitle "Page rotation" ; doc:hierarchyLevel 3 ; doc:sectionOrder 13 ;
+    doc:hasParentSection chx:S_PdfWriting ;
+    skos:definition "rotate(90), rotate(180) and rotate(270) turn a page clockwise and negative values counterclockwise, only in increments of 90 (Sweigart, 2025); the library run gave a rotation of 90, then 0 after rotate(-90) on a rotated page, then 360 after rotate(270) on a rotated page, and ValueError: Rotation angle must be a multiple of 90 for 45 (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PageRotation> .
+chx:S_BlankPages a doc:ConceptSection ; rdfs:label "Blank pages"@en ; doc:sectionTitle "Blank pages" ; doc:hierarchyLevel 3 ; doc:sectionOrder 14 ;
+    doc:hasParentSection chx:S_PdfWriting ;
+    skos:definition "add_blank_page() appends a page and insert_blank_page(index=2) puts one at page index 2, both of the size of the preceding page (Sweigart, 2025); the library run gave a page box of [0.0, 0.0, 612, 792] for a blank page after pages of that size and 12 pages after the insertion into a writer of 11 (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#BlankPages> .
+chx:S_WatermarkAndStamp a doc:ConceptSection ; rdfs:label "Watermark and stamp"@en ; doc:sectionTitle "Watermark and stamp" ; doc:hierarchyLevel 3 ; doc:sectionOrder 15 ;
+    doc:hasParentSection chx:S_PdfWriting ;
+    skos:definition "page.merge_page(watermark_page, over=False) puts the watermark PDF's first page under each page and over=True puts it on top, for a stamp or overlay (Sweigart, 2025); on the stand-in file the text of the underlay came before the page text, 'DRAFTPage one text', and the overlay after it, 'Page one textDRAFT', and the documentation adds merge_transformed_page for scaled or moved stamps (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#WatermarkAndStamp> .
+chx:S_PdfProtection a doc:TaxonomicSection ; rdfs:label "Pdf protection"@en ; doc:sectionTitle "Pdf protection" ; doc:hierarchyLevel 2 ; doc:sectionOrder 16 ;
+    doc:hasParentSection chx:S_PdfFiles ;
+    skos:definition "A PDF can be encrypted with a password and read again only by giving that password (Sweigart, 2025) (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PdfProtection> .
+chx:S_PdfEncryption a doc:ConceptSection ; rdfs:label "Pdf encryption"@en ; doc:sectionTitle "Pdf encryption" ; doc:hierarchyLevel 3 ; doc:sectionOrder 17 ;
+    doc:hasParentSection chx:S_PdfProtection ;
+    skos:definition "writer.encrypt('swordfish', algorithm='AES-256') makes the saved file unreadable without the password, and the chapter advises a password of different character types and 14 to 16 characters that is not a dictionary word (Sweigart, 2025); the library run wrote encryption version 5 revision 6 for AES-256 and version 2 revision 3 when no algorithm was given, the documentation says RC4 is the default, calls it insecure and recommends AES, and AES needs the cryptography package (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PdfEncryption> .
+chx:S_PdfDecryption a doc:ConceptSection ; rdfs:label "Pdf decryption"@en ; doc:sectionTitle "Pdf decryption" ; doc:hierarchyLevel 3 ; doc:sectionOrder 18 ;
+    doc:hasParentSection chx:S_PdfProtection ;
+    skos:definition "reader.is_encrypted is True for the encrypted file, reader.pages[0] raises FileNotDecryptedError, decrypt('an incorrect password').name is 'NOT_DECRYPTED' and decrypt('swordfish').name is 'OWNER_PASSWORD' (Sweigart, 2025); all four reproduced, a file encrypted with the two passwords 'user' and 'owner' gave USER_PASSWORD and OWNER_PASSWORD, and appending the decrypted reader to a writer gave an unencrypted file of six pages (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PdfDecryption> .
+chx:S_PasswordStrength a doc:ConceptSection ; rdfs:label "Password strength"@en ; doc:sectionTitle "Password strength" ; doc:hierarchyLevel 3 ; doc:sectionOrder 19 ;
+    doc:hasParentSection chx:S_PdfProtection ;
+    skos:definition "The chapter notes that an encrypted PDF can never be read again if the password is forgotten and that swordfish is a poor password because it is a dictionary word (Sweigart, 2025); hashlib's documentation recommends the key derivation functions pbkdf2_hmac and scrypt for storing passwords, and the plain hash used in the stand-in below is only a teaching device (Python Software Foundation, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PasswordStrength> .
+chx:S_WordFiles a doc:TaxonomicSection ; rdfs:label "Word files"@en ; doc:sectionTitle "Word files" ; doc:hierarchyLevel 1 ; doc:sectionOrder 20 ;
+    skos:definition "Word files with the .docx extension are read and written through the Python-Docx package, whose three data types are Document, Paragraph and Run (Sweigart, 2025) (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#WordFiles> .
+chx:S_WordStructure a doc:TaxonomicSection ; rdfs:label "Word structure"@en ; doc:sectionTitle "Word structure" ; doc:hierarchyLevel 2 ; doc:sectionOrder 21 ;
+    doc:hasParentSection chx:S_WordFiles ;
+    skos:definition "A .docx file is a structured document: a Document holds Paragraph objects and each Paragraph holds Run objects (Sweigart, 2025) (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#WordStructure> .
+chx:S_DocxPackage a doc:ConceptSection ; rdfs:label "Docx package"@en ; doc:sectionTitle "Docx package" ; doc:hierarchyLevel 3 ; doc:sectionOrder 22 ;
+    doc:hasParentSection chx:S_WordStructure ;
+    skos:definition "The chapter treats a .docx file as more than text, with font, size and colour attached to the text (Sweigart, 2025); it is a zip archive of XML parts, which the library run listed as [Content_Types].xml, _rels/.rels, docProps/core.xml, docProps/app.xml, word/document.xml and word/_rels/document.xml.rels, and docx.Document('a.pdf') raised PackageNotFoundError (Canny, 2013) (Python Software Foundation, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#DocxPackage> .
+chx:S_DocumentObject a doc:ConceptSection ; rdfs:label "Document object"@en ; doc:sectionTitle "Document object" ; doc:hierarchyLevel 3 ; doc:sectionOrder 23 ;
+    doc:hasParentSection chx:S_WordStructure ;
+    skos:definition "docx.Document('demo.docx') returns a Document object for the file, and docx.Document() returns a new blank one (Sweigart, 2025); the book's demo.docx was not opened, and a stand-in document was built in the library run with python-docx 1.2.0 (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#DocumentObject> .
+chx:S_ParagraphObject a doc:ConceptSection ; rdfs:label "Paragraph object"@en ; doc:sectionTitle "Paragraph object" ; doc:hierarchyLevel 3 ; doc:sectionOrder 24 ;
+    doc:hasParentSection chx:S_WordStructure ;
+    skos:definition "A new paragraph begins whenever the user presses Enter, a Paragraph object's text attribute holds its text, and the chapter prints 'Document Title' and 'A plain paragraph with some bold text and some italic' for the first two paragraphs of demo.docx, in one place without the space as 'DocumentTitle' (Sweigart, 2025); a paragraph is the block-level object and a run the inline one (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#ParagraphObject> .
+chx:S_RunObject a doc:ConceptSection ; rdfs:label "Run object"@en ; doc:sectionTitle "Run object" ; doc:hierarchyLevel 3 ; doc:sectionOrder 25 ;
+    doc:hasParentSection chx:S_WordStructure ;
+    skos:definition "A Run object is a contiguous run of text with the same style, and the chapter's second paragraph has four runs: 'A plain paragraph with some ', 'bold', ' and some ' and 'italic' (Sweigart, 2025); built with add_run the library run gave the same four texts, and the printed third run ' text and some ' in the book's prose differs from the printed output ' and some ' (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#RunObject> .
+chx:S_WordReading a doc:TaxonomicSection ; rdfs:label "Word reading"@en ; doc:sectionTitle "Word reading" ; doc:hierarchyLevel 2 ; doc:sectionOrder 26 ;
+    doc:hasParentSection chx:S_WordFiles ;
+    skos:definition "Reading a Word document means listing its paragraphs, their runs and their text (Sweigart, 2025) (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#WordReading> .
+chx:S_ParagraphList a doc:ConceptSection ; rdfs:label "Paragraph list"@en ; doc:sectionTitle "Paragraph list" ; doc:hierarchyLevel 3 ; doc:sectionOrder 27 ;
+    doc:hasParentSection chx:S_WordReading ;
+    skos:definition "len(doc.paragraphs) is 7 for the book's demo.docx, and doc.paragraphs[1].runs has length 4 (Sweigart, 2025); the book's file was not opened, and the stand-in paragraph built with add_run in three parts of text had 4 runs, read back in the order they were added (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#ParagraphList> .
+chx:S_RunText a doc:ConceptSection ; rdfs:label "Run text"@en ; doc:sectionTitle "Run text" ; doc:hierarchyLevel 3 ; doc:sectionOrder 28 ;
+    doc:hasParentSection chx:S_WordReading ;
+    skos:definition "doc.paragraphs[1].runs[1].text is 'bold' and runs[3].text is 'italic' (Sweigart, 2025); on the stand-in document the run that set bold gave bold True and the others None, so the formatting lives on the run and not in the paragraph's text (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#RunText> .
+chx:S_FullText a doc:ConceptSection ; rdfs:label "Full text"@en ; doc:sectionTitle "Full text" ; doc:hierarchyLevel 3 ; doc:sectionOrder 29 ;
+    doc:hasParentSection chx:S_WordReading ;
+    skos:definition "get_text(filename) opens the document, appends every paragraph's text to a list and returns '\\n'.join(full_text), which the chapter prints as six lines for demo.docx, and changing the append to '  ' + para.text indents while joining with '\\n\\n' double-spaces the result (Sweigart, 2025); the stand-in run gave 'A plain paragraph with some bold and some italic' for the joined runs (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#FullText> .
+chx:S_WordStyling a doc:TaxonomicSection ; rdfs:label "Word styling"@en ; doc:sectionTitle "Word styling" ; doc:hierarchyLevel 2 ; doc:sectionOrder 30 ;
+    doc:hasParentSection chx:S_WordFiles ;
+    skos:definition "Styles and run attributes give the same look to many paragraphs or runs, and python-docx reads and sets them by name (Sweigart, 2025) (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#WordStyling> .
+chx:S_StyleKinds a doc:ConceptSection ; rdfs:label "Style kinds"@en ; doc:sectionTitle "Style kinds" ; doc:hierarchyLevel 3 ; doc:sectionOrder 31 ;
+    doc:hasParentSection chx:S_WordStyling ;
+    skos:definition "Word has paragraph styles for Paragraph objects, character styles for Run objects and linked styles for both; to style a paragraph or run its style attribute is set to the style's name, and None removes the association (Sweigart, 2025); in python-docx 1.2.0 the name of a style the file does not define raised KeyError: 'no style with name 'NoSuchStyle'', while the documentation says Word silently ignores such a style, and a built-in style appears in the file only once it is used (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#StyleKinds> .
+chx:S_LinkedStyle a doc:ConceptSection ; rdfs:label "Linked style"@en ; doc:sectionTitle "Linked style" ; doc:hierarchyLevel 3 ; doc:sectionOrder 32 ;
+    doc:hasParentSection chx:S_WordStyling ;
+    skos:definition "A linked style for a Run takes ' Char' after its name, so Paragraph style 'Quote' is Run style 'Quote Char' (Sweigart, 2025); the library run gave run style Quote Char of type CHARACTER and ValueError: assigned style is type PARAGRAPH (1), need type CHARACTER (2) for the paragraph style Quote on a run (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#LinkedStyle> .
+chx:S_DefaultStyleNames a doc:ConceptSection ; rdfs:label "Default style names"@en ; doc:sectionTitle "Default style names" ; doc:hierarchyLevel 3 ; doc:sectionOrder 33 ;
+    doc:hasParentSection chx:S_WordStyling ;
+    skos:definition "The chapter lists the default Word style names from Normal and Body Text to Title, including 'List Number ' with a trailing space and 'MacroText' (Sweigart, 2025); the default template of python-docx 1.2.0 holds 36 paragraph, 27 character and 100 table styles and does not define those two names but List Number and macro, and the documentation says built-in styles are found by their English names (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#DefaultStyleNames> .
+chx:S_CustomStyles a doc:ConceptSection ; rdfs:label "Custom styles"@en ; doc:sectionTitle "Custom styles" ; doc:hierarchyLevel 3 ; doc:sectionOrder 34 ;
+    doc:hasParentSection chx:S_WordStyling ;
+    skos:definition "The chapter tells the reader to define custom styles in the Word application and read them from a paragraph or run (Sweigart, 2025); python-docx 1.2.0 can add a paragraph style to a document with styles.add_style('Citation', WD_STYLE_TYPE.PARAGRAPH), which the library run did, and a style can be given a base style (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#CustomStyles> .
+chx:S_RunAttributes a doc:ConceptSection ; rdfs:label "Run attributes"@en ; doc:sectionTitle "Run attributes" ; doc:hierarchyLevel 3 ; doc:sectionOrder 35 ;
+    doc:hasParentSection chx:S_WordStyling ;
+    skos:definition "Table 17-1 lists twelve text attributes of Run objects: bold, italic, underline, strike, double_strike, all_caps, small_caps, shadow, outline, rtl, imprint and emboss (Sweigart, 2025); in python-docx 1.2.0 the Run object defines bold, italic and underline and all twelve are attributes of run.font, and the library run showed that run.strike = True raises no error yet adds no w:strike element to the XML, while run.font.strike = True does (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#RunAttributes> .
+chx:S_TriStateAttribute a doc:ConceptSection ; rdfs:label "Tri state attribute"@en ; doc:sectionTitle "Tri state attribute" ; doc:hierarchyLevel 3 ; doc:sectionOrder 36 ;
+    doc:hasParentSection chx:S_WordStyling ;
+    skos:definition "Each attribute is True (always on), False (always off) or None (whatever the run's style says) (Sweigart, 2025); the library run set bold to True, False and None in turn and read back True, False and None, and the documentation states that None means the value is inherited from the style hierarchy (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#TriStateAttribute> .
+chx:S_WordWriting a doc:TaxonomicSection ; rdfs:label "Word writing"@en ; doc:sectionTitle "Word writing" ; doc:hierarchyLevel 2 ; doc:sectionOrder 37 ;
+    doc:hasParentSection chx:S_WordFiles ;
+    skos:definition "Writing a Word document means creating a blank document, adding paragraphs, runs, headings, breaks and pictures to its end, and saving it (Sweigart, 2025) (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#WordWriting> .
+chx:S_NewDocument a doc:ConceptSection ; rdfs:label "New document"@en ; doc:sectionTitle "New document" ; doc:hierarchyLevel 3 ; doc:sectionOrder 38 ;
+    doc:hasParentSection chx:S_WordWriting ;
+    skos:definition "docx.Document() returns a blank Word document and doc.save('helloworld.docx') writes it (Sweigart, 2025); the library run saved the stand-in documents to memory and to files, and the rendering in Word or LibreOffice that the chapter's figures show was not checked (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#NewDocument> .
+chx:S_AddParagraph a doc:ConceptSection ; rdfs:label "Add paragraph"@en ; doc:sectionTitle "Add paragraph" ; doc:hierarchyLevel 3 ; doc:sectionOrder 39 ;
+    doc:hasParentSection chx:S_WordWriting ;
+    skos:definition "doc.add_paragraph('Hello, world!') adds a paragraph and returns it, para.add_run(' This text...') adds text to its end, and a second argument such as 'Title' gives the style (Sweigart, 2025); the library run gave style Title for doc.add_paragraph('Hello, world!', 'Title') (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#AddParagraph> .
+chx:S_AddHeading a doc:ConceptSection ; rdfs:label "Add heading"@en ; doc:sectionTitle "Add heading" ; doc:hierarchyLevel 3 ; doc:sectionOrder 40 ;
+    doc:hasParentSection chx:S_WordWriting ;
+    skos:definition "doc.add_heading('Header 0', 0) to doc.add_heading('Header 4', 4) add headings, 0 being the Title style, and the chapter says the argument ranges from 0 to 4 and then that 1 to 9 are heading levels (Sweigart, 2025); python-docx accepts 0 to 9 and raised ValueError: level must be in range 0-9, got 10 for 10 (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#AddHeading> .
+chx:S_BreaksInDocument a doc:ConceptSection ; rdfs:label "Breaks in document"@en ; doc:sectionTitle "Breaks in document" ; doc:hierarchyLevel 3 ; doc:sectionOrder 41 ;
+    doc:hasParentSection chx:S_WordWriting ;
+    skos:definition "add_break() on a Run adds a line break and, given docx.enum.text.WD_BREAK.PAGE, a page break, as in the two-page example twoPage.docx (Sweigart, 2025); the library run found one page-break element in the first run's XML, and the document also has add_page_break() (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#BreaksInDocument> .
+chx:S_AddPicture a doc:ConceptSection ; rdfs:label "Add picture"@en ; doc:sectionTitle "Add picture" ; doc:hierarchyLevel 3 ; doc:sectionOrder 42 ;
+    doc:hasParentSection chx:S_WordWriting ;
+    skos:definition "doc.add_picture('zophie.png', width=docx.shared.Inches(1), height=docx.shared.Cm(4)) returns an InlineShape, and the width and height default to the image's normal size (Sweigart, 2025); the library run gave a width of 914400 and a height of 1440000, Inches(1) and Cm(4) in English metric units, and a native size computed from pixels and a dpi of 72 when the image carries none, which the book's zophie.png was not used to check (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#AddPicture> .
+chx:S_Automation a doc:TaxonomicSection ; rdfs:label "Automation"@en ; doc:sectionTitle "Automation" ; doc:hierarchyLevel 1 ; doc:sectionOrder 43 ;
+    skos:definition "Programs that combine, protect and produce PDF and Word files put the chapter's objects to work, inside limits that the formats impose (Sweigart, 2025)." ; dcterms:source <http://example.org/sen0414/ch17#Automation> .
+chx:S_CombineProject a doc:TaxonomicSection ; rdfs:label "Combine project"@en ; doc:sectionTitle "Combine project" ; doc:hierarchyLevel 2 ; doc:sectionOrder 44 ;
+    doc:hasParentSection chx:S_Automation ;
+    skos:definition "Project 12 combines all the PDFs of the working folder, sorted alphabetically, dropping each first page, into combined.pdf (Sweigart, 2025)." ; dcterms:source <http://example.org/sen0414/ch17#CombineProject> .
+chx:S_FindPdfFiles a doc:ConceptSection ; rdfs:label "Find pdf files"@en ; doc:sectionTitle "Find pdf files" ; doc:hierarchyLevel 3 ; doc:sectionOrder 45 ;
+    doc:hasParentSection chx:S_CombineProject ;
+    skos:definition "The program lists the folder with os.listdir('.'), keeps the names ending in .pdf and sorts them with sort(key=str.lower) so that uppercase does not come first (Sweigart, 2025); the listing is in arbitrary order and sort() is stable (Python Software Foundation, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#FindPdfFiles> .
+chx:S_CopyAfterFirstPage a doc:ConceptSection ; rdfs:label "Copy after first page"@en ; doc:sectionTitle "Copy after first page" ; doc:hierarchyLevel 3 ; doc:sectionOrder 46 ;
+    doc:hasParentSection chx:S_CombineProject ;
+    skos:definition "For each file the program calls writer.append(pdf_filename, (1, len(reader.pages))) to copy page index 1 to the end and leave out the cover sheet (Sweigart, 2025); with the stand-in files of 2, 3 and 1 pages the combined result had 3 pages, and the one-page file added none (Python Software Foundation, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#CopyAfterFirstPage> .
+chx:S_RerunTrap a doc:ConceptSection ; rdfs:label "Rerun trap"@en ; doc:sectionTitle "Rerun trap" ; doc:hierarchyLevel 3 ; doc:sectionOrder 47 ;
+    doc:hasParentSection chx:S_CombineProject ;
+    skos:definition "The chapter's listing as printed appends to pdf_files, which is not defined, and Python 3.14.4 answers NameError: name 'pdf_files' is not defined. Did you mean: 'pdf_filenames'? (Sweigart, 2025); with the name corrected, a second run in the same folder read combined.pdf as an input and wrote 5 pages instead of 3, and skipping that file gave 3 again (Python Software Foundation, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#RerunTrap> .
+chx:S_PracticePrograms a doc:TaxonomicSection ; rdfs:label "Practice programs"@en ; doc:sectionTitle "Practice programs" ; doc:hierarchyLevel 2 ; doc:sectionOrder 48 ;
+    doc:hasParentSection chx:S_Automation ;
+    skos:definition "The chapter ends with twelve practice questions and three practice programs (Sweigart, 2025)." ; dcterms:source <http://example.org/sen0414/ch17#PracticePrograms> .
+chx:S_PdfParanoia a doc:ConceptSection ; rdfs:label "Pdf paranoia"@en ; doc:sectionTitle "Pdf paranoia" ; doc:hierarchyLevel 3 ; doc:sectionOrder 49 ;
+    doc:hasParentSection chx:S_PracticePrograms ;
+    skos:definition "PDF Paranoia asks for an os.walk over a folder tree that encrypts each PDF with a password given on the command line, saves it with _encrypted.pdf added, reads and decrypts the copy to check it before the original is deleted, and a second program that decrypts every encrypted PDF it finds and prints a message for a wrong password (Sweigart, 2025); only the file-naming and the check-before-delete logic were run here, with a toy reversible transformation in place of PDF encryption (Python Software Foundation, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PdfParanoia> .
+chx:S_CustomInvitations a doc:ConceptSection ; rdfs:label "Custom invitations"@en ; doc:sectionTitle "Custom invitations" ; doc:hierarchyLevel 3 ; doc:sectionOrder 50 ;
+    doc:hasParentSection chx:S_PracticePrograms ;
+    skos:definition "Custom Invitations reads guests.txt and writes a Word document with one invitation per guest, using styles that already exist in a blank Word file and add_break() after the last paragraph of each invitation (Sweigart, 2025); with the five guests of the book's example the library run wrote 5 page breaks, one after the last invitation as well, and the stand-in counted 6 pages against 5 for a break only between invitations (Canny, 2013)." ; dcterms:source <http://example.org/sen0414/ch17#CustomInvitations> .
+chx:S_PasswordBreaker a doc:ConceptSection ; rdfs:label "Password breaker"@en ; doc:sectionTitle "Password breaker" ; doc:hierarchyLevel 3 ; doc:sectionOrder 51 ;
+    doc:hasParentSection chx:S_PracticePrograms ;
+    skos:definition "PDF Password Breaker reads dictionary.txt of over 44,000 words and passes the lowercase and uppercase form of each to decrypt(), 88,000 tries, which took a couple of minutes on the author's laptop (Sweigart, 2025); the book's file and a real encrypted PDF were not used, and the stand-in tried the forms of four words against a SHA-256 digest and found SWORDFISH on the sixth try (Python Software Foundation, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PasswordBreaker> .
+chx:S_Limits a doc:TaxonomicSection ; rdfs:label "Limits"@en ; doc:sectionTitle "Limits" ; doc:hierarchyLevel 2 ; doc:sectionOrder 52 ;
+    doc:hasParentSection chx:S_Automation ;
+    skos:definition "The chapter closes on why PDF and Word are hard to automate and where the reader can go next (Sweigart, 2025)." ; dcterms:source <http://example.org/sen0414/ch17#Limits> .
+chx:S_PresentationFormat a doc:ConceptSection ; rdfs:label "Presentation format"@en ; doc:sectionTitle "Presentation format" ; doc:hierarchyLevel 3 ; doc:sectionOrder 53 ;
+    doc:hasParentSection chx:S_Limits ;
+    skos:definition "The summary says that many limits come from formats meant to display nicely for human readers and not to be parsed by software (Sweigart, 2025); the Library of Congress describes PDF as a format for formatted, page-oriented documents, and a .docx is a zip of XML parts (Library of Congress, 2019) (Python Software Foundation, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PresentationFormat> .
+chx:S_HumanReview a doc:ConceptSection ; rdfs:label "Human review"@en ; doc:sectionTitle "Human review" ; doc:hierarchyLevel 3 ; doc:sectionOrder 54 ;
+    doc:hasParentSection chx:S_Limits ;
+    skos:definition "The chapter's language model prompt asks for paragraphs on single lines, headers and footers removed and hyphens at row ends joined, and its trial output lost the chapter number 1 (Sweigart, 2025); the model step was not run here." ; dcterms:source <http://example.org/sen0414/ch17#HumanReview> .
+chx:S_OtherPdfLibraries a doc:ConceptSection ; rdfs:label "Other pdf libraries"@en ; doc:sectionTitle "Other pdf libraries" ; doc:hierarchyLevel 3 ; doc:sectionOrder 55 ;
+    doc:hasParentSection chx:S_Limits ;
+    skos:definition "The summary recommends searching PyPI for pdfplumber, ReportLab, pdfrw, PyMuPDF, pdfkit and borb (Sweigart, 2025); the PyPI metadata read on 2026-10-01 listed pdfplumber 0.11.10, reportlab 5.0.1, pdfrw 0.4, PyMuPDF 1.28.2, pdfkit 1.0.0 and borb 3.0.9 (Python Package Index, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#OtherPdfLibraries> .
+chx:S_PackageNames a doc:ConceptSection ; rdfs:label "Package names"@en ; doc:sectionTitle "Package names" ; doc:hierarchyLevel 3 ; doc:sectionOrder 56 ;
+    doc:hasParentSection chx:S_Limits ;
+    skos:definition "The warning says to install Python-Docx and not Docx, and to write import docx (Sweigart, 2025); PyPI lists python-docx 1.2.0 and a separate docx 0.2.4, and pypdf 6.19.0, which asks for extras for AES and images (Python Package Index, 2026) (pypdf contributors, 2026)." ; dcterms:source <http://example.org/sen0414/ch17#PackageNames> .

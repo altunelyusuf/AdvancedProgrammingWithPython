@@ -1,0 +1,5021 @@
+{
+ "_version": "9.18.0",
+ "visuals": {},
+ "course": {
+  "_version": "1.3.3",
+  "name": "SEN0414 Advanced Programming",
+  "line": "SEN0414 Advanced Programming",
+  "chapter_sub": "chapter {n} of Automate the Boring Stuff with Python, 3rd edition",
+  "chapter_intro": "Chapter {n} of <i>Automate the Boring Stuff with Python</i>, 3rd edition (Sweigart, 2025), renewed for an advanced course.",
+  "playground": {
+   "label": "Project 5: back up a folder into numbered ZIP files (temporary folder, no input)",
+   "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\n\nroot = Path(tempfile.mkdtemp())\nspam = root / 'spam'\n(spam / 'eggs').mkdir(parents=True)\n(spam / 'file1.txt').write_text('Hello')\n(spam / 'eggs' / 'file2.txt').write_text('Hello' * 100)\nos.chdir(root)\n\ndef backup_to_zip(folder):\n    folder = Path(folder)\n    number = 1\n    while True:\n        zip_filename = Path(folder.parts[-1] + '_' + str(number) + '.zip')\n        if not zip_filename.exists():\n            break\n        number = number + 1\n    print(f'Creating {zip_filename}...')\n    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as backup_zip:\n        for folder_name, subfolders, filenames in os.walk(folder):\n            subfolders.sort()\n            filenames.sort()\n            folder_name = Path(folder_name)\n            print(f'Adding files in folder {folder_name.relative_to(root)}...')\n            for filename in filenames:\n                print(f'Adding file {filename}...')\n                path = folder_name / filename\n                backup_zip.write(path, arcname=path.relative_to(root))\n    print('Done.')\n\nbackup_to_zip(spam)\nbackup_to_zip(spam)\nprint(sorted(zipfile.ZipFile('spam_2.zip').namelist()))\nos.chdir('/')\nshutil.rmtree(root)",
+   "inputs": ""
+  },
+  "corpus": {
+   "book_pin_source": "02-textbook/sen0414_textbook_v1_0_0.ttl",
+   "book": [
+    "automate-python-book-3e/01-ontologies/automate_python_3e_ch{nn}_v1_0_0.ttl"
+   ],
+   "course": [
+    "00-course-profile/sen0414_course_v1_0_0.ttl",
+    "01-outcomes/sen0414_outcomes_v1_0_0.ttl",
+    "02-textbook/sen0414_textbook_v1_0_0.ttl",
+    "03-materials/sen0414_materials_v1_22_0.ttl"
+   ]
+  }
+ },
+ "discussion": [],
+ "findings": [
+  [
+   "Background",
+   "Chapter 11 of the 3rd edition, Organizing Files, teaches the shutil module with shutil.copy(), shutil.copytree() and shutil.move() for copying, moving and renaming; permanent deletion with os.unlink(), os.rmdir() and shutil.rmtree(), with a dry run as protection and the third-party send2trash module as the recoverable alternative; listing a folder with os.listdir() and iterdir() and walking a tree with os.walk(), shown by a program that renames every file to upper case; the zipfile module, with ZipFile objects in write, append and read use, namelist(), getinfo() with file_size and compress_size, extractall() and extract(); Project 5, backup_to_zip.py, which writes a folder into a ZIP file whose name counts up; and it closes with a summary, 4 practice questions and 4 practice programs: selective copying, finding large files, renumbering files and converting American to European dates."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's printed outputs reproduce under Python 3.14.4 except one sentence: shutil.copy() returned a str when the destination was a folder and a PosixPath when it was a file name, which is what the chapter prints; the walk of the chapter gave the same folders and files on each pass, but the documentation says that the order of names depends on the file system, so the chapter's listing is one possible order and the runs here sorted the names; the ZIP listing reproduced the member name file1.txt, file_size 50000, compress_size 97 and Compressed file is 515.46x smaller!, while the chapter's prose puts the compressed size at about 213 bytes, a number that neither compresslevel 9 nor the default level 6 gave (both 97; level 1 gave 293 and level 0 gave 50010), so the prose and the listing disagree with each other and only the listing runs."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter says that a file1.txt already in the destination folder of shutil.move() would be overwritten; under Python 3.14.4 shutil.move() into a folder that already held file1.txt raised shutil.Error and moved nothing, which is what the documentation states (the destination path in the folder must not already exist), whereas a move onto an existing path that is not a folder replaced the file; the chapter also describes the return value of shutil.move() as a string, and it was a str for a folder destination and a PosixPath for a new file name."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's Project 5 program differs from what its prose intends in four ways that were run: write() without a compression type stores the file, so the snapshot is not compressed although the chapter speaks of compressing; passing absolute paths to write() stores the whole path of each file without its leading slash as the member name; giving the folder as Path('.') raises IndexError, because Path('.').parts is an empty tuple; and when the archive is created inside the folder being backed up, os.walk lists the archive and the program writes it into itself; the program also tests names in the working directory and not next to the folder."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's advice on deletion holds: os.unlink() deletes a file for good, os.rmdir() only an empty folder (OSError otherwise) and shutil.rmtree() a whole tree, and the dry run, in which the delete is replaced by a print, exposed the typo *.rxt for *.txt by matching no file; current Python adds that unlink() on a folder raises IsADirectoryError on this Linux system, that rmtree() on a missing path raises FileNotFoundError unless ignore_errors=True, and that the onexc parameter, added in Python 3.12, replaces the deprecated onerror as the way to handle errors while deleting a tree; send2trash was not executed."
+  ],
+  [
+   "Conclusion",
+   "For an advanced course, chapter 11 is best taught by asking of each operation whether it can be undone, whether it stays inside the folder it was given, and whether the program can show what it will do before it does it: copy and copytree keep the source and move does not, rmtree, unlink and rmdir cannot be undone and send2trash can; the chapter's outputs hold under 3.14.4 except the overwrite claim for shutil.move and the 213-byte sentence, and Project 5 needs its compression type, its archive names, its folder argument and the place of its archive fixed, while pathlib's walk, copy and move, the exclusive and append modes, make_archive and the safety of extraction are what the chapter leaves for the course to add."
+  ],
+  [
+   "Contemporary developments",
+   "Current Python gives file handling more than the chapter presents: shutil.copy2() keeps metadata such as the modification time and copytree() uses it, copytree(dirs_exist_ok=True) copies into an existing folder, Path objects are accepted by the shutil and os functions since PEP 519 and have iterdir(), glob() and rglob(), Path.walk() since Python 3.12 is os.walk() for Path objects, and since Python 3.14 Path.copy(), copy_into(), move() and move_into() copy and move without shutil."
+  ],
+  [
+   "Contemporary developments",
+   "Current Python gives archives more than the chapter presents: ZipFile mode 'x' refuses to overwrite and 'a' adds, ZipFile.mkdir() since Python 3.11 adds a folder entry, compression methods beyond deflate include ZIP_BZIP2, ZIP_LZMA and, new in Python 3.14, ZIP_ZSTANDARD, shutil.make_archive() and shutil.unpack_archive() do in one call what the chapter does with a program, extraction removes .. and leading slashes from member names so that the members of a hostile archive stay inside the target folder, and the documentation still warns never to extract untrusted archives without inspection."
+  ]
+ ],
+ "unit": null,
+ "research_file": "sen0414_ch11_research_v1_0_0.ttl",
+ "chapter": 11,
+ "title": "Organizing files for an advanced course: chapter 11 of the 3rd edition and today's Python",
+ "python": "Python 3.14.4",
+ "nodes": [
+  {
+   "id": "CopyingAndMoving",
+   "label": "Copying and moving",
+   "level": 1,
+   "parent": null,
+   "body": "Copying, moving and renaming files and folders with the shutil module is the first subject of Chapter 11 (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_CopyingAndMoving",
+   "class_iri": "http://example.org/sen0414/ch11#CopyingAndMoving"
+  },
+  {
+   "id": "Copying",
+   "label": "Copying",
+   "level": 2,
+   "parent": "CopyingAndMoving",
+   "body": "Two functions copy: shutil.copy for one file and shutil.copytree for a folder with everything in it (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_Copying",
+   "class_iri": "http://example.org/sen0414/ch11#Copying"
+  },
+  {
+   "id": "CopyFile",
+   "label": "Copy file",
+   "level": 3,
+   "parent": "Copying",
+   "body": "shutil.copy(source, destination) copies a file to a folder, which keeps the name, or to a file name, which becomes the copy's name (Sweigart, 2025); in a run under Python 3.14.4 copying a.txt into a folder and to b.txt in it left both a.txt and b.txt there, and the documentation adds that an existing destination file is replaced, that permission bits are copied and that other metadata is not (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_CopyFile",
+   "class_iri": "http://example.org/sen0414/ch11#CopyFile",
+   "example": "shutil.copy(source, destination)",
+   "definition": "shutil.copy copies one file to a destination that is either a folder, which keeps the file's name, or a file name, which becomes the copy's name; an existing destination file is replaced, and the call returns the path of the new file.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'a.txt\\').write_text(\\'Hello\\')\\n(t/\\'box\\').mkdir()\\nr1 = shutil.copy(t/\\'a.txt\\', t/\\'box\\')\\nr2 = shutil.copy(t/\\'a.txt\\', t/\\'box\\'/\\'b.txt\\')\\nout = (Path(r1).name, Path(r2).name, sorted(p.name for p in (t/\\'box\\').iterdir()), (t/\\'a.txt\\').exists())\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "('a.txt', 'b.txt', ['a.txt', 'b.txt'], True)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'a.txt').write_text('Hello')\\n(t/'box').mkdir()\\nr1 = shutil.copy(t/'a.txt', t/'box')\\nr2 = shutil.copy(t/'a.txt', t/'box'/'b.txt')\\nout = (Path(r1).name, Path(r2).name, sorted(p.name for p in (t/'box').iterdir()), (t/'a.txt').exists())\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CopyFolderTree",
+   "label": "Copy folder tree",
+   "level": 3,
+   "parent": "Copying",
+   "body": "shutil.copytree(h / 'spam', h / 'spam_backup') makes a backup folder with the same content and returns its path (Sweigart, 2025); run under 3.14.4 it returned a PosixPath holding file1.txt and file2.txt, and a second call with the same destination raised FileExistsError, because the destination folder must not exist yet (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_CopyFolderTree",
+   "class_iri": "http://example.org/sen0414/ch11#CopyFolderTree",
+   "example": "shutil.copytree(source, destination)",
+   "definition": "shutil.copytree copies a whole folder with all its files and subfolders to a new folder that must not exist yet, and returns the destination; it raises FileExistsError when the destination exists.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\'/\\'eggs\\').mkdir(parents=True)\\n(t/\\'spam\\'/\\'file1.txt\\').write_text(\\'Hello\\')\\n(t/\\'spam\\'/\\'eggs\\'/\\'file2.txt\\').write_text(\\'Hi\\')\\nshutil.copytree(t/\\'spam\\', t/\\'spam_backup\\')\\ncopied = sorted(str(p.relative_to(t/\\'spam_backup\\')) for p in (t/\\'spam_backup\\').rglob(\\'*\\'))\\ntry:\\n    shutil.copytree(t/\\'spam\\', t/\\'spam_backup\\')\\n    second = \\'no error\\'\\nexcept FileExistsError:\\n    second = \\'FileExistsError\\'\\nout = (copied, second)\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "(['eggs', 'eggs/file2.txt', 'file1.txt'], 'FileExistsError')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam'/'eggs').mkdir(parents=True)\\n(t/'spam'/'file1.txt').write_text('Hello')\\n(t/'spam'/'eggs'/'file2.txt').write_text('Hi')\\nshutil.copytree(t/'spam', t/'spam_backup')\\ncopied = sorted(str(p.relative_to(t/'spam_backup')) for p in (t/'spam_backup').rglob('*'))\\ntry:\\n    shutil.copytree(t/'spam', t/'spam_backup')\\n    second = 'no error'\\nexcept FileExistsError:\\n    second = 'FileExistsError'\\nout = (copied, second)\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CopyWithMetadata",
+   "label": "Copy with metadata",
+   "level": 3,
+   "parent": "Copying",
+   "body": "shutil.copy2 is not in the chapter; it copies as shutil.copy does and also tries to keep metadata such as the modification time, so a file whose time was set to 1000000000 kept it in a copy2 copy and did not in a copy made by shutil.copy, and copytree copies its files with copy2 (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_CopyWithMetadata",
+   "class_iri": "http://example.org/sen0414/ch11#CopyWithMetadata",
+   "example": "shutil.copy2(source, destination)",
+   "definition": "shutil.copy2 copies a file like shutil.copy and also tries to keep its metadata, such as the modification time, which shutil.copy does not keep; copytree uses copy2 for every file.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nsrc = t/\\'a.txt\\'\\nsrc.write_text(\\'x\\')\\nos.utime(src, (n * 100_000_000, n * 100_000_000))\\nshutil.copy(src, t/\\'plain.txt\\')\\nshutil.copy2(src, t/\\'kept.txt\\')\\nout = (int((t/\\'kept.txt\\').stat().st_mtime), (t/\\'plain.txt\\').stat().st_mtime > 1_500_000_000)\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 10})",
+    "out": "(1000000000, True)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nsrc = t/'a.txt'\\nsrc.write_text('x')\\nos.utime(src, (n * 100_000_000, n * 100_000_000))\\nshutil.copy(src, t/'plain.txt')\\nshutil.copy2(src, t/'kept.txt')\\nout = (int((t/'kept.txt').stat().st_mtime), (t/'plain.txt').stat().st_mtime > 1_500_000_000)\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "10",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ExistingDestination",
+   "label": "Existing destination",
+   "level": 3,
+   "parent": "Copying",
+   "body": "The chapter's copytree needs a destination that does not exist (Sweigart, 2025); since Python 3.8 dirs_exist_ok=True lets it continue into an existing folder, where a file of the same name is overwritten and other files stay, so with a.txt changed from 'old' to 'new' the folder held a.txt and keep.txt (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_ExistingDestination",
+   "class_iri": "http://example.org/sen0414/ch11#ExistingDestination",
+   "example": "shutil.copytree(source, destination, dirs_exist_ok=True)",
+   "definition": "With dirs_exist_ok=True, copytree continues into a destination folder that already exists and overwrites files of the same name there, leaving the other files in place.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'src\\').mkdir()\\n(t/\\'src\\'/\\'a.txt\\').write_text(\\'new\\')\\n(t/\\'dst\\').mkdir()\\n(t/\\'dst\\'/\\'a.txt\\').write_text(\\'old\\')\\n(t/\\'dst\\'/\\'keep.txt\\').write_text(\\'kept\\')\\nshutil.copytree(t/\\'src\\', t/\\'dst\\', dirs_exist_ok=True)\\nout = (sorted(p.name for p in (t/\\'dst\\').iterdir()), (t/\\'dst\\'/\\'a.txt\\').read_text())\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "(['a.txt', 'keep.txt'], 'new')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'src').mkdir()\\n(t/'src'/'a.txt').write_text('new')\\n(t/'dst').mkdir()\\n(t/'dst'/'a.txt').write_text('old')\\n(t/'dst'/'keep.txt').write_text('kept')\\nshutil.copytree(t/'src', t/'dst', dirs_exist_ok=True)\\nout = (sorted(p.name for p in (t/'dst').iterdir()), (t/'dst'/'a.txt').read_text())\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "Moving",
+   "label": "Moving",
+   "level": 2,
+   "parent": "CopyingAndMoving",
+   "body": "shutil.move moves and renames, and the chapter treats the two as one operation (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_Moving",
+   "class_iri": "http://example.org/sen0414/ch11#Moving"
+  },
+  {
+   "id": "MoveFileOrFolder",
+   "label": "Move file or folder",
+   "level": 3,
+   "parent": "Moving",
+   "body": "shutil.move(h / 'spam/file1.txt', h / 'spam2') moves the file into the folder and keeps its name (Sweigart, 2025); the chapter says it returns a string, and in a run under 3.14.4 it returned a str when the destination was a folder and a PosixPath when it was a new file name, the same as shutil.copy does; across file systems the function copies and then deletes (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_MoveFileOrFolder",
+   "class_iri": "http://example.org/sen0414/ch11#MoveFileOrFolder",
+   "example": "shutil.move(source, destination)",
+   "definition": "shutil.move moves a file or a folder to a destination and returns where it went; if the destination is an existing folder the source goes inside it under its own name, and across file systems the move is a copy followed by a delete.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\').mkdir()\\n(t/\\'spam2\\').mkdir()\\n(t/\\'spam\\'/\\'file1.txt\\').write_text(\\'Hello\\')\\nr = shutil.move(t/\\'spam\\'/\\'file1.txt\\', t/\\'spam2\\')\\nout = (type(r).__name__, Path(r).relative_to(t).as_posix(), (t/\\'spam\\'/\\'file1.txt\\').exists())\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "('str', 'spam2/file1.txt', False)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam').mkdir()\\n(t/'spam2').mkdir()\\n(t/'spam'/'file1.txt').write_text('Hello')\\nr = shutil.move(t/'spam'/'file1.txt', t/'spam2')\\nout = (type(r).__name__, Path(r).relative_to(t).as_posix(), (t/'spam'/'file1.txt').exists())\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "MoveAsRename",
+   "label": "Move as rename",
+   "level": 3,
+   "parent": "Moving",
+   "body": "When the destination is not an existing folder, shutil.move(h / 'spam/file1.txt', h / 'spam2/new_name.txt') moves and renames in one step (Sweigart, 2025); inside one folder it is a rename, and under 3.14.4 it returned a PosixPath and left only new_name.txt in the folder (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_MoveAsRename",
+   "class_iri": "http://example.org/sen0414/ch11#MoveAsRename",
+   "example": "shutil.move(source, destination_not_a_folder)",
+   "definition": "When the destination is not an existing folder, shutil.move uses it as the new path, so a move inside one folder is a rename, and an existing file at that path may be overwritten as os.rename would do on the platform.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\').mkdir()\\n(t/\\'spam\\'/\\'file1.txt\\').write_text(\\'Hello\\')\\nr = shutil.move(t/\\'spam\\'/\\'file1.txt\\', t/\\'spam\\'/\\'new_name.txt\\')\\nout = (type(r).__name__, sorted(p.name for p in (t/\\'spam\\').iterdir()))\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "('PosixPath', ['new_name.txt'])",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam').mkdir()\\n(t/'spam'/'file1.txt').write_text('Hello')\\nr = shutil.move(t/'spam'/'file1.txt', t/'spam'/'new_name.txt')\\nout = (type(r).__name__, sorted(p.name for p in (t/'spam').iterdir()))\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "MoveCollision",
+   "label": "Move collision",
+   "level": 3,
+   "parent": "Moving",
+   "body": "The chapter says that a file1.txt already in the destination folder would be overwritten (Sweigart, 2025); under Python 3.14.4 shutil.move of file1.txt into a folder that already held a file1.txt raised shutil.Error with the message Destination path 'H/spam2/file1.txt' already exists, the old file kept its content 'old' and the source stayed where it was, which agrees with the documentation that the destination path in the folder must not already exist, while a move onto an existing non-folder path replaced that file on this system (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_MoveCollision",
+   "class_iri": "http://example.org/sen0414/ch11#MoveCollision",
+   "example": "shutil.move(file, folder_that_already_holds_that_name)",
+   "definition": "When the destination is a folder that already holds an item of the source's name, shutil.move raises shutil.Error and moves nothing, which differs from the chapter's statement that the file would be overwritten.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\').mkdir()\\n(t/\\'spam2\\').mkdir()\\n(t/\\'spam\\'/\\'file1.txt\\').write_text(\\'new\\')\\n(t/\\'spam2\\'/\\'file1.txt\\').write_text(\\'old\\')\\ntry:\\n    shutil.move(t/\\'spam\\'/\\'file1.txt\\', t/\\'spam2\\')\\n    res = \\'moved\\'\\nexcept shutil.Error:\\n    res = \\'shutil.Error\\'\\nout = (res, (t/\\'spam2\\'/\\'file1.txt\\').read_text(), (t/\\'spam\\'/\\'file1.txt\\').exists())\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "('shutil.Error', 'old', True)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam').mkdir()\\n(t/'spam2').mkdir()\\n(t/'spam'/'file1.txt').write_text('new')\\n(t/'spam2'/'file1.txt').write_text('old')\\ntry:\\n    shutil.move(t/'spam'/'file1.txt', t/'spam2')\\n    res = 'moved'\\nexcept shutil.Error:\\n    res = 'shutil.Error'\\nout = (res, (t/'spam2'/'file1.txt').read_text(), (t/'spam'/'file1.txt').exists())\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PathlibCopyMove",
+   "label": "Pathlib copy move",
+   "level": 3,
+   "parent": "Moving",
+   "body": "The chapter uses shutil for all copying and moving (Sweigart, 2025); Python 3.14 added Path.copy, Path.copy_into, Path.move and Path.move_into, and under 3.14.4 copy returned a Path and left the original in place, move left the old name missing, and copy_into and move_into put the file into an existing folder under its own name (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_PathlibCopyMove",
+   "class_iri": "http://example.org/sen0414/ch11#PathlibCopyMove",
+   "example": "Path.copy(target), Path.move(target)",
+   "definition": "Since Python 3.14 a Path object can copy and move itself with Path.copy, Path.copy_into, Path.move and Path.move_into, and they return the new Path; before 3.14 this needed shutil, so the page of this course runs these only under 3.14."
+  },
+  {
+   "id": "Deleting",
+   "label": "Deleting",
+   "level": 1,
+   "parent": null,
+   "body": "Deleting is where the chapter warns most, and its answer is the dry run and the recycle bin (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_Deleting",
+   "class_iri": "http://example.org/sen0414/ch11#Deleting"
+  },
+  {
+   "id": "PermanentDeletion",
+   "label": "Permanent deletion",
+   "level": 2,
+   "parent": "Deleting",
+   "body": "os.unlink, os.rmdir and shutil.rmtree delete for good (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_PermanentDeletion",
+   "class_iri": "http://example.org/sen0414/ch11#PermanentDeletion"
+  },
+  {
+   "id": "DeleteFile",
+   "label": "Delete file",
+   "level": 3,
+   "parent": "PermanentDeletion",
+   "body": "os.unlink(path) deletes a single file permanently (Sweigart, 2025); run under 3.14.4 it removed a file and a second call raised FileNotFoundError, and on this Linux system the same call on a folder raised IsADirectoryError (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_DeleteFile",
+   "class_iri": "http://example.org/sen0414/ch11#DeleteFile",
+   "example": "os.unlink(path)",
+   "definition": "os.unlink deletes one file for good, with no recycle bin; it is the same operation as os.remove, and it raises FileNotFoundError for a missing path and an error for a folder.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nf = t/\\'a.txt\\'\\nf.write_text(\\'x\\')\\nos.unlink(f)\\ntry:\\n    os.unlink(f)\\n    again = \\'no error\\'\\nexcept FileNotFoundError:\\n    again = \\'FileNotFoundError\\'\\nout = (f.exists(), again)\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "(False, 'FileNotFoundError')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nf = t/'a.txt'\\nf.write_text('x')\\nos.unlink(f)\\ntry:\\n    os.unlink(f)\\n    again = 'no error'\\nexcept FileNotFoundError:\\n    again = 'FileNotFoundError'\\nout = (f.exists(), again)\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "DeleteEmptyFolder",
+   "label": "Delete empty folder",
+   "level": 3,
+   "parent": "PermanentDeletion",
+   "body": "os.rmdir(path) deletes a folder that must be empty (Sweigart, 2025); under 3.14.4 a folder that still held a file raised OSError (errno 39 on this system) and was removed once the file was gone (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_DeleteEmptyFolder",
+   "class_iri": "http://example.org/sen0414/ch11#DeleteEmptyFolder",
+   "example": "os.rmdir(path)",
+   "definition": "os.rmdir deletes one folder, and only if it is empty; a folder that still holds something raises OSError.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'d\\').mkdir()\\n(t/\\'d\\'/\\'f.txt\\').write_text(\\'x\\')\\ntry:\\n    os.rmdir(t/\\'d\\')\\n    first = \\'removed\\'\\nexcept OSError:\\n    first = \\'OSError\\'\\nos.unlink(t/\\'d\\'/\\'f.txt\\')\\nos.rmdir(t/\\'d\\')\\nout = (first, (t/\\'d\\').exists())\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "('OSError', False)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'d').mkdir()\\n(t/'d'/'f.txt').write_text('x')\\ntry:\\n    os.rmdir(t/'d')\\n    first = 'removed'\\nexcept OSError:\\n    first = 'OSError'\\nos.unlink(t/'d'/'f.txt')\\nos.rmdir(t/'d')\\nout = (first, (t/'d').exists())\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "DeleteFolderTree",
+   "label": "Delete folder tree",
+   "level": 3,
+   "parent": "PermanentDeletion",
+   "body": "shutil.rmtree(path) deletes a folder with all its files and subfolders (Sweigart, 2025); under 3.14.4 it removed a tree with one nested file, raised FileNotFoundError for a path that was no longer there and raised nothing with ignore_errors=True; the documentation says that, where the platform allows, a version that resists symlink attacks is used, and rmtree.avoids_symlink_attacks was True here (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_DeleteFolderTree",
+   "class_iri": "http://example.org/sen0414/ch11#DeleteFolderTree",
+   "example": "shutil.rmtree(path)",
+   "definition": "shutil.rmtree deletes a folder with everything in it, irreversibly; it raises FileNotFoundError for a missing path, unless ignore_errors=True.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\'/\\'eggs\\').mkdir(parents=True)\\n(t/\\'spam\\'/\\'eggs\\'/\\'f.txt\\').write_text(\\'x\\')\\nshutil.rmtree(t/\\'spam\\')\\nshutil.rmtree(t/\\'spam\\', ignore_errors=True)\\ntry:\\n    shutil.rmtree(t/\\'spam\\')\\n    second = \\'no error\\'\\nexcept FileNotFoundError:\\n    second = \\'FileNotFoundError\\'\\nout = ((t/\\'spam\\').exists(), second)\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "(False, 'FileNotFoundError')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam'/'eggs').mkdir(parents=True)\\n(t/'spam'/'eggs'/'f.txt').write_text('x')\\nshutil.rmtree(t/'spam')\\nshutil.rmtree(t/'spam', ignore_errors=True)\\ntry:\\n    shutil.rmtree(t/'spam')\\n    second = 'no error'\\nexcept FileNotFoundError:\\n    second = 'FileNotFoundError'\\nout = ((t/'spam').exists(), second)\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "DeletionErrors",
+   "label": "Deletion errors",
+   "level": 3,
+   "parent": "PermanentDeletion",
+   "body": "The chapter gives rmtree no error handler (Sweigart, 2025); since Python 3.12 the onexc parameter names a function that receives the failing function, the path and the exception, and replaces the deprecated onerror, whose third argument is the tuple sys.exc_info() gives; a handler on a missing folder received its name and FileNotFoundError (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_DeletionErrors",
+   "class_iri": "http://example.org/sen0414/ch11#DeletionErrors",
+   "example": "shutil.rmtree(path, onexc=handler)",
+   "definition": "Instead of stopping, rmtree can call a handler with the failing function, the path and the exception; the onexc parameter exists since Python 3.12 and replaces the deprecated onerror, whose handler receives an exception-information tuple instead of the exception.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nseen = []\\nshutil.rmtree(t/\\'missing\\', onexc=lambda func, path, exc: seen.append((Path(path).name, type(exc).__name__)))\\nout = seen\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "[('missing', 'FileNotFoundError')]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nseen = []\\nshutil.rmtree(t/'missing', onexc=lambda func, path, exc: seen.append((Path(path).name, type(exc).__name__)))\\nout = seen\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SaferDeletion",
+   "label": "Safer deletion",
+   "level": 2,
+   "parent": "Deleting",
+   "body": "The chapter offers two protections against a bug that deletes the wrong files: a dry run and the recycle bin (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_SaferDeletion",
+   "class_iri": "http://example.org/sen0414/ch11#SaferDeletion"
+  },
+  {
+   "id": "DryRun",
+   "label": "Dry run",
+   "level": 3,
+   "parent": "SaferDeletion",
+   "body": "The chapter's program with the typo glob('*.rxt') would delete .rxt files, and a version with the delete commented out and a print added shows it (Sweigart, 2025); run on a folder holding a.txt and b.txt, the .rxt pattern matched 0 files and so printed nothing, where the pattern *.txt would have printed a.txt and b.txt, which is how the dry run exposes the typo; the chapter advises dry runs for copy, rename and move as well (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_DryRun",
+   "class_iri": "http://example.org/sen0414/ch11#DryRun",
+   "example": "print('Deleting', filename)  # os.unlink(filename)",
+   "definition": "A dry run replaces the dangerous call with a print, so the program shows what it would delete, copy, rename or move before it does so; the chapter's typo *.rxt for *.txt is found this way.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'a.txt\\').write_text(\\'x\\')\\n(t/\\'b.txt\\').write_text(\\'y\\')\\nfor i in range(n):\\n    (t/(\\'extra%d.txt\\' % i)).write_text(\\'x\\')\\nwould = [f.name for f in sorted(t.glob(\\'*.rxt\\'))]\\nwould_fixed = [f.name for f in sorted(t.glob(\\'*.txt\\'))]\\nout = (would, would_fixed, sorted(p.name for p in t.iterdir()))\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 0})",
+    "out": "([], ['a.txt', 'b.txt'], ['a.txt', 'b.txt'])",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'a.txt').write_text('x')\\n(t/'b.txt').write_text('y')\\nfor i in range(n):\\n    (t/('extra%d.txt' % i)).write_text('x')\\nwould = [f.name for f in sorted(t.glob('*.rxt'))]\\nwould_fixed = [f.name for f in sorted(t.glob('*.txt'))]\\nout = (would, would_fixed, sorted(p.name for p in t.iterdir()))\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "RecycleBin",
+   "label": "Recycle bin",
+   "level": 3,
+   "parent": "SaferDeletion",
+   "body": "The third-party send2trash module moves files and folders to the recycle bin or trash instead of deleting them, so that a mistake can be undone, it does not free disk space and it cannot restore a file (Sweigart, 2025); send2trash was not installed here (importlib found no module), its pages on PyPI and GitHub could not be opened for this study, and nothing about it was executed.",
+   "section_iri": "http://example.org/sen0414/ch11#S_RecycleBin",
+   "class_iri": "http://example.org/sen0414/ch11#RecycleBin",
+   "example": "send2trash.send2trash(path)",
+   "definition": "The third-party send2trash module moves a file or folder to the recycle bin or trash instead of deleting it, so it can be restored, but it frees no disk space and cannot take anything out of the bin; it needs installing and a desktop with a trash, so this course does not run it."
+  },
+  {
+   "id": "FolderTrees",
+   "label": "Folder trees",
+   "level": 1,
+   "parent": null,
+   "body": "Listing one folder and walking a whole tree of folders are the two ways the chapter reaches the files (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_FolderTrees",
+   "class_iri": "http://example.org/sen0414/ch11#FolderTrees"
+  },
+  {
+   "id": "Listing",
+   "label": "Listing",
+   "level": 2,
+   "parent": "FolderTrees",
+   "body": "os.listdir and Path.iterdir list one folder and do not enter its subfolders (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_Listing",
+   "class_iri": "http://example.org/sen0414/ch11#Listing"
+  },
+  {
+   "id": "ListDirectory",
+   "label": "List directory",
+   "level": 3,
+   "parent": "Listing",
+   "body": "os.listdir(path) returns a list of the names in one folder (Sweigart, 2025); for the chapter's spam folder it gave ['eggs', 'eggs2', 'file1.txt'] when sorted, and the documentation promises no order (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_ListDirectory",
+   "class_iri": "http://example.org/sen0414/ch11#ListDirectory",
+   "example": "os.listdir(path)",
+   "definition": "os.listdir returns the names in one folder as a list of strings, both files and folders, without their contents and in no promised order.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\'/\\'eggs\\').mkdir(parents=True)\\n(t/\\'spam\\'/\\'file1.txt\\').write_text(\\'x\\')\\nfor i in range(n):\\n    (t/\\'spam\\'/(\\'extra%d.txt\\' % i)).write_text(\\'x\\')\\nout = sorted(os.listdir(t/\\'spam\\'))\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 0})",
+    "out": "['eggs', 'file1.txt']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam'/'eggs').mkdir(parents=True)\\n(t/'spam'/'file1.txt').write_text('x')\\nfor i in range(n):\\n    (t/'spam'/('extra%d.txt' % i)).write_text('x')\\nout = sorted(os.listdir(t/'spam'))\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "IterateDirectory",
+   "label": "Iterate directory",
+   "level": 3,
+   "parent": "Listing",
+   "body": "Path.iterdir() gives a Path object for each entry of a folder (Sweigart, 2025); for a spam folder holding eggs and file1.txt it gave eggs (a folder) and file1.txt (a file) when sorted (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_IterateDirectory",
+   "class_iri": "http://example.org/sen0414/ch11#IterateDirectory",
+   "example": "Path.iterdir()",
+   "definition": "Path.iterdir yields a Path object for every entry of a folder, and like listdir it does not look into subfolders and promises no order.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\'/\\'eggs\\').mkdir(parents=True)\\n(t/\\'spam\\'/\\'file1.txt\\').write_text(\\'x\\')\\nfor i in range(n):\\n    (t/\\'spam\\'/(\\'extra%d.txt\\' % i)).write_text(\\'x\\')\\nout = sorted((p.name, p.is_dir()) for p in (t/\\'spam\\').iterdir())\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 0})",
+    "out": "[('eggs', True), ('file1.txt', False)]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam'/'eggs').mkdir(parents=True)\\n(t/'spam'/'file1.txt').write_text('x')\\nfor i in range(n):\\n    (t/'spam'/('extra%d.txt' % i)).write_text('x')\\nout = sorted((p.name, p.is_dir()) for p in (t/'spam').iterdir())\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "GlobPattern",
+   "label": "Glob pattern",
+   "level": 3,
+   "parent": "Listing",
+   "body": "The chapter finds files with Path.glob('*.rxt') in its deletion example (Sweigart, 2025); glob looks in one folder and rglob in the subfolders as well, so with a.txt, b.pdf, and sub/c.txt the pattern *.txt found a.txt with glob and a.txt and c.txt with rglob (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_GlobPattern",
+   "class_iri": "http://example.org/sen0414/ch11#GlobPattern",
+   "example": "folder.glob('*.txt'), folder.rglob('*.txt')",
+   "definition": "Path.glob yields the entries of one folder whose names match a wildcard pattern, and Path.rglob searches the subfolders too; its case_sensitive argument decides whether the case of letters matters in the pattern.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'sub\\').mkdir()\\n(t/\\'a.txt\\').write_text(\\'x\\')\\n(t/\\'b.pdf\\').write_text(\\'x\\')\\n(t/\\'sub\\'/\\'c.txt\\').write_text(\\'x\\')\\nfor i in range(n):\\n    (t/(\\'extra%d.txt\\' % i)).write_text(\\'x\\')\\nout = (sorted(p.name for p in t.glob(\\'*.txt\\')), sorted(p.name for p in t.rglob(\\'*.txt\\')))\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 0})",
+    "out": "(['a.txt'], ['a.txt', 'c.txt'])",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'sub').mkdir()\\n(t/'a.txt').write_text('x')\\n(t/'b.pdf').write_text('x')\\n(t/'sub'/'c.txt').write_text('x')\\nfor i in range(n):\\n    (t/('extra%d.txt' % i)).write_text('x')\\nout = (sorted(p.name for p in t.glob('*.txt')), sorted(p.name for p in t.rglob('*.txt')))\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "Walking",
+   "label": "Walking",
+   "level": 2,
+   "parent": "FolderTrees",
+   "body": "os.walk is the chapter's tool for doing something to every file in a folder and all folders below it (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_Walking",
+   "class_iri": "http://example.org/sen0414/ch11#Walking"
+  },
+  {
+   "id": "WalkTree",
+   "label": "Walk tree",
+   "level": 3,
+   "parent": "Walking",
+   "body": "for folder_name, subfolders, filenames in os.walk(top) gives on each pass the folder's name as a string, a list of its subfolder names and a list of its file names (Sweigart, 2025); for a tree like the chapter's, with spam, eggs, eggs2 and bacon, the sorted passes were spam with eggs and eggs2 and file1.txt, spam/eggs with bacon and file2.txt, spam/eggs/bacon with file4.txt and spam/eggs2 with nothing (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_WalkTree",
+   "class_iri": "http://example.org/sen0414/ch11#WalkTree",
+   "example": "for folder_name, subfolders, filenames in os.walk(top):",
+   "definition": "os.walk visits a folder and every folder below it and on each pass gives three values: the current folder's path as a string, the list of its subfolder names and the list of its file names, with no path in the names.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nfor d in (\\'spam/eggs/bacon\\', \\'spam/eggs2\\'):\\n    (t/d).mkdir(parents=True)\\nfor f in (\\'spam/file1.txt\\', \\'spam/eggs/file2.txt\\', \\'spam/eggs/bacon/file4.txt\\'):\\n    (t/f).write_text(\\'Hello\\')\\nout = [(Path(a).relative_to(t).as_posix(), sorted(b), sorted(c)) for a, b, c in os.walk(t/\\'spam\\')]\\nout.sort()\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "[('spam', ['eggs', 'eggs2'], ['file1.txt']), ('spam/eggs', ['bacon'], ['file2.txt']), ('spam/eggs/bacon', [], ['file4.txt']), ('spam/eggs2', [], [])]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nfor d in ('spam/eggs/bacon', 'spam/eggs2'):\\n    (t/d).mkdir(parents=True)\\nfor f in ('spam/file1.txt', 'spam/eggs/file2.txt', 'spam/eggs/bacon/file4.txt'):\\n    (t/f).write_text('Hello')\\nout = [(Path(a).relative_to(t).as_posix(), sorted(b), sorted(c)) for a, b, c in os.walk(t/'spam')]\\nout.sort()\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "WalkOrder",
+   "label": "Walk order",
+   "level": 3,
+   "parent": "Walking",
+   "body": "The chapter shows one order of output (Sweigart, 2025); the documentation says that the order of names depends on the file system, that a folder comes before its subfolders by default and that topdown=False turns this around, which a test on a folder a with a subfolder b gave as ., a, a/b top-down and a/b, a, . bottom-up; bottom-up is the order in which rmdir can empty a tree, as the documentation's own rmtree example does (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_WalkOrder",
+   "class_iri": "http://example.org/sen0414/ch11#WalkOrder",
+   "example": "os.walk(top, topdown=False)",
+   "definition": "By default os.walk gives a folder before its subfolders; with topdown=False it gives the subfolders first, which is the order needed to delete a tree with rmdir, and the order of names inside one folder depends on the file system.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'a\\'/\\'b\\').mkdir(parents=True)\\n(t/\\'a\\'/\\'b\\'/\\'f.txt\\').write_text(\\'x\\')\\nfor i in range(n):\\n    (t/(\\'extra%d\\' % i)).mkdir()\\ndown = [Path(a).relative_to(t).as_posix() for a, b, c in os.walk(t)]\\nup = [Path(a).relative_to(t).as_posix() for a, b, c in os.walk(t, topdown=False)]\\nout = (down, up)\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 0})",
+    "out": "(['.', 'a', 'a/b'], ['a/b', 'a', '.'])",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'a'/'b').mkdir(parents=True)\\n(t/'a'/'b'/'f.txt').write_text('x')\\nfor i in range(n):\\n    (t/('extra%d' % i)).mkdir()\\ndown = [Path(a).relative_to(t).as_posix() for a, b, c in os.walk(t)]\\nup = [Path(a).relative_to(t).as_posix() for a, b, c in os.walk(t, topdown=False)]\\nout = (down, up)\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PruneWalk",
+   "label": "Prune walk",
+   "level": 3,
+   "parent": "Walking",
+   "body": "The chapter does not prune (Sweigart, 2025); when walking top-down the loop can remove a name from the subfolder list in place and os.walk then skips that folder, so with keep, keep/inner and skip the visited folders were ., keep and keep/inner, and skip was not entered (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_PruneWalk",
+   "class_iri": "http://example.org/sen0414/ch11#PruneWalk",
+   "example": "subfolders.remove('name')",
+   "definition": "When walking top-down the loop may change the subfolder list in place, for example with remove or del, and os.walk then skips the removed folders; assigning a new list to the name does not prune.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nfor d in (\\'keep\\', \\'skip\\', \\'keep/inner\\'):\\n    (t/d).mkdir()\\nfor i in range(n):\\n    (t/(\\'extra%d\\' % i)).mkdir()\\nvisited = []\\nfor a, b, c in os.walk(t):\\n    if \\'skip\\' in b:\\n        b.remove(\\'skip\\')\\n    visited.append(Path(a).relative_to(t).as_posix())\\nout = sorted(visited)\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 0})",
+    "out": "['.', 'keep', 'keep/inner']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nfor d in ('keep', 'skip', 'keep/inner'):\\n    (t/d).mkdir()\\nfor i in range(n):\\n    (t/('extra%d' % i)).mkdir()\\nvisited = []\\nfor a, b, c in os.walk(t):\\n    if 'skip' in b:\\n        b.remove('skip')\\n    visited.append(Path(a).relative_to(t).as_posix())\\nout = sorted(visited)\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "WalkAndRename",
+   "label": "Walk and rename",
+   "level": 3,
+   "parent": "Walking",
+   "body": "The chapter's program renames each file to upper case while it walks (Sweigart, 2025); run under 3.14.4 on the chapter's tree it renamed file1.txt to FILE1.TXT and the files of eggs and bacon likewise, and the files of every folder were renamed while os.walk was still running (Python Software Foundation, 2026); the documentation says that adding or removing a file during the walk leaves it unspecified whether the name is listed (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_WalkAndRename",
+   "class_iri": "http://example.org/sen0414/ch11#WalkAndRename",
+   "example": "shutil.move(p / filename, p / filename.upper())",
+   "definition": "The chapter's program walks a tree and renames each file to upper case with shutil.move; the documentation leaves it unspecified whether a file renamed during the walk is listed, so the program is safe only because it renames files and never adds or removes folders.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\'/\\'eggs\\').mkdir(parents=True)\\n(t/\\'spam\\'/\\'file1.txt\\').write_text(\\'Hello\\')\\n(t/\\'spam\\'/\\'eggs\\'/\\'file2.txt\\').write_text(\\'Hello\\')\\nfor folder_name, subfolders, filenames in os.walk(t/\\'spam\\'):\\n    p = Path(folder_name)\\n    for filename in filenames:\\n        shutil.move(p / filename, p / filename.upper())\\nout = sorted(str(p.relative_to(t)) for p in (t/\\'spam\\').rglob(\\'*.TXT\\'))\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "['spam/FILE1.TXT', 'spam/eggs/FILE2.TXT']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam'/'eggs').mkdir(parents=True)\\n(t/'spam'/'file1.txt').write_text('Hello')\\n(t/'spam'/'eggs'/'file2.txt').write_text('Hello')\\nfor folder_name, subfolders, filenames in os.walk(t/'spam'):\\n    p = Path(folder_name)\\n    for filename in filenames:\\n        shutil.move(p / filename, p / filename.upper())\\nout = sorted(str(p.relative_to(t)) for p in (t/'spam').rglob('*.TXT'))\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PathWalk",
+   "label": "Path walk",
+   "level": 3,
+   "parent": "Walking",
+   "body": "Path.walk is not in the chapter; it was added in Python 3.12 and gives the folder as a Path and the subfolder and file names as strings, where os.walk gives the folder as a str (Python Software Foundation, 2026), and under 3.14.4 the first value was a str from os.walk and a PosixPath from Path.walk (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_PathWalk",
+   "class_iri": "http://example.org/sen0414/ch11#PathWalk",
+   "example": "folder.walk()",
+   "definition": "Path.walk, added in Python 3.12, is os.walk for Path objects: it yields the current folder as a Path, and lists of subfolder and file names as strings; it has top_down, on_error and follow_symlinks parameters.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\'/\\'eggs\\').mkdir(parents=True)\\n(t/\\'spam\\'/\\'file1.txt\\').write_text(\\'x\\')\\nout = sorted((type(d).__name__, d.relative_to(t).as_posix(), sorted(s), sorted(f)) for d, s, f in (t/\\'spam\\').walk())\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "[('PosixPath', 'spam', ['eggs'], ['file1.txt']), ('PosixPath', 'spam/eggs', [], [])]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam'/'eggs').mkdir(parents=True)\\n(t/'spam'/'file1.txt').write_text('x')\\nout = sorted((type(d).__name__, d.relative_to(t).as_posix(), sorted(s), sorted(f)) for d, s, f in (t/'spam').walk())\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ZipArchives",
+   "label": "Zip archives",
+   "level": 1,
+   "parent": null,
+   "body": "The zipfile module creates, reads and extracts ZIP archives (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_ZipArchives",
+   "class_iri": "http://example.org/sen0414/ch11#ZipArchives"
+  },
+  {
+   "id": "WritingZip",
+   "label": "Writing zip",
+   "level": 2,
+   "parent": "ZipArchives",
+   "body": "Writing an archive means opening a ZipFile in a mode and writing files into it (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_WritingZip",
+   "class_iri": "http://example.org/sen0414/ch11#WritingZip"
+  },
+  {
+   "id": "CreateZip",
+   "label": "Create zip",
+   "level": 3,
+   "parent": "WritingZip",
+   "body": "zipfile.ZipFile('example.zip', 'w') creates the archive, erasing one that exists, and write adds a file from the disk (Sweigart, 2025); the chapter's file1.txt holds 'Hello' * 10000, which is 50000 characters, and the archive made from it held the name file1.txt (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_CreateZip",
+   "class_iri": "http://example.org/sen0414/ch11#CreateZip",
+   "example": "zipfile.ZipFile('example.zip', 'w')",
+   "definition": "A ZipFile opened with mode 'w' creates a new ZIP file, or empties an existing one, and its write method adds a file from the disk under its path; using the object in a with statement closes it at the end.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'file1.txt\\').write_text(\\'Hello\\' * 10000)\\nwith zipfile.ZipFile(t/\\'example.zip\\', \\'w\\') as z:\\n    z.write(t/\\'file1.txt\\', arcname=\\'file1.txt\\', compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)\\nout = (zipfile.is_zipfile(t/\\'example.zip\\'), zipfile.ZipFile(t/\\'example.zip\\').namelist())\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "(True, ['file1.txt'])",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'file1.txt').write_text('Hello' * 10000)\\nwith zipfile.ZipFile(t/'example.zip', 'w') as z:\\n    z.write(t/'file1.txt', arcname='file1.txt', compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)\\nout = (zipfile.is_zipfile(t/'example.zip'), zipfile.ZipFile(t/'example.zip').namelist())\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CompressionMethod",
+   "label": "Compression method",
+   "level": 3,
+   "parent": "WritingZip",
+   "body": "write compresses only when compress_type=zipfile.ZIP_DEFLATED is passed; without it the file is stored at its regular size (Sweigart, 2025); under 3.14.4 ZIP_STORED is 0 and ZIP_DEFLATED is 8, the stored member of 50000 bytes stayed 50000 bytes and the deflated one was smaller, and ZIP_BZIP2, ZIP_LZMA and ZIP_ZSTANDARD are 12, 14 and 93, the last one new in Python 3.14 (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_CompressionMethod",
+   "class_iri": "http://example.org/sen0414/ch11#CompressionMethod",
+   "example": "compress_type=zipfile.ZIP_DEFLATED",
+   "definition": "The compression method is ZIP_STORED by default, which does not compress at all, or ZIP_DEFLATED, which the chapter recommends; the standard library also offers ZIP_BZIP2 and ZIP_LZMA, and ZIP_ZSTANDARD since Python 3.14.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nsizes = {}\\nfor name, method in ((\\'stored\\', zipfile.ZIP_STORED), (\\'deflated\\', zipfile.ZIP_DEFLATED)):\\n    b = io.BytesIO()\\n    with zipfile.ZipFile(b, \\'w\\') as z:\\n        z.writestr(\\'a.txt\\', \\'Hello\\' * (n * 1000), compress_type=method)\\n    sizes[name] = zipfile.ZipFile(b).getinfo(\\'a.txt\\').compress_size\\nout = (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED, sizes[\\'stored\\'], sizes[\\'deflated\\'] < sizes[\\'stored\\'])\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 10})",
+    "out": "(0, 8, 50000, True)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nsizes = {}\\nfor name, method in (('stored', zipfile.ZIP_STORED), ('deflated', zipfile.ZIP_DEFLATED)):\\n    b = io.BytesIO()\\n    with zipfile.ZipFile(b, 'w') as z:\\n        z.writestr('a.txt', 'Hello' * (n * 1000), compress_type=method)\\n    sizes[name] = zipfile.ZipFile(b).getinfo('a.txt').compress_size\\nout = (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED, sizes['stored'], sizes['deflated'] < sizes['stored'])\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "10",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CompressionLevel",
+   "label": "Compression level",
+   "level": 3,
+   "parent": "WritingZip",
+   "body": "compresslevel is a value from 0 to 9, added in Python 3.7, and the chapter says 9 is slowest and most compressed and that the default is 6 (Sweigart, 2025); on the chapter's data the compressed sizes under 3.14.4 were 50010 bytes at level 0, 293 at level 1, 97 at level 6 and 97 at level 9, and on a less repetitive text the default size equalled the size at level 6 and not that at level 9, which matches the documentation that the default of zlib is currently level 6 (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_CompressionLevel",
+   "class_iri": "http://example.org/sen0414/ch11#CompressionLevel",
+   "example": "compresslevel=9",
+   "definition": "compresslevel picks the compression effort for ZIP_DEFLATED from 0 to 9; higher is slower and smaller, 9 is the most compressed, and the default level is that of zlib, which is level 6.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nsizes = {}\\nfor lvl in (0, 1, 6, 9):\\n    b = io.BytesIO()\\n    with zipfile.ZipFile(b, \\'w\\') as z:\\n        z.writestr(\\'a.txt\\', \\'Hello\\' * (n * 1000), compress_type=zipfile.ZIP_DEFLATED, compresslevel=lvl)\\n    sizes[lvl] = zipfile.ZipFile(b).getinfo(\\'a.txt\\').compress_size\\nout = (sizes[0] > 50000, sizes[0] > sizes[1] > sizes[9], sizes[9] <= sizes[6], sizes[9] < 200)\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 10})",
+    "out": "(True, True, True, True)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nsizes = {}\\nfor lvl in (0, 1, 6, 9):\\n    b = io.BytesIO()\\n    with zipfile.ZipFile(b, 'w') as z:\\n        z.writestr('a.txt', 'Hello' * (n * 1000), compress_type=zipfile.ZIP_DEFLATED, compresslevel=lvl)\\n    sizes[lvl] = zipfile.ZipFile(b).getinfo('a.txt').compress_size\\nout = (sizes[0] > 50000, sizes[0] > sizes[1] > sizes[9], sizes[9] <= sizes[6], sizes[9] < 200)\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "10",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "AppendToZip",
+   "label": "Append to zip",
+   "level": 3,
+   "parent": "WritingZip",
+   "body": "Mode 'a' adds to an existing archive and mode 'w' erases it (Sweigart, 2025); under 3.14.4 after 'a' an archive held one.txt and two.txt, mode 'x' on the existing file raised FileExistsError, and 'w' left only the new member; the exclusive mode is not in the chapter (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_AppendToZip",
+   "class_iri": "http://example.org/sen0414/ch11#AppendToZip",
+   "example": "zipfile.ZipFile('example.zip', 'a')",
+   "definition": "Mode 'a' adds files to an existing ZIP file and keeps what is there, mode 'w' erases it first, and mode 'x' refuses to touch an existing file with FileExistsError.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\np = t/\\'z.zip\\'\\nwith zipfile.ZipFile(p, \\'w\\') as z:\\n    z.writestr(\\'one.txt\\', \\'1\\')\\nwith zipfile.ZipFile(p, \\'a\\') as z:\\n    z.writestr(\\'two.txt\\', \\'2\\')\\nafter_a = zipfile.ZipFile(p).namelist()\\ntry:\\n    zipfile.ZipFile(p, \\'x\\')\\n    x = \\'no error\\'\\nexcept FileExistsError:\\n    x = \\'FileExistsError\\'\\nwith zipfile.ZipFile(p, \\'w\\') as z:\\n    z.writestr(\\'three.txt\\', \\'3\\')\\nout = (after_a, x, zipfile.ZipFile(p).namelist())\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "(['one.txt', 'two.txt'], 'FileExistsError', ['three.txt'])",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\np = t/'z.zip'\\nwith zipfile.ZipFile(p, 'w') as z:\\n    z.writestr('one.txt', '1')\\nwith zipfile.ZipFile(p, 'a') as z:\\n    z.writestr('two.txt', '2')\\nafter_a = zipfile.ZipFile(p).namelist()\\ntry:\\n    zipfile.ZipFile(p, 'x')\\n    x = 'no error'\\nexcept FileExistsError:\\n    x = 'FileExistsError'\\nwith zipfile.ZipFile(p, 'w') as z:\\n    z.writestr('three.txt', '3')\\nout = (after_a, x, zipfile.ZipFile(p).namelist())\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ReadingZip",
+   "label": "Reading zip",
+   "level": 2,
+   "parent": "ZipArchives",
+   "body": "Reading an archive starts with a ZipFile object opened on its file name (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_ReadingZip",
+   "class_iri": "http://example.org/sen0414/ch11#ReadingZip"
+  },
+  {
+   "id": "NameList",
+   "label": "Name list",
+   "level": 3,
+   "parent": "ReadingZip",
+   "body": "zipfile.ZipFile('example.zip') opens the archive and namelist() returns the member names (Sweigart, 2025); for the chapter's archive it gave ['file1.txt'], and folders appear with a closing slash, as in emptydir/ made by ZipFile.mkdir, which was added in Python 3.11 (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_NameList",
+   "class_iri": "http://example.org/sen0414/ch11#NameList",
+   "example": "example_zip.namelist()",
+   "definition": "ZipFile(name) opens an archive for reading, and namelist returns the names of its members as a list of strings, folders included with a closing slash; the ZipFile object is a different thing from the zipfile module.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nwith zipfile.ZipFile(t/\\'z.zip\\', \\'w\\') as z:\\n    z.writestr(\\'file1.txt\\', \\'x\\')\\n    z.writestr(\\'sub/file2.txt\\', \\'y\\')\\n    z.mkdir(\\'emptydir\\')\\nfor i in range(n):\\n    zipfile.ZipFile(t/\\'z.zip\\', \\'a\\').writestr(\\'extra%d.txt\\' % i, \\'E\\')\\nout = zipfile.ZipFile(t/\\'z.zip\\').namelist()\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 0})",
+    "out": "['file1.txt', 'sub/file2.txt', 'emptydir/']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nwith zipfile.ZipFile(t/'z.zip', 'w') as z:\\n    z.writestr('file1.txt', 'x')\\n    z.writestr('sub/file2.txt', 'y')\\n    z.mkdir('emptydir')\\nfor i in range(n):\\n    zipfile.ZipFile(t/'z.zip', 'a').writestr('extra%d.txt' % i, 'E')\\nout = zipfile.ZipFile(t/'z.zip').namelist()\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ZipInfoSizes",
+   "label": "Zip info sizes",
+   "level": 3,
+   "parent": "ReadingZip",
+   "body": "getinfo('file1.txt') returns a ZipInfo whose file_size and compress_size hold the original and the compressed size (Sweigart, 2025); under 3.14.4 they were 50000 and 97 for the chapter's file at level 9 (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_ZipInfoSizes",
+   "class_iri": "http://example.org/sen0414/ch11#ZipInfoSizes",
+   "example": "example_zip.getinfo('file1.txt').compress_size",
+   "definition": "getinfo returns a ZipInfo for one member of the archive, whose file_size is the original size in bytes and compress_size the size inside the archive.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nb = io.BytesIO()\\nwith zipfile.ZipFile(b, \\'w\\') as z:\\n    z.writestr(\\'file1.txt\\', \\'Hello\\' * (n * 1000), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)\\ninfo = zipfile.ZipFile(b).getinfo(\\'file1.txt\\')\\nout = (info.filename, info.file_size, info.compress_size < info.file_size)\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 10})",
+    "out": "('file1.txt', 50000, True)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nb = io.BytesIO()\\nwith zipfile.ZipFile(b, 'w') as z:\\n    z.writestr('file1.txt', 'Hello' * (n * 1000), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)\\ninfo = zipfile.ZipFile(b).getinfo('file1.txt')\\nout = (info.filename, info.file_size, info.compress_size < info.file_size)\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "10",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CompressionRatio",
+   "label": "Compression ratio",
+   "level": 3,
+   "parent": "ReadingZip",
+   "body": "The chapter divides the two sizes and prints Compressed file is 515.46x smaller! (Sweigart, 2025); that output reproduced under 3.14.4 and the same data was stored in 97 bytes, but the chapter's prose says the file compresses to about 213 bytes, which neither the level 9 nor the default level gave (97), and I could not find what the 213 belongs to (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_CompressionRatio",
+   "class_iri": "http://example.org/sen0414/ch11#CompressionRatio",
+   "example": "file_size / compress_size",
+   "definition": "The ratio of the original size to the compressed size tells how well the data compressed; highly repetitive text such as 'Hello' repeated 10000 times compresses about 515 times, and data that is already compressed hardly at all.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nb = io.BytesIO()\\nwith zipfile.ZipFile(b, \\'w\\') as z:\\n    z.writestr(\\'file1.txt\\', \\'Hello\\' * (n * 1000), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)\\ninfo = zipfile.ZipFile(b).getinfo(\\'file1.txt\\')\\nout = (info.file_size, info.file_size / info.compress_size > 100, info.compress_size < 200)\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 10})",
+    "out": "(50000, True, True)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nb = io.BytesIO()\\nwith zipfile.ZipFile(b, 'w') as z:\\n    z.writestr('file1.txt', 'Hello' * (n * 1000), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)\\ninfo = zipfile.ZipFile(b).getinfo('file1.txt')\\nout = (info.file_size, info.file_size / info.compress_size > 100, info.compress_size < 200)\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "10",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ExtractingZip",
+   "label": "Extracting zip",
+   "level": 2,
+   "parent": "ZipArchives",
+   "body": "extractall and extract take files out of an archive (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_ExtractingZip",
+   "class_iri": "http://example.org/sen0414/ch11#ExtractingZip"
+  },
+  {
+   "id": "ExtractAll",
+   "label": "Extract all",
+   "level": 3,
+   "parent": "ExtractingZip",
+   "body": "extractall() extracts everything into the current folder, or into a folder named, which is created when missing (Sweigart, 2025); under 3.14.4 extracting an archive of a.txt and sub/b.txt gave a.txt, sub and sub/b.txt, and the documentation notes that extracting twice overwrites without asking (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_ExtractAll",
+   "class_iri": "http://example.org/sen0414/ch11#ExtractAll",
+   "example": "example_zip.extractall(folder)",
+   "definition": "extractall writes every member of the archive into the current folder, or into the folder named, which is created when missing, and it overwrites files of the same name without asking.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nwith zipfile.ZipFile(t/\\'z.zip\\', \\'w\\') as z:\\n    z.writestr(\\'a.txt\\', \\'A\\')\\n    z.writestr(\\'sub/b.txt\\', \\'B\\')\\nfor i in range(n):\\n    zipfile.ZipFile(t/\\'z.zip\\', \\'a\\').writestr(\\'extra%d.txt\\' % i, \\'E\\')\\nzipfile.ZipFile(t/\\'z.zip\\').extractall(t/\\'out\\')\\nout = sorted(p.relative_to(t/\\'out\\').as_posix() for p in (t/\\'out\\').rglob(\\'*\\'))\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 0})",
+    "out": "['a.txt', 'sub', 'sub/b.txt']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nwith zipfile.ZipFile(t/'z.zip', 'w') as z:\\n    z.writestr('a.txt', 'A')\\n    z.writestr('sub/b.txt', 'B')\\nfor i in range(n):\\n    zipfile.ZipFile(t/'z.zip', 'a').writestr('extra%d.txt' % i, 'E')\\nzipfile.ZipFile(t/'z.zip').extractall(t/'out')\\nout = sorted(p.relative_to(t/'out').as_posix() for p in (t/'out').rglob('*'))\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ExtractOne",
+   "label": "Extract one",
+   "level": 3,
+   "parent": "ExtractingZip",
+   "body": "extract('file1.txt', folder) takes out one member, whose name must be in namelist() (Sweigart, 2025); under 3.14.4 it returned the path it wrote, created the missing folders, and a name that was not in the archive raised KeyError (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_ExtractOne",
+   "class_iri": "http://example.org/sen0414/ch11#ExtractOne",
+   "example": "example_zip.extract('file1.txt', folder)",
+   "definition": "extract takes out one member, whose name must be one of those namelist returns, and returns the path it wrote; a name that is not in the archive raises KeyError.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nwith zipfile.ZipFile(t/\\'z.zip\\', \\'w\\') as z:\\n    z.writestr(\\'a.txt\\', \\'A\\')\\nzf = zipfile.ZipFile(t/\\'z.zip\\')\\nr = zf.extract(\\'a.txt\\', t/\\'new\\'/\\'folder\\')\\ntry:\\n    zf.extract(\\'nothing.txt\\', t)\\n    k = \\'no error\\'\\nexcept KeyError:\\n    k = \\'KeyError\\'\\nout = (Path(r).relative_to(t).as_posix(), k)\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "('new/folder/a.txt', 'KeyError')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nwith zipfile.ZipFile(t/'z.zip', 'w') as z:\\n    z.writestr('a.txt', 'A')\\nzf = zipfile.ZipFile(t/'z.zip')\\nr = zf.extract('a.txt', t/'new'/'folder')\\ntry:\\n    zf.extract('nothing.txt', t)\\n    k = 'no error'\\nexcept KeyError:\\n    k = 'KeyError'\\nout = (Path(r).relative_to(t).as_posix(), k)\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ExtractionSafety",
+   "label": "Extraction safety",
+   "level": 3,
+   "parent": "ExtractingZip",
+   "body": "The chapter does not warn about untrusted archives (Sweigart, 2025); the documentation says to inspect them first, and under 3.14.4 an archive whose members were named ../../evil.txt and /abs.txt extracted to safe/evil.txt and safe/abs.txt, and ok/../../third.txt to safe/ok/third.txt, so nothing landed outside the target folder (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_ExtractionSafety",
+   "class_iri": "http://example.org/sen0414/ch11#ExtractionSafety",
+   "example": "a member named '../../evil.txt'",
+   "definition": "An archive from an untrusted source may carry member names with .. or a leading slash; the zipfile module removes them on extraction so nothing lands outside the target folder, but the documentation still says never to extract untrusted archives without inspecting them first.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nb = io.BytesIO()\\nwith zipfile.ZipFile(b, \\'w\\') as z:\\n    z.writestr(\\'../../evil.txt\\', \\'x\\')\\n    z.writestr(\\'/abs.txt\\', \\'y\\')\\nz = zipfile.ZipFile(b)\\nz.extractall(t/\\'safe\\')\\nout = (z.namelist(), sorted(p.relative_to(t).as_posix() for p in t.rglob(\\'*.txt\\')))\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "(['../../evil.txt', '/abs.txt'], ['safe/abs.txt', 'safe/evil.txt'])",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nb = io.BytesIO()\\nwith zipfile.ZipFile(b, 'w') as z:\\n    z.writestr('../../evil.txt', 'x')\\n    z.writestr('/abs.txt', 'y')\\nz = zipfile.ZipFile(b)\\nz.extractall(t/'safe')\\nout = (z.namelist(), sorted(p.relative_to(t).as_posix() for p in t.rglob('*.txt')))\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ArchiveHelpers",
+   "label": "Archive helpers",
+   "level": 2,
+   "parent": "ZipArchives",
+   "body": "shutil has archive functions that are not in the chapter (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_ArchiveHelpers",
+   "class_iri": "http://example.org/sen0414/ch11#ArchiveHelpers"
+  },
+  {
+   "id": "MakeArchive",
+   "label": "Make archive",
+   "level": 3,
+   "parent": "ArchiveHelpers",
+   "body": "shutil.make_archive(base_name, 'zip', root_dir, base_dir) builds a ZIP file of a folder in one call and returns its name (Python Software Foundation, 2026); under 3.14.4 it made snap.zip with spam/, spam/a.txt, spam/sub/ and spam/sub/b.txt, with deflate (8) for the files and folder entries stored (0), and the formats offered were bztar, gztar, tar, xztar, zip and zstdtar (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_MakeArchive",
+   "class_iri": "http://example.org/sen0414/ch11#MakeArchive",
+   "example": "shutil.make_archive(name, 'zip', root_dir, base_dir)",
+   "definition": "shutil.make_archive builds a zip, tar or other archive of a folder in one call and returns the archive's name; its zip files are compressed with the deflate method, where the chapter's ZipFile.write compresses only when told to.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\'/\\'sub\\').mkdir(parents=True)\\n(t/\\'spam\\'/\\'a.txt\\').write_text(\\'Hello\\' * 100)\\n(t/\\'spam\\'/\\'sub\\'/\\'b.txt\\').write_text(\\'B\\')\\nname = shutil.make_archive(str(t/\\'snap\\'), \\'zip\\', root_dir=t, base_dir=\\'spam\\')\\nzf = zipfile.ZipFile(name)\\nout = (Path(name).name, sorted(zf.namelist()), {i.compress_type for i in zf.infolist() if not i.is_dir()})\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "('snap.zip', ['spam/', 'spam/a.txt', 'spam/sub/', 'spam/sub/b.txt'], {8})",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam'/'sub').mkdir(parents=True)\\n(t/'spam'/'a.txt').write_text('Hello' * 100)\\n(t/'spam'/'sub'/'b.txt').write_text('B')\\nname = shutil.make_archive(str(t/'snap'), 'zip', root_dir=t, base_dir='spam')\\nzf = zipfile.ZipFile(name)\\nout = (Path(name).name, sorted(zf.namelist()), {i.compress_type for i in zf.infolist() if not i.is_dir()})\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "UnpackArchive",
+   "label": "Unpack archive",
+   "level": 3,
+   "parent": "ArchiveHelpers",
+   "body": "shutil.unpack_archive(filename, extract_dir) extracts an archive by the extension of its name; for a ZIP file it extracted a.txt, sub and sub/b.txt under 3.14.4, and the documentation warns never to unpack archives from untrusted sources without inspection, adding that since 3.14 the defaults of both built-in formats prevent the most dangerous cases (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_UnpackArchive",
+   "class_iri": "http://example.org/sen0414/ch11#UnpackArchive",
+   "example": "shutil.unpack_archive(filename, extract_dir)",
+   "definition": "shutil.unpack_archive extracts an archive, choosing the format from the file name's extension, into the folder named or the current one; for a zip file it uses the zipfile module.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nwith zipfile.ZipFile(t/\\'z.zip\\', \\'w\\') as z:\\n    z.writestr(\\'a.txt\\', \\'A\\')\\n    z.writestr(\\'sub/b.txt\\', \\'B\\')\\nfor i in range(n):\\n    zipfile.ZipFile(t/\\'z.zip\\', \\'a\\').writestr(\\'extra%d.txt\\' % i, \\'E\\')\\nshutil.unpack_archive(t/\\'z.zip\\', t/\\'un\\')\\nout = sorted(p.relative_to(t/\\'un\\').as_posix() for p in (t/\\'un\\').rglob(\\'*\\'))\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 0})",
+    "out": "['a.txt', 'sub', 'sub/b.txt']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nwith zipfile.ZipFile(t/'z.zip', 'w') as z:\\n    z.writestr('a.txt', 'A')\\n    z.writestr('sub/b.txt', 'B')\\nfor i in range(n):\\n    zipfile.ZipFile(t/'z.zip', 'a').writestr('extra%d.txt' % i, 'E')\\nshutil.unpack_archive(t/'z.zip', t/'un')\\nout = sorted(p.relative_to(t/'un').as_posix() for p in (t/'un').rglob('*'))\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "BackupProject",
+   "label": "Backup project",
+   "level": 1,
+   "parent": null,
+   "body": "Project 5 of the chapter backs a folder up into numbered ZIP files (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_BackupProject",
+   "class_iri": "http://example.org/sen0414/ch11#BackupProject"
+  },
+  {
+   "id": "ZipNaming",
+   "label": "Zip naming",
+   "level": 2,
+   "parent": "BackupProject",
+   "body": "The program first works out the name of the archive (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_ZipNaming",
+   "class_iri": "http://example.org/sen0414/ch11#ZipNaming"
+  },
+  {
+   "id": "NextZipName",
+   "label": "Next zip name",
+   "level": 3,
+   "parent": "ZipNaming",
+   "body": "The name is the last part of the folder's path, an underscore and a number that starts at 1 and grows until no such file exists (Sweigart, 2025); three runs against an empty working folder gave spam_1.zip, spam_2.zip and spam_3.zip, and the existence test looks in the current working directory, not next to the folder (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_NextZipName",
+   "class_iri": "http://example.org/sen0414/ch11#NextZipName",
+   "example": "zip_filename = Path(folder.parts[-1] + '_' + str(number) + '.zip')",
+   "definition": "The backup program names its archive after the last part of the folder's path, then counts up from 1 and stops at the first name that does not exist yet, so each run makes the next numbered snapshot; it tests names in the current working directory.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nos.chdir(t)\\nfolder = Path(\\'/home/al/spam\\')\\nmade = []\\nfor run in range(n):\\n    number = 1\\n    while True:\\n        zip_filename = Path(folder.parts[-1] + \\'_\\' + str(number) + \\'.zip\\')\\n        if not zip_filename.exists():\\n            break\\n        number = number + 1\\n    zip_filename.write_text(\\'\\')\\n    made.append(zip_filename.name)\\nos.chdir(\\'/\\')\\nout = made\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 3})",
+    "out": "['spam_1.zip', 'spam_2.zip', 'spam_3.zip']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nos.chdir(t)\\nfolder = Path('/home/al/spam')\\nmade = []\\nfor run in range(n):\\n    number = 1\\n    while True:\\n        zip_filename = Path(folder.parts[-1] + '_' + str(number) + '.zip')\\n        if not zip_filename.exists():\\n            break\\n        number = number + 1\\n    zip_filename.write_text('')\\n    made.append(zip_filename.name)\\nos.chdir('/')\\nout = made\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "3",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ZipBuilding",
+   "label": "Zip building",
+   "level": 2,
+   "parent": "BackupProject",
+   "body": "Then it walks the folder and writes every file into the archive (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_ZipBuilding",
+   "class_iri": "http://example.org/sen0414/ch11#ZipBuilding"
+  },
+  {
+   "id": "WalkIntoZip",
+   "label": "Walk into zip",
+   "level": 3,
+   "parent": "ZipBuilding",
+   "body": "The program opens the ZipFile in write mode and in os.walk writes each file with backup_zip.write(folder_name / filename) (Sweigart, 2025); the run printed Creating spam_1.zip..., Adding files in folder, Adding file file1.txt... and Done., as the chapter shows, and a second run made spam_2.zip; an empty folder is not recorded, because only files are written(Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_WalkIntoZip",
+   "class_iri": "http://example.org/sen0414/ch11#WalkIntoZip",
+   "example": "backup_zip.write(folder_name / filename)",
+   "definition": "The program walks the folder with os.walk and writes every file into the archive, so one loop inside another covers the whole tree; folders that hold no files are not recorded in the archive.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\'/\\'sub\\').mkdir(parents=True)\\n(t/\\'spam\\'/\\'empty\\').mkdir()\\n(t/\\'spam\\'/\\'file1.txt\\').write_text(\\'Hello\\')\\n(t/\\'spam\\'/\\'sub\\'/\\'f2.txt\\').write_text(\\'x\\')\\nbackup_zip = zipfile.ZipFile(t/\\'spam_1.zip\\', \\'w\\')\\nfor folder_name, subfolders, filenames in os.walk(t/\\'spam\\'):\\n    folder_name = Path(folder_name)\\n    for filename in filenames:\\n        backup_zip.write(folder_name / filename, arcname=(folder_name / filename).relative_to(t))\\nbackup_zip.close()\\nout = sorted(zipfile.ZipFile(t/\\'spam_1.zip\\').namelist())\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "['spam/file1.txt', 'spam/sub/f2.txt']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam'/'sub').mkdir(parents=True)\\n(t/'spam'/'empty').mkdir()\\n(t/'spam'/'file1.txt').write_text('Hello')\\n(t/'spam'/'sub'/'f2.txt').write_text('x')\\nbackup_zip = zipfile.ZipFile(t/'spam_1.zip', 'w')\\nfor folder_name, subfolders, filenames in os.walk(t/'spam'):\\n    folder_name = Path(folder_name)\\n    for filename in filenames:\\n        backup_zip.write(folder_name / filename, arcname=(folder_name / filename).relative_to(t))\\nbackup_zip.close()\\nout = sorted(zipfile.ZipFile(t/'spam_1.zip').namelist())\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ArchiveNames",
+   "label": "Archive names",
+   "level": 3,
+   "parent": "ZipBuilding",
+   "body": "The chapter's program passes absolute paths to write (Sweigart, 2025); under 3.14.4 the member name was the whole path of the file without its leading slash, ending in spam/file1.txt, and the documentation says write stores the name of the file less a drive letter and leading separators unless arcname is given (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_ArchiveNames",
+   "class_iri": "http://example.org/sen0414/ch11#ArchiveNames",
+   "example": "backup_zip.write(path, arcname=relative_path)",
+   "definition": "ZipFile.write stores a file under the path it was given, less any drive letter and leading slash, so the chapter's program, which passes absolute paths, stores the folder's whole path inside the archive; passing arcname with a path relative to the folder's parent keeps the archive tidy.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\').mkdir()\\n(t/\\'spam\\'/\\'file1.txt\\').write_text(\\'Hello\\')\\nwith zipfile.ZipFile(t/\\'abs.zip\\', \\'w\\') as z:\\n    z.write(t/\\'spam\\'/\\'file1.txt\\')\\nname = zipfile.ZipFile(t/\\'abs.zip\\').namelist()[0]\\nout = (name.endswith(\\'spam/file1.txt\\'), len(name) > len(\\'spam/file1.txt\\'), str(t).lstrip(\\'/\\') + \\'/spam/file1.txt\\' == name)\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "(True, True, True)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam').mkdir()\\n(t/'spam'/'file1.txt').write_text('Hello')\\nwith zipfile.ZipFile(t/'abs.zip', 'w') as z:\\n    z.write(t/'spam'/'file1.txt')\\nname = zipfile.ZipFile(t/'abs.zip').namelist()[0]\\nout = (name.endswith('spam/file1.txt'), len(name) > len('spam/file1.txt'), str(t).lstrip('/') + '/spam/file1.txt' == name)\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "StoredByDefault",
+   "label": "Stored by default",
+   "level": 3,
+   "parent": "ZipBuilding",
+   "body": "The chapter opens the archive with zipfile.ZipFile(zip_filename, 'w') and calls write without a compression type (Sweigart, 2025); under 3.14.4 its members had compress type 0 and the 5-byte test file was stored as 5 bytes, so the snapshot was not compressed, and a file of 'Hello' * 1000 was more than 5000 bytes stored and under 500 deflated (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_StoredByDefault",
+   "class_iri": "http://example.org/sen0414/ch11#StoredByDefault",
+   "example": "backup_zip = zipfile.ZipFile(zip_filename, 'w')",
+   "definition": "The chapter's backup program opens the archive without a compression argument, so the default ZIP_STORED applies and the snapshot is not compressed; it is slightly larger than its files until compression=zipfile.ZIP_DEFLATED is passed.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\').mkdir()\\n(t/\\'spam\\'/\\'file1.txt\\').write_text(\\'Hello\\' * (n * 100))\\nsizes = []\\nfor comp in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED):\\n    with zipfile.ZipFile(t/(\\'c%d.zip\\' % comp), \\'w\\', compression=comp) as z:\\n        z.write(t/\\'spam\\'/\\'file1.txt\\', arcname=\\'file1.txt\\')\\n    sizes.append(os.path.getsize(t/(\\'c%d.zip\\' % comp)))\\nout = (sizes[0] > 5000, sizes[1] < 500)\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 10})",
+    "out": "(True, True)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam').mkdir()\\n(t/'spam'/'file1.txt').write_text('Hello' * (n * 100))\\nsizes = []\\nfor comp in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED):\\n    with zipfile.ZipFile(t/('c%d.zip' % comp), 'w', compression=comp) as z:\\n        z.write(t/'spam'/'file1.txt', arcname='file1.txt')\\n    sizes.append(os.path.getsize(t/('c%d.zip' % comp)))\\nout = (sizes[0] > 5000, sizes[1] < 500)\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "10",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SelfInclusion",
+   "label": "Self inclusion",
+   "level": 3,
+   "parent": "ZipBuilding",
+   "body": "The chapter's program puts the archive in the working folder (Sweigart, 2025); with the working folder inside the folder being backed up, os.walk listed file1.txt and spam_1.zip and the program wrote the archive into itself, and with the folder given as Path('.') the expression folder.parts[-1] raised IndexError: tuple index out of range, because Path('.').parts is an empty tuple (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_SelfInclusion",
+   "class_iri": "http://example.org/sen0414/ch11#SelfInclusion",
+   "example": "os.walk(folder) while the new zip is inside folder",
+   "definition": "If the archive is created inside the folder being backed up, the walk lists the new archive among the files and the program writes it into itself; the program should put its archives elsewhere or skip them.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'spam\\').mkdir()\\n(t/\\'spam\\'/\\'file1.txt\\').write_text(\\'Hello\\')\\nz = zipfile.ZipFile(t/\\'spam\\'/\\'spam_1.zip\\', \\'w\\')\\nadded = []\\nfor folder_name, subfolders, filenames in os.walk(t/\\'spam\\'):\\n    for filename in sorted(filenames):\\n        added.append(filename)\\n        z.write(Path(folder_name) / filename, arcname=filename)\\nz.close()\\nout = added\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "['file1.txt', 'spam_1.zip']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'spam').mkdir()\\n(t/'spam'/'file1.txt').write_text('Hello')\\nz = zipfile.ZipFile(t/'spam'/'spam_1.zip', 'w')\\nadded = []\\nfor folder_name, subfolders, filenames in os.walk(t/'spam'):\\n    for filename in sorted(filenames):\\n        added.append(filename)\\n        z.write(Path(folder_name) / filename, arcname=filename)\\nz.close()\\nout = added\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PracticeWork",
+   "label": "Practice work",
+   "level": 1,
+   "parent": null,
+   "body": "Chapter 11 ends with a summary, four practice questions and four practice programs (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_PracticeWork",
+   "class_iri": "http://example.org/sen0414/ch11#PracticeWork"
+  },
+  {
+   "id": "Questions",
+   "label": "Questions",
+   "level": 2,
+   "parent": "PracticeWork",
+   "body": "The four practice questions test the vocabulary of the chapter (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_Questions",
+   "class_iri": "http://example.org/sen0414/ch11#Questions"
+  },
+  {
+   "id": "PracticeQuestions",
+   "label": "Practice questions",
+   "level": 3,
+   "parent": "Questions",
+   "body": "The questions ask about shutil.copy and shutil.copytree, about renaming, about the delete functions of send2trash and shutil, and about the ZipFile method equivalent to open() (Sweigart, 2025); run under 3.14.4 shutil.copy on a folder raised IsADirectoryError on this system and copytree copied it, shutil.move renames, and the equivalent of open() is the ZipFile constructor, not the method ZipFile.open, which opens one member of the archive (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_PracticeQuestions",
+   "class_iri": "http://example.org/sen0414/ch11#PracticeQuestions",
+   "example": "shutil.copy() versus shutil.copytree()",
+   "definition": "The four practice questions ask how shutil.copy differs from shutil.copytree, which function renames files, how the delete functions of send2trash and shutil differ, and which ZipFile method matches open() on a file; the answers follow from the concepts of this chapter.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'f.txt\\').write_text(\\'x\\')\\n(t/\\'d\\').mkdir()\\n(t/\\'d\\'/\\'g.txt\\').write_text(\\'y\\')\\ntry:\\n    shutil.copy(t/\\'d\\', t/\\'dcopy\\')\\n    copy_on_folder = \\'copied\\'\\nexcept IsADirectoryError:\\n    copy_on_folder = \\'IsADirectoryError\\'\\nshutil.copytree(t/\\'d\\', t/\\'dtree\\')\\nout = (copy_on_folder, [p.name for p in (t/\\'dtree\\').iterdir()], zipfile.ZipFile.__name__, zipfile.ZipFile.open.__qualname__)\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "('IsADirectoryError', ['g.txt'], 'ZipFile', 'ZipFile.open')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'f.txt').write_text('x')\\n(t/'d').mkdir()\\n(t/'d'/'g.txt').write_text('y')\\ntry:\\n    shutil.copy(t/'d', t/'dcopy')\\n    copy_on_folder = 'copied'\\nexcept IsADirectoryError:\\n    copy_on_folder = 'IsADirectoryError'\\nshutil.copytree(t/'d', t/'dtree')\\nout = (copy_on_folder, [p.name for p in (t/'dtree').iterdir()], zipfile.ZipFile.__name__, zipfile.ZipFile.open.__qualname__)\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "Programs",
+   "label": "Programs",
+   "level": 2,
+   "parent": "PracticeWork",
+   "body": "The four practice programs apply walking, copying, sizes, numbering and regular expressions (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch11#S_Programs",
+   "class_iri": "http://example.org/sen0414/ch11#Programs"
+  },
+  {
+   "id": "SelectiveCopy",
+   "label": "Selective copy",
+   "level": 3,
+   "parent": "Programs",
+   "body": "The first program walks a tree and copies files with one extension into a new folder (Sweigart, 2025); a solution written for this study copied one.pdf, four.pdf and two.PDF from a tree of four files, because it compared the lower-cased name (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_SelectiveCopy",
+   "class_iri": "http://example.org/sen0414/ch11#SelectiveCopy",
+   "example": "if filename.endswith('.pdf'): shutil.copy(...)",
+   "definition": "The first practice program walks a tree and copies the files with one extension into a new folder; the extension test is best done on the lower-cased suffix, and the destination must not be inside the tree being walked.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nfor d in (\\'src/a\\', \\'src/b\\'):\\n    (t/d).mkdir(parents=True)\\nfor f in (\\'src/one.pdf\\', \\'src/a/two.PDF\\', \\'src/b/three.txt\\', \\'src/b/four.pdf\\'):\\n    (t/f).write_text(f)\\n(t/\\'dest\\').mkdir()\\nfor folder_name, subfolders, filenames in os.walk(t/\\'src\\'):\\n    for filename in filenames:\\n        if filename.lower().endswith(\\'.pdf\\'):\\n            shutil.copy(Path(folder_name) / filename, t/\\'dest\\')\\nout = sorted(p.name for p in (t/\\'dest\\').iterdir())\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "['four.pdf', 'one.pdf', 'two.PDF']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nfor d in ('src/a', 'src/b'):\\n    (t/d).mkdir(parents=True)\\nfor f in ('src/one.pdf', 'src/a/two.PDF', 'src/b/three.txt', 'src/b/four.pdf'):\\n    (t/f).write_text(f)\\n(t/'dest').mkdir()\\nfor folder_name, subfolders, filenames in os.walk(t/'src'):\\n    for filename in filenames:\\n        if filename.lower().endswith('.pdf'):\\n            shutil.copy(Path(folder_name) / filename, t/'dest')\\nout = sorted(p.name for p in (t/'dest').iterdir())\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "LargeFiles",
+   "label": "Large files",
+   "level": 3,
+   "parent": "Programs",
+   "body": "The second program prints files larger than 100MB with os.path.getsize (Sweigart, 2025); a solution written for this study used 100 * 1024 * 1024 bytes as the limit, created sparse files of 100 MB and 100 MB plus one byte, and printed only the second, 104857601 bytes; the same code with a limit of 1000 bytes is the example of this concept, where the chapter does not say whether MB means 10^6 or 2^20 bytes (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_LargeFiles",
+   "class_iri": "http://example.org/sen0414/ch11#LargeFiles",
+   "example": "os.path.getsize(path)",
+   "definition": "The second practice program walks a tree and prints the files whose size from os.path.getsize exceeds a limit; the chapter's limit is 100MB, and the same code is shown here with a limit of 1000 bytes on small test files.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/\\'d\\').mkdir()\\n(t/\\'d\\'/\\'big.bin\\').write_bytes(b\\'x\\' * 2000)\\n(t/\\'d\\'/\\'small.bin\\').write_bytes(b\\'x\\' * 10)\\n(t/\\'big2.bin\\').write_bytes(b\\'x\\' * 1001)\\nlimit = n * 100\\nout = sorted((Path(f).name, os.path.getsize(f)) for folder_name, subfolders, filenames in os.walk(t) for f in (os.path.join(folder_name, n) for n in filenames) if os.path.getsize(f) > limit)\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 10})",
+    "out": "[('big.bin', 2000), ('big2.bin', 1001)]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\n(t/'d').mkdir()\\n(t/'d'/'big.bin').write_bytes(b'x' * 2000)\\n(t/'d'/'small.bin').write_bytes(b'x' * 10)\\n(t/'big2.bin').write_bytes(b'x' * 1001)\\nlimit = n * 100\\nout = sorted((Path(f).name, os.path.getsize(f)) for folder_name, subfolders, filenames in os.walk(t) for f in (os.path.join(folder_name, n) for n in filenames) if os.path.getsize(f) > limit)\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "10",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "RenumberFiles",
+   "label": "Renumber files",
+   "level": 3,
+   "parent": "Programs",
+   "body": "The third program closes gaps in numbered file names, with the chapter's 117 files spam001.txt to spam120.txt missing 42, 86 and 103 (Sweigart, 2025); a solution written for this study renamed each file to the next number in sorted order, and the result was spam001.txt to spam117.txt with no gap, spam042.txt being the old spam043.txt; the added challenge of inserting a gap was not built (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_RenumberFiles",
+   "class_iri": "http://example.org/sen0414/ch11#RenumberFiles",
+   "example": "zfill and shutil.move",
+   "definition": "The third practice program finds the numbered files of a prefix, locates gaps in the numbers and renames the later files down to close them; str.zfill pads a number with zeros to the width of the names.",
+   "io": {
+    "code": "(lambda g: exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nfor i in (1, 2, 4, 5, n):\\n    (t/(\\'spam%s.txt\\' % str(i).zfill(3))).write_text(\\'\\')\\nfiles = sorted(p for p in t.iterdir() if p.name.startswith(\\'spam\\'))\\nfor new_number, p in enumerate(files, start=1):\\n    new_name = \\'spam%s.txt\\' % str(new_number).zfill(3)\\n    if p.name != new_name:\\n        shutil.move(p, p.with_name(new_name))\\nout = sorted(p.name for p in t.iterdir())\\nshutil.rmtree(t)\\n', g) or g['out'])({'n': 8})",
+    "out": "['spam001.txt', 'spam002.txt', 'spam003.txt', 'spam004.txt', 'spam005.txt']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "BoolOp",
+         "kind": "BoolOp",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "exec",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nfor i in (1, 2, 4, 5, n):\\n    (t/('spam%s.txt' % str(i).zfill(3))).write_text('')\\nfiles = sorted(p for p in t.iterdir() if p.name.startswith('spam'))\\nfor new_number, p in enumerate(files, start=1):\\n    new_name = 'spam%s.txt' % str(new_number).zfill(3)\\n    if p.name != new_name:\\n        shutil.move(p, p.with_name(new_name))\\nout = sorted(p.name for p in t.iterdir())\\nshutil.rmtree(t)\\n\"",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'out'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'n'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "8",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "DateRenaming",
+   "label": "Date renaming",
+   "level": 3,
+   "parent": "Programs",
+   "body": "The fourth program swaps the month and the day in names with MM-DD-YYYY dates (Sweigart, 2025); a solution written for this study walked a folder, matched (\\d\\d)-(\\d\\d)-(\\d\\d\\d\\d) and used re.sub with the groups in the order 2, 1, 3, which turned spam12-31-1900.txt into spam31-12-1900.txt and report01-02-2020.txt into report02-01-2020.txt and left notes.txt alone (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch11#S_DateRenaming",
+   "class_iri": "http://example.org/sen0414/ch11#DateRenaming",
+   "example": "re.sub(r'(\\d\\d)-(\\d\\d)-(\\d\\d\\d\\d)', r'\\2-\\1-\\3', name)",
+   "definition": "The fourth practice program finds file names with an American date MM-DD-YYYY and renames them to the European DD-MM-YYYY by swapping the first two groups of a regular expression, using shutil.move to rename; a name without a date is left alone.",
+   "io": {
+    "code": "(lambda g: (exec('import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nimport re\\nfor n in (\\'spam12-31-1900.txt\\', \\'report01-02-2020.txt\\', \\'notes.txt\\'):\\n    (t/n).write_text(\\'\\')\\npattern = re.compile(r\\'(\\\\d\\\\d)-(\\\\d\\\\d)-(\\\\d\\\\d\\\\d\\\\d)\\')\\nfor folder_name, subfolders, filenames in os.walk(t):\\n    for filename in filenames:\\n        if pattern.search(filename):\\n            shutil.move(Path(folder_name) / filename, Path(folder_name) / pattern.sub(r\\'\\\\2-\\\\1-\\\\3\\', filename))\\nout = sorted(p.name for p in t.iterdir())\\nshutil.rmtree(t)\\n', g), g['out'])[1])({})",
+    "out": "['notes.txt', 'report02-01-2020.txt', 'spam31-12-1900.txt']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "exec",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "\"import os, shutil, tempfile, zipfile, io\\nfrom pathlib import Path\\nt = Path(tempfile.mkdtemp())\\nimport re\\nfor n in ('spam12-31-1900.txt', 'report01-02-2020.txt', 'notes.txt'):\\n    (t/n).write_text('')\\npattern = re.compile(r'(\\\\d\\\\d)-(\\\\d\\\\d)-(\\\\d\\\\d\\\\d\\\\d)')\\nfor folder_name, subfolders, filenames in os.walk(t):\\n    for filename in filenames:\\n        if pattern.search(filename):\\n            shutil.move(Path(folder_name) / filename, Path(folder_name) / pattern.sub(r'\\\\2-\\\\1-\\\\3', filename))\\nout = sorted(p.name for p in t.iterdir())\\nshutil.rmtree(t)\\n\"",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "g",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'out'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  }
+ ],
+ "relations": [
+  {
+   "source": "Copying",
+   "target": "CopyingAndMoving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CopyFile",
+   "target": "Copying",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CopyFolderTree",
+   "target": "Copying",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CopyWithMetadata",
+   "target": "Copying",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ExistingDestination",
+   "target": "Copying",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Moving",
+   "target": "CopyingAndMoving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MoveFileOrFolder",
+   "target": "Moving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MoveAsRename",
+   "target": "Moving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MoveCollision",
+   "target": "Moving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PathlibCopyMove",
+   "target": "Moving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PermanentDeletion",
+   "target": "Deleting",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DeleteFile",
+   "target": "PermanentDeletion",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DeleteEmptyFolder",
+   "target": "PermanentDeletion",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DeleteFolderTree",
+   "target": "PermanentDeletion",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DeletionErrors",
+   "target": "PermanentDeletion",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SaferDeletion",
+   "target": "Deleting",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DryRun",
+   "target": "SaferDeletion",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RecycleBin",
+   "target": "SaferDeletion",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Listing",
+   "target": "FolderTrees",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ListDirectory",
+   "target": "Listing",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "IterateDirectory",
+   "target": "Listing",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GlobPattern",
+   "target": "Listing",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Walking",
+   "target": "FolderTrees",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WalkTree",
+   "target": "Walking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WalkOrder",
+   "target": "Walking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PruneWalk",
+   "target": "Walking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WalkAndRename",
+   "target": "Walking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PathWalk",
+   "target": "Walking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WritingZip",
+   "target": "ZipArchives",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CreateZip",
+   "target": "WritingZip",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CompressionMethod",
+   "target": "WritingZip",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CompressionLevel",
+   "target": "WritingZip",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AppendToZip",
+   "target": "WritingZip",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ReadingZip",
+   "target": "ZipArchives",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NameList",
+   "target": "ReadingZip",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ZipInfoSizes",
+   "target": "ReadingZip",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CompressionRatio",
+   "target": "ReadingZip",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ExtractingZip",
+   "target": "ZipArchives",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ExtractAll",
+   "target": "ExtractingZip",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ExtractOne",
+   "target": "ExtractingZip",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ExtractionSafety",
+   "target": "ExtractingZip",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ArchiveHelpers",
+   "target": "ZipArchives",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MakeArchive",
+   "target": "ArchiveHelpers",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "UnpackArchive",
+   "target": "ArchiveHelpers",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ZipNaming",
+   "target": "BackupProject",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NextZipName",
+   "target": "ZipNaming",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ZipBuilding",
+   "target": "BackupProject",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WalkIntoZip",
+   "target": "ZipBuilding",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ArchiveNames",
+   "target": "ZipBuilding",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "StoredByDefault",
+   "target": "ZipBuilding",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SelfInclusion",
+   "target": "ZipBuilding",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Questions",
+   "target": "PracticeWork",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PracticeQuestions",
+   "target": "Questions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Programs",
+   "target": "PracticeWork",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SelectiveCopy",
+   "target": "Programs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LargeFiles",
+   "target": "Programs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RenumberFiles",
+   "target": "Programs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DateRenaming",
+   "target": "Programs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  }
+ ],
+ "agents": [
+  {
+   "id": "agent-Copying",
+   "name": "Copying agent",
+   "subject": "Copying",
+   "covers": [
+    "CopyFile",
+    "CopyFolderTree",
+    "CopyWithMetadata",
+    "ExistingDestination",
+    "Copying"
+   ]
+  },
+  {
+   "id": "agent-Moving",
+   "name": "Moving agent",
+   "subject": "Moving",
+   "covers": [
+    "MoveFileOrFolder",
+    "MoveAsRename",
+    "MoveCollision",
+    "PathlibCopyMove",
+    "Moving"
+   ]
+  },
+  {
+   "id": "agent-PermanentDeletion",
+   "name": "Permanent deletion agent",
+   "subject": "PermanentDeletion",
+   "covers": [
+    "DeleteFile",
+    "DeleteEmptyFolder",
+    "DeleteFolderTree",
+    "DeletionErrors",
+    "PermanentDeletion"
+   ]
+  },
+  {
+   "id": "agent-SaferDeletion",
+   "name": "Safer deletion agent",
+   "subject": "SaferDeletion",
+   "covers": [
+    "DryRun",
+    "RecycleBin",
+    "SaferDeletion"
+   ]
+  },
+  {
+   "id": "agent-Listing",
+   "name": "Listing agent",
+   "subject": "Listing",
+   "covers": [
+    "ListDirectory",
+    "IterateDirectory",
+    "GlobPattern",
+    "Listing"
+   ]
+  },
+  {
+   "id": "agent-Walking",
+   "name": "Walking agent",
+   "subject": "Walking",
+   "covers": [
+    "WalkTree",
+    "WalkOrder",
+    "PruneWalk",
+    "WalkAndRename",
+    "PathWalk",
+    "Walking"
+   ]
+  },
+  {
+   "id": "agent-WritingZip",
+   "name": "Writing zip agent",
+   "subject": "WritingZip",
+   "covers": [
+    "CreateZip",
+    "CompressionMethod",
+    "CompressionLevel",
+    "AppendToZip",
+    "WritingZip"
+   ]
+  },
+  {
+   "id": "agent-ReadingZip",
+   "name": "Reading zip agent",
+   "subject": "ReadingZip",
+   "covers": [
+    "NameList",
+    "ZipInfoSizes",
+    "CompressionRatio",
+    "ReadingZip"
+   ]
+  },
+  {
+   "id": "agent-ExtractingZip",
+   "name": "Extracting zip agent",
+   "subject": "ExtractingZip",
+   "covers": [
+    "ExtractAll",
+    "ExtractOne",
+    "ExtractionSafety",
+    "ExtractingZip"
+   ]
+  },
+  {
+   "id": "agent-ArchiveHelpers",
+   "name": "Archive helpers agent",
+   "subject": "ArchiveHelpers",
+   "covers": [
+    "MakeArchive",
+    "UnpackArchive",
+    "ArchiveHelpers"
+   ]
+  },
+  {
+   "id": "agent-ZipNaming",
+   "name": "Zip naming agent",
+   "subject": "ZipNaming",
+   "covers": [
+    "NextZipName",
+    "ZipNaming"
+   ]
+  },
+  {
+   "id": "agent-ZipBuilding",
+   "name": "Zip building agent",
+   "subject": "ZipBuilding",
+   "covers": [
+    "WalkIntoZip",
+    "ArchiveNames",
+    "StoredByDefault",
+    "SelfInclusion",
+    "ZipBuilding"
+   ]
+  },
+  {
+   "id": "agent-Questions",
+   "name": "Questions agent",
+   "subject": "Questions",
+   "covers": [
+    "PracticeQuestions",
+    "Questions"
+   ]
+  },
+  {
+   "id": "agent-Programs",
+   "name": "Programs agent",
+   "subject": "Programs",
+   "covers": [
+    "SelectiveCopy",
+    "LargeFiles",
+    "RenumberFiles",
+    "DateRenaming",
+    "Programs"
+   ]
+  }
+ ],
+ "refs": [
+  [
+   "Automate the Boring Stuff with Python, 3rd edition - Chapter 11, Organizing Files (Al Sweigart, No Starch Press, 2025)",
+   "https://automatetheboringstuff.com/3e/chapter11.html"
+  ],
+  [
+   "PEP 428 - The pathlib module, object-oriented filesystem paths (Pitrou, 2012; Python 3.4)",
+   "https://peps.python.org/pep-0428/"
+  ],
+  [
+   "PEP 519 - Adding a file system path protocol (Cannon and Zevenhoven, 2016; Python 3.6)",
+   "https://peps.python.org/pep-0519/"
+  ],
+  [
+   "The Python Standard Library, os - walk, listdir, unlink and rmdir (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/os.html"
+  ],
+  [
+   "The Python Standard Library, os.path - getsize (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/os.path.html"
+  ],
+  [
+   "The Python Standard Library, pathlib - object-oriented filesystem paths: iterdir, glob, walk, copy and move (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/pathlib.html"
+  ],
+  [
+   "The Python Standard Library, re - regular expression operations: sub (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/re.html"
+  ],
+  [
+   "The Python Standard Library, shutil - high-level file operations: copy, copytree, move, rmtree, make_archive, unpack_archive (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/shutil.html"
+  ],
+  [
+   "The Python Standard Library, zipfile - work with ZIP archives (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/zipfile.html"
+  ],
+  [
+   "The Python Standard Library, zlib - compression levels and the default level (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/zlib.html"
+  ],
+  [
+   "What's New In Python 3.12 - pathlib.Path.walk (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/whatsnew/3.12.html"
+  ],
+  [
+   "What's New In Python 3.14 - pathlib copy and move methods (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/whatsnew/3.14.html"
+  ]
+ ],
+ "resources": [
+  {
+   "kind": "documentation",
+   "title": "Automate the Boring Stuff with Python, 3rd edition: Chapter 11, Organizing Files",
+   "url": "https://automatetheboringstuff.com/3e/chapter11.html",
+   "source": "automatetheboringstuff.com",
+   "why": "The course textbook's own chapter, free online: shutil, deleting, os.walk, zipfile and the backup project.",
+   "concept": "CopyingAndMoving"
+  },
+  {
+   "kind": "documentation",
+   "title": "shutil \u2014 High-level file operations",
+   "url": "https://docs.python.org/3/library/shutil.html",
+   "source": "Python documentation",
+   "why": "Exactly what copy, copytree, move and rmtree do when the destination exists, and the archive helpers.",
+   "concept": "MoveCollision"
+  },
+  {
+   "kind": "documentation",
+   "title": "zipfile \u2014 Work with ZIP archives",
+   "url": "https://docs.python.org/3/library/zipfile.html",
+   "source": "Python documentation",
+   "why": "ZipFile modes, compression methods, extract and the warning about untrusted archives.",
+   "concept": "CreateZip"
+  },
+  {
+   "kind": "documentation",
+   "title": "os \u2014 Miscellaneous operating system interfaces",
+   "url": "https://docs.python.org/3/library/os.html",
+   "source": "Python documentation",
+   "why": "os.walk with its topdown and pruning rules, os.unlink and os.rmdir.",
+   "concept": "WalkTree"
+  },
+  {
+   "kind": "documentation",
+   "title": "pathlib \u2014 Object-oriented filesystem paths",
+   "url": "https://docs.python.org/3/library/pathlib.html",
+   "source": "Python documentation",
+   "why": "iterdir, glob, Path.walk (3.12) and Path.copy and Path.move (3.14).",
+   "concept": "PathlibCopyMove"
+  },
+  {
+   "kind": "documentation",
+   "title": "zlib \u2014 Compression compatible with gzip",
+   "url": "https://docs.python.org/3/library/zlib.html",
+   "source": "Python documentation",
+   "why": "What the compression levels 0 to 9 and the default level mean.",
+   "concept": "CompressionLevel"
+  },
+  {
+   "kind": "documentation",
+   "title": "os.path \u2014 Common pathname manipulations",
+   "url": "https://docs.python.org/3/library/os.path.html",
+   "source": "Python documentation",
+   "why": "getsize, used by the practice program that looks for large files.",
+   "concept": "LargeFiles"
+  },
+  {
+   "kind": "documentation",
+   "title": "re \u2014 Regular expression operations",
+   "url": "https://docs.python.org/3/library/re.html",
+   "source": "Python documentation",
+   "why": "sub and group references, used to swap the month and day in a file name.",
+   "concept": "DateRenaming"
+  },
+  {
+   "kind": "pep",
+   "title": "PEP 428 \u2013 The pathlib module \u2013 object-oriented filesystem paths",
+   "url": "https://peps.python.org/pep-0428/",
+   "source": "peps.python.org",
+   "why": "Why paths became objects.",
+   "concept": "IterateDirectory"
+  }
+ ],
+ "resources_checked": "2026-10-01"
+}

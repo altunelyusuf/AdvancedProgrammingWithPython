@@ -1,0 +1,4180 @@
+{
+ "_version": "9.17.0",
+ "visuals": {},
+ "course": {
+  "_version": "1.3.3",
+  "name": "SEN0414 Advanced Programming",
+  "line": "SEN0414 Advanced Programming",
+  "chapter_sub": "chapter {n} of Automate the Boring Stuff with Python, 3rd edition",
+  "chapter_intro": "Chapter {n} of <i>Automate the Boring Stuff with Python</i>, 3rd edition (Sweigart, 2025), renewed for an advanced course.",
+  "playground": {
+   "label": "Excel files without openpyxl: zip and XML, column letters, price update and county totals (standard library only)",
+   "code": "import io, re, zipfile\nimport pprint\nimport xml.etree.ElementTree as ET\nfrom xml.sax.saxutils import escape\n\nNS = '{http://schemas.openxmlformats.org/spreadsheetml/2006/main}'\n\ndef letter(n):                      # 1 -> A, 27 -> AA\n    s = ''\n    while n:\n        n, r = divmod(n - 1, 26)\n        s = chr(65 + r) + s\n    return s\n\ndef number(col):                    # A -> 1, AA -> 27\n    n = 0\n    for ch in col:\n        n = n * 26 + ord(ch) - 64\n    return n\n\ndef make_xlsx(title, rows):\n    \"\"\"Write a one-sheet workbook with the standard library: an .xlsx file is a zip of XML parts.\"\"\"\n    cells = ''\n    for r, row in enumerate(rows, 1):\n        cells += '<row r=\"%d\">' % r\n        for c, v in enumerate(row, 1):\n            ref = letter(c) + str(r)\n            if isinstance(v, str) and v.startswith('='):\n                cells += '<c r=\"%s\"><f>%s</f></c>' % (ref, escape(v[1:]))\n            elif isinstance(v, str):\n                cells += '<c r=\"%s\" t=\"inlineStr\"><is><t>%s</t></is></c>' % (ref, escape(v))\n            else:\n                cells += '<c r=\"%s\"><v>%s</v></c>' % (ref, v)\n        cells += '</row>'\n    ns = NS[1:-1]\n    parts = {\n        '[Content_Types].xml': '<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/><Default Extension=\"xml\" ContentType=\"application/xml\"/><Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/><Override PartName=\"/xl/worksheets/sheet1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/></Types>',\n        '_rels/.rels': '<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"xl/workbook.xml\"/></Relationships>',\n        'xl/workbook.xml': '<workbook xmlns=\"%s\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><sheets><sheet name=\"%s\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>' % (ns, title),\n        'xl/_rels/workbook.xml.rels': '<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet1.xml\"/></Relationships>',\n        'xl/worksheets/sheet1.xml': '<worksheet xmlns=\"%s\"><sheetData>%s</sheetData></worksheet>' % (ns, cells),\n    }\n    buf = io.BytesIO()\n    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as z:\n        for name, text in parts.items():\n            z.writestr(name, text)\n    return buf.getvalue()\n\ndef read_xlsx(data):\n    \"\"\"Read it back: sheet names, then {coordinate: value} for the first sheet.\"\"\"\n    with zipfile.ZipFile(io.BytesIO(data)) as z:\n        names = [s.get('name') for s in ET.fromstring(z.read('xl/workbook.xml')).iter(NS + 'sheet')]\n        sheet = ET.fromstring(z.read('xl/worksheets/sheet1.xml'))\n    cells = {}\n    for c in sheet.iter(NS + 'c'):\n        if c.find(NS + 'f') is not None:\n            cells[c.get('r')] = '=' + c.find(NS + 'f').text\n        elif c.get('t') == 'inlineStr':\n            cells[c.get('r')] = c.find(NS + 'is').find(NS + 't').text\n        else:\n            v = float(c.find(NS + 'v').text)\n            cells[c.get('r')] = int(v) if v == int(v) else v\n    return names, cells\n\ndef size(cells):                    # like sheet.max_row and sheet.max_column\n    rc = [re.fullmatch(r'([A-Z]+)(\\d+)', k).groups() for k in cells]\n    return max(int(r) for c, r in rc), max(number(c) for c, r in rc)\n\n# Project 10 of the chapter: correct some prices, keep the formulas, save under a new name\nsales = [['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL'],\n         ['Potatoes', 0.86, 21.6, '=ROUND(B2*C2, 2)'],\n         ['Celery', 1.9, 4.3, '=ROUND(B3*C3, 2)'],\n         ['Garlic', 2.25, 10, '=ROUND(B4*C4, 2)'],\n         ['Lemon', 1.1, 11.5, '=ROUND(B5*C5, 2)']]\nbook_bytes = make_xlsx('Sheet', sales)\nnames, cells = read_xlsx(book_bytes)\nprint(names, size(cells), letter(size(cells)[1]), number('AA'), letter(900))\nprint(book_bytes[:2], zipfile.ZipFile(io.BytesIO(book_bytes)).namelist())\n\nPRICE_UPDATES = {'Garlic': 3.07, 'Celery': 1.19, 'Lemon': 1.27}\nmax_row, max_col = size(cells)\nfor row_num in range(2, max_row + 1):                 # skip the header row\n    produce_name = cells['A' + str(row_num)]\n    if produce_name in PRICE_UPDATES:\n        cells['B' + str(row_num)] = PRICE_UPDATES[produce_name]\nrows = [[cells.get(letter(c) + str(r)) for c in range(1, max_col + 1)] for r in range(1, max_row + 1)]\nupdated_bytes = make_xlsx('Sheet', rows)              # a new file; the original bytes are untouched\nnew_names, new_cells = read_xlsx(updated_bytes)\nprint([(new_cells['A%d' % r], new_cells['B%d' % r], new_cells['D%d' % r]) for r in range(2, max_row + 1)])\nprint(read_xlsx(book_bytes)[1]['B3'], new_cells['B3'])\n\n# Project 9 of the chapter: count tracts and add populations per county, then write the result as Python source\ntracts = [('AL', 'Autauga', 1912), ('AL', 'Autauga', 2170), ('AL', 'Baldwin', 1948), ('AK', 'Anchorage', '4020'), ('AK', 'Anchorage', '5000')]\ncounty_data = {}\nfor state, county, pop in tracts:\n    county_data.setdefault(state, {})\n    county_data[state].setdefault(county, {'tracts': 0, 'pop': 0})\n    county_data[state][county]['tracts'] += 1\n    county_data[state][county]['pop'] += int(pop)       # cell values may be text\nsource = 'allData = ' + pprint.pformat(county_data)\nprint(source)\nnamespace = {}\nexec(source, namespace)                                 # what \"import census2010\" does with the file\nprint(namespace['allData']['AK']['Anchorage'])\n"
+  },
+  "corpus": {
+   "book_pin_source": "02-textbook/sen0414_textbook_v1_0_0.ttl",
+   "book": [
+    "automate-python-book-3e/01-ontologies/automate_python_3e_ch{nn}_v1_0_0.ttl"
+   ],
+   "course": [
+    "00-course-profile/sen0414_course_v1_0_0.ttl",
+    "01-outcomes/sen0414_outcomes_v1_0_0.ttl",
+    "02-textbook/sen0414_textbook_v1_0_0.ttl",
+    "03-materials/sen0414_materials_v1_22_0.ttl"
+   ]
+  }
+ },
+ "discussion": [],
+ "findings": [
+  [
+   "Background",
+   "Chapter 14 of the 3rd edition, Excel Spreadsheets, teaches the third-party module openpyxl: opening a workbook with load_workbook, reading sheets by name and the active sheet, reading cells by name and with cell(row, column), max_row and max_column, column letters and numbers, slices and the rows and columns attributes, then Project 9 (county totals from a census workbook) and Project 10 (correcting prices in a produce workbook); creating, renaming, adding and deleting sheets, writing cell values and saving; Font objects; formulas as strings and data_only; row height, column width, merging cells and freeze panes; and bar charts from a Reference and a Series, closing with 18 practice questions and 2 practice programs, a multiplication table and a blank row inserter."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's printed outputs reproduce with openpyxl 3.1.5 under Python 3.14.4 when the book's spreadsheets are replaced by stand-ins holding Table 14-1: the type of the workbook, the sheet names, the active sheet, the repr of a cell, the datetime of A1, the row, column and coordinate of B1, the loop over every other row, max_row 7 and max_column 3, the column letters 'A', 'B', 'AA' and 'AHP' and the numbers 1 and 27, the tuple of three tuples of cells for A1 to C3, the seven values of column B, the sheet names after create_sheet and del, the merged and unmerged ranges, and the freeze_panes settings of Table 14-3; both projects ran as printed on stand-in data, with the dictionary written by pprint and imported back."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's statement that an unspecified font name or size falls back to the openpyxl defaults of Calibri and 11 does not hold for a Font object: a new cell's font is Calibri 11, but Font(size=24, italic=True) has no name, Font(name='Times New Roman', bold=True) has no size, and the styles part of the saved file lists for the first only italic and a size of 24 and no name; what Excel shows for the missing attributes was not tested because Excel was not available. A Font cannot be changed after creation - setting bold on one raises AttributeError - so a different style means a new Font assigned to the cell."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's account of Reference is wrong in two places: it says the function takes five arguments and lists three, and it says the first integer of a cell position is the row, whereas the documented signature is Reference(worksheet, min_col, min_row, max_col, max_row) and Reference(sheet, 2, 3, 4, 5) printed as the range B3 to D5 of the sheet, columns first. The chapter's own example, Reference(sheet, 1, 1, 1, 10), is column 1 and rows 1 to 10, so it runs as printed, and the chart part written for it names the range A1 to A10."
+  ],
+  [
+   "Comparative analysis",
+   "Three practice questions ask for more than the chapter's text shows or for something slightly different: question 10 asks for the string name of row 14, but rows are numbered and the function the chapter teaches that returns a letter name is get_column_letter, which gives 'N' for 14; question 16 asks how to hide column C, which the chapter's introduction mentions and no example shows, and column_dimensions['C'].hidden = True was saved and read back as True; question 18 asks for five functions and methods of a bar chart, which are Reference, Series, BarChart, append and add_chart. The chapter's price list in Project 10 also says lemons while its dictionary key is 'Lemon', so a key of 'Lemons' would match nothing."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's explanation of formulas holds and needs two additions: openpyxl stores a formula as text without a value, so a file it has written and no spreadsheet application has opened gives None for that cell under data_only=True, as the run showed for the chapter's =SUM(A1:A2) and for the stand-in produce workbook after its prices were corrected; and any text that starts with an equal sign is taken for a formula, including the text =not a formula(, unless the data type of the cell is set to string. The chapter's 500 appears only after Excel has saved the file and was not reproduced."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter writes the county totals with pprint.pformat as the text of a Python module and imports it: pformat sorts dictionary keys by default, so the printed order is alphabetical, the generated file parses and imports back to the same dictionary (the Anchorage entry printed as {'pop': 9020, 'tracts': 2} for the stand-in rows, one population given as text and converted with int), and reading the data back by import executes the statements of the file, so such a file is to be trusted like a program."
+  ],
+  [
+   "Conclusion",
+   "For an advanced course, chapter 14 is best taught through what an .xlsx file is - a zip archive of XML parts in which a cell is a number, a string or a formula with no cached value - so that the chapter's calls read as operations on that structure: load_workbook reads it, the Workbook and Worksheet objects change it in memory, save writes it, and only a spreadsheet application fills in formula results. The chapter's outputs hold with openpyxl 3.1.5; the font default, the Reference arguments, reading creating cells, data_only giving None, formulas that do not move, dates, optimised modes and XML safety are what the course adds, and every statement about Excel itself remains unverified here."
+  ],
+  [
+   "Contemporary developments",
+   "Reading a cell creates it: on a new sheet, reading A1 and C5 left two cells and max_row 5 and max_column 3, and reading only the value of A100 made max_row 100, which the tutorial warns about; the chapter's loops of range(2, sheet.max_row + 1) depend on max_row, so code that touches a far cell first makes them run over empty rows. For large files the documentation adds a read-only mode (lazy, cells of another type, no iter_cols, must be closed) and a write-only mode (no sheets at the start, rows added only with append, saved once), which the run confirmed by the errors they raise."
+  ],
+  [
+   "Contemporary developments",
+   "Current practice adds to the chapter: iter_rows and values with values_only=True for plain values, insert_rows and delete_rows, which move cells but leave a formula's text as it was (=SUM(B1:B4) moved from C5 to C7 unchanged, while Translator from openpyxl.formula.translate gave =SUM(B3:B6) for that move), copy_worksheet, dates stored as numbers in the 1900 or 1904 date system with the 1900 leap-year error and no timezones (a timezone-aware datetime is accepted on assignment and fails when the file is saved), and the refusal of old .xls files and of files that are not zip archives."
+  ],
+  [
+   "Contemporary developments",
+   "The library's own status matters to a course: the PyPI record lists 3.1.5, uploaded 2024-06-28, as the newest release, requiring Python 3.8 or later and naming Python versions up to 3.11 in its classifiers, and also lists a beta 3.2.0b1 uploaded in 2022; the documentation the chapter points to was headed 3.1.3. The operations executed ran without a warning under Python 3.14.4 with warnings turned into errors, apart from the sheet-title warning the script provoked. The documentation's home page also says openpyxl does not guard by default against quadratic blowup or billion laughs XML attacks and advises defusedxml, which matters because an .xlsx file is a zip archive of XML."
+  ]
+ ],
+ "unit": null,
+ "research_file": "sen0414_ch14_research_v1_0_0.ttl",
+ "chapter": 14,
+ "title": "Excel spreadsheets for an advanced course: chapter 14 of the 3rd edition, openpyxl and today's Python",
+ "python": "Python 3.14.4",
+ "nodes": [
+  {
+   "id": "WorkbookModel",
+   "label": "Workbook model",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter reads a workbook file into a Workbook object that holds sheets, and a sheet that holds cells addressed by column letter and row number (Sweigart, 2025) (Gazoni and Clark, 2024).",
+   "section_iri": "http://example.org/sen0414/ch14#S_WorkbookModel",
+   "class_iri": "http://example.org/sen0414/ch14#WorkbookModel"
+  },
+  {
+   "id": "WorkbookStructure",
+   "label": "Workbook structure",
+   "level": 2,
+   "parent": "WorkbookModel",
+   "body": "The chapter starts from the file, the workbook object, its sheets and the active sheet (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_WorkbookStructure",
+   "class_iri": "http://example.org/sen0414/ch14#WorkbookStructure"
+  },
+  {
+   "id": "WorkbookFile",
+   "label": "Workbook file",
+   "level": 3,
+   "parent": "WorkbookStructure",
+   "body": "An Excel document is a workbook, saved with the .xlsx extension, and openpyxl.load_workbook('example3.xlsx') returns a value of type openpyxl.workbook.workbook.Workbook, as the chapter prints (Sweigart, 2025); the book's example3.xlsx was not opened, and a stand-in with the seven rows of Table 14-1 was written and loaded instead. The file is a zip archive of XML parts, which the tutorial states and the run showed by listing the members of a saved file: docProps/app.xml, docProps/core.xml, xl/theme/theme1.xml, one xl/worksheets part per sheet, xl/styles.xml, _rels/.rels, xl/workbook.xml, xl/_rels/workbook.xml.rels and [Content_Types].xml (Gazoni and Clark, 2024); a zip archive written in memory starts with the two bytes PK (Python Software Foundation, 2026). openpyxl operates on files and not on the Excel application, which the chapter says and which was not tested here (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_WorkbookFile",
+   "class_iri": "http://example.org/sen0414/ch14#WorkbookFile",
+   "example": "wb = openpyxl.load_workbook('example3.xlsx')",
+   "definition": "A workbook is an Excel document saved in a file with the .xlsx extension, and load_workbook returns a Workbook object for it; the file itself is a zip archive of XML parts.",
+   "io": {
+    "code": "(lambda b: (__import__('zipfile').ZipFile(b, 'w').close(), b.getvalue()[:2])[1])(__import__('io').BytesIO())",
+    "out": "b'PK'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "__import__",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "'zipfile'",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "label": "b",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "'w'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "b",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "Slice",
+               "kind": "Slice",
+               "children": [
+                {
+                 "label": "2",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'io'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SheetNames",
+   "label": "Sheet names",
+   "level": 3,
+   "parent": "WorkbookStructure",
+   "body": "For the stand-in, wb.sheetnames is ['Sheet1', 'Sheet2', 'Sheet3'], wb['Sheet3'] is a Worksheet of type openpyxl.worksheet.worksheet.Worksheet whose title is 'Sheet3', and a name that is not in the workbook raises KeyError with the text Worksheet Nope does not exist. (Sweigart, 2025) (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_SheetNames",
+   "class_iri": "http://example.org/sen0414/ch14#SheetNames",
+   "example": "sheet = wb['Sheet3']",
+   "definition": "The sheetnames attribute lists the names of the workbook's sheets, and a sheet is fetched by its name with square brackets like a dictionary key, which gives a Worksheet whose title attribute is that name."
+  },
+  {
+   "id": "ActiveSheet",
+   "label": "Active sheet",
+   "level": 3,
+   "parent": "WorkbookStructure",
+   "body": "wb.active is the Worksheet of Sheet1 for the stand-in; the chapter calls it the sheet on top when the workbook is opened, and the tutorial adds that the property is set to 0 by default, so the first worksheet is returned unless it is changed, and that a new workbook always has at least one worksheet (Sweigart, 2025) (Gazoni and Clark, 2024).",
+   "section_iri": "http://example.org/sen0414/ch14#S_ActiveSheet",
+   "class_iri": "http://example.org/sen0414/ch14#ActiveSheet",
+   "example": "another_sheet = wb.active",
+   "definition": "The active attribute is the sheet that is on top when the workbook is opened, which is the first sheet unless the workbook says otherwise."
+  },
+  {
+   "id": "CellReferences",
+   "label": "Cell references",
+   "level": 2,
+   "parent": "WorkbookModel",
+   "body": "A cell is reached by its name or by its row and column numbers, and the Cell tells where it is (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_CellReferences",
+   "class_iri": "http://example.org/sen0414/ch14#CellReferences"
+  },
+  {
+   "id": "CellByName",
+   "label": "Cell by name",
+   "level": 3,
+   "parent": "CellReferences",
+   "body": "sheet['A1'] is a Cell object, and its value is datetime.datetime(2035, 4, 5, 13, 34, 2) for the stand-in, while sheet['B1'].value is 'Apples' and sheet['C1'].value is 73 (Sweigart, 2025); the tutorial says that indexing returns the cell or creates one if it does not exist yet (Gazoni and Clark, 2024).",
+   "section_iri": "http://example.org/sen0414/ch14#S_CellByName",
+   "class_iri": "http://example.org/sen0414/ch14#CellByName",
+   "example": "c = sheet['A1']",
+   "definition": "A sheet is indexed by a cell name such as 'A1' to get a Cell object, whose value attribute holds the number, text or date stored there."
+  },
+  {
+   "id": "CellByNumbers",
+   "label": "Cell by numbers",
+   "level": 3,
+   "parent": "CellReferences",
+   "body": "sheet.cell(row=1, column=2) is the same cell as B1 and takes integers counted from 1; the chapter's loop over range(1, 8, 2) printed 1 Apples, 3 Pears, 5 Apples and 7 Strawberries, and a row or column of 0 raises ValueError with the text Row or column values must be at least 1 (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4). The method also takes a value, so cell(row=1, column=1, value=5) writes 5 and returns the cell (Gazoni and Clark, 2024).",
+   "section_iri": "http://example.org/sen0414/ch14#S_CellByNumbers",
+   "class_iri": "http://example.org/sen0414/ch14#CellByNumbers",
+   "example": "c = sheet.cell(row=1, column=2)",
+   "definition": "The cell method takes the row and the column as integers counted from 1, so a loop can step through rows and pick a column without converting letters; passing a value also writes it.",
+   "io": {
+    "code": "list(range(1, 8, 2))",
+    "out": "[1, 3, 5, 7]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "list",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "range",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "1",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "8",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "2",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CellAttributes",
+   "label": "Cell attributes",
+   "level": 3,
+   "parent": "CellReferences",
+   "body": "For B1 of the stand-in the value is 'Apples', the row 1, the column 2 and the coordinate 'B1', and the chapter's f-strings print Row 1, Column 2 is Apples and Cell B1 is Apples; the letters that openpyxl uses for the kinds of cell content were d for A1, s for B1 and n for C1 (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_CellAttributes",
+   "class_iri": "http://example.org/sen0414/ch14#CellAttributes",
+   "example": "where = c.coordinate",
+   "definition": "A Cell knows its value, its row and column as integers and its coordinate as text, which together can be printed back as a sentence such as Row 1, Column 2 is Apples.",
+   "io": {
+    "code": "(lambda row, col, v: f'Row {row}, Column {col} is {v}')(1, 2, 'Apples')",
+    "out": "'Row 1, Column 2 is Apples'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "f-string",
+         "kind": "JoinedStr",
+         "children": [
+          {
+           "label": "'Row '",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "{ }",
+           "kind": "FormattedValue",
+           "children": [
+            {
+             "label": "row",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "', Column '",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "{ }",
+           "kind": "FormattedValue",
+           "children": [
+            {
+             "label": "col",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "' is '",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "{ }",
+           "kind": "FormattedValue",
+           "children": [
+            {
+             "label": "v",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "1",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "2",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "'Apples'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SheetSize",
+   "label": "Sheet size",
+   "level": 3,
+   "parent": "CellReferences",
+   "body": "sheet.max_row is 7 and sheet.max_column is 3 for the stand-in, both of type int, as the chapter says; the documentation defines them as the largest row and column index that contain data, counted from 1, and a new empty sheet reported 1 and 1 (Sweigart, 2025) (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_SheetSize",
+   "class_iri": "http://example.org/sen0414/ch14#SheetSize",
+   "example": "last_row = sheet.max_row",
+   "definition": "The max_row and max_column attributes are integers giving the largest row and column that hold data, so the letter of the last column needs a conversion.",
+   "io": {
+    "code": "(lambda rows: (len(rows), max(len(r) for r in rows)))([(1, 'Apples', 73)] * 7)",
+    "out": "(7, 3)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "len",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "rows",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "max",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "GeneratorExp",
+             "kind": "GeneratorExp",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "len",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "r",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "comprehension",
+               "kind": "comprehension",
+               "children": [
+                {
+                 "label": "r",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "rows",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "*",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'Apples'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "73",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "7",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CellCreationOnRead",
+   "label": "Cell creation on read",
+   "level": 3,
+   "parent": "CellReferences",
+   "body": "On a new sheet, reading A1 and C5 left two cells in memory and made max_row 5 and max_column 3, and reading only the value of A100 made max_row 100 and returned None; the tutorial warns that scrolling through cells instead of accessing them directly creates them all in memory, and the chapter as read does not mention it, so a loop over range(2, sheet.max_row + 1) also visits empty rows once some code has touched a far cell (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_CellCreationOnRead",
+   "class_iri": "http://example.org/sen0414/ch14#CellCreationOnRead",
+   "example": "sheet['A100'].value",
+   "definition": "A cell that does not exist yet is created when it is first accessed, even only to read it, so touching a far cell makes max_row larger and walking over a region creates every cell in it."
+  },
+  {
+   "id": "Addresses",
+   "label": "Addresses",
+   "level": 2,
+   "parent": "WorkbookModel",
+   "body": "Columns are named with letters and counted with numbers, and two functions convert between them (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_Addresses",
+   "class_iri": "http://example.org/sen0414/ch14#Addresses"
+  },
+  {
+   "id": "ColumnLetters",
+   "label": "Column letters",
+   "level": 3,
+   "parent": "Addresses",
+   "body": "get_column_letter gives 'A', 'B', 'AA' and 'AHP' for 1, 2, 27 and 900 and column_index_from_string gives 1 for 'A' and 27 for 'AA', as the chapter prints, and 'M' is 13 (Sweigart, 2025); practice question 10 asks for the string name of row 14, but rows are numbered and the function that returns a letter name is get_column_letter, which gives 'N' for 14. The functions accept names from A to ZZZ: 'AAAA' raises ValueError, 0 raises ValueError with the text Invalid column index 0, and 16384 is 'XFD' and 18278 is 'ZZZ' (in the run of openpyxl 3.1.5 under Python 3.14.4). A plain Python version of the two conversions round-trips every number from 1 to 18278 (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch14#S_ColumnLetters",
+   "class_iri": "http://example.org/sen0414/ch14#ColumnLetters",
+   "example": "get_column_letter(27), column_index_from_string('AA')",
+   "definition": "Two functions of openpyxl.utils convert between column numbers and letters, 27 and 'AA' for instance, and need no workbook; the letters are a base-26 numbering without a zero.",
+   "io": {
+    "code": "(lambda f, g: (f(f, 1), f(f, 27), f(f, 900), g('AA'), g('M')))(lambda f, n: '' if n == 0 else f(f, (n - 1) // 26) + chr(65 + (n - 1) % 26), lambda s: __import__('functools').reduce(lambda a, c: a * 26 + ord(c) - 64, s, 0))",
+    "out": "('A', 'AA', 'AHP', 27, 13)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "f",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "f",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "f",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "f",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "27",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "f",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "f",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "900",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'AA'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "g",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'M'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "IfExp",
+         "kind": "IfExp",
+         "children": [
+          {
+           "label": "Compare",
+           "kind": "Compare",
+           "children": [
+            {
+             "label": "n",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "0",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "''",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "f",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "f",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "//",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "-",
+                 "kind": "BinOp",
+                 "children": [
+                  {
+                   "label": "n",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "1",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "26",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "chr",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "+",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "65",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "%",
+                 "kind": "BinOp",
+                 "children": [
+                  {
+                   "label": "-",
+                   "kind": "BinOp",
+                   "children": [
+                    {
+                     "label": "n",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "1",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "26",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'functools'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Lambda",
+           "kind": "Lambda",
+           "children": [
+            {
+             "label": "arguments",
+             "kind": "arguments",
+             "children": [
+              {
+               "label": "arg",
+               "kind": "arg",
+               "children": []
+              },
+              {
+               "label": "arg",
+               "kind": "arg",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "-",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "+",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "*",
+                 "kind": "BinOp",
+                 "children": [
+                  {
+                   "label": "a",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "26",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "ord",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "c",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "64",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "s",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "0",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CellCoordinate",
+   "label": "Cell coordinate",
+   "level": 3,
+   "parent": "Addresses",
+   "body": "A coordinate such as 'AB12' is the column letters then the row number and splits into 'AB' and '12' with a pattern; a row number of 0 or of 1048577 raises ValueError with the text Row numbers must be between 1 and 1048576 (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_CellCoordinate",
+   "class_iri": "http://example.org/sen0414/ch14#CellCoordinate",
+   "example": "'AB12'",
+   "definition": "A cell's coordinate is its column letters followed by its row number, which can be split with a pattern into the two parts.",
+   "io": {
+    "code": "__import__('re').fullmatch(r'([A-Z]+)(\\d+)', 'AB12').groups()",
+    "out": "('AB', '12')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'re'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "'([A-Z]+)(\\\\d+)'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'AB12'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "RangesAndValues",
+   "label": "Ranges and values",
+   "level": 2,
+   "parent": "WorkbookModel",
+   "body": "A block of cells is taken by slicing, by the rows and columns attributes or by the methods that give values (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_RangesAndValues",
+   "class_iri": "http://example.org/sen0414/ch14#RangesAndValues"
+  },
+  {
+   "id": "RangeSlice",
+   "label": "Range slice",
+   "level": 3,
+   "parent": "RangesAndValues",
+   "body": "sheet['A1':'C3'] is a tuple of 3 tuples of 3 Cell objects, rows first, and the chapter's two loops print A1 2035-04-05 13:34:02, B1 Apples, C1 73 and then the rows 2 and 3 with the line --- END OF ROW --- after each (Sweigart, 2025); sheet['B'] gave the 7 cells of column B and sheet[2] the 3 cells of row 2 (in the run of openpyxl 3.1.5 under Python 3.14.4), while the forms sheet['C:D'] and sheet[5:10] are in the tutorial and were not run (Gazoni and Clark, 2024).",
+   "section_iri": "http://example.org/sen0414/ch14#S_RangeSlice",
+   "class_iri": "http://example.org/sen0414/ch14#RangeSlice",
+   "example": "area = sheet['A1':'C3']",
+   "definition": "Slicing a sheet with two coordinates gives a tuple of rows, each a tuple of the Cell objects from the left to the right of the area, so two nested loops visit every cell.",
+   "io": {
+    "code": "tuple(tuple(c + str(r) for c in 'ABC') for r in range(1, 4))",
+    "out": "(('A1', 'B1', 'C1'), ('A2', 'B2', 'C2'), ('A3', 'B3', 'C3'))",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "tuple",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "GeneratorExp",
+       "kind": "GeneratorExp",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "tuple",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "GeneratorExp",
+           "kind": "GeneratorExp",
+           "children": [
+            {
+             "label": "+",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "c",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "str",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "r",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "comprehension",
+             "kind": "comprehension",
+             "children": [
+              {
+               "label": "c",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'ABC'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "comprehension",
+         "kind": "comprehension",
+         "children": [
+          {
+           "label": "r",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "range",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "4",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "RowsAndColumns",
+   "label": "Rows and columns",
+   "level": 3,
+   "parent": "RangesAndValues",
+   "body": "list(sheet.rows) holds 7 tuples of 3 cells and list(sheet.columns) 3 tuples of 7 cells, and the cells of list(sheet.columns)[1] have the values Apples, Cherries, Pears, Oranges, Apples, Bananas and Strawberries, as the chapter prints (Sweigart, 2025); the documentation notes that columns is not available in read-only mode (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_RowsAndColumns",
+   "class_iri": "http://example.org/sen0414/ch14#RowsAndColumns",
+   "example": "column_b = list(sheet.columns)[1]",
+   "definition": "The rows and columns attributes give the cells row by row and column by column, and once turned into lists they can be indexed; columns are rows turned on their side.",
+   "io": {
+    "code": "list(zip(*[(1, 'a'), (2, 'b'), (3, 'c')]))",
+    "out": "[(1, 2, 3), ('a', 'b', 'c')]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "list",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "zip",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Starred",
+         "kind": "Starred",
+         "children": [
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'a'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "2",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'b'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "3",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'c'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ValuesOnly",
+   "label": "Values only",
+   "level": 3,
+   "parent": "RangesAndValues",
+   "body": "iter_rows(min_row=1, max_row=2, max_col=3, values_only=True) gave the first two rows as tuples of plain values, and the first row of sheet.values was (datetime.datetime(2035, 4, 5, 13, 34, 2), 'Apples', 73); the chapter as read does not present iter_rows or values, and the documentation lists them, with values used to build a pandas DataFrame, which was not run (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_ValuesOnly",
+   "class_iri": "http://example.org/sen0414/ch14#ValuesOnly",
+   "example": "for row in sheet.iter_rows(values_only=True): print(row)",
+   "definition": "The iter_rows method and the values property give plain values instead of Cell objects, which is the shortest way to read a region into Python data; the chapter as read does not present them."
+  },
+  {
+   "id": "DateValues",
+   "label": "Date values",
+   "level": 3,
+   "parent": "RangesAndValues",
+   "body": "Column A comes back as datetime values, as the chapter says (Sweigart, 2025); the stored cell has the type n and a number format of yyyy-mm-dd h:mm:ss, and the day number 45000 added to the epoch 1899-12-30 is 2023-03-15 (Gazoni and Clark, 2024) (Python Software Foundation, 2026) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_DateValues",
+   "class_iri": "http://example.org/sen0414/ch14#DateValues",
+   "example": "sheet['A1'].value",
+   "definition": "A date or time cell comes back as a Python datetime, because the file stores it as a number of days with a date format.",
+   "io": {
+    "code": "__import__('datetime').datetime(1899, 12, 30) + __import__('datetime').timedelta(days=45000)",
+    "out": "datetime.datetime(2023, 3, 15, 0, 0)",
+    "tree": {
+     "label": "+",
+     "kind": "BinOp",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'datetime'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "1899",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "12",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "30",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'datetime'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "keyword",
+         "kind": "keyword",
+         "children": [
+          {
+           "label": "45000",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ReadingProject",
+   "label": "Reading project",
+   "level": 1,
+   "parent": null,
+   "body": "Project 9 reads a census workbook, counts tracts and adds populations for each county, and writes the result as Python source (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_ReadingProject",
+   "class_iri": "http://example.org/sen0414/ch14#ReadingProject"
+  },
+  {
+   "id": "CensusNumbers",
+   "label": "Census numbers",
+   "level": 2,
+   "parent": "ReadingProject",
+   "body": "The project has three steps: read the rows, fill a nested dictionary, write it to a file (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_CensusNumbers",
+   "class_iri": "http://example.org/sen0414/ch14#CensusNumbers"
+  },
+  {
+   "id": "CountyStructure",
+   "label": "County structure",
+   "level": 3,
+   "parent": "CensusNumbers",
+   "body": "The chapter's county_data is keyed county_data[state abbrev][county]['tracts'] and ['pop'], so county_data['AK']['Anchorage']['pop'] is 291826 and ['tracts'] is 55 in the chapter's excerpt; the book's censuspopdata.xlsx was not opened, and a stand-in with six tract rows of which one population was text ran the chapter's loop and gave AL Autauga 3 tracts and 7455, AL Baldwin 1 and 1948, and AK Anchorage 2 and 9020, which shows why the chapter converts with int() (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_CountyStructure",
+   "class_iri": "http://example.org/sen0414/ch14#CountyStructure",
+   "example": "county_data[state][county]['pop']",
+   "definition": "Project 9 keeps its totals in a dictionary of dictionaries keyed by state abbreviation and county name, each county holding a tract count and a population, and reads the population cell as text that int() converts.",
+   "io": {
+    "code": "(lambda d: sum(c['pop'] for c in d['AK'].values()))({'AK': {'Anchorage': {'pop': 291826, 'tracts': 55}, 'Juneau': {'pop': 31275, 'tracts': 7}}})",
+    "out": "323101",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "sum",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "GeneratorExp",
+           "kind": "GeneratorExp",
+           "children": [
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "c",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'pop'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "comprehension",
+             "kind": "comprehension",
+             "children": [
+              {
+               "label": "c",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "Subscript",
+                   "kind": "Subscript",
+                   "children": [
+                    {
+                     "label": "d",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "'AK'",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'AK'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "Dict",
+         "kind": "Dict",
+         "children": [
+          {
+           "label": "'Anchorage'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Juneau'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "Dict",
+           "kind": "Dict",
+           "children": [
+            {
+             "label": "'pop'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'tracts'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "291826",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "55",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Dict",
+           "kind": "Dict",
+           "children": [
+            {
+             "label": "'pop'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'tracts'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "31275",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "7",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "DefaultEntries",
+   "label": "Default entries",
+   "level": 3,
+   "parent": "CensusNumbers",
+   "body": "county_data.setdefault(state, {}) and county_data[state].setdefault(county, {'tracts': 0, 'pop': 0}) make the keys before they are incremented, and the second call with another default changes nothing; without them county_data['AK']['Anchorage'] = 1 on an empty dictionary raises KeyError: 'AK', which is the error the chapter predicts (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch14#S_DefaultEntries",
+   "class_iri": "http://example.org/sen0414/ch14#DefaultEntries",
+   "example": "county_data.setdefault(state, {})",
+   "definition": "The setdefault method creates a missing key with a starting value and does nothing when the key exists, so it can be called on every row before the counters are incremented.",
+   "io": {
+    "code": "(lambda d: (d.setdefault('AK', {}), d.setdefault('AK', {'x': 1}), d))({})",
+    "out": "({}, {}, {'AK': {}})",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "d",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "'AK'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "Dict",
+             "kind": "Dict",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "d",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "'AK'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "Dict",
+             "kind": "Dict",
+             "children": [
+              {
+               "label": "'x'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "d",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "GeneratedModule",
+   "label": "Generated module",
+   "level": 3,
+   "parent": "CensusNumbers",
+   "body": "pprint.pformat(county_data) gives text that is valid Python, the chapter writes it after 'allData = ' to census2010.py and imports it, and for the stand-in census2010.allData['AK']['Anchorage'] printed {'pop': 9020, 'tracts': 2}; pformat sorts dictionary keys by default (sort_dicts=True), so the file is in alphabetical order, and importing the file executes its statements, so a file written this way is trusted like a program (Sweigart, 2025) (Python Software Foundation, 2026) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_GeneratedModule",
+   "class_iri": "http://example.org/sen0414/ch14#GeneratedModule",
+   "example": "'allData = ' + pprint.pformat(county_data)",
+   "definition": "The project writes its dictionary as the text of a Python module with pformat, which sorts the keys, so that import census2010 gives the data back; importing runs the file as code.",
+   "io": {
+    "code": "(lambda s: __import__('ast').literal_eval(s.split(' = ', 1)[1]))('allData = ' + __import__('pprint').pformat({'b': {'pop': 1, 'tracts': 2}, 'a': {'pop': 3, 'tracts': 1}}))",
+    "out": "{'a': {'pop': 3, 'tracts': 1}, 'b': {'pop': 1, 'tracts': 2}}",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'ast'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "s",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "' = '",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "+",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "'allData = '",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'pprint'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Dict",
+           "kind": "Dict",
+           "children": [
+            {
+             "label": "'b'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'a'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "Dict",
+             "kind": "Dict",
+             "children": [
+              {
+               "label": "'pop'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'tracts'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "2",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Dict",
+             "kind": "Dict",
+             "children": [
+              {
+               "label": "'pop'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'tracts'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "3",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "WritingWorkbooks",
+   "label": "Writing workbooks",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter creates workbooks and sheets, writes values, saves, and in Project 10 edits cells of an existing workbook (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_WritingWorkbooks",
+   "class_iri": "http://example.org/sen0414/ch14#WritingWorkbooks"
+  },
+  {
+   "id": "AddingAndRemoving",
+   "label": "Adding and removing",
+   "level": 2,
+   "parent": "WritingWorkbooks",
+   "body": "A workbook is created blank and its sheets are added and removed by name (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_AddingAndRemoving",
+   "class_iri": "http://example.org/sen0414/ch14#AddingAndRemoving"
+  },
+  {
+   "id": "NewWorkbook",
+   "label": "New workbook",
+   "level": 3,
+   "parent": "AddingAndRemoving",
+   "body": "openpyxl.Workbook() gives a workbook with one sheet, so wb.sheetnames is ['Sheet'] and sheet.title is 'Sheet', and setting sheet.title = 'Spam Bacon Eggs Sheet' makes wb.sheetnames ['Spam Bacon Eggs Sheet'], as the chapter prints (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_NewWorkbook",
+   "class_iri": "http://example.org/sen0414/ch14#NewWorkbook",
+   "example": "wb = openpyxl.Workbook()",
+   "definition": "The Workbook function makes a blank workbook that starts with one sheet named Sheet, whose title attribute can be replaced."
+  },
+  {
+   "id": "SheetCreation",
+   "label": "Sheet creation",
+   "level": 3,
+   "parent": "AddingAndRemoving",
+   "body": "create_sheet() on a new workbook returned a Worksheet named Sheet1 after ['Sheet'], create_sheet(index=0, title='First Sheet') put it first and create_sheet(index=2, title='Middle Sheet') gave ['First Sheet', 'Sheet', 'Middle Sheet', 'Sheet1'], as the chapter prints (Sweigart, 2025); beyond the chapter, a second sheet titled Mysheet became Mysheet1, an index of -1 puts the sheet before the last one, a title of 32 characters is accepted with a UserWarning that says some applications may not read the file, a title containing / raises ValueError, and copy_worksheet made a sheet titled Sheet1 Copy (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_SheetCreation",
+   "class_iri": "http://example.org/sen0414/ch14#SheetCreation",
+   "example": "new_sheet = wb.create_sheet(index=0, title='First Sheet')",
+   "definition": "The create_sheet method adds a sheet at the end under the next free name, or at a given index and with a given title."
+  },
+  {
+   "id": "SheetRemoval",
+   "label": "Sheet removal",
+   "level": 3,
+   "parent": "AddingAndRemoving",
+   "body": "del wb['Middle Sheet'] and del wb['Sheet1'] left ['First Sheet', 'Sheet'] as the chapter prints, wb.remove(wb['Sheet']) then left ['First Sheet'], and del of a name that is not there raises KeyError (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_SheetRemoval",
+   "class_iri": "http://example.org/sen0414/ch14#SheetRemoval",
+   "example": "del wb['Sheet1']",
+   "definition": "A sheet is removed from the workbook with the del operator and its name, as a key is removed from a dictionary, or with the remove method and the sheet object."
+  },
+  {
+   "id": "SavingAndOutput",
+   "label": "Saving and output",
+   "level": 2,
+   "parent": "WritingWorkbooks",
+   "body": "Edits are kept in memory until save, and values are written by assignment (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_SavingAndOutput",
+   "class_iri": "http://example.org/sen0414/ch14#SavingAndOutput"
+  },
+  {
+   "id": "SaveMethod",
+   "label": "Save method",
+   "level": 3,
+   "parent": "SavingAndOutput",
+   "body": "After the stand-in's sheet was retitled Spam Spam Spam and saved as example3_copy.xlsx, the copy had the new title and the original file still had Sheet1, as the chapter explains; save overwrites an existing file without warning, since a blank workbook saved over a file of 4954 bytes left one of 4784 bytes, and the tutorial says the same (Sweigart, 2025) (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4). That save fails while Excel has the file open was not tested.",
+   "section_iri": "http://example.org/sen0414/ch14#S_SaveMethod",
+   "class_iri": "http://example.org/sen0414/ch14#SaveMethod",
+   "example": "wb.save('example3_copy.xlsx')",
+   "definition": "Nothing reaches the disk until the save method is called, and it overwrites an existing file without asking, so the chapter saves edited workbooks under a new name to keep the original."
+  },
+  {
+   "id": "CellWriting",
+   "label": "Cell writing",
+   "level": 3,
+   "parent": "SavingAndOutput",
+   "body": "sheet['A1'] = 'Hello, world!' makes sheet['A1'].value that text; the kinds stored were s for text, n for a number, b for True, d for a datetime with the format yyyy-mm-dd h:mm:ss and d for a date with yyyy-mm-dd; a list as a value raises ValueError with the text Cannot convert [1, 2] to Excel, and a datetime with a timezone is accepted on assignment and raises TypeError only when the file is saved, with the text Excel does not support timezones in datetimes, which agrees with the documentation that only naive datetimes can be stored (Sweigart, 2025) (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_CellWriting",
+   "class_iri": "http://example.org/sen0414/ch14#CellWriting",
+   "example": "sheet['A1'] = 'Hello, world!'",
+   "definition": "Assigning to a cell name or to a cell's value writes it like a dictionary entry, and the Python type of the value decides how the cell is stored."
+  },
+  {
+   "id": "PriceUpdate",
+   "label": "Price update",
+   "level": 2,
+   "parent": "WritingWorkbooks",
+   "body": "Project 10 corrects prices in a produce workbook while its total column holds formulas (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_PriceUpdate",
+   "class_iri": "http://example.org/sen0414/ch14#PriceUpdate"
+  },
+  {
+   "id": "UpdateLoop",
+   "label": "Update loop",
+   "level": 3,
+   "parent": "PriceUpdate",
+   "body": "With PRICE_UPDATES = {'Garlic': 3.07, 'Celery': 1.19, 'Lemon': 1.27} and a loop over range(2, sheet.max_row + 1), a stand-in of seven rows (the book's produceSales3.xlsx was not opened) came out with Celery 1.19, Garlic 3.07 and Lemon 1.27 in the saved updatedProduceSales3.xlsx and the other prices unchanged, while the original file still held 1.9 for Celery (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4); the chapter's prose says lemons and its key is 'Lemon', and 'Lemon' in the dictionary is True while 'Lemons' is False, and its step 1 pseudo-code cell_obj = 1.19 would only rebind a name and not change a cell (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_UpdateLoop",
+   "class_iri": "http://example.org/sen0414/ch14#UpdateLoop",
+   "example": "if produce_name in PRICE_UPDATES:",
+   "definition": "Project 10 holds the corrected prices in a dictionary and loops over the rows from 2 on, changing the price cell of every row whose produce name is a key, then saves to a new file.",
+   "io": {
+    "code": "[n in {'Garlic': 3.07, 'Celery': 1.19, 'Lemon': 1.27} for n in ('Lemon', 'Lemons')]",
+    "out": "[True, False]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "n",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Dict",
+         "kind": "Dict",
+         "children": [
+          {
+           "label": "'Garlic'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Celery'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Lemon'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "3.07",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "1.19",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "1.27",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "n",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'Lemon'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Lemons'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "FormulaSurvival",
+   "label": "Formula survival",
+   "level": 3,
+   "parent": "PriceUpdate",
+   "body": "After the update all seven total cells still had the kind f and the text =ROUND(B2*C2, 2) and so on for their rows, and opening the updated file with data_only=True gave None for them, because the stand-in had never been calculated by a spreadsheet application; whether Excel recalculates them on opening was not tested (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_FormulaSurvival",
+   "class_iri": "http://example.org/sen0414/ch14#FormulaSurvival",
+   "example": "=ROUND(B2*C2, 2)",
+   "definition": "The total column of the produce workbook holds formulas, which stay formulas when only the price cells are changed, because openpyxl writes them back as text and does not recalculate."
+  },
+  {
+   "id": "Presentation",
+   "label": "Presentation",
+   "level": 1,
+   "parent": null,
+   "body": "Fonts, sizes of rows and columns, merged cells and frozen rows change how a sheet looks and scrolls (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_Presentation",
+   "class_iri": "http://example.org/sen0414/ch14#Presentation"
+  },
+  {
+   "id": "FontStyle",
+   "label": "Font style",
+   "level": 2,
+   "parent": "Presentation",
+   "body": "A Font object is made once and assigned to cells (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_FontStyle",
+   "class_iri": "http://example.org/sen0414/ch14#FontStyle"
+  },
+  {
+   "id": "FontObject",
+   "label": "Font object",
+   "level": 3,
+   "parent": "FontStyle",
+   "body": "Font(name='Times New Roman', bold=True) and Font(size=24, italic=True) are made with the keyword arguments of Table 14-2, name as text, size as a number and bold and italic as Booleans, and the size read back as 24.0 (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_FontObject",
+   "class_iri": "http://example.org/sen0414/ch14#FontObject",
+   "example": "Font(name='Times New Roman', size=24, bold=True, italic=True)",
+   "definition": "A Font object is made from the openpyxl.styles module with the keyword arguments name, size, bold and italic, and holds only the attributes it was given."
+  },
+  {
+   "id": "FontAssignment",
+   "label": "Font assignment",
+   "level": 3,
+   "parent": "FontStyle",
+   "body": "Setting sheet['A1'].font to the Font and then sheet['A1'] = 'Hello, world!' saved and reloaded as size 24.0, italic True, bold False and the text; setting the attribute bold on an existing Font raised AttributeError with the text Style objects are immutable and cannot be changed, and the font read from the cell is equal to the Font assigned but is not the same object (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_FontAssignment",
+   "class_iri": "http://example.org/sen0414/ch14#FontAssignment",
+   "example": "sheet['A1'].font = italic_24_font",
+   "definition": "A cell is styled by assigning a Font object to its font attribute, and the Font cannot be changed afterwards, so a new look needs a new Font."
+  },
+  {
+   "id": "FontDefaults",
+   "label": "Font defaults",
+   "level": 3,
+   "parent": "FontStyle",
+   "body": "The chapter says that a Font without a name uses the openpyxl default Calibri and one without a size uses 11; in the run a new cell had the font Calibri 11.0, but the Font made with size=24 and italic=True had name None, the one made with name and bold had size None, and the styles part of the saved file listed the first font with only italic and a size of 24; what Excel displays for the missing attributes was not tested (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_FontDefaults",
+   "class_iri": "http://example.org/sen0414/ch14#FontDefaults",
+   "example": "Font(size=24, italic=True)",
+   "definition": "A new cell's font is Calibri 11, but a Font object made with some keyword arguments has no value for the others, so the chapter's claim that it falls back to Calibri and 11 is not what the saved file holds."
+  },
+  {
+   "id": "SizeMeasures",
+   "label": "Size measures",
+   "level": 2,
+   "parent": "Presentation",
+   "body": "Row heights, column widths and hidden columns are set through dimension objects (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_SizeMeasures",
+   "class_iri": "http://example.org/sen0414/ch14#SizeMeasures"
+  },
+  {
+   "id": "RowAndColumnSize",
+   "label": "Row and column size",
+   "level": 3,
+   "parent": "SizeMeasures",
+   "body": "row_dimensions is a DimensionHolder of RowDimension objects and column_dimensions one of ColumnDimension objects; sheet.row_dimensions[1].height = 70 and sheet.column_dimensions['B'].width = 20 were read back as 70.0 and 20.0 after saving, row 5 set to 100 gave 100.0, and a column left alone reported 13.0, which fits the chapter's remark that default sizes vary between versions (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_RowAndColumnSize",
+   "class_iri": "http://example.org/sen0414/ch14#RowAndColumnSize",
+   "example": "sheet.row_dimensions[1].height = 70",
+   "definition": "The row_dimensions and column_dimensions attributes are dictionary-like, indexed by row number and by column letter, and set the height of a row and the width of a column."
+  },
+  {
+   "id": "HiddenColumn",
+   "label": "Hidden column",
+   "level": 3,
+   "parent": "SizeMeasures",
+   "body": "Practice question 16 asks how to hide column C; column_dimensions['C'].hidden = True was saved, written as a hidden column in the sheet part, and read back as True, and the documentation shows grouping with hidden=True as well (Sweigart, 2025) (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_HiddenColumn",
+   "class_iri": "http://example.org/sen0414/ch14#HiddenColumn",
+   "example": "sheet.column_dimensions['C'].hidden = True",
+   "definition": "A column is hidden by setting hidden on its dimension object; the chapter promises hiding and its practice question 16 asks for it, but no example shows it."
+  },
+  {
+   "id": "MergedAndFrozenPositions",
+   "label": "Merged and frozen positions",
+   "level": 2,
+   "parent": "Presentation",
+   "body": "Merging joins cells into one, and freezing keeps headers in view (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_MergedAndFrozenPositions",
+   "class_iri": "http://example.org/sen0414/ch14#MergedAndFrozenPositions"
+  },
+  {
+   "id": "MergeCells",
+   "label": "Merge cells",
+   "level": 3,
+   "parent": "MergedAndFrozenPositions",
+   "body": "merge_cells('A1:D3') joins 12 cells and merge_cells('C5:D5') two, sheet.merged_cells.ranges listed ['A1:D3', 'C5:D5'], a cell inside a merged area such as B2 is a MergedCell whose value is None and whose assignment raises AttributeError with the text 'MergedCell' object attribute 'value' is read-only, unmerge_cells('A1:D3') and ('C5:D5') left no merged ranges and B2 an ordinary Cell, and unmerging a range that is not merged raises ValueError (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_MergeCells",
+   "class_iri": "http://example.org/sen0414/ch14#MergeCells",
+   "example": "sheet.merge_cells('A1:D3')",
+   "definition": "The merge_cells method joins the rectangle named by its top-left and bottom-right cells into one cell whose value is set in the top-left cell, and unmerge_cells splits it again.",
+   "io": {
+    "code": "(lambda a: (ord(a[3]) - ord(a[0]) + 1) * (int(a[4]) - int(a[1]) + 1))('A1:D3')",
+    "out": "12",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "*",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "-",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "ord",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "Subscript",
+                 "kind": "Subscript",
+                 "children": [
+                  {
+                   "label": "a",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "3",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "ord",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "Subscript",
+                 "kind": "Subscript",
+                 "children": [
+                  {
+                   "label": "a",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "0",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "-",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "int",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "Subscript",
+                 "kind": "Subscript",
+                 "children": [
+                  {
+                   "label": "a",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "4",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "int",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "Subscript",
+                 "kind": "Subscript",
+                 "children": [
+                  {
+                   "label": "a",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "1",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'A1:D3'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "FreezePanes",
+   "label": "Freeze panes",
+   "level": 3,
+   "parent": "MergedAndFrozenPositions",
+   "body": "Practice question 17 asks what a freeze pane is: it keeps rows and columns visible while the sheet scrolls; the freeze_panes settings of Table 14-3 were all read back as set, A1 and None both gave None, a Cell object was accepted (B3 gave a split of 1 column and 2 rows), and the counts of frozen rows and columns follow from the coordinate: A2 freezes 1 row, B1 1 column, C1 2 columns, C2 1 row and 2 columns (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_FreezePanes",
+   "class_iri": "http://example.org/sen0414/ch14#FreezePanes",
+   "example": "sheet.freeze_panes = 'A2'",
+   "definition": "A freeze pane keeps rows and columns visible while the sheet scrolls: setting freeze_panes to a cell freezes every row above it and every column to its left, and setting it to A1 or None removes the freeze.",
+   "io": {
+    "code": "[(lambda s: (int(s[1:]) - 1, ord(s[0]) - 65))(x) for x in ('A2', 'B1', 'C1', 'C2', 'A1')]",
+    "out": "[(1, 0), (0, 1), (0, 2), (1, 2), (0, 0)]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Lambda",
+         "kind": "Lambda",
+         "children": [
+          {
+           "label": "arguments",
+           "kind": "arguments",
+           "children": [
+            {
+             "label": "arg",
+             "kind": "arg",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "-",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "int",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "Subscript",
+                 "kind": "Subscript",
+                 "children": [
+                  {
+                   "label": "s",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "Slice",
+                   "kind": "Slice",
+                   "children": [
+                    {
+                     "label": "1",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "-",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "ord",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "Subscript",
+                 "kind": "Subscript",
+                 "children": [
+                  {
+                   "label": "s",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "0",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "65",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "x",
+         "kind": "Name",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "x",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'A2'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'B1'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'C1'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'C2'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'A1'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "FormulasAndCharts",
+   "label": "Formulas and charts",
+   "level": 1,
+   "parent": null,
+   "body": "Formulas are strings that start with an equal sign, and charts are built from references to cells (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_FormulasAndCharts",
+   "class_iri": "http://example.org/sen0414/ch14#FormulasAndCharts"
+  },
+  {
+   "id": "FormulaCells",
+   "label": "Formula cells",
+   "level": 2,
+   "parent": "FormulasAndCharts",
+   "body": "A formula is stored as text in a cell and calculated only by a spreadsheet application (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_FormulaCells",
+   "class_iri": "http://example.org/sen0414/ch14#FormulaCells"
+  },
+  {
+   "id": "FormulaString",
+   "label": "Formula string",
+   "level": 3,
+   "parent": "FormulaCells",
+   "body": "sheet['A3'] = '=SUM(A1:A2)' after 200 and 300 in A1 and A2 gave the kind f, and the saved sheet part holds the formula without a value, so a reloaded A3 is '=SUM(A1:A2)' as the chapter prints; text that starts with = is always taken for a formula, including '=not a formula(', while '123' stays text with the kind s, and setting the data type of the cell to s keeps a formula-looking text as text (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_FormulaString",
+   "class_iri": "http://example.org/sen0414/ch14#FormulaString",
+   "example": "sheet['A3'] = '=SUM(A1:A2)'",
+   "definition": "A formula is written into a cell as text that starts with an equal sign, in the same way as any other value."
+  },
+  {
+   "id": "NoCalculation",
+   "label": "No calculation",
+   "level": 3,
+   "parent": "FormulaCells",
+   "body": "The chapter says openpyxl cannot calculate formulas, so the 500 that Excel shows for =SUM(A1:A2) is not produced by the module; Python's sum([200, 300]) is 500, but no spreadsheet application was run here to show what Excel would display, and the chapter's example of a long nested formula is offered as a reason to prefer Python code (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_NoCalculation",
+   "class_iri": "http://example.org/sen0414/ch14#NoCalculation",
+   "example": "a formula written by openpyxl",
+   "definition": "The module does not calculate formulas, and the result that a spreadsheet application would show has to be worked out separately, here by Python.",
+   "io": {
+    "code": "sum([200, 300])",
+    "out": "500",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "sum",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "200",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "300",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CachedResult",
+   "label": "Cached result",
+   "level": 3,
+   "parent": "FormulaCells",
+   "body": "Loaded without data_only the cell gave the text =SUM(A1:A2), and loaded with data_only=True it gave None, because no spreadsheet application had opened the file; the chapter's 500 needs the file to be opened and saved in Excel first, which answers practice question 14, and was not reproduced; the tutorial defines data_only as choosing between the formula and the value stored the last time Excel read the sheet (Sweigart, 2025) (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_CachedResult",
+   "class_iri": "http://example.org/sen0414/ch14#CachedResult",
+   "example": "load_workbook('writeFormula3.xlsx', data_only=True)",
+   "definition": "Loading with data_only=True gives the value that a spreadsheet application stored the last time it saved the file, and gives None when no application has calculated the formula."
+  },
+  {
+   "id": "FormulaTranslation",
+   "label": "Formula translation",
+   "level": 3,
+   "parent": "FormulaCells",
+   "body": "insert_rows(3, 2) moved a formula cell from C5 to C7 and left its text =SUM(B1:B4) as it was, openpyxl.formula.translate.Translator('=SUM(B1:B4)', origin='C5').translate_formula('C7') gave =SUM(B3:B6), and the Tokenizer split =ROUND(B2*C2, 2) into the function ROUND(, the operands B2 and C2, the infix operator *, a separator, a space, the number 2 and the closing parenthesis; the chapter as read presents none of these (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_FormulaTranslation",
+   "class_iri": "http://example.org/sen0414/ch14#FormulaTranslation",
+   "example": "Translator('=SUM(B1:B4)', origin='C5').translate_formula('C7')",
+   "definition": "The Translator class rewrites a formula for another position, moving its relative references, which the row-moving methods of a sheet do not do; the chapter as read does not present it."
+  },
+  {
+   "id": "ChartSequence",
+   "label": "Chart sequence",
+   "level": 2,
+   "parent": "FormulasAndCharts",
+   "body": "A chart is assembled from cell references and added to a sheet (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_ChartSequence",
+   "class_iri": "http://example.org/sen0414/ch14#ChartSequence"
+  },
+  {
+   "id": "ChartRecipe",
+   "label": "Chart recipe",
+   "level": 3,
+   "parent": "ChartSequence",
+   "body": "The chapter's five steps are a Reference, a Series, a chart object, appending the series and add_chart; for column A holding 1 to 100 squares, BarChart with title My Chart and Series(ref_obj, title='First series') saved a workbook with the parts xl/charts/chart1.xml and xl/drawings/drawing1.xml, the chart part contained the title and the series title, and a reloaded sheet held 1 chart; BarChart, LineChart, ScatterChart and PieChart all exist, the default chart size is 15 by 7.5, and the chart's look on screen was not viewed; practice question 18 is answered by Reference, Series, BarChart, append and add_chart, and the documentation shows the shorter add_data (Sweigart, 2025) (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_ChartRecipe",
+   "class_iri": "http://example.org/sen0414/ch14#ChartRecipe",
+   "example": "sheet.add_chart(chart_obj, 'C5')",
+   "definition": "A chart is built from a Reference to a block of cells, a Series made from it, a chart object such as BarChart to which the series is appended, and a call of add_chart with the cell where its top-left corner goes."
+  },
+  {
+   "id": "ReferenceObject",
+   "label": "Reference object",
+   "level": 3,
+   "parent": "ChartSequence",
+   "body": "Reference(sheet, 2, 3, 4, 5) printed as the range B3 to D5 of the sheet, with min_col 2, min_row 3, max_col 4 and max_row 5, and the documented signature is worksheet, min_col, min_row, max_col, max_row; the chapter says five arguments and lists three and says the first integer is the row, which is wrong, while its example Reference(sheet, 1, 1, 1, 10) is column 1, rows 1 to 10 and the saved chart names A1 to A10 (Sweigart, 2025) (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_ReferenceObject",
+   "class_iri": "http://example.org/sen0414/ch14#ReferenceObject",
+   "example": "openpyxl.chart.Reference(sheet, 1, 1, 1, 10)",
+   "definition": "A Reference names a block of cells by the sheet and then the first column, first row, last column and last row, in that order.",
+   "io": {
+    "code": "(lambda L, a, b, c, d: '$%s$%d:$%s$%d' % (L(a), b, L(c), d))(lambda n: chr(64 + n), 2, 3, 4, 5)",
+    "out": "'$B$3:$D$5'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "%",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "'$%s$%d:$%s$%d'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "L",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "a",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "b",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "L",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "c",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "d",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "chr",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "64",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "n",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "2",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "3",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "4",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "5",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "BeyondTheChapter",
+   "label": "Beyond the chapter",
+   "level": 1,
+   "parent": null,
+   "body": "Large files, file-format limits, dates and the two practice programs go beyond the chapter's text (Sweigart, 2025) (Gazoni and Clark, 2024).",
+   "section_iri": "http://example.org/sen0414/ch14#S_BeyondTheChapter",
+   "class_iri": "http://example.org/sen0414/ch14#BeyondTheChapter"
+  },
+  {
+   "id": "LargeDataSources",
+   "label": "Large data sources",
+   "level": 2,
+   "parent": "BeyondTheChapter",
+   "body": "Two optimised modes handle files too large for memory (Gazoni and Clark, 2024).",
+   "section_iri": "http://example.org/sen0414/ch14#S_LargeDataSources",
+   "class_iri": "http://example.org/sen0414/ch14#LargeDataSources"
+  },
+  {
+   "id": "ReadOnlyMode",
+   "label": "Read only mode",
+   "level": 3,
+   "parent": "LargeDataSources",
+   "body": "load_workbook(..., read_only=True) gave a ReadOnlyWorksheet whose rows are ReadOnlyCell objects, calculate_dimension() returned A1:C7, iter_cols raised AttributeError, saving raised TypeError with the text Workbook is read-only, and the documentation says the workbook is loaded lazily and must be closed with close() (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_ReadOnlyMode",
+   "class_iri": "http://example.org/sen0414/ch14#ReadOnlyMode",
+   "example": "load_workbook('big.xlsx', read_only=True)",
+   "definition": "Read-only mode loads rows lazily with little memory, returns cells of a lighter type, offers no iter_cols, cannot be saved and must be closed."
+  },
+  {
+   "id": "WriteOnlyMode",
+   "label": "Write only mode",
+   "level": 3,
+   "parent": "LargeDataSources",
+   "body": "Workbook(write_only=True) had no sheets (sheetnames was []), create_sheet() and append([1, 2, 3]) worked, ws['A1'] raised TypeError because a write-only sheet cannot be indexed, and a second save raised FileNotFoundError, while the documentation says a write-only workbook can be saved only once (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_WriteOnlyMode",
+   "class_iri": "http://example.org/sen0414/ch14#WriteOnlyMode",
+   "example": "Workbook(write_only=True)",
+   "definition": "Write-only mode starts with no sheets, accepts rows only through append, keeps memory use low and can be saved only once."
+  },
+  {
+   "id": "FormatDetails",
+   "label": "Format details",
+   "level": 2,
+   "parent": "BeyondTheChapter",
+   "body": "The module reads the xlsx family, warns of XML attacks, has a release history and stores dates as numbers (Gazoni and Clark, 2024).",
+   "section_iri": "http://example.org/sen0414/ch14#S_FormatDetails",
+   "class_iri": "http://example.org/sen0414/ch14#FormatDetails"
+  },
+  {
+   "id": "OldFormatRefusal",
+   "label": "Old format refusal",
+   "level": 3,
+   "parent": "FormatDetails",
+   "body": "An old .xls file raised InvalidFileException with the text openpyxl does not support the old .xls file format, please use xlrd to read this file, or convert it to the more recent .xlsx file format., a text file named .xlsx raised BadZipFile with the text File is not a zip file, and a missing file raised FileNotFoundError; the documentation says openpyxl reads and writes xlsx, xlsm, xltx and xltm files (Gazoni and Clark, 2024) (Python Software Foundation, 2026) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_OldFormatRefusal",
+   "class_iri": "http://example.org/sen0414/ch14#OldFormatRefusal",
+   "example": "load_workbook('old.xls')",
+   "definition": "The module reads the xlsx family of formats only: an old .xls file, a file that is not a zip archive and a missing file each stop with an error that says which."
+  },
+  {
+   "id": "XmlSafety",
+   "label": "Xml safety",
+   "level": 3,
+   "parent": "FormatDetails",
+   "body": "The documentation's home page says that by default openpyxl does not guard against quadratic blowup or billion laughs XML attacks and that installing defusedxml guards against them; neither defusedxml nor lxml was installed in the run, and the protection was not tested (Gazoni and Clark, 2024).",
+   "section_iri": "http://example.org/sen0414/ch14#S_XmlSafety",
+   "class_iri": "http://example.org/sen0414/ch14#XmlSafety",
+   "example": "defusedxml",
+   "definition": "An xlsx file is XML inside a zip, and the documentation says openpyxl does not by default guard against quadratic blowup or billion laughs attacks and advises installing defusedxml before reading files from others."
+  },
+  {
+   "id": "LibraryStatus",
+   "label": "Library status",
+   "level": 3,
+   "parent": "FormatDetails",
+   "body": "The Python Package Index lists openpyxl 3.1.5 uploaded on 2024-06-28 as the newest release, with Requires-Python 3.8 or later and classifiers up to Python 3.11, and also a beta 3.2.0b1 uploaded on 2022-05-19; the documentation pages were headed 3.1.3 and generated on 2024-05-29; the chapter says to install it with pip, as Appendix A explains, and it was installed with uv into a scratch folder; every operation executed ran under Python 3.14.4 with warnings turned into errors, apart from the title-length warning the script provoked (Sweigart, 2025) (Python Package Index, 2026) (Python Software Foundation, 2026) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_LibraryStatus",
+   "class_iri": "http://example.org/sen0414/ch14#LibraryStatus",
+   "example": "openpyxl 3.1.5",
+   "definition": "The newest openpyxl on the Python Package Index is 3.1.5 of 2024-06-28, which ran under Python 3.14.4 although its classifiers stop at Python 3.11."
+  },
+  {
+   "id": "DateSerials",
+   "label": "Date serials",
+   "level": 3,
+   "parent": "FormatDetails",
+   "body": "The documentation says a date can be stored as an ISO 8601 string or as a number, that the 1900 date system counts 1900 as a leap year by mistake, that the 1904 system is chosen with wb.epoch, and that no timezone can be stored; in the run wb.epoch was 1899-12-30, iso_dates was False, to_excel gave 49404.565300925926 for 2035-04-05 13:34:02 and 61.0 for 1900-03-01, from_excel(1.5) gave 1900-01-01 12:00 where the plain epoch sum gives 1899-12-31 12:00, and date(1900, 2, 29) raises ValueError (Gazoni and Clark, 2024) (Python Software Foundation, 2026) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_DateSerials",
+   "class_iri": "http://example.org/sen0414/ch14#DateSerials",
+   "example": "epoch = wb.epoch",
+   "definition": "Dates are stored as day numbers counted from an epoch, 1899-12-30 for the usual 1900 date system, and the system wrongly counts 1900 as a leap year, so the plain epoch sum is right only from 1 March 1900 on and no timezone can be stored.",
+   "io": {
+    "code": "(__import__('datetime').datetime(1900, 3, 1) - __import__('datetime').datetime(1899, 12, 30)).days",
+    "out": "61",
+    "tree": {
+     "label": "Attribute",
+     "kind": "Attribute",
+     "children": [
+      {
+       "label": "-",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'datetime'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1900",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "3",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'datetime'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1899",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "12",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "30",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PracticePrograms",
+   "label": "Practice programs",
+   "level": 2,
+   "parent": "BeyondTheChapter",
+   "body": "The chapter ends with 18 practice questions and two programs to write (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch14#S_PracticePrograms",
+   "class_iri": "http://example.org/sen0414/ch14#PracticePrograms"
+  },
+  {
+   "id": "MultiplicationTable",
+   "label": "Multiplication table",
+   "level": 3,
+   "parent": "PracticePrograms",
+   "body": "A solution written for this study, called as a function with 6 because the command line was not used, gave a sheet of 7 rows and 7 columns with G7 equal to 36, D5 equal to 12, A1 empty, B1 and A4 in bold and C3 not in bold; the book's Figure 14-10 was not viewed (Sweigart, 2025) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_MultiplicationTable",
+   "class_iri": "http://example.org/sen0414/ch14#MultiplicationTable",
+   "example": "multiplicationTable.py 6",
+   "definition": "Practice program 1 builds an N by N multiplication table with the labels in row 1 and column A set in bold.",
+   "io": {
+    "code": "[[None] + list(range(1, 4))] + [[r] + [r * c for c in range(1, 4)] for r in range(1, 4)]",
+    "out": "[[None, 1, 2, 3], [1, 1, 2, 3], [2, 2, 4, 6], [3, 3, 6, 9]]",
+    "tree": {
+     "label": "+",
+     "kind": "BinOp",
+     "children": [
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "None",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "list",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "range",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "4",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "ListComp",
+       "kind": "ListComp",
+       "children": [
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "r",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "ListComp",
+           "kind": "ListComp",
+           "children": [
+            {
+             "label": "*",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "r",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "c",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "comprehension",
+             "kind": "comprehension",
+             "children": [
+              {
+               "label": "c",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "range",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "4",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "comprehension",
+         "kind": "comprehension",
+         "children": [
+          {
+           "label": "r",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "range",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "4",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "BlankRowInserter",
+   "label": "Blank row inserter",
+   "level": 3,
+   "parent": "PracticePrograms",
+   "body": "A solution written for this study that copies rows before N unchanged and writes the later rows M rows lower turned the rows item1 to item5 into item1, item2, two empty rows, item3, item4, item5 for N of 3 and M of 2, and the sheet method insert_rows(3, 2) gave the same values; the command-line form was not run, and the figures were not viewed (Sweigart, 2025) (Gazoni and Clark, 2024) (in the run of openpyxl 3.1.5 under Python 3.14.4).",
+   "section_iri": "http://example.org/sen0414/ch14#S_BlankRowInserter",
+   "class_iri": "http://example.org/sen0414/ch14#BlankRowInserter",
+   "example": "blankRowInserter.py 3 2 myProduce.xlsx",
+   "definition": "Practice program 2 inserts M blank rows at row N by copying the first rows unchanged and writing every later row M rows lower.",
+   "io": {
+    "code": "[r if r < 3 else r + 2 for r in range(1, 6)]",
+    "out": "[1, 2, 5, 6, 7]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "IfExp",
+       "kind": "IfExp",
+       "children": [
+        {
+         "label": "Compare",
+         "kind": "Compare",
+         "children": [
+          {
+           "label": "r",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "3",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "r",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "r",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "r",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "range",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "6",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  }
+ ],
+ "relations": [
+  {
+   "source": "WorkbookStructure",
+   "target": "WorkbookModel",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WorkbookFile",
+   "target": "WorkbookStructure",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SheetNames",
+   "target": "WorkbookStructure",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ActiveSheet",
+   "target": "WorkbookStructure",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CellReferences",
+   "target": "WorkbookModel",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CellByName",
+   "target": "CellReferences",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CellByNumbers",
+   "target": "CellReferences",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CellAttributes",
+   "target": "CellReferences",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SheetSize",
+   "target": "CellReferences",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CellCreationOnRead",
+   "target": "CellReferences",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Addresses",
+   "target": "WorkbookModel",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ColumnLetters",
+   "target": "Addresses",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CellCoordinate",
+   "target": "Addresses",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RangesAndValues",
+   "target": "WorkbookModel",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RangeSlice",
+   "target": "RangesAndValues",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RowsAndColumns",
+   "target": "RangesAndValues",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ValuesOnly",
+   "target": "RangesAndValues",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DateValues",
+   "target": "RangesAndValues",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CensusNumbers",
+   "target": "ReadingProject",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CountyStructure",
+   "target": "CensusNumbers",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DefaultEntries",
+   "target": "CensusNumbers",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GeneratedModule",
+   "target": "CensusNumbers",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AddingAndRemoving",
+   "target": "WritingWorkbooks",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NewWorkbook",
+   "target": "AddingAndRemoving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SheetCreation",
+   "target": "AddingAndRemoving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SheetRemoval",
+   "target": "AddingAndRemoving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SavingAndOutput",
+   "target": "WritingWorkbooks",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SaveMethod",
+   "target": "SavingAndOutput",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CellWriting",
+   "target": "SavingAndOutput",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PriceUpdate",
+   "target": "WritingWorkbooks",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "UpdateLoop",
+   "target": "PriceUpdate",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FormulaSurvival",
+   "target": "PriceUpdate",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FontStyle",
+   "target": "Presentation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FontObject",
+   "target": "FontStyle",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FontAssignment",
+   "target": "FontStyle",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FontDefaults",
+   "target": "FontStyle",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SizeMeasures",
+   "target": "Presentation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RowAndColumnSize",
+   "target": "SizeMeasures",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "HiddenColumn",
+   "target": "SizeMeasures",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MergedAndFrozenPositions",
+   "target": "Presentation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MergeCells",
+   "target": "MergedAndFrozenPositions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FreezePanes",
+   "target": "MergedAndFrozenPositions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FormulaCells",
+   "target": "FormulasAndCharts",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FormulaString",
+   "target": "FormulaCells",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NoCalculation",
+   "target": "FormulaCells",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CachedResult",
+   "target": "FormulaCells",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FormulaTranslation",
+   "target": "FormulaCells",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ChartSequence",
+   "target": "FormulasAndCharts",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ChartRecipe",
+   "target": "ChartSequence",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ReferenceObject",
+   "target": "ChartSequence",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LargeDataSources",
+   "target": "BeyondTheChapter",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ReadOnlyMode",
+   "target": "LargeDataSources",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WriteOnlyMode",
+   "target": "LargeDataSources",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FormatDetails",
+   "target": "BeyondTheChapter",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "OldFormatRefusal",
+   "target": "FormatDetails",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "XmlSafety",
+   "target": "FormatDetails",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LibraryStatus",
+   "target": "FormatDetails",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DateSerials",
+   "target": "FormatDetails",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PracticePrograms",
+   "target": "BeyondTheChapter",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MultiplicationTable",
+   "target": "PracticePrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "BlankRowInserter",
+   "target": "PracticePrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ActiveSheet",
+   "target": "NewWorkbook",
+   "type": "mentions",
+   "evidence": "the document's section on Active sheet names New workbook"
+  },
+  {
+   "source": "FreezePanes",
+   "target": "RowsAndColumns",
+   "type": "mentions",
+   "evidence": "the document's section on Freeze panes names Rows and columns"
+  }
+ ],
+ "agents": [
+  {
+   "id": "agent-WorkbookStructure",
+   "name": "Workbook structure agent",
+   "subject": "WorkbookStructure",
+   "covers": [
+    "WorkbookFile",
+    "SheetNames",
+    "ActiveSheet",
+    "WorkbookStructure"
+   ]
+  },
+  {
+   "id": "agent-CellReferences",
+   "name": "Cell references agent",
+   "subject": "CellReferences",
+   "covers": [
+    "CellByName",
+    "CellByNumbers",
+    "CellAttributes",
+    "SheetSize",
+    "CellCreationOnRead",
+    "CellReferences"
+   ]
+  },
+  {
+   "id": "agent-Addresses",
+   "name": "Addresses agent",
+   "subject": "Addresses",
+   "covers": [
+    "ColumnLetters",
+    "CellCoordinate",
+    "Addresses"
+   ]
+  },
+  {
+   "id": "agent-RangesAndValues",
+   "name": "Ranges and values agent",
+   "subject": "RangesAndValues",
+   "covers": [
+    "RangeSlice",
+    "RowsAndColumns",
+    "ValuesOnly",
+    "DateValues",
+    "RangesAndValues"
+   ]
+  },
+  {
+   "id": "agent-CensusNumbers",
+   "name": "Census numbers agent",
+   "subject": "CensusNumbers",
+   "covers": [
+    "CountyStructure",
+    "DefaultEntries",
+    "GeneratedModule",
+    "CensusNumbers"
+   ]
+  },
+  {
+   "id": "agent-AddingAndRemoving",
+   "name": "Adding and removing agent",
+   "subject": "AddingAndRemoving",
+   "covers": [
+    "NewWorkbook",
+    "SheetCreation",
+    "SheetRemoval",
+    "AddingAndRemoving"
+   ]
+  },
+  {
+   "id": "agent-SavingAndOutput",
+   "name": "Saving and output agent",
+   "subject": "SavingAndOutput",
+   "covers": [
+    "SaveMethod",
+    "CellWriting",
+    "SavingAndOutput"
+   ]
+  },
+  {
+   "id": "agent-PriceUpdate",
+   "name": "Price update agent",
+   "subject": "PriceUpdate",
+   "covers": [
+    "UpdateLoop",
+    "FormulaSurvival",
+    "PriceUpdate"
+   ]
+  },
+  {
+   "id": "agent-FontStyle",
+   "name": "Font style agent",
+   "subject": "FontStyle",
+   "covers": [
+    "FontObject",
+    "FontAssignment",
+    "FontDefaults",
+    "FontStyle"
+   ]
+  },
+  {
+   "id": "agent-SizeMeasures",
+   "name": "Size measures agent",
+   "subject": "SizeMeasures",
+   "covers": [
+    "RowAndColumnSize",
+    "HiddenColumn",
+    "SizeMeasures"
+   ]
+  },
+  {
+   "id": "agent-MergedAndFrozenPositions",
+   "name": "Merged and frozen positions agent",
+   "subject": "MergedAndFrozenPositions",
+   "covers": [
+    "MergeCells",
+    "FreezePanes",
+    "MergedAndFrozenPositions"
+   ]
+  },
+  {
+   "id": "agent-FormulaCells",
+   "name": "Formula cells agent",
+   "subject": "FormulaCells",
+   "covers": [
+    "FormulaString",
+    "NoCalculation",
+    "CachedResult",
+    "FormulaTranslation",
+    "FormulaCells"
+   ]
+  },
+  {
+   "id": "agent-ChartSequence",
+   "name": "Chart sequence agent",
+   "subject": "ChartSequence",
+   "covers": [
+    "ChartRecipe",
+    "ReferenceObject",
+    "ChartSequence"
+   ]
+  },
+  {
+   "id": "agent-LargeDataSources",
+   "name": "Large data sources agent",
+   "subject": "LargeDataSources",
+   "covers": [
+    "ReadOnlyMode",
+    "WriteOnlyMode",
+    "LargeDataSources"
+   ]
+  },
+  {
+   "id": "agent-FormatDetails",
+   "name": "Format details agent",
+   "subject": "FormatDetails",
+   "covers": [
+    "OldFormatRefusal",
+    "XmlSafety",
+    "LibraryStatus",
+    "DateSerials",
+    "FormatDetails"
+   ]
+  },
+  {
+   "id": "agent-PracticePrograms",
+   "name": "Practice programs agent",
+   "subject": "PracticePrograms",
+   "covers": [
+    "MultiplicationTable",
+    "BlankRowInserter",
+    "PracticePrograms"
+   ]
+  }
+ ],
+ "refs": [
+  [
+   "Automate the Boring Stuff with Python, 3rd edition - Chapter 14, Excel Spreadsheets (Al Sweigart, No Starch Press, 2025)",
+   "https://automatetheboringstuff.com/3e/chapter14.html"
+  ],
+  [
+   "Installing Python modules - pip and virtual environments (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/installing/index.html"
+  ],
+  [
+   "The Python Package Index record of openpyxl in JSON - release list, upload times, supported Python versions (Python Package Index, 2026)",
+   "https://pypi.org/pypi/openpyxl/json"
+  ],
+  [
+   "The Python Standard Library, Built-in Types - mapping types, dict.setdefault (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/stdtypes.html"
+  ],
+  [
+   "The Python Standard Library, datetime - basic date and time types (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/datetime.html"
+  ],
+  [
+   "The Python Standard Library, io - BytesIO and StringIO (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/io.html"
+  ],
+  [
+   "The Python Standard Library, pprint - data pretty printer (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/pprint.html"
+  ],
+  [
+   "The Python Standard Library, xml.etree.ElementTree - the ElementTree XML API (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/xml.etree.elementtree.html"
+  ],
+  [
+   "The Python Standard Library, zipfile - work with ZIP archives (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/zipfile.html"
+  ],
+  [
+   "openpyxl - A Python library to read/write Excel 2010 xlsx/xlsm files - documentation home page, including the security note (Gazoni and Clark, 2024; the page was headed 3.1.3)",
+   "https://openpyxl.readthedocs.io/en/stable/"
+  ],
+  [
+   "openpyxl Additional Worksheet Properties - views and folding (Gazoni and Clark, 2024; headed 3.1.3)",
+   "https://openpyxl.readthedocs.io/en/stable/worksheet_properties.html"
+  ],
+  [
+   "openpyxl Charts - creating a chart, chart types and anchors (Gazoni and Clark, 2024; headed 3.1.3)",
+   "https://openpyxl.readthedocs.io/en/stable/charts/introduction.html"
+  ],
+  [
+   "openpyxl Dates and Times - serial numbers, the 1900 and 1904 date systems, timezones (Gazoni and Clark, 2024; headed 3.1.3)",
+   "https://openpyxl.readthedocs.io/en/stable/datetime.html"
+  ],
+  [
+   "openpyxl Optimised Modes - read-only and write-only workbooks (Gazoni and Clark, 2024; headed 3.1.3)",
+   "https://openpyxl.readthedocs.io/en/stable/optimized.html"
+  ],
+  [
+   "openpyxl Parsing Formulas - the Tokenizer and translating formulas (Gazoni and Clark, 2024; headed 3.1.3)",
+   "https://openpyxl.readthedocs.io/en/stable/formula.html"
+  ],
+  [
+   "openpyxl Tutorial - workbooks, worksheets, cells, saving and loading (Gazoni and Clark, 2024; headed 3.1.3)",
+   "https://openpyxl.readthedocs.io/en/stable/tutorial.html"
+  ],
+  [
+   "openpyxl Working with Pandas and NumPy (Gazoni and Clark, 2024; headed 3.1.3)",
+   "https://openpyxl.readthedocs.io/en/stable/pandas.html"
+  ],
+  [
+   "openpyxl.chart.reference module - the Reference class and its arguments (Gazoni and Clark, 2024; headed 3.1.3)",
+   "https://openpyxl.readthedocs.io/en/stable/api/openpyxl.chart.reference.html"
+  ],
+  [
+   "openpyxl.worksheet.worksheet module - Worksheet methods and properties (Gazoni and Clark, 2024; headed 3.1.3)",
+   "https://openpyxl.readthedocs.io/en/stable/api/openpyxl.worksheet.worksheet.html"
+  ]
+ ],
+ "resources": [
+  {
+   "kind": "documentation",
+   "title": "Automate the Boring Stuff with Python, 3rd edition: Chapter 14, Excel Spreadsheets",
+   "url": "https://automatetheboringstuff.com/3e/chapter14.html",
+   "source": "automatetheboringstuff.com",
+   "why": "The course textbook's own chapter, free online: reading and writing workbooks, the two projects, fonts, formulas, sizes, merging, freezing and charts.",
+   "concept": "WorkbookModel"
+  },
+  {
+   "kind": "documentation",
+   "title": "openpyxl - A Python library to read/write Excel 2010 xlsx/xlsm files",
+   "url": "https://openpyxl.readthedocs.io/en/stable/",
+   "source": "openpyxl documentation",
+   "why": "The library's home page, with its sample code and its security note about XML attacks and defusedxml.",
+   "concept": "XmlSafety"
+  },
+  {
+   "kind": "documentation",
+   "title": "Tutorial - openpyxl documentation",
+   "url": "https://openpyxl.readthedocs.io/en/stable/tutorial.html",
+   "source": "openpyxl documentation",
+   "why": "Workbooks, worksheets, cell access, iter_rows and values_only, saving and the flags of load_workbook such as data_only and read_only.",
+   "concept": "CellCreationOnRead"
+  },
+  {
+   "kind": "documentation",
+   "title": "Optimised Modes - openpyxl documentation",
+   "url": "https://openpyxl.readthedocs.io/en/stable/optimized.html",
+   "source": "openpyxl documentation",
+   "why": "Read-only and write-only workbooks for very large files, and what each of them cannot do.",
+   "concept": "ReadOnlyMode"
+  },
+  {
+   "kind": "documentation",
+   "title": "Parsing Formulas - openpyxl documentation",
+   "url": "https://openpyxl.readthedocs.io/en/stable/formula.html",
+   "source": "openpyxl documentation",
+   "why": "The Tokenizer that splits a formula into tokens and the Translator that moves a formula to another cell.",
+   "concept": "FormulaTranslation"
+  },
+  {
+   "kind": "documentation",
+   "title": "Dates and Times - openpyxl documentation",
+   "url": "https://openpyxl.readthedocs.io/en/stable/datetime.html",
+   "source": "openpyxl documentation",
+   "why": "How dates are stored as numbers, the 1900 and 1904 date systems, the leap-year error and why no timezone can be stored.",
+   "concept": "DateSerials"
+  },
+  {
+   "kind": "documentation",
+   "title": "Charts - openpyxl documentation",
+   "url": "https://openpyxl.readthedocs.io/en/stable/charts/introduction.html",
+   "source": "openpyxl documentation",
+   "why": "The chart types, the steps of creating a chart and its default size and anchor.",
+   "concept": "ChartRecipe"
+  },
+  {
+   "kind": "documentation",
+   "title": "zipfile - Work with ZIP archives",
+   "url": "https://docs.python.org/3/library/zipfile.html",
+   "source": "Python documentation",
+   "why": "The standard-library module that opens the zip archive an .xlsx file is, which the page's playground program uses to write and read a workbook.",
+   "concept": "WorkbookFile"
+  },
+  {
+   "kind": "documentation",
+   "title": "xml.etree.ElementTree - The ElementTree XML API",
+   "url": "https://docs.python.org/3/library/xml.etree.elementtree.html",
+   "source": "Python documentation",
+   "why": "Parsing the XML parts of a workbook with the standard library, as the playground program does.",
+   "concept": "WorkbookFile"
+  },
+  {
+   "kind": "documentation",
+   "title": "pprint - Data pretty printer",
+   "url": "https://docs.python.org/3/library/pprint.html",
+   "source": "Python documentation",
+   "why": "pformat, which writes Project 9's dictionary as Python source, and its sort_dicts parameter.",
+   "concept": "GeneratedModule"
+  }
+ ],
+ "resources_checked": "2026-10-01"
+}

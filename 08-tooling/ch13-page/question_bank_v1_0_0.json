@@ -1,0 +1,1188 @@
+[
+ {
+  "concept": "UrlAnatomy",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "from urllib.parse import urlsplit\np = urlsplit('https://site.example/books/find?title=py&page=2#top')\nprint(p.netloc, p.path, p.query, p.fragment)",
+  "options": [
+   "site.example /books/find title=py&page=2 top",
+   "site.example /books/find?title=py&page=2 top",
+   "https site.example /books/find title=py&page=2",
+   "site.example /books/find title=py&page=2 #top"
+  ],
+  "answer": 0,
+  "why": "urlsplit cuts the address into scheme, netloc, path, query and fragment, and the query leaves out the question mark and the fragment the number sign."
+ },
+ {
+  "concept": "QueryString",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "from urllib.parse import parse_qs\nprint(parse_qs('a=1&a=2&b=x'))",
+  "options": [
+   "{'a': '2', 'b': 'x'}",
+   "{'a': ['1', '2'], 'b': ['x']}",
+   "{'a': ['1'], 'b': ['x']}",
+   "[('a', '1'), ('a', '2'), ('b', 'x')]"
+  ],
+  "answer": 1,
+  "why": "parse_qs gives a dictionary whose values are lists, so a name that appears twice keeps both values."
+ },
+ {
+  "concept": "StatusCode",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import http\nprint(http.HTTPStatus(429).phrase, int(http.HTTPStatus.NOT_FOUND))",
+  "options": [
+   "Forbidden 403",
+   "Too Many Requests 429",
+   "Too Many Requests 404",
+   "Not Found 404"
+  ],
+  "answer": 2,
+  "why": "HTTPStatus(429) is Too Many Requests and HTTPStatus.NOT_FOUND is the integer 404."
+ },
+ {
+  "concept": "RobotsTxt",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import urllib.robotparser as rp\nr = rp.RobotFileParser()\nr.parse(['User-agent: *', 'Disallow: /a'])\nprint(r.can_fetch('*', 'https://x.example/a/b'), r.can_fetch('*', 'https://x.example/ab'), r.can_fetch('*', 'https://x.example/b'))",
+  "options": [
+   "False True True",
+   "False False False",
+   "True True True",
+   "False False True"
+  ],
+  "answer": 3,
+  "why": "The standard-library parser compares the Disallow value as a prefix of the path, so /a/b and /ab are both refused and /b is allowed."
+ },
+ {
+  "concept": "CommandLineArguments",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "argv = ['showmap.py', '777', 'Valencia', 'St,']\nprint(len(argv), argv[0], ' '.join(argv[1:]))",
+  "options": [
+   "4 showmap.py 777 Valencia St,",
+   "3 777 Valencia St,",
+   "3 showmap.py 777 Valencia St,",
+   "4 777 showmap.py Valencia St,"
+  ],
+  "answer": 0,
+  "why": "The script name is item 0 of sys.argv, so four words give a length of four, and joining the words after it rebuilds the address."
+ },
+ {
+  "concept": "ShowmapProgram",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "from urllib.parse import quote\nprint(quote('a b&c/d'))",
+  "options": [
+   "a+b&c/d",
+   "a%20b%26c/d",
+   "a%20b%26c%2Fd",
+   "a%20b&c/d"
+  ],
+  "answer": 1,
+  "why": "quote writes %20 for a space and %26 for an ampersand, and leaves the slash alone unless safe is set to an empty string."
+ },
+ {
+  "concept": "StatusCheck",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "print([s < 400 for s in (204, 302, 403, 503)])",
+  "options": [
+   "[True, True, True, False]",
+   "[True, False, False, False]",
+   "[True, True, False, False]",
+   "[False, False, False, False]"
+  ],
+  "answer": 2,
+  "why": "The ok attribute of a response is true for every code below 400, so 204 and 302 count and 403 and 503 do not."
+ },
+ {
+  "concept": "RaiseForStatus",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import urllib.error\nprint(urllib.error.HTTPError('http://x.example/a', 500, 'Internal Server Error', {}, None))",
+  "options": [
+   "HTTPError: 500 Internal Server Error",
+   "500 Internal Server Error",
+   "HTTPError: 500",
+   "HTTP Error 500: Internal Server Error"
+  ],
+  "answer": 3,
+  "why": "An HTTPError prints as HTTP Error followed by the code, a colon and the reason, which is the form of the message raise_for_status gives."
+ },
+ {
+  "concept": "BinaryWrite",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "text = '\\u00e9'\nprint(len(text), len(text.encode('utf-8')))",
+  "options": [
+   "1 2",
+   "1 1",
+   "2 2",
+   "0 2"
+  ],
+  "answer": 0,
+  "why": "The text has one character, and its UTF-8 bytes, which are what a binary file holds, are two."
+ },
+ {
+  "concept": "ChunkedDownload",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "body = b'x' * 10\nprint([len(body[i:i + 4]) for i in range(0, len(body), 4)])",
+  "options": [
+   "[4, 4, 4]",
+   "[4, 4, 2]",
+   "[2, 4, 4]",
+   "[4, 6]"
+  ],
+  "answer": 1,
+  "why": "The chunks have the size asked for except the last, which holds what remains."
+ },
+ {
+  "concept": "JsonDecoding",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import json\nprint(json.loads('[{\"n\": 1.5, \"ok\": true, \"x\": null}]'))",
+  "options": [
+   "[{'n': 1.5, 'ok': 'true', 'x': 'null'}]",
+   "{'n': 1.5, 'ok': True, 'x': None}",
+   "[{'n': 1.5, 'ok': True, 'x': None}]",
+   "[{\"n\": 1.5, \"ok\": true, \"x\": null}]"
+  ],
+  "answer": 2,
+  "why": "json.loads turns true into True and null into None, and the outer brackets make a list."
+ },
+ {
+  "concept": "ValueConversion",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "print(round(310.15 - 273.15, 1))",
+  "options": [
+   "583.3",
+   "310.2",
+   "36.0",
+   "37.0"
+  ],
+  "answer": 3,
+  "why": "Subtracting 273.15 turns Kelvin into Celsius, which gives 37.0."
+ },
+ {
+  "concept": "HtmlAttribute",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "from html.parser import HTMLParser\nclass P(HTMLParser):\n    def handle_starttag(self, tag, attrs):\n        print(tag, dict(attrs)['alt'])\nP().feed('<img src=a.png alt=\"x y\">')",
+  "options": [
+   "img x y",
+   "img a.png",
+   "img alt",
+   "img None"
+  ],
+  "answer": 0,
+  "why": "The parser hands the attributes as name and value pairs, and the value of alt is x y."
+ },
+ {
+  "concept": "RegexPitfall",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import re\nprint(re.findall(r'<a href=\"(.*?)\">', '<a href=\"x\">1</a><a class=\"c\" href=\"y\">2</a><a href=\"z\">3</a>'))",
+  "options": [
+   "['x', 'y', 'z']",
+   "['x', 'z']",
+   "['y']",
+   "[]"
+  ],
+  "answer": 1,
+  "why": "The pattern needs href right after a, so the tag with a class first is missed."
+ },
+ {
+  "concept": "SearchResultLinks",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "print([min(5, n) for n in (1, 5, 6)])",
+  "options": [
+   "[5, 5, 5]",
+   "[1, 5, 6]",
+   "[1, 5, 5]",
+   "[0, 5, 5]"
+  ],
+  "answer": 2,
+  "why": "min keeps the smaller of five and the number of links."
+ },
+ {
+  "concept": "ComicCrawler",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "urls = ['/a/', '/b/', '#', '/c/']\nn = 0\nfor u in urls:\n    if u.endswith('#'):\n        break\n    n += 1\nprint(n)",
+  "options": [
+   "3",
+   "4",
+   "1",
+   "2"
+  ],
+  "answer": 3,
+  "why": "The loop stops at the first address that ends in #, after two pages."
+ },
+ {
+  "concept": "UrlAnatomy",
+  "level": "Remember",
+  "q": "Which part of a URL comes after the number sign?",
+  "options": [
+   "The fragment",
+   "The query",
+   "The path",
+   "The scheme"
+  ],
+  "answer": 0,
+  "why": "The optional fragment follows the number sign and the query follows the question mark."
+ },
+ {
+  "concept": "QueryString",
+  "level": "Understand",
+  "q": "Why must a space in a query string be percent-encoded or written as a plus?",
+  "options": [
+   "The server only accepts upper-case letters",
+   "Characters such as a space or a comma are not allowed raw in the pairs",
+   "A space would end the whole URL and the request would be dropped by Python",
+   "Python cannot hold a space inside a string"
+  ],
+  "answer": 1,
+  "why": "Spaces and commas must be encoded or written as a plus so that the pairs stay readable as name=value."
+ },
+ {
+  "concept": "HttpsEncryption",
+  "level": "Understand",
+  "q": "What can a network observer still see when a browser uses HTTPS?",
+  "options": [
+   "The pages that were downloaded",
+   "What was typed into a form",
+   "The name of the site visited",
+   "The password sent to the site"
+  ],
+  "answer": 2,
+  "why": "HTTPS hides the content and the submitted data, but not the name of the site."
+ },
+ {
+  "concept": "StatusCode",
+  "level": "Remember",
+  "q": "A response has status 503. Which class of code is it?",
+  "options": [
+   "A client error, 4xx",
+   "A redirection, 3xx",
+   "A success, 2xx",
+   "A server error, 5xx"
+  ],
+  "answer": 3,
+  "why": "The first digit gives the class, and 5 means a server error."
+ },
+ {
+  "concept": "PoliteDelay",
+  "level": "Understand",
+  "q": "Why does the comic downloader pause between comics?",
+  "options": [
+   "So that it does not hammer the server with requests",
+   "Because Python cannot save two files at once",
+   "Because the site asks for a password each time",
+   "To let the browser load the images first"
+  ],
+  "answer": 0,
+  "why": "A crawler that loads many pages pauses so as not to overload the server."
+ },
+ {
+  "concept": "UserAgent",
+  "level": "Understand",
+  "q": "What does a site learn from the default user-agent string of requests?",
+  "options": [
+   "The name of the person who runs the script",
+   "That the client is a script, python-requests, and not a browser",
+   "The password of the account",
+   "The operating system of the server"
+  ],
+  "answer": 1,
+  "why": "requests sends python-requests and its version, which tells a site that the client is a script."
+ },
+ {
+  "concept": "WebbrowserOpen",
+  "level": "Understand",
+  "q": "What does webbrowser.open return?",
+  "options": [
+   "The HTML of the page",
+   "The status code of the page",
+   "True if a browser was launched and False if not",
+   "The window that was opened"
+  ],
+  "answer": 2,
+  "why": "webbrowser.open only asks the default browser to show the URL and cannot read the page."
+ },
+ {
+  "concept": "GetRequest",
+  "level": "Understand",
+  "q": "What does requests.get return?",
+  "options": [
+   "The HTML as a string",
+   "A file on the disk",
+   "A BeautifulSoup object",
+   "A Response object"
+  ],
+  "answer": 3,
+  "why": "It returns a Response, which holds the body and the status; the package is installed separately."
+ },
+ {
+  "concept": "ResponseBody",
+  "level": "Remember",
+  "q": "Which attribute of a Response holds the body as bytes?",
+  "options": [
+   "content",
+   "text",
+   "status_code",
+   "headers"
+  ],
+  "answer": 0,
+  "why": "content holds the bytes and text holds the decoded string."
+ },
+ {
+  "concept": "ApiEndpoint",
+  "level": "Understand",
+  "q": "Why do services put a version number such as /geo/1.0/ in an endpoint?",
+  "options": [
+   "So that the key is checked once",
+   "So that an old version can be retired without breaking new callers",
+   "So that the answer arrives as JSON",
+   "So that the request uses HTTPS"
+  ],
+  "answer": 1,
+  "why": "The version number lets a service retire an old form of the call."
+ },
+ {
+  "concept": "ApiKey",
+  "level": "Understand",
+  "q": "Where should a program keep its API key?",
+  "options": [
+   "In the source code, in plain text",
+   "In the URL of the web page",
+   "In a file the program reads, not in the source code",
+   "In the name of the script"
+  ],
+  "answer": 2,
+  "why": "A key identifies the account and is kept secret, so it is read from a file."
+ },
+ {
+  "concept": "ApiErrorResponse",
+  "level": "Understand",
+  "q": "A weather call for an unknown city is answered with an empty list. What should the program do?",
+  "options": [
+   "Index item 0 and catch nothing",
+   "Call raise_for_status again",
+   "Ask for the same city in Kelvin",
+   "Check that the list is not empty before indexing it"
+  ],
+  "answer": 3,
+  "why": "The call is still answered, so the program checks the shape of the decoded data before indexing it."
+ },
+ {
+  "concept": "HtmlElement",
+  "level": "Remember",
+  "q": "What is an HTML element?",
+  "options": [
+   "A starting tag, its content and a closing tag",
+   "Only the text between two tags",
+   "A file with the extension .html",
+   "An attribute such as href"
+  ],
+  "answer": 0,
+  "why": "Elements are made of the tags and the content between them, and they nest to form the tree of the page."
+ },
+ {
+  "concept": "ViewSource",
+  "level": "Understand",
+  "q": "What does requests download from a page that scripts change after it loads?",
+  "options": [
+   "The page as it looks on the screen",
+   "The source as the browser first received it, without the later changes",
+   "Only the images of the page",
+   "The page after the scripts have run"
+  ],
+  "answer": 1,
+  "why": "The source is the HTML text received, which may differ from the screen."
+ },
+ {
+  "concept": "DeveloperTools",
+  "level": "Remember",
+  "q": "Which key opens the Developer Tools in Firefox, Chrome and Edge?",
+  "options": [
+   "F5",
+   "Ctrl+Q",
+   "F12",
+   "F1"
+  ],
+  "answer": 2,
+  "why": "F12 opens them, and Inspect Element shows the tag, id, class and a copy of the CSS selector."
+ },
+ {
+  "concept": "CssSelector",
+  "level": "Understand",
+  "q": "In a CSS selector, what does > between two parts mean?",
+  "options": [
+   "Any descendant",
+   "A sibling",
+   "An attribute",
+   "A direct child"
+  ],
+  "answer": 3,
+  "why": "A space means any descendant and > means a direct child."
+ },
+ {
+  "concept": "SoupObject",
+  "level": "Understand",
+  "q": "What does the second argument of bs4.BeautifulSoup(html, 'html.parser') name?",
+  "options": [
+   "The parser to use, here the one in Python's standard library",
+   "The encoding of the file",
+   "The first tag to start from",
+   "The class of the elements"
+  ],
+  "answer": 0,
+  "why": "html.parser selects the standard-library parser; the others must be installed."
+ },
+ {
+  "concept": "SelectMethod",
+  "level": "Understand",
+  "q": "What does select return when nothing matches?",
+  "options": [
+   "None",
+   "An empty list",
+   "An error",
+   "An empty string"
+  ],
+  "answer": 1,
+  "why": "select never returns None; select_one does when nothing matches."
+ },
+ {
+  "concept": "SelectorPatterns",
+  "level": "Apply",
+  "q": "Which selector matches a p element that has the id author?",
+  "options": [
+   "p #author",
+   "p.author",
+   "p#author",
+   "#author p"
+  ],
+  "answer": 2,
+  "why": "p#author needs the p element itself to be the author, while p #author needs it inside a p element."
+ },
+ {
+  "concept": "TagText",
+  "level": "Understand",
+  "q": "How do get_text and str differ on a tag?",
+  "options": [
+   "get_text gives the HTML and str gives the text",
+   "They give the same string",
+   "get_text gives only the attributes",
+   "get_text gives the text without tags, and str gives the tag's HTML"
+  ],
+  "answer": 3,
+  "why": "get_text removes the nested tags and turns references such as &lt; back into characters."
+ },
+ {
+  "concept": "TagAttributes",
+  "level": "Understand",
+  "q": "What does get return for an attribute the tag does not have?",
+  "options": [
+   "None",
+   "An empty string",
+   "A KeyError",
+   "The name of the tag"
+  ],
+  "answer": 0,
+  "why": "get returns None, while attrs is the dictionary of all attributes."
+ },
+ {
+  "concept": "LinkVerification",
+  "level": "Understand",
+  "q": "Why does the link-verification program turn each href into an absolute URL?",
+  "options": [
+   "Because relative links are always broken",
+   "Because many links are relative and cannot be requested as they are",
+   "Because requests refuses any http address",
+   "Because a 404 only appears for absolute links"
+  ],
+  "answer": 1,
+  "why": "Relative addresses are resolved against the page URL before they are requested."
+ },
+ {
+  "concept": "WebDriverStart",
+  "level": "Understand",
+  "q": "Why does the chapter's advice about downloading geckodriver differ from current Selenium?",
+  "options": [
+   "Selenium no longer needs a browser",
+   "geckodriver is now part of Python",
+   "Selenium Manager now finds the driver itself",
+   "Selenium only works with Chrome now"
+  ],
+  "answer": 2,
+  "why": "Selenium Manager ships with Selenium and locates the driver, so no separate download is needed."
+ },
+ {
+  "concept": "ByLocators",
+  "level": "Understand",
+  "q": "In Selenium, what kind of value is By.CSS_SELECTOR?",
+  "options": [
+   "A function",
+   "A CSS file",
+   "A Tag object",
+   "A plain string, 'css selector'"
+  ],
+  "answer": 3,
+  "why": "The By constants are plain strings such as 'css selector' and 'link text'."
+ },
+ {
+  "concept": "ElementLookup",
+  "level": "Understand",
+  "q": "Selenium's find_element finds nothing. What happens?",
+  "options": [
+   "NoSuchElementException is raised",
+   "None is returned",
+   "An empty list is returned",
+   "The browser closes"
+  ],
+  "answer": 0,
+  "why": "find_element raises, while find_elements returns an empty list."
+ },
+ {
+  "concept": "ElementProperties",
+  "level": "Remember",
+  "q": "Which WebElement attribute gives the rendered text?",
+  "options": [
+   "tag_name",
+   "text",
+   "location",
+   "size"
+  ],
+  "answer": 1,
+  "why": "text gives the rendered text and get_property('innerHTML') gives the source."
+ },
+ {
+  "concept": "ClickAndSubmit",
+  "level": "Understand",
+  "q": "What does send_keys do?",
+  "options": [
+   "Presses a button",
+   "Reloads the page",
+   "Types into a field or sends a key such as Keys.END",
+   "Closes the browser"
+  ],
+  "answer": 2,
+  "why": "click presses, send_keys types, and submit sends the form that contains the element."
+ },
+ {
+  "concept": "SyncPlaywright",
+  "level": "Understand",
+  "q": "In which mode does Playwright launch a browser by default?",
+  "options": [
+   "With a window",
+   "Inside a Python thread",
+   "Slowly, at 50 milliseconds per step",
+   "Headless, without a window"
+  ],
+  "answer": 3,
+  "why": "headless=False with slow_mo shows the steps."
+ },
+ {
+  "concept": "PageLocators",
+  "level": "Remember",
+  "q": "Which of these returns a Locator in Playwright?",
+  "options": [
+   "page.get_by_role('checkbox')",
+   "page.quit()",
+   "page.find_element()",
+   "page.sleep()"
+  ],
+  "answer": 0,
+  "why": "A Page offers locators such as get_by_role, get_by_text and locator."
+ },
+ {
+  "concept": "LocatorMethods",
+  "level": "Understand",
+  "q": "A Playwright locator matches seven paragraphs and click() is called on it. What happens?",
+  "options": [
+   "The first paragraph is clicked",
+   "An error is raised, because locators are strict",
+   "All seven are clicked",
+   "Nothing happens and None is returned"
+  ],
+  "answer": 1,
+  "why": "An action on a locator that matches several elements raises an error, so nth picks one."
+ },
+ {
+  "concept": "AutoWaiting",
+  "level": "Understand",
+  "q": "What does Playwright do when a selector matches nothing and an action is asked for?",
+  "options": [
+   "It fails at once",
+   "It returns None",
+   "It waits, up to 30 seconds by default, and then fails",
+   "It tries the next selector"
+  ],
+  "answer": 2,
+  "why": "Auto-waiting makes a mistyped selector pause for the default timeout."
+ },
+ {
+  "concept": "DynamicPages",
+  "level": "Understand",
+  "q": "A page is built by scripts after it loads. Which approach does the chapter recommend when the service offers one?",
+  "options": [
+   "A longer sleep in requests",
+   "A regular expression on the HTML",
+   "Beautiful Soup with another parser",
+   "Its API"
+  ],
+  "answer": 3,
+  "why": "An API is preferable whenever the service offers one, and a browser driver is the fallback."
+ },
+ {
+  "concept": "WebProtocol",
+  "level": "Understand",
+  "q": "Which three things are the ground under every tool of the chapter?",
+  "options": [
+   "Addresses, the protocol and the manners of a visiting program",
+   "Parsers, drivers and clipboards",
+   "Keys, tokens and passwords",
+   "Chunks, files and folders"
+  ],
+  "answer": 0,
+  "why": "The chapter's tools all rest on how addresses are written, how the protocol answers and how a program should behave on a site."
+ },
+ {
+  "concept": "AddressForms",
+  "level": "Remember",
+  "q": "In a URL, what does the part after the question mark hold?",
+  "options": [
+   "The name of the site",
+   "A list of names and values",
+   "The folder of the file",
+   "The protocol in use"
+  ],
+  "answer": 1,
+  "why": "The query is a list of name=value pairs and urllib.parse reads it."
+ },
+ {
+  "concept": "ProtocolBasics",
+  "level": "Remember",
+  "q": "Which two parts of the protocol do the chapter's programs rely on?",
+  "options": [
+   "Cookies and sessions",
+   "Redirects and proxies",
+   "HTTPS and the status codes",
+   "Chunks and headers"
+  ],
+  "answer": 2,
+  "why": "HTTPS protects the content in transit and the status codes tell whether a request worked."
+ },
+ {
+  "concept": "CrawlerManners",
+  "level": "Understand",
+  "q": "What does a program that visits a site owe the site?",
+  "options": [
+   "A password for every page it loads",
+   "A copy of every file it downloads",
+   "A browser window for every request",
+   "A limit on its rate of requests and attention to what the site asks crawlers to leave alone"
+  ],
+  "answer": 3,
+  "why": "Politeness means pausing between requests and reading robots.txt."
+ },
+ {
+  "concept": "BrowserLaunch",
+  "level": "Understand",
+  "q": "What does the webbrowser module do with a URL?",
+  "options": [
+   "Hands it to the browser the user already has",
+   "Downloads the page and parses it",
+   "Starts a separate browser engine inside Python",
+   "Checks its status code"
+  ],
+  "answer": 0,
+  "why": "It only asks the default browser to show the page."
+ },
+ {
+  "concept": "BrowserOpening",
+  "level": "Understand",
+  "q": "Where does showmap.py read the address from?",
+  "options": [
+   "A file named address.txt",
+   "The command-line arguments, or the clipboard when there are none",
+   "An input() prompt only",
+   "The title of the browser tab"
+  ],
+  "answer": 1,
+  "why": "It joins the arguments or falls back to the clipboard, then opens a search URL."
+ },
+ {
+  "concept": "Downloading",
+  "level": "Understand",
+  "q": "What does requests turn a URL into?",
+  "options": [
+   "A parsed tree of tags",
+   "A browser tab",
+   "A Response that the program can check, read and save",
+   "A list of links"
+  ],
+  "answer": 2,
+  "why": "The Response holds the status and the body of the download."
+ },
+ {
+  "concept": "PageFetching",
+  "level": "Understand",
+  "q": "Does the requests package come with Python?",
+  "options": [
+   "Yes, it is in the standard library",
+   "Yes, but only on Windows",
+   "No, but urllib is its only replacement",
+   "No, it is installed separately"
+  ],
+  "answer": 3,
+  "why": "The chapter says to install requests; urllib.request is the standard-library alternative."
+ },
+ {
+  "concept": "ResponseChecking",
+  "level": "Understand",
+  "q": "Name the two checks that tell a program a download worked.",
+  "options": [
+   "The status code, and the exception raised by raise_for_status",
+   "The length of the text, and the file name",
+   "The user-agent string, and the cookie",
+   "The order of the headers, and the encoding"
+  ],
+  "answer": 0,
+  "why": "status_code equals requests.codes.ok on success and raise_for_status raises on 4xx and 5xx."
+ },
+ {
+  "concept": "FileSaving",
+  "level": "Understand",
+  "q": "How is the body of a response saved to a file?",
+  "options": [
+   "In text mode, in one string",
+   "In binary mode, in pieces",
+   "Through print() to the screen",
+   "Through webbrowser.open"
+  ],
+  "answer": 1,
+  "why": "iter_content gives the chunks and each is written to a file opened for binary writing."
+ },
+ {
+  "concept": "WebApis",
+  "level": "Understand",
+  "q": "What does a web API let a program do?",
+  "options": [
+   "Draw the page in a window",
+   "Install a package",
+   "Ask another program for data, most often answered as JSON",
+   "Rewrite the HTML of a site"
+  ],
+  "answer": 2,
+  "why": "The answer is usually JSON, which json.loads decodes."
+ },
+ {
+  "concept": "ApiCalls",
+  "level": "Understand",
+  "q": "What does an API call URL usually contain?",
+  "options": [
+   "A password and a cookie",
+   "A parser and a selector",
+   "A folder and a file name",
+   "A version, a query and a key"
+  ],
+  "answer": 3,
+  "why": "A call may also be answered with an error, so the answer is checked."
+ },
+ {
+  "concept": "ApiData",
+  "level": "Understand",
+  "q": "What happens to what an API returns before the program uses it?",
+  "options": [
+   "It is decoded from JSON and then converted into the units needed",
+   "It is parsed by Beautiful Soup",
+   "It is encrypted with HTTPS",
+   "It is opened in a browser"
+  ],
+  "answer": 0,
+  "why": "For example Kelvin becomes Celsius after json.loads."
+ },
+ {
+  "concept": "HtmlPages",
+  "level": "Understand",
+  "q": "What is a web page, as the program receives it?",
+  "options": [
+   "A picture of the screen",
+   "HTML text that describes elements",
+   "A list of CSS files",
+   "A Python object"
+  ],
+  "answer": 1,
+  "why": "The source and the Developer Tools show that text."
+ },
+ {
+  "concept": "MarkupBasics",
+  "level": "Remember",
+  "q": "HTML is written as what?",
+  "options": [
+   "Lines of Python",
+   "Rows of a table only",
+   "Elements made of tags, and the tags carry attributes",
+   "A single long string without structure"
+  ],
+  "answer": 2,
+  "why": "Tags nest into the tree of the page and attributes are name-value pairs inside them."
+ },
+ {
+  "concept": "PageInspection",
+  "level": "Understand",
+  "q": "How does the programmer find the element to pick on a page?",
+  "options": [
+   "With webbrowser.open",
+   "With raise_for_status",
+   "With the user-agent string",
+   "With the page source and the Developer Tools"
+  ],
+  "answer": 3,
+  "why": "Inspect Element shows the tag, id, class and a copy of the CSS selector."
+ },
+ {
+  "concept": "ParsingAdvice",
+  "level": "Remember",
+  "q": "What does the chapter leave to a parser and not to a regular expression?",
+  "options": [
+   "Parsing HTML",
+   "Downloading a file",
+   "Reading a JSON answer",
+   "Opening a browser"
+  ],
+  "answer": 0,
+  "why": "HTML can be written in many equivalent ways that one pattern misses."
+ },
+ {
+  "concept": "BeautifulSoup",
+  "level": "Understand",
+  "q": "What does Beautiful Soup turn the text of a page into?",
+  "options": [
+   "A file on the disk",
+   "Objects from which elements are selected",
+   "A running browser",
+   "A Response"
+  ],
+  "answer": 1,
+  "why": "It parses the text into a tree of Tag objects."
+ },
+ {
+  "concept": "SoupCreation",
+  "level": "Remember",
+  "q": "What two things go into bs4.BeautifulSoup(...)?",
+  "options": [
+   "The URL and a key",
+   "A selector and a tag",
+   "The page text and the name of a parser",
+   "A file name and a timeout"
+  ],
+  "answer": 2,
+  "why": "The parser name, such as html.parser, selects how the text is read."
+ },
+ {
+  "concept": "ElementSelection",
+  "level": "Remember",
+  "q": "What does select find elements by?",
+  "options": [
+   "A regular expression",
+   "An XPath only",
+   "The status code",
+   "A CSS selector"
+  ],
+  "answer": 3,
+  "why": "The Tag objects it returns give their text and attributes."
+ },
+ {
+  "concept": "CrawlingPrograms",
+  "level": "Understand",
+  "q": "Which three things do the chapter's scraping projects put together?",
+  "options": [
+   "requests, a parser and a stop rule",
+   "A browser, a key and a clipboard",
+   "JSON, a regular expression and a thread",
+   "A driver, a locator and a timer"
+  ],
+  "answer": 0,
+  "why": "They download, parse and stop at a limit or a marker."
+ },
+ {
+  "concept": "ProgramsOfChapter",
+  "level": "Understand",
+  "q": "Which are the chapter's crawling programs?",
+  "options": [
+   "showmap.py and the weather program",
+   "searchpypi.py, downloadXkcdComics.py and the link verification program",
+   "Only the Selenium examples",
+   "The Playwright examples and showmap.py"
+  ],
+  "answer": 1,
+  "why": "Each combines downloading, parsing and a stop rule."
+ },
+ {
+  "concept": "BrowserAutomation",
+  "level": "Understand",
+  "q": "What do Selenium and Playwright have in common?",
+  "options": [
+   "They parse HTML without a browser",
+   "They only download files",
+   "They start a real browser and drive it as a user does",
+   "They replace the requests package"
+  ],
+  "answer": 2,
+  "why": "The program controls a real browser, which is slower than a download."
+ },
+ {
+  "concept": "SeleniumControl",
+  "level": "Understand",
+  "q": "What does the chapter's Selenium part cover?",
+  "options": [
+   "Only parsing saved HTML files",
+   "Writing API keys to a file",
+   "Counting links in a page",
+   "Starting a browser, finding elements, reading them, clicking and sending keys"
+  ],
+  "answer": 3,
+  "why": "It names find_element, text, click and send_keys."
+ },
+ {
+  "concept": "PlaywrightControl",
+  "level": "Understand",
+  "q": "What does the chapter's Playwright part cover?",
+  "options": [
+   "Launching a browser, locators, clicking, filling and pressing keys",
+   "Downloading comics in chunks",
+   "Reading robots.txt",
+   "Decoding JSON answers"
+  ],
+  "answer": 0,
+  "why": "It uses locators such as get_by_role and actions such as click and fill."
+ },
+ {
+  "concept": "ToolChoice",
+  "level": "Understand",
+  "q": "What decides whether to use requests or a driven browser?",
+  "options": [
+   "The size of the file",
+   "The page",
+   "The operating system",
+   "The name of the site"
+  ],
+  "answer": 1,
+  "why": "A static page is fetched with requests, a page built by scripts needs a driver, and an API is best when there is one."
+ },
+ {
+  "concept": "RobotsTxt",
+  "level": "Understand",
+  "q": "What does a robots.txt file do?",
+  "options": [
+   "It blocks crawlers at the server",
+   "It lists the passwords of a site",
+   "It asks crawlers not to fetch some paths, but does not enforce it",
+   "It speeds up downloads"
+  ],
+  "answer": 2,
+  "why": "It is a request and not an access control."
+ },
+ {
+  "concept": "RaiseForStatus",
+  "level": "Understand",
+  "q": "When does raise_for_status raise?",
+  "options": [
+   "For every status",
+   "For a 2xx status",
+   "Only for 404",
+   "For a 4xx or 5xx status"
+  ],
+  "answer": 3,
+  "why": "It does nothing for a download that worked and raises an HTTPError for 4xx and 5xx."
+ },
+ {
+  "concept": "BinaryWrite",
+  "level": "Understand",
+  "q": "Why is a downloaded file opened in write binary mode?",
+  "options": [
+   "Because the bytes are the file's content whatever its text encoding",
+   "Because text mode cannot open a new file",
+   "Because binary mode is faster than text mode",
+   "Because requests converts it to binary anyway"
+  ],
+  "answer": 0,
+  "why": "Writing bytes to a text-mode file raises TypeError."
+ },
+ {
+  "concept": "ChunkedDownload",
+  "level": "Understand",
+  "q": "Why does requests advise stream=True with iter_content for a download?",
+  "options": [
+   "So that the download is encrypted",
+   "So that the body is not read whole into memory first",
+   "So that the status is checked twice",
+   "So that the file is compressed"
+  ],
+  "answer": 1,
+  "why": "Chunks are written one by one, the last one shorter."
+ },
+ {
+  "concept": "JsonDecoding",
+  "level": "Understand",
+  "q": "What does response.json() raise when the body is a challenge page in HTML?",
+  "options": [
+   "KeyError",
+   "HTTPError",
+   "JSONDecodeError",
+   "Nothing, it returns the HTML"
+  ],
+  "answer": 2,
+  "why": "Text that is not JSON raises JSONDecodeError."
+ },
+ {
+  "concept": "StatusCheck",
+  "level": "Remember",
+  "q": "Which constant equals the success status in requests?",
+  "options": [
+   "requests.codes.found, which is 302",
+   "requests.ok, which is 0",
+   "requests.codes.error, which is 400",
+   "requests.codes.ok, which is 200"
+  ],
+  "answer": 3,
+  "why": "status_code equals requests.codes.ok on success."
+ },
+ {
+  "concept": "CommandLineArguments",
+  "level": "Remember",
+  "q": "What is item 0 of sys.argv?",
+  "options": [
+   "The script name",
+   "The first word typed after the script name",
+   "The Python interpreter's version",
+   "The current folder"
+  ],
+  "answer": 0,
+  "why": "The script name comes first and the words typed after it follow."
+ },
+ {
+  "concept": "ShowmapProgram",
+  "level": "Understand",
+  "q": "What does showmap.py use when no address is given on the command line?",
+  "options": [
+   "A fixed address in the code",
+   "The clipboard",
+   "The last page the browser showed",
+   "An input() prompt"
+  ],
+  "answer": 1,
+  "why": "It takes the address from the command line, or from the clipboard when there is none."
+ },
+ {
+  "concept": "ValueConversion",
+  "level": "Remember",
+  "q": "In which unit does the weather API of the chapter give the temperature by default?",
+  "options": [
+   "Celsius",
+   "Fahrenheit",
+   "Kelvin",
+   "Rankine"
+  ],
+  "answer": 2,
+  "why": "The temperature arrives in Kelvin and is converted by program."
+ },
+ {
+  "concept": "HtmlAttribute",
+  "level": "Remember",
+  "q": "What does an attribute like id do in a tag?",
+  "options": [
+   "It names a group of elements",
+   "It closes the tag",
+   "It sets the text colour",
+   "It names one element"
+  ],
+  "answer": 3,
+  "why": "id names one element and class names a group."
+ },
+ {
+  "concept": "RegexPitfall",
+  "level": "Understand",
+  "q": "Why does the chapter advise a parser instead of a regular expression for HTML?",
+  "options": [
+   "HTML can be written in many equivalent ways that one pattern misses",
+   "Regular expressions cannot read a string with angle brackets",
+   "A parser is always faster than re",
+   "Regular expressions only work on files"
+  ],
+  "answer": 0,
+  "why": "A pattern that needs href right after a misses an a tag that has a class first."
+ },
+ {
+  "concept": "SearchResultLinks",
+  "level": "Apply",
+  "q": "How many tabs does searchpypi.py open when the page has twelve result links?",
+  "options": [
+   "Twelve",
+   "Five",
+   "One",
+   "None"
+  ],
+  "answer": 1,
+  "why": "The count is the smaller of five and the number of links."
+ },
+ {
+  "concept": "ComicCrawler",
+  "level": "Understand",
+  "q": "When does the comic downloader stop?",
+  "options": [
+   "After the first image",
+   "When the page has no image",
+   "When the prev link ends in # or after ten downloads",
+   "When the status is 200"
+  ],
+  "answer": 2,
+  "why": "It follows the link whose rel is prev until one of the two stops applies."
+ },
+ {
+  "concept": "UrlAnatomy",
+  "level": "Remember",
+  "q": "Which function of urllib.parse cuts a URL into its parts?",
+  "options": [
+   "urljoin",
+   "quote",
+   "parse_qs",
+   "urlsplit"
+  ],
+  "answer": 3,
+  "why": "urlsplit cuts the address; urljoin resolves a relative one, quote encodes and parse_qs reads a query."
+ },
+ {
+  "concept": "QueryString",
+  "level": "Remember",
+  "q": "What does parse_qs return for each name?",
+  "options": [
+   "A list of values",
+   "A single string",
+   "A number",
+   "A tuple of two strings"
+  ],
+  "answer": 0,
+  "why": "The values are lists, because a name may appear more than once."
+ },
+ {
+  "concept": "StatusCode",
+  "level": "Remember",
+  "q": "Which module names the status codes and their phrases?",
+  "options": [
+   "urllib.parse",
+   "http",
+   "json",
+   "webbrowser"
+  ],
+  "answer": 1,
+  "why": "http.HTTPStatus names them."
+ }
+]
