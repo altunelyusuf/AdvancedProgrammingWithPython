@@ -1,0 +1,3107 @@
+{
+ "_version": "9.19.0",
+ "visuals": {},
+ "course": {
+  "_version": "1.3.3",
+  "name": "SEN0414 Advanced Programming",
+  "line": "SEN0414 Advanced Programming",
+  "chapter_sub": "chapter {n} of Automate the Boring Stuff with Python, 3rd edition",
+  "chapter_intro": "Chapter {n} of <i>Automate the Boring Stuff with Python</i>, 3rd edition (Sweigart, 2025), renewed for an advanced course.",
+  "playground": {
+   "label": "Speech files offline: timing, subtitles and a WAV file (uses input)",
+   "code": "import io, struct, wave\n\nsentence = input('Sentence to \"speak\": ')\nwords = sentence.split()\nrate = 200                      # words per minute, the default rate of pyttsx3\nspw = 60 / rate                 # seconds per word\ntotal = len(words) * spw\nprint(len(words), 'words at', rate, 'words per minute take', round(total, 2), 'seconds')\n\n# 1. Cut the sentence into subtitle segments of three words each, with a start and end time.\nsegments = []\nfor i in range(0, len(words), 3):\n    chunk = words[i:i + 3]\n    segments.append({'start': i * spw, 'end': (i + len(chunk)) * spw, 'text': ' ' + ' '.join(chunk)})\n\ndef stamp(seconds, hours, mark):\n    ms = round(seconds * 1000)\n    h = '%02d:' % (ms // 3600000) if hours or ms >= 3600000 else ''\n    return '%s%02d:%02d%s%03d' % (h, ms % 3600000 // 60000, ms % 60000 // 1000, mark, ms % 1000)\n\nprint('--- SRT')\nfor n, s in enumerate(segments, 1):\n    print(n)\n    print(stamp(s['start'], True, ','), '-->', stamp(s['end'], True, ','))\n    print(s['text'].strip())\n    print()\nprint('--- VTT')\nprint('WEBVTT')\nprint()\nfor s in segments:\n    print(stamp(s['start'], False, '.'), '-->', stamp(s['end'], False, '.'))\n    print(s['text'].strip())\n    print()\nprint('--- TSV')\nprint('start', 'end', 'text', sep='\\t')\nfor s in segments:\n    print(round(1000 * s['start']), round(1000 * s['end']), s['text'].strip(), sep='\\t')\n\n# 2. A WAV file of the same length, made in memory (silence stands in for the voice).\nframes_per_second = 22050\nbuf = io.BytesIO()\nwith wave.open(buf, 'wb') as w:\n    w.setnchannels(1)\n    w.setsampwidth(2)\n    w.setframerate(frames_per_second)\n    w.writeframes(struct.pack('<h', 0) * round(total * frames_per_second))\ndata = buf.getvalue()\nprint('--- WAV')\nprint(data[:4], data[8:12], len(data), 'bytes')\nwith wave.open(io.BytesIO(data), 'rb') as r:\n    print(r.getnchannels(), 'channel,', r.getsampwidth(), 'bytes per sample,', r.getframerate(), 'frames per second,', round(r.getnframes() / r.getframerate(), 2), 'seconds')",
+   "inputs": "Dinosaurs are a diverse group of reptiles of the clade dinosauria"
+  },
+  "corpus": {
+   "book_pin_source": "02-textbook/sen0414_textbook_v1_0_0.ttl",
+   "book": [
+    "automate-python-book-3e/01-ontologies/automate_python_3e_ch{nn}_v1_0_0.ttl"
+   ],
+   "course": [
+    "00-course-profile/sen0414_course_v1_0_0.ttl",
+    "01-outcomes/sen0414_outcomes_v1_0_0.ttl",
+    "02-textbook/sen0414_textbook_v1_0_0.ttl",
+    "03-materials/sen0414_materials_v1_22_0.ttl"
+   ]
+  },
+  "exam": {
+   "course": "SEN0414",
+   "release_prefix": "sen0414-exam-release",
+   "public_key": {
+    "kty": "EC",
+    "crv": "P-256",
+    "x": "_V6lAWK-uO72ApcyNiCalt4q8h2Yt-HzOol5XoZNwEk",
+    "y": "3UhUEuwspaDMB-gZsFCLKx2GW08SABcTHzJvuvUEc5I"
+   },
+   "bonus_points": 10
+  }
+ },
+ "discussion": [],
+ "findings": [
+  [
+   "Background",
+   "Chapter 24 of the 3rd edition, Text-to-Speech and Speech Recognition Engines, teaches three third-party packages: pyttsx3, which speaks text through the speech engine of the operating system (SAPI5 on Windows, NSSpeechSynthesizer on macOS, eSpeak on Linux) with say(), runAndWait(), getProperty() and setProperty() for rate, volume and voice, and save_to_file() for a WAV file; Whisper, installed as openai-whisper, which loads a model named tiny, base, small, medium or large-v3 with load_model(), transcribes an audio file with transcribe() into a dictionary whose 'text' key holds the words, and writes SRT, VTT, TSV, TXT or JSON files through get_writer(); and yt-dlp, which downloads a video or only its audio or metadata; it closes with seven practice questions and three practice programs: a spoken guess-the-number game, the song 99 Bottles of Beer, and a YouTube transcriber."
+  ],
+  [
+   "Comparative analysis",
+   "The behaviour of pyttsx3 that the chapter describes reproduces where it can be run without a sound card: with the package's dummy driver under Python 3.14.4, say() returns at once and only queues the text, the events started-utterance and finished-utterance come only after runAndWait(), setProperty('rate', 300) takes effect only when the queue is run, getProperty('volume') and getProperty('rate') give 1.0 and 200, getProperty('voices') is a list of Voice objects that print as <pyttsx3.voice.Voice object at 0x...>, and a Voice made without gender, age and languages holds None, None and an empty list, as the chapter says; the default init() on this machine raises RuntimeError saying that eSpeak or eSpeak-ng is probably not installed, which is why the chapter tells Linux readers to install espeak; no speech was heard and no real voice was listed, because the machine has no engine and no sound card."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's statement that pyttsx3 can save .wav files only holds for two of its three engines and not for the third: the eSpeak driver of version 2.99 writes the file with the standard wave module as mono, 16-bit, 22,050 Hz, the SAPI5 driver writes through a SAPI file stream, and the macOS driver carries the comment that Apple writes .aiff, not .wav; the standard-library modules for AIFF (aifc), audioop, sunau, chunk and sndhdr were removed in Python 3.13 by PEP 594 and are absent under 3.14.4, while wave remains, so a WAV file can be read with the standard library and an AIFF file cannot."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's account of Whisper holds with additions the chapter leaves out: release 20250625 accepts fourteen model names, not five, among them the .en models, large-v1, large-v2, large, and turbo with large-v3-turbo, and its command line uses turbo as the default model where the chapter recommends base; the five names the chapter gives are all valid; Whisper decodes every audio file by starting the ffmpeg command-line program for 16 kHz mono samples, so ffmpeg must be installed, which the chapter does not say; the memory column of the chapter's Table 24-1 (1, 1, 2, 5 and 10 GB) equals the required-VRAM column of the package's README; the runtimes of the table were measured by the author on his laptop and were not reproduced, since no model can be downloaded and run here, and the only numbers computed from them are ratios, such as the 'large-v3' model taking 12.8 times as long as 'base' on the 15-minute sample; the package lists Python 3.8 to 3.13 and was not installed or run here under Python 3.14.4."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's sample subtitle files reproduce when Whisper's own writer source is executed: the SRT file numbers each block from 1, always shows hours and uses a comma before the milliseconds (00:00:05,640), the VTT file starts with the line WEBVTT and shows hours only when they are not zero (00:05.640), the TSV file has the header line start, end and text with times as integer milliseconds (5640), and the TXT file has one stripped segment per line; the writer replaces --> inside a segment's text by ->, names the output file after the audio file without its folder or extension (talks/hello.wav gives hello.srt), and raises KeyError for a format it does not know; the W3C WebVTT text confirms that hours may be omitted when zero, and the description of SubRip confirms the comma."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's language option holds and is wider than the chapter says: get_tokenizer lower-cases the name, so language='English' is accepted, the package knows 100 languages, and the chapter's statement that the engines work with most widely spoken languages is consistent with that list; the dictionary returned by transcribe() has exactly the keys text, segments and language, and each segment carries start, end and text, which is what the subtitle writers read; with word timestamps requested, each segment also carries a list of words, and the writers can then break subtitles by a number of words per line or by a line width and a line count, options the chapter does not cover."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's yt-dlp code is consistent with the package, checked offline in a scratch environment with yt-dlp 2026.8.19 under Python 3.14.4 without any download: the template 'downloaded_content.%(ext)s' gives downloaded_content.m4a, the post-processor FFmpegExtractAudio exists and needs ffmpeg, and sanitize_info() exists; but the chapter's prose names ydl.sanitize(), which the package does not have, the download() method also accepts a single address instead of a list because it wraps it, extract_info() downloads by default unless skip_download is set as the chapter does, and a title is not stripped of its forbidden characters as the chapter says but has them replaced by look-alike characters such as a full-width question mark and colon; no video was fetched, because the session has no route to the video sites."
+  ],
+  [
+   "Conclusion",
+   "For an advanced course, chapter 24 is best taught as glue code around three engines that cannot all run in a classroom: what runs offline is the standard-library part (wave files, subtitle formats, file names, JSON, glob, arithmetic on the book's table) and the package logic that has a dummy mode (pyttsx3's queue, properties and events), and what needs a voice, a model, ffmpeg or a network (speaking, saving with a real engine, load_model, transcribe, yt-dlp downloads) is read and not executed; the chapter's printed behaviour holds, and the course should add the AIFF case and the removed audio modules, the fourteen Whisper model names and the turbo default, the ffmpeg requirement, the word-level subtitle options, yt-dlp's look-alike file names, and the testing of speech code with injected engines."
+  ],
+  [
+   "Contemporary developments",
+   "Current practice adds what the chapter does not show: pyttsx3 2.99 has a module-level speak() that calls init(), say() and runAndWait(), a dummy driver that lets programs be tested without a voice, callbacks registered with connect() for the events started-utterance, started-word, finished-utterance and error, and say() returns an error message instead of queuing an empty string; its Read the Docs page still describes version 2.6 from 2021; programs that speak or transcribe are best written so that the engine is passed in, as the practice programs here do with recording stand-ins, and every result of Whisper needs human review, as the chapter says."
+  ]
+ ],
+ "unit": null,
+ "research_file": "sen0414_ch24_research_v1_0_0.ttl",
+ "chapter": 24,
+ "title": "Text-to-speech and speech recognition engines for an advanced course: chapter 24 of the 3rd edition and today's packages",
+ "python": "Python 3.14.4",
+ "nodes": [
+  {
+   "id": "SpeechSynthesis",
+   "label": "Speech synthesis",
+   "level": 1,
+   "parent": null,
+   "body": "Text-to-speech in the chapter is the pyttsx3 package: it starts an engine, queues text, changes rate, volume and voice, and can save the speech to a file (Sweigart, 2025) (Bhat, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_SpeechSynthesis",
+   "class_iri": "http://example.org/sen0414/ch24#SpeechSynthesis"
+  },
+  {
+   "id": "EngineSetup",
+   "label": "Engine setup",
+   "level": 2,
+   "parent": "SpeechSynthesis",
+   "body": "pyttsx3 does not synthesise the voice itself; it drives the speech engine that the operating system already has, and starting it is one function call (Sweigart, 2025) (Bhat, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_EngineSetup",
+   "class_iri": "http://example.org/sen0414/ch24#EngineSetup"
+  },
+  {
+   "id": "SynthesisPackage",
+   "label": "Synthesis package",
+   "level": 3,
+   "parent": "EngineSetup",
+   "body": "pyttsx3 is installed with pip install pyttsx3; on Linux the speech engine eSpeak may need to be installed first with sudo apt install espeak, and the name means py for Python, tts for text-to-speech, x for extended and 3 for Python 3 (Sweigart, 2025); release 2.99 was uploaded on 2025-07-08 and depends on comtypes, pypiwin32 and pywin32 only on Windows and on pyobjc only on macOS (Bhat, 2025). The package source was read and executed with its dummy driver; no real voice was run.",
+   "section_iri": "http://example.org/sen0414/ch24#S_SynthesisPackage",
+   "class_iri": "http://example.org/sen0414/ch24#SynthesisPackage",
+   "example": "import pyttsx3",
+   "definition": "pyttsx3 is a third-party package, installed with pip install pyttsx3, that does not synthesise the voice itself but drives the speech engine that the operating system already has; its name is py for Python, tts for text-to-speech, x for extended and 3 for Python 3."
+  },
+  {
+   "id": "PlatformEngines",
+   "label": "Platform engines",
+   "level": 3,
+   "parent": "EngineSetup",
+   "body": "The chapter names SAPI5 for Windows, NSSpeechSynthesizer for macOS and eSpeak for Linux (Sweigart, 2025); the package source holds a table of engines per platform, win32 giving sapi5 first, darwin giving nsss first and every other platform giving espeak, which was executed by setting sys.platform in a test, and it ships a dummy driver that speaks nothing (Bhat, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_PlatformEngines",
+   "class_iri": "http://example.org/sen0414/ch24#PlatformEngines",
+   "example": "pyttsx3.init('dummy')",
+   "definition": "The engine behind pyttsx3 depends on the platform: SAPI5 on Windows, NSSpeechSynthesizer on macOS and eSpeak on Linux; the package lists the engines per platform with the first as the default, and also ships a dummy driver that speaks nothing and is meant for tests.",
+   "io": {
+    "code": "{'win32': 'sapi5', 'darwin': 'nsss'}.get('linux', 'espeak')",
+    "out": "'espeak'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "Dict",
+         "kind": "Dict",
+         "children": [
+          {
+           "label": "'win32'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'darwin'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'sapi5'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'nsss'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'linux'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "'espeak'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "InitFunction",
+   "label": "Init function",
+   "level": 3,
+   "parent": "EngineSetup",
+   "body": "pyttsx3.init() returns an Engine object (Sweigart, 2025); with the dummy driver a second call returns the very same object, and its repr is pyttsx3.engine.Engine('dummy', debug=False); the default init() on this machine, where eSpeak is not installed, raised RuntimeError with the text This means you probably do not have eSpeak or eSpeak-ng installed! (Bhat, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_InitFunction",
+   "class_iri": "http://example.org/sen0414/ch24#InitFunction",
+   "example": "engine = pyttsx3.init()",
+   "definition": "pyttsx3.init() returns an Engine object for a named driver or the platform default and returns the same object again for the same driver while it is alive; when the driver cannot start, as with eSpeak missing on Linux, it raises RuntimeError."
+  },
+  {
+   "id": "Speaking",
+   "label": "Speaking",
+   "level": 2,
+   "parent": "SpeechSynthesis",
+   "body": "Speech is a queue: say() adds to it and runAndWait() runs it (Sweigart, 2025) (Bhat, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_Speaking",
+   "class_iri": "http://example.org/sen0414/ch24#Speaking"
+  },
+  {
+   "id": "SayMethod",
+   "label": "Say method",
+   "level": 3,
+   "parent": "Speaking",
+   "body": "say() takes the text to speak, and the speaking does not begin until runAndWait() is called (Sweigart, 2025); with the dummy driver say('Hello. How are you doing?', 'greeting') returned None and the list of events was still empty, and say('') and say(None) returned the text Argument value can't be None or empty instead of queuing (Bhat, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_SayMethod",
+   "class_iri": "http://example.org/sen0414/ch24#SayMethod",
+   "example": "engine.say('Hello.')",
+   "definition": "say() adds a text to the engine's queue and returns at once; it does not speak, and it returns an error message instead of queuing when the text is empty or only spaces."
+  },
+  {
+   "id": "RunAndWait",
+   "label": "Run and wait",
+   "level": 3,
+   "parent": "Speaking",
+   "body": "runAndWait() blocks until the computer has finished speaking the whole string (Sweigart, 2025); with the dummy driver the events started greeting and finished greeting True appeared only after the call, and the dummy driver cannot run the loop a second time in one process, which the real drivers can, so each executed example used it once (Bhat, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_RunAndWait",
+   "class_iri": "http://example.org/sen0414/ch24#RunAndWait",
+   "example": "engine.runAndWait()",
+   "definition": "runAndWait() starts the engine, works through everything queued so far and blocks until the last utterance is finished; without it nothing queued by say(), setProperty() or save_to_file() takes effect."
+  },
+  {
+   "id": "EngineEvents",
+   "label": "Engine events",
+   "level": 3,
+   "parent": "Speaking",
+   "body": "The chapter does not mention events; the package lets a program register callbacks with connect() for started-utterance, started-word, finished-utterance and error (Bhat, 2025), and the executed example received the two utterance events in order and the word events with their start position and length.",
+   "section_iri": "http://example.org/sen0414/ch24#S_EngineEvents",
+   "class_iri": "http://example.org/sen0414/ch24#EngineEvents",
+   "example": "engine.connect('finished-utterance', callback)",
+   "definition": "connect() registers a callback for one of the engine's events: started-utterance, started-word, finished-utterance or error; the callbacks run during runAndWait(), and each receives the name given to say()."
+  },
+  {
+   "id": "SpeakShortcut",
+   "label": "Speak shortcut",
+   "level": 3,
+   "parent": "Speaking",
+   "body": "The chapter calls init(), say() and runAndWait() one after the other (Sweigart, 2025); version 2.99 also has speak(text), whose source is exactly those three lines (Bhat, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_SpeakShortcut",
+   "class_iri": "http://example.org/sen0414/ch24#SpeakShortcut",
+   "example": "pyttsx3.speak('Hello.')",
+   "definition": "Version 2.99 has a module-level speak(text) that gets the engine with init(), queues the text with say() and calls runAndWait(), which the chapter does not show."
+  },
+  {
+   "id": "VoiceSettings",
+   "label": "Voice settings",
+   "level": 2,
+   "parent": "SpeechSynthesis",
+   "body": "Rate, volume and voice are read with getProperty() and changed with setProperty() (Sweigart, 2025) (Bhat, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_VoiceSettings",
+   "class_iri": "http://example.org/sen0414/ch24#VoiceSettings"
+  },
+  {
+   "id": "GetProperty",
+   "label": "Get property",
+   "level": 3,
+   "parent": "VoiceSettings",
+   "body": "getProperty('volume') gives 1.0 and getProperty('rate') gives 200 in the chapter, and the strings 'rate', 'volume' and 'voices' read the settings (Sweigart, 2025); with the dummy driver the same two calls gave 1.0 and 200, 'voices' gave three Voice objects, and the unknown name 'tempo' raised KeyError with the text unknown property tempo (Bhat, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_GetProperty",
+   "class_iri": "http://example.org/sen0414/ch24#GetProperty",
+   "example": "engine.getProperty('rate')",
+   "definition": "getProperty() reads a setting by name: 'rate' is words per minute, 'volume' a float from 0.0 to 1.0, 'voice' the current voice and 'voices' the plural list of all Voice objects; an unknown name raises KeyError."
+  },
+  {
+   "id": "SetProperty",
+   "label": "Set property",
+   "level": 3,
+   "parent": "VoiceSettings",
+   "body": "setProperty('rate', 300) and setProperty('volume', 0.5) change the settings, and the voice is set with the singular 'voice' and the id of a Voice object (Sweigart, 2025); with the dummy driver the rate still read 200 and the volume 1.0 right after the calls and read 300 and 0.5 only after runAndWait() (Bhat, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_SetProperty",
+   "class_iri": "http://example.org/sen0414/ch24#SetProperty",
+   "example": "engine.setProperty('rate', 300)",
+   "definition": "setProperty() queues a change of 'rate', 'volume' or 'voice'; the singular 'voice' takes the id of a Voice, and like speech the change is applied only when runAndWait() runs the queue."
+  },
+  {
+   "id": "SpeechRate",
+   "label": "Speech rate",
+   "level": 3,
+   "parent": "VoiceSettings",
+   "body": "The chapter says the voice speaks at 200 words per minute by default (Sweigart, 2025); the eSpeak driver of version 2.99 sets the rate 200 and the volume 1.0 when it starts (Bhat, 2025), and 60 divided by 200 is 0.3, the seconds per word, which was computed.",
+   "section_iri": "http://example.org/sen0414/ch24#S_SpeechRate",
+   "class_iri": "http://example.org/sen0414/ch24#SpeechRate",
+   "example": "60 / 200",
+   "definition": "The rate is the speaking speed in words per minute and starts at 200, so at the default each word takes on average 60 / 200 of a second.",
+   "io": {
+    "code": "60 / 200",
+    "out": "0.3",
+    "tree": {
+     "label": "/",
+     "kind": "BinOp",
+     "children": [
+      {
+       "label": "60",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "200",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "60 / 200",
+      "focus": "60 / 200",
+      "value": "0.3"
+     }
+    ]
+   }
+  },
+  {
+   "id": "VoiceObjects",
+   "label": "Voice objects",
+   "level": 3,
+   "parent": "VoiceSettings",
+   "body": "The chapter describes the name, gender, age and languages of a Voice and the printed form <pyttsx3.voice.Voice object at 0x...> (Sweigart, 2025); a Voice made with only an id held None for name, gender and age and [] for languages, and the printed list of the dummy driver's voices began with [<pyttsx3.voice.Voice object at 0x (Bhat, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_VoiceObjects",
+   "class_iri": "http://example.org/sen0414/ch24#VoiceObjects",
+   "example": "engine.getProperty('voices')",
+   "definition": "A Voice object has the attributes id, name, languages, gender and age; gender and age are None and languages is an empty list when the operating system does not say, and a list of Voice objects prints as <pyttsx3.voice.Voice object at 0x...> because the class defines no repr."
+  },
+  {
+   "id": "SavedAudio",
+   "label": "Saved audio",
+   "level": 2,
+   "parent": "SpeechSynthesis",
+   "body": "Speech can go to a file instead of the speakers, and the file can be read back with the standard library if it is a WAV file (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch24#S_SavedAudio",
+   "class_iri": "http://example.org/sen0414/ch24#SavedAudio"
+  },
+  {
+   "id": "SaveToFile",
+   "label": "Save to file",
+   "level": 3,
+   "parent": "SavedAudio",
+   "body": "save_to_file() needs runAndWait() before the file exists, and the chapter says that pyttsx3 can save .wav files only and not .mp3 or another format (Sweigart, 2025); the source of version 2.99 writes WAV in the eSpeak driver with the wave module, writes through a SAPI file stream in the SAPI5 driver, and says in the macOS driver that Apple writes .aiff, not .wav (Bhat, 2025). No file was saved by a real engine here, and the dummy driver has no save_to_file.",
+   "section_iri": "http://example.org/sen0414/ch24#S_SaveToFile",
+   "class_iri": "http://example.org/sen0414/ch24#SaveToFile",
+   "example": "engine.save_to_file('Hello.', 'hello.wav')",
+   "definition": "save_to_file() queues speech to be written to a file instead of the speakers, and like say() it needs runAndWait() before the file exists; the chapter says that only .wav is possible, which is true of the eSpeak and SAPI5 drivers and not of the macOS driver, which writes .aiff."
+  },
+  {
+   "id": "WavContainer",
+   "label": "Wav container",
+   "level": 3,
+   "parent": "SavedAudio",
+   "body": "A WAV file written with the standard wave module as one channel, 2-byte samples and 22,050 frames per second, the parameters of the eSpeak driver, began with RIFF and WAVE, and one second was 44,144 bytes long and read back as 22,050 frames, 1.0 second (Python Software Foundation, 2026) (Bhat, 2025). This is a file made by this example and not one made by pyttsx3.",
+   "section_iri": "http://example.org/sen0414/ch24#S_WavContainer",
+   "class_iri": "http://example.org/sen0414/ch24#WavContainer",
+   "example": "wave.open('hello.wav', 'rb')",
+   "definition": "A WAV file is a RIFF container holding a format header and raw samples; the standard wave module reads and writes it, and the eSpeak driver of pyttsx3 writes mono, 2-byte samples at 22,050 frames per second, so one second of silence is 44 header bytes plus 44,100 data bytes.",
+   "io": {
+    "code": "(lambda io, wave: (lambda b: (lambda w: (w.setnchannels(1), w.setsampwidth(2), w.setframerate(22050), w.writeframes(bytes(44100)), w.close(), (b.getvalue()[:4], b.getvalue()[8:12], len(b.getvalue())))[-1])(wave.open(b, 'wb')))(io.BytesIO()))(__import__('io'), __import__('wave'))",
+    "out": "(b'RIFF', b'WAVE', 44144)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Lambda",
+           "kind": "Lambda",
+           "children": [
+            {
+             "label": "arguments",
+             "kind": "arguments",
+             "children": [
+              {
+               "label": "arg",
+               "kind": "arg",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Lambda",
+               "kind": "Lambda",
+               "children": [
+                {
+                 "label": "arguments",
+                 "kind": "arguments",
+                 "children": [
+                  {
+                   "label": "arg",
+                   "kind": "arg",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "Subscript",
+                 "kind": "Subscript",
+                 "children": [
+                  {
+                   "label": "Tuple",
+                   "kind": "Tuple",
+                   "children": [
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "Attribute",
+                       "kind": "Attribute",
+                       "children": [
+                        {
+                         "label": "w",
+                         "kind": "Name",
+                         "children": []
+                        }
+                       ]
+                      },
+                      {
+                       "label": "1",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    },
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "Attribute",
+                       "kind": "Attribute",
+                       "children": [
+                        {
+                         "label": "w",
+                         "kind": "Name",
+                         "children": []
+                        }
+                       ]
+                      },
+                      {
+                       "label": "2",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    },
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "Attribute",
+                       "kind": "Attribute",
+                       "children": [
+                        {
+                         "label": "w",
+                         "kind": "Name",
+                         "children": []
+                        }
+                       ]
+                      },
+                      {
+                       "label": "22050",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    },
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "Attribute",
+                       "kind": "Attribute",
+                       "children": [
+                        {
+                         "label": "w",
+                         "kind": "Name",
+                         "children": []
+                        }
+                       ]
+                      },
+                      {
+                       "label": "call",
+                       "kind": "Call",
+                       "children": [
+                        {
+                         "label": "bytes",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "44100",
+                         "kind": "Constant",
+                         "children": []
+                        }
+                       ]
+                      }
+                     ]
+                    },
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "Attribute",
+                       "kind": "Attribute",
+                       "children": [
+                        {
+                         "label": "w",
+                         "kind": "Name",
+                         "children": []
+                        }
+                       ]
+                      }
+                     ]
+                    },
+                    {
+                     "label": "Tuple",
+                     "kind": "Tuple",
+                     "children": [
+                      {
+                       "label": "Subscript",
+                       "kind": "Subscript",
+                       "children": [
+                        {
+                         "label": "call",
+                         "kind": "Call",
+                         "children": [
+                          {
+                           "label": "Attribute",
+                           "kind": "Attribute",
+                           "children": [
+                            {
+                             "label": "b",
+                             "kind": "Name",
+                             "children": []
+                            }
+                           ]
+                          }
+                         ]
+                        },
+                        {
+                         "label": "Slice",
+                         "kind": "Slice",
+                         "children": [
+                          {
+                           "label": "4",
+                           "kind": "Constant",
+                           "children": []
+                          }
+                         ]
+                        }
+                       ]
+                      },
+                      {
+                       "label": "Subscript",
+                       "kind": "Subscript",
+                       "children": [
+                        {
+                         "label": "call",
+                         "kind": "Call",
+                         "children": [
+                          {
+                           "label": "Attribute",
+                           "kind": "Attribute",
+                           "children": [
+                            {
+                             "label": "b",
+                             "kind": "Name",
+                             "children": []
+                            }
+                           ]
+                          }
+                         ]
+                        },
+                        {
+                         "label": "Slice",
+                         "kind": "Slice",
+                         "children": [
+                          {
+                           "label": "8",
+                           "kind": "Constant",
+                           "children": []
+                          },
+                          {
+                           "label": "12",
+                           "kind": "Constant",
+                           "children": []
+                          }
+                         ]
+                        }
+                       ]
+                      },
+                      {
+                       "label": "call",
+                       "kind": "Call",
+                       "children": [
+                        {
+                         "label": "len",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "call",
+                         "kind": "Call",
+                         "children": [
+                          {
+                           "label": "Attribute",
+                           "kind": "Attribute",
+                           "children": [
+                            {
+                             "label": "b",
+                             "kind": "Name",
+                             "children": []
+                            }
+                           ]
+                          }
+                         ]
+                        }
+                       ]
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "label": "UnaryOp",
+                   "kind": "UnaryOp",
+                   "children": [
+                    {
+                     "label": "1",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "wave",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "b",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'wb'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "io",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "__import__",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'io'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "__import__",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'wave'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(lambda io, wave: (lambda b: (lambda w: (w.setnchannels(1), w.setsampwidth(2), w.setframerate(22050), w.writeframes(bytes(44100)), w.close(), (b.getvalue()[:4], b.getvalue()[8:12], len(b.getvalue())))[-1])(wave.open(b, 'wb')))(io.BytesIO()))(__import__('io'), __import__('wave'))",
+      "focus": "-1",
+      "value": "-1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "SpeechDuration",
+   "label": "Speech duration",
+   "level": 3,
+   "parent": "SavedAudio",
+   "body": "The chapter reports that a string of 1,800 words became a 10-minute audio file in about two seconds on the author's computer (Sweigart, 2025); 1,800 words at the default 200 words per minute is 9.0 minutes, computed, which is of the same size; the time of two seconds was not reproduced.",
+   "section_iri": "http://example.org/sen0414/ch24#S_SpeechDuration",
+   "class_iri": "http://example.org/sen0414/ch24#SpeechDuration",
+   "example": "1800 / 200",
+   "definition": "The length of speech follows from the word count and the rate: 1,800 words at 200 words per minute take 9 minutes, which agrees in size with the 10-minute file that the chapter reports for its laptop.",
+   "io": {
+    "code": "1800 / 200",
+    "out": "9.0",
+    "tree": {
+     "label": "/",
+     "kind": "BinOp",
+     "children": [
+      {
+       "label": "1800",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "200",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "1800 / 200",
+      "focus": "1800 / 200",
+      "value": "9.0"
+     }
+    ]
+   }
+  },
+  {
+   "id": "RemovedAudioModules",
+   "label": "Removed audio modules",
+   "level": 3,
+   "parent": "SavedAudio",
+   "body": "Python 3.13 removed aifc, audioop, sunau, chunk and sndhdr, and find_spec found none of them under 3.14.4 while it found wave (Heimes and Cannon, 2019) (Python Software Foundation, 2026); the macOS driver of pyttsx3 writes AIFF, so reading such a file needs a third-party package.",
+   "section_iri": "http://example.org/sen0414/ch24#S_RemovedAudioModules",
+   "class_iri": "http://example.org/sen0414/ch24#RemovedAudioModules",
+   "example": "import wave",
+   "definition": "Python 3.13 removed aifc, audioop, sunau, chunk and sndhdr from the standard library under PEP 594 and kept wave; under 3.14.4 only wave can still be imported, so AIFF files, which the macOS driver of pyttsx3 writes, need a third-party reader."
+  },
+  {
+   "id": "SpeechRecognition",
+   "label": "Speech recognition",
+   "level": 1,
+   "parent": null,
+   "body": "Speech recognition in the chapter is the Whisper package: it loads a trained model, turns an audio file into text with timings, and can write the result as subtitle files (Sweigart, 2025) (OpenAI, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_SpeechRecognition",
+   "class_iri": "http://example.org/sen0414/ch24#SpeechRecognition"
+  },
+  {
+   "id": "WhisperModels",
+   "label": "Whisper models",
+   "level": 2,
+   "parent": "SpeechRecognition",
+   "body": "Whisper runs a trained model on the computer; the model's name sets the balance between speed and accuracy (Sweigart, 2025) (OpenAI, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_WhisperModels",
+   "class_iri": "http://example.org/sen0414/ch24#WhisperModels"
+  },
+  {
+   "id": "WhisperPackage",
+   "label": "Whisper package",
+   "level": 3,
+   "parent": "WhisperModels",
+   "body": "The chapter says to install Whisper with pip install openai-whisper, that the package called whisper on PyPI is something else, and that the download is large (Sweigart, 2025); the package lists PyTorch, numba, numpy and tiktoken as requirements, names Python 3.8 to 3.13 in its classifiers, and needs the command-line tool ffmpeg, which the chapter does not mention (OpenAI, 2025). It was read from the source distribution and not installed here, so Whisper was not run under Python 3.14.4.",
+   "section_iri": "http://example.org/sen0414/ch24#S_WhisperPackage",
+   "class_iri": "http://example.org/sen0414/ch24#WhisperPackage",
+   "example": "pip install openai-whisper",
+   "definition": "Whisper is installed as openai-whisper, because the package called whisper on PyPI is something else; it depends on PyTorch and other large packages and needs the ffmpeg program on the path, which the chapter does not mention; this was read and not installed here."
+  },
+  {
+   "id": "LoadModel",
+   "label": "Load model",
+   "level": 3,
+   "parent": "WhisperModels",
+   "body": "load_model() takes one of the names 'tiny', 'base', 'small', 'medium' or 'large-v3' in the chapter (Sweigart, 2025); the source of release 20250625 holds fourteen names, the five of the chapter among them and also tiny.en, base.en, small.en, medium.en, large-v1, large-v2, large, large-v3-turbo and turbo, where large is the same file as large-v3 and turbo the same as large-v3-turbo (OpenAI, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_LoadModel",
+   "class_iri": "http://example.org/sen0414/ch24#LoadModel",
+   "example": "model = whisper.load_model('base')",
+   "definition": "load_model(name) returns a model object; release 20250625 accepts fourteen names, among them the chapter's tiny, base, small, medium and large-v3, the .en models for English only, large-v1, large-v2, large, and turbo; the first call downloads the model file."
+  },
+  {
+   "id": "ModelSizes",
+   "label": "Model sizes",
+   "level": 3,
+   "parent": "WhisperModels",
+   "body": "Table 24-1 gives file sizes of 74MB to 3GB, memory of 1GB to 10GB and the author's runtimes, and the author finds base suitable for 99 percent of purposes (Sweigart, 2025); its memory column equals the required-VRAM column of the package's README, and the 15-minute sample of 900 seconds gives 11.25, 5.84, 2.27, 0.74 and 0.46 seconds of audio per second of computing for tiny, base, small, medium and large-v3, all computed from the table, while large-v3 took about 12.8 times as long as base (OpenAI, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_ModelSizes",
+   "class_iri": "http://example.org/sen0414/ch24#ModelSizes",
+   "example": "whisper.load_model('large-v3')",
+   "definition": "Larger models are slower and more accurate: on the chapter's 15-minute sample the author's laptop needed 2 minutes 34 seconds for base and 32 minutes 58 seconds for large-v3, about 12.8 times as long; these times are the book's own measurements, not reproduced here.",
+   "io": {
+    "code": "round((32 * 60 + 58) / (2 * 60 + 34), 1)",
+    "out": "12.8",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "round",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "/",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "*",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "32",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "60",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "58",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "*",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "2",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "60",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "34",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "1",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "round((32 * 60 + 58) / (2 * 60 + 34), 1)",
+      "focus": "32 * 60",
+      "value": "1920"
+     },
+     {
+      "expr": "round((1920 + 58) / (2 * 60 + 34), 1)",
+      "focus": "1920 + 58",
+      "value": "1978"
+     },
+     {
+      "expr": "round(1978 / (2 * 60 + 34), 1)",
+      "focus": "2 * 60",
+      "value": "120"
+     },
+     {
+      "expr": "round(1978 / (120 + 34), 1)",
+      "focus": "120 + 34",
+      "value": "154"
+     },
+     {
+      "expr": "round(1978 / 154, 1)",
+      "focus": "1978 / 154",
+      "value": "12.844155844155845"
+     },
+     {
+      "expr": "round(12.844155844155845, 1)",
+      "focus": "round(12.844155844155845, 1)",
+      "value": "12.8"
+     }
+    ]
+   }
+  },
+  {
+   "id": "GraphicsProcessor",
+   "label": "Graphics processor",
+   "level": 3,
+   "parent": "WhisperModels",
+   "body": "The chapter says that Whisper uses the CPU by default and that device='cuda' uses an NVIDIA graphics processor (Sweigart, 2025); the command line of release 20250625 chooses cuda when PyTorch reports it and the CPU otherwise (OpenAI, 2025). No graphics processor was used here.",
+   "section_iri": "http://example.org/sen0414/ch24#S_GraphicsProcessor",
+   "class_iri": "http://example.org/sen0414/ch24#GraphicsProcessor",
+   "example": "whisper.load_model('base', device='cuda')",
+   "definition": "By default Whisper computes on the CPU; with an NVIDIA card and the matching PyTorch the device argument 'cuda' moves the model to the graphics processor and speeds transcription up; this was read and not run here."
+  },
+  {
+   "id": "Transcription",
+   "label": "Transcription",
+   "level": 2,
+   "parent": "SpeechRecognition",
+   "body": "transcribe() turns an audio file into a dictionary of text and timed segments (Sweigart, 2025) (OpenAI, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_Transcription",
+   "class_iri": "http://example.org/sen0414/ch24#Transcription"
+  },
+  {
+   "id": "TranscribeMethod",
+   "label": "Transcribe method",
+   "level": 3,
+   "parent": "Transcription",
+   "body": "transcribe() is called on the model with the audio file's name, and the chapter says that Whisper accepts any audio or video file and converts it itself (Sweigart, 2025); it was read and not run here, since no model can be downloaded.",
+   "section_iri": "http://example.org/sen0414/ch24#S_TranscribeMethod",
+   "class_iri": "http://example.org/sen0414/ch24#TranscribeMethod",
+   "example": "result = model.transcribe('hello.wav')",
+   "definition": "transcribe(path) decodes the audio or video file and returns a dictionary; it can take seconds or hours depending on the model and the length, and it accepts a language argument; it was read and not run here."
+  },
+  {
+   "id": "ResultDictionary",
+   "label": "Result dictionary",
+   "level": 3,
+   "parent": "Transcription",
+   "body": "The 'text' key holds the transcription (Sweigart, 2025); in the source of release 20250625 transcribe() ends by returning a dict with the keys text, segments and language, which was found by parsing that function's code (OpenAI, 2025). The dictionary in the executed example was written by hand in that shape and was not produced by Whisper.",
+   "section_iri": "http://example.org/sen0414/ch24#S_ResultDictionary",
+   "class_iri": "http://example.org/sen0414/ch24#ResultDictionary",
+   "example": "result['text']",
+   "definition": "The dictionary returned by transcribe() has the keys text, segments and language; the 'text' value is the whole transcription and every entry of 'segments' has start and end in seconds and its own text.",
+   "io": {
+    "code": "{'text': ' Hello. How are you doing?', 'segments': [{'start': 0.0, 'end': 2.5, 'text': ' Hello. How are you doing?'}], 'language': 'en'}['text'].strip()",
+    "out": "'Hello. How are you doing?'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Dict",
+           "kind": "Dict",
+           "children": [
+            {
+             "label": "'text'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'segments'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'language'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "' Hello. How are you doing?'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "List",
+             "kind": "List",
+             "children": [
+              {
+               "label": "Dict",
+               "kind": "Dict",
+               "children": [
+                {
+                 "label": "'start'",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "'end'",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "'text'",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "0.0",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "2.5",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "' Hello. How are you doing?'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "'en'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'text'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "LanguageOption",
+   "label": "Language option",
+   "level": 3,
+   "parent": "Transcription",
+   "body": "The chapter passes language='English' and says that Whisper detects the language by itself otherwise (Sweigart, 2025); get_tokenizer lower-cases the name and looks it up among 100 language names and codes, so 'English' becomes en, which was found by parsing the stored source (OpenAI, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_LanguageOption",
+   "class_iri": "http://example.org/sen0414/ch24#LanguageOption",
+   "example": "model.transcribe('hello.wav', language='English')",
+   "definition": "Without a language argument Whisper detects the language from the first 30 seconds; with one it skips that step, and the name may be a code such as 'en' or a name such as 'English', which is lower-cased; the package knows 100 languages."
+  },
+  {
+   "id": "AudioDecoding",
+   "label": "Audio decoding",
+   "level": 3,
+   "parent": "Transcription",
+   "body": "The chapter says that Whisper converts any file to the format it requires (Sweigart, 2025); in release 20250625 that conversion is a call of ffmpeg with the options -f s16le -ac 1 and -ar 16000 (SAMPLE_RATE 16000), documented in the source as Requires the ffmpeg CLI in PATH, and a chunk is 30 seconds of 480,000 samples, which was read from the source by parsing it (OpenAI, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch24#S_AudioDecoding",
+   "class_iri": "http://example.org/sen0414/ch24#AudioDecoding",
+   "example": "ffmpeg -i hello.wav -f s16le -ac 1 -ar 16000 -",
+   "definition": "Whisper does not read the file itself: it starts ffmpeg to convert any audio or video file to 16,000 samples per second of mono 16-bit sound, and it processes that sound in 30-second chunks of 480,000 samples.",
+   "io": {
+    "code": "30 * 16000",
+    "out": "480000",
+    "tree": {
+     "label": "*",
+     "kind": "BinOp",
+     "children": [
+      {
+       "label": "30",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "16000",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "30 * 16000",
+      "focus": "30 * 16000",
+      "value": "480000"
+     }
+    ]
+   }
+  },
+  {
+   "id": "HumanReview",
+   "label": "Human review",
+   "level": 3,
+   "parent": "Transcription",
+   "body": "The chapter says that all models produce errors, that Whisper is pretty good but never perfect at punctuation and capitals, and that the output should always be reviewed by a person (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_HumanReview",
+   "class_iri": "http://example.org/sen0414/ch24#HumanReview",
+   "example": "print(result['text'])",
+   "definition": "All models make errors, including in punctuation and capital letters, so the chapter asks that a person review every transcription and suggests trying a larger model when there are many errors."
+  },
+  {
+   "id": "SubtitleFiles",
+   "label": "Subtitle files",
+   "level": 2,
+   "parent": "SpeechRecognition",
+   "body": "The timed segments of a transcription can be written as subtitle files in several formats (Sweigart, 2025) (OpenAI, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_SubtitleFiles",
+   "class_iri": "http://example.org/sen0414/ch24#SubtitleFiles"
+  },
+  {
+   "id": "SrtFormat",
+   "label": "Srt format",
+   "level": 3,
+   "parent": "SubtitleFiles",
+   "body": "The chapter's SRT sample shows block numbers, 00:00:00,000 --> 00:00:05,640 and the text (Sweigart, 2025); Whisper's SRT writer, executed from the stored source, wrote 1 then 00:00:00,000 --> 00:00:05,640 then the text and a blank line, then 2 and 00:00:05,640 --> 00:00:14,960, and a formula written here gave the same as Whisper's format_timestamp for ten test times (OpenAI, 2025) (Python Package Index, 2026).",
+   "section_iri": "http://example.org/sen0414/ch24#S_SrtFormat",
+   "class_iri": "http://example.org/sen0414/ch24#SrtFormat",
+   "example": "00:00:00,000 --> 00:00:05,640",
+   "definition": "A SubRip file holds numbered blocks separated by a blank line, each with a start and end time as hours:minutes:seconds,milliseconds with a comma and then the text; Whisper's SRT writer always writes the hours.",
+   "io": {
+    "code": "(lambda ms: '%02d:%02d:%02d,%03d' % (ms // 3600000, ms % 3600000 // 60000, ms % 60000 // 1000, ms % 1000))(round(5.64 * 1000))",
+    "out": "'00:00:05,640'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "%",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "'%02d:%02d:%02d,%03d'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "//",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "ms",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "3600000",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "//",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "%",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "ms",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "3600000",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "60000",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "//",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "%",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "ms",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "60000",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "1000",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "%",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "ms",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1000",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "round",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "*",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "5.64",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "1000",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(lambda ms: '%02d:%02d:%02d,%03d' % (ms // 3600000, ms % 3600000 // 60000, ms % 60000 // 1000, ms % 1000))(round(5.64 * 1000))",
+      "focus": "5.64 * 1000",
+      "value": "5640.0"
+     },
+     {
+      "expr": "(lambda ms: '%02d:%02d:%02d,%03d' % (ms // 3600000, ms % 3600000 // 60000, ms % 60000 // 1000, ms % 1000))(round(5640.0))",
+      "focus": "round(5640.0)",
+      "value": "5640"
+     }
+    ]
+   }
+  },
+  {
+   "id": "VttFormat",
+   "label": "Vtt format",
+   "level": 3,
+   "parent": "SubtitleFiles",
+   "body": "The chapter's VTT sample starts with WEBVTT and shows 00:00.000 --> 00:05.640 (Sweigart, 2025); the executed writer wrote WEBVTT, a blank line and the same lines, and wrote 01:01:01.500 for 3,661.5 seconds, so hours appear only when they are not zero, as the W3C text allows (W3C, 2026) (OpenAI, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_VttFormat",
+   "class_iri": "http://example.org/sen0414/ch24#VttFormat",
+   "example": "00:05.640",
+   "definition": "A WebVTT file starts with the line WEBVTT and writes times with a full stop before the milliseconds; the hours may be left out when they are zero, which is how Whisper writes them.",
+   "io": {
+    "code": "(lambda ms: '%02d:%02d.%03d' % (ms % 3600000 // 60000, ms % 60000 // 1000, ms % 1000))(round(5.64 * 1000))",
+    "out": "'00:05.640'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "%",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "'%02d:%02d.%03d'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "//",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "%",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "ms",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "3600000",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "60000",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "//",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "%",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "ms",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "60000",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "1000",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "%",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "ms",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1000",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "round",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "*",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "5.64",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "1000",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(lambda ms: '%02d:%02d.%03d' % (ms % 3600000 // 60000, ms % 60000 // 1000, ms % 1000))(round(5.64 * 1000))",
+      "focus": "5.64 * 1000",
+      "value": "5640.0"
+     },
+     {
+      "expr": "(lambda ms: '%02d:%02d.%03d' % (ms % 3600000 // 60000, ms % 60000 // 1000, ms % 1000))(round(5640.0))",
+      "focus": "round(5640.0)",
+      "value": "5640"
+     }
+    ]
+   }
+  },
+  {
+   "id": "TsvFormat",
+   "label": "Tsv format",
+   "level": 3,
+   "parent": "SubtitleFiles",
+   "body": "The chapter's TSV sample has the header start, end, text and times such as 0 and 5640 (Sweigart, 2025); the executed writer wrote the header with tabs and the integer milliseconds 0, 5640 and 14960 (OpenAI, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_TsvFormat",
+   "class_iri": "http://example.org/sen0414/ch24#TsvFormat",
+   "example": "start end text",
+   "definition": "Whisper's TSV file is not an official subtitle format: it has the header line start, end and text separated by tabs and then one line per segment with the times as integer milliseconds, which any program with the csv module can read.",
+   "io": {
+    "code": "(round(1000 * 5.64), round(1000 * 14.96))",
+    "out": "(5640, 14960)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "round",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "*",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "1000",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "5.64",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "round",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "*",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "1000",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "14.96",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(round(1000 * 5.64), round(1000 * 14.96))",
+      "focus": "1000 * 5.64",
+      "value": "5640.0"
+     },
+     {
+      "expr": "(round(5640.0), round(1000 * 14.96))",
+      "focus": "round(5640.0)",
+      "value": "5640"
+     },
+     {
+      "expr": "(5640, round(1000 * 14.96))",
+      "focus": "1000 * 14.96",
+      "value": "14960.0"
+     },
+     {
+      "expr": "(5640, round(14960.0))",
+      "focus": "round(14960.0)",
+      "value": "14960"
+     }
+    ]
+   }
+  },
+  {
+   "id": "TxtAndJsonFormats",
+   "label": "Txt and json formats",
+   "level": 3,
+   "parent": "SubtitleFiles",
+   "body": "The chapter names the formats 'txt' and 'json' for get_writer() (Sweigart, 2025); the executed TXT writer wrote the two stripped segment texts on two lines, and the JSON writer wrote the whole dictionary with json.dump, keeping the leading space of a segment's text (OpenAI, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch24#S_TxtAndJsonFormats",
+   "class_iri": "http://example.org/sen0414/ch24#TxtAndJsonFormats",
+   "example": "get_writer('json', '.')",
+   "definition": "The TXT writer writes one stripped segment text per line and the JSON writer dumps the whole result dictionary with json.dump; the chapter lists both names in the get_writer() argument.",
+   "io": {
+    "code": "__import__('json').dumps({'start': 0, 'end': 1.5, 'text': ' a'})",
+    "out": "'{\"start\": 0, \"end\": 1.5, \"text\": \" a\"}'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "__import__",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'json'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'start'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'end'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'text'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "1.5",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "' a'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "GetWriter",
+   "label": "Get writer",
+   "level": 3,
+   "parent": "SubtitleFiles",
+   "body": "The chapter calls get_writer('srt', '.') and then write_function(result, 'audio') and gets audio.srt (Sweigart, 2025); the executed writer named the file after the audio file's basename without extension, so talks/hello.wav gave hello.srt, replaced --> inside a segment's text by ->, and get_writer('pdf', '.') raised KeyError (OpenAI, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_GetWriter",
+   "class_iri": "http://example.org/sen0414/ch24#GetWriter",
+   "example": "whisper.utils.get_writer('srt', '.')",
+   "definition": "get_writer(format, folder) returns a writer function, and calling it with the result and an audio file name writes folder/name.format, where the name is the audio file's name without its folder and extension; an unknown format raises KeyError.",
+   "io": {
+    "code": "__import__('os').path.splitext(__import__('os').path.basename('talks/hello.wav'))[0] + '.srt'",
+    "out": "'hello.srt'",
+    "tree": {
+     "label": "+",
+     "kind": "BinOp",
+     "children": [
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'os'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "__import__",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "'os'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "'talks/hello.wav'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "0",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "'.srt'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "WordTimestamps",
+   "label": "Word timestamps",
+   "level": 3,
+   "parent": "SubtitleFiles",
+   "body": "The chapter does not cover word timestamps; in the executed example a result with a list of words in its segment gave one subtitle by default, three subtitles of two, two and one words with max_words_per_line 2, and two subtitles with max_line_width 10 and max_line_count 2 (OpenAI, 2025). The words and times were written by hand and were not produced by Whisper.",
+   "section_iri": "http://example.org/sen0414/ch24#S_WordTimestamps",
+   "class_iri": "http://example.org/sen0414/ch24#WordTimestamps",
+   "example": "write_function(result, 'audio', {'max_words_per_line': 2})",
+   "definition": "When the transcription was made with word timestamps, every segment also holds a list of words with their own times, and the writer can then start a new subtitle after a number of words or a line width; the chapter does not cover these options."
+  },
+  {
+   "id": "VideoDownload",
+   "label": "Video download",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter uses the yt-dlp package to fetch the audio or the facts of an online video so that Whisper has a file to transcribe (Sweigart, 2025) (Python Package Index, 2026).",
+   "section_iri": "http://example.org/sen0414/ch24#S_VideoDownload",
+   "class_iri": "http://example.org/sen0414/ch24#VideoDownload"
+  },
+  {
+   "id": "Downloading",
+   "label": "Downloading",
+   "level": 2,
+   "parent": "VideoDownload",
+   "body": "yt-dlp downloads a video or only its sound, steered by a dictionary of options (Sweigart, 2025) (Python Package Index, 2026).",
+   "section_iri": "http://example.org/sen0414/ch24#S_Downloading",
+   "class_iri": "http://example.org/sen0414/ch24#Downloading"
+  },
+  {
+   "id": "YtDlpPackage",
+   "label": "Yt dlp package",
+   "level": 3,
+   "parent": "Downloading",
+   "body": "The chapter installs yt-dlp as described in its Appendix A and says that the first step for an error is to install the latest version (Sweigart, 2025); release 2026.8.19 was uploaded on 2026-08-19 and needs Python 3.10 or later (Python Package Index, 2026). It was run only offline in a scratch environment, by a stored probe script with its recorded output; no video site was contacted.",
+   "section_iri": "http://example.org/sen0414/ch24#S_YtDlpPackage",
+   "class_iri": "http://example.org/sen0414/ch24#YtDlpPackage",
+   "example": "import yt_dlp",
+   "definition": "yt-dlp is a third-party package that downloads from YouTube and many other video sites; it is installed with pip, changes often as the sites change, and the chapter's first advice for an error is to install the latest version; it was run here only offline, in a scratch environment."
+  },
+  {
+   "id": "DownloadCall",
+   "label": "Download call",
+   "level": 3,
+   "parent": "Downloading",
+   "body": "The chapter says that download() expects a list, which is why the address is put in a list (Sweigart, 2025); the source of yt-dlp 2026.8.19 wraps a single address itself and comments that passing one address is a common mistake (Python Package Index, 2026). The download itself needs a network and was not run.",
+   "section_iri": "http://example.org/sen0414/ch24#S_DownloadCall",
+   "class_iri": "http://example.org/sen0414/ch24#DownloadCall",
+   "example": "ydl.download([video_url])",
+   "definition": "download() is called with a list of addresses inside a with yt_dlp.YoutubeDL() block; current yt-dlp also accepts one address, wrapping it in a list itself; the download needs a network and was not run."
+  },
+  {
+   "id": "DownloadOptions",
+   "label": "Download options",
+   "level": 3,
+   "parent": "Downloading",
+   "body": "The chapter's dictionary holds quiet, no_warnings, outtmpl, format, postprocessors and skip_download (Sweigart, 2025); the options object was built offline in the scratch environment without error and kept the post-processor FFmpegExtractAudio (Python Package Index, 2026).",
+   "section_iri": "http://example.org/sen0414/ch24#S_DownloadOptions",
+   "class_iri": "http://example.org/sen0414/ch24#DownloadOptions",
+   "example": "yt_dlp.YoutubeDL({'quiet': True})",
+   "definition": "The dictionary given to YoutubeDL holds options such as quiet and no_warnings to silence the output, outtmpl for the file name, format for the choice of stream, postprocessors for steps after the download, and skip_download to fetch only information."
+  },
+  {
+   "id": "OutputTemplate",
+   "label": "Output template",
+   "level": 3,
+   "parent": "Downloading",
+   "body": "The chapter sets 'outtmpl': 'downloaded_content.%(ext)s' and says that the name would otherwise be based on the video's title (Sweigart, 2025); the template is filled in with printf-style named fields, and 'downloaded_content.%(ext)s' % {'ext': 'm4a'} gave downloaded_content.m4a, while yt-dlp's prepare_filename gave the same name for a dictionary with ext m4a and gave a name built from title and id in square brackets under the default template (Python Software Foundation, 2026) (Python Package Index, 2026).",
+   "section_iri": "http://example.org/sen0414/ch24#S_OutputTemplate",
+   "class_iri": "http://example.org/sen0414/ch24#OutputTemplate",
+   "example": "'outtmpl': 'downloaded_content.%(ext)s'",
+   "definition": "The outtmpl option is an output template: the text is filled in with printf-style named fields, so %(ext)s becomes the real file extension and the script can know the file's stem in advance; without it the name is built from the video's title and id.",
+   "io": {
+    "code": "'downloaded_content.%(ext)s' % {'ext': 'm4a'}",
+    "out": "'downloaded_content.m4a'",
+    "tree": {
+     "label": "%",
+     "kind": "BinOp",
+     "children": [
+      {
+       "label": "'downloaded_content.%(ext)s'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'ext'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'m4a'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "AudioExtraction",
+   "label": "Audio extraction",
+   "level": 3,
+   "parent": "Downloading",
+   "body": "The chapter asks for the format 'm4a/bestaudio/best' and the post-processor FFmpegExtractAudio with the codec m4a (Sweigart, 2025); the post-processor class exists in the package, which was checked offline, but extracting sound runs ffmpeg on a downloaded file, so it was not run (Python Package Index, 2026).",
+   "section_iri": "http://example.org/sen0414/ch24#S_AudioExtraction",
+   "class_iri": "http://example.org/sen0414/ch24#AudioExtraction",
+   "example": "'format': 'm4a/bestaudio/best'",
+   "definition": "The format option lists choices separated by slashes, tried from left to right, and the FFmpegExtractAudio post-processor then extracts the sound with ffmpeg into the preferred codec; it needs ffmpeg installed and a network, and was not run.",
+   "io": {
+    "code": "'m4a/bestaudio/best'.split('/')",
+    "out": "['m4a', 'bestaudio', 'best']",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "'m4a/bestaudio/best'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "'/'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "Metadata",
+   "label": "Metadata",
+   "level": 2,
+   "parent": "VideoDownload",
+   "body": "After a download the script must find the file, and it can ask for the video's facts without downloading (Sweigart, 2025) (Python Package Index, 2026).",
+   "section_iri": "http://example.org/sen0414/ch24#S_Metadata",
+   "class_iri": "http://example.org/sen0414/ch24#Metadata"
+  },
+  {
+   "id": "FindDownloadedFile",
+   "label": "Find downloaded file",
+   "level": 3,
+   "parent": "Metadata",
+   "body": "The chapter finds the file with Path().glob('downloaded_content.*') and takes the first match (Sweigart, 2025); in a temporary folder holding downloaded_content.m4a, notes.txt and downloaded_content_old.mp3 the glob matched exactly one file and str() of it was downloaded_content.m4a (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch24#S_FindDownloadedFile",
+   "class_iri": "http://example.org/sen0414/ch24#FindDownloadedFile",
+   "example": "Path().glob('downloaded_content.*')",
+   "definition": "Because the extension can vary, the script finds the file with a glob pattern: Path().glob('downloaded_content.*') yields every file in the current folder whose name is downloaded_content followed by any extension, and the chapter takes the first.",
+   "io": {
+    "code": "(__import__('pathlib').PurePath('downloaded_content.m4a').match('downloaded_content.*'), __import__('pathlib').PurePath('notes.txt').match('downloaded_content.*'))",
+    "out": "(True, False)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'pathlib'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "'downloaded_content.m4a'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'downloaded_content.*'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'pathlib'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "'notes.txt'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'downloaded_content.*'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "MetadataOnly",
+   "label": "Metadata only",
+   "level": 3,
+   "parent": "Metadata",
+   "body": "The chapter sets skip_download, calls extract_info() and sanitize_info() and writes metadata.json with encoding utf-8 (Sweigart, 2025); a dictionary written with json.dumps in that way read back equal, and sanitize_info() exists in the package, turned a function in the dictionary into text and made json.dumps work, while extract_info() would need a network (Python Package Index, 2026) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch24#S_MetadataOnly",
+   "class_iri": "http://example.org/sen0414/ch24#MetadataOnly",
+   "example": "ydl.extract_info(video_url)",
+   "definition": "With skip_download set, extract_info() returns a dictionary of facts about the video, such as title and duration; sanitize_info() turns that dictionary into something JSON can store, and the chapter writes it to metadata.json with json.dumps and encoding utf-8.",
+   "io": {
+    "code": "__import__('json').loads(__import__('json').dumps({'title': 'T', 'duration': 60}))['duration']",
+    "out": "60",
+    "tree": {
+     "label": "Subscript",
+     "kind": "Subscript",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'json'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'json'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Dict",
+           "kind": "Dict",
+           "children": [
+            {
+             "label": "'title'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'duration'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'T'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "60",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'duration'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "FilenameCleaning",
+   "label": "Filename cleaning",
+   "level": 3,
+   "parent": "Metadata",
+   "body": "The chapter says the title-based filename excludes characters not allowed in filenames (Sweigart, 2025); for the title What: is? this/that yt-dlp 2026.8.19 gave a name with a full-width colon, a full-width question mark and a division-like slash followed by [abc].mp4, so the characters are replaced and not excluded (Python Package Index, 2026). The chapter's prose also names ydl.sanitize(), which the package does not have; its code uses sanitize_info().",
+   "section_iri": "http://example.org/sen0414/ch24#S_FilenameCleaning",
+   "class_iri": "http://example.org/sen0414/ch24#FilenameCleaning",
+   "example": "yt_dlp.YoutubeDL({}).prepare_filename(info)",
+   "definition": "The chapter says characters not allowed in filenames are excluded from a title-based name; yt-dlp 2026.8.19 instead replaces them with look-alike characters, so 'What: is? this/that' becomes a name with a full-width colon, a full-width question mark and a division-like slash, followed by the id in square brackets."
+  },
+  {
+   "id": "DownloadFailures",
+   "label": "Download failures",
+   "level": 3,
+   "parent": "Metadata",
+   "body": "The chapter lists age or login requirements, geographic restrictions and anti-scraping measures as reasons for a refusal and says to install the latest yt-dlp first (Sweigart, 2025); an attempt in the scratch environment to download a placeholder address that cannot exist raised DownloadError, which shows that a failed download is an exception a script must expect (Python Package Index, 2026).",
+   "section_iri": "http://example.org/sen0414/ch24#S_DownloadFailures",
+   "class_iri": "http://example.org/sen0414/ch24#DownloadFailures",
+   "example": "pip install --upgrade yt-dlp",
+   "definition": "A site may refuse a download because of age or login rules, location or protection against scripts; the chapter's first step is to update yt-dlp, which follows the sites' changes, and a script should treat a failed download as a normal outcome."
+  },
+  {
+   "id": "PracticeWork",
+   "label": "Practice work",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter closes with seven practice questions and three practice programs (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_PracticeWork",
+   "class_iri": "http://example.org/sen0414/ch24#PracticeWork"
+  },
+  {
+   "id": "Questions",
+   "label": "Questions",
+   "level": 2,
+   "parent": "PracticeWork",
+   "body": "The practice questions test the chapter's facts about the three packages (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_Questions",
+   "class_iri": "http://example.org/sen0414/ch24#Questions"
+  },
+  {
+   "id": "PracticeQuestions",
+   "label": "Practice questions",
+   "level": 3,
+   "parent": "Questions",
+   "body": "The answers to the seven questions are the chapter's own (Sweigart, 2025): faster speech by a higher 'rate'; WAV; no online service except Whisper's first model download; yes, other languages; the chapter recommends base and does not call it a default, while the command line of release 20250625 defaults to turbo (OpenAI, 2025); SRT and VTT; yes, other sites.",
+   "section_iri": "http://example.org/sen0414/ch24#S_PracticeQuestions",
+   "class_iri": "http://example.org/sen0414/ch24#PracticeQuestions",
+   "example": "Practice questions 1 to 7",
+   "definition": "The seven practice questions ask: how to make pyttsx3 speak faster (raise the 'rate' property), which format it saves (WAV, with the exceptions above), whether pyttsx3 and Whisper need online services (no, apart from Whisper's first model download), whether they support other languages (yes), which model is the default (the chapter recommends base but does not call it a default, while the command line of release 20250625 uses turbo), which two subtitle formats are common (SRT and VTT), and whether yt-dlp works on other sites than YouTube (yes)."
+  },
+  {
+   "id": "Programs",
+   "label": "Programs",
+   "level": 2,
+   "parent": "PracticeWork",
+   "body": "The practice programs put the packages to use in a game, a song and a transcriber (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch24#S_Programs",
+   "class_iri": "http://example.org/sen0414/ch24#Programs"
+  },
+  {
+   "id": "GuessWithVoice",
+   "label": "Guess with voice",
+   "level": 3,
+   "parent": "Programs",
+   "body": "The practice program replaces every print() by speak() and says the guess in the hint (Sweigart, 2025); a solution with a recording stand-in for the engine printed and recorded the four lines I am thinking of a number between 1 and 20., Your guess, 10, is too low., Your guess, 18, is too high. and Good job! You guessed my number in 3 guesses!, and the recorded list equalled the printed lines. The stand-in is not pyttsx3.",
+   "section_iri": "http://example.org/sen0414/ch24#S_GuessWithVoice",
+   "class_iri": "http://example.org/sen0414/ch24#GuessWithVoice",
+   "example": "speak('Your guess, 42, is too low.')",
+   "definition": "The first practice program replaces print() in the guess-the-number game by a function speak() that prints the text and also says it, and makes the hints name the guess, such as Your guess, 42, is too low.",
+   "io": {
+    "code": "(lambda guess, secret: 'Your guess, %d, is too %s.' % (guess, 'low' if guess < secret else 'high'))(42, 50)",
+    "out": "'Your guess, 42, is too low.'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "%",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "'Your guess, %d, is too %s.'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "guess",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "IfExp",
+             "kind": "IfExp",
+             "children": [
+              {
+               "label": "Compare",
+               "kind": "Compare",
+               "children": [
+                {
+                 "label": "guess",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "secret",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'low'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'high'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "42",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "50",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "BottlesSong",
+   "label": "Bottles song",
+   "level": 3,
+   "parent": "Programs",
+   "body": "The practice program sings the lyrics from 99 and suggests starting at 2 or 3 (Sweigart, 2025); a solution started at 3 printed three verses in which 2 bottles, 1 bottle and finally No more bottles of beer on the wall follow, with the singular for one bottle. The lyrics were printed and not spoken.",
+   "section_iri": "http://example.org/sen0414/ch24#S_BottlesSong",
+   "class_iri": "http://example.org/sen0414/ch24#BottlesSong",
+   "example": "'%d bottle%s' % (n, ...)",
+   "definition": "The second practice program speaks 99 Bottles of Beer, each verse one bottle fewer, down to the line No more bottles of beer on the wall; starting at 2 or 3 makes testing easier, and the word bottle needs its singular form for one bottle.",
+   "io": {
+    "code": "[('1 bottle' if n == 1 else '%d bottles' % n) for n in (2, 1, 0)]",
+    "out": "['2 bottles', '1 bottle', '0 bottles']",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "IfExp",
+       "kind": "IfExp",
+       "children": [
+        {
+         "label": "Compare",
+         "kind": "Compare",
+         "children": [
+          {
+           "label": "n",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'1 bottle'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "%",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "'%d bottles'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "n",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "n",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "0",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "TranscriberGlue",
+   "label": "Transcriber glue",
+   "level": 3,
+   "parent": "Programs",
+   "body": "The practice program combines yt-dlp and Whisper to make SRT files from a list of addresses (Sweigart, 2025); a loop that takes the download, transcribe and write steps as functions ran with stand-ins and returned one SRT text per address. The stand-ins are not yt-dlp or Whisper, and the real pipeline was not run.",
+   "section_iri": "http://example.org/sen0414/ch24#S_TranscriberGlue",
+   "class_iri": "http://example.org/sen0414/ch24#TranscriberGlue",
+   "example": "transcribe_all(urls, download, transcribe, write)",
+   "definition": "The third practice program glues yt-dlp and Whisper: for each address it downloads the audio, transcribes it and writes an SRT file; passing the three steps in as functions lets the loop be tested offline with stand-ins, while the real steps need a network and a model."
+  }
+ ],
+ "relations": [
+  {
+   "source": "EngineSetup",
+   "target": "SpeechSynthesis",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SynthesisPackage",
+   "target": "EngineSetup",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PlatformEngines",
+   "target": "EngineSetup",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "InitFunction",
+   "target": "EngineSetup",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Speaking",
+   "target": "SpeechSynthesis",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SayMethod",
+   "target": "Speaking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RunAndWait",
+   "target": "Speaking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "EngineEvents",
+   "target": "Speaking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SpeakShortcut",
+   "target": "Speaking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "VoiceSettings",
+   "target": "SpeechSynthesis",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GetProperty",
+   "target": "VoiceSettings",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SetProperty",
+   "target": "VoiceSettings",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SpeechRate",
+   "target": "VoiceSettings",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "VoiceObjects",
+   "target": "VoiceSettings",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SavedAudio",
+   "target": "SpeechSynthesis",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SaveToFile",
+   "target": "SavedAudio",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WavContainer",
+   "target": "SavedAudio",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SpeechDuration",
+   "target": "SavedAudio",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RemovedAudioModules",
+   "target": "SavedAudio",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WhisperModels",
+   "target": "SpeechRecognition",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WhisperPackage",
+   "target": "WhisperModels",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LoadModel",
+   "target": "WhisperModels",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ModelSizes",
+   "target": "WhisperModels",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GraphicsProcessor",
+   "target": "WhisperModels",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Transcription",
+   "target": "SpeechRecognition",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TranscribeMethod",
+   "target": "Transcription",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ResultDictionary",
+   "target": "Transcription",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LanguageOption",
+   "target": "Transcription",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AudioDecoding",
+   "target": "Transcription",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "HumanReview",
+   "target": "Transcription",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SubtitleFiles",
+   "target": "SpeechRecognition",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SrtFormat",
+   "target": "SubtitleFiles",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "VttFormat",
+   "target": "SubtitleFiles",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TsvFormat",
+   "target": "SubtitleFiles",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TxtAndJsonFormats",
+   "target": "SubtitleFiles",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GetWriter",
+   "target": "SubtitleFiles",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WordTimestamps",
+   "target": "SubtitleFiles",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Downloading",
+   "target": "VideoDownload",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "YtDlpPackage",
+   "target": "Downloading",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DownloadCall",
+   "target": "Downloading",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DownloadOptions",
+   "target": "Downloading",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "OutputTemplate",
+   "target": "Downloading",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AudioExtraction",
+   "target": "Downloading",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Metadata",
+   "target": "VideoDownload",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FindDownloadedFile",
+   "target": "Metadata",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MetadataOnly",
+   "target": "Metadata",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FilenameCleaning",
+   "target": "Metadata",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DownloadFailures",
+   "target": "Metadata",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Questions",
+   "target": "PracticeWork",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PracticeQuestions",
+   "target": "Questions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Programs",
+   "target": "PracticeWork",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GuessWithVoice",
+   "target": "Programs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "BottlesSong",
+   "target": "Programs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TranscriberGlue",
+   "target": "Programs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  }
+ ],
+ "agents": [
+  {
+   "id": "agent-EngineSetup",
+   "name": "Engine setup agent",
+   "subject": "EngineSetup",
+   "covers": [
+    "SynthesisPackage",
+    "PlatformEngines",
+    "InitFunction",
+    "EngineSetup"
+   ]
+  },
+  {
+   "id": "agent-Speaking",
+   "name": "Speaking agent",
+   "subject": "Speaking",
+   "covers": [
+    "SayMethod",
+    "RunAndWait",
+    "EngineEvents",
+    "SpeakShortcut",
+    "Speaking"
+   ]
+  },
+  {
+   "id": "agent-VoiceSettings",
+   "name": "Voice settings agent",
+   "subject": "VoiceSettings",
+   "covers": [
+    "GetProperty",
+    "SetProperty",
+    "SpeechRate",
+    "VoiceObjects",
+    "VoiceSettings"
+   ]
+  },
+  {
+   "id": "agent-SavedAudio",
+   "name": "Saved audio agent",
+   "subject": "SavedAudio",
+   "covers": [
+    "SaveToFile",
+    "WavContainer",
+    "SpeechDuration",
+    "RemovedAudioModules",
+    "SavedAudio"
+   ]
+  },
+  {
+   "id": "agent-WhisperModels",
+   "name": "Whisper models agent",
+   "subject": "WhisperModels",
+   "covers": [
+    "WhisperPackage",
+    "LoadModel",
+    "ModelSizes",
+    "GraphicsProcessor",
+    "WhisperModels"
+   ]
+  },
+  {
+   "id": "agent-Transcription",
+   "name": "Transcription agent",
+   "subject": "Transcription",
+   "covers": [
+    "TranscribeMethod",
+    "ResultDictionary",
+    "LanguageOption",
+    "AudioDecoding",
+    "HumanReview",
+    "Transcription"
+   ]
+  },
+  {
+   "id": "agent-SubtitleFiles",
+   "name": "Subtitle files agent",
+   "subject": "SubtitleFiles",
+   "covers": [
+    "SrtFormat",
+    "VttFormat",
+    "TsvFormat",
+    "TxtAndJsonFormats",
+    "GetWriter",
+    "WordTimestamps",
+    "SubtitleFiles"
+   ]
+  },
+  {
+   "id": "agent-Downloading",
+   "name": "Downloading agent",
+   "subject": "Downloading",
+   "covers": [
+    "YtDlpPackage",
+    "DownloadCall",
+    "DownloadOptions",
+    "OutputTemplate",
+    "AudioExtraction",
+    "Downloading"
+   ]
+  },
+  {
+   "id": "agent-Metadata",
+   "name": "Metadata agent",
+   "subject": "Metadata",
+   "covers": [
+    "FindDownloadedFile",
+    "MetadataOnly",
+    "FilenameCleaning",
+    "DownloadFailures",
+    "Metadata"
+   ]
+  },
+  {
+   "id": "agent-Questions",
+   "name": "Questions agent",
+   "subject": "Questions",
+   "covers": [
+    "PracticeQuestions",
+    "Questions"
+   ]
+  },
+  {
+   "id": "agent-Programs",
+   "name": "Programs agent",
+   "subject": "Programs",
+   "covers": [
+    "GuessWithVoice",
+    "BottlesSong",
+    "TranscriberGlue",
+    "Programs"
+   ]
+  }
+ ],
+ "refs": [
+  [
+   "Automate the Boring Stuff with Python, 3rd edition - Chapter 24, Text-to-Speech and Speech Recognition Engines (Al Sweigart, No Starch Press, 2025)",
+   "https://automatetheboringstuff.com/3e/chapter24.html"
+  ],
+  [
+   "PEP 594 - Removing dead batteries from the standard library (Python Enhancement Proposals)",
+   "https://peps.python.org/pep-0594/"
+  ],
+  [
+   "SubRip - the .srt subtitle file format (Wikipedia)",
+   "https://en.wikipedia.org/wiki/SubRip"
+  ],
+  [
+   "The Python Standard Library, Built-in Types - printf-style string formatting with a mapping (Python documentation, read live)",
+   "https://docs.python.org/3/library/stdtypes.html"
+  ],
+  [
+   "The Python Standard Library, io - Core tools for working with streams (Python documentation, read live)",
+   "https://docs.python.org/3/library/io.html"
+  ],
+  [
+   "The Python Standard Library, json - JSON encoder and decoder (Python documentation, read live)",
+   "https://docs.python.org/3/library/json.html"
+  ],
+  [
+   "The Python Standard Library, pathlib - Object-oriented filesystem paths, glob and match (Python documentation, read live)",
+   "https://docs.python.org/3/library/pathlib.html"
+  ],
+  [
+   "The Python Standard Library, struct - Interpret bytes as packed binary data (Python documentation, read live)",
+   "https://docs.python.org/3/library/struct.html"
+  ],
+  [
+   "The Python Standard Library, subprocess - Subprocess management (Python documentation, read live)",
+   "https://docs.python.org/3/library/subprocess.html"
+  ],
+  [
+   "The Python Standard Library, tempfile - Generate temporary files and directories (Python documentation, read live)",
+   "https://docs.python.org/3/library/tempfile.html"
+  ],
+  [
+   "The Python Standard Library, wave - Read and write WAV files (Python documentation, read live)",
+   "https://docs.python.org/3/library/wave.html"
+  ],
+  [
+   "WebVTT: The Web Video Text Tracks Format (W3C Candidate Recommendation Draft, 20 May 2026)",
+   "https://www.w3.org/TR/webvtt1/"
+  ],
+  [
+   "What's New In Python 3.13 - the modules removed by PEP 594 (Python documentation, read live)",
+   "https://docs.python.org/3/whatsnew/3.13.html"
+  ],
+  [
+   "openai-whisper 20250625 source distribution, the package source, README and licence read (OpenAI, uploaded 2025-06-26, MIT)",
+   "https://files.pythonhosted.org/packages/35/8e/d36f8880bcf18ec026a55807d02fe4c7357da9f25aebd92f85178000c0dc/openai_whisper-20250625.tar.gz"
+  ],
+  [
+   "openai-whisper on the Python Package Index, project page",
+   "https://pypi.org/project/openai-whisper/"
+  ],
+  [
+   "pyttsx3 2.99 wheel, the package source read and executed with its dummy driver (Natesh M Bhat, uploaded 2025-07-08, MPL-2.0)",
+   "https://files.pythonhosted.org/packages/84/14/9fb5842581f0419b5eb85f8c26c1c0c0f4cf6b4d5be638ae3157316a2650/pyttsx3-2.99-py3-none-any.whl"
+  ],
+  [
+   "pyttsx3 documentation on Read the Docs (describes version 2.6, rendered 2021-07-14)",
+   "https://pyttsx3.readthedocs.io/en/latest/"
+  ],
+  [
+   "pyttsx3 on the Python Package Index, release metadata (JSON interface: version 2.99, upload date, dependencies)",
+   "https://pypi.org/pypi/pyttsx3/json"
+  ],
+  [
+   "yt-dlp 2026.8.19 wheel, the package source read and run offline in a scratch environment (uploaded 2026-08-19, Unlicense)",
+   "https://files.pythonhosted.org/packages/69/b2/8cd1613f56eed7ceb64fbd4df3f1c01246bfb098e6f398228bafda22b80b/yt_dlp-2026.8.19-py3-none-any.whl"
+  ],
+  [
+   "yt-dlp on the Python Package Index, project page",
+   "https://pypi.org/project/yt-dlp/"
+  ]
+ ],
+ "resources": [
+  {
+   "kind": "documentation",
+   "title": "Chapter 24 - Text-to-Speech and Speech Recognition Engines, Automate the Boring Stuff with Python, 3rd Ed",
+   "url": "https://automatetheboringstuff.com/3e/chapter24.html",
+   "source": "automatetheboringstuff.com",
+   "why": "The course textbook's own chapter, free online: pyttsx3, Whisper, subtitle files, yt-dlp and the practice programs.",
+   "concept": "SynthesisPackage"
+  },
+  {
+   "kind": "documentation",
+   "title": "wave - Read and write WAV files",
+   "url": "https://docs.python.org/3/library/wave.html",
+   "source": "Python documentation",
+   "why": "The standard module that reads and writes the WAV files pyttsx3 saves: channels, sample width, frame rate and frames.",
+   "concept": "WavContainer"
+  },
+  {
+   "kind": "documentation",
+   "title": "pathlib - Object-oriented filesystem paths",
+   "url": "https://docs.python.org/3/library/pathlib.html",
+   "source": "Python documentation",
+   "why": "Path.glob and PurePath.match, which find the downloaded file whatever its extension.",
+   "concept": "FindDownloadedFile"
+  },
+  {
+   "kind": "documentation",
+   "title": "json - JSON encoder and decoder",
+   "url": "https://docs.python.org/3/library/json.html",
+   "source": "Python documentation",
+   "why": "json.dumps and json.load, used for Whisper's JSON output and for the video metadata file.",
+   "concept": "TxtAndJsonFormats"
+  },
+  {
+   "kind": "documentation",
+   "title": "What's New In Python 3.13",
+   "url": "https://docs.python.org/3/whatsnew/3.13.html",
+   "source": "Python documentation",
+   "why": "The list of standard-library modules removed in 3.13, among them aifc, audioop, sunau, chunk and sndhdr.",
+   "concept": "RemovedAudioModules"
+  },
+  {
+   "kind": "pep",
+   "title": "PEP 594 - Removing dead batteries from the standard library",
+   "url": "https://peps.python.org/pep-0594/",
+   "source": "peps.python.org",
+   "why": "Why the old audio modules were removed and that the wave module stays.",
+   "concept": "RemovedAudioModules"
+  },
+  {
+   "kind": "documentation",
+   "title": "WebVTT: The Web Video Text Tracks Format",
+   "url": "https://www.w3.org/TR/webvtt1/",
+   "source": "W3C",
+   "why": "The specification of the VTT file: the WEBVTT line, cue timings and the optional hours in a time stamp.",
+   "concept": "VttFormat"
+  },
+  {
+   "kind": "documentation",
+   "title": "SubRip - Wikipedia",
+   "url": "https://en.wikipedia.org/wiki/SubRip",
+   "source": "Wikipedia",
+   "why": "The SRT file format: numbered blocks, times with a comma before the milliseconds, and a blank line between blocks.",
+   "concept": "SrtFormat"
+  },
+  {
+   "kind": "documentation",
+   "title": "openai-whisper - PyPI",
+   "url": "https://pypi.org/project/openai-whisper/",
+   "source": "pypi.org",
+   "why": "The project page of the package the chapter installs as openai-whisper.",
+   "concept": "WhisperPackage"
+  },
+  {
+   "kind": "documentation",
+   "title": "yt-dlp - PyPI",
+   "url": "https://pypi.org/project/yt-dlp/",
+   "source": "pypi.org",
+   "why": "The project page of yt-dlp, with its options and the note that it follows the video sites' changes.",
+   "concept": "YtDlpPackage"
+  },
+  {
+   "kind": "documentation",
+   "title": "pyttsx3 - Text-to-speech x-platform (documentation of version 2.6)",
+   "url": "https://pyttsx3.readthedocs.io/en/latest/",
+   "source": "pyttsx3.readthedocs.io",
+   "why": "The package's own documentation of the Engine, Voice and driver interfaces; it describes version 2.6 of 2021, older than the 2.99 read for this chapter.",
+   "concept": "PlatformEngines"
+  }
+ ],
+ "resources_checked": "2026-10-01"
+}

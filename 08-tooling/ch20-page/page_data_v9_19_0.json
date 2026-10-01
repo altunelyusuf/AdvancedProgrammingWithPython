@@ -1,0 +1,5602 @@
+{
+ "_version": "9.19.0",
+ "visuals": {},
+ "course": {
+  "_version": "1.3.3",
+  "name": "SEN0414 Advanced Programming",
+  "line": "SEN0414 Advanced Programming",
+  "chapter_sub": "chapter {n} of Automate the Boring Stuff with Python, 3rd edition",
+  "chapter_intro": "Chapter {n} of <i>Automate the Boring Stuff with Python</i>, 3rd edition (Sweigart, 2025), renewed for an advanced course.",
+  "playground": {
+   "label": "Push notifications to a mail: parse a poll response, build a message, plan the next poll (offline)",
+   "code": "import json\nfrom email.message import EmailMessage\nfrom email.utils import parseaddr\nfrom urllib.parse import urlencode\n\nevents = [\n    {'id': 'a1', 'time': 1797823000, 'event': 'open', 'topic': 'demoTopic'},\n    {'id': 'a2', 'time': 1797823340, 'event': 'message', 'topic': 'demoTopic', 'message': 'Hello, world!'},\n    {'id': 'a3', 'time': 1797823712, 'event': 'message', 'topic': 'demoTopic',\n     'title': 'Important: Read this!', 'message': 'The rent is too high!', 'priority': 5, 'tags': ['warning']},\n    {'id': 'a4', 'time': 1797824000, 'event': 'keepalive', 'topic': 'demoTopic'},\n]\npoll_text = '\\n'.join(json.dumps(e) for e in events)\n\nnotifications = [json.loads(line) for line in poll_text.splitlines()]\nmessages = [n for n in notifications if n['event'] == 'message']\nprint(len(notifications), 'lines,', len(messages), 'messages')\n\nmail = EmailMessage()\nmail['From'] = 'Notifier <notifier@example.com>'\nmail['To'] = 'you@example.com'\nmail['Subject'] = '%d notification(s)' % len(messages)\nbody = []\nfor n in messages:\n    body.append('[%s] %s - %s' % (n.get('priority', 3), n.get('title', '(no title)'), n['message']))\nmail.set_content('\\n'.join(body))\nprint(mail['Subject'])\nprint(mail.get_content(), end='')\nprint(parseaddr(mail['From']))\n\nlast_id = messages[-1]['id']\nprint('next poll: /json?' + urlencode({'poll': 1, 'since': last_id}))",
+   "inputs": ""
+  },
+  "corpus": {
+   "book_pin_source": "02-textbook/sen0414_textbook_v1_0_0.ttl",
+   "book": [
+    "automate-python-book-3e/01-ontologies/automate_python_3e_ch{nn}_v1_0_0.ttl"
+   ],
+   "course": [
+    "00-course-profile/sen0414_course_v1_0_0.ttl",
+    "01-outcomes/sen0414_outcomes_v1_0_0.ttl",
+    "02-textbook/sen0414_textbook_v1_0_0.ttl",
+    "03-materials/sen0414_materials_v1_22_0.ttl"
+   ]
+  },
+  "exam": {
+   "course": "SEN0414",
+   "release_prefix": "sen0414-exam-release",
+   "public_key": {
+    "kty": "EC",
+    "crv": "P-256",
+    "x": "_V6lAWK-uO72ApcyNiCalt4q8h2Yt-HzOol5XoZNwEk",
+    "y": "3UhUEuwspaDMB-gZsFCLKx2GW08SABcTHzJvuvUEc5I"
+   },
+   "bonus_points": 10
+  }
+ },
+ "discussion": [],
+ "findings": [
+  [
+   "Background",
+   "Chapter 20 of the 3rd edition, Sending Emails, Texts, and Push Notifications, teaches three ways for a program to reach a person: the EZGmail module over the Gmail API, which sends mail with send() (attachments, cc and bcc), reads it as conversation threads and messages with unread(), recent() and summary(), searches with Gmail's search operators and downloads attachments; texts sent as email to a carrier's SMS email gateway, with a table of twelve providers and five disadvantages; and push notifications through the free ntfy service, sent with requests.post() and a topic name, extended with a title, a priority from 1 to 5 and tags as headers, and received by polling /json?poll=1 and parsing one JSON object per line; it closes with 5 practice questions and 3 practice programs (Umbrella Reminder, Auto Unsubscriber, Email-Based Computer Control)."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter says that Gmail's security measures make the EZGmail module a better route than the standard library's smtplib and imaplib; the documentation of Google agrees in part and adds what the chapter omits: Gmail accepts standard IMAP, POP and SMTP at imap.gmail.com on port 993 and smtp.gmail.com on port 465 or 587 when the client authorizes with OAuth 2.0, and since 14 March 2025 a third-party client can no longer use a plain account password there, the exception being an app password, which Google says is not recommended and needs 2-Step Verification; the standard library's smtplib and imaplib therefore remain usable for Gmail, but their login by password is what stopped working."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's description of EZGmail holds against version 2026.4.28 of the module as read in its source, with differences the chapter does not state: the attachments attribute of a message is a list of file names (as the chapter says), while the README's example of it prints a dictionary with id and size; a message timestamp is made with datetime.fromtimestamp from the internal date in milliseconds without a time zone, so it shows the clock time of the computer that runs the program; summary() takes each sender's first name as the text up to the first space, so a sender text without a space loses its last character; downloadAllAttachments() has an overwrite argument that defaults to True, which matches the chapter's statement that existing files are overwritten; the README lists cc and bcc both in its quick start and among the limitations, and the source accepts both; and the module builds its message with the legacy email.mime classes."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's printed outputs of the ntfy section reproduce in kind under Python 3.14.4 on a local stand-in for the service: a POST with a body is a request with a method of POST, a GET without a body is a GET, the headers Title, Tags and Priority are carried as written, the response text of a poll holds one JSON object per line and json.loads() on the whole text raises JSONDecodeError 'Extra data: line 2 column 1 (char 134)' for the chapter's two lines, and each line parsed alone gives the dictionaries the chapter shows; the one printed value that depends on the machine is the chapter's str(datetime.datetime.fromtimestamp(1797823712)), which is '2026-12-20 21:28:32' at six hours behind UTC and '2026-12-21 03:28:32' at UTC; the service itself was not contacted."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's statements about ntfy agree with its documentation, which also says more: a message may be 4,096 bytes and longer text is treated as an attachment, the free service's daily limit is 250 messages, priority 1 to 5 has the names min, low, default, high and max, since accepts a duration, a Unix timestamp, a message id, all or latest, the event key has the values open, keepalive, message, message_delete, message_clear and poll_request where the chapter lists four, a poll without since returns the topic's whole cache with replay limits, the documentation advises passing the id of the last message as since, and a header value that is not plain ASCII should be sent as an RFC 2047 encoded word; the combined duration 2h30m that the chapter gives for since is not among the examples in the pages read."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's table of SMS email gateways is a snapshot that has aged: vendor notices report that AT&T ended its email-to-text gateway on 17 June 2025, so the two AT&T addresses of the table no longer deliver, that Cricket, an AT&T subsidiary, is affected as well, and that other carriers reduced support or delivery guarantees; these are vendor statements and not the carriers' own, and the table's other addresses were not tested, since sending a text needs a phone number and a live gateway; the chapter's five disadvantages of a gateway are consistent with what the vendors describe."
+  ],
+  [
+   "Conclusion",
+   "For an advanced course, chapter 20 is best taught as three channels judged by the same questions: what reaches the person, what proves the sender and what can be tested without sending; the parts that can be executed offline are the message objects of the standard library, the address and query parsing, the base64 and JSON handling, the request objects of urllib and the parsing of a poll response, and all of them reproduce under Python 3.14.4, while the sending through Gmail, the reading of a real mailbox, a text through a carrier and a call to ntfy.sh were read from the book and its sources and not run, because each needs an account, a phone or the network; the chapter's Gmail claim needs the update about OAuth and app passwords, its gateway table needs the AT&T correction, and its ntfy and EZGmail statements hold with the additions of findings 3, 4 and 5."
+  ],
+  [
+   "Contemporary developments",
+   "Current Python gives the chapter's topics more than it presents: email.message.EmailMessage, whose policy is the current one, builds and reads a message, adds attachments with add_attachment() and lists them with iter_attachments(), while the email.mime classes that EZGmail uses belong to the legacy compat32 interface; smtplib's send_message() reads the recipients from To, Cc and Bcc and does not transmit the Bcc field; email.utils.parseaddr() and getaddresses() take apart the sender and address lists; the module smtpd was removed in Python 3.12, so the standard library has no test SMTP server, which this study replaced by a short socketserver handler on the loopback address; the secrets module, not random, is the source for a secret topic name; and html.parser can do the link finding that the Auto Unsubscriber asks of Beautiful Soup."
+  ],
+  [
+   "Contemporary developments",
+   "Modern practice warns of traps the chapter states briefly or not at all: a message limit counts bytes, so text with letters such as \u0131 or \u015f is longer in bytes than in characters; HTTP libraries send a header value as Latin-1, so a title with a letter outside it raises UnicodeEncodeError unless it is sent as an encoded word; a topic name is the only protection of a notification, so it is chosen with secrets, compared case-sensitively and never used for passwords or card numbers; a command channel needs a check that does not rest on the From address and a fixed list of allowed commands, for which hmac.compare_digest() compares a password in constant time; and every keyed lookup into a notification needs get(), because title, priority and tags are present only when set."
+  ]
+ ],
+ "unit": null,
+ "research_file": "sen0414_ch20_research_v1_0_0.ttl",
+ "chapter": 20,
+ "title": "Email, texts and push notifications for an advanced course: chapter 20 of the 3rd edition and today's services",
+ "python": "Python 3.14.4",
+ "nodes": [
+  {
+   "id": "GmailService",
+   "label": "Gmail service",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter's first channel is Gmail reached through its API by the EZGmail module, for sending, reading and searching mail (Sweigart, 2025). Everything that needs a Google account, the consent screen or a mailbox was read from the chapter and the module's source and was not run; what can be run here is the message handling of the standard library that the module sits on (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_GmailService",
+   "class_iri": "http://example.org/sen0414/ch20#GmailService"
+  },
+  {
+   "id": "GmailSetup",
+   "label": "Gmail setup",
+   "level": 2,
+   "parent": "GmailService",
+   "body": "Before any call the program needs permission from the account's owner, and before any real call it should be tested without one (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch20#S_GmailSetup",
+   "class_iri": "http://example.org/sen0414/ch20#GmailSetup"
+  },
+  {
+   "id": "CredentialsAndToken",
+   "label": "Credentials and token",
+   "level": 3,
+   "parent": "GmailSetup",
+   "body": "The chapter has the reader create a Google Cloud project, enable the Gmail API, add the https://mail.google.com scope on the consent screen and download a credentials file, after which ezgmail.init() opens a browser once and writes a token file; the token file is to be treated like a password, and deleting its credential in the console revokes it (Sweigart, 2025). The module's source shows the scope string https://mail.google.com/, init(userId='me', tokenFile='token.json', credentialsFile='credentials.json'), and that EMAIL_ADDRESS is False until a login has succeeded (Sweigart, 2026). None of this was run: it needs a Google account and a browser.",
+   "section_iri": "http://example.org/sen0414/ch20#S_CredentialsAndToken",
+   "class_iri": "http://example.org/sen0414/ch20#CredentialsAndToken",
+   "example": "ezgmail.init()",
+   "definition": "Reaching Gmail from a program needs two files made once in the Google Cloud console: a credentials file that identifies the program and a token file that records the owner's permission; the token works like a password and must not be shared."
+  },
+  {
+   "id": "DryRun",
+   "label": "Dry run",
+   "level": 3,
+   "parent": "GmailSetup",
+   "body": "The chapter's warning is to use a separate account for scripts and to comment out the line that sends or deletes and put a print() in its place (Sweigart, 2025). A function whose send argument defaults to None can do the same without editing: notify('Backup finished') prints DRY RUN: Backup finished and returns None, while notify('Backup finished', send=sent.append) hands the text to the sender and leaves ['Backup finished'] in the list, both as executed for this study.",
+   "section_iri": "http://example.org/sen0414/ch20#S_DryRun",
+   "class_iri": "http://example.org/sen0414/ch20#DryRun",
+   "example": "print(message) instead of ezgmail.send(message)",
+   "definition": "A dry run replaces the line that sends or deletes with a print, so a program can be tested without touching real mail; a send function passed as an argument makes the switch a one-word change.",
+   "io": {
+    "code": "(lambda notify: (notify('Backup finished'), notify('Backup finished', send=str.upper)))(lambda text, send=None: 'DRY RUN: ' + text if send is None else send(text))",
+    "out": "('DRY RUN: Backup finished', 'BACKUP FINISHED')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "notify",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'Backup finished'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "notify",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'Backup finished'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "keyword",
+             "kind": "keyword",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "str",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "None",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "IfExp",
+         "kind": "IfExp",
+         "children": [
+          {
+           "label": "Compare",
+           "kind": "Compare",
+           "children": [
+            {
+             "label": "send",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "None",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "'DRY RUN: '",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "text",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "send",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "text",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "GmailSending",
+   "label": "Gmail sending",
+   "level": 2,
+   "parent": "GmailService",
+   "body": "One function sends mail, with optional attachments, carbon copies and an HTML body (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch20#S_GmailSending",
+   "class_iri": "http://example.org/sen0414/ch20#GmailSending"
+  },
+  {
+   "id": "SendCall",
+   "label": "Send call",
+   "level": 3,
+   "parent": "GmailSending",
+   "body": "ezgmail.send('recipient@example.com', 'Subject line', 'Body of the email') is the whole call (Sweigart, 2025). The source builds a MIMEText message, sets its to, from and subject fields and sends its URL-safe base64 form as the raw field of the Gmail API's send call; its documentation says the sender argument seems to be ignored because Gmail uses the account's own address (Sweigart, 2026). Built the same way with the standard library, the message has the type text/plain and the payload 'Body of the email', and its raw form decodes back to the same To, Subject and Cc values, as executed; the call itself was not run.",
+   "section_iri": "http://example.org/sen0414/ch20#S_SendCall",
+   "class_iri": "http://example.org/sen0414/ch20#SendCall",
+   "example": "ezgmail.send('recipient@example.com', 'Subject line', 'Body of the email')",
+   "definition": "One call gives recipient, subject and body; the library builds a text message with those header fields and hands it to the Gmail API, and the sender argument is ignored because Gmail uses the account's own address.",
+   "io": {
+    "code": "(lambda m: (m.__setitem__('to', 'recipient@example.com'), m.__setitem__('subject', 'Subject line'), (m['To'], m['Subject'], m.get_content_type(), m.get_payload()))[2])(__import__('email.mime.text', fromlist=['MIMEText']).MIMEText('Body of the email', 'plain'))",
+    "out": "('recipient@example.com', 'Subject line', 'text/plain', 'Body of the email')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "m",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'to'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'recipient@example.com'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "m",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'subject'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'Subject line'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "Subscript",
+               "kind": "Subscript",
+               "children": [
+                {
+                 "label": "m",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'To'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "Subscript",
+               "kind": "Subscript",
+               "children": [
+                {
+                 "label": "m",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'Subject'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "m",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "m",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'email.mime.text'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "keyword",
+             "kind": "keyword",
+             "children": [
+              {
+               "label": "List",
+               "kind": "List",
+               "children": [
+                {
+                 "label": "'MIMEText'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'Body of the email'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'plain'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "AttachmentSend",
+   "label": "Attachment send",
+   "level": 3,
+   "parent": "GmailSending",
+   "body": "An extra list of file names makes ezgmail.send() attach the files, and Gmail may refuse .exe and .zip files and repeated identical text (Sweigart, 2025). The source then builds a MIMEMultipart message with the text as the first part and, for each name, a part with a Content-Disposition of attachment and the file's base name, and it raises an error when a file does not exist (Sweigart, 2026). With EmailMessage.add_attachment() on a message with text, the part types are multipart/mixed, text/plain and the attachment's own type, and iter_attachments() yields the one file named notes.csv, as executed (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_AttachmentSend",
+   "class_iri": "http://example.org/sen0414/ch20#AttachmentSend",
+   "example": "ezgmail.send(to, subject, body, ['attachment1.jpg'])",
+   "definition": "An extra list of file names makes the message a multipart one with the text as its first part and each file as a further part that carries the file's name.",
+   "io": {
+    "code": "(lambda m: (m.set_content('Body'), m.add_attachment(b'xyz', maintype='application', subtype='octet-stream', filename='notes.bin'), [p.get_content_type() for p in m.walk()], [a.get_filename() for a in m.iter_attachments()])[2:])(__import__('email.message', fromlist=['EmailMessage']).EmailMessage())",
+    "out": "(['multipart/mixed', 'text/plain', 'application/octet-stream'], ['notes.bin'])",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "m",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'Body'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "m",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "b'xyz'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "keyword",
+               "kind": "keyword",
+               "children": [
+                {
+                 "label": "'application'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "keyword",
+               "kind": "keyword",
+               "children": [
+                {
+                 "label": "'octet-stream'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "keyword",
+               "kind": "keyword",
+               "children": [
+                {
+                 "label": "'notes.bin'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "ListComp",
+             "kind": "ListComp",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "p",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "comprehension",
+               "kind": "comprehension",
+               "children": [
+                {
+                 "label": "p",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "m",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "ListComp",
+             "kind": "ListComp",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "a",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "comprehension",
+               "kind": "comprehension",
+               "children": [
+                {
+                 "label": "a",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "m",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Slice",
+           "kind": "Slice",
+           "children": [
+            {
+             "label": "2",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'email.message'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "keyword",
+             "kind": "keyword",
+             "children": [
+              {
+               "label": "List",
+               "kind": "List",
+               "children": [
+                {
+                 "label": "'EmailMessage'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CcBccFields",
+   "label": "Cc bcc fields",
+   "level": 3,
+   "parent": "GmailSending",
+   "body": "The keyword arguments cc and bcc take strings, and the chapter's example gives two blind copies as one comma-separated string (Sweigart, 2025). In the source they are copied into header fields named cc and bcc (Sweigart, 2026); as executed, such a string splits into ['otherfriend@example.com', 'someoneelse@example.com'] with email.utils.getaddresses, and a message built that way and decoded from its raw form still shows the Bcc field as 'otherfriend@example.com,someoneelse@example.com' (Python Software Foundation, 2026). How Gmail treats that field on sending was not tested.",
+   "section_iri": "http://example.org/sen0414/ch20#S_CcBccFields",
+   "class_iri": "http://example.org/sen0414/ch20#CcBccFields",
+   "example": "ezgmail.send(to, subject, body, cc='a@example.com', bcc='b@example.com,c@example.com')",
+   "definition": "The cc and bcc keyword arguments are strings of comma-separated addresses that become header fields of the message; splitting such a string into single addresses is done by email.utils.getaddresses.",
+   "io": {
+    "code": "[a for _, a in __import__('email.utils', fromlist=['x']).getaddresses(['otherfriend@example.com,someoneelse@example.com'])]",
+    "out": "['otherfriend@example.com', 'someoneelse@example.com']",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "a",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "_",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "a",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'email.utils'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "keyword",
+               "kind": "keyword",
+               "children": [
+                {
+                 "label": "List",
+                 "kind": "List",
+                 "children": [
+                  {
+                   "label": "'x'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "'otherfriend@example.com,someoneelse@example.com'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "HtmlSubtype",
+   "label": "Html subtype",
+   "level": 3,
+   "parent": "GmailSending",
+   "body": "The chapter sends plain text; the README and the source add a mimeSubtype argument that is 'plain' by default and 'html' for an HTML body, and any other string raises an error (Sweigart, 2026). MIMEText('<b>Hello</b>', 'html') has the content type text/html, as executed (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_HtmlSubtype",
+   "class_iri": "http://example.org/sen0414/ch20#HtmlSubtype",
+   "example": "ezgmail.send(to, subject, body, mimeSubtype='html')",
+   "definition": "The mimeSubtype argument is 'plain' by default and 'html' sends the body as HTML; any other string is refused by the library.",
+   "io": {
+    "code": "__import__('email.mime.text', fromlist=['MIMEText']).MIMEText('<b>Hello</b>', 'html').get_content_type()",
+    "out": "'text/html'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'email.mime.text'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "keyword",
+               "kind": "keyword",
+               "children": [
+                {
+                 "label": "List",
+                 "kind": "List",
+                 "children": [
+                  {
+                   "label": "'MIMEText'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "'<b>Hello</b>'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'html'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "GmailReading",
+   "label": "Gmail reading",
+   "level": 2,
+   "parent": "GmailService",
+   "body": "Reading mail means working with Gmail's threads and the messages inside them (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch20#S_GmailReading",
+   "class_iri": "http://example.org/sen0414/ch20#GmailReading"
+  },
+  {
+   "id": "ThreadVersusMessage",
+   "label": "Thread versus message",
+   "level": 3,
+   "parent": "GmailReading",
+   "body": "Gmail groups replies into conversation threads; EZGmail's GmailThread has a messages list of GmailMessage objects, and unread(), recent() and search() return lists of threads, so practice question 2 is answered by that difference (Sweigart, 2025). The source adds that a thread's messages are fetched from the API when first used and run from the oldest at index 0 to the most recent, that unread() and recent() are searches, and that search(), recent() and unread() take maxResults with a default of 25 (Sweigart, 2026). Not run: it needs a mailbox.",
+   "section_iri": "http://example.org/sen0414/ch20#S_ThreadVersusMessage",
+   "class_iri": "http://example.org/sen0414/ch20#ThreadVersusMessage",
+   "example": "message = ezgmail.unread()[0].messages[0]",
+   "definition": "Gmail groups replies into conversation threads; a thread object holds a list of message objects, and ezgmail.unread(), recent() and search() return threads, not single messages."
+  },
+  {
+   "id": "MessageAttributes",
+   "label": "Message attributes",
+   "level": 3,
+   "parent": "GmailReading",
+   "body": "A GmailMessage has subject, sender, recipient, body and timestamp, and the chapter prints a sender as 'Al Sweigart <al@inventwithpython.com>' and a body as 'Do you want to watch RoboCop this weekend?\\r\\n' (Sweigart, 2025). Parsing that header text and body with email.message_from_string() gives the subject 'RoboCop', the sender text with its display name and the body with its \\r\\n, as executed (Python Software Foundation, 2026); the source's body attribute is cut before a quoted reply, and originalBody keeps everything (Sweigart, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_MessageAttributes",
+   "class_iri": "http://example.org/sen0414/ch20#MessageAttributes",
+   "example": "message.subject, message.sender, message.body",
+   "definition": "A message object has subject, sender, recipient, body and timestamp attributes; the sender and recipient keep the display name in front of the address.",
+   "io": {
+    "code": "(lambda m: (m['subject'], m['from'], m.get_payload()))(__import__('email').message_from_string('From: Al Sweigart <al@inventwithpython.com>\\nTo: Jon Doe <example@gmail.com>\\nSubject: RoboCop\\n\\nDo you want to watch RoboCop this weekend?\\r\\n'))",
+    "out": "('RoboCop', 'Al Sweigart <al@inventwithpython.com>', 'Do you want to watch RoboCop this weekend?\\r\\n')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "m",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'subject'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "m",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'from'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "m",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'email'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'From: Al Sweigart <al@inventwithpython.com>\\nTo: Jon Doe <example@gmail.com>\\nSubject: RoboCop\\n\\nDo you want to watch RoboCop this weekend?\\r\\n'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "InternalDateTimestamp",
+   "label": "Internal date timestamp",
+   "level": 3,
+   "parent": "GmailReading",
+   "body": "The chapter prints timestamp as datetime.datetime(2026, 12, 9, 13, 28, 48) (Sweigart, 2025). The source computes it as datetime.datetime.fromtimestamp(int(internalDate) // 1000), which without a tz argument gives the platform's local time and a naive object (Sweigart, 2026) (Python Software Foundation, 2026); with tz set to UTC the internal date 1797823712000 gives 2026-12-21 03:28:32+00:00, as executed, and the same second gives 21:28:32 at six hours behind UTC, 19:28:32 at eight hours behind and 06:28:32 at three hours ahead.",
+   "section_iri": "http://example.org/sen0414/ch20#S_InternalDateTimestamp",
+   "class_iri": "http://example.org/sen0414/ch20#InternalDateTimestamp",
+   "example": "when = message.timestamp",
+   "definition": "Gmail gives a message's date as milliseconds since the Unix epoch; dividing by 1000 and passing the seconds to datetime.fromtimestamp gives a datetime, which without a time zone argument is the clock time of the computer running the program.",
+   "io": {
+    "code": "__import__('datetime').datetime.fromtimestamp(int('1797823712000') // 1000, tz=__import__('datetime').timezone.utc)",
+    "out": "datetime.datetime(2026, 12, 21, 3, 28, 32, tzinfo=datetime.timezone.utc)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'datetime'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "//",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "int",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'1797823712000'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "1000",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "keyword",
+       "kind": "keyword",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'datetime'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "__import__('datetime').datetime.fromtimestamp(int('1797823712000') // 1000, tz=__import__('datetime').timezone.utc)",
+      "focus": "int('1797823712000')",
+      "value": "1797823712000"
+     },
+     {
+      "expr": "__import__('datetime').datetime.fromtimestamp(1797823712000 // 1000, tz=__import__('datetime').timezone.utc)",
+      "focus": "1797823712000 // 1000",
+      "value": "1797823712"
+     }
+    ]
+   }
+  },
+  {
+   "id": "SummaryLine",
+   "label": "Summary line",
+   "level": 3,
+   "parent": "GmailReading",
+   "body": "ezgmail.summary(unread_threads) prints a line such as 'Al, Jon - Do you want to watch RoboCop this weekend? - Dec 09' (Sweigart, 2025). The source builds the names with name[:name.find(' ')] and the date with strftime('%b %d') (Sweigart, 2026); applied to the two senders of the chapter and the timestamp above the line reads 'Al, Jon - Do you want to watch RoboCop this weekend? - Dec 21' at UTC, and a sender text without a space, such as al@inventwithpython.com, has find(' ') equal to -1 and is cut to al@inventwithpython.co, all as executed.",
+   "section_iri": "http://example.org/sen0414/ch20#S_SummaryLine",
+   "class_iri": "http://example.org/sen0414/ch20#SummaryLine",
+   "example": "ezgmail.summary(unread_threads)",
+   "definition": "summary prints one line per thread made of the first names of the senders, the snippet and the month and day of the latest message; a first name is the sender text up to the first space.",
+   "io": {
+    "code": "', '.join(n[:n.find(' ')] for n in ['Al Sweigart <al@inventwithpython.com>', 'Jon Doe <example@gmail.com>'])",
+    "out": "'Al, Jon'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "', '",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "GeneratorExp",
+       "kind": "GeneratorExp",
+       "children": [
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "n",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "Slice",
+           "kind": "Slice",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "n",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "' '",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "comprehension",
+         "kind": "comprehension",
+         "children": [
+          {
+           "label": "n",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "List",
+           "kind": "List",
+           "children": [
+            {
+             "label": "'Al Sweigart <al@inventwithpython.com>'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'Jon Doe <example@gmail.com>'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "GmailSearching",
+   "label": "Gmail searching",
+   "level": 2,
+   "parent": "GmailService",
+   "body": "Searching and downloading finish the reading side (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch20#S_GmailSearching",
+   "class_iri": "http://example.org/sen0414/ch20#GmailSearching"
+  },
+  {
+   "id": "SearchOperators",
+   "label": "Search operators",
+   "level": 3,
+   "parent": "GmailSearching",
+   "body": "ezgmail.search() takes what the Gmail search box takes, such as 'label:UNREAD', 'from:al@inventwithpython.com', 'subject:hello' and 'has:attachment', the last being the answer to practice question 3 (Sweigart, 2025); Gmail's help page says operators can be combined, and the quick start says recent() and unread() wrap search() (Google, 2026) (Sweigart, 2026). In the source, recent() is search('label:INBOX') and unread() is search('label:UNREAD'), and search() passes the query and maxResults to the API's threads list call (Sweigart, 2026). As executed, the operators are plain text and ' '.join(['from:al@inventwithpython.com', 'has:attachment', 'subject:hello']) is one query string. Not run against a mailbox.",
+   "section_iri": "http://example.org/sen0414/ch20#S_SearchOperators",
+   "class_iri": "http://example.org/sen0414/ch20#SearchOperators",
+   "example": "found = ezgmail.search('has:attachment')",
+   "definition": "search takes the same query text as the Gmail search box, including operators such as label:UNREAD, from:, subject: and has:attachment, and returns threads; recent() and unread() are searches with fixed queries.",
+   "io": {
+    "code": "' '.join(['from:al@inventwithpython.com', 'has:attachment', 'subject:hello'])",
+    "out": "'from:al@inventwithpython.com has:attachment subject:hello'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "' '",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'from:al@inventwithpython.com'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'has:attachment'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'subject:hello'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "AttachmentDownload",
+   "label": "Attachment download",
+   "level": 3,
+   "parent": "GmailSearching",
+   "body": "A message's attachments attribute lists file names, downloadAttachment('tulips.jpg') saves one and downloadAllAttachments(downloadFolder='vacation2026') saves all and returns the names (Sweigart, 2025). The source keeps a list of names that may contain duplicates, takes a duplicateIndex argument for them, creates the folder when it is missing, and decodes the API's data with base64.urlsafe_b64decode (Sweigart, 2026); the README's example of the attribute as a dictionary does not match the source read. URL-safe base64 writes the bytes 251, 255, 254 as b'-__-' where the standard alphabet writes b'+//+', and decoding what urlsafe_b64encode made returns the same bytes, as executed (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_AttachmentDownload",
+   "class_iri": "http://example.org/sen0414/ch20#AttachmentDownload",
+   "example": "message.downloadAllAttachments(downloadFolder='vacation2026')",
+   "definition": "A message lists its attachment file names and downloadAttachment or downloadAllAttachments saves them to the current folder or to downloadFolder; the Gmail API delivers the file contents in URL-safe base64.",
+   "io": {
+    "code": "(lambda b: b.urlsafe_b64decode(b.urlsafe_b64encode(bytes([251, 255, 254]))) == bytes([251, 255, 254]))(__import__('base64'))",
+    "out": "True",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Compare",
+         "kind": "Compare",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "b",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "b",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "bytes",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "List",
+                 "kind": "List",
+                 "children": [
+                  {
+                   "label": "251",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "255",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "254",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "bytes",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "List",
+             "kind": "List",
+             "children": [
+              {
+               "label": "251",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "255",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "254",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "__import__",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'base64'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "OverwriteDefault",
+   "label": "Overwrite default",
+   "level": 3,
+   "parent": "GmailSearching",
+   "body": "The chapter says a file with the attachment's name is overwritten automatically (Sweigart, 2025). The source opens the target with mode 'wb', and downloadAllAttachments() has an overwrite argument that defaults to True and, when False, refuses a message with duplicate names (Sweigart, 2026). Writing b'first' and then b'second' to tulips.jpg in a temporary folder leaves one file holding b'second', as executed.",
+   "section_iri": "http://example.org/sen0414/ch20#S_OverwriteDefault",
+   "class_iri": "http://example.org/sen0414/ch20#OverwriteDefault",
+   "example": "downloadAttachment('tulips.jpg') when tulips.jpg exists",
+   "definition": "A file that already has the attachment's name is overwritten without a question, because the file is opened for writing; nothing of the old file remains.",
+   "io": {
+    "code": "(lambda os, tf: (lambda d: (open(os.path.join(d, 'a.txt'), 'wb').write(b'one'), open(os.path.join(d, 'a.txt'), 'wb').write(b'two'), open(os.path.join(d, 'a.txt'), 'rb').read())[2])(tf.mkdtemp()))(__import__('os'), __import__('tempfile'))",
+    "out": "b'two'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Lambda",
+           "kind": "Lambda",
+           "children": [
+            {
+             "label": "arguments",
+             "kind": "arguments",
+             "children": [
+              {
+               "label": "arg",
+               "kind": "arg",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "Tuple",
+               "kind": "Tuple",
+               "children": [
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "open",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "call",
+                       "kind": "Call",
+                       "children": [
+                        {
+                         "label": "Attribute",
+                         "kind": "Attribute",
+                         "children": [
+                          {
+                           "label": "Attribute",
+                           "kind": "Attribute",
+                           "children": [
+                            {
+                             "label": "os",
+                             "kind": "Name",
+                             "children": []
+                            }
+                           ]
+                          }
+                         ]
+                        },
+                        {
+                         "label": "d",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "'a.txt'",
+                         "kind": "Constant",
+                         "children": []
+                        }
+                       ]
+                      },
+                      {
+                       "label": "'wb'",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "label": "b'one'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "open",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "call",
+                       "kind": "Call",
+                       "children": [
+                        {
+                         "label": "Attribute",
+                         "kind": "Attribute",
+                         "children": [
+                          {
+                           "label": "Attribute",
+                           "kind": "Attribute",
+                           "children": [
+                            {
+                             "label": "os",
+                             "kind": "Name",
+                             "children": []
+                            }
+                           ]
+                          }
+                         ]
+                        },
+                        {
+                         "label": "d",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "'a.txt'",
+                         "kind": "Constant",
+                         "children": []
+                        }
+                       ]
+                      },
+                      {
+                       "label": "'wb'",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "label": "b'two'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "open",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "call",
+                       "kind": "Call",
+                       "children": [
+                        {
+                         "label": "Attribute",
+                         "kind": "Attribute",
+                         "children": [
+                          {
+                           "label": "Attribute",
+                           "kind": "Attribute",
+                           "children": [
+                            {
+                             "label": "os",
+                             "kind": "Name",
+                             "children": []
+                            }
+                           ]
+                          }
+                         ]
+                        },
+                        {
+                         "label": "d",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "'a.txt'",
+                         "kind": "Constant",
+                         "children": []
+                        }
+                       ]
+                      },
+                      {
+                       "label": "'rb'",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "2",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "tf",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "__import__",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'os'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "__import__",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'tempfile'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "StandardLibraryMail",
+   "label": "Standard library mail",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter sets EZGmail against smtplib and imaplib; the standard library is also what builds and parses the messages themselves, and what this study could run without an account (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_StandardLibraryMail",
+   "class_iri": "http://example.org/sen0414/ch20#StandardLibraryMail"
+  },
+  {
+   "id": "MailProtocols",
+   "label": "Mail protocols",
+   "level": 2,
+   "parent": "StandardLibraryMail",
+   "body": "The two protocols of the standard library are SMTP for sending and IMAP for reading (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_MailProtocols",
+   "class_iri": "http://example.org/sen0414/ch20#MailProtocols"
+  },
+  {
+   "id": "SmtpPorts",
+   "label": "Smtp ports",
+   "level": 3,
+   "parent": "MailProtocols",
+   "body": "The chapter names smtplib as the standard-library way to send and says Gmail's measures make EZGmail the better route (Sweigart, 2025). smtplib.SMTP_PORT is 25 and smtplib.SMTP_SSL_PORT is 465, as executed, and Google lists smtp.gmail.com with port 465 for SSL or 587 for TLS and OAuth 2.0 as the way to authorize (Python Software Foundation, 2026) (Google, 2026). A login to Gmail was not attempted.",
+   "section_iri": "http://example.org/sen0414/ch20#S_SmtpPorts",
+   "class_iri": "http://example.org/sen0414/ch20#SmtpPorts",
+   "example": "server = smtplib.SMTP('smtp.gmail.com', 587)",
+   "definition": "smtplib is the standard library's client for the Simple Mail Transfer Protocol that sends mail; its constants name port 25 for a plain connection and 465 for one that is encrypted from the start, and Gmail's server smtp.gmail.com takes 465 or 587.",
+   "io": {
+    "code": "(lambda s: (s.SMTP_PORT, s.SMTP_SSL_PORT))(__import__('smtplib'))",
+    "out": "(25, 465)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "s",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "s",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "__import__",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'smtplib'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ImapPorts",
+   "label": "Imap ports",
+   "level": 3,
+   "parent": "MailProtocols",
+   "body": "imaplib.IMAP4_PORT is 143 and imaplib.IMAP4_SSL_PORT is 993, as executed (Python Software Foundation, 2026); Google lists imap.gmail.com on 993, requires SSL there and supports OAuth 2.0 with the SASL XOAUTH2 mechanism (Google, 2026). Since 14 March 2025 IMAP, SMTP and POP no longer work with legacy account passwords, the exception being app passwords, which Google does not recommend (Google, 2026). The chapter's sentence that Gmail does not allow the standard protocols is therefore true of passwords and not of OAuth (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch20#S_ImapPorts",
+   "class_iri": "http://example.org/sen0414/ch20#ImapPorts",
+   "example": "box = imaplib.IMAP4_SSL('imap.gmail.com')",
+   "definition": "imaplib is the standard library's client for the Internet Message Access Protocol that reads mail; port 143 is the plain port and 993 the encrypted one, and Gmail's server is imap.gmail.com on 993.",
+   "io": {
+    "code": "(lambda s: (s.IMAP4_PORT, s.IMAP4_SSL_PORT))(__import__('imaplib'))",
+    "out": "(143, 993)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "s",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "s",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "__import__",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'imaplib'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SendMessageMethod",
+   "label": "Send message method",
+   "level": 3,
+   "parent": "MailProtocols",
+   "body": "smtplib.SMTP.send_message() reads the sender from Sender or From and the recipients from To, Cc and Bcc, and never transmits a Bcc field (Python Software Foundation, 2026). Against a short SMTP handler written for this study on the loopback address, not against Gmail, a message with To, Cc and two Bcc addresses produced four recipient commands, the data held the Cc field and no Bcc field, and the call returned {} since no recipient was refused, all as executed.",
+   "section_iri": "http://example.org/sen0414/ch20#S_SendMessageMethod",
+   "class_iri": "http://example.org/sen0414/ch20#SendMessageMethod",
+   "example": "server.send_message(msg)",
+   "definition": "send_message takes a message object, reads the sender and the recipients from its From, To, Cc and Bcc fields and sends the text without the Bcc field, so blind copies are delivered but not shown."
+  },
+  {
+   "id": "MailMessages",
+   "label": "Mail messages",
+   "level": 2,
+   "parent": "StandardLibraryMail",
+   "body": "Building and taking apart a message is the work of the email package (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_MailMessages",
+   "class_iri": "http://example.org/sen0414/ch20#MailMessages"
+  },
+  {
+   "id": "EmailMessageClass",
+   "label": "Email message class",
+   "level": 3,
+   "parent": "MailMessages",
+   "body": "EmailMessage is the central class of the email package; a header is set like a dictionary entry and set_content() sets the body and its type (Python Software Foundation, 2026). A message with Subject 'Hi' and the body 'Body' has the type text/plain, the charset utf-8 and the content 'Body\\n', and the same message with a CSV attachment has the parts multipart/mixed, text/plain and text/csv, as executed.",
+   "section_iri": "http://example.org/sen0414/ch20#S_EmailMessageClass",
+   "class_iri": "http://example.org/sen0414/ch20#EmailMessageClass",
+   "example": "msg = EmailMessage(); msg.set_content('Body')",
+   "definition": "email.message.EmailMessage is the current class for building and reading messages: fields are set like dictionary entries, set_content sets the body and its type, and add_attachment makes the message multipart.",
+   "io": {
+    "code": "(lambda m: (m.__setitem__('Subject', 'Hi'), m.set_content('Body'), (m['Subject'], m.get_content_type(), m.get_content_charset(), m.get_content()))[2])(__import__('email.message', fromlist=['EmailMessage']).EmailMessage())",
+    "out": "('Hi', 'text/plain', 'utf-8', 'Body\\n')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "m",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'Subject'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'Hi'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "m",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'Body'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "Subscript",
+               "kind": "Subscript",
+               "children": [
+                {
+                 "label": "m",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'Subject'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "m",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "m",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "m",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'email.message'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "keyword",
+             "kind": "keyword",
+             "children": [
+              {
+               "label": "List",
+               "kind": "List",
+               "children": [
+                {
+                 "label": "'EmailMessage'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "AddressParsing",
+   "label": "Address parsing",
+   "level": 3,
+   "parent": "MailMessages",
+   "body": "The chapter's sender attribute keeps the display name, 'Al Sweigart <al@inventwithpython.com>' (Sweigart, 2025). email.utils.parseaddr() splits it into ('Al Sweigart', 'al@inventwithpython.com'), as executed, and getaddresses() splits a list of header values, such as the chapter's two blind copies, into pairs with an empty name (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_AddressParsing",
+   "class_iri": "http://example.org/sen0414/ch20#AddressParsing",
+   "example": "email.utils.parseaddr('Al Sweigart <al@inventwithpython.com>')",
+   "definition": "parseaddr splits a header value that holds a display name and an address into the two parts, and formataddr puts them together again, which matters because the sender and recipient attributes of a message keep both.",
+   "io": {
+    "code": "__import__('email.utils', fromlist=['x']).parseaddr('Al Sweigart <al@inventwithpython.com>')",
+    "out": "('Al Sweigart', 'al@inventwithpython.com')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "__import__",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'email.utils'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "keyword",
+           "kind": "keyword",
+           "children": [
+            {
+             "label": "List",
+             "kind": "List",
+             "children": [
+              {
+               "label": "'x'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'Al Sweigart <al@inventwithpython.com>'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "LegacyMimeClasses",
+   "label": "Legacy mime classes",
+   "level": 3,
+   "parent": "MailMessages",
+   "body": "The documentation describes email.mime as part of the legacy compat32 API kept for existing code, and the EZGmail source imports MIMEText, MIMEMultipart, MIMEImage, MIMEAudio and MIMEBase from it (Python Software Foundation, 2026) (Sweigart, 2026). MIMEText('x').policy is Compat32 and EmailMessage().policy is EmailPolicy, as executed; a MIMEMultipart holding a MIMEText reports multipart/mixed and one text/plain part.",
+   "section_iri": "http://example.org/sen0414/ch20#S_LegacyMimeClasses",
+   "class_iri": "http://example.org/sen0414/ch20#LegacyMimeClasses",
+   "example": "MIMEText('Body', 'plain')",
+   "definition": "MIMEText, MIMEMultipart and the other classes of email.mime belong to the older interface with the compat32 policy, which the documentation keeps for existing code; new code uses EmailMessage, whose policy is the current one.",
+   "io": {
+    "code": "(type(__import__('email.mime.text', fromlist=['MIMEText']).MIMEText('x').policy).__name__, type(__import__('email.message', fromlist=['EmailMessage']).EmailMessage().policy).__name__)",
+    "out": "('Compat32', 'EmailPolicy')",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "type",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "__import__",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "'email.mime.text'",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "keyword",
+                   "kind": "keyword",
+                   "children": [
+                    {
+                     "label": "List",
+                     "kind": "List",
+                     "children": [
+                      {
+                       "label": "'MIMEText'",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "'x'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "type",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "__import__",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "'email.message'",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "keyword",
+                   "kind": "keyword",
+                   "children": [
+                    {
+                     "label": "List",
+                     "kind": "List",
+                     "children": [
+                      {
+                       "label": "'EmailMessage'",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SmsGateways",
+   "label": "Sms gateways",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter's second channel is text to a phone sent as an email to the carrier's gateway (Sweigart, 2025). No gateway was contacted, because a text needs a real number and a live carrier service; the address and length handling was run.",
+   "section_iri": "http://example.org/sen0414/ch20#S_SmsGateways",
+   "class_iri": "http://example.org/sen0414/ch20#SmsGateways"
+  },
+  {
+   "id": "GatewayUse",
+   "label": "Gateway use",
+   "level": 2,
+   "parent": "SmsGateways",
+   "body": "A gateway is an email server of a carrier that turns a message into a text (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch20#S_GatewayUse",
+   "class_iri": "http://example.org/sen0414/ch20#GatewayUse"
+  },
+  {
+   "id": "GatewayAddress",
+   "label": "Gateway address",
+   "level": 3,
+   "parent": "GatewayUse",
+   "body": "A text to a Verizon customer with the number 212-555-1234 goes to 2125551234@vtext.com, and the subject and body appear in the text (Sweigart, 2025). Built from a dictionary of carrier domains, '%s@%s' % ('2125551234', 'vtext.com') is '2125551234@vtext.com', as executed. The chapter's table gives the same domain vtext.com for Verizon and Xfinity Mobile.",
+   "section_iri": "http://example.org/sen0414/ch20#S_GatewayAddress",
+   "class_iri": "http://example.org/sen0414/ch20#GatewayAddress",
+   "example": "2125551234@vtext.com",
+   "definition": "A text is sent through a gateway by mailing the phone number at the carrier's gateway domain; the subject and body then appear in the text.",
+   "io": {
+    "code": "'%s@%s' % ('2125551234', {'Verizon': 'vtext.com', 'T-Mobile': 'tmomail.net'}['Verizon'])",
+    "out": "'2125551234@vtext.com'",
+    "tree": {
+     "label": "%",
+     "kind": "BinOp",
+     "children": [
+      {
+       "label": "'%s@%s'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "'2125551234'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Dict",
+           "kind": "Dict",
+           "children": [
+            {
+             "label": "'Verizon'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'T-Mobile'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'vtext.com'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'tmomail.net'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'Verizon'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ProviderTable",
+   "label": "Provider table",
+   "level": 3,
+   "parent": "GatewayUse",
+   "body": "Table 20-1 lists twelve providers, seven with a separate MMS gateway and five where the MMS gateway is the same as the SMS one, and eleven different SMS domains because Verizon and Xfinity Mobile share vtext.com, as counted from the table in a program (Sweigart, 2025). Vendor notices report that AT&T ended its email-to-text gateway in June 2025 (17 June according to one of them), which makes the table's AT&T rows and, as reported, Cricket's obsolete (SignalWire, 2025) (BlueNote Software, 2025). The other rows were not tested.",
+   "section_iri": "http://example.org/sen0414/ch20#S_ProviderTable",
+   "class_iri": "http://example.org/sen0414/ch20#ProviderTable",
+   "example": "number@txt.att.net, number@tmomail.net, number@vtext.com",
+   "definition": "The chapter's table names an SMS gateway, and for most providers a separate MMS gateway, for twelve providers; a provider's address is found by a web search, and the table is a snapshot that goes out of date."
+  },
+  {
+   "id": "SmsLengthLimit",
+   "label": "Sms length limit",
+   "level": 3,
+   "parent": "GatewayUse",
+   "body": "The SMS gateways limit a message to 160 characters and the MMS gateways have no character limit, and a photo must go through the MMS gateway (Sweigart, 2025). A text of 240 characters wrapped at width 160 by textwrap.wrap() gives pieces of 158 and 80 characters, and 160 characters pass a test of at most 160 where 161 do not, as executed (Python Software Foundation, 2026); how a gateway handles a longer text was not tested.",
+   "section_iri": "http://example.org/sen0414/ch20#S_SmsLengthLimit",
+   "class_iri": "http://example.org/sen0414/ch20#SmsLengthLimit",
+   "example": "len(text) <= 160",
+   "definition": "A text through an SMS gateway is limited to 160 characters, where the MMS gateway has no character limit and is the route for a photo; a longer message has to be shortened or split by the program.",
+   "io": {
+    "code": "[len(p) for p in __import__('textwrap').wrap('The backup finished on all servers and the report is ready. ' * 4, width=160)]",
+    "out": "[158, 80]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "p",
+         "kind": "Name",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "p",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'textwrap'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "*",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "'The backup finished on all servers and the report is ready. '",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "4",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "keyword",
+           "kind": "keyword",
+           "children": [
+            {
+             "label": "160",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "[len(p) for p in __import__('textwrap').wrap('The backup finished on all servers and the report is ready. ' * 4, width=160)]",
+      "focus": "'The backup finished on all servers and the report is ready. ' * 4",
+      "value": "'The backup finished on all servers and the report is ready. The backup finished on all servers and the report is ready. The backup finished on all servers and the report is ready. The backup finished on all servers and the report is ready. '"
+     }
+    ]
+   }
+  },
+  {
+   "id": "GatewayDisadvantages",
+   "label": "Gateway disadvantages",
+   "level": 3,
+   "parent": "GatewayUse",
+   "body": "The chapter lists five disadvantages: no guarantee that the text arrives promptly or at all, no way to learn of a failure, no way for the recipient to reply, possible blocking after too many messages with no way to learn the limit, and no promise that a working gateway works tomorrow (Sweigart, 2025). Practice question 4 asks for them. The vendor notices on the AT&T shutdown are the concrete case of the last one (SignalWire, 2025) (BlueNote Software, 2025).",
+   "section_iri": "http://example.org/sen0414/ch20#S_GatewayDisadvantages",
+   "class_iri": "http://example.org/sen0414/ch20#GatewayDisadvantages",
+   "example": "no delivery guarantee, no failure notice, no reply",
+   "definition": "Five disadvantages: no guarantee that the text arrives promptly or at all, no way to know it failed, no way for the recipient to reply, a block that may come without a known limit, and no promise that a gateway that works today works tomorrow."
+  },
+  {
+   "id": "PaidApiProviders",
+   "label": "Paid api providers",
+   "level": 3,
+   "parent": "GatewayUse",
+   "body": "For reliable or bulk texts the chapter names the API of a telecom provider such as Twilio, which often needs a subscription or fees and an application, with rules that differ by country and change over time (Sweigart, 2025). No provider's documentation was read for this study, and none was used.",
+   "section_iri": "http://example.org/sen0414/ch20#S_PaidApiProviders",
+   "class_iri": "http://example.org/sen0414/ch20#PaidApiProviders",
+   "example": "a telecom provider's API such as Twilio",
+   "definition": "For reliable or bulk texts the chapter points to the API of a telecom service provider such as Twilio, which usually needs a subscription or usage fees and possibly an application, under rules that differ by country."
+  },
+  {
+   "id": "PushNotifications",
+   "label": "Push notifications",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter's third channel is the free ntfy service, reached with plain HTTP requests (Sweigart, 2025). Nothing was sent to ntfy.sh; the request objects, the headers and the parsing of a response were run, against a stand-in server on the loopback address written for this study.",
+   "section_iri": "http://example.org/sen0414/ch20#S_PushNotifications",
+   "class_iri": "http://example.org/sen0414/ch20#PushNotifications"
+  },
+  {
+   "id": "NotificationTopics",
+   "label": "Notification topics",
+   "level": 2,
+   "parent": "PushNotifications",
+   "body": "A topic is the address of a notification (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch20#S_NotificationTopics",
+   "class_iri": "http://example.org/sen0414/ch20#NotificationTopics"
+  },
+  {
+   "id": "TopicAsSecret",
+   "label": "Topic as secret",
+   "level": 3,
+   "parent": "NotificationTopics",
+   "body": "A topic works like a chat room that anyone may post to and read; the chapter uses the topic AlSweigartZPgxBQ42 and advises a secret topic with random letters and numbers, treated as a password, noting that topics are case-sensitive (Sweigart, 2025). A seeded random.Random repeats its topic suffix, which the documentation says makes it unsuitable for security; the secrets module is meant for tokens, and token_urlsafe(8) is 11 characters long and differs from one call to the next, as executed (Python Software Foundation, 2026) (The ntfy documentation, 2026). 'AlSweigartZPgxBQ42' == 'alsweigartzpgxbq42' is False, as executed. The documentation allows only letters, numbers, underscores and dashes in a topic name, up to 64 characters (The ntfy documentation, 2026); a pattern test accepts AlSweigartZPgxBQ42 and a name of 64 letters, and rejects a name with a space, one with a slash, one of 65 characters and an empty one, as executed.",
+   "section_iri": "http://example.org/sen0414/ch20#S_TopicAsSecret",
+   "class_iri": "http://example.org/sen0414/ch20#TopicAsSecret",
+   "example": "AlSweigartZPgxBQ42",
+   "definition": "A topic is the name of a channel: anyone may publish to it and anyone may subscribe, so a topic meant for one person needs a long random suffix and is treated like a password; names are case-sensitive, and a secrets token is the right source of the random part.",
+   "io": {
+    "code": "len(__import__('secrets').token_urlsafe(8))",
+    "out": "11",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "len",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'secrets'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "8",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SensitiveData",
+   "label": "Sensitive data",
+   "level": 3,
+   "parent": "NotificationTopics",
+   "body": "The chapter says not to use ntfy for passwords or credit card numbers even with a secret topic, and that there is no way to tell who posted a message (Sweigart, 2025); the documentation says that, with no sign-up, the topic is essentially a password (The ntfy documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_SensitiveData",
+   "class_iri": "http://example.org/sen0414/ch20#SensitiveData",
+   "example": "never send passwords or card numbers",
+   "definition": "A topic is open to whoever learns its name and the service does not say who posted a message, so a notification carries short status text and never a password or a card number."
+  },
+  {
+   "id": "NotificationSending",
+   "label": "Notification sending",
+   "level": 2,
+   "parent": "PushNotifications",
+   "body": "Sending is one POST request with the text as its body, extended by headers (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch20#S_NotificationSending",
+   "class_iri": "http://example.org/sen0414/ch20#NotificationSending"
+  },
+  {
+   "id": "PostRequest",
+   "label": "Post request",
+   "level": 3,
+   "parent": "NotificationSending",
+   "body": "requests.post('https://ntfy.sh/AlSweigartZPgxBQ42', 'Hello, world!') prints <Response [200]>, and the second positional argument of requests.post() is data (Sweigart, 2025) (Requests developers, 2026). The requests library is not in the standard library and was not installed; with urllib.request, a Request with data is a POST and one without is a GET, as executed (Python Software Foundation, 2026). Against a loopback stand-in a POST with the body 'The rent is too high!' returned status 200 and the stand-in recorded the method POST, the path, the body and the headers.",
+   "section_iri": "http://example.org/sen0414/ch20#S_PostRequest",
+   "class_iri": "http://example.org/sen0414/ch20#PostRequest",
+   "example": "resp = requests.post('https://ntfy.sh/AlSweigartZPgxBQ42', 'Hello, world!')",
+   "definition": "A notification is sent by one HTTP POST whose body is the message text, where reading uses GET; in the standard library a request that carries data is a POST and one without is a GET.",
+   "io": {
+    "code": "(__import__('urllib.request', fromlist=['x']).Request('https://ntfy.sh/AlSweigartZPgxBQ42', data=b'Hello, world!').get_method(), __import__('urllib.request', fromlist=['x']).Request('https://ntfy.sh/AlSweigartZPgxBQ42').get_method())",
+    "out": "('POST', 'GET')",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'urllib.request'",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "keyword",
+                 "kind": "keyword",
+                 "children": [
+                  {
+                   "label": "List",
+                   "kind": "List",
+                   "children": [
+                    {
+                     "label": "'x'",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "'https://ntfy.sh/AlSweigartZPgxBQ42'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "keyword",
+             "kind": "keyword",
+             "children": [
+              {
+               "label": "b'Hello, world!'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'urllib.request'",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "keyword",
+                 "kind": "keyword",
+                 "children": [
+                  {
+                   "label": "List",
+                   "kind": "List",
+                   "children": [
+                    {
+                     "label": "'x'",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "'https://ntfy.sh/AlSweigartZPgxBQ42'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "MessageSizeLimit",
+   "label": "Message size limit",
+   "level": 3,
+   "parent": "NotificationSending",
+   "body": "A message may be 4,096 bytes at most, and on the free service 250 messages a day (Sweigart, 2025) (The ntfy documentation, 2026). Bytes are not characters: 'K\u0131rm\u0131z\u0131 alarm' has 13 characters and 16 bytes in UTF-8, a string of 4,096 letter x is 4,096 bytes and passes, and 4,095 letters x followed by \u015f is 4,096 characters and 4,097 bytes and does not pass, as executed.",
+   "section_iri": "http://example.org/sen0414/ch20#S_MessageSizeLimit",
+   "class_iri": "http://example.org/sen0414/ch20#MessageSizeLimit",
+   "example": "len(text.encode('utf-8')) <= 4096",
+   "definition": "A message may be at most 4,096 bytes, and a byte count is not a character count: a letter outside ASCII such as \u0131 or \u015f takes two bytes in UTF-8; on the free service at most 250 messages a day may be sent.",
+   "io": {
+    "code": "(len('K\u0131rm\u0131z\u0131 alarm'), len('K\u0131rm\u0131z\u0131 alarm'.encode('utf-8')))",
+    "out": "(13, 16)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'K\u0131rm\u0131z\u0131 alarm'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "'K\u0131rm\u0131z\u0131 alarm'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'utf-8'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(len('K\u0131rm\u0131z\u0131 alarm'), len('K\u0131rm\u0131z\u0131 alarm'.encode('utf-8')))",
+      "focus": "len('K\u0131rm\u0131z\u0131 alarm')",
+      "value": "13"
+     }
+    ]
+   }
+  },
+  {
+   "id": "MetadataHeaders",
+   "label": "Metadata headers",
+   "level": 3,
+   "parent": "NotificationSending",
+   "body": "A title, a priority and tags are sent as the headers Title, Priority and Tags in the dictionary passed as headers (Sweigart, 2025). In urllib.request the header_items() of such a Request are [('Title', 'Important: Read this!'), ('Tags', 'warning,neutral_face'), ('Priority', '5')] and the loopback stand-in received the three headers as sent, as executed (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_MetadataHeaders",
+   "class_iri": "http://example.org/sen0414/ch20#MetadataHeaders",
+   "example": "headers={'Title': 'Important: Read this!', 'Tags': 'warning,neutral_face', 'Priority': '5'}",
+   "definition": "A title, tags and a priority travel as HTTP headers next to the message text; in the requests library they are a dictionary passed as headers, and in urllib they are a dictionary passed to Request.",
+   "io": {
+    "code": "__import__('urllib.request', fromlist=['x']).Request('https://ntfy.sh/AlSweigartZPgxBQ42', data=b'The rent is too high!', headers={'Title': 'Important: Read this!', 'Tags': 'warning,neutral_face', 'Priority': '5'}).header_items()",
+    "out": "[('Title', 'Important: Read this!'), ('Tags', 'warning,neutral_face'), ('Priority', '5')]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'urllib.request'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "keyword",
+               "kind": "keyword",
+               "children": [
+                {
+                 "label": "List",
+                 "kind": "List",
+                 "children": [
+                  {
+                   "label": "'x'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "'https://ntfy.sh/AlSweigartZPgxBQ42'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "keyword",
+           "kind": "keyword",
+           "children": [
+            {
+             "label": "b'The rent is too high!'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "keyword",
+           "kind": "keyword",
+           "children": [
+            {
+             "label": "Dict",
+             "kind": "Dict",
+             "children": [
+              {
+               "label": "'Title'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'Tags'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'Priority'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'Important: Read this!'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'warning,neutral_face'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'5'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PriorityLevels",
+   "label": "Priority levels",
+   "level": 3,
+   "parent": "NotificationSending",
+   "body": "A priority runs from 1 (lowest) to 5 (highest), 3 is the default, and a higher priority does not deliver faster but lets a subscriber filter (Sweigart, 2025); the documentation names them min, low, default, high and max (also called urgent) and accepts the header under the names X-Priority, Priority, prio and p (The ntfy documentation, 2026). As executed, dict(zip(range(1, 6), names)) gives {1: 'min', 2: 'low', 3: 'default', 4: 'high', 5: 'max'}.",
+   "section_iri": "http://example.org/sen0414/ch20#S_PriorityLevels",
+   "class_iri": "http://example.org/sen0414/ch20#PriorityLevels",
+   "example": "Priority: 5",
+   "definition": "A priority is a whole number from 1 (min) to 5 (max) with 3 as the default; a higher priority does not deliver faster, it only lets a subscriber choose which messages make a sound.",
+   "io": {
+    "code": "dict(zip(range(1, 6), ['min', 'low', 'default', 'high', 'max']))",
+    "out": "{1: 'min', 2: 'low', 3: 'default', 4: 'high', 5: 'max'}",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "dict",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "zip",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "range",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "6",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'min'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'low'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'default'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'high'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'max'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "HeaderEncoding",
+   "label": "Header encoding",
+   "level": 3,
+   "parent": "NotificationSending",
+   "body": "The chapter passes plain ASCII titles (Sweigart, 2025). The documentation says ntfy accepts UTF-8 in headers but not every library sends it, and recommends an RFC 2047 encoded word (The ntfy documentation, 2026). Executed, http.client's putheader('Title', '\u015eifre de\u011fi\u015fti') raised UnicodeEncodeError, email.header.Header('\u015eifre', 'utf-8').encode() gave '=?utf-8?b?xZ5pZnJl?=' and a header with the encoded word was accepted by putheader (Python Software Foundation, 2026). Whether ntfy.sh decodes it was not tested.",
+   "section_iri": "http://example.org/sen0414/ch20#S_HeaderEncoding",
+   "class_iri": "http://example.org/sen0414/ch20#HeaderEncoding",
+   "example": "Title: =?utf-8?b?...?=",
+   "definition": "HTTP libraries send header values as Latin-1, so a title with a letter outside it fails; an RFC 2047 encoded word, which email.header.Header makes, is plain ASCII and is accepted by ntfy.",
+   "io": {
+    "code": "__import__('email.header', fromlist=['x']).Header('\u015eifre', 'utf-8').encode()",
+    "out": "'=?utf-8?b?xZ5pZnJl?='",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'email.header'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "keyword",
+               "kind": "keyword",
+               "children": [
+                {
+                 "label": "List",
+                 "kind": "List",
+                 "children": [
+                  {
+                   "label": "'x'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "'\u015eifre'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'utf-8'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ResponseStatus",
+   "label": "Response status",
+   "level": 3,
+   "parent": "NotificationSending",
+   "body": "The chapter prints <Response [200]> for success and says a reserved topic without permission gives <Response [403]> (Sweigart, 2025). http.HTTPStatus(200).phrase is 'OK' and http.HTTPStatus(403).phrase is 'Forbidden', as executed (Python Software Foundation, 2026); a program should test the status code and not assume success.",
+   "section_iri": "http://example.org/sen0414/ch20#S_ResponseStatus",
+   "class_iri": "http://example.org/sen0414/ch20#ResponseStatus",
+   "example": "<Response [200]> and <Response [403]>",
+   "definition": "The number in a response says what happened: 200 for accepted, 403 when a reserved topic refuses the sender; the standard library names the codes in http.HTTPStatus.",
+   "io": {
+    "code": "(__import__('http').HTTPStatus(200).phrase, __import__('http').HTTPStatus(403).phrase)",
+    "out": "('OK', 'Forbidden')",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'http'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "200",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'http'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "403",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "StructuredPayload",
+   "label": "Structured payload",
+   "level": 3,
+   "parent": "NotificationSending",
+   "body": "Since nobody can tell who posted a message, the chapter suggests To and From labels, better as JSON (Sweigart, 2025). json.loads(json.dumps({'to': 'Yusuf', 'from': 'backup', 'text': 'done'}))['from'] is 'backup', as executed (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_StructuredPayload",
+   "class_iri": "http://example.org/sen0414/ch20#StructuredPayload",
+   "example": "json.dumps({'to': 'Yusuf', 'from': 'backup', 'text': 'done'})",
+   "definition": "The service does not tell who posted a message, so a sender and a recipient are written into the text itself, best as JSON so that a receiving program can read the parts.",
+   "io": {
+    "code": "__import__('json').loads(__import__('json').dumps({'to': 'Yusuf', 'from': 'backup', 'text': 'done'}))['from']",
+    "out": "'backup'",
+    "tree": {
+     "label": "Subscript",
+     "kind": "Subscript",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'json'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'json'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Dict",
+           "kind": "Dict",
+           "children": [
+            {
+             "label": "'to'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'from'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'text'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'Yusuf'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'backup'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'done'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'from'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "NotificationReceiving",
+   "label": "Notification receiving",
+   "level": 2,
+   "parent": "PushNotifications",
+   "body": "Receiving is a GET of the topic's JSON address, by polling (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch20#S_NotificationReceiving",
+   "class_iri": "http://example.org/sen0414/ch20#NotificationReceiving"
+  },
+  {
+   "id": "PollRequest",
+   "label": "Poll request",
+   "level": 3,
+   "parent": "NotificationReceiving",
+   "body": "requests.get('https://ntfy.sh/AlSweigartZPgxBQ42/json?poll=1') returns all messages the server holds for the topic (Sweigart, 2025) (The ntfy documentation, 2026). urllib.parse.parse_qs(urlsplit(url).query) takes the options of .../json?poll=1&since=10m apart as {'poll': ['1'], 'since': ['10m']}, as executed (Python Software Foundation, 2026). The loopback stand-in served three lines to a urlopen() poll, as executed.",
+   "section_iri": "http://example.org/sen0414/ch20#S_PollRequest",
+   "class_iri": "http://example.org/sen0414/ch20#PollRequest",
+   "example": "resp = requests.get('https://ntfy.sh/AlSweigartZPgxBQ42/json?poll=1')",
+   "definition": "A GET to the topic's /json address with poll=1 returns every message the server still holds and ends the connection; the options after the question mark are a query string that urllib.parse can take apart.",
+   "io": {
+    "code": "__import__('urllib.parse', fromlist=['x']).parse_qs(__import__('urllib.parse', fromlist=['x']).urlsplit('https://ntfy.sh/AlSweigartZPgxBQ42/json?poll=1&since=10m').query)",
+    "out": "{'poll': ['1'], 'since': ['10m']}",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "__import__",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'urllib.parse'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "keyword",
+           "kind": "keyword",
+           "children": [
+            {
+             "label": "List",
+             "kind": "List",
+             "children": [
+              {
+               "label": "'x'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'urllib.parse'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "keyword",
+               "kind": "keyword",
+               "children": [
+                {
+                 "label": "List",
+                 "kind": "List",
+                 "children": [
+                  {
+                   "label": "'x'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "'https://ntfy.sh/AlSweigartZPgxBQ42/json?poll=1&since=10m'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SinceParameter",
+   "label": "Since parameter",
+   "level": 3,
+   "parent": "NotificationReceiving",
+   "body": "since restricts the poll; the chapter lists a span such as 10m, a Unix timestamp and a message id, and options are joined by an ampersand (Sweigart, 2025). The documentation lists a duration, a timestamp, a message id, all and latest (The ntfy documentation, 2026); urllib.parse.urlencode({'poll': 1, 'since': 'wZ22cjyKXw1F'}) is 'poll=1&since=wZ22cjyKXw1F', as executed (Python Software Foundation, 2026). The combined duration 2h30m given by the chapter is not among the documentation's examples as read, and it was not tested.",
+   "section_iri": "http://example.org/sen0414/ch20#S_SinceParameter",
+   "class_iri": "http://example.org/sen0414/ch20#SinceParameter",
+   "example": "/json?poll=1&since=wZ22cjyKXw1F",
+   "definition": "A since option limits the poll to messages after a time span, a Unix timestamp or a message id; urllib.parse.urlencode builds the query string and separates options with an ampersand.",
+   "io": {
+    "code": "__import__('urllib.parse', fromlist=['x']).urlencode({'poll': 1, 'since': 'wZ22cjyKXw1F'})",
+    "out": "'poll=1&since=wZ22cjyKXw1F'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "__import__",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'urllib.parse'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "keyword",
+           "kind": "keyword",
+           "children": [
+            {
+             "label": "List",
+             "kind": "List",
+             "children": [
+              {
+               "label": "'x'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'poll'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'since'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "1",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'wZ22cjyKXw1F'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "LineJsonParsing",
+   "label": "Line json parsing",
+   "level": 3,
+   "parent": "NotificationReceiving",
+   "body": "The response text holds one JSON object per line, so the chapter splits it with splitlines() and calls json.loads() on each line (Sweigart, 2025). json.loads() of the two-line text of the chapter raises JSONDecodeError: Extra data: line 2 column 1 (char 134), while the loop gives notifications[0]['message'] as 'Hello, world!' and notifications[1]['message'] as 'The rent is too high!' with tags ['warning', 'neutral_face'] and priority 5, as executed (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_LineJsonParsing",
+   "class_iri": "http://example.org/sen0414/ch20#LineJsonParsing",
+   "example": "for json_text in resp.text.splitlines(): json.loads(json_text)",
+   "definition": "The response is one JSON object per line, which as a whole is not valid JSON, so the text is split into lines and each line is parsed by json.loads into a dictionary.",
+   "io": {
+    "code": "[__import__('json').loads(l)['message'] for l in '''{'id':'1jnHKeFNqwnS','time':1797823340,'event':'message','message':'Hello, world!'}\\n{'id':'wZ22cjyKXw1F','time':1797823712,'event':'message','title':'Important: Read this!','message':'The rent is too high!','priority':5}\\n'''.replace(chr(39), chr(34)).splitlines()]",
+    "out": "['Hello, world!', 'The rent is too high!']",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'json'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "l",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'message'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "l",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "\"{'id':'1jnHKeFNqwnS','time':1797823340,'event':'message','message':'Hello, world!'}\\n{'id':'wZ22cjyKXw1F','time':1797823712,'event':'message','title':'Important: Read this!','message':'The rent is too high!','priority':5}\\n\"",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "chr",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "39",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "chr",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "34",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "EpochTimestamp",
+   "label": "Epoch timestamp",
+   "level": 3,
+   "parent": "NotificationReceiving",
+   "body": "The time and expires keys are Unix timestamps; the chapter says str(datetime.datetime.fromtimestamp(1797823712)) is '2026-12-20 21:28:32' (Sweigart, 2025). That value depends on the time zone of the computer: with tz set to UTC the result is '2026-12-21 03:28:32+00:00', and expires minus time in the chapter's sample is 43200 seconds, twelve hours, as executed (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_EpochTimestamp",
+   "class_iri": "http://example.org/sen0414/ch20#EpochTimestamp",
+   "example": "'time':1797823712",
+   "definition": "The time and expires keys are Unix timestamps in seconds; fromtimestamp without a zone shows the clock time of the reading computer, so the same number prints differently in different zones, while a timestamp with a zone argument does not.",
+   "io": {
+    "code": "str(__import__('datetime').datetime.fromtimestamp(1797823712, tz=__import__('datetime').timezone.utc))",
+    "out": "'2026-12-21 03:28:32+00:00'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "str",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'datetime'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "1797823712",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "keyword",
+         "kind": "keyword",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'datetime'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "EventTypes",
+   "label": "Event types",
+   "level": 3,
+   "parent": "NotificationReceiving",
+   "body": "The chapter names message, open, keepalive and poll_request as the values of the event key (Sweigart, 2025); the documentation lists also message_delete and message_clear (The ntfy documentation, 2026). Keeping the lines whose event is 'message' from a text with an open line, a message line and a keepalive line leaves ['Hello, world!'], as executed.",
+   "section_iri": "http://example.org/sen0414/ch20#S_EventTypes",
+   "class_iri": "http://example.org/sen0414/ch20#EventTypes",
+   "example": "if note['event'] == 'message': keep(note)",
+   "definition": "Each line has an event key: message for a notification, open and keepalive for the connection, poll_request for a poll, and in the current documentation also message_delete and message_clear; a reading program keeps only the message events.",
+   "io": {
+    "code": "[m['message'] for m in map(__import__('json').loads, '''{'id':'a1','event':'open'}\\n{'id':'a2','event':'message','message':'Hello, world!'}\\n{'id':'a3','event':'keepalive'}\\n'''.replace(chr(39), chr(34)).splitlines()) if m['event'] == 'message']",
+    "out": "['Hello, world!']",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "m",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'message'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "m",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "map",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'json'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "\"{'id':'a1','event':'open'}\\n{'id':'a2','event':'message','message':'Hello, world!'}\\n{'id':'a3','event':'keepalive'}\\n\"",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "chr",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "39",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "chr",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "34",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "Compare",
+         "kind": "Compare",
+         "children": [
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "m",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'event'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'message'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "OptionalKeys",
+   "label": "Optional keys",
+   "level": 3,
+   "parent": "NotificationReceiving",
+   "body": "The title, priority and tags keys exist only when set (Sweigart, 2025). Indexing notifications[0]['title'] raised KeyError: 'title' on the chapter's first message, while .get('title') gave None and .get('priority', 3) gave 3, as executed.",
+   "section_iri": "http://example.org/sen0414/ch20#S_OptionalKeys",
+   "class_iri": "http://example.org/sen0414/ch20#OptionalKeys",
+   "example": "title = notification.get('title')",
+   "definition": "The title, priority and tags keys are present only when the sender set them, so indexing a missing key raises KeyError and get returns a default instead.",
+   "io": {
+    "code": "(lambda n: (n.get('title'), n.get('priority', 3)))(__import__('json').loads('''{'id':'1','event':'message','message':'Hello'}'''.replace(chr(39), chr(34))))",
+    "out": "(None, 3)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "n",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "'title'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "n",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "'priority'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "3",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'json'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "\"{'id':'1','event':'message','message':'Hello'}\"",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "chr",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "39",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "chr",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "34",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PollingEtiquette",
+   "label": "Polling etiquette",
+   "level": 3,
+   "parent": "NotificationReceiving",
+   "body": "The chapter advises polling once a minute or every few minutes, and mentions streaming (Sweigart, 2025); the documentation adds that a poll without since re-reads the topic's whole cache, replays are capped, and a client should pass the id of the last message as since (The ntfy documentation, 2026). The id of the last line of the chapter's text is 'wZ22cjyKXw1F', as executed. The streaming methods were not run.",
+   "section_iri": "http://example.org/sen0414/ch20#S_PollingEtiquette",
+   "class_iri": "http://example.org/sen0414/ch20#PollingEtiquette",
+   "example": "since = last_id",
+   "definition": "A program that polls should ask once a minute or less often and pass the id of the last message it has handled as since, so that the server returns only what is new.",
+   "io": {
+    "code": "[__import__('json').loads(l)['id'] for l in '''{'id':'1jnHKeFNqwnS','time':1797823340,'event':'message','message':'Hello, world!'}\\n{'id':'wZ22cjyKXw1F','time':1797823712,'event':'message','title':'Important: Read this!','message':'The rent is too high!','priority':5}\\n'''.replace(chr(39), chr(34)).splitlines()][-1]",
+    "out": "'wZ22cjyKXw1F'",
+    "tree": {
+     "label": "Subscript",
+     "kind": "Subscript",
+     "children": [
+      {
+       "label": "ListComp",
+       "kind": "ListComp",
+       "children": [
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'json'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "l",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'id'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "comprehension",
+         "kind": "comprehension",
+         "children": [
+          {
+           "label": "l",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "\"{'id':'1jnHKeFNqwnS','time':1797823340,'event':'message','message':'Hello, world!'}\\n{'id':'wZ22cjyKXw1F','time':1797823712,'event':'message','title':'Important: Read this!','message':'The rent is too high!','priority':5}\\n\"",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "chr",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "39",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "chr",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "34",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "UnaryOp",
+       "kind": "UnaryOp",
+       "children": [
+        {
+         "label": "1",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "[__import__('json').loads(l)['id'] for l in \"{'id':'1jnHKeFNqwnS','time':1797823340,'event':'message','message':'Hello, world!'}\\n{'id':'wZ22cjyKXw1F','time':1797823712,'event':'message','title':'Important: Read this!','message':'The rent is too high!','priority':5}\\n\".replace(chr(39), chr(34)).splitlines()][-1]",
+      "focus": "-1",
+      "value": "-1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "PracticeWork",
+   "label": "Practice work",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter ends with five questions and three programs (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch20#S_PracticeWork",
+   "class_iri": "http://example.org/sen0414/ch20#PracticeWork"
+  },
+  {
+   "id": "ChapterQuestions",
+   "label": "Chapter questions",
+   "level": 2,
+   "parent": "PracticeWork",
+   "body": "Five questions test the chapter's vocabulary (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch20#S_ChapterQuestions",
+   "class_iri": "http://example.org/sen0414/ch20#ChapterQuestions"
+  },
+  {
+   "id": "PracticeQuestions",
+   "label": "Practice questions",
+   "level": 3,
+   "parent": "ChapterQuestions",
+   "body": "Question 1 asks what the credentials and token files are, 2 the difference between thread and message objects, 3 how search() finds mail with attachments, 4 the disadvantages of an SMS email gateway, and 5 which library sends and receives ntfy notifications (Sweigart, 2025). The answers of this study: the credentials file identifies the program and the token file records the owner's consent; a thread holds a list of messages; search('has:attachment'); the five disadvantages; and the Requests library, which the chapter uses, although any HTTP client works, urllib.request being the standard library's (Sweigart, 2026) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch20#S_PracticeQuestions",
+   "class_iri": "http://example.org/sen0414/ch20#PracticeQuestions",
+   "example": "ezgmail.search('has:attachment')",
+   "definition": "The chapter closes with five practice questions: the credentials and token files, thread against message, finding attachments with a search, the drawbacks of an SMS gateway, and the library that talks to ntfy."
+  },
+  {
+   "id": "ChapterPrograms",
+   "label": "Chapter programs",
+   "level": 2,
+   "parent": "PracticeWork",
+   "body": "The three practice programs combine the chapter's channels with earlier chapters (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch20#S_ChapterPrograms",
+   "class_iri": "http://example.org/sen0414/ch20#ChapterPrograms"
+  },
+  {
+   "id": "UmbrellaReminder",
+   "label": "Umbrella reminder",
+   "level": 3,
+   "parent": "ChapterPrograms",
+   "body": "The program checks the morning forecast at weather.gov and texts a reminder when rain is forecast (Sweigart, 2025). Only the decision was run: on the sample strings 'Sunny, with a high near 75.' and 'Showers likely, mainly after 2pm.' a test for the words rain or showers gives False and True, as executed; weather.gov was not contacted and its page structure was not read.",
+   "section_iri": "http://example.org/sen0414/ch20#S_UmbrellaReminder",
+   "class_iri": "http://example.org/sen0414/ch20#UmbrellaReminder",
+   "example": "'rain' in forecast.lower()",
+   "definition": "The first practice program reads a forecast early in the morning and sends a text when rain is expected; the test that decides can be written and checked on sample forecast text without any network.",
+   "io": {
+    "code": "[any(w in f.lower() for w in ('rain', 'showers')) for f in ('Sunny, with a high near 75.', 'Showers likely, mainly after 2pm.')]",
+    "out": "[False, True]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "any",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "GeneratorExp",
+         "kind": "GeneratorExp",
+         "children": [
+          {
+           "label": "Compare",
+           "kind": "Compare",
+           "children": [
+            {
+             "label": "w",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "f",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "comprehension",
+           "kind": "comprehension",
+           "children": [
+            {
+             "label": "w",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "'rain'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'showers'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "f",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'Sunny, with a high near 75.'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Showers likely, mainly after 2pm.'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "AutoUnsubscriber",
+   "label": "Auto unsubscriber",
+   "level": 3,
+   "parent": "ChapterPrograms",
+   "body": "The program scans mail for links with the word unsubscribe and opens them with webbrowser.open(), using Beautiful Soup (Sweigart, 2025). With the standard library's html.parser.HTMLParser a short subclass collected the two hrefs 'https://example.com/u?id=1' and 'https://example.com/u?id=2' from a sample page that also held a link to a home page, including one whose text sits inside a b tag, as executed (Python Software Foundation, 2026). Beautiful Soup, a mailbox and a browser were not used.",
+   "section_iri": "http://example.org/sen0414/ch20#S_AutoUnsubscriber",
+   "class_iri": "http://example.org/sen0414/ch20#AutoUnsubscriber",
+   "example": "'unsubscribe' in link_text.lower()",
+   "definition": "The second program reads the mail, finds links that hold the word unsubscribe and opens them in a browser; the finding can be done with the standard library's HTML parser, and opening the links and completing the forms stays manual."
+  },
+  {
+   "id": "CommandByMail",
+   "label": "Command by mail",
+   "level": 3,
+   "parent": "ChapterPrograms",
+   "body": "The program acts on instructions found in mail or in a topic, every fifteen minutes, and the chapter advises a password in the message because a From address is easy to fake, deleting handled mail, a confirmation and a log (Sweigart, 2025). A parser that takes the password from the first line, compares it with hmac.compare_digest() and accepts only the commands status and download returned ('download', 'magnet:?xt=1') for a correct message and None for a wrong password, for the command rm -rf / and for a message without a command, as executed (Python Software Foundation, 2026). No program was launched and no mail or topic was read.",
+   "section_iri": "http://example.org/sen0414/ch20#S_CommandByMail",
+   "class_iri": "http://example.org/sen0414/ch20#CommandByMail",
+   "example": "if password == 'open-sesame': run(command)",
+   "definition": "The third program acts on commands that arrive by mail or as a notification, so the sender is checked by a password in the text, since a From address is easily faked, only listed commands are run, and what was done is logged and confirmed.",
+   "io": {
+    "code": "__import__('hmac').compare_digest(b'open-sesame', b'open-sesame')",
+    "out": "True",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "__import__",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'hmac'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "b'open-sesame'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "b'open-sesame'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  }
+ ],
+ "relations": [
+  {
+   "source": "GmailSetup",
+   "target": "GmailService",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CredentialsAndToken",
+   "target": "GmailSetup",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DryRun",
+   "target": "GmailSetup",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GmailSending",
+   "target": "GmailService",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SendCall",
+   "target": "GmailSending",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AttachmentSend",
+   "target": "GmailSending",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CcBccFields",
+   "target": "GmailSending",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "HtmlSubtype",
+   "target": "GmailSending",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GmailReading",
+   "target": "GmailService",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ThreadVersusMessage",
+   "target": "GmailReading",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MessageAttributes",
+   "target": "GmailReading",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "InternalDateTimestamp",
+   "target": "GmailReading",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SummaryLine",
+   "target": "GmailReading",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GmailSearching",
+   "target": "GmailService",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SearchOperators",
+   "target": "GmailSearching",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AttachmentDownload",
+   "target": "GmailSearching",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "OverwriteDefault",
+   "target": "GmailSearching",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MailProtocols",
+   "target": "StandardLibraryMail",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SmtpPorts",
+   "target": "MailProtocols",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ImapPorts",
+   "target": "MailProtocols",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SendMessageMethod",
+   "target": "MailProtocols",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MailMessages",
+   "target": "StandardLibraryMail",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "EmailMessageClass",
+   "target": "MailMessages",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AddressParsing",
+   "target": "MailMessages",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LegacyMimeClasses",
+   "target": "MailMessages",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GatewayUse",
+   "target": "SmsGateways",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GatewayAddress",
+   "target": "GatewayUse",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ProviderTable",
+   "target": "GatewayUse",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SmsLengthLimit",
+   "target": "GatewayUse",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GatewayDisadvantages",
+   "target": "GatewayUse",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PaidApiProviders",
+   "target": "GatewayUse",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NotificationTopics",
+   "target": "PushNotifications",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TopicAsSecret",
+   "target": "NotificationTopics",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SensitiveData",
+   "target": "NotificationTopics",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NotificationSending",
+   "target": "PushNotifications",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PostRequest",
+   "target": "NotificationSending",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MessageSizeLimit",
+   "target": "NotificationSending",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MetadataHeaders",
+   "target": "NotificationSending",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PriorityLevels",
+   "target": "NotificationSending",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "HeaderEncoding",
+   "target": "NotificationSending",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ResponseStatus",
+   "target": "NotificationSending",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "StructuredPayload",
+   "target": "NotificationSending",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "NotificationReceiving",
+   "target": "PushNotifications",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PollRequest",
+   "target": "NotificationReceiving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SinceParameter",
+   "target": "NotificationReceiving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LineJsonParsing",
+   "target": "NotificationReceiving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "EpochTimestamp",
+   "target": "NotificationReceiving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "EventTypes",
+   "target": "NotificationReceiving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "OptionalKeys",
+   "target": "NotificationReceiving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PollingEtiquette",
+   "target": "NotificationReceiving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ChapterQuestions",
+   "target": "PracticeWork",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PracticeQuestions",
+   "target": "ChapterQuestions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ChapterPrograms",
+   "target": "PracticeWork",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "UmbrellaReminder",
+   "target": "ChapterPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AutoUnsubscriber",
+   "target": "ChapterPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CommandByMail",
+   "target": "ChapterPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PracticeQuestions",
+   "target": "CredentialsAndToken",
+   "type": "mentions",
+   "evidence": "the document's section on Practice questions names Credentials and token"
+  }
+ ],
+ "agents": [
+  {
+   "id": "agent-GmailSetup",
+   "name": "Gmail setup agent",
+   "subject": "GmailSetup",
+   "covers": [
+    "CredentialsAndToken",
+    "DryRun",
+    "GmailSetup"
+   ]
+  },
+  {
+   "id": "agent-GmailSending",
+   "name": "Gmail sending agent",
+   "subject": "GmailSending",
+   "covers": [
+    "SendCall",
+    "AttachmentSend",
+    "CcBccFields",
+    "HtmlSubtype",
+    "GmailSending"
+   ]
+  },
+  {
+   "id": "agent-GmailReading",
+   "name": "Gmail reading agent",
+   "subject": "GmailReading",
+   "covers": [
+    "ThreadVersusMessage",
+    "MessageAttributes",
+    "InternalDateTimestamp",
+    "SummaryLine",
+    "GmailReading"
+   ]
+  },
+  {
+   "id": "agent-GmailSearching",
+   "name": "Gmail searching agent",
+   "subject": "GmailSearching",
+   "covers": [
+    "SearchOperators",
+    "AttachmentDownload",
+    "OverwriteDefault",
+    "GmailSearching"
+   ]
+  },
+  {
+   "id": "agent-MailProtocols",
+   "name": "Mail protocols agent",
+   "subject": "MailProtocols",
+   "covers": [
+    "SmtpPorts",
+    "ImapPorts",
+    "SendMessageMethod",
+    "MailProtocols"
+   ]
+  },
+  {
+   "id": "agent-MailMessages",
+   "name": "Mail messages agent",
+   "subject": "MailMessages",
+   "covers": [
+    "EmailMessageClass",
+    "AddressParsing",
+    "LegacyMimeClasses",
+    "MailMessages"
+   ]
+  },
+  {
+   "id": "agent-GatewayUse",
+   "name": "Gateway use agent",
+   "subject": "GatewayUse",
+   "covers": [
+    "GatewayAddress",
+    "ProviderTable",
+    "SmsLengthLimit",
+    "GatewayDisadvantages",
+    "PaidApiProviders",
+    "GatewayUse"
+   ]
+  },
+  {
+   "id": "agent-NotificationTopics",
+   "name": "Notification topics agent",
+   "subject": "NotificationTopics",
+   "covers": [
+    "TopicAsSecret",
+    "SensitiveData",
+    "NotificationTopics"
+   ]
+  },
+  {
+   "id": "agent-NotificationSending",
+   "name": "Notification sending agent",
+   "subject": "NotificationSending",
+   "covers": [
+    "PostRequest",
+    "MessageSizeLimit",
+    "MetadataHeaders",
+    "PriorityLevels",
+    "HeaderEncoding",
+    "ResponseStatus",
+    "StructuredPayload",
+    "NotificationSending"
+   ]
+  },
+  {
+   "id": "agent-NotificationReceiving",
+   "name": "Notification receiving agent",
+   "subject": "NotificationReceiving",
+   "covers": [
+    "PollRequest",
+    "SinceParameter",
+    "LineJsonParsing",
+    "EpochTimestamp",
+    "EventTypes",
+    "OptionalKeys",
+    "PollingEtiquette",
+    "NotificationReceiving"
+   ]
+  },
+  {
+   "id": "agent-ChapterQuestions",
+   "name": "Chapter questions agent",
+   "subject": "ChapterQuestions",
+   "covers": [
+    "PracticeQuestions",
+    "ChapterQuestions"
+   ]
+  },
+  {
+   "id": "agent-ChapterPrograms",
+   "name": "Chapter programs agent",
+   "subject": "ChapterPrograms",
+   "covers": [
+    "UmbrellaReminder",
+    "AutoUnsubscriber",
+    "CommandByMail",
+    "ChapterPrograms"
+   ]
+  }
+ ],
+ "refs": [
+  [
+   "AT&T Ended Email-to-Text Services: What to Do Next (SignalWire blog, 2 May 2025, read 2026-10-01; a vendor source)",
+   "https://signalwire.com/blog/att-ending-email-to-text"
+  ],
+  [
+   "Automate the Boring Stuff with Python, 3rd edition - Chapter 20, Sending Email, Texts, and Push Notifications (Al Sweigart, No Starch Press, 2025)",
+   "https://automatetheboringstuff.com/3e/chapter20.html"
+  ],
+  [
+   "EZGmail 2026.4.28 source distribution on PyPI, src/ezgmail/__init__.py (Al Sweigart, uploaded 2026-04-28, read 2026-10-01)",
+   "https://pypi.org/project/ezgmail/"
+  ],
+  [
+   "EZGmail README on GitHub (Al Sweigart, master branch, read 2026-10-01)",
+   "https://raw.githubusercontent.com/asweigart/ezgmail/master/README.md"
+  ],
+  [
+   "Gmail API overview (Google for Developers, last updated 2026-09-18, read 2026-10-01)",
+   "https://developers.google.com/workspace/gmail/api/guides"
+  ],
+  [
+   "IMAP, POP, and SMTP - Gmail (Google for Developers, last updated 2026-09-15, read 2026-10-01)",
+   "https://developers.google.com/workspace/gmail/imap/imap-smtp"
+  ],
+  [
+   "PEP 594 - Removing dead batteries from the standard library (Heimes and Cannon, created 2019-05-20, read 2026-10-01)",
+   "https://peps.python.org/pep-0594/"
+  ],
+  [
+   "Requests documentation, Developer Interface - requests.post (requests.readthedocs.io, read 2026-10-01)",
+   "https://requests.readthedocs.io/en/latest/api/"
+  ],
+  [
+   "Search operators you can use with Gmail (Gmail Help, read 2026-10-01)",
+   "https://support.google.com/mail/answer/7190"
+  ],
+  [
+   "Sign in with app passwords (Google Account Help, read 2026-10-01)",
+   "https://support.google.com/accounts/answer/185833"
+  ],
+  [
+   "The Python Standard Library, base64 - Base16, Base32, Base64, Base85 data encodings (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/base64.html"
+  ],
+  [
+   "The Python Standard Library, datetime - Basic date and time types (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/datetime.html"
+  ],
+  [
+   "The Python Standard Library, email - An email and MIME handling package, and email.message - Representing an email message (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/email.message.html"
+  ],
+  [
+   "The Python Standard Library, email.header - Internationalized headers (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/email.header.html"
+  ],
+  [
+   "The Python Standard Library, email.mime - Creating email and MIME objects from scratch (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/email.mime.html"
+  ],
+  [
+   "The Python Standard Library, email.utils - Miscellaneous utilities (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/email.utils.html"
+  ],
+  [
+   "The Python Standard Library, hmac - Keyed-hashing for message authentication (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/hmac.html"
+  ],
+  [
+   "The Python Standard Library, html.parser - Simple HTML and XHTML parser (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/html.parser.html"
+  ],
+  [
+   "The Python Standard Library, http - HTTP modules, and http.client - HTTP protocol client (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/http.client.html"
+  ],
+  [
+   "The Python Standard Library, imaplib - IMAP4 protocol client (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/imaplib.html"
+  ],
+  [
+   "The Python Standard Library, json - JSON encoder and decoder (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/json.html"
+  ],
+  [
+   "The Python Standard Library, secrets and random - generating secrets and pseudo-random numbers (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/secrets.html"
+  ],
+  [
+   "The Python Standard Library, smtplib - SMTP protocol client (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/smtplib.html"
+  ],
+  [
+   "The Python Standard Library, textwrap - Text wrapping and filling (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/textwrap.html"
+  ],
+  [
+   "The Python Standard Library, urllib.parse - Parse URLs into components (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/urllib.parse.html"
+  ],
+  [
+   "The Python Standard Library, urllib.request - Extensible library for opening URLs (docs.python.org, read 2026-10-01)",
+   "https://docs.python.org/3/library/urllib.request.html"
+  ],
+  [
+   "Transition from less secure apps to OAuth (Google Workspace Admin Help, last updated 2026-09-24, read 2026-10-01)",
+   "https://support.google.com/a/answer/14114704"
+  ],
+  [
+   "Troubleshooting Mobile Text Alert Failures - SMS gateway notice (BlueNote Software support, last updated 12 June 2025, read 2026-10-01; a vendor source)",
+   "https://support.bluenotesoftware.com/article/427-sms-gateway-notice"
+  ],
+  [
+   "ntfy documentation, Publishing - sending messages, priority, tags, headers, limitations (docs.ntfy.sh, read 2026-10-01)",
+   "https://docs.ntfy.sh/publish/"
+  ],
+  [
+   "ntfy documentation, Subscribe via API - JSON stream, polling, since, message fields (docs.ntfy.sh, read 2026-10-01)",
+   "https://docs.ntfy.sh/subscribe/api/"
+  ]
+ ],
+ "resources": [
+  {
+   "kind": "documentation",
+   "title": "Chapter 20 - Sending Emails, Texts, and Push Notifications, Automate the Boring Stuff with Python, 3rd Ed",
+   "url": "https://automatetheboringstuff.com/3e/chapter20.html",
+   "source": "automatetheboringstuff.com",
+   "why": "The course textbook's own chapter, free online: the Gmail API with EZGmail, SMS email gateways, ntfy push notifications and the three practice programs.",
+   "concept": "CredentialsAndToken"
+  },
+  {
+   "kind": "documentation",
+   "title": "email.message: Representing an email message",
+   "url": "https://docs.python.org/3/library/email.message.html",
+   "source": "Python documentation",
+   "why": "The standard library's EmailMessage: set headers, set_content, add_attachment and iter_attachments, all of which run offline.",
+   "concept": "EmailMessageClass"
+  },
+  {
+   "kind": "documentation",
+   "title": "smtplib \u2014 SMTP protocol client",
+   "url": "https://docs.python.org/3/library/smtplib.html",
+   "source": "Python documentation",
+   "why": "How send_message() takes the recipients from To, Cc and Bcc and never transmits the Bcc field.",
+   "concept": "SendMessageMethod"
+  },
+  {
+   "kind": "documentation",
+   "title": "email.utils: Miscellaneous utilities",
+   "url": "https://docs.python.org/3/library/email.utils.html",
+   "source": "Python documentation",
+   "why": "parseaddr, getaddresses and formataddr: taking a sender such as 'Al Sweigart <al@inventwithpython.com>' apart.",
+   "concept": "AddressParsing"
+  },
+  {
+   "kind": "documentation",
+   "title": "urllib.request \u2014 Extensible library for opening URLs",
+   "url": "https://docs.python.org/3/library/urllib.request.html",
+   "source": "Python documentation",
+   "why": "The Request object: data makes a POST, headers are a dictionary, and get_method() tells which, all without sending anything.",
+   "concept": "PostRequest"
+  },
+  {
+   "kind": "documentation",
+   "title": "urllib.parse \u2014 Parse URLs into components",
+   "url": "https://docs.python.org/3/library/urllib.parse.html",
+   "source": "Python documentation",
+   "why": "urlsplit, parse_qs and urlencode: the query string of a poll address such as /json?poll=1&since=10m.",
+   "concept": "PollRequest"
+  },
+  {
+   "kind": "documentation",
+   "title": "json \u2014 JSON encoder and decoder",
+   "url": "https://docs.python.org/3/library/json.html",
+   "source": "Python documentation",
+   "why": "json.loads and the JSONDecodeError raised for text that holds more than one document.",
+   "concept": "LineJsonParsing"
+  },
+  {
+   "kind": "documentation",
+   "title": "email.header: Internationalized headers",
+   "url": "https://docs.python.org/3/library/email.header.html",
+   "source": "Python documentation",
+   "why": "Header and its encode method, which make an RFC 2047 encoded word for a title with letters outside ASCII.",
+   "concept": "HeaderEncoding"
+  },
+  {
+   "kind": "documentation",
+   "title": "hmac \u2014 Keyed-Hashing for Message Authentication",
+   "url": "https://docs.python.org/3/library/hmac.html",
+   "source": "Python documentation",
+   "why": "compare_digest, the constant-time comparison used for the password of the command-by-mail program.",
+   "concept": "CommandByMail"
+  },
+  {
+   "kind": "documentation",
+   "title": "secrets \u2014 Generate secure random numbers for managing secrets",
+   "url": "https://docs.python.org/3/library/secrets.html",
+   "source": "Python documentation",
+   "why": "token_urlsafe and choice: the right source for the random part of a secret topic name.",
+   "concept": "TopicAsSecret"
+  },
+  {
+   "kind": "documentation",
+   "title": "html.parser \u2014 Simple HTML and XHTML parser",
+   "url": "https://docs.python.org/3/library/html.parser.html",
+   "source": "Python documentation",
+   "why": "The standard library's HTMLParser, enough to find links whose text says unsubscribe.",
+   "concept": "AutoUnsubscriber"
+  },
+  {
+   "kind": "documentation",
+   "title": "Sending messages - ntfy",
+   "url": "https://docs.ntfy.sh/publish/",
+   "source": "ntfy documentation",
+   "why": "Publishing: headers and their aliases, priority names, tags, and the limitations (4,096 bytes, 250 messages a day on ntfy.sh).",
+   "concept": "MessageSizeLimit"
+  },
+  {
+   "kind": "documentation",
+   "title": "Using the API - ntfy",
+   "url": "https://docs.ntfy.sh/subscribe/api/",
+   "source": "ntfy documentation",
+   "why": "Subscribing: the JSON stream, poll=1, the values of since and every field of a message.",
+   "concept": "SinceParameter"
+  },
+  {
+   "kind": "documentation",
+   "title": "IMAP, POP, and SMTP | Gmail | Google for Developers",
+   "url": "https://developers.google.com/workspace/gmail/imap/imap-smtp",
+   "source": "Google for Developers",
+   "why": "Gmail's own statement on the standard protocols: server names, ports and OAuth 2.0.",
+   "concept": "ImapPorts"
+  },
+  {
+   "kind": "documentation",
+   "title": "Transition from less secure apps to OAuth | Sync data | Google Workspace Help",
+   "url": "https://support.google.com/a/answer/14114704",
+   "source": "Google Workspace Help",
+   "why": "The date, 14 March 2025, from which a password no longer works for IMAP and SMTP with Gmail.",
+   "concept": "SmtpPorts"
+  },
+  {
+   "kind": "documentation",
+   "title": "Refine searches in Gmail - Computer - Gmail Help",
+   "url": "https://support.google.com/mail/answer/7190",
+   "source": "Gmail Help",
+   "why": "The operators that ezgmail.search() accepts, such as from:, subject:, label: and has:attachment.",
+   "concept": "SearchOperators"
+  },
+  {
+   "kind": "pep",
+   "title": "PEP 594 \u2013 Removing dead batteries from the standard library",
+   "url": "https://peps.python.org/pep-0594/",
+   "source": "peps.python.org",
+   "why": "Why smtpd, the standard library's test SMTP server, is gone from Python 3.12.",
+   "concept": "SendMessageMethod"
+  }
+ ],
+ "resources_checked": "2026-10-01"
+}

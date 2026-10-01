@@ -1,0 +1,3379 @@
+{
+ "_version": "9.19.0",
+ "visuals": {},
+ "course": {
+  "_version": "1.3.3",
+  "name": "SEN0414 Advanced Programming",
+  "line": "SEN0414 Advanced Programming",
+  "chapter_sub": "chapter {n} of Automate the Boring Stuff with Python, 3rd edition",
+  "chapter_intro": "Chapter {n} of <i>Automate the Boring Stuff with Python</i>, 3rd edition (Sweigart, 2025), renewed for an advanced course.",
+  "playground": {
+   "label": "Links of a page: parse, resolve, deduplicate and check robots.txt (offline)",
+   "code": "from html.parser import HTMLParser\nfrom urllib.parse import urljoin, urldefrag, urlsplit, quote\nimport urllib.robotparser as rp\n\nPAGE = '''<h1>Books</h1>\n<p><a href=\"/ok.html\">fine</a> <a href=\"/gone.html\">broken</a>\n<a href=\"https://other.example/x\">elsewhere</a> <a href=\"/ok.html#top\">again</a>\n<a href=\"mailto:al@example.com\">mail</a> <a>no href</a></p>'''\nBASE = 'https://site.example/index.html'\n\nclass Links(HTMLParser):\n    def __init__(self):\n        super().__init__()\n        self.hrefs = []\n    def handle_starttag(self, tag, attrs):\n        if tag == 'a':\n            self.hrefs.append(dict(attrs).get('href'))\n\np = Links()\np.feed(PAGE)\nprint('raw hrefs:', p.hrefs)\n\nseen = []\nfor h in p.hrefs:\n    if not h:\n        continue\n    url = urldefrag(urljoin(BASE, h))[0]\n    if urlsplit(url).scheme not in ('http', 'https'):\n        continue\n    if urlsplit(url).netloc != urlsplit(BASE).netloc:\n        continue\n    if url not in seen:\n        seen.append(url)\nprint('to check:', seen)\n\nrobots = rp.RobotFileParser()\nrobots.parse(['User-agent: *', 'Disallow: /gone'])\nfor url in seen:\n    print(url, 'allowed' if robots.can_fetch('*', url) else 'disallowed by robots.txt')\n\nprint('https://www.openstreetmap.org/search?query=' + quote('777 Valencia St, San Francisco'))",
+   "inputs": ""
+  },
+  "corpus": {
+   "book_pin_source": "02-textbook/sen0414_textbook_v1_0_0.ttl",
+   "book": [
+    "automate-python-book-3e/01-ontologies/automate_python_3e_ch{nn}_v1_0_0.ttl"
+   ],
+   "course": [
+    "00-course-profile/sen0414_course_v1_0_0.ttl",
+    "01-outcomes/sen0414_outcomes_v1_0_0.ttl",
+    "02-textbook/sen0414_textbook_v1_0_0.ttl",
+    "03-materials/sen0414_materials_v1_22_0.ttl"
+   ]
+  },
+  "exam": {
+   "course": "SEN0414",
+   "release_prefix": "sen0414-exam-release",
+   "public_key": {
+    "kty": "EC",
+    "crv": "P-256",
+    "x": "_V6lAWK-uO72ApcyNiCalt4q8h2Yt-HzOol5XoZNwEk",
+    "y": "3UhUEuwspaDMB-gZsFCLKx2GW08SABcTHzJvuvUEc5I"
+   },
+   "bonus_points": 10
+  }
+ },
+ "discussion": [],
+ "findings": [
+  [
+   "Background",
+   "Chapter 13 of the 3rd edition teaches how a program reaches the web in five steps of growing power: the webbrowser module that opens a page in the user's own browser, the requests module that downloads a page or a file, an API of a weather service answered in JSON, the parsing of HTML with Beautiful Soup, and the control of a real browser with Selenium and with Playwright; it builds three projects on them, showmap.py for OpenStreetMap, searchpypi.py for the search results of PyPI and downloadXkcdComics.py, and closes with 18 practice questions and three practice programs, an image site downloader, the game 2048 and link verification."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's printed behaviours reproduce wherever they can run offline: the map URL of showmap.py with its address quoted, the status codes and the message of a failed download, the byte counts that write() returns while a response is saved in chunks, the conversion of 285.44 Kelvin to 12.3 Celsius and 54.1 Fahrenheit, and, with requests 2.34.2 and Beautiful Soup 4.15.0 run on the page that the chapter downloads, the matches, texts and attributes the chapter prints for the span with the id author and for the first two paragraphs, and the attribute order alt before src; the download of the page by the book and the ontology of the book agree byte for byte, since the SHA-256 of the page as downloaded equals the digest the book ontology records."
+  ],
+  [
+   "Comparative analysis",
+   "Seven printed things in the chapter cannot be run as printed: the HTML of example3.html as typeset has a typographic quotation mark inside the href of the link, an unescaped p tag in the first paragraph and a misplaced closing form tag, so that on it Beautiful Soup 4.15.0 finds no element with the id author and eight paragraphs, whereas the file the chapter tells the reader to download has the escaped text and the right tags; the chapter says that select('p') gives a list of three matches, but the file has seven paragraphs, three of them inside the form; the file's alt text reads Close up where the chapter prints Close-up; the Step 4 listing of the comic downloader is indented with 8, 12, 15, 12 and then 6 spaces and Python rejects it with an IndentationError; the printed list of sys.argv shows the words St, and Francisco, with a trailing space that shell splitting never produces; and the printed error of raise_for_status names a URL that ends in .html although the requested URL does not, where the message of requests 2.34.2 repeats the requested URL."
+  ],
+  [
+   "Comparative analysis",
+   "Two of the chapter's three projects meet today's web differently from the book: fetching the search page of PyPI with requests on 2026-10-01 returned status 200 with the page titled Client Challenge and no element of the class package-snippet, so searchpypi.py opens nothing, and the robots.txt of pypi.org disallows /search*, a rule that RFC 9309 defines with the wildcard * and that urllib.robotparser in Python 3.14.4 does not apply, since it matches the path as a literal prefix; the XKCD page structure the chapter relies on still held on the same day, with the comic image inside the element with id comic at an address beginning with two slashes and a rel prev link whose href is # on the first comic."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's advice on requests is correct and incomplete: raise_for_status() after every get() is what the library documents, but the documentation also says that nearly all production code should pass a timeout because a call without one can hang indefinitely (a call with timeout=0.2 raised ReadTimeout, and the same call without one returned the slow server's late answer), and that a download to a file should pass stream=True, because without it the whole body is read before get() returns (with stream=True the first five bytes were read while the server still held the rest), so that iter_content(100000) on a response fetched without stream=True only cuts an already loaded body into chunks."
+  ],
+  [
+   "Comparative analysis",
+   "What a program may fetch is a question the chapter touches only through bandwidth and through the advice to prefer an API: the Robots Exclusion Protocol of RFC 9309 states that its rules are not a form of access authorization, so a robots.txt is a request that a polite crawler honours and the standard library can read it with urllib.robotparser (which gave can_fetch False for a disallowed prefix and exposed Crawl-delay and Request-rate), and an API key identifies an account, so the chapter's advice to keep it in a file and out of the source is the practice an advanced course must add to; the fake key of the chapter's example was answered by OpenWeather with status 401 and a JSON message on 2026-10-01."
+  ],
+  [
+   "Conclusion",
+   "For an advanced course, chapter 13 is best taught as a choice of tool by the page in front of the program: webbrowser when the user should see the page, requests with raise_for_status and a timeout when the URL is known and the answer is text or a file, an API when the service offers one, Beautiful Soup on the text received when the page is static, and Selenium or Playwright only when the page needs a script or a login; the chapter's offline-checkable outputs hold, four printed listings do not run as printed, searchpypi.py meets a challenge page and a robots rule today, and what an advanced course adds is timeouts, streaming, robots.txt, the newer Selenium and Playwright behaviour and the deprecations of current Python."
+  ],
+  [
+   "Contemporary developments",
+   "Current Python replaces or fences several details the chapter uses: PurePath.as_uri() is deprecated since Python 3.14 and removed in 3.19 in favour of Path.as_uri(), which gives the file:// URLs that the chapter suggests for local help pages; datetime.utcfromtimestamp() has been deprecated since 3.12, and datetime.fromtimestamp(), which the chapter names for the dt field of the forecast, answers in the local time zone of the machine, so the same timestamp printed 17:13 with the zone set to Europe/Istanbul and 07:13 with America/Los_Angeles; webbrowser.open() returns True or False and in 3.14 the BROWSER variable can name an already registered browser; and urllib.request.pathname2url has gained add_scheme in 3.14."
+  ],
+  [
+   "Contemporary developments",
+   "The Selenium part of the chapter is one step behind the library: Selenium Manager, shipped with every Selenium release, downloads and finds the driver and the browser by itself, so the manual geckodriver download and the webdriver-manager package that the chapter mentions are no longer needed; the exception the chapter calls NoSuchElement is NoSuchElementException; the text of a WebElement comes from the WebDriver command GET_ELEMENT_TEXT, not from the innerText property that the chapter calls its source; get_attribute looks for a property first and only then for an attribute; and find_element_by_id of older tutorials no longer exists in Selenium 4.50.0."
+  ],
+  [
+   "Contemporary developments",
+   "The Playwright part is accurate against Playwright 1.63.0 and gains from its documentation: locators are strict, so an action on a locator that matches several elements raises, which is why the chapter picks one with nth(0); every action waits for its actionability checks up to a default timeout of 30000 milliseconds, which is the pause the chapter reports for a mistyped selector; a locator has no submit() method, as the chapter says; query_selector() returns None at once when nothing matches; and the library and the browsers are installed in two steps, the package and then the command playwright install, which the chapter writes as python -m playwright install and which Playwright 1.63.0 answers with its usage text."
+  ]
+ ],
+ "unit": null,
+ "research_file": "sen0414_ch13_research_v1_0_0.ttl",
+ "chapter": 13,
+ "title": "Web scraping for an advanced course: chapter 13 of the 3rd edition and today's web",
+ "python": "Python 3.14.4",
+ "nodes": [
+  {
+   "id": "WebProtocol",
+   "label": "Web protocol",
+   "level": 1,
+   "parent": null,
+   "body": "Addresses, the protocol and the manners of a program that visits sites are the ground under every tool of Chapter 13 (Sweigart, 2025) (Internet Engineering Task Force, 2022).",
+   "section_iri": "http://example.org/sen0414/ch13#S_WebProtocol",
+   "class_iri": "http://example.org/sen0414/ch13#WebProtocol"
+  },
+  {
+   "id": "AddressForms",
+   "label": "Address forms",
+   "level": 2,
+   "parent": "WebProtocol",
+   "body": "A URL is read in parts, and the part after the question mark is a list of names and values (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_AddressForms",
+   "class_iri": "http://example.org/sen0414/ch13#AddressForms"
+  },
+  {
+   "id": "UrlAnatomy",
+   "label": "Url anatomy",
+   "level": 3,
+   "parent": "AddressForms",
+   "body": "The chapter breaks https://api.openweathermap.org/geo/1.0/direct?q=...&appid=... into the scheme https, the domain name api.openweathermap.org, the path /geo/1.0/direct and the query string (Sweigart, 2025); urllib.parse.urlsplit gives ('https', 'api.openweathermap.org', '/geo/1.0/direct', 'q=San,CA,US&appid=KEY') for those four parts, and the #map=19/37.75897/-122.42142 that the address bar of OpenStreetMap shows is a fragment, which urlsplit returns as map=19/37.75897/-122.42142 and which RFC 3986 defines as a way to identify a secondary resource by reference to the primary one (Python Software Foundation, 2026) (Internet Engineering Task Force, 2005).",
+   "section_iri": "http://example.org/sen0414/ch13#S_UrlAnatomy",
+   "class_iri": "http://example.org/sen0414/ch13#UrlAnatomy",
+   "example": "https://api.openweathermap.org/geo/1.0/direct?q=...",
+   "definition": "A URL is written as a scheme, a host, a path, an optional query after a question mark and an optional fragment after a number sign; urllib.parse.urlsplit cuts it into those parts.",
+   "io": {
+    "code": "__import__('urllib.parse', fromlist=['x']).urlsplit('https://api.openweathermap.org/geo/1.0/direct?q=San,CA,US&appid=KEY')[:4]",
+    "out": "('https', 'api.openweathermap.org', '/geo/1.0/direct', 'q=San,CA,US&appid=KEY')",
+    "tree": {
+     "label": "Subscript",
+     "kind": "Subscript",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'urllib.parse'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "keyword",
+             "kind": "keyword",
+             "children": [
+              {
+               "label": "List",
+               "kind": "List",
+               "children": [
+                {
+                 "label": "'x'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'https://api.openweathermap.org/geo/1.0/direct?q=San,CA,US&appid=KEY'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Slice",
+       "kind": "Slice",
+       "children": [
+        {
+         "label": "4",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "QueryString",
+   "label": "Query string",
+   "level": 3,
+   "parent": "AddressForms",
+   "body": "The chapter writes the query with f-strings, q={city_name},{state_code},{country_code}&appid={API_key}, and explains that names and values are separated by an equal sign and pairs by an ampersand (Sweigart, 2025); parse_qs('q=San+Francisco%2CCA&appid=KEY') returns {'q': ['San Francisco,CA'], 'appid': ['KEY']}, urlencode writes a space as + and a comma as %2C, quote writes a space as %20 and quote('a/b c', safe='') gives a%2Fb%20c, and the chapter as read does not present these functions; the live call with the chapter's f-string and a space in the city name was answered by OpenWeather, with status 401 because the key is a fake (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_QueryString",
+   "class_iri": "http://example.org/sen0414/ch13#QueryString",
+   "example": "?q={city_name},{state_code}&appid={API_key}",
+   "definition": "The query string of a URL is a list of name=value pairs joined by ampersands; characters such as a space or a comma must be percent-encoded or written as a plus, and parse_qs reads the pairs back into a dictionary of lists.",
+   "io": {
+    "code": "__import__('urllib.parse', fromlist=['x']).parse_qs('q=San+Francisco%2CCA&appid=KEY')",
+    "out": "{'q': ['San Francisco,CA'], 'appid': ['KEY']}",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "__import__",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'urllib.parse'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "keyword",
+           "kind": "keyword",
+           "children": [
+            {
+             "label": "List",
+             "kind": "List",
+             "children": [
+              {
+               "label": "'x'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'q=San+Francisco%2CCA&appid=KEY'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ProtocolBasics",
+   "label": "Protocol basics",
+   "level": 2,
+   "parent": "WebProtocol",
+   "body": "HTTPS and the status codes are the two parts of the protocol that the chapter's programs rely on (Sweigart, 2025) (Internet Engineering Task Force, 2022).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ProtocolBasics",
+   "class_iri": "http://example.org/sen0414/ch13#ProtocolBasics"
+  },
+  {
+   "id": "HttpsEncryption",
+   "label": "Https encryption",
+   "level": 3,
+   "parent": "ProtocolBasics",
+   "body": "The chapter explains that HTTPS is an encrypted version of HTTP, so that identity thieves, an internet service provider or an intelligence agency cannot view the pages visited or the passwords and card numbers submitted, while the identity of the site visited can still be known, and that a VPN only moves that visibility to the VPN provider (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_HttpsEncryption",
+   "class_iri": "http://example.org/sen0414/ch13#HttpsEncryption",
+   "example": "https://",
+   "definition": "HTTPS is HTTP over an encrypted connection: the content of the pages and what is submitted are hidden from the network, but the name of the site visited can still be seen."
+  },
+  {
+   "id": "StatusCode",
+   "label": "Status code",
+   "level": 3,
+   "parent": "ProtocolBasics",
+   "body": "The chapter names 200 as the code for OK and 404 as Not Found and compares status_code with requests.codes.ok (Sweigart, 2025); http.HTTPStatus(404).phrase is 'Not Found', int(HTTPStatus.OK) is 200 and HTTPStatus(429) is 429 'Too Many Requests', and RFC 9110 defines the classes, 2xx Successful, 3xx Redirection and 4xx Client Error, of which the last says that the client seems to have erred (Python Software Foundation, 2026) (Internet Engineering Task Force, 2022).",
+   "section_iri": "http://example.org/sen0414/ch13#S_StatusCode",
+   "class_iri": "http://example.org/sen0414/ch13#StatusCode",
+   "example": "200 OK, 404 Not Found",
+   "definition": "Every HTTP response carries a three-digit status code whose first digit gives its class, 2xx success, 3xx redirection, 4xx client error and 5xx server error; http.HTTPStatus names the codes and their phrases.",
+   "io": {
+    "code": "(__import__('http').HTTPStatus(404).phrase, int(__import__('http').HTTPStatus.OK))",
+    "out": "('Not Found', 200)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'http'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "404",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "int",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "__import__",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "'http'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "CrawlerManners",
+   "label": "Crawler manners",
+   "level": 2,
+   "parent": "WebProtocol",
+   "body": "A program that visits a site owes it a limit on the rate of requests and attention to what the site asks crawlers to leave alone (Sweigart, 2025) (Internet Engineering Task Force, 2022).",
+   "section_iri": "http://example.org/sen0414/ch13#S_CrawlerManners",
+   "class_iri": "http://example.org/sen0414/ch13#CrawlerManners"
+  },
+  {
+   "id": "RobotsTxt",
+   "label": "Robots txt",
+   "level": 3,
+   "parent": "CrawlerManners",
+   "body": "The chapter as read never mentions robots.txt; RFC 9309 defines it as the rules that crawlers are requested to honour, and states that they are not a form of access authorization (Internet Engineering Task Force, 2022); urllib.robotparser.RobotFileParser.parse(['User-agent: *', 'Disallow: /private']) makes can_fetch('*', 'https://x.example/private/a') False and can_fetch('*', 'https://x.example/') True, the robots.txt of xkcd.com read on 2026-10-01 disallows /personal/ for every agent and the whole site for GPTBot, and Crawl-delay: 10 and Request-rate: 3/20 are read as 10 and RequestRate(requests=3, seconds=20) (Python Software Foundation, 2026) (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_RobotsTxt",
+   "class_iri": "http://example.org/sen0414/ch13#RobotsTxt",
+   "example": "https://pypi.org/robots.txt",
+   "definition": "A robots.txt file at the root of a site lists paths that crawlers are asked not to fetch; it is a request and not an access control, and urllib.robotparser reads it and answers can_fetch.",
+   "io": {
+    "code": "(lambda rp: (rp.parse(['User-agent: *', 'Disallow: /private']), rp.can_fetch('*', 'https://x.example/private/a'), rp.can_fetch('*', 'https://x.example/'))[1:])(__import__('urllib.robotparser', fromlist=['x']).RobotFileParser())",
+    "out": "(False, True)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "rp",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "List",
+               "kind": "List",
+               "children": [
+                {
+                 "label": "'User-agent: *'",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "'Disallow: /private'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "rp",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'*'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'https://x.example/private/a'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "rp",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'*'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'https://x.example/'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Slice",
+           "kind": "Slice",
+           "children": [
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'urllib.robotparser'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "keyword",
+             "kind": "keyword",
+             "children": [
+              {
+               "label": "List",
+               "kind": "List",
+               "children": [
+                {
+                 "label": "'x'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PoliteDelay",
+   "label": "Polite delay",
+   "level": 3,
+   "parent": "CrawlerManners",
+   "body": "The comic downloader limits itself to 10 downloads by default so as not to eat up the bandwidth of the site, and after each comic it calls time.sleep(1) so as not to hammer the web server (Sweigart, 2025); a site can state its own pace in robots.txt with Crawl-delay or Request-rate, which urllib.robotparser returns as 10 and RequestRate(requests=3, seconds=20) for the file 'Crawl-delay: 10' and 'Request-rate: 3/20' (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_PoliteDelay",
+   "class_iri": "http://example.org/sen0414/ch13#PoliteDelay",
+   "example": "time.sleep(1)",
+   "definition": "A crawler that loads many pages pauses between requests so that it does not hammer the server; the comic downloader sleeps one second after each comic and limits itself to ten downloads."
+  },
+  {
+   "id": "UserAgent",
+   "label": "User agent",
+   "level": 3,
+   "parent": "CrawlerManners",
+   "body": "The chapter says that the user-agent string of requests is like python-requests/X.XX.X and that a site can use it to recognise a script (Sweigart, 2025); requests 2.34.2 sent a user agent beginning python-requests to a local server, urllib.request sent Python-urllib/3.14 under Python 3.14.4, (Requests documentation, 2026) (Python Software Foundation, 2026); the chapter adds that the user agent of a Selenium-driven browser is the same as a regular browser's (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_UserAgent",
+   "class_iri": "http://example.org/sen0414/ch13#UserAgent",
+   "example": "python-requests/2.34.2",
+   "definition": "The user-agent string of a request names the client; requests sends python-requests and its version and urllib sends Python-urllib and its version, so a site can tell a script from a browser."
+  },
+  {
+   "id": "BrowserLaunch",
+   "label": "Browser launch",
+   "level": 1,
+   "parent": null,
+   "body": "The webbrowser module hands a URL to the browser the user already has (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_BrowserLaunch",
+   "class_iri": "http://example.org/sen0414/ch13#BrowserLaunch"
+  },
+  {
+   "id": "BrowserOpening",
+   "label": "Browser opening",
+   "level": 2,
+   "parent": "BrowserLaunch",
+   "body": "showmap.py reads an address from the arguments or the clipboard and hands a URL to the browser (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_BrowserOpening",
+   "class_iri": "http://example.org/sen0414/ch13#BrowserOpening"
+  },
+  {
+   "id": "WebbrowserOpen",
+   "label": "Webbrowser open",
+   "level": 3,
+   "parent": "BrowserOpening",
+   "body": "webbrowser.open('https://inventwithpython.com/') opens the page in a browser tab, and the chapter says that this is about all the module can do (Sweigart, 2025); the documentation adds that open(url, new=0, autoraise=True) returns True if a browser was launched and False otherwise, that new=2 asks for a new tab, that python -m webbrowser -t URL does the same from the command line, and that since Python 3.14 a name in the BROWSER variable can refer to an already registered browser; with a controller registered under the name stub, open returned True and handed it the URL, and get('no-such-browser') raised webbrowser.Error with the message 'could not locate runnable browser' (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_WebbrowserOpen",
+   "class_iri": "http://example.org/sen0414/ch13#WebbrowserOpen",
+   "example": "webbrowser.open('https://inventwithpython.com/')",
+   "definition": "webbrowser.open asks the user's default browser to show a URL and returns True if a browser was launched and False if not; it cannot read the page."
+  },
+  {
+   "id": "CommandLineArguments",
+   "label": "Command line arguments",
+   "level": 3,
+   "parent": "BrowserOpening",
+   "body": "sys.argv holds the script name followed by the words typed after it, and ' '.join(sys.argv[1:]) rebuilds the address '777 Valencia St, San Francisco, CA 94110' (Sweigart, 2025); after the shell had split 'showmap 777 Valencia St, San Francisco, CA 94110' the script received ['777', 'Valencia', 'St,', 'San', 'Francisco,', 'CA', '94110'] without the trailing spaces in 'St, ' and 'Francisco, ' that the chapter prints, and the documentation says that with -c the first item is '-c' (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_CommandLineArguments",
+   "class_iri": "http://example.org/sen0414/ch13#CommandLineArguments",
+   "example": "sys.argv[1:]",
+   "definition": "sys.argv is the list of words typed after python and the script name, with the script name first, so joining sys.argv[1:] with spaces rebuilds an address typed without quotes.",
+   "io": {
+    "code": "' '.join(['showmap.py', '777', 'Valencia', 'St,', 'San', 'Francisco,', 'CA', '94110'][1:])",
+    "out": "'777 Valencia St, San Francisco, CA 94110'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "' '",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Subscript",
+       "kind": "Subscript",
+       "children": [
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "'showmap.py'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'777'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Valencia'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'St,'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'San'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Francisco,'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'CA'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'94110'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Slice",
+         "kind": "Slice",
+         "children": [
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ShowmapProgram",
+   "label": "Showmap program",
+   "level": 3,
+   "parent": "BrowserOpening",
+   "body": "showmap.py joins the arguments into the address or, with none, reads pyperclip.paste(), and opens 'https://www.openstreetmap.org/search?query=' + address; the chapter says that the browser handles URL encoding such as spaces as %20 (Sweigart, 2025); percent-encoding the address in the program gives query=777%20Valencia%20St%2C%20San%20Francisco%2C%20CA%2094110 from the chapter's arguments and query=1%20Main%20St%20%26%202nd%20Ave from the address '1 Main St & 2nd Ave', where the ampersand must be written %26 because in a query string it separates two parameters; the clipboard part needs the pyperclip package and a clipboard and was not run, and the page opened by the real URL answered status 200 on 2026-10-01 (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ShowmapProgram",
+   "class_iri": "http://example.org/sen0414/ch13#ShowmapProgram",
+   "example": "showmap.py",
+   "definition": "showmap.py takes an address from the command line, or from the clipboard when there is none, puts it into an OpenStreetMap search URL and opens that URL with webbrowser.open; the address should be percent-encoded with urllib.parse.quote.",
+   "io": {
+    "code": "(lambda argv, clip: 'https://www.openstreetmap.org/search?query=' + __import__('urllib.parse', fromlist=['x']).quote(' '.join(argv[1:]) if len(argv) > 1 else clip))(['showmap.py'], '1 Main St & 2nd Ave')",
+    "out": "'https://www.openstreetmap.org/search?query=1%20Main%20St%20%26%202nd%20Ave'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "'https://www.openstreetmap.org/search?query='",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'urllib.parse'",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "keyword",
+                 "kind": "keyword",
+                 "children": [
+                  {
+                   "label": "List",
+                   "kind": "List",
+                   "children": [
+                    {
+                     "label": "'x'",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "IfExp",
+             "kind": "IfExp",
+             "children": [
+              {
+               "label": "Compare",
+               "kind": "Compare",
+               "children": [
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "len",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "argv",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "' '",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "Subscript",
+                 "kind": "Subscript",
+                 "children": [
+                  {
+                   "label": "argv",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "Slice",
+                   "kind": "Slice",
+                   "children": [
+                    {
+                     "label": "1",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "clip",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'showmap.py'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "'1 Main St & 2nd Ave'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "Downloading",
+   "label": "Downloading",
+   "level": 1,
+   "parent": null,
+   "body": "requests turns a URL into a Response that the program can check, read and save (Sweigart, 2025) (Requests documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_Downloading",
+   "class_iri": "http://example.org/sen0414/ch13#Downloading"
+  },
+  {
+   "id": "PageFetching",
+   "label": "Page fetching",
+   "level": 2,
+   "parent": "Downloading",
+   "body": "requests.get fetches a page and hands back a Response object (Sweigart, 2025) (Requests documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_PageFetching",
+   "class_iri": "http://example.org/sen0414/ch13#PageFetching"
+  },
+  {
+   "id": "GetRequest",
+   "label": "Get request",
+   "level": 3,
+   "parent": "PageFetching",
+   "body": "requests.get(url) takes a string URL and returns a Response object, whose type prints as <class 'requests.models.Response'>, and the module must be installed before use because it does not come with Python (Sweigart, 2025); the signature of get in requests 2.34.2 is get(url, params=None, **kwargs), and a get made without a timeout keyword never times out, so a server that does not answer can hold the program for ever (Requests documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_GetRequest",
+   "class_iri": "http://example.org/sen0414/ch13#GetRequest",
+   "example": "requests.get(url)",
+   "definition": "requests.get downloads the page or file at a URL and returns a Response object; the requests package is installed separately, it does not come with Python."
+  },
+  {
+   "id": "ResponseBody",
+   "label": "Response body",
+   "level": 3,
+   "parent": "PageFetching",
+   "body": "The downloaded page is stored as a string in the text attribute of the Response, and only the HTML is downloaded, not the images (Sweigart, 2025); content holds the same body as bytes, encoding is taken from the Content-Type header, text of a 19,000-byte reply had 19,000 characters, and the chapter's first lines 'The Project Gutenberg EBook of Romeo and Juliet' still open the file, although len(response.text) was 174126 on 2026-10-01 where the chapter prints 178978 (Requests documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ResponseBody",
+   "class_iri": "http://example.org/sen0414/ch13#ResponseBody",
+   "example": "response.text, response.content",
+   "definition": "A Response holds the body both as bytes, in content, and as a string decoded with the response's encoding, in text; the download contains only the HTML, and images and other media must be fetched separately."
+  },
+  {
+   "id": "ResponseChecking",
+   "label": "Response checking",
+   "level": 2,
+   "parent": "Downloading",
+   "body": "Two checks tell the program that a download worked: the status code, and the exception raised by raise_for_status (Sweigart, 2025) (Requests documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ResponseChecking",
+   "class_iri": "http://example.org/sen0414/ch13#ResponseChecking"
+  },
+  {
+   "id": "StatusCheck",
+   "label": "Status check",
+   "level": 3,
+   "parent": "ResponseChecking",
+   "body": "The chapter compares status_code with requests.codes.ok, which is 200 (Sweigart, 2025); in requests 2.34.2 the ok attribute is True when status_code is less than 400, so a 301 is ok and a 404 or 500 is not, and the library states that this is not a check for 200 OK (Requests documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_StatusCheck",
+   "class_iri": "http://example.org/sen0414/ch13#StatusCheck",
+   "example": "response.status_code == requests.codes.ok",
+   "definition": "A response is checked through its status_code, which equals requests.codes.ok (200) on success; the ok attribute is true for every code below 400.",
+   "io": {
+    "code": "[(s, s < 400) for s in (200, 301, 404, 500)]",
+    "out": "[(200, True), (301, True), (404, False), (500, False)]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "s",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Compare",
+         "kind": "Compare",
+         "children": [
+          {
+           "label": "s",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "400",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "s",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "200",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "301",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "404",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "500",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "RaiseForStatus",
+   "label": "Raise for status",
+   "level": 3,
+   "parent": "ResponseChecking",
+   "body": "raise_for_status raises an exception if the download failed and does nothing otherwise, and the chapter advises calling it after every get, or wrapping it in try and except and printing f'There was a problem: {exc}' (Sweigart, 2025); against a local server the exception was requests.exceptions.HTTPError with the message '404 Client Error: Not Found for url: ' followed by the URL that was requested, which has no .html where the chapter's printed message shows one, the class derives from RequestException and that from OSError, a successful call returned None, and urllib.error.HTTPError has the message 'HTTP Error 404: Not Found' (Requests documentation, 2026) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_RaiseForStatus",
+   "class_iri": "http://example.org/sen0414/ch13#RaiseForStatus",
+   "example": "response.raise_for_status()",
+   "definition": "raise_for_status does nothing when the download worked and raises an HTTPError when the status is 4xx or 5xx; it is called right after every get so that a program stops on a bad download, or its exception is caught and printed.",
+   "io": {
+    "code": "str(__import__('urllib.error', fromlist=['x']).HTTPError('http://x.example/gone', 404, 'Not Found', {}, None))",
+    "out": "'HTTP Error 404: Not Found'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "str",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'urllib.error'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "keyword",
+             "kind": "keyword",
+             "children": [
+              {
+               "label": "List",
+               "kind": "List",
+               "children": [
+                {
+                 "label": "'x'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'http://x.example/gone'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "404",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Not Found'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "Dict",
+         "kind": "Dict",
+         "children": []
+        },
+        {
+         "label": "None",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "FileSaving",
+   "label": "File saving",
+   "level": 2,
+   "parent": "Downloading",
+   "body": "The body of a response is saved to a file opened in binary mode, in pieces (Sweigart, 2025) (Requests documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_FileSaving",
+   "class_iri": "http://example.org/sen0414/ch13#FileSaving"
+  },
+  {
+   "id": "BinaryWrite",
+   "label": "Binary write",
+   "level": 3,
+   "parent": "FileSaving",
+   "body": "The chapter writes the page to a file opened with 'wb', because even a plaintext page must be written as binary data to keep its Unicode encoding, and write() returns the number of bytes written (Sweigart, 2025); writing the bytes of a response to a file opened in text mode raised TypeError: write() argument must be str, not bytes, and the four characters of 'caf\u00e9' take five bytes in UTF-8, which write returned (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_BinaryWrite",
+   "class_iri": "http://example.org/sen0414/ch13#BinaryWrite",
+   "example": "open('RomeoAndJuliet.txt', 'wb')",
+   "definition": "A downloaded body is written to a file opened in write binary mode, because the bytes are the file's content whatever its text encoding; write returns the number of bytes written, and writing bytes to a text-mode file raises TypeError.",
+   "io": {
+    "code": "(lambda f: (f.write(b'caf\\xc3\\xa9'), f.getvalue().decode('utf-8')))(__import__('io').BytesIO())",
+    "out": "(5, 'caf\u00e9')",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "f",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "b'caf\\xc3\\xa9'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "f",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "'utf-8'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'io'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ChunkedDownload",
+   "label": "Chunked download",
+   "level": 3,
+   "parent": "FileSaving",
+   "body": "The chapter loops over response.iter_content(100000) and calls write() on each chunk, which printed 100000 and 78978 for its file, and iter_content returns bytes (Sweigart, 2025); for a 19,000-byte body chunks of 8,000 bytes gave write counts [8000, 8000, 3000] and saved 19,000 bytes; requests documents that a download should pass stream=True, without which the whole body is read before get() returns, and with stream=True five bytes were read from a response whose other five the server was still holding back (Requests documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ChunkedDownload",
+   "class_iri": "http://example.org/sen0414/ch13#ChunkedDownload",
+   "example": "for chunk in response.iter_content(100000):",
+   "definition": "iter_content yields the body in chunks of the size asked for, the last one shorter; the chapter writes each chunk to the file, and requests advises stream=True for a download so that the body is not read whole into memory first.",
+   "io": {
+    "code": "[len(c) for c in (lambda b: [b[i:i + 8000] for i in range(0, len(b), 8000)])(b'x' * 19000)]",
+    "out": "[8000, 8000, 3000]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "len",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "c",
+         "kind": "Name",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "c",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Lambda",
+           "kind": "Lambda",
+           "children": [
+            {
+             "label": "arguments",
+             "kind": "arguments",
+             "children": [
+              {
+               "label": "arg",
+               "kind": "arg",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "ListComp",
+             "kind": "ListComp",
+             "children": [
+              {
+               "label": "Subscript",
+               "kind": "Subscript",
+               "children": [
+                {
+                 "label": "b",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "Slice",
+                 "kind": "Slice",
+                 "children": [
+                  {
+                   "label": "i",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "+",
+                   "kind": "BinOp",
+                   "children": [
+                    {
+                     "label": "i",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "8000",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "comprehension",
+               "kind": "comprehension",
+               "children": [
+                {
+                 "label": "i",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "range",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "0",
+                   "kind": "Constant",
+                   "children": []
+                  },
+                  {
+                   "label": "call",
+                   "kind": "Call",
+                   "children": [
+                    {
+                     "label": "len",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "b",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "8000",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "*",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "b'x'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "19000",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "WebApis",
+   "label": "Web apis",
+   "level": 1,
+   "parent": null,
+   "body": "A web API lets a program ask another program for data, most often answered as JSON (Sweigart, 2025) (Internet Engineering Task Force, 2022).",
+   "section_iri": "http://example.org/sen0414/ch13#S_WebApis",
+   "class_iri": "http://example.org/sen0414/ch13#WebApis"
+  },
+  {
+   "id": "ApiCalls",
+   "label": "Api calls",
+   "level": 2,
+   "parent": "WebApis",
+   "body": "An API call is a URL with a version, a query and a key, and its answer may be an error (Sweigart, 2025) (Requests documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ApiCalls",
+   "class_iri": "http://example.org/sen0414/ch13#ApiCalls"
+  },
+  {
+   "id": "ApiEndpoint",
+   "label": "Api endpoint",
+   "level": 3,
+   "parent": "ApiCalls",
+   "body": "The chapter calls the URL used for one request the endpoint, builds two of them for OpenWeather, /geo/1.0/direct for the latitude and longitude of a city and /data/2.5/weather for its current weather, and notes that services put a version number in the URL and may retire old versions (Sweigart, 2025); the documentation of the geocoding API shows the same endpoint with an optional limit parameter for cities that share a name (OpenWeather documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ApiEndpoint",
+   "class_iri": "http://example.org/sen0414/ch13#ApiEndpoint",
+   "example": "https://api.openweathermap.org/geo/1.0/direct",
+   "definition": "An API is the way one program is asked for data by another, and an endpoint is the URL at which one request is answered; services put a version number into it, such as /geo/1.0/ and /data/2.5/, so that an old version can be retired."
+  },
+  {
+   "id": "ApiKey",
+   "label": "Api key",
+   "level": 3,
+   "parent": "ApiCalls",
+   "body": "The chapter says that an API key is like a password that identifies the account, that it must be kept secret, and that a program should read it from a text file and not include it in the source, and it warns that the key in its example is fake (Sweigart, 2025); OpenWeather answered the call that carried that fake key on 2026-10-01 with status 401 and a JSON body whose message reads Invalid API key (OpenWeather documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ApiKey",
+   "class_iri": "http://example.org/sen0414/ch13#ApiKey",
+   "example": "appid={API_key}",
+   "definition": "An API key identifies the account that is making the requests and is sent in the query string; it is kept secret and read from a file, not written in the source, and a key that is not valid is answered with a 401 error."
+  },
+  {
+   "id": "ApiErrorResponse",
+   "label": "Api error response",
+   "level": 3,
+   "parent": "ApiCalls",
+   "body": "The chapter says that an unknown city gives an empty list and a wrong latitude gives a dictionary like {'cod': '400', 'message': 'wrong latitude'} (Sweigart, 2025); json.loads('[]') is [], the dictionary decoded from that text has cod '400', and text that is HTML and not JSON, such as a challenge page, raises json.JSONDecodeError with the message 'Expecting value: line 1 column 1 (char 0)' (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ApiErrorResponse",
+   "class_iri": "http://example.org/sen0414/ch13#ApiErrorResponse",
+   "example": "[] and {'cod': '400', 'message': 'wrong latitude'}",
+   "definition": "A call that finds nothing or is wrong is still answered, with an empty list for an unknown city and a dictionary with a cod and a message for a wrong latitude, so the program checks the shape of the decoded data before indexing it."
+  },
+  {
+   "id": "ApiData",
+   "label": "Api data",
+   "level": 2,
+   "parent": "WebApis",
+   "body": "What an API returns is decoded from JSON and then converted into the units the program needs (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ApiData",
+   "class_iri": "http://example.org/sen0414/ch13#ApiData"
+  },
+  {
+   "id": "JsonDecoding",
+   "label": "Json decoding",
+   "level": 3,
+   "parent": "ApiData",
+   "body": "The chapter says that json.loads(response.text) returns a Python data structure of lists and dictionaries, so that response_data[0]['lat'] is a float (Sweigart, 2025); the list [{'lat': 37.7790262, 'lon': -122.419906}] written to JSON and read back gives 37.7790262 for its first item, response.json() gave the same dictionary as json.loads(response.text) for a local server, and requests documents that a successful decoding says nothing about a successful response (Python Software Foundation, 2026) (Requests documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_JsonDecoding",
+   "class_iri": "http://example.org/sen0414/ch13#JsonDecoding",
+   "example": "json.loads(response.text)",
+   "definition": "json.loads turns JSON text into lists, dictionaries, strings, numbers and None; response.json() does the same for a response, and text that is not JSON, such as a challenge page in HTML, raises JSONDecodeError.",
+   "io": {
+    "code": "(lambda j: j.loads(j.dumps([{'lat': 37.7790262, 'lon': -122.419906}]))[0]['lat'])(__import__('json'))",
+    "out": "37.7790262",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "j",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "j",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "List",
+                 "kind": "List",
+                 "children": [
+                  {
+                   "label": "Dict",
+                   "kind": "Dict",
+                   "children": [
+                    {
+                     "label": "'lat'",
+                     "kind": "Constant",
+                     "children": []
+                    },
+                    {
+                     "label": "'lon'",
+                     "kind": "Constant",
+                     "children": []
+                    },
+                    {
+                     "label": "37.7790262",
+                     "kind": "Constant",
+                     "children": []
+                    },
+                    {
+                     "label": "UnaryOp",
+                     "kind": "UnaryOp",
+                     "children": [
+                      {
+                       "label": "122.419906",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "0",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'lat'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "__import__",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'json'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(lambda j: j.loads(j.dumps([{'lat': 37.7790262, 'lon': -122.419906}]))[0]['lat'])(__import__('json'))",
+      "focus": "-122.419906",
+      "value": "-122.419906"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ValueConversion",
+   "label": "Value conversion",
+   "level": 3,
+   "parent": "ApiData",
+   "body": "The chapter converts the temperature 285.44 Kelvin with round(285.44 - 273.15, 1), which is 12.3, and round(285.44 * (9 / 5) - 459.67, 1), which is 54.1, and names datetime.datetime.fromtimestamp for the dt field of the forecast (Sweigart, 2025); the timestamp 1790000000 is 2026-09-21T14:13:20 in UTC and 17:13:20 in UTC+3, fromtimestamp without a zone printed 17:13 with the zone of the process set to Europe/Istanbul and 07:13 with America/Los_Angeles, and datetime.utcfromtimestamp raised a DeprecationWarning, having been deprecated since Python 3.12 (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ValueConversion",
+   "class_iri": "http://example.org/sen0414/ch13#ValueConversion",
+   "example": "round(285.44 - 273.15, 1)",
+   "definition": "A value from an API is often in a unit or a form the program must convert: the temperature arrives in Kelvin and is turned into Celsius by subtracting 273.15 and into Fahrenheit with 9/5 and 459.67, and a Unix timestamp is turned into a datetime, in a stated time zone.",
+   "io": {
+    "code": "(round(285.44 - 273.15, 1), round(285.44 * (9 / 5) - 459.67, 1))",
+    "out": "(12.3, 54.1)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "round",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "-",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "285.44",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "273.15",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "1",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "round",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "-",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "*",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "285.44",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "/",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "9",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "5",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "459.67",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "1",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(round(285.44 - 273.15, 1), round(285.44 * (9 / 5) - 459.67, 1))",
+      "focus": "285.44 - 273.15",
+      "value": "12.29000000000002"
+     },
+     {
+      "expr": "(round(12.29000000000002, 1), round(285.44 * (9 / 5) - 459.67, 1))",
+      "focus": "round(12.29000000000002, 1)",
+      "value": "12.3"
+     },
+     {
+      "expr": "(12.3, round(285.44 * (9 / 5) - 459.67, 1))",
+      "focus": "9 / 5",
+      "value": "1.8"
+     },
+     {
+      "expr": "(12.3, round(285.44 * 1.8 - 459.67, 1))",
+      "focus": "285.44 * 1.8",
+      "value": "513.792"
+     },
+     {
+      "expr": "(12.3, round(513.792 - 459.67, 1))",
+      "focus": "513.792 - 459.67",
+      "value": "54.122000000000014"
+     },
+     {
+      "expr": "(12.3, round(54.122000000000014, 1))",
+      "focus": "round(54.122000000000014, 1)",
+      "value": "54.1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "HtmlPages",
+   "label": "Html pages",
+   "level": 1,
+   "parent": null,
+   "body": "A page is HTML text that describes elements, and the source and the Developer Tools show that text (Sweigart, 2025) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_HtmlPages",
+   "class_iri": "http://example.org/sen0414/ch13#HtmlPages"
+  },
+  {
+   "id": "MarkupBasics",
+   "label": "Markup basics",
+   "level": 2,
+   "parent": "HtmlPages",
+   "body": "HTML is written as elements made of tags, and the tags carry attributes (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_MarkupBasics",
+   "class_iri": "http://example.org/sen0414/ch13#MarkupBasics"
+  },
+  {
+   "id": "HtmlElement",
+   "label": "Html element",
+   "level": 3,
+   "parent": "MarkupBasics",
+   "body": "The chapter explains that an HTML file is plaintext whose tags, words in angle brackets, enclose content, and that a starting tag, its content and a closing tag form an element, as <b>Hello</b>, world! shows (Sweigart, 2025); the standard library parser reported 26 starting tags in the example page, among them 7 p elements, and did not check that end tags match start tags (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_HtmlElement",
+   "class_iri": "http://example.org/sen0414/ch13#HtmlElement",
+   "example": "<b>Hello</b>, world!",
+   "definition": "An HTML element is a starting tag, its content and a closing tag, such as <b>Hello</b>, and elements nest inside one another to form the tree of the page."
+  },
+  {
+   "id": "HtmlAttribute",
+   "label": "Html attribute",
+   "level": 3,
+   "parent": "MarkupBasics",
+   "body": "The chapter names href of the a tag and id, which can identify one element, as attributes, and class as the marker the searchpypi.py program looks for (Sweigart, 2025); the standard library parser handed the attributes as pairs, [('href', 'https://x.example/'), ('id', 'k')] for <a href=https://x.example/ id=k>, found the id author on the span, the class slogan on one paragraph and four input elements, of types text, password, checkbox and submit, in the example page; MDN describes the class attribute as an identifying name for targeting the element (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_HtmlAttribute",
+   "class_iri": "http://example.org/sen0414/ch13#HtmlAttribute",
+   "example": "<a href='https://inventwithpython.com'>",
+   "definition": "A tag can carry attributes written as name=value inside the angle brackets, such as href of a link, id that names one element and class that names a group; a parser hands them to the program as name-value pairs.",
+   "io": {
+    "code": "(lambda h: (h.feed('<a href=https://x.example/ id=k>t</a>'), h.got)[1])(type('P', (__import__('html.parser', fromlist=['x']).HTMLParser,), {'got': [], 'handle_starttag': lambda s, t, a: s.got.append((t, a))})())",
+    "out": "[('a', [('href', 'https://x.example/'), ('id', 'k')])]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "h",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "'<a href=https://x.example/ id=k>t</a>'",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "h",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "type",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'P'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'html.parser'",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "keyword",
+                 "kind": "keyword",
+                 "children": [
+                  {
+                   "label": "List",
+                   "kind": "List",
+                   "children": [
+                    {
+                     "label": "'x'",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Dict",
+           "kind": "Dict",
+           "children": [
+            {
+             "label": "'got'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'handle_starttag'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "List",
+             "kind": "List",
+             "children": []
+            },
+            {
+             "label": "Lambda",
+             "kind": "Lambda",
+             "children": [
+              {
+               "label": "arguments",
+               "kind": "arguments",
+               "children": [
+                {
+                 "label": "arg",
+                 "kind": "arg",
+                 "children": []
+                },
+                {
+                 "label": "arg",
+                 "kind": "arg",
+                 "children": []
+                },
+                {
+                 "label": "arg",
+                 "kind": "arg",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "Attribute",
+                 "kind": "Attribute",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "s",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "label": "Tuple",
+                 "kind": "Tuple",
+                 "children": [
+                  {
+                   "label": "t",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "a",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PageInspection",
+   "label": "Page inspection",
+   "level": 2,
+   "parent": "HtmlPages",
+   "body": "The source and the Developer Tools are how the programmer finds the element to pick (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_PageInspection",
+   "class_iri": "http://example.org/sen0414/ch13#PageInspection"
+  },
+  {
+   "id": "ViewSource",
+   "label": "View source",
+   "level": 3,
+   "parent": "PageInspection",
+   "body": "Right-clicking a page and choosing View page source shows the HTML the browser received, from which it renders the page (Sweigart, 2025); the chapter also says that a program using requests gets only the HTML content of a page (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ViewSource",
+   "class_iri": "http://example.org/sen0414/ch13#ViewSource",
+   "example": "right-click, View page source",
+   "definition": "The source of a page is the HTML text the browser actually received, which is what requests downloads; the page on the screen may differ from it when scripts have changed it afterwards."
+  },
+  {
+   "id": "DeveloperTools",
+   "label": "Developer tools",
+   "level": 3,
+   "parent": "PageInspection",
+   "body": "F12 opens the Developer Tools in Firefox, Chrome and Microsoft Edge, and Inspect Element from the context menu shows the HTML responsible for the part of the page clicked; the chapter finds the div with the class forecast-text of weather.gov this way and warns that a redesign of the site means repeating the process (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_DeveloperTools",
+   "class_iri": "http://example.org/sen0414/ch13#DeveloperTools",
+   "example": "F12, Inspect Element",
+   "definition": "The Developer Tools of Firefox, Chrome and Edge open with F12 and show the HTML behind the element that was right-clicked and Inspect Element chosen, where its tag, id, class and a copy of its CSS selector are found."
+  },
+  {
+   "id": "CssSelector",
+   "label": "Css selector",
+   "level": 3,
+   "parent": "PageInspection",
+   "body": "The Developer Tools can copy the CSS selector of an element, such as div.row-odd:nth-child(1) > div:nth-child(2), and the chapter passes it to select() or find_element(), calls XPath another syntax beyond its scope and advises using a site's API when it has one because it changes less than the page (Sweigart, 2025); MDN defines the space as the descendant combinator and > as the child combinator, and on a page with divs Beautiful Soup 4.15.0 matched 'div span' twice and 'div > span' once (Beautiful Soup documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_CssSelector",
+   "class_iri": "http://example.org/sen0414/ch13#CssSelector",
+   "example": "div.row-odd:nth-child(1) > div:nth-child(2)",
+   "definition": "A CSS selector names the elements to pick by tag, by # and id, by . and class, by attribute in square brackets, by a space for any descendant and by > for a direct child; the Developer Tools can copy one, and XPath is another syntax."
+  },
+  {
+   "id": "ParsingAdvice",
+   "label": "Parsing advice",
+   "level": 2,
+   "parent": "HtmlPages",
+   "body": "Parsing HTML is left to a parser and not to a regular expression (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ParsingAdvice",
+   "class_iri": "http://example.org/sen0414/ch13#ParsingAdvice"
+  },
+  {
+   "id": "RegexPitfall",
+   "label": "Regex pitfall",
+   "level": 3,
+   "parent": "ParsingAdvice",
+   "body": "The chapter advises against regular expressions for HTML because valid HTML can be formatted in many ways and capturing them all is tedious and error prone (Sweigart, 2025); on four ways of writing a link the pattern <a href='(.*?)'> found the plain link and not the one with a class before the href, the one with single quotes and line breaks, or the one written in capitals without quotes, and it found a link inside a comment that a browser never shows, while the HTMLParser of the standard library found the first three and not the comment (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_RegexPitfall",
+   "class_iri": "http://example.org/sen0414/ch13#RegexPitfall",
+   "example": "re.findall('<a href=...>', html)",
+   "definition": "A regular expression for a tag fails on the many equivalent ways HTML can be written, so the chapter advises a parser such as Beautiful Soup; a pattern that needs href right after a does not match an a tag that has a class first.",
+   "io": {
+    "code": "__import__('re').findall('<a href=([^ >]+)>', '<a class=c href=x>t</a>')",
+    "out": "[]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Attribute",
+       "kind": "Attribute",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "__import__",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "'re'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'<a href=([^ >]+)>'",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "'<a class=c href=x>t</a>'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "BeautifulSoup",
+   "label": "Beautiful soup",
+   "level": 1,
+   "parent": null,
+   "body": "Beautiful Soup turns the text of a page into objects from which elements are selected (Sweigart, 2025) (Beautiful Soup documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_BeautifulSoup",
+   "class_iri": "http://example.org/sen0414/ch13#BeautifulSoup"
+  },
+  {
+   "id": "SoupCreation",
+   "label": "Soup creation",
+   "level": 2,
+   "parent": "BeautifulSoup",
+   "body": "A BeautifulSoup object is made from the page text and the name of a parser (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_SoupCreation",
+   "class_iri": "http://example.org/sen0414/ch13#SoupCreation"
+  },
+  {
+   "id": "SoupObject",
+   "label": "Soup object",
+   "level": 3,
+   "parent": "SoupCreation",
+   "body": "bs4.BeautifulSoup(res.text, 'html.parser') returns an object of type bs4.BeautifulSoup and the same call accepts an open file, and the chapter says to install beautifulsoup4 and import bs4 (Sweigart, 2025); html.parser is the parser of Python's standard library, the documentation lists lxml and html5lib as others to be installed, and on the page as typeset in the chapter, with a typographic quotation mark in a link and an unescaped p tag, bs4 4.15.0 found no element with the id author and 8 paragraphs, because the value of href ran on up to the next straight quotation mark and the unescaped p tag started another paragraph (Beautiful Soup documentation, 2026) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_SoupObject",
+   "class_iri": "http://example.org/sen0414/ch13#SoupObject",
+   "example": "bs4.BeautifulSoup(res.text, 'html.parser')",
+   "definition": "bs4.BeautifulSoup takes the HTML, as a string or an open file, and the name of a parser and returns an object holding the parsed page; the name html.parser selects the parser of Python's standard library, the others must be installed."
+  },
+  {
+   "id": "ElementSelection",
+   "label": "Element selection",
+   "level": 2,
+   "parent": "BeautifulSoup",
+   "body": "select finds elements by a CSS selector and the Tag objects give their text and attributes (Sweigart, 2025) (Beautiful Soup documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ElementSelection",
+   "class_iri": "http://example.org/sen0414/ch13#ElementSelection"
+  },
+  {
+   "id": "SelectMethod",
+   "label": "Select method",
+   "level": 3,
+   "parent": "ElementSelection",
+   "body": "select('#author') returned a ResultSet, a list, of one Tag and select('p') a list of seven on the page the chapter downloads, three of them inside the form, where the chapter says that it gives a list of three matches, and select('#nothing') returned [] and select_one('#nothing') returned None; the chapter as read presents select and not select_one or find_all, and the installed bs4 is 4.15.0 while its documentation site showed 4.14.3 (Sweigart, 2025) (Beautiful Soup documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_SelectMethod",
+   "class_iri": "http://example.org/sen0414/ch13#SelectMethod",
+   "example": "soup.select('#author')",
+   "definition": "select takes a CSS selector and returns a list of the matching Tag objects, an empty list when nothing matches, and never None; select_one returns the first match or None."
+  },
+  {
+   "id": "SelectorPatterns",
+   "label": "Selector patterns",
+   "level": 3,
+   "parent": "ElementSelection",
+   "body": "Table 13-2 lists div, #author, .notice, div span, div > span, input[name] and input[type='button'] (Sweigart, 2025); on the fixture <div class='notice'><span>in div</span><p><span id='deep'>deep</span></p></div><span>outside</span><input name='q'><input type='button' value='b'><p id='author'>p</p> the counts were 1, 1, 1, 2, 1, 1 and 1, 'p #author' matched nothing because the element with the id is the p itself, 'p#author' matched it and 'p #deep' matched the span (Beautiful Soup documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_SelectorPatterns",
+   "class_iri": "http://example.org/sen0414/ch13#SelectorPatterns",
+   "example": "div span, div > span, input[name], p #author",
+   "definition": "The chapter's patterns combine: a tag name, #id, .class, a space for a descendant, > for a direct child and [attribute] or [attribute=value]; p #author needs the element to be inside a p element while p#author needs the p element to be the author."
+  },
+  {
+   "id": "TagText",
+   "label": "Tag text",
+   "level": 3,
+   "parent": "ElementSelection",
+   "body": "str(elems[0]) gave <span id='author'>Al Sweigart</span> and elems[0].get_text() gave 'Al Sweigart', the first paragraph gave 'This <p> tag puts content into a single paragraph.' although its source holds &lt;p&gt;, the second 'This text is a link to books by Al Sweigart.' and the image paragraph '' (Sweigart, 2025); html.unescape('&lt;p&gt;') is '<p>' and the standard library parser converts character references to characters unless convert_charrefs=False is given (Beautiful Soup documentation, 2026) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_TagText",
+   "class_iri": "http://example.org/sen0414/ch13#TagText",
+   "example": "elems[0].get_text()",
+   "definition": "get_text returns the text between a tag's opening and closing tags with the nested tags removed and character references such as &lt; turned back into characters, while str of the tag returns its HTML."
+  },
+  {
+   "id": "TagAttributes",
+   "label": "Tag attributes",
+   "level": 3,
+   "parent": "ElementSelection",
+   "body": "elems[0].attrs gave {'id': 'author'}, get('id') gave 'author' and get('some_nonexistent_addr') gave None, and str of the image paragraph printed alt before src although the page has src first, as the chapter prints it; the alt text in the file is 'Close up of my cat Zophie.' where the chapter prints 'Close-up' (Sweigart, 2025) (Beautiful Soup documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_TagAttributes",
+   "class_iri": "http://example.org/sen0414/ch13#TagAttributes",
+   "example": "span_elem.get('id'), span_elem.attrs",
+   "definition": "get returns the value of one attribute, or None for an attribute the tag does not have, and attrs is the dictionary of all its attributes."
+  },
+  {
+   "id": "CrawlingPrograms",
+   "label": "Crawling programs",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter's two scraping projects and its link-checking practice program put requests, a parser and a stop rule together (Sweigart, 2025) (Requests documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_CrawlingPrograms",
+   "class_iri": "http://example.org/sen0414/ch13#CrawlingPrograms"
+  },
+  {
+   "id": "ProgramsOfChapter",
+   "label": "Programs of chapter",
+   "level": 2,
+   "parent": "CrawlingPrograms",
+   "body": "searchpypi.py, downloadXkcdComics.py and the link verification program are the chapter's crawling programs (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ProgramsOfChapter",
+   "class_iri": "http://example.org/sen0414/ch13#ProgramsOfChapter"
+  },
+  {
+   "id": "SearchResultLinks",
+   "label": "Search result links",
+   "level": 3,
+   "parent": "ProgramsOfChapter",
+   "body": "searchpypi.py fetches https://pypi.org/search/?q= plus the arguments, selects '.package-snippet' and opens min(5, len(link_elems)) tabs with 'https://pypi.org' added to each href (Sweigart, 2025); min(5, n) gave 0, 3 and 5 for 0, 3 and 12 links, and on a fixture with three result links and one other link the loop printed three Opening lines and opened three pages through a stub browser; on 2026-10-01 the search page fetched with requests had status 200, the title Client Challenge and no element of the class package-snippet, and the robots.txt of pypi.org lists Disallow: /search*, which RFC 9309 reads with * as a wildcard, so that a matcher written to that rule returned True for /search/?q=boring+stuff as disallowed, while urllib.robotparser answered True for can_fetch, matching the text as a literal prefix (Internet Engineering Task Force, 2022) (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_SearchResultLinks",
+   "class_iri": "http://example.org/sen0414/ch13#SearchResultLinks",
+   "example": "min(5, len(link_elems))",
+   "definition": "searchpypi.py downloads a search page, selects the links of the results with a class selector, and opens the first five in browser tabs, the count being the smaller of five and the number of links found.",
+   "io": {
+    "code": "[min(5, n) for n in (0, 3, 12)]",
+    "out": "[0, 3, 5]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "min",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "5",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "n",
+         "kind": "Name",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "n",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "0",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "3",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "12",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ComicCrawler",
+   "label": "Comic crawler",
+   "level": 3,
+   "parent": "ProgramsOfChapter",
+   "body": "downloadXkcdComics.py starts at https://xkcd.com, saves the image of '#comic img' under os.path.basename of its URL with 'https:' put before its src, follows the href of 'a[rel='prev']' and stops at a URL ending in # or after 10 downloads (Sweigart, 2025); on a fixture of four pages the loop saved three.png, two.png and one.png, logged that the page with no image has no comic image, stopped when the previous link was #, and with a limit of 2 stopped after two pages; the same loop written with requests, bs4 and iter_content gave the same result against a local server; on 2026-10-01 xkcd.com still had its image in the element with id comic at an address beginning with two slashes, a rel prev link, and # as the href of the prev link of the first comic (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ComicCrawler",
+   "class_iri": "http://example.org/sen0414/ch13#ComicCrawler",
+   "example": "while not url.endswith('#') and num_downloads < MAX_DOWNLOADS:",
+   "definition": "downloadXkcdComics.py loops over the pages of a comic site: it downloads a page, saves the image inside the element with id comic, follows the link whose rel is prev and stops when that link ends in # or after ten downloads.",
+   "io": {
+    "code": "[u.endswith('#') for u in ('https://xkcd.com/2/', 'https://xkcd.com#')]",
+    "out": "[False, True]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "u",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "'#'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "u",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'https://xkcd.com/2/'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'https://xkcd.com#'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "LinkVerification",
+   "label": "Link verification",
+   "level": 3,
+   "parent": "ProgramsOfChapter",
+   "body": "The practice program asks for every a link of a page and the broken ones, those that give 404 (Sweigart, 2025); on a fixture page with six a elements, one without an href and one mailto, the program resolved each href against the page URL, dropped the fragment so that ok.html#top and ok.html counted once, skipped the other site and printed broken: ['SITE/gone.html'] (Python Software Foundation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_LinkVerification",
+   "class_iri": "http://example.org/sen0414/ch13#LinkVerification",
+   "example": "find every a link and test for 404",
+   "definition": "The link-verification practice program finds every a element of a page, turns each href into an absolute URL, asks for it and prints the links whose status is 404."
+  },
+  {
+   "id": "BrowserAutomation",
+   "label": "Browser automation",
+   "level": 1,
+   "parent": null,
+   "body": "Selenium and Playwright start a real browser and drive it as a user does (Sweigart, 2025) (Selenium documentation, 2026) (Playwright documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_BrowserAutomation",
+   "class_iri": "http://example.org/sen0414/ch13#BrowserAutomation"
+  },
+  {
+   "id": "SeleniumControl",
+   "label": "Selenium control",
+   "level": 2,
+   "parent": "BrowserAutomation",
+   "body": "The chapter's Selenium part covers starting a browser, finding elements, reading them, clicking and sending keys (Sweigart, 2025) (Selenium documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_SeleniumControl",
+   "class_iri": "http://example.org/sen0414/ch13#SeleniumControl"
+  },
+  {
+   "id": "WebDriverStart",
+   "label": "Web driver start",
+   "level": 3,
+   "parent": "SeleniumControl",
+   "body": "The chapter imports Selenium with from selenium import webdriver and starts Firefox with webdriver.Firefox(), whose type is selenium.webdriver.firefox.webdriver.WebDriver, and tells the reader to download geckodriver when the error says it must be in PATH or to use the webdriver-manager package (Sweigart, 2025); in Selenium 4.50.0 webdriver.Firefox is that class, Selenium Manager, which the documentation says ships with every Selenium release and is used by the bindings by default, finds the driver and the browser itself, and no browser was started for this chapter; the interface was read without one (Selenium documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_WebDriverStart",
+   "class_iri": "http://example.org/sen0414/ch13#WebDriverStart",
+   "example": "browser = webdriver.Firefox()",
+   "definition": "Selenium starts a real browser that the program controls; it is imported with from selenium import webdriver, and since Selenium Manager finds the driver itself, no separate download is needed."
+  },
+  {
+   "id": "ByLocators",
+   "label": "By locators",
+   "level": 3,
+   "parent": "SeleniumControl",
+   "body": "Table 13-3 lists By.CLASS_NAME, CSS_SELECTOR, ID, LINK_TEXT, PARTIAL_LINK_TEXT, NAME and TAG_NAME (Sweigart, 2025); in Selenium 4.50.0 they hold 'class name', 'css selector', 'id', 'link text', 'partial link text', 'name' and 'tag name', By.XPATH holds 'xpath', and the documentation's list of locator strategies includes xpath as well (Selenium documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ByLocators",
+   "class_iri": "http://example.org/sen0414/ch13#ByLocators",
+   "example": "By.ID, By.CSS_SELECTOR, By.LINK_TEXT",
+   "definition": "The By constants say how an element is looked for: by class name, CSS selector, id, link text, partial link text, name or tag name, and XPath in the library; the constants are plain strings such as 'css selector' and 'link text'."
+  },
+  {
+   "id": "ElementLookup",
+   "label": "Element lookup",
+   "level": 3,
+   "parent": "SeleniumControl",
+   "body": "find_element returns the first match and find_elements a list, and Selenium raises an exception when nothing matches, which the chapter names NoSuchElement (Sweigart, 2025); the class in Selenium 4.50.0 is NoSuchElementException, a subclass of WebDriverException, there is no NoSuchElement, and find_element_by_id of older tutorials no longer exists (Selenium documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ElementLookup",
+   "class_iri": "http://example.org/sen0414/ch13#ElementLookup",
+   "example": "find_element() and find_elements()",
+   "definition": "find_element returns the first matching WebElement and raises NoSuchElementException when there is none, while find_elements returns a list that is empty when there is none."
+  },
+  {
+   "id": "ElementProperties",
+   "label": "Element properties",
+   "level": 3,
+   "parent": "SeleniumControl",
+   "body": "Table 13-4 lists tag_name, get_attribute, get_property, text, clear, is_displayed, is_enabled, is_selected, location and size, and the chapter says that text is a shortcut for get_property('innerText') (Sweigart, 2025); all of those names exist in Selenium 4.50.0, where text is read by the WebDriver command GET_ELEMENT_TEXT and its source does not mention innerText, and get_attribute tries a property of that name first and then the attribute (Selenium documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ElementProperties",
+   "class_iri": "http://example.org/sen0414/ch13#ElementProperties",
+   "example": "elems[0].text, elems[0].get_property('innerHTML')",
+   "definition": "A WebElement gives its rendered text in text, its source through get_property('innerHTML'), a property or attribute through get_attribute, and whether it is displayed, enabled or selected."
+  },
+  {
+   "id": "ClickAndSubmit",
+   "label": "Click and submit",
+   "level": 3,
+   "parent": "SeleniumControl",
+   "body": "click() follows a link or presses a button, send_keys() types text or a key such as Keys.END, and submit() acts as the Submit button of the form, and back(), forward(), refresh() and quit() click the browser's buttons (Sweigart, 2025); these methods exist in Selenium 4.50.0, Keys.ENTER is the character '\\ue007' and Keys.END is '\\ue010', and none of them was run because no browser was started (Selenium documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ClickAndSubmit",
+   "class_iri": "http://example.org/sen0414/ch13#ClickAndSubmit",
+   "example": "click(), send_keys(), submit()",
+   "definition": "click follows a link or presses a button, send_keys types into a field or sends a key such as Keys.END, and submit sends the form that contains the element; back, forward, refresh and quit act on the browser itself."
+  },
+  {
+   "id": "PlaywrightControl",
+   "label": "Playwright control",
+   "level": 2,
+   "parent": "BrowserAutomation",
+   "body": "The chapter's Playwright part covers launching a browser, locators, clicking, filling and pressing keys (Sweigart, 2025) (Playwright documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_PlaywrightControl",
+   "class_iri": "http://example.org/sen0414/ch13#PlaywrightControl"
+  },
+  {
+   "id": "SyncPlaywright",
+   "label": "Sync playwright",
+   "level": 3,
+   "parent": "PlaywrightControl",
+   "body": "with sync_playwright() as playwright: launches a browser with playwright.firefox.launch(), which the chapter says runs without a window by default, and headless=False with slow_mo=50 shows the steps (Sweigart, 2025); the launch function of Playwright 1.63.0 has the parameters headless and slow_mo, python -m playwright --version printed Version 1.63.0 and python -m playwright install --help printed its usage, and no browser was installed or started (Playwright documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_SyncPlaywright",
+   "class_iri": "http://example.org/sen0414/ch13#SyncPlaywright",
+   "example": "with sync_playwright() as playwright:",
+   "definition": "Playwright is used in its synchronous form inside a with block, which starts and stops it; it launches a browser in headless mode by default, without a window, and headless=False with slow_mo shows the steps."
+  },
+  {
+   "id": "PageLocators",
+   "label": "Page locators",
+   "level": 3,
+   "parent": "PlaywrightControl",
+   "body": "Table 13-5 lists get_by_role, get_by_text, get_by_label, get_by_placeholder, get_by_alt_text and locator (Sweigart, 2025); all six exist on the Page of Playwright 1.63.0, and its documentation adds that locators are strict, so an action on a locator that matches several elements raises an error (Playwright documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_PageLocators",
+   "class_iri": "http://example.org/sen0414/ch13#PageLocators",
+   "example": "page.get_by_role('checkbox'), page.locator('p')",
+   "definition": "A Page offers locators, get_by_role, get_by_text, get_by_label, get_by_placeholder, get_by_alt_text and locator for a CSS or XPath selector, each returning a Locator that stands for the elements that may match."
+  },
+  {
+   "id": "LocatorMethods",
+   "label": "Locator methods",
+   "level": 3,
+   "parent": "PlaywrightControl",
+   "body": "Table 13-6 lists get_attribute, count, nth, first, last, all, inner_text, inner_html, click, is_visible, is_enabled, is_checked and bounding_box, and the chapter adds fill, clear, press, check, uncheck and set_checked (Sweigart, 2025); all of them exist on the Locator of Playwright 1.63.0, there is no submit method, as the chapter says, and the chapter's use of nth(0) picks one element from a locator that matches seven paragraphs (Playwright documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_LocatorMethods",
+   "class_iri": "http://example.org/sen0414/ch13#LocatorMethods",
+   "example": "elems.nth(0).inner_text(), count(), check()",
+   "definition": "A Locator counts its matches, picks one with nth, first or last, reads inner_text and inner_html, and acts with click, fill, press, check and uncheck; it is strict, so an action on a locator that matches several elements raises an error."
+  },
+  {
+   "id": "AutoWaiting",
+   "label": "Auto waiting",
+   "level": 3,
+   "parent": "PlaywrightControl",
+   "body": "The chapter says that Playwright pauses for 30 seconds when an element does not exist and that is_visible and query_selector answer at once (Sweigart, 2025); the constant for the default timeout in Playwright 1.63.0 is 30000 milliseconds, its documentation says that an action waits for its actionability checks and fails with a TimeoutError if they do not pass within the timeout, query_selector returns null when nothing matches, and is_visible does not wait and returns immediately (Playwright documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch13#S_AutoWaiting",
+   "class_iri": "http://example.org/sen0414/ch13#AutoWaiting",
+   "example": "page.is_visible() and the 30 second pause",
+   "definition": "Playwright waits for an element to exist and be ready before it acts, up to a default timeout of 30 seconds, so a mistyped selector makes the program pause that long; is_visible and query_selector answer at once."
+  },
+  {
+   "id": "ToolChoice",
+   "label": "Tool choice",
+   "level": 2,
+   "parent": "BrowserAutomation",
+   "body": "Whether to use requests or a driven browser depends on the page (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_ToolChoice",
+   "class_iri": "http://example.org/sen0414/ch13#ToolChoice"
+  },
+  {
+   "id": "DynamicPages",
+   "label": "Dynamic pages",
+   "level": 3,
+   "parent": "ToolChoice",
+   "body": "The chapter says that a page that depends on JavaScript that updates it needs Selenium and not requests, that sites such as large shops recognise scripts and may refuse them, that a Selenium-driven browser passes for human more easily, but that sites can still detect it and that a browser is slower and hard to run in the background (Sweigart, 2025); it also advises preferring the API of a site, and the Client Challenge page that PyPI returned to requests on 2026-10-01 is an example of a page that a plain download cannot pass (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch13#S_DynamicPages",
+   "class_iri": "http://example.org/sen0414/ch13#DynamicPages",
+   "example": "requests or a browser",
+   "definition": "A page whose content is built by scripts, or that needs a login, cannot be read from the text requests downloads; the program then needs a browser driver, which is slower and may still be detected, and an API is preferable whenever the service offers one."
+  }
+ ],
+ "relations": [
+  {
+   "source": "AddressForms",
+   "target": "WebProtocol",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "UrlAnatomy",
+   "target": "AddressForms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "QueryString",
+   "target": "AddressForms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ProtocolBasics",
+   "target": "WebProtocol",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "HttpsEncryption",
+   "target": "ProtocolBasics",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "StatusCode",
+   "target": "ProtocolBasics",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CrawlerManners",
+   "target": "WebProtocol",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RobotsTxt",
+   "target": "CrawlerManners",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PoliteDelay",
+   "target": "CrawlerManners",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "UserAgent",
+   "target": "CrawlerManners",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "BrowserOpening",
+   "target": "BrowserLaunch",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WebbrowserOpen",
+   "target": "BrowserOpening",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CommandLineArguments",
+   "target": "BrowserOpening",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ShowmapProgram",
+   "target": "BrowserOpening",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PageFetching",
+   "target": "Downloading",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GetRequest",
+   "target": "PageFetching",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ResponseBody",
+   "target": "PageFetching",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ResponseChecking",
+   "target": "Downloading",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "StatusCheck",
+   "target": "ResponseChecking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RaiseForStatus",
+   "target": "ResponseChecking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FileSaving",
+   "target": "Downloading",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "BinaryWrite",
+   "target": "FileSaving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ChunkedDownload",
+   "target": "FileSaving",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ApiCalls",
+   "target": "WebApis",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ApiEndpoint",
+   "target": "ApiCalls",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ApiKey",
+   "target": "ApiCalls",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ApiErrorResponse",
+   "target": "ApiCalls",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ApiData",
+   "target": "WebApis",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "JsonDecoding",
+   "target": "ApiData",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ValueConversion",
+   "target": "ApiData",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MarkupBasics",
+   "target": "HtmlPages",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "HtmlElement",
+   "target": "MarkupBasics",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "HtmlAttribute",
+   "target": "MarkupBasics",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PageInspection",
+   "target": "HtmlPages",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ViewSource",
+   "target": "PageInspection",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DeveloperTools",
+   "target": "PageInspection",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CssSelector",
+   "target": "PageInspection",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ParsingAdvice",
+   "target": "HtmlPages",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "RegexPitfall",
+   "target": "ParsingAdvice",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SoupCreation",
+   "target": "BeautifulSoup",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SoupObject",
+   "target": "SoupCreation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ElementSelection",
+   "target": "BeautifulSoup",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SelectMethod",
+   "target": "ElementSelection",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SelectorPatterns",
+   "target": "ElementSelection",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TagText",
+   "target": "ElementSelection",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TagAttributes",
+   "target": "ElementSelection",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ProgramsOfChapter",
+   "target": "CrawlingPrograms",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SearchResultLinks",
+   "target": "ProgramsOfChapter",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ComicCrawler",
+   "target": "ProgramsOfChapter",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LinkVerification",
+   "target": "ProgramsOfChapter",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SeleniumControl",
+   "target": "BrowserAutomation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WebDriverStart",
+   "target": "SeleniumControl",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ByLocators",
+   "target": "SeleniumControl",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ElementLookup",
+   "target": "SeleniumControl",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ElementProperties",
+   "target": "SeleniumControl",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ClickAndSubmit",
+   "target": "SeleniumControl",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PlaywrightControl",
+   "target": "BrowserAutomation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SyncPlaywright",
+   "target": "PlaywrightControl",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PageLocators",
+   "target": "PlaywrightControl",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LocatorMethods",
+   "target": "PlaywrightControl",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AutoWaiting",
+   "target": "PlaywrightControl",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ToolChoice",
+   "target": "BrowserAutomation",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DynamicPages",
+   "target": "ToolChoice",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ShowmapProgram",
+   "target": "QueryString",
+   "type": "mentions",
+   "evidence": "the document's section on Showmap program names Query string"
+  },
+  {
+   "source": "ByLocators",
+   "target": "CssSelector",
+   "type": "mentions",
+   "evidence": "the document's section on By locators names Css selector"
+  }
+ ],
+ "agents": [
+  {
+   "id": "agent-AddressForms",
+   "name": "Address forms agent",
+   "subject": "AddressForms",
+   "covers": [
+    "UrlAnatomy",
+    "QueryString",
+    "AddressForms"
+   ]
+  },
+  {
+   "id": "agent-ProtocolBasics",
+   "name": "Protocol basics agent",
+   "subject": "ProtocolBasics",
+   "covers": [
+    "HttpsEncryption",
+    "StatusCode",
+    "ProtocolBasics"
+   ]
+  },
+  {
+   "id": "agent-CrawlerManners",
+   "name": "Crawler manners agent",
+   "subject": "CrawlerManners",
+   "covers": [
+    "RobotsTxt",
+    "PoliteDelay",
+    "UserAgent",
+    "CrawlerManners"
+   ]
+  },
+  {
+   "id": "agent-BrowserOpening",
+   "name": "Browser opening agent",
+   "subject": "BrowserOpening",
+   "covers": [
+    "WebbrowserOpen",
+    "CommandLineArguments",
+    "ShowmapProgram",
+    "BrowserOpening"
+   ]
+  },
+  {
+   "id": "agent-PageFetching",
+   "name": "Page fetching agent",
+   "subject": "PageFetching",
+   "covers": [
+    "GetRequest",
+    "ResponseBody",
+    "PageFetching"
+   ]
+  },
+  {
+   "id": "agent-ResponseChecking",
+   "name": "Response checking agent",
+   "subject": "ResponseChecking",
+   "covers": [
+    "StatusCheck",
+    "RaiseForStatus",
+    "ResponseChecking"
+   ]
+  },
+  {
+   "id": "agent-FileSaving",
+   "name": "File saving agent",
+   "subject": "FileSaving",
+   "covers": [
+    "BinaryWrite",
+    "ChunkedDownload",
+    "FileSaving"
+   ]
+  },
+  {
+   "id": "agent-ApiCalls",
+   "name": "Api calls agent",
+   "subject": "ApiCalls",
+   "covers": [
+    "ApiEndpoint",
+    "ApiKey",
+    "ApiErrorResponse",
+    "ApiCalls"
+   ]
+  },
+  {
+   "id": "agent-ApiData",
+   "name": "Api data agent",
+   "subject": "ApiData",
+   "covers": [
+    "JsonDecoding",
+    "ValueConversion",
+    "ApiData"
+   ]
+  },
+  {
+   "id": "agent-MarkupBasics",
+   "name": "Markup basics agent",
+   "subject": "MarkupBasics",
+   "covers": [
+    "HtmlElement",
+    "HtmlAttribute",
+    "MarkupBasics"
+   ]
+  },
+  {
+   "id": "agent-PageInspection",
+   "name": "Page inspection agent",
+   "subject": "PageInspection",
+   "covers": [
+    "ViewSource",
+    "DeveloperTools",
+    "CssSelector",
+    "PageInspection"
+   ]
+  },
+  {
+   "id": "agent-ParsingAdvice",
+   "name": "Parsing advice agent",
+   "subject": "ParsingAdvice",
+   "covers": [
+    "RegexPitfall",
+    "ParsingAdvice"
+   ]
+  },
+  {
+   "id": "agent-SoupCreation",
+   "name": "Soup creation agent",
+   "subject": "SoupCreation",
+   "covers": [
+    "SoupObject",
+    "SoupCreation"
+   ]
+  },
+  {
+   "id": "agent-ElementSelection",
+   "name": "Element selection agent",
+   "subject": "ElementSelection",
+   "covers": [
+    "SelectMethod",
+    "SelectorPatterns",
+    "TagText",
+    "TagAttributes",
+    "ElementSelection"
+   ]
+  },
+  {
+   "id": "agent-ProgramsOfChapter",
+   "name": "Programs of chapter agent",
+   "subject": "ProgramsOfChapter",
+   "covers": [
+    "SearchResultLinks",
+    "ComicCrawler",
+    "LinkVerification",
+    "ProgramsOfChapter"
+   ]
+  },
+  {
+   "id": "agent-SeleniumControl",
+   "name": "Selenium control agent",
+   "subject": "SeleniumControl",
+   "covers": [
+    "WebDriverStart",
+    "ByLocators",
+    "ElementLookup",
+    "ElementProperties",
+    "ClickAndSubmit",
+    "SeleniumControl"
+   ]
+  },
+  {
+   "id": "agent-PlaywrightControl",
+   "name": "Playwright control agent",
+   "subject": "PlaywrightControl",
+   "covers": [
+    "SyncPlaywright",
+    "PageLocators",
+    "LocatorMethods",
+    "AutoWaiting",
+    "PlaywrightControl"
+   ]
+  },
+  {
+   "id": "agent-ToolChoice",
+   "name": "Tool choice agent",
+   "subject": "ToolChoice",
+   "covers": [
+    "DynamicPages",
+    "ToolChoice"
+   ]
+  }
+ ],
+ "refs": [
+  [
+   "Automate the Boring Stuff with Python, 3rd edition - Chapter 13, Web Scraping (Al Sweigart, No Starch Press, 2025)",
+   "https://automatetheboringstuff.com/3e/chapter13.html"
+  ],
+  [
+   "Basic HTML syntax - elements and attributes (MDN Web Docs)",
+   "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Structuring_content/Basic_HTML_syntax"
+  ],
+  [
+   "Beautiful Soup Documentation - parsers, select and the search methods (Beautiful Soup 4.14.3 documentation)",
+   "https://www.crummy.com/software/BeautifulSoup/bs4/doc/"
+  ],
+  [
+   "CSS selectors - child and descendant combinators (MDN Web Docs)",
+   "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_selectors"
+  ],
+  [
+   "Geocoding API - direct geocoding by city name (OpenWeather documentation)",
+   "https://openweathermap.org/api/geocoding-api"
+  ],
+  [
+   "Playwright for Python - Browsers: installing the browsers with playwright install (Playwright documentation)",
+   "https://playwright.dev/python/docs/browsers"
+  ],
+  [
+   "Playwright for Python - auto-waiting and actionability checks (Playwright documentation)",
+   "https://playwright.dev/python/docs/actionability"
+  ],
+  [
+   "Playwright for Python - locators and strictness (Playwright documentation)",
+   "https://playwright.dev/python/docs/locators"
+  ],
+  [
+   "RFC 3986 - Uniform Resource Identifier (URI): Generic Syntax, the fragment component (Berners-Lee, Fielding and Masinter, IETF, 2005)",
+   "https://www.rfc-editor.org/rfc/rfc3986"
+  ],
+  [
+   "RFC 8259 - The JavaScript Object Notation (JSON) Data Interchange Format (Bray, IETF, 2017)",
+   "https://www.rfc-editor.org/rfc/rfc8259"
+  ],
+  [
+   "RFC 9110 - HTTP Semantics: status code classes (Fielding, Nottingham and Reschke, IETF, 2022)",
+   "https://www.rfc-editor.org/rfc/rfc9110"
+  ],
+  [
+   "RFC 9309 - Robots Exclusion Protocol (Koster, Illyes, Zeller and Sassman, IETF, 2022)",
+   "https://www.rfc-editor.org/rfc/rfc9309"
+  ],
+  [
+   "Requests: HTTP for Humans, Advanced Usage - session objects (Requests 2.34.2 documentation)",
+   "https://requests.readthedocs.io/en/latest/user/advanced/"
+  ],
+  [
+   "Requests: HTTP for Humans, Quickstart - response content, errors, timeouts, streaming downloads (Requests 2.34.2 documentation)",
+   "https://requests.readthedocs.io/en/latest/user/quickstart/"
+  ],
+  [
+   "Selenium Manager - automated driver and browser management (Selenium documentation)",
+   "https://www.selenium.dev/documentation/selenium_manager/"
+  ],
+  [
+   "Selenium WebDriver - locator strategies (Selenium documentation)",
+   "https://www.selenium.dev/documentation/webdriver/elements/locators/"
+  ],
+  [
+   "The Python Standard Library, datetime - fromtimestamp and the deprecation of utcfromtimestamp (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/datetime.html"
+  ],
+  [
+   "The Python Standard Library, html.parser - simple HTML and XHTML parser (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/html.parser.html"
+  ],
+  [
+   "The Python Standard Library, http - HTTP modules and HTTPStatus (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/http.html"
+  ],
+  [
+   "The Python Standard Library, json - JSON encoder and decoder (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/json.html"
+  ],
+  [
+   "The Python Standard Library, pathlib - Path.as_uri, Path.from_uri and the deprecation of PurePath.as_uri (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/pathlib.html"
+  ],
+  [
+   "The Python Standard Library, sys - argv (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/sys.html"
+  ],
+  [
+   "The Python Standard Library, urllib.parse - parse URLs into components, quote and unquote (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/urllib.parse.html"
+  ],
+  [
+   "The Python Standard Library, urllib.request - extensible library for opening URLs (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/urllib.request.html"
+  ],
+  [
+   "The Python Standard Library, urllib.robotparser - parser for robots.txt (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/urllib.robotparser.html"
+  ],
+  [
+   "The Python Standard Library, webbrowser - convenient web-browser controller: open, register, BROWSER (Python 3.14.4 documentation source)",
+   "https://docs.python.org/3/library/webbrowser.html"
+  ],
+  [
+   "The example page of the chapter, example3.html, downloaded 2026-10-01",
+   "https://autbor.com/example3.html"
+  ],
+  [
+   "What's New In Python 3.14 - webbrowser, urllib file URLs, pathlib deprecation (Python documentation source)",
+   "https://docs.python.org/3/whatsnew/3.14.html"
+  ],
+  [
+   "robots.txt of pypi.org, read 2026-10-01",
+   "https://pypi.org/robots.txt"
+  ]
+ ],
+ "resources": [
+  {
+   "kind": "documentation",
+   "title": "Chapter 13 - Web Scraping, Automate the Boring Stuff with Python, 3rd Ed",
+   "url": "https://automatetheboringstuff.com/3e/chapter13.html",
+   "source": "automatetheboringstuff.com",
+   "why": "The course textbook's own chapter, free online: webbrowser, requests, web APIs, HTML, Beautiful Soup, Selenium and Playwright.",
+   "concept": "WebbrowserOpen"
+  },
+  {
+   "kind": "documentation",
+   "title": "urllib.parse \u2014 Parse URLs into components",
+   "url": "https://docs.python.org/3/library/urllib.parse.html",
+   "source": "Python documentation",
+   "why": "urlsplit, parse_qs, quote and urljoin: how a URL is cut up and built.",
+   "concept": "UrlAnatomy"
+  },
+  {
+   "kind": "documentation",
+   "title": "html.parser \u2014 Simple HTML and XHTML parser",
+   "url": "https://docs.python.org/3/library/html.parser.html",
+   "source": "Python documentation",
+   "why": "The standard-library HTML parser, used in this page's examples where Beautiful Soup is not installed.",
+   "concept": "HtmlElement"
+  },
+  {
+   "kind": "documentation",
+   "title": "urllib.robotparser \u2014 Parser for robots.txt",
+   "url": "https://docs.python.org/3/library/urllib.robotparser.html",
+   "source": "Python documentation",
+   "why": "can_fetch, crawl_delay and request_rate for a robots.txt file.",
+   "concept": "RobotsTxt"
+  },
+  {
+   "kind": "documentation",
+   "title": "webbrowser \u2014 Convenient web-browser controller",
+   "url": "https://docs.python.org/3/library/webbrowser.html",
+   "source": "Python documentation",
+   "why": "open, open_new_tab and how a browser is chosen.",
+   "concept": "WebbrowserOpen"
+  },
+  {
+   "kind": "documentation",
+   "title": "Quickstart \u2014 Requests 2.34.2 documentation",
+   "url": "https://requests.readthedocs.io/en/latest/user/quickstart/",
+   "source": "Requests documentation",
+   "why": "Response content, status codes, raise_for_status, timeouts and streaming downloads.",
+   "concept": "GetRequest"
+  },
+  {
+   "kind": "documentation",
+   "title": "Beautiful Soup Documentation \u2014 Beautiful Soup 4.14.3 documentation",
+   "url": "https://www.crummy.com/software/BeautifulSoup/bs4/doc/",
+   "source": "Beautiful Soup documentation",
+   "why": "Parsers, select and the search methods.",
+   "concept": "SoupObject"
+  },
+  {
+   "kind": "documentation",
+   "title": "Locator strategies | Selenium",
+   "url": "https://www.selenium.dev/documentation/webdriver/elements/locators/",
+   "source": "Selenium documentation",
+   "why": "The By locator strategies the chapter lists in Table 13-3.",
+   "concept": "ByLocators"
+  },
+  {
+   "kind": "documentation",
+   "title": "RFC 9309: Robots Exclusion Protocol",
+   "url": "https://www.rfc-editor.org/rfc/rfc9309.html",
+   "source": "RFC Editor",
+   "why": "The standard that defines robots.txt rules, including the * wildcard.",
+   "concept": "UserAgent"
+  }
+ ],
+ "resources_checked": "2026-10-01"
+}

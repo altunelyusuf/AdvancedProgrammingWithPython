@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SEN0414 Exam desk</title>
+<style>
+:root{--ink:#1F2933;--mute:#5B6B7B;--navy:#1E2A3A;--blue:#306998;--yellow:#FFD43B;--card:#F1F4F8;--line:#D0D7DE;--ok:#1A7F37;--bad:#B42318;--bg:#FFFFFF;--panel:#FAFBFC;color-scheme:light}
+*{box-sizing:border-box}html{font-size:18px}body{margin:0;font:1rem/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+header{background:var(--navy);color:#fff;padding:.7rem 1rem;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}header h1{font-size:1.2rem;margin:0;flex:1 1 auto}
+header .sz button{background:var(--yellow);color:#000;border:0;border-radius:6px;padding:.25rem .6rem;font-weight:700;cursor:pointer;margin-left:.3rem}
+nav{display:flex;flex-wrap:wrap;gap:.3rem;padding:.5rem 1rem;background:var(--card);border-bottom:1px solid var(--line)}
+nav button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:.4rem .8rem;font:inherit;cursor:pointer}nav button[aria-selected=true]{background:var(--blue);color:#fff;border-color:var(--blue)}
+main{padding:1rem;max-width:1200px;margin:auto}section[hidden]{display:none}h2{margin:.2rem 0 .6rem;font-size:1.3rem}
+.note{color:var(--mute);font-size:.9rem}.row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.5rem 0}
+.btn{background:var(--blue);color:#fff;border:0;border-radius:8px;padding:.45rem .9rem;font:inherit;cursor:pointer}.btn.g{background:#fff;color:var(--blue);border:1px solid var(--blue)}.btn:disabled{opacity:.5;cursor:default}
+input,select,textarea{font:inherit;border:1px solid var(--line);border-radius:6px;padding:.3rem .5rem;max-width:100%}
+.tscroll{overflow-x:auto}table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid var(--line);padding:.3rem .5rem;text-align:left;vertical-align:top}th{background:var(--card)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.pill{display:inline-block;border-radius:10px;padding:0 .5rem;font-size:.85rem;border:1px solid var(--line)}
+code{background:var(--card);padding:0 .25rem;border-radius:4px;word-break:break-all}textarea{width:100%;min-height:8rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem}
+.warn{border:2px solid var(--bad);border-radius:8px;padding:.5rem .8rem;margin:.6rem 0}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+</style></head><body>
+<header><h1>SEN0414 Exam desk <span class="note" style="color:#cbd5e1">version 1.0.0 · the instructor's copy</span></h1><span class="sz">Text size <button id="szm" aria-label="Smaller text">A−</button><button id="szp" aria-label="Larger text">A+</button></span></header>
+<nav role="tablist" aria-label="Sections"></nav>
+<main>
+<section data-s="key"><h2>1 · Your key</h2>
+<p>Open your <b>instructor key file</b> (<code>sen0414_instructor_key_v1_0_0.json</code>). It stays in this browser tab: nothing is sent anywhere and nothing is stored. The key makes release codes. Without it you can still import and mark results.</p>
+<div class="row"><input type="file" id="keyfile" accept=".json,application/json" aria-label="Instructor key file"></div><p id="keymsg" role="status" class="note">No key loaded.</p>
+<div class="warn"><b>Keep student data out of the repository.</b> Result files, rosters and grade lists hold student data. This page keeps them only in memory; the files you export are yours to store outside the course repository.</div></section>
+<section data-s="results" hidden><h2>2 · Results</h2>
+<p>Add the students' <b>.json result files</b> (as many as you like). Each is checked for changes after export, then marked again here with the same marking code as the exam page.</p>
+<div class="row"><input type="file" id="resfiles" accept=".json,application/json" multiple aria-label="Student result files"><button class="btn" id="regrade">Mark all again</button><span id="resmsg" class="note" role="status"></span></div>
+<div class="tscroll"><table id="restab"><thead><tr><th scope="col">Student no.</th><th scope="col">Name</th><th scope="col">Chapter</th><th scope="col">Exam</th><th scope="col">Answered</th><th scope="col">File check</th><th scope="col">Marked here</th><th scope="col">Page's own mark</th><th scope="col">Notes</th></tr></thead><tbody></tbody></table></div></section>
+<section data-s="roster" hidden><h2>3 · Class list</h2>
+<p>Add your class list (a <b>.csv</b> or <b>.xlsx</b> file with student number, name, surname; a header row is recognised). It shows who has not handed in and whose name differs from the class list.</p>
+<div class="row"><input type="file" id="rosterfile" accept=".csv,.xlsx,.xls,text/csv" aria-label="Class list file"><span id="rostmsg" class="note" role="status"></span></div>
+<div class="tscroll"><table id="rosttab"><thead><tr><th scope="col">Student no.</th><th scope="col">Name</th><th scope="col">Surname</th><th scope="col">Exams handed in</th><th scope="col">Notes</th></tr></thead><tbody></tbody></table></div></section>
+<section data-s="codes" hidden><h2>4 · Release codes</h2>
+<p>A release code lets a student see their score and the corrections for one exam. Give the code of an exam only after you have collected the result files.</p>
+<div class="row"><label for="cch">Chapter</label><input id="cch" size="4" placeholder="6 or *"><label for="cex">Exam code</label><input id="cex" size="12" placeholder="M-12345 or *"><button class="btn" id="cmake">Make code</button><button class="btn g" id="call">One code for every exam handed in</button><button class="btn g" id="cdl">Download list</button></div>
+<p class="note">Chapter <code>*</code> with exam code <code>*</code> releases every exam of every chapter; exam code <code>*</code> alone releases every exam of that chapter.</p>
+<div class="tscroll"><table id="codetab"><thead><tr><th scope="col">Chapter</th><th scope="col">Exam</th><th scope="col">Release code</th><th scope="col"></th></tr></thead><tbody></tbody></table></div><p id="codemsg" class="note" role="status"></p></section>
+<section data-s="grades" hidden><h2>5 · Grades and announcement</h2>
+<p>The exam result counts as a bonus. For each student the best percentage of every chapter is taken, the chapters are averaged, and the bonus is that average of the bonus points. Change the two numbers if your rule differs.</p>
+<div class="row"><label for="gbonus">Bonus points at 100%</label><input id="gbonus" type="number" min="0" step="0.5" value="__BONUS__" size="5"><label for="gneed">Chapters counted (0 = the ones handed in)</label><input id="gneed" type="number" min="0" step="1" value="0" size="4"><label><input type="checkbox" id="gnames"> names in the announcement</label></div>
+<div class="row"><button class="btn" id="gmake">Work out the grades</button><button class="btn g" id="gcsv">Download grades (CSV)</button><button class="btn g" id="gtxt">Download announcement (text)</button><button class="btn g" id="gcopy">Copy announcement</button></div>
+<div class="tscroll"><table id="gradetab"><thead><tr><th scope="col">Student no.</th><th scope="col">Name</th><th scope="col">Chapters</th><th scope="col">Average %</th><th scope="col">Bonus points</th></tr></thead><tbody></tbody></table></div>
+<h3>Announcement</h3><textarea id="gann" aria-label="Announcement text" readonly></textarea></section>
+</main>
+<script>
+/*__MARKING__*/
+const BONUS_DEFAULT=__BONUS__, PUB=__PUB__, PREFIX='__PREFIX__';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const S={key:null,results:[],roster:[],codes:[],grades:[]};
+const SECT=[['key','1 · Key'],['results','2 · Results'],['roster','3 · Class list'],['codes','4 · Release codes'],['grades','5 · Grades']];
+const nav=$('nav');SECT.forEach(([k,l],i)=>{const b=document.createElement('button');b.type='button';b.role='tab';b.textContent=l;b.dataset.k=k;b.setAttribute('aria-selected',i===0);b.onclick=()=>show(k);nav.appendChild(b)});
+function show(k){$$('section[data-s]').forEach(s=>s.hidden=s.dataset.s!==k);$$('nav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.k===k))}
+let fs=18;const setfs=d=>{fs=Math.max(14,Math.min(30,fs+d));document.documentElement.style.fontSize=fs+'px'};$('#szm').onclick=()=>setfs(-2);$('#szp').onclick=()=>setfs(2);
+const b64u=a=>btoa(String.fromCharCode(...a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const fold=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ı/g,'i').replace(/İ/g,'I').toLowerCase().replace(/\s+/g,' ').trim();
+function download(name,type,data){const u=URL.createObjectURL(new Blob([data],{type})),a=document.createElement('a');a.href=u;a.download=name;a.hidden=true;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
+const readText=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result));r.onerror=()=>rej(new Error('could not read '+f.name));r.readAsText(f)});
+// ---- the key ----
+$('#keyfile').onchange=async e=>{const f=e.target.files[0];if(!f)return;const m=$('#keymsg');try{const j=JSON.parse(await readText(f)),k=j.private_jwk;if(!k||!k.d)throw new Error('this file has no private key');
+  if(k.x!==PUB.x||k.y!==PUB.y)throw new Error('this key does not belong to the exam pages (its public half differs)');
+  const jw=Object.assign({},k);delete jw.key_ops;delete jw.ext;S.key=await crypto.subtle.importKey('jwk',jw,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);m.textContent='Key loaded: it matches the public key built into the exam pages.';m.className='ok'}catch(err){S.key=null;m.textContent='The key could not be used: '+err.message+'.';m.className='bad'}};
+async function release(ch,code){if(!S.key)throw new Error('Load your key first (section 1).');const c=ch==='*'?'*':String(ch).padStart(2,'0'),scope=c+':'+code;
+ const sig=new Uint8Array(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},S.key,new TextEncoder().encode(PREFIX+'|'+scope)));return 'R1.'+scope+'.'+b64u(sig)}
+// ---- results ----
+async function loadResults(files){const m=$('#resmsg');let added=0,bad=[];for(const f of files){try{const o=JSON.parse(await readText(f));if(o.format!=='sen0414-exam-result')throw new Error('not an exam result file');
+  const d=o.digest&&o.digest.value,c=JSON.parse(JSON.stringify(o));delete c.digest;const sum=await xSha256(xCanon(c));
+  const r={file:f.name,obj:o,digestOk:d===sum,ch:Number(o.chapter),code:o.exam.code,sno:String(o.student.number||'').trim(),name:(o.student.name||'')+' '+(o.student.surname||''),re:null};
+  const dup=S.results.findIndex(x=>x.sno===r.sno&&x.ch===r.ch&&x.code===r.code);if(dup>=0){const a=S.results[dup];if((o.finished||'')>=(a.obj.finished||'')){r.note='replaced an earlier copy of the same exam';S.results[dup]=r}else{continue}}else S.results.push(r);added++}catch(err){bad.push(f.name+': '+err.message)}}
+ m.textContent=added+' result file(s) added'+(bad.length?'; not used: '+bad.join('; '):'')+'.';paintResults();paintRoster()}
+$('#resfiles').onchange=async e=>{await loadResults([...e.target.files]);e.target.value=''};
+function paintResults(){const tb=$('#restab tbody');tb.innerHTML=S.results.sort((a,b)=>a.sno.localeCompare(b.sno)||a.ch-b.ch).map(r=>{const o=r.obj,note=[r.note,!r.digestOk?'the file was changed after it was saved':'',!o.student.number?'no student number':'',r.re&&o.page_marks&&Math.abs(r.re.got-o.page_total.got)>0.05?'differs from the page’s mark':''].filter(Boolean).join('; ');
+  return '<tr><td>'+esc(r.sno)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.ch)+'</td><td><code>'+esc(r.code)+'</code></td><td>'+esc(o.answered)+' of '+esc(o.items.length)+'</td><td>'+(r.digestOk?'<span class="ok">unchanged</span>':'<span class="bad">changed</span>')+'</td><td>'+(r.re?esc(r.re.got)+' of '+esc(r.re.pts)+' ('+r.re.pct+'%)':'not yet')+'</td><td>'+(o.page_total?esc(o.page_total.got)+' of '+esc(o.page_total.points):'not in the file')+'</td><td>'+esc(note)+'</td></tr>'}).join('')}
+async function regradeOne(o){const per=[];let got=0,pts=0;for(let i=0;i<o.items.length;i++){const it=o.items[i];let sc=0;try{const r=it.type==='program'?await xpMark(it,o.answers[i]):await xMark(it,o.answers[i]);sc=r.score}catch(e){sc=0}per.push(sc);got+=sc*it.pts;pts+=it.pts}
+ got=Math.round(got*10)/10;return {got,pts,pct:pts?Math.round(100*got/pts):0,per}}
+$('#regrade').onclick=async()=>{const b=$('#regrade'),m=$('#resmsg');b.disabled=true;let n=0;for(const r of S.results){n++;m.textContent='Marking '+n+' of '+S.results.length+' ('+r.sno+', chapter '+r.ch+')…';r.re=await regradeOne(r.obj);paintResults()}m.textContent='Marked '+S.results.length+' result(s).';b.disabled=false;S.grades=[]};
+// ---- class list ----
+function parseCsv(t){const rows=[];let row=[],cur='',q=false;const sep=(t.split('\n')[0].match(/;/g)||[]).length>(t.split('\n')[0].match(/,/g)||[]).length?';':',';for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){cur+='"';i++}else q=false}else cur+=c}else if(c==='"')q=true;else if(c===sep){row.push(cur);cur=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(cur);cur='';if(row.some(x=>x.trim()))rows.push(row);row=[]}else cur+=c}row.push(cur);if(row.some(x=>x.trim()))rows.push(row);return rows}
+function rosterFrom(rows){if(!rows.length)return [];let h=rows[0].map(x=>fold(x)),iN=h.findIndex(x=>/(number|numara|\bno\b|id)/.test(x)),iA=h.findIndex(x=>/^(name|ad|first)/.test(x)),iS=h.findIndex(x=>/(surname|soyad|last)/.test(x));let body=rows;
+ if(iN>=0&&iS>=0){body=rows.slice(1);if(iA<0)iA=[0,1,2].find(i=>i!==iN&&i!==iS)}else{iN=0;iA=1;iS=2}return body.map(r=>({sno:String(r[iN]||'').trim(),name:String(r[iA]||'').trim(),surname:String(r[iS]||'').trim()})).filter(x=>x.sno)}
+$('#rosterfile').onchange=async e=>{const f=e.target.files[0];if(!f)return;const m=$('#rostmsg');try{let rows;if(/\.xlsx?$/i.test(f.name)){await new Promise((res,rej)=>{if(window.XLSX)return res();const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=res;s.onerror=()=>rej(new Error('the spreadsheet reader could not be loaded (offline?); save the list as .csv instead'));document.head.appendChild(s)});
+   const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:''})}else rows=parseCsv(await readText(f));
+  S.roster=rosterFrom(rows);m.textContent=S.roster.length+' students in the class list.';paintRoster()}catch(err){m.textContent='Could not read the class list: '+err.message}};
+function paintRoster(){const tb=$('#rosttab tbody');const by=new Map();S.results.forEach(r=>{if(!by.has(r.sno))by.set(r.sno,[]);by.get(r.sno).push(r)});const seen=new Set();
+ let h=S.roster.map(s=>{seen.add(s.sno);const rs=by.get(s.sno)||[],nm=[...new Set(rs.map(r=>fold(r.obj.student.name)+'|'+fold(r.obj.student.surname)))],bad=nm.some(x=>x!==fold(s.name)+'|'+fold(s.surname));
+  return '<tr><td>'+esc(s.sno)+'</td><td>'+esc(s.name)+'</td><td>'+esc(s.surname)+'</td><td>'+(rs.length?[...new Set(rs.map(r=>r.ch))].sort((a,b)=>a-b).join(', '):'<span class="bad">none</span>')+'</td><td>'+(bad?'the name on the result differs from the class list':'')+'</td></tr>'}).join('');
+ [...by.keys()].filter(k=>S.roster.length&&!seen.has(k)).forEach(k=>{const r=by.get(k)[0];h+='<tr><td>'+esc(k)+'</td><td>'+esc(r.obj.student.name)+'</td><td>'+esc(r.obj.student.surname)+'</td><td>'+[...new Set(by.get(k).map(x=>x.ch))].join(', ')+'</td><td class="bad">not in the class list</td></tr>'});tb.innerHTML=h}
+// ---- release codes ----
+function paintCodes(){$('#codetab tbody').innerHTML=S.codes.map((c,i)=>'<tr><td>'+esc(c.ch)+'</td><td><code>'+esc(c.code)+'</code></td><td><code>'+esc(c.value)+'</code></td><td><button class="btn g" data-copy="'+i+'">Copy</button></td></tr>').join('')}
+async function addCode(ch,code){const v=await release(ch,code);if(!S.codes.some(c=>c.value===v))S.codes.push({ch:String(ch),code,value:v});paintCodes()}
+$('#cmake').onclick=async()=>{try{const ch=$('#cch').value.trim(),code=$('#cex').value.trim();if(!ch||!code)throw new Error('enter the chapter and the exam code');if(ch!=='*'&&!/^\d{1,2}$/.test(ch))throw new Error('the chapter is a number such as 6, or *');await addCode(ch,code);$('#codemsg').textContent=''}catch(e){$('#codemsg').textContent=e.message}};
+$('#call').onclick=async()=>{try{const seen=new Set();for(const r of S.results){const k=r.ch+'|'+r.code;if(seen.has(k))continue;seen.add(k);await addCode(r.ch,r.code)}$('#codemsg').textContent=seen.size?seen.size+' code(s) made.':'No results imported yet.'}catch(e){$('#codemsg').textContent=e.message}};
+$('#cdl').onclick=()=>download('sen0414_release_codes.txt','text/plain',S.codes.map(c=>'chapter '+c.ch+'\t'+c.code+'\t'+c.value).join('\n')+'\n');
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-copy]');if(b){try{await navigator.clipboard.writeText(S.codes[+b.dataset.copy].value);b.textContent='Copied'}catch(_){b.textContent='Select and copy by hand'}}});
+// ---- grades ----
+function grades(){const bonus=Number($('#gbonus').value)||0,need=Number($('#gneed').value)||0,by=new Map();
+ S.results.forEach(r=>{if(!r.re)return;const g=by.get(r.sno)||{sno:r.sno,name:r.name,best:{}};g.name=r.name;g.best[r.ch]=Math.max(g.best[r.ch]||0,r.re.pct);by.set(r.sno,g)});
+ return [...by.values()].map(g=>{const ps=Object.values(g.best),sum=ps.reduce((a,b)=>a+b,0),den=Math.max(ps.length,need),avg=den?sum/den:0;return {sno:g.sno,name:g.name,chapters:Object.keys(g.best).map(Number).sort((a,b)=>a-b),avg:Math.round(avg*10)/10,bonus:Math.round(avg*bonus)/100}}).sort((a,b)=>a.sno.localeCompare(b.sno))}
+$('#gmake').onclick=()=>{if(S.results.some(r=>!r.re)){$('#gann').value='Some results are not marked yet: press “Mark all again” in section 2 first.';return}S.grades=grades();
+ $('#gradetab tbody').innerHTML=S.grades.map(g=>'<tr><td>'+esc(g.sno)+'</td><td>'+esc(g.name)+'</td><td>'+g.chapters.join(', ')+'</td><td>'+g.avg+'</td><td>'+g.bonus+'</td></tr>').join('');
+ const nm=$('#gnames').checked;$('#gann').value='SEN0414 – exam bonus (out of '+(Number($('#gbonus').value)||0)+' points)\n\n'+S.grades.map(g=>g.sno+(nm?'  '+g.name:'')+'  →  '+g.bonus+'  (chapters '+g.chapters.join(', ')+', average '+g.avg+'%)').join('\n')+'\n'};
+const csvq=v=>'"'+String(v).replace(/"/g,'""')+'"';
+$('#gcsv').onclick=()=>{if(!S.grades.length)$('#gmake').click();download('sen0414_exam_bonus.csv','text/csv;charset=utf-8','﻿student_number,name,chapters,average_percent,bonus_points\n'+S.grades.map(g=>[g.sno,g.name,g.chapters.join(' '),g.avg,g.bonus].map(csvq).join(',')).join('\n')+'\n')};
+$('#gtxt').onclick=()=>{if(!S.grades.length)$('#gmake').click();download('sen0414_exam_announcement.txt','text/plain;charset=utf-8',$('#gann').value)};
+$('#gcopy').onclick=async()=>{if(!S.grades.length)$('#gmake').click();try{await navigator.clipboard.writeText($('#gann').value);$('#gcopy').textContent='Copied'}catch(e){}};
+window.DESK={S,regradeOne,release,loadResults,grades};
+</script></body></html>

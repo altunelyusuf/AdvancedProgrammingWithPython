@@ -1,0 +1,5443 @@
+{
+ "_version": "9.19.0",
+ "visuals": {},
+ "course": {
+  "_version": "1.3.3",
+  "name": "SEN0414 Advanced Programming",
+  "line": "SEN0414 Advanced Programming",
+  "chapter_sub": "chapter {n} of Automate the Boring Stuff with Python, 3rd edition",
+  "chapter_intro": "Chapter {n} of <i>Automate the Boring Stuff with Python</i>, 3rd edition (Sweigart, 2025), renewed for an advanced course.",
+  "playground": {
+   "label": "Looking Busy on a model desk: nudges and the fail-safe (uses input)",
+   "code": "from collections import namedtuple\nPoint = namedtuple('Point', 'x y'); Size = namedtuple('Size', 'width height'); Box = namedtuple('Box', 'left top width height')\nclass FailSafeException(Exception): pass\nclass Desk:\n    def __init__(self, w=1920, h=1080, pos=None):\n        self.size = Size(w, h); self.pos = Point(*(pos or (w // 2, h // 2))); self.log = []\n        self.PAUSE = 0.1; self.FAILSAFE = True; self.clock = 0.0\n        self.corners = {(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)}\n    def _check(self):\n        if self.FAILSAFE and tuple(self.pos) in self.corners: raise FailSafeException('corner')\n    def _at(self, x, y):\n        x = self.pos.x if x is None else x; y = self.pos.y if y is None else y\n        p = Point(min(max(x, 0), self.size.width - 1), min(max(y, 0), self.size.height - 1))\n        if p != self.pos: self.log.append(('move', p.x, p.y))\n        self.pos = p\n    def _done(self): self.clock = round(self.clock + self.PAUSE, 6)\n    def _press(self, k): self.log += [('keydown', k.lower() if len(k) > 1 else k), ('keyup', k.lower() if len(k) > 1 else k)]\n    def moveTo(self, x=None, y=None): self._check(); self._at(x, y); self._done()\n    def move(self, dx, dy): self._check(); self._at(self.pos.x + dx, self.pos.y + dy); self._done()\n    def click(self, x=None, y=None, clicks=1, button='left'):\n        self._check()\n        if isinstance(x, tuple) and len(x) == 4: x, y = x[0] + x[2] // 2, x[1] + x[3] // 2\n        elif isinstance(x, tuple): x, y = x\n        self._at(x, y)\n        for _ in range(clicks): self.log += [('down', button), ('up', button)]\n        self._done()\n    def doubleClick(self): self.click(clicks=2)\n    def scroll(self, n):\n        self._check(); self.log += [('wheel', 1 if n > 0 else -1)] * abs(n); self._done()\n    def drag(self, dx, dy, button='left'):\n        self._check()\n        if (dx, dy) != (0, 0):\n            self.log.append(('down', button)); self._at(self.pos.x + dx, self.pos.y + dy); self.log.append(('up', button))\n        self._done()\n    def dragTo(self, x, y, button='left'):\n        self._check(); self.log.append(('down', button)); self._at(x, y); self.log.append(('up', button)); self._done()\n    def keyDown(self, k): self._check(); self.log.append(('keydown', k.lower() if len(k) > 1 else k)); self._done()\n    def keyUp(self, k): self._check(); self.log.append(('keyup', k.lower() if len(k) > 1 else k)); self._done()\n    def press(self, keys, presses=1):\n        self._check()\n        for _ in range(presses):\n            for k in ([keys] if isinstance(keys, str) else keys): self._press(k)\n        self._done()\n    def write(self, message):\n        self._check()\n        for c in message: self._press(c)\n        self._done()\n    def hotkey(self, *keys):\n        self._check()\n        for k in keys: self.log.append(('keydown', k.lower() if len(k) > 1 else k))\n        for k in reversed(keys): self.log.append(('keyup', k.lower() if len(k) > 1 else k))\n        self._done()\n\nx, y = map(int, input('Start the pointer at (x y): ').split())\nd = Desk(pos=(x, y))\nprint('fail-safe corners:', sorted(d.corners))\nfor i in range(6):\n    try:\n        d.move(-1 if i % 2 == 0 else 1, 0)\n    except FailSafeException:\n        print('step', i, ': the fail-safe stopped the script with the pointer at', tuple(d.pos))\n        break\n    print('step', i, ': pointer at', tuple(d.pos))\nprint('events sent:', d.log)\n",
+   "inputs": "1 0"
+  },
+  "corpus": {
+   "book_pin_source": "02-textbook/sen0414_textbook_v1_0_0.ttl",
+   "book": [
+    "automate-python-book-3e/01-ontologies/automate_python_3e_ch{nn}_v1_0_0.ttl"
+   ],
+   "course": [
+    "00-course-profile/sen0414_course_v1_0_0.ttl",
+    "01-outcomes/sen0414_outcomes_v1_0_0.ttl",
+    "02-textbook/sen0414_textbook_v1_0_0.ttl",
+    "03-materials/sen0414_materials_v1_22_0.ttl"
+   ]
+  },
+  "exam": {
+   "course": "SEN0414",
+   "release_prefix": "sen0414-exam-release",
+   "public_key": {
+    "kty": "EC",
+    "crv": "P-256",
+    "x": "_V6lAWK-uO72ApcyNiCalt4q8h2Yt-HzOol5XoZNwEk",
+    "y": "3UhUEuwspaDMB-gZsFCLKx2GW08SABcTHzJvuvUEc5I"
+   },
+   "bonus_points": 10
+  }
+ },
+ "discussion": [],
+ "findings": [
+  [
+   "Background",
+   "Chapter 23 of the 3rd edition, Controlling the Keyboard and Mouse, introduces GUI automation with the PyAutoGUI library: a warning not to name a program pyautogui.py; the accessibility setting macOS needs; the fail-safe, the pause and the logout as ways to stay in control; screen coordinates, size(), moveTo(), move() and position(); click(), mouseDown(), mouseUp(), doubleClick(), drag(), dragTo() and scroll() with the square-spiral program spiralDraw.py; the MouseInfo tool; screenshot(), pixel(), pixelMatchesColor(), locateOnScreen(), locateAllOnScreen() and ImageNotFoundException; window objects and their attributes and methods; a box about captchas and ethics; write(), key names, press(), keyDown(), keyUp() and hotkey(); tips for setting up scripts, sleep() and countdown(); the message boxes of PyMsgBox; and it closes with 13 practice questions and 3 practice programs, Looking Busy, Reading Text Fields with the Clipboard and Writing a Game-Playing Bot."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter names PyAutoGUI version 1.0.0 three times, twice for the window features working only on Windows and once for locateOnScreen() raising ImageNotFoundException instead of returning None, but the newest release the package index offers is 0.9.54, and the source of 0.9.54 already has the names the chapter uses, write() as another name of typewrite(), drag() of dragRel() and move() of moveRel(), with comments that say they are the names PyAutoGUI 1.0 is meant to use; the documentation dates ImageNotFoundException to version 0.9.41, so the version number 1.0.0 in the chapter names a release that does not exist and the behaviour it describes is that of 0.9.54."
+  ],
+  [
+   "Comparative analysis",
+   "One printed command of the chapter fails in the current library: pyautogui.pixel((50, 200)), which the chapter prints twice, raises TypeError because PyScreeze 1.0.1 takes the two coordinates as separate arguments, pixel(x, y), and its source notes that the second edition of the book documented the tuple form; the chapter's pixelMatchesColor(50, 200, (130, 135, 144)) is called correctly and its True, and its False for a different colour, hold, and the function has a tolerance argument, default 0, that the chapter does not mention, so that (255, 255, 254) against (255, 255, 255) is False at tolerance 0 and True at tolerance 1."
+  ],
+  [
+   "Comparative analysis",
+   "The chapter's account of the fail-safe and the pause holds with two additions: the fail-safe points of 0.9.54 are the four corners of the screen, as the chapter says, although the documentation's cheat sheet names only the upper-left, and they are computed once when PyAutoGUI is imported, so they do not follow a change of resolution; and the exception is raised by the next PyAutoGUI call after the pointer has reached a corner, not by the move that reached it, since the check runs before each call and a move that ends on a fail-safe point is itself exempt from the check. The pause is 0.1 second by default, added after every public call, and two clicks with PAUSE at 0.5 took 1.0 second."
+  ],
+  [
+   "Comparative analysis",
+   "What the chapter says about platforms matches the library but leaves out what a course needs: the window functions getActiveWindow(), getAllWindows(), getWindowsAt() and getWindowsWithTitle() exist only on Windows, and on Linux the names are absent and raise AttributeError (PyGetWindow implements only Windows); a screenshot on Linux needs a helper program that the chapter does not name, so screenshot() raised an Exception on the machine used here, and the Linux installation of the chapter's appendix lists python3-tk and python3-dev but no screenshot helper, while the PyAutoGUI and PyScreeze documents name scrot and gnome-screenshot; pyperclip needs xclip or xsel on Linux, and without them paste and copy raise PyperclipException."
+  ],
+  [
+   "Conclusion",
+   "For an advanced course, chapter 23 is best taught as a small event language: every call is a list of events (a move, a button down and up, a key down and up, a wheel step) preceded by a fail-safe check and followed by a pause, and its reliability comes from what the script checks (a pixel, an image, a window, a log) before it lets the next events go; most of it can be run and compared without a desktop by recording the events, as done here for 21 scenarios, while screenshots, real windows, the clipboard and message boxes need a desktop and are read, not run, in this study; the chapter's printed outputs hold for PyAutoGUI 0.9.54 except the tuple form of pixel, and the version numbers, the platform notes and the library's additions listed above are what the course adds."
+  ],
+  [
+   "Contemporary developments",
+   "Current PyAutoGUI has more than the chapter presents: click() takes clicks, interval and button, with tripleClick(); press() takes presses and a list of keys and hold() is a context manager that holds keys for the length of a with block; moveTo() takes None for a coordinate to keep the present one; hscroll() scrolls sideways; onScreen() tests coordinates; center() and locateCenterOnScreen() give the middle of a Box; the optional confidence argument of the locate functions needs OpenCV; isValidKey() tests a key name; KEYBOARD_KEYS has 194 names including f1 to f24, where the chapter's table lists f1 to f12; and the tween functions shape a timed movement."
+  ],
+  [
+   "Contemporary developments",
+   "Some behaviour of the library surprises a reader of the chapter: PyAutoGUI does not keep a coordinate on the screen, since the lines that would clamp it are commented out in the source, so on the virtual X display used here it was the display that held the pointer at x = 0 after move(-300, 0) from x = 200, and the chapter's statement that there are no negative coordinates is a property of the screen and not a check of the library; a name that is not a key is silently ignored by press(), keyDown() and write(), which is why isValidKey() exists; a drag of (0, 0) does nothing; the chapter's spiralDraw.py makes 32 drag calls of which 2 are zero drags, and because distance has become negative by the last call its final drag moves down 20 pixels instead of up; and the nudge of the Looking Busy program from the pointer's corner position can reach a corner and trigger the fail-safe."
+  ]
+ ],
+ "unit": null,
+ "research_file": "sen0414_ch23_research_v1_0_0.ttl",
+ "chapter": 23,
+ "title": "Controlling the keyboard and mouse: chapter 23 of the 3rd edition and today's PyAutoGUI",
+ "python": "Python 3.14.4",
+ "nodes": [
+  {
+   "id": "ScreenCoordinates",
+   "label": "Screen coordinates",
+   "level": 1,
+   "parent": null,
+   "body": "Where things are on the screen, and how the pointer is sent there, are the base of Chapter 23 (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_ScreenCoordinates",
+   "class_iri": "http://example.org/sen0414/ch23#ScreenCoordinates"
+  },
+  {
+   "id": "Geometry",
+   "label": "Geometry",
+   "level": 2,
+   "parent": "ScreenCoordinates",
+   "body": "The screen is a grid of pixels, and the chapter gives it a size and gives places on it points and boxes (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_Geometry",
+   "class_iri": "http://example.org/sen0414/ch23#Geometry"
+  },
+  {
+   "id": "CoordinateOrigin",
+   "label": "Coordinate origin",
+   "level": 3,
+   "parent": "Geometry",
+   "body": "The origin (0, 0) is the upper-left corner, x increases to the right and y increases downward, so on a 1920 by 1080 screen the lower-right pixel is (1919, 1079), and the chapter states that all coordinates are positive integers (Sweigart, 2025); the documentation's onScreen(0, -1) is False, onScreen(1919, 1079) is True and onScreen(1920, 1080) is False, as run here, and an on-screen test written for this study gave [True, False, True, False] for (0, 0), (0, -1), (1919, 1079) and (1920, 1080) (PyAutoGUI documentation, 2026) (PyAutoGUI 0.9.54 source, read and run for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_CoordinateOrigin",
+   "class_iri": "http://example.org/sen0414/ch23#CoordinateOrigin",
+   "example": "x, y = 0, 0",
+   "definition": "The origin (0, 0) is the upper-left pixel of the screen, x grows to the right and y grows downward, so on a screen 1920 pixels wide and 1080 high the lower-right pixel is (1919, 1079).",
+   "io": {
+    "code": "(lambda w, h: ((0, 0), (w - 1, h - 1)))(1920, 1080)",
+    "out": "((0, 0), (1919, 1079))",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "0",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "0",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "-",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "w",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "-",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "h",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "1920",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "1080",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ScreenSize",
+   "label": "Screen size",
+   "level": 3,
+   "parent": "Geometry",
+   "body": "size() returns the named tuple Size(width=1920, height=1080) on the chapter's screen, which can be indexed, read by attribute, unpacked into two names and turned into a tuple (Sweigart, 2025); a named tuple gives each position a name and is still a tuple (Python Software Foundation, 2026); PyAutoGUI handles only the primary monitor (PyAutoGUI documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch23#S_ScreenSize",
+   "class_iri": "http://example.org/sen0414/ch23#ScreenSize",
+   "example": "pyautogui.size()",
+   "definition": "size() returns a named tuple Size with the width and the height of the screen in pixels, readable by index or by attribute and unpackable into two names.",
+   "io": {
+    "code": "(lambda S: (S(1920, 1080)[0], S(1920, 1080).height, tuple(S(1920, 1080))))(__import__('collections').namedtuple('Size', 'width height'))",
+    "out": "(1920, 1080, (1920, 1080))",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "Subscript",
+           "kind": "Subscript",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "S",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1920",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "1080",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "0",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "S",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1920",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "1080",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "tuple",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "S",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1920",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "1080",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'collections'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'Size'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'width height'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PointAndBox",
+   "label": "Point and box",
+   "level": 3,
+   "parent": "Geometry",
+   "body": "position() returns a Point such as Point(x=1536, y=637), read by index or by x and y (Sweigart, 2025); a Box is left, top, width and height, as in Box(left=643, top=745, width=70, height=29), whose middle is Point(x=678, y=759), the place at which click((643, 745, 70, 29)) moved the pointer in the recorded PyAutoGUI events (Sweigart, 2025) (PyAutoGUI 0.9.54 source, read and run for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_PointAndBox",
+   "class_iri": "http://example.org/sen0414/ch23#PointAndBox",
+   "example": "box = pyautogui.locateOnScreen('submit.png')",
+   "definition": "position() gives a named tuple Point of x and y, and the locate functions give a named tuple Box of left, top, width and height; the middle of a Box is its left plus half its width and its top plus half its height.",
+   "io": {
+    "code": "(lambda B: (B(643, 745, 70, 29).left, (643 + 70 // 2, 745 + 29 // 2)))(__import__('collections').namedtuple('Box', 'left top width height'))",
+    "out": "(643, (678, 759))",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "B",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "643",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "745",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "70",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "29",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "+",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "643",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "//",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "70",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "2",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "+",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "745",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "//",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "29",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "2",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "__import__",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'collections'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "'Box'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'left top width height'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(lambda B: (B(643, 745, 70, 29).left, (643 + 70 // 2, 745 + 29 // 2)))(__import__('collections').namedtuple('Box', 'left top width height'))",
+      "focus": "70 // 2",
+      "value": "35"
+     },
+     {
+      "expr": "(lambda B: (B(643, 745, 70, 29).left, (643 + 35, 745 + 29 // 2)))(__import__('collections').namedtuple('Box', 'left top width height'))",
+      "focus": "643 + 35",
+      "value": "678"
+     },
+     {
+      "expr": "(lambda B: (B(643, 745, 70, 29).left, (678, 745 + 29 // 2)))(__import__('collections').namedtuple('Box', 'left top width height'))",
+      "focus": "29 // 2",
+      "value": "14"
+     },
+     {
+      "expr": "(lambda B: (B(643, 745, 70, 29).left, (678, 745 + 14)))(__import__('collections').namedtuple('Box', 'left top width height'))",
+      "focus": "745 + 14",
+      "value": "759"
+     }
+    ]
+   }
+  },
+  {
+   "id": "Movement",
+   "label": "Movement",
+   "level": 2,
+   "parent": "ScreenCoordinates",
+   "body": "moveTo() sets the pointer's place and move() changes it by an offset (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_Movement",
+   "class_iri": "http://example.org/sen0414/ch23#Movement"
+  },
+  {
+   "id": "MoveTo",
+   "label": "Move to",
+   "level": 3,
+   "parent": "Movement",
+   "body": "moveTo(100, 100, duration=0.25) moves the pointer there over a quarter of a second and, without a duration, at once (Sweigart, 2025); None keeps a coordinate, so from (100, 200) moveTo(None, 500) ended at (100, 500) and moveTo(600, None) at (600, 200) in the recorded events, and a duration of no more than MINIMUM_DURATION, 0.1 second, means an instant move (PyAutoGUI documentation, 2026) (PyAutoGUI 0.9.54 source, read and run for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_MoveTo",
+   "class_iri": "http://example.org/sen0414/ch23#MoveTo",
+   "example": "pyautogui.moveTo(100, 100, duration=0.25)",
+   "definition": "moveTo moves the pointer to absolute coordinates, at once or over the given number of seconds, and None for one coordinate keeps the present value of that coordinate.",
+   "io": {
+    "code": "(lambda pos, x, y: (pos[0] if x is None else x, pos[1] if y is None else y))((100, 200), None, 500)",
+    "out": "(100, 500)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "IfExp",
+           "kind": "IfExp",
+           "children": [
+            {
+             "label": "Compare",
+             "kind": "Compare",
+             "children": [
+              {
+               "label": "x",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "None",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "pos",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "x",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "IfExp",
+           "kind": "IfExp",
+           "children": [
+            {
+             "label": "Compare",
+             "kind": "Compare",
+             "children": [
+              {
+               "label": "y",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "None",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "pos",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "y",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "100",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "200",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "None",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "500",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "MoveRelative",
+   "label": "Move relative",
+   "level": 3,
+   "parent": "Movement",
+   "body": "move(100, 0, duration=0.25) moves the pointer 100 pixels to the right and the chapter's square uses move(100, 0), move(0, 100), move(-100, 0) and move(0, -100) (Sweigart, 2025); in the recorded events moveTo(100, 100), move(100, 0) and move(0, 100) sent moves to (100, 100), (200, 100) and (200, 200), and the model sent the same events (PyAutoGUI 0.9.54 source, read and run for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_MoveRelative",
+   "class_iri": "http://example.org/sen0414/ch23#MoveRelative",
+   "example": "pyautogui.move(100, 0, duration=0.25)",
+   "definition": "move moves the pointer by an offset from where it is, to the right for a positive first number and downward for a positive second, so a negative number moves it left or up.",
+   "io": {
+    "code": "(lambda pos, dx, dy: (pos[0] + dx, pos[1] + dy))((200, 100), -100, 0)",
+    "out": "(100, 100)",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "pos",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "dx",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "Subscript",
+             "kind": "Subscript",
+             "children": [
+              {
+               "label": "pos",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "1",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "dy",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "200",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "100",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "UnaryOp",
+       "kind": "UnaryOp",
+       "children": [
+        {
+         "label": "100",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "0",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(lambda pos, dx, dy: (pos[0] + dx, pos[1] + dy))((200, 100), -100, 0)",
+      "focus": "-100",
+      "value": "-100"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ClampToScreen",
+   "label": "Clamp to screen",
+   "level": 3,
+   "parent": "Movement",
+   "body": "A point is on the screen when 0 <= x < width and 0 <= y < height, which onScreen() tests (PyAutoGUI documentation, 2026); the lines of the source that would keep a target inside the screen are commented out, so PyAutoGUI does not clamp, and on the virtual X display used here the pointer stopped at x = 0 after move(-300, 0) from x = 200 and at x = 0 after moveTo(-5, 400), which is why the model clamps; the chapter's statement that there are no negative coordinates describes the screen, not a check in the library (Sweigart, 2025) (PyAutoGUI 0.9.54 source, read and run for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_ClampToScreen",
+   "class_iri": "http://example.org/sen0414/ch23#ClampToScreen",
+   "example": "pyautogui.onScreen(1920, 1080)",
+   "definition": "A point is on the screen when 0 <= x < width and 0 <= y < height, which onScreen tests; PyAutoGUI 0.9.54 does not clamp a target to the screen itself, so the display decides where a pointer sent off the screen stops.",
+   "io": {
+    "code": "[(x, 0 <= x < 1920) for x in (-1, 0, 1919, 1920)]",
+    "out": "[(-1, False), (0, True), (1919, True), (1920, False)]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "x",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Compare",
+         "kind": "Compare",
+         "children": [
+          {
+           "label": "0",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "x",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "1920",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "x",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "UnaryOp",
+           "kind": "UnaryOp",
+           "children": [
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "0",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "1919",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "1920",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "[(x, 0 <= x < 1920) for x in (-1, 0, 1919, 1920)]",
+      "focus": "-1",
+      "value": "-1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "MouseActions",
+   "label": "Mouse actions",
+   "level": 1,
+   "parent": null,
+   "body": "Clicking, scrolling and dragging send mouse-button and wheel events to the computer (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_MouseActions",
+   "class_iri": "http://example.org/sen0414/ch23#MouseActions"
+  },
+  {
+   "id": "Clicking",
+   "label": "Clicking",
+   "level": 2,
+   "parent": "MouseActions",
+   "body": "A click is a button press followed by a release at a place, and the wheel is a separate kind of step (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_Clicking",
+   "class_iri": "http://example.org/sen0414/ch23#Clicking"
+  },
+  {
+   "id": "ClickFunction",
+   "label": "Click function",
+   "level": 3,
+   "parent": "Clicking",
+   "body": "click(10, 5) moves the pointer to (10, 5) and clicks the left button once, a full click being a button down and then a button up, and mouseDown() and mouseUp() send the two halves (Sweigart, 2025); the recorded events of click(10, 5) were a move to (10, 5), a press of the left button and its release, doubleClick() sent two press-and-release pairs, click(10, 5, clicks=3) sent three, and the model sent the same events as the recorded ones for the first two; on the Linux backend click() is built from the same press and release, as the chapter says (PyAutoGUI 0.9.54 source, read and run for this study); the documentation adds tripleClick() and the clicks and interval arguments (PyAutoGUI documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch23#S_ClickFunction",
+   "class_iri": "http://example.org/sen0414/ch23#ClickFunction",
+   "example": "pyautogui.click(10, 5)",
+   "definition": "click moves the pointer to the given coordinates if any and then sends a button press and a release for each click; doubleClick, rightClick and middleClick are the same call with other arguments, and mouseDown and mouseUp send the two halves alone.",
+   "io": {
+    "code": "[(e, 'left') for _ in range(2) for e in ('down', 'up')]",
+    "out": "[('down', 'left'), ('up', 'left'), ('down', 'left'), ('up', 'left')]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "e",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'left'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "_",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "range",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "e",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'down'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'up'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ButtonChoice",
+   "label": "Button choice",
+   "level": 3,
+   "parent": "Clicking",
+   "body": "button='left', 'middle' or 'right' chooses the button, as in click(100, 150, button='left') and click(200, 250, button='right') (Sweigart, 2025); the right button was recorded as a press and release of the right button at (100, 150), and an unknown value raised PyAutoGUIException with the message button argument must be one of ('left', 'middle', 'right', 'primary', 'secondary', 1, 2, 3, 4, 5, 6, 7) on Linux, where 1, 2 and 3 are left, middle and right (PyAutoGUI 0.9.54 source, read and run for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_ButtonChoice",
+   "class_iri": "http://example.org/sen0414/ch23#ButtonChoice",
+   "example": "pyautogui.click(200, 250, button='right')",
+   "definition": "The button argument names the button: 'left', 'middle' or 'right' (also 'primary', 'secondary' and the numbers 1 to 7 on Linux), and any other value raises PyAutoGUIException.",
+   "io": {
+    "code": "{'left': 1, 'middle': 2, 'right': 3}['right']",
+    "out": "3",
+    "tree": {
+     "label": "Subscript",
+     "kind": "Subscript",
+     "children": [
+      {
+       "label": "Dict",
+       "kind": "Dict",
+       "children": [
+        {
+         "label": "'left'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'middle'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'right'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "1",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "2",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "3",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "'right'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ScrollWheel",
+   "label": "Scroll wheel",
+   "level": 3,
+   "parent": "Clicking",
+   "body": "scroll(200) scrolls up and a negative number scrolls down, by units whose size the operating system and the program decide (Sweigart, 2025); on the Linux backend the recorded events of scroll(3) were three wheel-up steps and of scroll(-2) two wheel-down steps, because the source repeats one wheel click for every unit, so scroll(200) sends 200 of them; hscroll() scrolls sideways on macOS and Linux (PyAutoGUI 0.9.54 source, read and run for this study) (PyAutoGUI documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch23#S_ScrollWheel",
+   "class_iri": "http://example.org/sen0414/ch23#ScrollWheel",
+   "example": "pyautogui.scroll(200)",
+   "definition": "scroll sends wheel steps at the pointer, upward for a positive number and downward for a negative one; the size of a step depends on the system, and on the Linux backend every unit is one wheel click.",
+   "io": {
+    "code": "[('up' if n > 0 else 'down', abs(n)) for n in (3, -2)]",
+    "out": "[('up', 3), ('down', 2)]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "IfExp",
+         "kind": "IfExp",
+         "children": [
+          {
+           "label": "Compare",
+           "kind": "Compare",
+           "children": [
+            {
+             "label": "n",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "0",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "'up'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'down'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "abs",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "n",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "n",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "3",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "UnaryOp",
+           "kind": "UnaryOp",
+           "children": [
+            {
+             "label": "2",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "[('up' if n > 0 else 'down', abs(n)) for n in (3, -2)]",
+      "focus": "-2",
+      "value": "-2"
+     }
+    ]
+   }
+  },
+  {
+   "id": "Dragging",
+   "label": "Dragging",
+   "level": 2,
+   "parent": "MouseActions",
+   "body": "Dragging is moving the pointer while a button is held, and the chapter draws a spiral with it (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_Dragging",
+   "class_iri": "http://example.org/sen0414/ch23#Dragging"
+  },
+  {
+   "id": "DragFunctions",
+   "label": "Drag functions",
+   "level": 3,
+   "parent": "Dragging",
+   "body": "drag() moves by an offset and dragTo() to a place while the left button is held, and macOS needs a duration to drag correctly (Sweigart, 2025); the recorded events of drag(30, 0) from (100, 100) were a press of the left button, a move to (130, 100) and a release, dragTo(200, 150) sent a move to (200, 150) between the same two events, drag(0, 0) sent no events at all, and button='right' held the right button, the model giving the same events for the first three; the documentation says the button keyword is 'left', 'middle' or 'right' (PyAutoGUI 0.9.54 source, read and run for this study) (PyAutoGUI documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch23#S_DragFunctions",
+   "class_iri": "http://example.org/sen0414/ch23#DragFunctions",
+   "example": "pyautogui.drag(30, 0, duration=0.2)",
+   "definition": "drag and dragTo hold the left button (or the one named by button) down while the pointer moves by an offset or to a place, and release it there; a drag of (0, 0) sends nothing.",
+   "io": {
+    "code": "(lambda pos, dx, dy: [('down', 'left'), ('move', pos[0] + dx, pos[1] + dy), ('up', 'left')])((100, 100), 30, 0)",
+    "out": "[('down', 'left'), ('move', 130, 100), ('up', 'left')]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "List",
+         "kind": "List",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "'down'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'left'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "'move'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "+",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "Subscript",
+               "kind": "Subscript",
+               "children": [
+                {
+                 "label": "pos",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "0",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "dx",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "+",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "Subscript",
+               "kind": "Subscript",
+               "children": [
+                {
+                 "label": "pos",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "dy",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "'up'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "'left'",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "100",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "100",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "30",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "0",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SpiralDrawProgram",
+   "label": "Spiral draw program",
+   "level": 3,
+   "parent": "Dragging",
+   "body": "spiralDraw.py starts with distance = 300 and change = 20 and in each pass of its while loop drags right, reduces distance, drags down, drags left, reduces distance and drags up (Sweigart, 2025); run against the model from (500, 500) it made 32 drag calls, (0, 0) appeared twice, distance ended at -20 and the last call was (0, 20), a drag downward, because distance was already negative; the points it visited lay inside the rectangle from (500, 500) to (800, 780) and the pointer ended at (660, 660), and the same loop against PyAutoGUI 0.9.54 with recorded events made 32 calls, 30 button presses and also ended at (660, 660) (PyAutoGUI 0.9.54 source, read and run for this study) (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_SpiralDrawProgram",
+   "class_iri": "http://example.org/sen0414/ch23#SpiralDrawProgram",
+   "example": "while distance > 0: pyautogui.drag(distance, 0, duration=0.2)",
+   "definition": "The chapter's spiralDraw.py drags right, down, left and up with a distance that shrinks by 20 after every second drag; starting from 300 it makes 32 drag calls, two of them with a zero distance, and the last one moves down because distance has turned negative.",
+   "io": {
+    "code": "len([c for d in range(300, 0, -40) for c in ((d, 0), (0, d - 20), (-(d - 20), 0), (0, -(d - 40)))])",
+    "out": "32",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "len",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "ListComp",
+       "kind": "ListComp",
+       "children": [
+        {
+         "label": "c",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "comprehension",
+         "kind": "comprehension",
+         "children": [
+          {
+           "label": "d",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "range",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "300",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "0",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "UnaryOp",
+             "kind": "UnaryOp",
+             "children": [
+              {
+               "label": "40",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "comprehension",
+         "kind": "comprehension",
+         "children": [
+          {
+           "label": "c",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "d",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "-",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "d",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "20",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "UnaryOp",
+               "kind": "UnaryOp",
+               "children": [
+                {
+                 "label": "-",
+                 "kind": "BinOp",
+                 "children": [
+                  {
+                   "label": "d",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "20",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "UnaryOp",
+               "kind": "UnaryOp",
+               "children": [
+                {
+                 "label": "-",
+                 "kind": "BinOp",
+                 "children": [
+                  {
+                   "label": "d",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "40",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "len([c for d in range(300, 0, -40) for c in ((d, 0), (0, d - 20), (-(d - 20), 0), (0, -(d - 40)))])",
+      "focus": "-40",
+      "value": "-40"
+     }
+    ]
+   }
+  },
+  {
+   "id": "KeyboardActions",
+   "label": "Keyboard actions",
+   "level": 1,
+   "parent": null,
+   "body": "Typing, key names and key presses send keyboard events to the active window (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_KeyboardActions",
+   "class_iri": "http://example.org/sen0414/ch23#KeyboardActions"
+  },
+  {
+   "id": "TypingText",
+   "label": "Typing text",
+   "level": 2,
+   "parent": "KeyboardActions",
+   "body": "write() types text, either as a string of characters or as a list of key names (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_TypingText",
+   "class_iri": "http://example.org/sen0414/ch23#TypingText"
+  },
+  {
+   "id": "WriteFunction",
+   "label": "Write function",
+   "level": 3,
+   "parent": "TypingText",
+   "body": "write('Hello, world!') types the string into the active window, with an optional pause after each character, and for characters such as A or ! it holds the shift key by itself (Sweigart, 2025); the recorded events of write('Hi!') were a press and release of H, i and ! with no separate shift event, because the Linux backend adds the shift key inside the press of a shift character, which isShiftCharacter() decides: it gave [False, True, True, False, True] for a, A, !, 4 and ~; the documentation says write() with a string can press only single-character keys (PyAutoGUI 0.9.54 source, read and run for this study) (PyAutoGUI documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch23#S_WriteFunction",
+   "class_iri": "http://example.org/sen0414/ch23#WriteFunction",
+   "example": "pyautogui.write('Hello, world!')",
+   "definition": "write presses and releases one key for every character of a string, adds the shift key by itself for capitals and symbols such as ! and lets an optional interval pass between the characters.",
+   "io": {
+    "code": "('H'.isupper(), '!' in '~!@#$%^&*()_+', 'h'.isupper())",
+    "out": "(True, True, False)",
+    "tree": {
+     "label": "Tuple",
+     "kind": "Tuple",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'H'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "'!'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'~!@#$%^&*()_+'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "'h'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "('H'.isupper(), '!' in '~!@#$%^&*()_+', 'h'.isupper())",
+      "focus": "'!' in '~!@#$%^&*()_+'",
+      "value": "True"
+     }
+    ]
+   }
+  },
+  {
+   "id": "KeyListTyping",
+   "label": "Key list typing",
+   "level": 3,
+   "parent": "TypingText",
+   "body": "write(['a', 'b', 'left', 'left', 'X', 'Y']) presses the keys in turn and, because the left arrow moves the text cursor, types XYab (Sweigart, 2025); the recorded events were a press and release of a, b, left, left, X and Y, so the library sends the arrow key and does not edit text itself, and a text-cursor model fed those keys gave XYab and, fed the characters of Hello, world! one by one, gave Hello, world!; the keyboard page of the documentation says write() presses only single-character keys, while the source accepts a list of key names and the events above show it (PyAutoGUI 0.9.54 source, read and run for this study) (PyAutoGUI documentation, 2026) (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_KeyListTyping",
+   "class_iri": "http://example.org/sen0414/ch23#KeyListTyping",
+   "example": "pyautogui.write(['a', 'b', 'left', 'left', 'X', 'Y'])",
+   "definition": "Given a list, write presses each named key in turn, so arrow keys move the text cursor and the list above types XYab.",
+   "io": {
+    "code": "(lambda keys: __import__('functools').reduce(lambda st, k: (st[0][:st[1]] + k + st[0][st[1]:], st[1] + 1) if len(k) == 1 else (st[0], max(0, st[1] - 1)) if k == 'left' else st, keys, ('', 0))[0])(['a', 'b', 'left', 'left', 'X', 'Y'])",
+    "out": "'XYab'",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Subscript",
+         "kind": "Subscript",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "Attribute",
+             "kind": "Attribute",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "__import__",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "'functools'",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "Lambda",
+             "kind": "Lambda",
+             "children": [
+              {
+               "label": "arguments",
+               "kind": "arguments",
+               "children": [
+                {
+                 "label": "arg",
+                 "kind": "arg",
+                 "children": []
+                },
+                {
+                 "label": "arg",
+                 "kind": "arg",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "IfExp",
+               "kind": "IfExp",
+               "children": [
+                {
+                 "label": "Compare",
+                 "kind": "Compare",
+                 "children": [
+                  {
+                   "label": "call",
+                   "kind": "Call",
+                   "children": [
+                    {
+                     "label": "len",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "k",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "1",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                },
+                {
+                 "label": "Tuple",
+                 "kind": "Tuple",
+                 "children": [
+                  {
+                   "label": "+",
+                   "kind": "BinOp",
+                   "children": [
+                    {
+                     "label": "+",
+                     "kind": "BinOp",
+                     "children": [
+                      {
+                       "label": "Subscript",
+                       "kind": "Subscript",
+                       "children": [
+                        {
+                         "label": "Subscript",
+                         "kind": "Subscript",
+                         "children": [
+                          {
+                           "label": "st",
+                           "kind": "Name",
+                           "children": []
+                          },
+                          {
+                           "label": "0",
+                           "kind": "Constant",
+                           "children": []
+                          }
+                         ]
+                        },
+                        {
+                         "label": "Slice",
+                         "kind": "Slice",
+                         "children": [
+                          {
+                           "label": "Subscript",
+                           "kind": "Subscript",
+                           "children": [
+                            {
+                             "label": "st",
+                             "kind": "Name",
+                             "children": []
+                            },
+                            {
+                             "label": "1",
+                             "kind": "Constant",
+                             "children": []
+                            }
+                           ]
+                          }
+                         ]
+                        }
+                       ]
+                      },
+                      {
+                       "label": "k",
+                       "kind": "Name",
+                       "children": []
+                      }
+                     ]
+                    },
+                    {
+                     "label": "Subscript",
+                     "kind": "Subscript",
+                     "children": [
+                      {
+                       "label": "Subscript",
+                       "kind": "Subscript",
+                       "children": [
+                        {
+                         "label": "st",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "0",
+                         "kind": "Constant",
+                         "children": []
+                        }
+                       ]
+                      },
+                      {
+                       "label": "Slice",
+                       "kind": "Slice",
+                       "children": [
+                        {
+                         "label": "Subscript",
+                         "kind": "Subscript",
+                         "children": [
+                          {
+                           "label": "st",
+                           "kind": "Name",
+                           "children": []
+                          },
+                          {
+                           "label": "1",
+                           "kind": "Constant",
+                           "children": []
+                          }
+                         ]
+                        }
+                       ]
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "label": "+",
+                   "kind": "BinOp",
+                   "children": [
+                    {
+                     "label": "Subscript",
+                     "kind": "Subscript",
+                     "children": [
+                      {
+                       "label": "st",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "1",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    },
+                    {
+                     "label": "1",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "label": "IfExp",
+                 "kind": "IfExp",
+                 "children": [
+                  {
+                   "label": "Compare",
+                   "kind": "Compare",
+                   "children": [
+                    {
+                     "label": "k",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "'left'",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "Tuple",
+                   "kind": "Tuple",
+                   "children": [
+                    {
+                     "label": "Subscript",
+                     "kind": "Subscript",
+                     "children": [
+                      {
+                       "label": "st",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "0",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    },
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "max",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "0",
+                       "kind": "Constant",
+                       "children": []
+                      },
+                      {
+                       "label": "-",
+                       "kind": "BinOp",
+                       "children": [
+                        {
+                         "label": "Subscript",
+                         "kind": "Subscript",
+                         "children": [
+                          {
+                           "label": "st",
+                           "kind": "Name",
+                           "children": []
+                          },
+                          {
+                           "label": "1",
+                           "kind": "Constant",
+                           "children": []
+                          }
+                         ]
+                        },
+                        {
+                         "label": "1",
+                         "kind": "Constant",
+                         "children": []
+                        }
+                       ]
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "label": "st",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "keys",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "''",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "0",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'a'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'b'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'left'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'left'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'X'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'Y'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "KeyNames",
+   "label": "Key names",
+   "level": 2,
+   "parent": "KeyboardActions",
+   "body": "Keys that are not single characters are named by short strings (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_KeyNames",
+   "class_iri": "http://example.org/sen0414/ch23#KeyNames"
+  },
+  {
+   "id": "KeyNameTable",
+   "label": "Key name table",
+   "level": 3,
+   "parent": "KeyNames",
+   "body": "Table 23-1 gives names such as 'enter' (or 'return'), 'esc', 'tab', 'shiftleft', 'left', 'f1', 'volumemute', 'pause', 'capslock', 'printscreen', 'winleft' and 'command', and says 'shift', 'ctrl', 'alt' and 'win' mean the left-hand key (Sweigart, 2025); every name of that table is in pyautogui.KEYBOARD_KEYS of 0.9.54, which has 194 names including f1 to f24 where the table says F1 to F12, 'shift' and 'shiftleft' have the same keycode, 50, on the X display used here, and a name longer than one character is lowercased, so press('ENTER') was recorded as enter; on that Linux backend isValidKey() is False for 'command', 'option' and 'volumemute' and True for 'enter', 'return', 'esc', 'f13', 'printscreen' and 'win' (PyAutoGUI 0.9.54 source, read and run for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_KeyNameTable",
+   "class_iri": "http://example.org/sen0414/ch23#KeyNameTable",
+   "example": "pyautogui.KEYBOARD_KEYS",
+   "definition": "A key that is not a single character has a short lowercase name such as 'enter', 'esc', 'left' or 'f1', listed in KEYBOARD_KEYS; names of more than one character are lowercased by the library, and 'shift', 'ctrl', 'alt' and 'win' mean the left-hand key.",
+   "io": {
+    "code": "[k.lower() if len(k) > 1 else k for k in ('ENTER', 'A', 'Shift')]",
+    "out": "['enter', 'A', 'shift']",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "IfExp",
+       "kind": "IfExp",
+       "children": [
+        {
+         "label": "Compare",
+         "kind": "Compare",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "len",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "k",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "k",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "k",
+         "kind": "Name",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "k",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'ENTER'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'A'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Shift'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "SilentInvalidKey",
+   "label": "Silent invalid key",
+   "level": 3,
+   "parent": "KeyNames",
+   "body": "press('notakey') raised no error: the recorded call passed the name to the backend, which dropped it, and the source says that an invalid key is currently a no-op that does not raise, so isValidKey('notakey') is False while isValidKey('enter') and isValidKey('ctrl') are True; in the text-cursor model an unknown key was ignored and a, b, notakey, c gave abc; the chapter does not mention this (Sweigart, 2025) (PyAutoGUI 0.9.54 source, read and run for this study) (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_SilentInvalidKey",
+   "class_iri": "http://example.org/sen0414/ch23#SilentInvalidKey",
+   "example": "pyautogui.press('notakey')",
+   "definition": "A name that is not a valid key does not raise an error in press, keyDown or write; the call is ignored, so a script can test a name first with isValidKey.",
+   "io": {
+    "code": "[k in {'enter', 'esc', 'left'} for k in ('left', 'leftt')]",
+    "out": "[True, False]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "Compare",
+       "kind": "Compare",
+       "children": [
+        {
+         "label": "k",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Set",
+         "kind": "Set",
+         "children": [
+          {
+           "label": "'enter'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'esc'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'left'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "k",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'left'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'leftt'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "KeyPresses",
+   "label": "Key presses",
+   "level": 2,
+   "parent": "KeyboardActions",
+   "body": "A key press is a down and an up event, and a hotkey is several of them in a fixed order (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_KeyPresses",
+   "class_iri": "http://example.org/sen0414/ch23#KeyPresses"
+  },
+  {
+   "id": "PressAndRelease",
+   "label": "Press and release",
+   "level": 3,
+   "parent": "KeyPresses",
+   "body": "keyDown('shift'), press('4') and keyUp('shift') in a row type a dollar sign, and press() calls keyDown() and keyUp() for one key (Sweigart, 2025); the recorded events of that line were keydown shift, keydown 4, keyup 4, keyup shift, the same as in the model, press('left', presses=2) gave two press-and-release pairs, and hold('shift') around press(['left', 'left']) gave keydown shift, two pairs of left and keyup shift, which the chapter does not present; that a dollar sign appears on a screen was not run here (PyAutoGUI 0.9.54 source, read and run for this study) (PyAutoGUI documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch23#S_PressAndRelease",
+   "class_iri": "http://example.org/sen0414/ch23#PressAndRelease",
+   "example": "pyautogui.keyDown('shift'); pyautogui.press('4'); pyautogui.keyUp('shift')",
+   "definition": "keyDown sends a key press and keyUp a release; press sends both, as often as presses says, and hold holds keys for the length of a with block.",
+   "io": {
+    "code": "[(e, 'left') for _ in range(2) for e in ('keydown', 'keyup')]",
+    "out": "[('keydown', 'left'), ('keyup', 'left'), ('keydown', 'left'), ('keyup', 'left')]",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "e",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "'left'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "_",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "range",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "2",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "e",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'keydown'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'keyup'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "HotkeyFunction",
+   "label": "Hotkey function",
+   "level": 3,
+   "parent": "KeyPresses",
+   "body": "hotkey('ctrl', 'c') presses ctrl, presses c, releases c and releases ctrl, and hotkey('ctrl', 'alt', 'shift', 's') takes the place of eight calls; the copy shortcut is the command key on macOS (Sweigart, 2025); the recorded events of the four-key call were keydown ctrl, alt, shift, s and then keyup s, shift, alt, ctrl, as in the model, and the documentation gives the same order (PyAutoGUI 0.9.54 source, read and run for this study) (PyAutoGUI documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch23#S_HotkeyFunction",
+   "class_iri": "http://example.org/sen0414/ch23#HotkeyFunction",
+   "example": "pyautogui.hotkey('ctrl', 'alt', 'shift', 's')",
+   "definition": "hotkey presses its keys in the order given and releases them in the reverse order, so that a combination such as CTRL-C is one call instead of four.",
+   "io": {
+    "code": "(lambda ks: [('keydown', k) for k in ks] + [('keyup', k) for k in reversed(ks)])(('ctrl', 'c'))",
+    "out": "[('keydown', 'ctrl'), ('keydown', 'c'), ('keyup', 'c'), ('keyup', 'ctrl')]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "ListComp",
+           "kind": "ListComp",
+           "children": [
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "'keydown'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "k",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "comprehension",
+             "kind": "comprehension",
+             "children": [
+              {
+               "label": "k",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "ks",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "ListComp",
+           "kind": "ListComp",
+           "children": [
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "'keyup'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "k",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "comprehension",
+             "kind": "comprehension",
+             "children": [
+              {
+               "label": "k",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "reversed",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "ks",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "'ctrl'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'c'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "KeepingControl",
+   "label": "Keeping control",
+   "level": 1,
+   "parent": null,
+   "body": "A GUI script can run faster than its author can react, so the chapter adds ways to stop it and to keep it honest (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_KeepingControl",
+   "class_iri": "http://example.org/sen0414/ch23#KeepingControl"
+  },
+  {
+   "id": "SafetyNets",
+   "label": "Safety nets",
+   "level": 2,
+   "parent": "KeepingControl",
+   "body": "The fail-safe and the pause are the library's two built-in ways of staying in control (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_SafetyNets",
+   "class_iri": "http://example.org/sen0414/ch23#SafetyNets"
+  },
+  {
+   "id": "FailSafe",
+   "label": "Fail safe",
+   "level": 3,
+   "parent": "SafetyNets",
+   "body": "Sliding the mouse into a corner makes PyAutoGUI raise pyautogui.FailSafeException, and every PyAutoGUI call pauses a tenth of a second to leave time for that (Sweigart, 2025); in 0.9.54 FAILSAFE is True by default and the fail-safe points are the four corners, (0, 0), (0, 1079), (1919, 0) and (1919, 1079) on the 1920 by 1080 display, computed once when PyAutoGUI is imported, although the documentation's cheat sheet names only the upper-left; moveTo(0, 0) raised nothing, the pointer stood at (0, 0), and the next call raised FailSafeException before it did anything, a click at a corner sent no events, press('a') raised at each of the four corners and not at (1, 0) or (960, 540), FAILSAFE = False let the script carry on, and FailSafeException is a PyAutoGUIException (PyAutoGUI documentation, 2026) (PyAutoGUI 0.9.54 source, read and run for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_FailSafe",
+   "class_iri": "http://example.org/sen0414/ch23#FailSafe",
+   "example": "pyautogui.FailSafeException",
+   "definition": "While pyautogui.FAILSAFE is True, a pointer in one of the four corners of the screen makes the next PyAutoGUI call raise FailSafeException before it does anything, so a runaway script can be stopped by sliding the mouse into a corner.",
+   "io": {
+    "code": "(lambda w, h: sorted({(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)}))(1920, 1080)",
+    "out": "[(0, 0), (0, 1079), (1919, 0), (1919, 1079)]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "sorted",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "Set",
+           "kind": "Set",
+           "children": [
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "-",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "w",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "-",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "h",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": [
+              {
+               "label": "-",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "w",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "-",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "h",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "1920",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "1080",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "PauseSetting",
+   "label": "Pause setting",
+   "level": 3,
+   "parent": "SafetyNets",
+   "body": "Every PyAutoGUI call pauses PAUSE seconds afterwards, 0.1 by default, and PAUSE = 2 gives the two-second pause that practice question 9 asks for; statements that are not PyAutoGUI calls have no pause (Sweigart, 2025); in the model ten calls at the default pause added up to 1.0 second and two clicks at PAUSE 0.5 to 1.0 second, which two clicks under PyAutoGUI 0.9.54 took in real time, and a call that does several things such as write() or hotkey() pauses once at its end, so write('abc') and hotkey('ctrl', 'a') at PAUSE 2 added up to 4.0 seconds in the model (PyAutoGUI 0.9.54 source, read and run for this study) (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_PauseSetting",
+   "class_iri": "http://example.org/sen0414/ch23#PauseSetting",
+   "example": "pyautogui.PAUSE = 2",
+   "definition": "PAUSE is the number of seconds, 0.1 by default, that every PyAutoGUI call waits after it has finished; statements that are not PyAutoGUI calls are not slowed.",
+   "io": {
+    "code": "round(10 * 0.1, 6)",
+    "out": "1.0",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "round",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "*",
+       "kind": "BinOp",
+       "children": [
+        {
+         "label": "10",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "0.1",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "6",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "round(10 * 0.1, 6)",
+      "focus": "10 * 0.1",
+      "value": "1.0"
+     },
+     {
+      "expr": "round(1.0, 6)",
+      "focus": "round(1.0, 6)",
+      "value": "1.0"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ScriptDiscipline",
+   "label": "Script discipline",
+   "level": 2,
+   "parent": "KeepingControl",
+   "body": "A GUI script is finicky, so the chapter asks it to check, wait, log and stop (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_ScriptDiscipline",
+   "class_iri": "http://example.org/sen0414/ch23#ScriptDiscipline"
+  },
+  {
+   "id": "GuardedClick",
+   "label": "Guarded click",
+   "level": 3,
+   "parent": "ScriptDiscipline",
+   "body": "The chapter's tips are to keep the resolution and the window state the same, to pause for content to load, to use locateOnScreen() and stop if it fails, to check the window with getWindowsWithTitle() and activate() it, to log, to add checks and to supervise the first run, and it suggests testing a pixel before click() (Sweigart, 2025); in a model a click guarded by a pixel test sent a move to (50, 200) and a left click while the pixel was (130, 135, 144), and after a pop-up changed the pixel it raised SystemExit with the text stop: the screen is not what the script expects at (50, 200) and sent no events (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_GuardedClick",
+   "class_iri": "http://example.org/sen0414/ch23#GuardedClick",
+   "example": "if not pyautogui.pixelMatchesColor(x, y, expected): raise SystemExit",
+   "definition": "A script that checks what is on the screen before each event, and stops at the first check that fails, does no harm when a window has moved or a pop-up covers a button.",
+   "io": {
+    "code": "next((i for i, ok in enumerate([True, True, False, True]) if not ok), None)",
+    "out": "2",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "next",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "GeneratorExp",
+       "kind": "GeneratorExp",
+       "children": [
+        {
+         "label": "i",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "comprehension",
+         "kind": "comprehension",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "i",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "ok",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "enumerate",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "List",
+             "kind": "List",
+             "children": [
+              {
+               "label": "True",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "True",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "False",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "True",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "UnaryOp",
+           "kind": "UnaryOp",
+           "children": [
+            {
+             "label": "ok",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "None",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "ScriptLogging",
+   "label": "Script logging",
+   "level": 3,
+   "parent": "ScriptDiscipline",
+   "body": "The chapter says to keep a logfile with the logging module, so that a script stopped halfway can be changed to pick up where it left off (Sweigart, 2025); with the standard library logging module a run that stopped before row 2 left the lines INFO typed row 0, INFO typed row 1 and ERROR stopped before row 2, the resume point read from those lines was row 2, and the second run logged rows 2 and 3 (Python Software Foundation, 2026) (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_ScriptLogging",
+   "class_iri": "http://example.org/sen0414/ch23#ScriptLogging",
+   "example": "logging.info('typed row %d', i)",
+   "definition": "A script that logs each finished step to a file can be stopped halfway and restarted at the first step that the log does not show as done.",
+   "io": {
+    "code": "(lambda lines: 1 + max(int(l.split()[-1]) for l in lines if l.startswith('INFO')))(['INFO typed row 0', 'INFO typed row 1', 'ERROR stopped before row 2'])",
+    "out": "2",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "+",
+         "kind": "BinOp",
+         "children": [
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "max",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "GeneratorExp",
+             "kind": "GeneratorExp",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "int",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "Subscript",
+                 "kind": "Subscript",
+                 "children": [
+                  {
+                   "label": "call",
+                   "kind": "Call",
+                   "children": [
+                    {
+                     "label": "Attribute",
+                     "kind": "Attribute",
+                     "children": [
+                      {
+                       "label": "l",
+                       "kind": "Name",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "label": "UnaryOp",
+                   "kind": "UnaryOp",
+                   "children": [
+                    {
+                     "label": "1",
+                     "kind": "Constant",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "comprehension",
+               "kind": "comprehension",
+               "children": [
+                {
+                 "label": "l",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "lines",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "call",
+                 "kind": "Call",
+                 "children": [
+                  {
+                   "label": "Attribute",
+                   "kind": "Attribute",
+                   "children": [
+                    {
+                     "label": "l",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "'INFO'",
+                   "kind": "Constant",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'INFO typed row 0'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'INFO typed row 1'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'ERROR stopped before row 2'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "(lambda lines: 1 + max((int(l.split()[-1]) for l in lines if l.startswith('INFO'))))(['INFO typed row 0', 'INFO typed row 1', 'ERROR stopped before row 2'])",
+      "focus": "-1",
+      "value": "-1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "CountdownAndSleep",
+   "label": "Countdown and sleep",
+   "level": 3,
+   "parent": "ScriptDiscipline",
+   "body": "sleep(3) pauses the program for 3 seconds exactly as time.sleep() does, and countdown(10) prints 10 9 8 7 6 5 4 3 2 1, so print('Starting in ', end=''); countdown(3) shows Starting in 3 2 1 (Sweigart, 2025); in the PyAutoGUI source countdown() prints each number followed by a space, waits a second and ends the line at the end, and the same loop with the sleeps replaced printed Starting in 3 2 1 with a space after each number and a line break after the last, and slept [1, 1, 1] (Python Software Foundation, 2026) (PyAutoGUI 0.9.54 source, read and run for this study) (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_CountdownAndSleep",
+   "class_iri": "http://example.org/sen0414/ch23#CountdownAndSleep",
+   "example": "pyautogui.countdown(3)",
+   "definition": "sleep is time.sleep without the import; countdown prints the numbers from the given one down to 1, each followed by a space and a one-second wait, and then ends the line.",
+   "io": {
+    "code": "''.join(str(i) + ' ' for i in range(3, 0, -1)) + '\\n'",
+    "out": "'3 2 1 \\n'",
+    "tree": {
+     "label": "+",
+     "kind": "BinOp",
+     "children": [
+      {
+       "label": "call",
+       "kind": "Call",
+       "children": [
+        {
+         "label": "Attribute",
+         "kind": "Attribute",
+         "children": [
+          {
+           "label": "''",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "GeneratorExp",
+         "kind": "GeneratorExp",
+         "children": [
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "str",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "i",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "' '",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "comprehension",
+           "kind": "comprehension",
+           "children": [
+            {
+             "label": "i",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "range",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "3",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "0",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "UnaryOp",
+               "kind": "UnaryOp",
+               "children": [
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "'\\n'",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "''.join((str(i) + ' ' for i in range(3, 0, -1))) + '\\n'",
+      "focus": "-1",
+      "value": "-1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "AutomationEthics",
+   "label": "Automation ethics",
+   "level": 3,
+   "parent": "ScriptDiscipline",
+   "body": "The box on captchas says they are tests that people pass easily and software almost never does, that the chapter's techniques could otherwise sign up for accounts, flood users with messages or guess passwords, and that responsibility for a program falls on its programmer (Sweigart, 2025); the PyAutoGUI FAQ adds that it does no OCR and cannot tell whether a key is held down (PyAutoGUI documentation, 2026).",
+   "section_iri": "http://example.org/sen0414/ch23#S_AutomationEthics",
+   "class_iri": "http://example.org/sen0414/ch23#AutomationEthics",
+   "example": "captcha",
+   "definition": "A captcha is a test that only a human should pass, there to stop scripts from signing up for accounts, flooding sites or guessing passwords; the chapter holds the programmer responsible for what a program does."
+  },
+  {
+   "id": "SeeingTheScreen",
+   "label": "Seeing the screen",
+   "level": 1,
+   "parent": null,
+   "body": "A script that looks at the screen before it acts can notice that it has gone wrong (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_SeeingTheScreen",
+   "class_iri": "http://example.org/sen0414/ch23#SeeingTheScreen"
+  },
+  {
+   "id": "Capture",
+   "label": "Capture",
+   "level": 2,
+   "parent": "SeeingTheScreen",
+   "body": "A screenshot is an image of the screen, and a pixel is one colour in it (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_Capture",
+   "class_iri": "http://example.org/sen0414/ch23#Capture"
+  },
+  {
+   "id": "ScreenshotFunction",
+   "label": "Screenshot function",
+   "level": 3,
+   "parent": "Capture",
+   "body": "im = pyautogui.screenshot() returns a Pillow Image of the screen, and Chapter 21 and Pillow are needed first (Sweigart, 2025); screenshot('my_screenshot.png') also saves the file and region=(left, top, width, height) takes a part (PyAutoGUI documentation, 2026); on the Linux machine used here, with Pillow 12.3.0, the call raised an Exception that says Pillow 9.2.0 or greater and gnome-screenshot are needed, so no screenshot was taken and no output of screenshot() or pixel() on a real screen was reproduced; the documentation names scrot for Linux (PyAutoGUI 0.9.54 source, read and run for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_ScreenshotFunction",
+   "class_iri": "http://example.org/sen0414/ch23#ScreenshotFunction",
+   "example": "im = pyautogui.screenshot()",
+   "definition": "screenshot returns a Pillow Image of the screen and can save it to a file; it needs Pillow, and on Linux a helper program for capturing the screen."
+  },
+  {
+   "id": "PixelMatch",
+   "label": "Pixel match",
+   "level": 3,
+   "parent": "Capture",
+   "body": "pixel(0, 0) returns an RGB tuple such as (176, 176, 175), pixelMatchesColor(50, 200, (130, 135, 144)) is True and with (255, 135, 144) False, and the match must be exact, (255, 255, 254) against (255, 255, 255) being False (Sweigart, 2025); with the screen replaced by an in-memory Pillow image, PyScreeze 1.0.1 gave True, False, False and, with tolerance=1, True for those four cases, pixel((50, 200)) raised TypeError: pixel() missing 1 required positional argument: 'y', so the tuple form the chapter prints twice does not run and the coordinates must be separate, and the pixel test written for the model gave False for the same near miss (PyAutoGUI 0.9.54 source, read and run for this study) (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_PixelMatch",
+   "class_iri": "http://example.org/sen0414/ch23#PixelMatch",
+   "example": "pyautogui.pixelMatchesColor(50, 200, (130, 135, 144))",
+   "definition": "pixel(x, y) returns the RGB colour of one screen pixel, and pixelMatchesColor(x, y, rgb) is True when each of the three channels differs from the given colour by no more than tolerance, which is 0 by default, so the match is exact.",
+   "io": {
+    "code": "(lambda pix, exp, tol: all(abs(a - b) <= tol for a, b in zip(pix, exp)))((255, 255, 254), (255, 255, 255), 0)",
+    "out": "False",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "all",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "GeneratorExp",
+           "kind": "GeneratorExp",
+           "children": [
+            {
+             "label": "Compare",
+             "kind": "Compare",
+             "children": [
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "abs",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "-",
+                 "kind": "BinOp",
+                 "children": [
+                  {
+                   "label": "a",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "b",
+                   "kind": "Name",
+                   "children": []
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "label": "tol",
+               "kind": "Name",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "comprehension",
+             "kind": "comprehension",
+             "children": [
+              {
+               "label": "Tuple",
+               "kind": "Tuple",
+               "children": [
+                {
+                 "label": "a",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "b",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              },
+              {
+               "label": "call",
+               "kind": "Call",
+               "children": [
+                {
+                 "label": "zip",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "pix",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "exp",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "255",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "255",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "254",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "Tuple",
+       "kind": "Tuple",
+       "children": [
+        {
+         "label": "255",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "255",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "255",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "0",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "Recognition",
+   "label": "Recognition",
+   "level": 2,
+   "parent": "SeeingTheScreen",
+   "body": "Image recognition finds a picture on the screen instead of using fixed coordinates (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_Recognition",
+   "class_iri": "http://example.org/sen0414/ch23#Recognition"
+  },
+  {
+   "id": "LocateOnScreen",
+   "label": "Locate on screen",
+   "level": 3,
+   "parent": "Recognition",
+   "body": "locateOnScreen('submit.png') returns Box(left=643, top=745, width=70, height=29) for the first place the picture is found, raises ImageNotFoundException when it is not found or is a pixel off, list(locateAllOnScreen('submit.png')) lists every Box and click('submit.png') clicks the middle (Sweigart, 2025); in 0.9.54 the locate functions also work on two in-memory Pillow images without a screen: pyautogui.locate() found a 3 by 2 block in a 12 by 6 image as Box(left=4, top=2, width=3, height=2), locateAll() found it and a second block as Box(left=8, top=3, width=3, height=2), a picture that was not there raised pyautogui.ImageNotFoundException, which a handler written with that name caught, and after useImageNotFoundException(False) the same search returned None; a grid search written for this study gave the same two boxes; the documentation says the search starts at the upper-left corner and goes right and then down, that the exception has been raised since version 0.9.41, that the confidence argument needs OpenCV and that a search of a 1920 by 1080 screen takes about 1 or 2 seconds (PyAutoGUI documentation, 2026) (PyAutoGUI 0.9.54 source, read and run for this study) (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_LocateOnScreen",
+   "class_iri": "http://example.org/sen0414/ch23#LocateOnScreen",
+   "example": "pyautogui.locateOnScreen('submit.png')",
+   "definition": "locateOnScreen searches the screen from the upper-left corner, to the right and then down, for a picture that matches pixel for pixel and returns the Box of the first match or raises ImageNotFoundException; locateAllOnScreen yields every match.",
+   "io": {
+    "code": "(lambda g, t: [(x, y) for y in range(len(g) - len(t) + 1) for x in range(len(g[0]) - len(t[0]) + 1) if all(g[y + j][x:x + len(t[0])] == t[j] for j in range(len(t)))])(['..##..', '..##..', '......'], ['##', '##'])",
+    "out": "[(2, 0)]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "ListComp",
+         "kind": "ListComp",
+         "children": [
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "x",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "y",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "comprehension",
+           "kind": "comprehension",
+           "children": [
+            {
+             "label": "y",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "range",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "+",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "-",
+                 "kind": "BinOp",
+                 "children": [
+                  {
+                   "label": "call",
+                   "kind": "Call",
+                   "children": [
+                    {
+                     "label": "len",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "g",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  },
+                  {
+                   "label": "call",
+                   "kind": "Call",
+                   "children": [
+                    {
+                     "label": "len",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "t",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "label": "comprehension",
+           "kind": "comprehension",
+           "children": [
+            {
+             "label": "x",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "range",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "+",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "-",
+                 "kind": "BinOp",
+                 "children": [
+                  {
+                   "label": "call",
+                   "kind": "Call",
+                   "children": [
+                    {
+                     "label": "len",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "Subscript",
+                     "kind": "Subscript",
+                     "children": [
+                      {
+                       "label": "g",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "0",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "label": "call",
+                   "kind": "Call",
+                   "children": [
+                    {
+                     "label": "len",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "Subscript",
+                     "kind": "Subscript",
+                     "children": [
+                      {
+                       "label": "t",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "0",
+                       "kind": "Constant",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "label": "1",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "call",
+             "kind": "Call",
+             "children": [
+              {
+               "label": "all",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "GeneratorExp",
+               "kind": "GeneratorExp",
+               "children": [
+                {
+                 "label": "Compare",
+                 "kind": "Compare",
+                 "children": [
+                  {
+                   "label": "Subscript",
+                   "kind": "Subscript",
+                   "children": [
+                    {
+                     "label": "Subscript",
+                     "kind": "Subscript",
+                     "children": [
+                      {
+                       "label": "g",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "+",
+                       "kind": "BinOp",
+                       "children": [
+                        {
+                         "label": "y",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "j",
+                         "kind": "Name",
+                         "children": []
+                        }
+                       ]
+                      }
+                     ]
+                    },
+                    {
+                     "label": "Slice",
+                     "kind": "Slice",
+                     "children": [
+                      {
+                       "label": "x",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "+",
+                       "kind": "BinOp",
+                       "children": [
+                        {
+                         "label": "x",
+                         "kind": "Name",
+                         "children": []
+                        },
+                        {
+                         "label": "call",
+                         "kind": "Call",
+                         "children": [
+                          {
+                           "label": "len",
+                           "kind": "Name",
+                           "children": []
+                          },
+                          {
+                           "label": "Subscript",
+                           "kind": "Subscript",
+                           "children": [
+                            {
+                             "label": "t",
+                             "kind": "Name",
+                             "children": []
+                            },
+                            {
+                             "label": "0",
+                             "kind": "Constant",
+                             "children": []
+                            }
+                           ]
+                          }
+                         ]
+                        }
+                       ]
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "label": "Subscript",
+                   "kind": "Subscript",
+                   "children": [
+                    {
+                     "label": "t",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "j",
+                     "kind": "Name",
+                     "children": []
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "label": "comprehension",
+                 "kind": "comprehension",
+                 "children": [
+                  {
+                   "label": "j",
+                   "kind": "Name",
+                   "children": []
+                  },
+                  {
+                   "label": "call",
+                   "kind": "Call",
+                   "children": [
+                    {
+                     "label": "range",
+                     "kind": "Name",
+                     "children": []
+                    },
+                    {
+                     "label": "call",
+                     "kind": "Call",
+                     "children": [
+                      {
+                       "label": "len",
+                       "kind": "Name",
+                       "children": []
+                      },
+                      {
+                       "label": "t",
+                       "kind": "Name",
+                       "children": []
+                      }
+                     ]
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'..##..'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'..##..'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'......'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "'##'",
+         "kind": "Constant",
+         "children": []
+        },
+        {
+         "label": "'##'",
+         "kind": "Constant",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "MouseInfoTool",
+   "label": "Mouse info tool",
+   "level": 3,
+   "parent": "Recognition",
+   "body": "pyautogui.mouseInfo() opens the MouseInfo window, which shows the pointer's coordinates and the colour under it as an RGB tuple and a hex value, has Copy and Log buttons with a 3 second delay that the F1 to F8 keys avoid, and can save its log (Sweigart, 2025); the MouseInfo documentation describes the same program and the origin at the top left (MouseInfo documentation, 2026); 0.9.54 has a mouseInfo attribute, but the window needs a desktop and was not opened here (PyAutoGUI 0.9.54 source, read and run for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_MouseInfoTool",
+   "class_iri": "http://example.org/sen0414/ch23#MouseInfoTool",
+   "example": "pyautogui.mouseInfo()",
+   "definition": "mouseInfo opens a small window that shows the pointer's coordinates and the colour under it and can copy or log them, to help a script's author find the numbers to use."
+  },
+  {
+   "id": "WindowsAndDialogs",
+   "label": "Windows and dialogs",
+   "level": 1,
+   "parent": null,
+   "body": "Windows can be found, measured and moved, and message boxes talk to the user when the terminal is hidden (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_WindowsAndDialogs",
+   "class_iri": "http://example.org/sen0414/ch23#WindowsAndDialogs"
+  },
+  {
+   "id": "WindowObjects",
+   "label": "Window objects",
+   "level": 2,
+   "parent": "WindowsAndDialogs",
+   "body": "A Window object describes one application window (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_WindowObjects",
+   "class_iri": "http://example.org/sen0414/ch23#WindowObjects"
+  },
+  {
+   "id": "ActiveWindow",
+   "label": "Active window",
+   "level": 3,
+   "parent": "WindowObjects",
+   "body": "getActiveWindow() returns the window that accepts keyboard input, a Win32Window on Windows, and the chapter notes that the window features work only on Windows (Sweigart, 2025); in 0.9.54 they are imported from PyGetWindow only when the platform is win32, so on Linux getActiveWindow, getAllTitles and getWindowsWithTitle raised AttributeError: module 'pyautogui' has no attribute with that name, and the PyGetWindow README says only Windows is implemented (PyGetWindow README, 2026) (PyAutoGUI 0.9.54 source, read and run for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_ActiveWindow",
+   "class_iri": "http://example.org/sen0414/ch23#ActiveWindow",
+   "example": "pyautogui.getActiveWindow()",
+   "definition": "getActiveWindow returns the window that receives the keyboard, as a Window object; with PyAutoGUI 0.9.54 this and the other window functions exist only on Windows."
+  },
+  {
+   "id": "WindowGeometry",
+   "label": "Window geometry",
+   "level": 3,
+   "parent": "WindowObjects",
+   "body": "For a window at left 500, top 300 with width 2070 and height 1208 the chapter prints right 2570, bottom 1508, size Size(width=2070, height=1208) and topleft Point(x=500, y=300), and click(left + 10, top + 20) hits a button fixed 10 pixels right of and 20 below the corner (Sweigart, 2025); arithmetic on those four numbers in a model of the attributes gave right 2570, bottom 1508, centre (1535, 904) and area 2500560, a click at (510, 320), and right 1500 after the width was set to 1000; PyGetWindow itself was not run (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_WindowGeometry",
+   "class_iri": "http://example.org/sen0414/ch23#WindowGeometry",
+   "example": "active_win.topleft",
+   "definition": "A Window has left, top, width and height that can be read and set, and derived attributes such as right, bottom, topleft, center, size, area and box, so a button at a fixed offset inside a window can be clicked wherever the window is.",
+   "io": {
+    "code": "(lambda l, t, w, h: (l + w, t + h, (l + w // 2, t + h // 2)))(500, 300, 2070, 1208)",
+    "out": "(2570, 1508, (1535, 904))",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          },
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "l",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "w",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "+",
+           "kind": "BinOp",
+           "children": [
+            {
+             "label": "t",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "h",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "Tuple",
+           "kind": "Tuple",
+           "children": [
+            {
+             "label": "+",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "l",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "//",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "w",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "2",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "label": "+",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "t",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "//",
+               "kind": "BinOp",
+               "children": [
+                {
+                 "label": "h",
+                 "kind": "Name",
+                 "children": []
+                },
+                {
+                 "label": "2",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "500",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "300",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "2070",
+       "kind": "Constant",
+       "children": []
+      },
+      {
+       "label": "1208",
+       "kind": "Constant",
+       "children": []
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "WindowSearch",
+   "label": "Window search",
+   "level": 3,
+   "parent": "WindowObjects",
+   "body": "getWindowsWithTitle('Notepad') returns a list of the windows with that text in their title and an empty list if there are none, getAllWindows() returns all windows, getWindowsAt(x, y) those at a point and getAllTitles() their titles (Sweigart, 2025); a search written as 'Notepad' in title over three windows returned the two windows whose titles hold it and [] for 'Firefox'; how PyGetWindow matches on Windows was not run, its README shows getWindowsWithTitle('Untitled') finding Untitled - Notepad (PyGetWindow README, 2026) (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_WindowSearch",
+   "class_iri": "http://example.org/sen0414/ch23#WindowSearch",
+   "example": "pyautogui.getWindowsWithTitle('Notepad')",
+   "definition": "getWindowsWithTitle returns a list of the windows whose title contains the text, an empty list when there are none; getAllWindows, getWindowsAt and getAllTitles return all windows, those at a point and the titles.",
+   "io": {
+    "code": "[t for t in ('Untitled - Notepad', 'Mu 1.0.1 - test1.py', 'Notepad++') if 'Notepad' in t]",
+    "out": "['Untitled - Notepad', 'Notepad++']",
+    "tree": {
+     "label": "ListComp",
+     "kind": "ListComp",
+     "children": [
+      {
+       "label": "t",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "comprehension",
+       "kind": "comprehension",
+       "children": [
+        {
+         "label": "t",
+         "kind": "Name",
+         "children": []
+        },
+        {
+         "label": "Tuple",
+         "kind": "Tuple",
+         "children": [
+          {
+           "label": "'Untitled - Notepad'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Mu 1.0.1 - test1.py'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "'Notepad++'",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "Compare",
+         "kind": "Compare",
+         "children": [
+          {
+           "label": "'Notepad'",
+           "kind": "Constant",
+           "children": []
+          },
+          {
+           "label": "t",
+           "kind": "Name",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "WindowState",
+   "label": "Window state",
+   "level": 3,
+   "parent": "WindowObjects",
+   "body": "isMaximized, isMinimized and isActive are True or False, maximize(), minimize(), activate() and restore() change the state, restore() undoes a minimize or maximize and close() may bypass a dialog that asks to save (Sweigart, 2025); the PyGetWindow README also lists resize, resizeTo, move and moveTo (PyGetWindow README, 2026); none of it was run, since it needs Windows.",
+   "section_iri": "http://example.org/sen0414/ch23#S_WindowState",
+   "class_iri": "http://example.org/sen0414/ch23#WindowState",
+   "example": "active_win.maximize()",
+   "definition": "A Window reports isMaximized, isMinimized and isActive and is changed by maximize, minimize, restore, activate and close; close may skip a dialog that asks to save work."
+  },
+  {
+   "id": "MessageBoxes",
+   "label": "Message boxes",
+   "level": 2,
+   "parent": "WindowsAndDialogs",
+   "body": "Message boxes give a script a place to talk to the user that the windows it works on cannot hide (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_MessageBoxes",
+   "class_iri": "http://example.org/sen0414/ch23#MessageBoxes"
+  },
+  {
+   "id": "MessageBoxFunctions",
+   "label": "Message box functions",
+   "level": 3,
+   "parent": "MessageBoxes",
+   "body": "alert(text) shows an OK button, confirm(text) returns 'OK' or 'Cancel', prompt(text) returns the typed text and password(text) does the same with asterisks (Sweigart, 2025); the documentation adds that confirm returns the text of the button clicked and can carry other buttons, and that prompt and password return None after Cancel (PyAutoGUI documentation, 2026); in 0.9.54 the functions are built on tkinter (alert is a function named _alertTkinter here) and tkinter is the standard Python interface to Tk; they open a window and were not run (Python Software Foundation, 2026) (PyAutoGUI 0.9.54 source, read and run for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_MessageBoxFunctions",
+   "class_iri": "http://example.org/sen0414/ch23#MessageBoxFunctions",
+   "example": "pyautogui.confirm('Continue?')",
+   "definition": "alert, confirm, prompt and password show a message box, from PyMsgBox, because a script's own text window may be hidden by the windows it works on; confirm returns the text of the button clicked, and prompt and password return the text typed or None after Cancel."
+  },
+  {
+   "id": "PracticeWork",
+   "label": "Practice work",
+   "level": 1,
+   "parent": null,
+   "body": "The chapter ends with 13 practice questions and three practice programs (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_PracticeWork",
+   "class_iri": "http://example.org/sen0414/ch23#PracticeWork"
+  },
+  {
+   "id": "Questions",
+   "label": "Questions",
+   "level": 2,
+   "parent": "PracticeWork",
+   "body": "The practice questions revisit the fail-safe, movement, dragging, typing, screenshots, pauses and windows (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_Questions",
+   "class_iri": "http://example.org/sen0414/ch23#Questions"
+  },
+  {
+   "id": "PracticeQuestions",
+   "label": "Practice questions",
+   "level": 3,
+   "parent": "Questions",
+   "body": "Practice questions are the 13 review questions that close the chapter; their answers revisit the fail-safe, size(), position(), moveTo() against move(), drag(), write(), key names, screenshot(), PAUSE, Selenium, error-proneness and getWindowsWithTitle() (Sweigart, 2025) (Selenium documentation, 2026); a list comprehension over two stand-in windows gave [(800, 600)] for the one titled Untitled - Notepad (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_PracticeQuestions",
+   "class_iri": "http://example.org/sen0414/ch23#PracticeQuestions",
+   "example": "pyautogui.getWindowsWithTitle('Notepad')",
+   "definition": "Practice questions are the chapter's 13 review questions; one asks for the size of every Notepad window.",
+   "io": {
+    "code": "(lambda W: [w.size for w in W if 'Notepad' in w.title])([type('W', (), {'title': 'Untitled - Notepad', 'size': (800, 600)})(), type('W', (), {'title': 'Mu', 'size': (2070, 1208)})()])",
+    "out": "[(800, 600)]",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "Lambda",
+       "kind": "Lambda",
+       "children": [
+        {
+         "label": "arguments",
+         "kind": "arguments",
+         "children": [
+          {
+           "label": "arg",
+           "kind": "arg",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "ListComp",
+         "kind": "ListComp",
+         "children": [
+          {
+           "label": "Attribute",
+           "kind": "Attribute",
+           "children": [
+            {
+             "label": "w",
+             "kind": "Name",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "comprehension",
+           "kind": "comprehension",
+           "children": [
+            {
+             "label": "w",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "W",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "Compare",
+             "kind": "Compare",
+             "children": [
+              {
+               "label": "'Notepad'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "Attribute",
+               "kind": "Attribute",
+               "children": [
+                {
+                 "label": "w",
+                 "kind": "Name",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "List",
+       "kind": "List",
+       "children": [
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "type",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'W'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": []
+            },
+            {
+             "label": "Dict",
+             "kind": "Dict",
+             "children": [
+              {
+               "label": "'title'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'size'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'Untitled - Notepad'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "Tuple",
+               "kind": "Tuple",
+               "children": [
+                {
+                 "label": "800",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "600",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "call",
+         "kind": "Call",
+         "children": [
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "type",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "'W'",
+             "kind": "Constant",
+             "children": []
+            },
+            {
+             "label": "Tuple",
+             "kind": "Tuple",
+             "children": []
+            },
+            {
+             "label": "Dict",
+             "kind": "Dict",
+             "children": [
+              {
+               "label": "'title'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'size'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "'Mu'",
+               "kind": "Constant",
+               "children": []
+              },
+              {
+               "label": "Tuple",
+               "kind": "Tuple",
+               "children": [
+                {
+                 "label": "2070",
+                 "kind": "Constant",
+                 "children": []
+                },
+                {
+                 "label": "1208",
+                 "kind": "Constant",
+                 "children": []
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": []
+   }
+  },
+  {
+   "id": "Programs",
+   "label": "Programs",
+   "level": 2,
+   "parent": "PracticeWork",
+   "body": "The practice programs keep a chat status active, read a text field and play a game (Sweigart, 2025).",
+   "section_iri": "http://example.org/sen0414/ch23#S_Programs",
+   "class_iri": "http://example.org/sen0414/ch23#Programs"
+  },
+  {
+   "id": "LookingBusy",
+   "label": "Looking busy",
+   "level": 3,
+   "parent": "Programs",
+   "body": "The program nudges the pointer one pixel left every 10 seconds and one pixel right 10 seconds later (Sweigart, 2025); in the model six nudges from (400, 300) at 10-second steps gave x of 399, 400, 399, 400, 399 and 400; started at (1, 0) the first nudge reached the corner (0, 0) and the second call raised the fail-safe; started at x = 0 the left nudge moved nothing, so after four nudges the pointer stood at (1, 300) after three move events, one pixel from where it began (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_LookingBusy",
+   "class_iri": "http://example.org/sen0414/ch23#LookingBusy",
+   "example": "pyautogui.move(-1, 0); pyautogui.sleep(10)",
+   "definition": "Looking Busy nudges the pointer one pixel left, waits ten seconds, nudges it one pixel right and repeats, so that a chat program sees mouse movement.",
+   "io": {
+    "code": "sum(-1 if i % 2 == 0 else 1 for i in range(6))",
+    "out": "0",
+    "tree": {
+     "label": "call",
+     "kind": "Call",
+     "children": [
+      {
+       "label": "sum",
+       "kind": "Name",
+       "children": []
+      },
+      {
+       "label": "GeneratorExp",
+       "kind": "GeneratorExp",
+       "children": [
+        {
+         "label": "IfExp",
+         "kind": "IfExp",
+         "children": [
+          {
+           "label": "Compare",
+           "kind": "Compare",
+           "children": [
+            {
+             "label": "%",
+             "kind": "BinOp",
+             "children": [
+              {
+               "label": "i",
+               "kind": "Name",
+               "children": []
+              },
+              {
+               "label": "2",
+               "kind": "Constant",
+               "children": []
+              }
+             ]
+            },
+            {
+             "label": "0",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "UnaryOp",
+           "kind": "UnaryOp",
+           "children": [
+            {
+             "label": "1",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          },
+          {
+           "label": "1",
+           "kind": "Constant",
+           "children": []
+          }
+         ]
+        },
+        {
+         "label": "comprehension",
+         "kind": "comprehension",
+         "children": [
+          {
+           "label": "i",
+           "kind": "Name",
+           "children": []
+          },
+          {
+           "label": "call",
+           "kind": "Call",
+           "children": [
+            {
+             "label": "range",
+             "kind": "Name",
+             "children": []
+            },
+            {
+             "label": "6",
+             "kind": "Constant",
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "steps": [
+     {
+      "expr": "sum((-1 if i % 2 == 0 else 1 for i in range(6)))",
+      "focus": "-1",
+      "value": "-1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ClipboardReading",
+   "label": "Clipboard reading",
+   "level": 3,
+   "parent": "Programs",
+   "body": "The program gets the window with getWindowsWithTitle('Notepad'), activates it, clicks into the text field, sends hotkey('ctrl', 'a') and hotkey('ctrl', 'c') and reads pyperclip.paste(), because PyAutoGUI alone cannot read text from another program (Sweigart, 2025); in a model the two hotkeys copied the field's text to the clipboard and typing a and c without ctrl copied nothing; Pyperclip needs xclip or xsel on Linux and here copy() raised PyperclipException: Pyperclip could not find a copy/paste mechanism for your system, so paste() was not run (Pyperclip README, 2026) (PyAutoGUI 0.9.54 source, read and run for this study) (executed for this study).",
+   "section_iri": "http://example.org/sen0414/ch23#S_ClipboardReading",
+   "class_iri": "http://example.org/sen0414/ch23#ClipboardReading",
+   "example": "pyautogui.hotkey('ctrl', 'a'); pyautogui.hotkey('ctrl', 'c'); text = pyperclip.paste()",
+   "definition": "To read a text field, the program activates its window, clicks into it, selects all and copies with two hotkeys and reads the clipboard with pyperclip.paste(); PyAutoGUI alone cannot read text from another program."
+  },
+  {
+   "id": "GameBot",
+   "label": "Game bot",
+   "level": 3,
+   "parent": "Programs",
+   "body": "The last practice program points to a bot for the Flash game Sushi Go Round and says Flash is discontinued (Sweigart, 2025); the repository README says the bot is written with PyAutoGUI, that the game must stay fully visible and unmoved, and that moving the mouse to the top-left corner interrupts it; it was not run (sushigoroundbot README, 2026).",
+   "section_iri": "http://example.org/sen0414/ch23#S_GameBot",
+   "class_iri": "http://example.org/sen0414/ch23#GameBot",
+   "example": "asweigart/sushigoroundbot",
+   "definition": "Writing a Game-Playing Bot points to a bot for the Flash game Sushi Go Round that watches the game window for pictures of orders and clicks ingredient buttons."
+  }
+ ],
+ "relations": [
+  {
+   "source": "Geometry",
+   "target": "ScreenCoordinates",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CoordinateOrigin",
+   "target": "Geometry",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ScreenSize",
+   "target": "Geometry",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PointAndBox",
+   "target": "Geometry",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Movement",
+   "target": "ScreenCoordinates",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MoveTo",
+   "target": "Movement",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MoveRelative",
+   "target": "Movement",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ClampToScreen",
+   "target": "Movement",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Clicking",
+   "target": "MouseActions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ClickFunction",
+   "target": "Clicking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ButtonChoice",
+   "target": "Clicking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ScrollWheel",
+   "target": "Clicking",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Dragging",
+   "target": "MouseActions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "DragFunctions",
+   "target": "Dragging",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SpiralDrawProgram",
+   "target": "Dragging",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "TypingText",
+   "target": "KeyboardActions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WriteFunction",
+   "target": "TypingText",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "KeyListTyping",
+   "target": "TypingText",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "KeyNames",
+   "target": "KeyboardActions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "KeyNameTable",
+   "target": "KeyNames",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SilentInvalidKey",
+   "target": "KeyNames",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "KeyPresses",
+   "target": "KeyboardActions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PressAndRelease",
+   "target": "KeyPresses",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "HotkeyFunction",
+   "target": "KeyPresses",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "SafetyNets",
+   "target": "KeepingControl",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "FailSafe",
+   "target": "SafetyNets",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PauseSetting",
+   "target": "SafetyNets",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ScriptDiscipline",
+   "target": "KeepingControl",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GuardedClick",
+   "target": "ScriptDiscipline",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ScriptLogging",
+   "target": "ScriptDiscipline",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "CountdownAndSleep",
+   "target": "ScriptDiscipline",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "AutomationEthics",
+   "target": "ScriptDiscipline",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Capture",
+   "target": "SeeingTheScreen",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ScreenshotFunction",
+   "target": "Capture",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PixelMatch",
+   "target": "Capture",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Recognition",
+   "target": "SeeingTheScreen",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LocateOnScreen",
+   "target": "Recognition",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MouseInfoTool",
+   "target": "Recognition",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WindowObjects",
+   "target": "WindowsAndDialogs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ActiveWindow",
+   "target": "WindowObjects",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WindowGeometry",
+   "target": "WindowObjects",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WindowSearch",
+   "target": "WindowObjects",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "WindowState",
+   "target": "WindowObjects",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MessageBoxes",
+   "target": "WindowsAndDialogs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "MessageBoxFunctions",
+   "target": "MessageBoxes",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Questions",
+   "target": "PracticeWork",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "PracticeQuestions",
+   "target": "Questions",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "Programs",
+   "target": "PracticeWork",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "LookingBusy",
+   "target": "Programs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ClipboardReading",
+   "target": "Programs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "GameBot",
+   "target": "Programs",
+   "type": "is a kind of",
+   "evidence": "rdfs:subClassOf in the chapter's domain TBox"
+  },
+  {
+   "source": "ClickFunction",
+   "target": "MoveTo",
+   "type": "mentions",
+   "evidence": "the document's section on Click function names Move to"
+  },
+  {
+   "source": "ClickFunction",
+   "target": "PressAndRelease",
+   "type": "mentions",
+   "evidence": "the document's section on Click function names Press and release"
+  },
+  {
+   "source": "ButtonChoice",
+   "target": "PressAndRelease",
+   "type": "mentions",
+   "evidence": "the document's section on Button choice names Press and release"
+  },
+  {
+   "source": "DragFunctions",
+   "target": "MoveTo",
+   "type": "mentions",
+   "evidence": "the document's section on Drag functions names Move to"
+  },
+  {
+   "source": "WriteFunction",
+   "target": "PressAndRelease",
+   "type": "mentions",
+   "evidence": "the document's section on Write function names Press and release"
+  },
+  {
+   "source": "WriteFunction",
+   "target": "ActiveWindow",
+   "type": "mentions",
+   "evidence": "the document's section on Write function names Active window"
+  },
+  {
+   "source": "KeyListTyping",
+   "target": "PressAndRelease",
+   "type": "mentions",
+   "evidence": "the document's section on Key list typing names Press and release"
+  },
+  {
+   "source": "GuardedClick",
+   "target": "MoveTo",
+   "type": "mentions",
+   "evidence": "the document's section on Guarded click names Move to"
+  },
+  {
+   "source": "GuardedClick",
+   "target": "WindowState",
+   "type": "mentions",
+   "evidence": "the document's section on Guarded click names Window state"
+  }
+ ],
+ "agents": [
+  {
+   "id": "agent-Geometry",
+   "name": "Geometry agent",
+   "subject": "Geometry",
+   "covers": [
+    "CoordinateOrigin",
+    "ScreenSize",
+    "PointAndBox",
+    "Geometry"
+   ]
+  },
+  {
+   "id": "agent-Movement",
+   "name": "Movement agent",
+   "subject": "Movement",
+   "covers": [
+    "MoveTo",
+    "MoveRelative",
+    "ClampToScreen",
+    "Movement"
+   ]
+  },
+  {
+   "id": "agent-Clicking",
+   "name": "Clicking agent",
+   "subject": "Clicking",
+   "covers": [
+    "ClickFunction",
+    "ButtonChoice",
+    "ScrollWheel",
+    "Clicking"
+   ]
+  },
+  {
+   "id": "agent-Dragging",
+   "name": "Dragging agent",
+   "subject": "Dragging",
+   "covers": [
+    "DragFunctions",
+    "SpiralDrawProgram",
+    "Dragging"
+   ]
+  },
+  {
+   "id": "agent-TypingText",
+   "name": "Typing text agent",
+   "subject": "TypingText",
+   "covers": [
+    "WriteFunction",
+    "KeyListTyping",
+    "TypingText"
+   ]
+  },
+  {
+   "id": "agent-KeyNames",
+   "name": "Key names agent",
+   "subject": "KeyNames",
+   "covers": [
+    "KeyNameTable",
+    "SilentInvalidKey",
+    "KeyNames"
+   ]
+  },
+  {
+   "id": "agent-KeyPresses",
+   "name": "Key presses agent",
+   "subject": "KeyPresses",
+   "covers": [
+    "PressAndRelease",
+    "HotkeyFunction",
+    "KeyPresses"
+   ]
+  },
+  {
+   "id": "agent-SafetyNets",
+   "name": "Safety nets agent",
+   "subject": "SafetyNets",
+   "covers": [
+    "FailSafe",
+    "PauseSetting",
+    "SafetyNets"
+   ]
+  },
+  {
+   "id": "agent-ScriptDiscipline",
+   "name": "Script discipline agent",
+   "subject": "ScriptDiscipline",
+   "covers": [
+    "GuardedClick",
+    "ScriptLogging",
+    "CountdownAndSleep",
+    "AutomationEthics",
+    "ScriptDiscipline"
+   ]
+  },
+  {
+   "id": "agent-Capture",
+   "name": "Capture agent",
+   "subject": "Capture",
+   "covers": [
+    "ScreenshotFunction",
+    "PixelMatch",
+    "Capture"
+   ]
+  },
+  {
+   "id": "agent-Recognition",
+   "name": "Recognition agent",
+   "subject": "Recognition",
+   "covers": [
+    "LocateOnScreen",
+    "MouseInfoTool",
+    "Recognition"
+   ]
+  },
+  {
+   "id": "agent-WindowObjects",
+   "name": "Window objects agent",
+   "subject": "WindowObjects",
+   "covers": [
+    "ActiveWindow",
+    "WindowGeometry",
+    "WindowSearch",
+    "WindowState",
+    "WindowObjects"
+   ]
+  },
+  {
+   "id": "agent-MessageBoxes",
+   "name": "Message boxes agent",
+   "subject": "MessageBoxes",
+   "covers": [
+    "MessageBoxFunctions",
+    "MessageBoxes"
+   ]
+  },
+  {
+   "id": "agent-Questions",
+   "name": "Questions agent",
+   "subject": "Questions",
+   "covers": [
+    "PracticeQuestions",
+    "Questions"
+   ]
+  },
+  {
+   "id": "agent-Programs",
+   "name": "Programs agent",
+   "subject": "Programs",
+   "covers": [
+    "LookingBusy",
+    "ClipboardReading",
+    "GameBot",
+    "Programs"
+   ]
+  }
+ ],
+ "refs": [
+  [
+   "Automate the Boring Stuff with Python, 3rd edition - Appendix A, Installing Third-Party Packages",
+   "https://automatetheboringstuff.com/3e/appendixa.html"
+  ],
+  [
+   "Automate the Boring Stuff with Python, 3rd edition - Chapter 23, Controlling the Keyboard and Mouse (Al Sweigart, No Starch Press, 2025)",
+   "https://automatetheboringstuff.com/3e/chapter23.html"
+  ],
+  [
+   "Logging HOWTO (Python documentation)",
+   "https://docs.python.org/3/howto/logging.html"
+  ],
+  [
+   "MouseInfo documentation",
+   "https://mouseinfo.readthedocs.io/en/latest/"
+  ],
+  [
+   "PyAutoGUI README and repository (the release 0.9.54 installed with pip had its source files pyautogui/__init__.py and _pyautogui_x11.py read)",
+   "https://github.com/asweigart/pyautogui"
+  ],
+  [
+   "PyAutoGUI documentation - Cheat Sheet",
+   "https://pyautogui.readthedocs.io/en/latest/quickstart.html"
+  ],
+  [
+   "PyAutoGUI documentation - Installation",
+   "https://pyautogui.readthedocs.io/en/latest/install.html"
+  ],
+  [
+   "PyAutoGUI documentation - Keyboard Control Functions",
+   "https://pyautogui.readthedocs.io/en/latest/keyboard.html"
+  ],
+  [
+   "PyAutoGUI documentation - Message Box Functions",
+   "https://pyautogui.readthedocs.io/en/latest/msgbox.html"
+  ],
+  [
+   "PyAutoGUI documentation - Mouse Control Functions",
+   "https://pyautogui.readthedocs.io/en/latest/mouse.html"
+  ],
+  [
+   "PyAutoGUI documentation - Screenshot Functions (locate functions)",
+   "https://pyautogui.readthedocs.io/en/latest/screenshot.html"
+  ],
+  [
+   "PyAutoGUI documentation - Welcome, examples, FAQ and fail-safes",
+   "https://pyautogui.readthedocs.io/en/latest/"
+  ],
+  [
+   "PyGetWindow README (the window functions; only Windows implemented)",
+   "https://github.com/asweigart/PyGetWindow"
+  ],
+  [
+   "PyScreeze README (pixel and locate functions; the PyScreeze 1.0.1 source was read)",
+   "https://github.com/asweigart/pyscreeze"
+  ],
+  [
+   "Pyperclip README (clipboard; xclip or xsel on Linux)",
+   "https://github.com/asweigart/pyperclip"
+  ],
+  [
+   "Selenium documentation - Getting started with WebDriver",
+   "https://www.selenium.dev/documentation/webdriver/getting_started/"
+  ],
+  [
+   "The Python Standard Library, collections - namedtuple (Python documentation)",
+   "https://docs.python.org/3/library/collections.html"
+  ],
+  [
+   "The Python Standard Library, time - sleep (Python documentation)",
+   "https://docs.python.org/3/library/time.html"
+  ],
+  [
+   "The Python Standard Library, tkinter - Python interface to Tcl/Tk (Python documentation)",
+   "https://docs.python.org/3/library/tkinter.html"
+  ],
+  [
+   "sushigoroundbot README (the game bot the chapter points to)",
+   "https://github.com/asweigart/sushigoroundbot"
+  ]
+ ],
+ "resources": [
+  {
+   "kind": "documentation",
+   "title": "Automate the Boring Stuff with Python, 3rd edition: Chapter 23, Controlling the Keyboard and Mouse",
+   "url": "https://automatetheboringstuff.com/3e/chapter23.html",
+   "source": "automatetheboringstuff.com",
+   "why": "The course textbook's own chapter, free online: coordinates, mouse and keyboard calls, screenshots, windows and the practice programs.",
+   "concept": "CoordinateOrigin"
+  },
+  {
+   "kind": "documentation",
+   "title": "Welcome to PyAutoGUI's documentation",
+   "url": "https://pyautogui.readthedocs.io/en/latest/",
+   "source": "PyAutoGUI documentation",
+   "why": "The library's own overview: what it can do, the spiral example, the FAQ (primary monitor only, no OCR) and the fail-safe.",
+   "concept": "FailSafe"
+  },
+  {
+   "kind": "documentation",
+   "title": "Mouse Control Functions",
+   "url": "https://pyautogui.readthedocs.io/en/latest/mouse.html",
+   "source": "PyAutoGUI documentation",
+   "why": "Coordinates, onScreen(), moveTo() with None, clicks, drags, tweening and scrolling, with the exact arguments.",
+   "concept": "MoveTo"
+  },
+  {
+   "kind": "documentation",
+   "title": "Keyboard Control Functions",
+   "url": "https://pyautogui.readthedocs.io/en/latest/keyboard.html",
+   "source": "PyAutoGUI documentation",
+   "why": "write(), press(), hold(), hotkey() and the full KEYBOARD_KEYS list of key names.",
+   "concept": "KeyNameTable"
+  },
+  {
+   "kind": "documentation",
+   "title": "Screenshot Functions",
+   "url": "https://pyautogui.readthedocs.io/en/latest/screenshot.html",
+   "source": "PyAutoGUI documentation",
+   "why": "screenshot(), the locate functions, the order in which they search and ImageNotFoundException.",
+   "concept": "LocateOnScreen"
+  },
+  {
+   "kind": "documentation",
+   "title": "Message Box Functions",
+   "url": "https://pyautogui.readthedocs.io/en/latest/msgbox.html",
+   "source": "PyAutoGUI documentation",
+   "why": "alert(), confirm(), prompt() and password(): what each shows and returns.",
+   "concept": "MessageBoxFunctions"
+  },
+  {
+   "kind": "documentation",
+   "title": "Cheat Sheet",
+   "url": "https://pyautogui.readthedocs.io/en/latest/quickstart.html",
+   "source": "PyAutoGUI documentation",
+   "why": "One page of the whole API: PAUSE, FAILSAFE, mouse, keyboard, message boxes and screenshots.",
+   "concept": "PauseSetting"
+  },
+  {
+   "kind": "documentation",
+   "title": "MouseInfo documentation",
+   "url": "https://mouseinfo.readthedocs.io/en/latest/",
+   "source": "MouseInfo documentation",
+   "why": "The small program that shows pointer coordinates and pixel colours, to plan a script's positions.",
+   "concept": "MouseInfoTool"
+  },
+  {
+   "kind": "documentation",
+   "title": "PyScreeze README (raw text)",
+   "url": "https://raw.githubusercontent.com/asweigart/pyscreeze/master/README.md",
+   "source": "GitHub, asweigart/pyscreeze",
+   "why": "The module behind the screenshot, pixel and locate functions, and the helper programs it needs on Linux.",
+   "concept": "PixelMatch"
+  },
+  {
+   "kind": "documentation",
+   "title": "PyGetWindow README (raw text)",
+   "url": "https://raw.githubusercontent.com/asweigart/PyGetWindow/master/README.md",
+   "source": "GitHub, asweigart/PyGetWindow",
+   "why": "The window functions and the statement that only Windows is implemented.",
+   "concept": "ActiveWindow"
+  },
+  {
+   "kind": "documentation",
+   "title": "Pyperclip README (raw text)",
+   "url": "https://raw.githubusercontent.com/asweigart/pyperclip/master/README.md",
+   "source": "GitHub, asweigart/pyperclip",
+   "why": "copy() and paste(), and the xclip or xsel programs Linux needs.",
+   "concept": "ClipboardReading"
+  },
+  {
+   "kind": "documentation",
+   "title": "collections: Container datatypes",
+   "url": "https://docs.python.org/3/library/collections.html",
+   "source": "Python documentation",
+   "why": "namedtuple, the type behind Size, Point and Box.",
+   "concept": "PointAndBox"
+  },
+  {
+   "kind": "documentation",
+   "title": "Logging HOWTO",
+   "url": "https://docs.python.org/3/howto/logging.html",
+   "source": "Python documentation",
+   "why": "How to log a script's steps to a file with the logging module.",
+   "concept": "ScriptLogging"
+  },
+  {
+   "kind": "documentation",
+   "title": "Getting started | Selenium",
+   "url": "https://www.selenium.dev/documentation/webdriver/getting_started/",
+   "source": "Selenium documentation",
+   "why": "What WebDriver is, for practice question 10 (PyAutoGUI or Selenium for a web browser).",
+   "concept": "PracticeQuestions"
+  }
+ ],
+ "resources_checked": "2026-10-01"
+}
