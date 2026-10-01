@@ -53,5 +53,10 @@ rep("if(t.id==='xeclear'){e.stopImmediatePropagation();XS.recs=[];XS.items={};xS
 rep('id="xeclear">Clear my list</button>', 'id="xeclear">Clear my exam data…</button>')
 rep('<div id="xehist"></div></div>', '<div id="xehist"></div><div id="xeclearbox"></div><div class="row"><button class="btn g" id="xeauditzip">Download audit log (zip)</button><span class="note">What was done on this page, with your saved result files. Kept in this browser only.</span></div></div>')
 rep("items:items,answers:rec.ans||[],answered:", "items:items,labels:xLabels(items,rec.ans||[]),answers:rec.ans||[],answered:")
+# 7 the Code pipeline view is removed: it did not suit every program, and it made a second, different list of examples next to the Playground's
+rep("['pipeline','\U0001F3ED Code pipeline'],", "")
+a = s.index("P+='<div role=\"tabpanel\" data-pane=\"pipeline\" hidden>"); e = s.index("</div></div>';\n", a) + len("</div></div>';\n")
+assert "ppnext" in s[a:e] and s[a:e].count("data-pane=") == 1, "pipeline pane bounds"
+s = s[:a] + s[e:]
 open(sys.argv[2], "w", encoding="utf-8").write(s)
 print("wrote", sys.argv[2], len(s))

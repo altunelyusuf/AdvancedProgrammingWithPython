@@ -257,14 +257,7 @@ with sync_playwright() as p:
         ex_ok &= pg.input_value("#trcode").strip() != "" and pg.text_content("#trpos").startswith("step 1 of"); pg.click("#trnext"); ex_ok &= pg.text_content("#trpos").startswith("step 2 of")
     pg.fill("#trcode", "y = 1\ny = y + 41\nprint(y)"); pg.click("#trnext"); pg.wait_for_function("()=>document.getElementById('trpos').textContent.startsWith('step 1 of 3')||/step 1 of/.test(document.getElementById('trpos').textContent)", timeout=60000); retrace = pg.text_content("#trstat")
     feat("Step through offers examples, each traced when chosen; editing the code and pressing Step traces the new program", ex_ok and nex >= 4 and retrace.startswith("4 steps"), "%d examples; edited program: %s" % (nex, retrace))
-    view("pipeline"); pg.select_option("#ppex", "1"); pg.wait_for_function("()=>document.getElementById('ppstat').textContent===''&&document.querySelector('#ppout')&&document.querySelector('#ppout').textContent.length>0", timeout=120000); chosen = pg.input_value("#ppcode"); pg.click('[data-stage="1"]')  # first click runs the pipeline, then shows the stage
-    pg.wait_for_function("()=>document.querySelectorAll('#ppout .tok').length>0", timeout=120000); ntok = pg.locator("#ppout .tok").count(); pg.click('[data-stage="2"]'); tree_ok = pg.locator("#ppout svg g.n").count() > 5; pg.click('[data-stage="3"]'); nbc = pg.locator("#ppout tr").count() - 1; pg.click('[data-stage="4"]'); res = pg.text_content("#ppout pre").strip()
-    pipe_ok = True; npx = pg.locator("#ppex option").count()
-    for k in range(npx):
-        pg.select_option("#ppex", str(k)); pg.wait_for_function("k=>{const p=document.getElementById('ppcode').value;return !!document.querySelector('#ppbar .stage.now')&&p.length>0}", arg=k, timeout=120000)
-        pg.click('[data-stage="4"]'); pg.wait_for_function("()=>document.querySelector('#ppout pre')", timeout=120000); pipe_ok &= "Error" not in pg.text_content("#ppstat") and pg.locator("#ppout pre").count() > 0
-    feat("Code pipeline offers examples; choosing one fills the code and every example runs through all stages", pipe_ok and npx >= 5 and chosen.startswith("x = 2 + 3 * 6"), "%d examples" % npx)
-    feat("code pipeline: source, tokens, syntax tree, bytecode and result, each from Python's own modules", ntok == 11 and tree_ok and nbc > 3 and res == "20", "%d tokens, %d instructions, result %s" % (ntok, nbc, res))
+    feat("the Lab has no Code pipeline view (it was removed: one list of examples, in the Playground)", pg.locator('[data-tab="pipeline"]').count() == 0 and pg.locator("#ppex").count() == 0, "")
     # ---- 9.11.0: the 13 kinds of chapter 6 - helpers ----
     NEWKINDS = ["boxes", "classify", "facts", "hist", "keysort", "lanes", "matrix", "mutation", "passes", "refgraph", "seqtypes", "slices", "unpack"]
     T = lambda sel: pg.evaluate("s=>[...document.querySelectorAll(s)].map(e=>e.textContent)", sel)
