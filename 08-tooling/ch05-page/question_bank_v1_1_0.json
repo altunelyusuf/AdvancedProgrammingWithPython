@@ -1,0 +1,1707 @@
+[
+ {
+  "concept": "ErrorSignalling",
+  "level": "Understand",
+  "q": "What does the traceback of an unhandled exception tell the person who runs the program?",
+  "options": [
+   "That the program finished normally but printed a warning",
+   "That something went wrong, and the calls the exception passed through",
+   "Only the value of every variable at the moment of failure",
+   "Which line the programmer should delete to fix the bug"
+  ],
+  "answer": 1,
+  "why": "Raising an exception and the traceback it prints are how a program says that something went wrong, and the traceback records where the exception passed."
+ },
+ {
+  "concept": "Raising",
+  "level": "Understand",
+  "q": "A function cannot serve a call it was given. What does raising an exception let the function do?",
+  "options": [
+   "Repair the bad argument silently and carry on without telling anyone",
+   "Return None so the caller never notices a problem",
+   "Refuse the call and let the caller decide how to recover",
+   "Restart the whole program from the first line"
+  ],
+  "answer": 2,
+  "why": "Raising shows how a function refuses a call it cannot serve and how the caller then recovers."
+ },
+ {
+  "concept": "RaiseStatement",
+  "level": "Remember",
+  "q": "What does a raise statement do to the running code?",
+  "options": [
+   "It ends the program at once, even if an except clause matches",
+   "It stops the code and passes an exception to the nearest matching except clause",
+   "It prints a message and continues with the next line",
+   "It marks a line where the debugger will pause"
+  ],
+  "answer": 1,
+  "why": "A raise statement stops the running code and hands the exception to the nearest matching except clause, which is how a function tells its caller that a call was invalid."
+ },
+ {
+  "concept": "RaiseStatement",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "def area(w):\n    if w <= 0:\n        raise ValueError('bad width')\n    return w * 2\n\ntry:\n    print(area(0))\nexcept ValueError as e:\n    print('caught', e)",
+  "options": [
+   "0",
+   "caught 0",
+   "ValueError: bad width",
+   "caught bad width"
+  ],
+  "answer": 3,
+  "why": "area(0) raises ValueError, the nearest matching except clause receives it, and the program prints caught followed by the message."
+ },
+ {
+  "concept": "ExceptionMessage",
+  "level": "Understand",
+  "q": "Where does Python keep the text given to an exception, and how can it be shown?",
+  "options": [
+   "In a global variable called message",
+   "In its __notes__, and only print() can show it",
+   "Only in the traceback, never on the exception object",
+   "In its args, and str() of the exception shows it"
+  ],
+  "answer": 3,
+  "why": "The text passed to an exception is kept in its args and printed by str, so an except clause can show a message instead of a traceback."
+ },
+ {
+  "concept": "ExceptionMessage",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "try:\n    raise ValueError('bad input')\nexcept ValueError as err:\n    print('An exception happened:', str(err))",
+  "options": [
+   "An exception happened: bad input",
+   "An exception happened: ValueError",
+   "An exception happened: ValueError: bad input",
+   "An exception happened: ('bad input',)"
+  ],
+  "answer": 0,
+  "why": "str(err) gives only the text passed to the exception, which is kept in its args, so no class name or tuple appears."
+ },
+ {
+  "concept": "Tracebacks",
+  "level": "Understand",
+  "q": "What is a traceback?",
+  "options": [
+   "A log file that basicConfig writes at the end of a run",
+   "The record of the calls an exception passed on its way out",
+   "The list of breakpoints set in the debugger",
+   "A copy of the program's output taken before the error"
+  ],
+  "answer": 1,
+  "why": "Tracebacks are the record of where an exception passed on its way out."
+ },
+ {
+  "concept": "ExceptionUnwinding",
+  "level": "Understand",
+  "q": "Function main calls helper, helper calls parse, and parse raises an error that no function handles. What happens?",
+  "options": [
+   "Only parse stops, and helper carries on after the call as if nothing had happened to it",
+   "The error jumps straight to main and skips helper",
+   "The error is dropped as soon as parse returns",
+   "The error leaves parse, then helper, then main, and the program ends with a traceback"
+  ],
+  "answer": 3,
+  "why": "An exception that no function handles leaves each function in turn, up the call stack, until an except clause matches it or the program ends with a traceback."
+ },
+ {
+  "concept": "ExceptionUnwinding",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "def read_age(text):\n    return int(text)\n\ndef load(text):\n    return read_age(text)\n\ndef process(text):\n    try:\n        return load(text)\n    except ValueError as e:\n        return 'caught: ' + str(e)\n\nprint(process('abc'))",
+  "options": [
+   "0",
+   "caught: invalid literal for int() with base 10: 'abc'",
+   "caught: ValueError",
+   "caught: abc"
+  ],
+  "answer": 1,
+  "why": "The ValueError is not handled in read_age or load, so it leaves both and is caught in process, where str(e) is the int() message."
+ },
+ {
+  "concept": "TracebackReading",
+  "level": "Understand",
+  "q": "In a traceback, which call is listed last, just before the exception class and message?",
+  "options": [
+   "The call that raised the exception",
+   "The call whose except clause handled it",
+   "The first line of the file",
+   "The outermost call, where the program started"
+  ],
+  "answer": 0,
+  "why": "A traceback lists the calls from the outermost to the one that raised, and then ends with the exception class and message."
+ },
+ {
+  "concept": "FineGrainedLocations",
+  "level": "Understand",
+  "q": "Python 3.11 or later prints TypeError: 'NoneType' object is not subscriptable for print(data['a']['b']['c']). What do the marks under the line tell you?",
+  "options": [
+   "The first subscript, ['a'], is the failing part",
+   "The print call itself could not write its output",
+   "The whole line is invalid and must be removed",
+   "The last subscript, ['c'], is the failing part, so data['a']['b'] is None"
+  ],
+  "answer": 3,
+  "why": "Since Python 3.11 a traceback marks the failing part of the line, so in a chained expression you can read which subscript failed."
+ },
+ {
+  "concept": "FineGrainedLocations",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "data = {'a': {'b': None}}\ntry:\n    print(data['a']['b']['c'])\nexcept TypeError as e:\n    print(e)",
+  "options": [
+   "'NoneType' object has no attribute 'c'",
+   "None",
+   "'NoneType' object is not subscriptable",
+   "KeyError: 'c'"
+  ],
+  "answer": 2,
+  "why": "data['a']['b'] is None, and subscripting None with ['c'] raises TypeError with that message, which the except clause prints."
+ },
+ {
+  "concept": "ExceptionNotes",
+  "level": "Understand",
+  "q": "What are exception notes used for?",
+  "options": [
+   "Hiding the traceback from the user",
+   "Adding context to an exception when code re-raises it",
+   "Setting the threshold of the logger",
+   "Replacing the message given to the exception"
+  ],
+  "answer": 1,
+  "why": "An exception can carry notes added with add_note, kept in __notes__ and printed after the traceback, so re-raising code can add context."
+ },
+ {
+  "concept": "ExceptionNotes",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "try:\n    try:\n        int('x')\n    except ValueError as e:\n        e.add_note('while reading age')\n        raise\nexcept ValueError as e:\n    print(e.__notes__)",
+  "options": [
+   "('while reading age',)",
+   "['while reading age']",
+   "[]",
+   "None"
+  ],
+  "answer": 1,
+  "why": "add_note stores the text in the exception's __notes__ list, and the bare raise passes the same exception on, so the outer handler sees that list."
+ },
+ {
+  "concept": "Assertion",
+  "level": "Understand",
+  "q": "Whose errors are assertions meant to catch?",
+  "options": [
+   "Failures of the network or the disk",
+   "Mistakes in the operating system",
+   "The programmer's errors, meaning bugs in the code",
+   "The user's mistakes when typing input"
+  ],
+  "answer": 2,
+  "why": "Assertions are sanity checks meant for errors of the programmer and not of the user."
+ },
+ {
+  "concept": "Assert",
+  "level": "Understand",
+  "q": "What does an assertion state?",
+  "options": [
+   "How long a function is allowed to run before it is stopped",
+   "What must be true at that point if the program is correct",
+   "Which exception the caller has to catch",
+   "What the user should be asked next"
+  ],
+  "answer": 1,
+  "why": "An assertion states what must be true at a point in a program."
+ },
+ {
+  "concept": "AssertStatement",
+  "level": "Remember",
+  "q": "In normal mode, what happens when x is -1 and the program runs  assert x > 0 ?",
+  "options": [
+   "ValueError is raised",
+   "A warning is printed and the program continues",
+   "False is returned and ignored",
+   "AssertionError is raised"
+  ],
+  "answer": 3,
+  "why": "An assert statement raises AssertionError when the condition the programmer believes true is false."
+ },
+ {
+  "concept": "AssertStatement",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "x = -1\ntry:\n    assert x > 0\nexcept AssertionError:\n    print('failed')\nelse:\n    print('passed')",
+  "options": [
+   "failed passed",
+   "failed",
+   "AssertionError",
+   "passed"
+  ],
+  "answer": 1,
+  "why": "x > 0 is false for -1, so the assert raises AssertionError, the except clause runs and prints failed, and the else branch is skipped."
+ },
+ {
+  "concept": "AssertionFailure",
+  "level": "Understand",
+  "q": "How does the chapter advise treating a failed assertion?",
+  "options": [
+   "As a programmer error, so it is not caught",
+   "As a warning that logging can hide",
+   "As a SyntaxError found before the program runs",
+   "As a user error to catch and ask again"
+  ],
+  "answer": 0,
+  "why": "A failed assertion is an ordinary exception of class AssertionError, and the chapter advises against catching it, since it reports a programmer error."
+ },
+ {
+  "concept": "AssertionFailure",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "try:\n    assert 1 == 2\nexcept Exception as e:\n    print(type(e).__name__)",
+  "options": [
+   "ValueError",
+   "UnboundLocalError",
+   "AssertionError",
+   "Exception"
+  ],
+  "answer": 2,
+  "why": "AssertionError is a subclass of Exception, so except Exception catches it, and type(e).__name__ gives its own class name."
+ },
+ {
+  "concept": "AssertMessage",
+  "level": "Understand",
+  "q": "In  assert age >= 0, 'age is negative'  when is the second expression evaluated?",
+  "options": [
+   "Only when the condition is true",
+   "Only when the program runs under -O",
+   "Every time the line runs",
+   "Only when the condition is false"
+  ],
+  "answer": 3,
+  "why": "The second expression of an assert is evaluated only on failure, and its text becomes the message of the AssertionError."
+ },
+ {
+  "concept": "AssertMessage",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "try:\n    assert 2 + 2 == 5, 'math is broken'\nexcept AssertionError as e:\n    print(e)",
+  "options": [
+   "AssertionError: math is broken",
+   "False",
+   "2 + 2 == 5",
+   "math is broken"
+  ],
+  "answer": 3,
+  "why": "The second expression becomes the message of the AssertionError, and print(e) shows just that message."
+ },
+ {
+  "concept": "AssertVersusRaise",
+  "level": "Understand",
+  "q": "A shop program reads a quantity typed by a customer. Which check fits a negative quantity?",
+  "options": [
+   "assert quantity >= 0",
+   "if quantity < 0: raise ValueError(...)",
+   "logging.debug('negative quantity')",
+   "print a message and ignore it"
+  ],
+  "answer": 1,
+  "why": "An error the user can cause is checked with an if and a raise, while an assert states what must be true if the program is correct."
+ },
+ {
+  "concept": "AssertVersusRaise",
+  "level": "Analyze",
+  "q": "Which situation is a job for assert rather than for if and raise?",
+  "options": [
+   "Checking that a web form field is not empty",
+   "Checking that the file name typed by the user exists on the disk",
+   "Checking that a list is sorted after your own sorting step",
+   "Checking that a typed age is a number"
+  ],
+  "answer": 2,
+  "why": "An assert states what must be true if the program is correct, such as the result of the programmer's own step, while user-caused errors need if and raise."
+ },
+ {
+  "concept": "OptimisedMode",
+  "level": "Understand",
+  "q": "Why should a check that must always run not be written as an assert?",
+  "options": [
+   "An assert always ends the program, even when caught",
+   "An assert can only compare integers",
+   "An assert is slower than an if",
+   "Under -O assert statements produce no code, so the check disappears"
+  ],
+  "answer": 3,
+  "why": "Under the -O option assert statements produce no code at all, so a check that must always run is not written as an assertion."
+ },
+ {
+  "concept": "OptimisedMode",
+  "level": "Apply",
+  "q": "The program below is run normally, without the -O option. What happens when it runs?",
+  "code": "def f(x):\n    assert x > 0\n    return 'ok'\n\nprint(f(-1))",
+  "options": [
+   "ok",
+   "-1",
+   "AssertionError",
+   "ZeroDivisionError"
+  ],
+  "answer": 2,
+  "why": "__debug__ is True in normal mode, so the assert is active, it fails for -1, and the uncaught AssertionError ends the program."
+ },
+ {
+  "concept": "Logging",
+  "level": "Understand",
+  "q": "What is logging for?",
+  "options": [
+   "Checking that the programmer's assumptions are true",
+   "Stopping the program at a chosen line",
+   "Asking the user for input",
+   "Leaving a record of what a program did without stopping it"
+  ],
+  "answer": 3,
+  "why": "Logging leaves a record of what a program did, without stopping it."
+ },
+ {
+  "concept": "Setup",
+  "level": "Remember",
+  "q": "Which three things does setting up logging choose?",
+  "options": [
+   "A level, an exception and an assertion",
+   "A threshold, a format and a destination",
+   "A name, an author and a version",
+   "A threshold, a breakpoint and a traceback"
+  ],
+  "answer": 1,
+  "why": "Setting up logging means choosing a threshold, a format and a destination."
+ },
+ {
+  "concept": "BasicConfig",
+  "level": "Understand",
+  "q": "What does basicConfig set, and how does the chapter use it?",
+  "options": [
+   "The threshold, format and destination of the root logger, called once at the top",
+   "Only the format, called before every message",
+   "The breakpoints of the debugger, called once per line",
+   "The threshold of one function, called inside it"
+  ],
+  "answer": 0,
+  "why": "basicConfig sets the threshold, the format and the destination of the root logger, and the chapter calls it once at the top of a program."
+ },
+ {
+  "concept": "BasicConfig",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import logging, sys\nlogging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s', stream=sys.stdout)\nlogging.debug('a')\nlogging.info('b')",
+  "options": [
+   "(no output)",
+   "INFO:b",
+   "DEBUG:a",
+   "DEBUG:a INFO:b"
+  ],
+  "answer": 1,
+  "why": "The threshold is INFO, so the debug call is below it and produces nothing, while the info call is shown in the given format."
+ },
+ {
+  "concept": "LogFormat",
+  "level": "Understand",
+  "q": "What decides what each log line shows?",
+  "options": [
+   "The name of the calling function, always",
+   "The filename given to basicConfig",
+   "A format string with named fields",
+   "The number of the level"
+  ],
+  "answer": 2,
+  "why": "A format string with named fields decides what each log line shows."
+ },
+ {
+  "concept": "LogFormat",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import logging, sys\nlogging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s', stream=sys.stdout)\nlogging.warning('low disk')",
+  "options": [
+   "WARNING - low disk",
+   "WARNING:root:low disk",
+   "low disk",
+   "WARNING"
+  ],
+  "answer": 0,
+  "why": "The format string asks for the level name, a dash and the message, and the level name of logging.warning is written in capitals."
+ },
+ {
+  "concept": "LogToFile",
+  "level": "Understand",
+  "q": "What does passing filename='app.log' to basicConfig do?",
+  "options": [
+   "It sends the messages to both the file and the screen",
+   "It deletes the file when the program ends",
+   "It reads the logging settings from that file",
+   "It sends the messages to that text file instead of the screen"
+  ],
+  "answer": 3,
+  "why": "Passing filename to basicConfig sends the messages to a text file instead of the screen."
+ },
+ {
+  "concept": "LogToFile",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import logging, os, tempfile\np = os.path.join(tempfile.mkdtemp(), 'app.log')\nlogging.basicConfig(filename=p, level=logging.INFO, format='%(message)s')\nlogging.info('saved')\nlogging.shutdown()\nprint(open(p).read().strip())",
+  "options": [
+   "INFO:root:saved",
+   "(no output)",
+   "saved",
+   "app.log"
+  ],
+  "answer": 2,
+  "why": "The message goes to the file, not the screen, and the format is only %(message)s, so reading the file back gives just saved."
+ },
+ {
+  "concept": "ForceReconfigure",
+  "level": "Understand",
+  "q": "A program has already called basicConfig once. What makes a second call with new settings take effect?",
+  "options": [
+   "Nothing is needed, the second call always wins",
+   "Passing force=True",
+   "Calling logging.reset() first",
+   "Calling it with a different format string"
+  ],
+  "answer": 1,
+  "why": "basicConfig does nothing if the root logger already has handlers, so a second call is ignored unless force=True is passed."
+ },
+ {
+  "concept": "ForceReconfigure",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import logging, sys\nlogging.basicConfig(level=logging.WARNING, format='%(message)s', stream=sys.stdout)\nlogging.basicConfig(level=logging.DEBUG, format='%(message)s', stream=sys.stdout, force=True)\nlogging.debug('shown')",
+  "options": [
+   "DEBUG:root:shown",
+   "ValueError",
+   "(no output)",
+   "shown"
+  ],
+  "answer": 3,
+  "why": "force=True removes the handlers of the first call and applies the new threshold DEBUG, so the debug message is shown."
+ },
+ {
+  "concept": "Levels",
+  "level": "Understand",
+  "q": "What do logging levels let one program do?",
+  "options": [
+   "Write each message to a different file automatically",
+   "Catch different kinds of exceptions",
+   "Run faster by skipping functions",
+   "Produce much or little output by changing one setting"
+  ],
+  "answer": 3,
+  "why": "Logging levels let one program produce much or little output."
+ },
+ {
+  "concept": "LoggingLevels",
+  "level": "Remember",
+  "q": "Which list shows the five levels from lowest to highest importance?",
+  "options": [
+   "CRITICAL, ERROR, WARNING, INFO, DEBUG",
+   "DEBUG, WARNING, INFO, ERROR, CRITICAL",
+   "INFO, DEBUG, ERROR, WARNING, CRITICAL",
+   "DEBUG, INFO, WARNING, ERROR, CRITICAL"
+  ],
+  "answer": 3,
+  "why": "The five levels run from lowest to highest importance as DEBUG, INFO, WARNING, ERROR and CRITICAL, numbered 10, 20, 30, 40 and 50."
+ },
+ {
+  "concept": "LoggingLevels",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import logging\nprint(logging.CRITICAL - logging.DEBUG)",
+  "options": [
+   "40",
+   "30",
+   "50",
+   "60"
+  ],
+  "answer": 0,
+  "why": "CRITICAL is 50 and DEBUG is 10, so the difference is 40."
+ },
+ {
+  "concept": "LevelThreshold",
+  "level": "Understand",
+  "q": "With the threshold set to ERROR, which calls produce output?",
+  "options": [
+   "Only error",
+   "Debug, info and warning",
+   "Only error and critical",
+   "All five levels"
+  ],
+  "answer": 2,
+  "why": "A message is shown only if its level is at least the threshold, and ERROR and CRITICAL are the levels at or above ERROR."
+ },
+ {
+  "concept": "LevelThreshold",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import logging\nlogging.basicConfig(level=logging.ERROR)\nlog = logging.getLogger()\nprint([log.isEnabledFor(n) for n in (10, 20, 30, 40, 50)])",
+  "options": [
+   "[True, True, True, True, True]",
+   "[True, True, True, False, False]",
+   "[False, False, False, True, True]",
+   "[False, False, True, True, True]"
+  ],
+  "answer": 2,
+  "why": "With the threshold at ERROR (40) only levels 40 and 50 reach it, so the first three checks are False and the last two True."
+ },
+ {
+  "concept": "DefaultLevel",
+  "level": "Understand",
+  "q": "Why does logging.info('started') print nothing in a script that never calls basicConfig?",
+  "options": [
+   "Info messages can only go to files",
+   "Info calls are removed by the interpreter before the program starts running",
+   "The default threshold is WARNING, which is above INFO",
+   "Logging stays off until it is enabled"
+  ],
+  "answer": 2,
+  "why": "Without basicConfig the threshold is WARNING, so debug and info calls print nothing."
+ },
+ {
+  "concept": "DefaultLevel",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import logging\nprint(logging.getLevelName(logging.getLogger().getEffectiveLevel()))",
+  "options": [
+   "DEBUG",
+   "WARNING",
+   "NOTSET",
+   "INFO"
+  ],
+  "answer": 1,
+  "why": "The root logger has the default threshold 30 when nothing is configured, and getLevelName turns 30 into WARNING."
+ },
+ {
+  "concept": "DisablingLogging",
+  "level": "Understand",
+  "q": "What does logging.disable(logging.ERROR) silence?",
+  "options": [
+   "Nothing until basicConfig is called again",
+   "ERROR and everything above it",
+   "Only ERROR",
+   "ERROR and everything below it"
+  ],
+  "answer": 3,
+  "why": "logging.disable silences the given level and all below it."
+ },
+ {
+  "concept": "DisablingLogging",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import logging, sys\nlogging.basicConfig(level=logging.DEBUG, format='%(levelname)s', stream=sys.stdout)\nlogging.disable(logging.ERROR)\nlogging.warning('w')\nlogging.critical('c')",
+  "options": [
+   "(no output)",
+   "CRITICAL",
+   "WARNING",
+   "WARNING CRITICAL"
+  ],
+  "answer": 1,
+  "why": "disable(ERROR) silences ERROR and everything below it, so the warning is hidden and only the critical message is shown."
+ },
+ {
+  "concept": "Practice",
+  "level": "Understand",
+  "q": "Which decision belongs to logging practice?",
+  "options": [
+   "Choosing which Python version to install on the computer",
+   "Choosing the line for a breakpoint",
+   "Choosing between raise and assert",
+   "Choosing between a log call and print for a message"
+  ],
+  "answer": 3,
+  "why": "Practice in logging is choosing between it and print, and writing the calls well."
+ },
+ {
+  "concept": "LoggingVersusPrint",
+  "level": "Understand",
+  "q": "Why are log calls better than print calls for messages meant for the programmer?",
+  "options": [
+   "print cannot show the value of a variable",
+   "Log calls are always shown to the user",
+   "One setting switches them all off, where each print would have to be deleted",
+   "print calls can only appear once in a program"
+  ],
+  "answer": 2,
+  "why": "Log messages are for the programmer and print is for the user; log calls stay in the program and one setting switches them all off."
+ },
+ {
+  "concept": "LoggingVersusPrint",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import logging\nlogging.disable(logging.CRITICAL)\nlogging.error('hidden')\nprint('user message')",
+  "options": [
+   "user message",
+   "hidden",
+   "hidden user message",
+   "(no output)"
+  ],
+  "answer": 0,
+  "why": "logging.disable(CRITICAL) turns off every log message, including the error, while print is not affected and still shows its text."
+ },
+ {
+  "concept": "LazyFormatting",
+  "level": "Understand",
+  "q": "The level is WARNING. What does the disabled call  log.debug('rows: %s', rows)  avoid doing?",
+  "options": [
+   "Turning rows into text",
+   "Comparing its level with the threshold",
+   "Calling the function log.debug",
+   "Looking up the name rows"
+  ],
+  "answer": 0,
+  "why": "A message given arguments is formatted only when it is emitted, so a disabled debug call costs no string conversion."
+ },
+ {
+  "concept": "LazyFormatting",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import logging, sys\nlogging.basicConfig(level=logging.WARNING, stream=sys.stdout)\nlog = logging.getLogger()\n\nclass Big:\n    def __str__(self):\n        print('converted', end=' ')\n        return 'big'\n\nlog.debug('v %s', Big())\nlog.debug(f'v {Big()}')",
+  "options": [
+   "converted",
+   "(no output)",
+   "converted converted",
+   "v big"
+  ],
+  "answer": 0,
+  "why": "The call with an argument is disabled, so it never turns the object into text, while the f-string converts it before the call even happens."
+ },
+ {
+  "concept": "Debugger",
+  "level": "Understand",
+  "q": "For which kind of question is the debugger the right instrument?",
+  "options": [
+   "What the variables hold at one particular line",
+   "Whether a value the user typed is valid",
+   "What happened during a long unattended run, as a record",
+   "Whether the programmer's assumption still holds in every run"
+  ],
+  "answer": 0,
+  "why": "The debugger is the instrument for a question about the state at one line."
+ },
+ {
+  "concept": "Controls",
+  "level": "Remember",
+  "q": "Which four buttons does Debugging mode add to the top of the Mu editor?",
+  "options": [
+   "Run, Stop, Save and Debug",
+   "Continue, Step Over, Step In and Step Out",
+   "Continue, Stop, Pause and Restart",
+   "Step, Skip, Resume and Quit"
+  ],
+  "answer": 1,
+  "why": "The chapter says that Debugging mode also adds the buttons Continue, Step Over, Step In and Step Out; the Stop button is the usual one."
+ },
+ {
+  "concept": "Breakpoint",
+  "level": "Understand",
+  "q": "What does a breakpoint do?",
+  "options": [
+   "It skips that line and goes on",
+   "It pauses the running program at that line so its variables can be read",
+   "It deletes that line from the program",
+   "It logs the variables at every run"
+  ],
+  "answer": 1,
+  "why": "A breakpoint marks a line at which the debugger pauses the running program so its variables can be read."
+ },
+ {
+  "concept": "ContinueControl",
+  "level": "Understand",
+  "q": "The debugger is paused on line 10 and the next breakpoint is on line 40. What does Continue do?",
+  "options": [
+   "Finishes the current function and pauses in the caller, ignoring any breakpoint on line 40",
+   "Restarts the program from the first line",
+   "Executes only line 10 and pauses again",
+   "Runs the program until line 40, or until the end if there is no other breakpoint"
+  ],
+  "answer": 3,
+  "why": "Continue runs the program until the next breakpoint or the end."
+ },
+ {
+  "concept": "StepIn",
+  "level": "Understand",
+  "q": "The debugger is paused on  total = add(1, 2).  What does Step In do?",
+  "options": [
+   "It finishes the current function",
+   "It runs add and pauses on the next line of the caller",
+   "It pauses on the first line of add",
+   "It runs on to the next breakpoint"
+  ],
+  "answer": 2,
+  "why": "Step In executes the next line and, if that line is a call, pauses on the first line of the called function."
+ },
+ {
+  "concept": "StepOver",
+  "level": "Analyze",
+  "q": "You use Step Over on  result = compute(5)  and result is wrong. What did the step not show you?",
+  "options": [
+   "The lines that ran inside compute",
+   "The value of result afterwards",
+   "The line that was executed",
+   "That the program had a breakpoint set"
+  ],
+  "answer": 0,
+  "why": "Step Over runs a called function without pausing inside it, so the lines inside compute stayed hidden."
+ },
+ {
+  "concept": "StepOut",
+  "level": "Remember",
+  "q": "What does Step Out do?",
+  "options": [
+   "It runs the program on to the next breakpoint",
+   "It runs the rest of the current function at full speed until the function returns",
+   "It executes one line and pauses again",
+   "It ends the debugging session"
+  ],
+  "answer": 1,
+  "why": "Step Out executes lines of code at full speed until the program returns from the current function."
+ },
+ {
+  "concept": "PythonDebugger",
+  "level": "Understand",
+  "q": "Why does it matter that the standard library has its own debugger?",
+  "options": [
+   "It only works inside the Mu editor",
+   "It removes the need for logging",
+   "Editors are no longer needed to write Python code",
+   "The technique does not depend on one editor"
+  ],
+  "answer": 3,
+  "why": "The standard library has its own debugger, so the technique does not depend on one editor."
+ },
+ {
+  "concept": "BreakpointFunction",
+  "level": "Understand",
+  "q": "What does breakpoint() do in a normal run, and how can it be turned off without editing the code?",
+  "options": [
+   "It pauses in the debugger, and PYTHONBREAKPOINT=0 makes it do nothing",
+   "It pauses, and only deleting the call stops it",
+   "It writes its location to a log file",
+   "It sets a breakpoint on the next line and continues"
+  ],
+  "answer": 0,
+  "why": "The built-in breakpoint() pauses the program in the debugger at that line by calling sys.breakpointhook, and PYTHONBREAKPOINT=0 makes it do nothing."
+ },
+ {
+  "concept": "BreakpointFunction",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os\nos.environ['PYTHONBREAKPOINT'] = '0'\nbreakpoint()\nprint('ran on')",
+  "options": [
+   "(no output)",
+   "BdbQuit",
+   "ran on",
+   "(Pdb)"
+  ],
+  "answer": 2,
+  "why": "PYTHONBREAKPOINT=0 makes breakpoint() do nothing, so the program does not stop in the debugger and goes on to the print."
+ },
+ {
+  "concept": "PdbCommands",
+  "level": "Understand",
+  "q": "Which pdb command lists the call stack?",
+  "options": [
+   "next",
+   "return",
+   "list",
+   "where"
+  ],
+  "answer": 3,
+  "why": "The standard debugger pdb offers step, next, return, continue and break as the chapter's controls, and where lists the call stack."
+ },
+ {
+  "concept": "PdbCommands",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import pdb\nprint([hasattr(pdb.Pdb, 'do_' + c) for c in ('next', 'step', 'stepover')])",
+  "options": [
+   "[True, True, False]",
+   "[True, False, False]",
+   "[False, True, True]",
+   "[True, True, True]"
+  ],
+  "answer": 0,
+  "why": "pdb has commands next and step, but the name stepover is not among its commands."
+ },
+ {
+  "concept": "RemoteAttach",
+  "level": "Understand",
+  "q": "Since Python 3.14, how can pdb reach a program that is already running?",
+  "options": [
+   "With python -m pdb -p and the process identifier, using sys.remote_exec",
+   "By restarting the program with a breakpoint() call",
+   "Only through the Mu editor",
+   "By setting PYTHONBREAKPOINT=1 in another terminal"
+  ],
+  "answer": 0,
+  "why": "Since Python 3.14 the debugger can attach to a running process by its identifier, using sys.remote_exec."
+ },
+ {
+  "concept": "RemoteAttach",
+  "level": "Understand",
+  "q": "Which function, added in Python 3.14, lets the debugger run code inside another running Python process?",
+  "options": [
+   "sys.remote_exec",
+   "sys.breakpointhook",
+   "os.attach",
+   "pdb.set_trace"
+  ],
+  "answer": 0,
+  "why": "sys.remote_exec is the function Python 3.14 added so that the debugger can attach to a process that is already running."
+ },
+ {
+  "concept": "ModernPractice",
+  "level": "Understand",
+  "q": "What do the chapter's worked programs show?",
+  "options": [
+   "Which instrument finds which kind of bug",
+   "How to use the Mu editor only",
+   "How to write faster loops",
+   "How to avoid bugs in modern Python entirely"
+  ],
+  "answer": 0,
+  "why": "The chapter's worked programs show which instrument finds which kind of bug."
+ },
+ {
+  "concept": "WorkedCases",
+  "level": "Understand",
+  "q": "In the chapter, which instrument exposes the bug of the factorial, and which exposes the bug of the adding program?",
+  "options": [
+   "The debugger for both programs",
+   "Assertions for the factorial and logging for the adding program as well",
+   "Logging for both programs",
+   "Logging for the factorial and the debugger for the adding program"
+  ],
+  "answer": 3,
+  "why": "The log messages show i starting at 0 in the factorial, and the Debug Inspector pane shows the strings '5', '3' and '42' in the adding program."
+ },
+ {
+  "concept": "OffByOneRange",
+  "level": "Understand",
+  "q": "Why does the chapter's factorial(5) return 0?",
+  "options": [
+   "range(n + 1) starts at 0, so total is multiplied by 0 on the first pass",
+   "The loop stops one step early and never uses 5",
+   "factorial needs recursion to work",
+   "total starts at 0 instead of 1"
+  ],
+  "answer": 0,
+  "why": "The factorial multiplies by zero because its range starts at 0, and range(1, n + 1) fixes it."
+ },
+ {
+  "concept": "OffByOneRange",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "n = 4\nprint(list(range(n + 1)), list(range(1, n + 1)))",
+  "options": [
+   "[1, 2, 3, 4, 5] [1, 2, 3, 4]",
+   "[0, 1, 2, 3, 4] [1, 2, 3, 4]",
+   "[0, 1, 2, 3] [1, 2, 3, 4]",
+   "[0, 1, 2, 3, 4] [2, 3, 4]"
+  ],
+  "answer": 1,
+  "why": "range(n + 1) starts at 0 and stops before n + 1, while range(1, n + 1) starts at 1, so the zero that ruined the product disappears."
+ },
+ {
+  "concept": "StringConcatenation",
+  "level": "Understand",
+  "q": "Why does the adding program print The sum is 5342 instead of 50?",
+  "options": [
+   "The numbers are too big for an integer",
+   "Python adds the digits in the wrong order",
+   "The answers are strings, and adding strings joins them",
+   "print reverses the numbers"
+  ],
+  "answer": 2,
+  "why": "input and a list of typed answers give strings, and adding strings joins them, so the sum prints as 5342 until each answer is converted with int."
+ },
+ {
+  "concept": "StringConcatenation",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "answers = ['5', '3', '42']\nprint('The sum is', answers[0] + answers[1] + answers[2])",
+  "options": [
+   "The sum is 50",
+   "The sum is 5342",
+   "The sum is 5 3 42",
+   "TypeError"
+  ],
+  "answer": 1,
+  "why": "The three answers are strings, so + joins them instead of adding numbers."
+ },
+ {
+  "concept": "TypeMismatchComparison",
+  "level": "Understand",
+  "q": "Why does the Buggy Coin Toss game report every guess as wrong?",
+  "options": [
+   "It compares an integer from randint with a string, which is never equal",
+   "input removes the letters of the guess",
+   "randint returns a float, which cannot be compared",
+   "== cannot compare values in Python 3"
+  ],
+  "answer": 0,
+  "why": "A number never equals a string, so comparing the integer from randint with 'heads' is always false."
+ },
+ {
+  "concept": "TypeMismatchComparison",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "print(0 == 'heads', 0 == '0', str(0) == '0')",
+  "options": [
+   "False True True",
+   "True False True",
+   "False False True",
+   "False False False"
+  ],
+  "answer": 2,
+  "why": "A number never equals a string, even the digit 0 and the text '0', but after str() both sides are the text '0'."
+ },
+ {
+  "concept": "RemoteAttach",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import sys\nprint(callable(sys.breakpointhook))",
+  "options": [
+   "None",
+   "False",
+   "True",
+   "0"
+  ],
+  "answer": 2,
+  "why": "sys.breakpointhook is the function that breakpoint() calls to start the debugger, and functions are callable."
+ },
+ {
+  "concept": "BugModel",
+  "level": "Understand",
+  "q": "What question do raising exceptions, assertions, logging and the debugger all answer in different ways?",
+  "options": [
+   "How can the program be made to finish sooner when it works on very large inputs?",
+   "How can the source text be made shorter without changing it?",
+   "How can the programmer find out what the program is really doing?",
+   "How can the user be stopped from typing wrong data?"
+  ],
+  "answer": 2,
+  "why": "The branch presents the four instruments as four answers to one question: what the program is really doing, as opposed to what its source appears to say."
+ },
+ {
+  "concept": "BugNature",
+  "level": "Understand",
+  "q": "A program runs to its end, prints a plausible result, and the result is wrong. What kind of bug is it?",
+  "options": [
+   "A syntax error, which stops the program from starting",
+   "An unhandled exception, which prints a traceback",
+   "A logic error, which Python does not report",
+   "A warning, which the interpreter prints after the last line"
+  ],
+  "answer": 2,
+  "why": "A logic error lets the program run without any exception, so only a person who knows the right answer notices it."
+ },
+ {
+  "concept": "InstrumentSelection",
+  "level": "Understand",
+  "q": "A function is given a value that its caller could still correct. Which instrument fits?",
+  "options": [
+   "Raise an exception",
+   "Add an assertion",
+   "Log a debug message",
+   "Start the debugger"
+  ],
+  "answer": 0,
+  "why": "Raise an exception when the caller can do something about the error; an assertion states what must be true if the program itself is correct."
+ },
+ {
+  "concept": "WorkingVocabulary",
+  "level": "Understand",
+  "q": "Which three everyday ideas does the working vocabulary explain?",
+  "options": [
+   "Loops, functions and modules",
+   "Strings, numbers and lists",
+   "Editors, windows and menus",
+   "Objects, the command line and files"
+  ],
+  "answer": 3,
+  "why": "The group explains objects with their attributes and methods, the command line, and files with the directories that hold them."
+ },
+ {
+  "concept": "DebuggerInterface",
+  "level": "Understand",
+  "q": "Which part of the Mu window lists the current values of the program's variables?",
+  "options": [
+   "The Debug Inspector pane",
+   "The output pane where input is typed",
+   "The Stop button",
+   "The file editor"
+  ],
+  "answer": 0,
+  "why": "The Debug Inspector pane opens at the right side of the window and lists the current value of the variables of the program."
+ },
+ {
+  "concept": "LoggerObjects",
+  "level": "Understand",
+  "q": "In the logging system, which component receives the calls that application code makes?",
+  "options": [
+   "The handler",
+   "The logger",
+   "The formatter",
+   "The filter"
+  ],
+  "answer": 1,
+  "why": "Loggers expose the interface that application code uses; handlers deliver records, filters decide finer which to output, and formatters lay out the result."
+ },
+ {
+  "concept": "Bug",
+  "level": "Understand",
+  "q": "What is a bug, in the sense of the chapter?",
+  "options": [
+   "A fault in the computer hardware that runs the program, such as a broken memory chip",
+   "A message that Python prints when it stops",
+   "A place where the program does something other than its author intended",
+   "A line that Python refuses to read at all"
+  ],
+  "answer": 2,
+  "why": "A bug is the gap between the intention of the programmer and the behaviour of the running program; the computer carries out the instructions exactly as written."
+ },
+ {
+  "concept": "Bug",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "total = 1\nfor i in range(0, 4):\n    total = total * i\nprint(total)",
+  "options": [
+   "24",
+   "6",
+   "1",
+   "0"
+  ],
+  "answer": 3,
+  "why": "range(0, 4) starts at 0, so the first pass multiplies total by 0 and every later pass keeps it at 0."
+ },
+ {
+  "concept": "LogicError",
+  "level": "Understand",
+  "q": "Why is a logic error harder to find than a syntax error?",
+  "options": [
+   "Python reports nothing, so only someone who knows the right answer notices",
+   "Python reports the wrong line number for it",
+   "It appears only when the program runs on a different computer from the one it was written on",
+   "It stops the program before any output is printed"
+  ],
+  "answer": 0,
+  "why": "A syntax error stops the program with a message; a logic error lets the program run and print a wrong result without any complaint."
+ },
+ {
+  "concept": "LogicError",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "a = '5'\nb = '3'\nprint('The sum is ' + a + b)",
+  "options": [
+   "The sum is 8",
+   "The sum is 53",
+   "The sum is 5 3",
+   "TypeError"
+  ],
+  "answer": 1,
+  "why": "Both variables hold strings, and the plus sign joins strings, so the program prints a wrong sum without any error."
+ },
+ {
+  "concept": "Debugging",
+  "level": "Understand",
+  "q": "What is the central idea of debugging as the corpus presents it?",
+  "options": [
+   "Changing several lines at once until the output finally looks right to the author",
+   "Removing every print call from the program",
+   "Seeing the actual state of the program instead of guessing it",
+   "Running the program with fewer inputs"
+  ],
+  "answer": 2,
+  "why": "Debugging finds the root cause of a bug by making the program show its state, forming a guess and testing it."
+ },
+ {
+  "concept": "Debugging",
+  "level": "Analyze",
+  "q": "A programmer changes two lines at once and the bug disappears. Why is that a poor way to debug?",
+  "options": [
+   "The debugger refuses to run after two changes",
+   "Python reports an error when two lines change together",
+   "Both changes are certain to have been wrong",
+   "It is impossible to tell which of the two changes mattered"
+  ],
+  "answer": 3,
+  "why": "Changing one thing at a time and running again is what makes the effect of each change visible."
+ },
+ {
+  "concept": "InstrumentChoice",
+  "level": "Understand",
+  "q": "A run must leave a record that can be read after it ends. Which instrument fits?",
+  "options": [
+   "Logging",
+   "An assertion",
+   "A raised exception",
+   "The debugger"
+  ],
+  "answer": 0,
+  "why": "Log when a run must leave a record; the debugger answers questions about the state at one line, and assertions state what must be true."
+ },
+ {
+  "concept": "ObjectVocabulary",
+  "level": "Understand",
+  "q": "What is the difference between an attribute and a method?",
+  "options": [
+   "An attribute is a function; a method is a value",
+   "An attribute is a value reached by a dotted name; a method is a function reached the same way and called with parentheses",
+   "An attribute belongs to a module; a method belongs to a string",
+   "There is no difference; both words name a variable"
+  ],
+  "answer": 1,
+  "why": "The glossary defines an attribute as a value referenced by name with a dotted expression and a method as a function defined inside a class body."
+ },
+ {
+  "concept": "ObjectVocabulary",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "word = 'abc'\nprint(word.upper(), str.upper(word))",
+  "options": [
+   "ABC abc",
+   "abc ABC",
+   "ABC ABC",
+   "ABC"
+  ],
+  "answer": 2,
+  "why": "word.upper() passes the string to the method by the dot, and str.upper(word) passes it explicitly; both return ABC."
+ },
+ {
+  "concept": "CommandLine",
+  "level": "Understand",
+  "q": "In python main.py -O, what is -O, given that it comes after the script name?",
+  "options": [
+   "An option that switches assertions off",
+   "The name of the module to run",
+   "Nothing; both Python and the program ignore it",
+   "An argument for the program, which the program finds in sys.argv"
+  ],
+  "answer": 3,
+  "why": "Words before the script name are options for Python; words after it are arguments for the program."
+ },
+ {
+  "concept": "FileAndDirectory",
+  "level": "Understand",
+  "q": "A program opens an existing file with open('log.txt', 'w'). What happens to the old contents?",
+  "options": [
+   "They are erased",
+   "They are kept and new text is added at the end",
+   "They are kept and the program stops with an error",
+   "They are moved to a backup file"
+  ],
+  "answer": 0,
+  "why": "The tutorial states that mode 'w' erases an existing file with the same name, whereas mode 'a' appends."
+ },
+ {
+  "concept": "ExceptionClass",
+  "level": "Understand",
+  "q": "Why does an except Exception clause catch a ValueError?",
+  "options": [
+   "ValueError is another name for Exception",
+   "ValueError is a subclass of Exception",
+   "An except clause catches every exception, whatever its class",
+   "Exception is a subclass of ValueError"
+  ],
+  "answer": 1,
+  "why": "An except clause catches every exception that is an instance of the named class or of a subclass, and issubclass(ValueError, Exception) is True."
+ },
+ {
+  "concept": "ExceptionClass",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "try:\n    raise ValueError('bad value')\nexcept TypeError:\n    print('inner')\nexcept Exception:\n    print('broad')",
+  "options": [
+   "inner",
+   "bad value",
+   "broad",
+   "ValueError"
+  ],
+  "answer": 2,
+  "why": "The TypeError clause does not match a ValueError, and the Exception clause does, because ValueError is a subclass of Exception."
+ },
+ {
+  "concept": "ArgumentValidation",
+  "level": "Understand",
+  "q": "Where should a function check its arguments?",
+  "options": [
+   "At the end, after the result is computed",
+   "Only in the code that calls the function",
+   "Only when the program runs with -O",
+   "At the start, before the function has any effect"
+  ],
+  "answer": 3,
+  "why": "Validating first keeps a bad value from travelling deeper and leaves nothing half done when the call is refused."
+ },
+ {
+  "concept": "UnhandledException",
+  "level": "Understand",
+  "q": "What happens when an exception is raised and no except clause matches it?",
+  "options": [
+   "The program stops and the traceback is printed",
+   "The program continues with the next line after the failed one",
+   "The exception is silently discarded",
+   "The program restarts from its first line"
+  ],
+  "answer": 0,
+  "why": "If no try and except statements cover the raise statement, the program crashes and displays the error message with its traceback."
+ },
+ {
+  "concept": "UnhandledException",
+  "level": "Apply",
+  "q": "The program below is run. Which exception class does the last line of its error output name?",
+  "code": "x = 1\nraise Exception",
+  "options": [
+   "SystemExit",
+   "Exception",
+   "KeyError",
+   "RuntimeError"
+  ],
+  "answer": 1,
+  "why": "The raise statement is not covered by any except clause, so the program stops there and the traceback ends with the line Exception."
+ },
+ {
+  "concept": "StandardErrorStream",
+  "level": "Understand",
+  "q": "Where does the traceback of an unhandled exception go?",
+  "options": [
+   "To the standard output stream",
+   "To the standard input stream",
+   "To the standard error stream",
+   "To the file named in basicConfig"
+  ],
+  "answer": 2,
+  "why": "An uncaught exception is reported by sys.excepthook, which prints the traceback to sys.stderr."
+ },
+ {
+  "concept": "SanityCheck",
+  "level": "Understand",
+  "q": "What does a sanity check test?",
+  "options": [
+   "That the program has no syntax errors",
+   "That the user typed valid data",
+   "That every line of the program has run",
+   "A property that must hold if the code before it is correct"
+  ],
+  "answer": 3,
+  "why": "A sanity check is a cheap test of a result that must hold if the preceding code did its job, written to catch an obvious mistake early."
+ },
+ {
+  "concept": "SanityCheck",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "ages = [26, 57, 92]\nages.reverse()\nprint(ages[0] <= ages[-1])",
+  "options": [
+   "False",
+   "True",
+   "26",
+   "[92, 57, 26]"
+  ],
+  "answer": 0,
+  "why": "After reverse() the list is [92, 57, 26], so the first item is not smaller than the last and the chapter's check would fail."
+ },
+ {
+  "concept": "SortedOrderCheck",
+  "level": "Understand",
+  "q": "Why can the check ages[0] <= ages[-1] pass for a list that is not sorted?",
+  "options": [
+   "It sorts the list before comparing",
+   "It compares only the first and last items, so [1, 3, 2] passes",
+   "It compares every neighbouring pair",
+   "It always raises AssertionError for an unsorted list"
+  ],
+  "answer": 1,
+  "why": "The check is deliberately weak: it tests one property of the list, and a stronger check compares every neighbouring pair or the list with sorted(list)."
+ },
+ {
+  "concept": "SortedOrderCheck",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "ages = [1, 3, 2]\nprint(ages[0] <= ages[-1], ages == sorted(ages))",
+  "options": [
+   "True True",
+   "False True",
+   "True False",
+   "False False"
+  ],
+  "answer": 2,
+  "why": "The first item 1 is not larger than the last item 2, so the weak check passes, but the list differs from its sorted version."
+ },
+ {
+  "concept": "FailFast",
+  "level": "Understand",
+  "q": "What does failing fast mean for an assertion?",
+  "options": [
+   "Running the program as quickly as possible",
+   "Ignoring failures until the end of the run",
+   "Catching the error and carrying on with the run",
+   "Stopping at the first violated condition so that the failure appears near its cause"
+  ],
+  "answer": 3,
+  "why": "The shorter the time between the original cause of the bug and the moment it is first noticed, the easier the bug is to fix."
+ },
+ {
+  "concept": "CommandLineOption",
+  "level": "Understand",
+  "q": "What does the interpreter option -O change?",
+  "options": [
+   "It removes assert statements",
+   "It makes print calls silent",
+   "It starts the debugger",
+   "It switches every log message on"
+  ],
+  "answer": 0,
+  "why": "Under -O the compiler emits no code for assert statements and __debug__ is false."
+ },
+ {
+  "concept": "CommandLineOption",
+  "level": "Apply",
+  "q": "The program below is run normally, with no option. What does it print?",
+  "code": "import sys\nprint(sys.flags.optimize)",
+  "options": [
+   "1",
+   "0",
+   "2",
+   "True"
+  ],
+  "answer": 1,
+  "why": "The optimize field of sys.flags is 0 in a normal run, 1 under -O and 2 under -OO."
+ },
+ {
+  "concept": "PercentPlaceholder",
+  "level": "Understand",
+  "q": "In logging.debug('i is %s', i), what does %s do?",
+  "options": [
+   "It prints the letter s after the message that is logged",
+   "It converts the message to upper case",
+   "It marks where the value of i is put into the message",
+   "It sets the level of the message"
+  ],
+  "answer": 2,
+  "why": "A percent placeholder is a marker that is replaced by a value; logging fills it from the arguments that follow the message."
+ },
+ {
+  "concept": "PercentPlaceholder",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "print('%s scored %d points' % ('Ana', 7))",
+  "options": [
+   "Ana scored 7.0 points",
+   "('Ana', 7) scored points",
+   "%s scored %d points",
+   "Ana scored 7 points"
+  ],
+  "answer": 3,
+  "why": "The % operator fills the markers in order from the tuple, %s with the text and %d with the integer."
+ },
+ {
+  "concept": "Logger",
+  "level": "Understand",
+  "q": "What do two calls of logging.getLogger('app') return?",
+  "options": [
+   "The same logger object both times",
+   "Two separate loggers with the same name",
+   "The root logger both times",
+   "A copy of the first logger"
+  ],
+  "answer": 0,
+  "why": "A logger is always obtained from getLogger(name), and calls with the same name return the same object."
+ },
+ {
+  "concept": "Logger",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import logging\na = logging.getLogger('app')\nb = logging.getLogger('app')\nprint(a is b, a.name)",
+  "options": [
+   "False app",
+   "True app",
+   "True root",
+   "False root"
+  ],
+  "answer": 1,
+  "why": "Both calls return one object, and its name is the string that was passed to getLogger."
+ },
+ {
+  "concept": "Handler",
+  "level": "Understand",
+  "q": "Which component of logging decides where a log record is delivered, such as the screen or a file?",
+  "options": [
+   "The root logger",
+   "The level",
+   "The handler",
+   "The record"
+  ],
+  "answer": 2,
+  "why": "A handler is the object that delivers a log record to a destination; the same record can go to the screen and to a file through different handlers."
+ },
+ {
+  "concept": "LogRecord",
+  "level": "Understand",
+  "q": "What is a log record?",
+  "options": [
+   "A line of the log file",
+   "A saved copy of the program's variables",
+   "The list of all messages logged so far",
+   "The object that carries the details of one logged event from the logger to the handlers"
+  ],
+  "answer": 3,
+  "why": "Log information is passed between loggers, handlers, filters and formatters in a LogRecord instance."
+ },
+ {
+  "concept": "LogRecord",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import logging\nr = logging.LogRecord('app', 20, 'p.py', 3, 'hello %s', ('world',), None)\nprint(r.levelname, r.getMessage())",
+  "options": [
+   "INFO hello world",
+   "20 hello world",
+   "INFO hello %s",
+   "app INFO hello world"
+  ],
+  "answer": 0,
+  "why": "The level 20 has the name INFO, and getMessage() fills the message with its arguments."
+ },
+ {
+  "concept": "MuEditor",
+  "level": "Understand",
+  "q": "Which button of the Mu editor starts a program under the debugger?",
+  "options": [
+   "Run",
+   "Debug",
+   "Stop",
+   "Step Over"
+  ],
+  "answer": 1,
+  "why": "The Debug button in the top row, next to the Run button, starts the program under the debugger."
+ },
+ {
+  "concept": "RunUnderDebugger",
+  "level": "Understand",
+  "q": "Where is a program paused when it is started under the debugger?",
+  "options": [
+   "After its last line",
+   "At the first line that raises an exception",
+   "Just before its first line",
+   "Nowhere until a breakpoint is reached"
+  ],
+  "answer": 2,
+  "why": "The debugger pauses the program just before it would have run the first line, and that line is highlighted in the file editor."
+ },
+ {
+  "concept": "ProgramState",
+  "level": "Understand",
+  "q": "What does the state of a program at one moment consist of?",
+  "options": [
+   "The text of its source file",
+   "The output it has printed so far",
+   "The list of the modules it imports",
+   "The values of its variables and the line that runs next"
+  ],
+  "answer": 3,
+  "why": "The state is what the program holds at that moment: the values of its variables and the position of the line about to run."
+ },
+ {
+  "concept": "InspectorPane",
+  "level": "Understand",
+  "q": "In the Debug Inspector pane the variable first shows '5' with quote marks. What does that tell you?",
+  "options": [
+   "The value is a string, not the number 5",
+   "The value is a list that holds one single item",
+   "The value was typed in twice",
+   "The value is a function"
+  ],
+  "answer": 0,
+  "why": "The quote marks show that the value is a string, which is how the adding program's bug becomes visible."
+ },
+ {
+  "concept": "StopControl",
+  "level": "Understand",
+  "q": "What does the Stop button of the debugger do?",
+  "options": [
+   "It pauses the program at the next line",
+   "It ends the session and terminates the program at once",
+   "It runs the program on to the next breakpoint",
+   "It removes every breakpoint"
+  ],
+  "answer": 1,
+  "why": "Stop terminates the program immediately; Continue is the control that lets it run on."
+ },
+ {
+  "concept": "Process",
+  "level": "Understand",
+  "q": "What does os.getpid() return?",
+  "options": [
+   "The name of the script that is being run by Python",
+   "The version of Python",
+   "The identifier of the current process",
+   "The path of the working directory"
+  ],
+  "answer": 2,
+  "why": "The function returns the current process id, the number by which a running program is identified."
+ },
+ {
+  "concept": "Process",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os\nprint(isinstance(os.getpid(), int), os.getpid() > 0)",
+  "options": [
+   "True False",
+   "False True",
+   "False False",
+   "True True"
+  ],
+  "answer": 3,
+  "why": "A process identifier is a positive integer."
+ },
+ {
+  "concept": "EnvironmentVariable",
+  "level": "Understand",
+  "q": "What type are the values in os.environ?",
+  "options": [
+   "Strings",
+   "Integers",
+   "Booleans",
+   "Lists"
+  ],
+  "answer": 0,
+  "why": "The documentation says that the keys and values of os.environ are strings, so a setting of 0 is the string '0'."
+ },
+ {
+  "concept": "EnvironmentVariable",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import os\nprint(os.environ.get('NOPE_NOT_SET'), os.environ.get('NOPE_NOT_SET', 'default'))",
+  "options": [
+   "default default",
+   "None default",
+   "None None",
+   "KeyError"
+  ],
+  "answer": 1,
+  "why": "get() returns None for a name that is not set, or the default if one is given, and does not raise KeyError."
+ },
+ {
+  "concept": "BreakpointHook",
+  "level": "Understand",
+  "q": "A program sets sys.breakpointhook to its own function. What does breakpoint() do?",
+  "options": [
+   "It starts pdb anyway, and ignores the function that was set",
+   "It does nothing",
+   "It calls that function instead of starting pdb",
+   "It raises RuntimeError"
+  ],
+  "answer": 2,
+  "why": "breakpoint() calls whatever sys.breakpointhook currently is and returns what it returns."
+ },
+ {
+  "concept": "BreakpointHook",
+  "level": "Analyze",
+  "q": "PYTHONBREAKPOINT is set to 0, and the program has replaced sys.breakpointhook with its own function. What does breakpoint() do?",
+  "options": [
+   "It does nothing, because 0 switches the call off",
+   "It starts pdb",
+   "It raises RuntimeError",
+   "It calls the program's function, because the variable is not consulted"
+  ],
+  "answer": 3,
+  "why": "If sys.breakpointhook is overridden programmatically, PYTHONBREAKPOINT is not consulted."
+ },
+ {
+  "concept": "AccumulatorStart",
+  "level": "Remember",
+  "q": "What starting value must an accumulator that collects a product have?",
+  "options": [
+   "1",
+   "0",
+   "-1",
+   "The first item of the loop"
+  ],
+  "answer": 0,
+  "why": "Multiplying by 1 changes nothing, whereas a product that starts at 0 stays 0."
+ },
+ {
+  "concept": "AccumulatorStart",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "total = 1\nfor i in range(1, 5 + 1):\n    total += i\nprint(total)",
+  "options": [
+   "15",
+   "16",
+   "120",
+   "6"
+  ],
+  "answer": 1,
+  "why": "The sum of 1 to 5 is 15, and the starting value 1 instead of 0 makes the result one too large."
+ },
+ {
+  "concept": "AccumulatorStart",
+  "level": "Analyze",
+  "q": "A loop that should multiply the numbers 1 to 5 into total starts with total = 0. Which symptom do you expect?",
+  "options": [
+   "The result is always exactly one too large, whatever the numbers",
+   "Python raises a TypeError",
+   "The result is always 0, however many passes run",
+   "The loop never ends"
+  ],
+  "answer": 2,
+  "why": "Zero times anything is zero, so a product that starts at 0 stays 0, the same symptom as in the chapter's factorial."
+ },
+ {
+  "concept": "RandomInteger",
+  "level": "Understand",
+  "q": "Which numbers can random.randint(0, 1) return?",
+  "options": [
+   "Only 0",
+   "0.5 and 1",
+   "Any real number from 0 to 1",
+   "0 and 1"
+  ],
+  "answer": 3,
+  "why": "randint(a, b) returns an integer N with a <= N <= b, so both ends are possible."
+ },
+ {
+  "concept": "RandomInteger",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "import random\nrandom.seed(1)\na = random.randint(1, 6)\nrandom.seed(1)\nb = random.randint(1, 6)\nprint(a == b)",
+  "options": [
+   "True",
+   "False",
+   "1",
+   "None"
+  ],
+  "answer": 0,
+  "why": "Seeding the generator with the same value makes it produce the same numbers again."
+ },
+ {
+  "concept": "MembershipTest",
+  "level": "Understand",
+  "q": "What does 'head' in 'heads' evaluate to?",
+  "options": [
+   "False, because the two strings differ",
+   "True, because 'head' is a substring of 'heads'",
+   "An error, because the strings have different lengths",
+   "'head', the part that was found"
+  ],
+  "answer": 1,
+  "why": "For strings, x in y is True if and only if x is a substring of y."
+ },
+ {
+  "concept": "MembershipTest",
+  "level": "Apply",
+  "q": "What does this program print?",
+  "code": "print('head' in ('heads', 'tails'), 'head' in 'heads')",
+  "options": [
+   "True True",
+   "False False",
+   "False True",
+   "True False"
+  ],
+  "answer": 2,
+  "why": "In a tuple the test asks for an equal member, and 'head' is not one; in a string it asks for a substring, and 'head' is one."
+ }
+]
