@@ -1,0 +1,311 @@
+{
+ "CallStackOrder": {
+  "kind": "callstack",
+  "code": [
+   "def outer():",
+   "    print('outer starts')",
+   "    middle()",
+   "    print('outer returns')",
+   "",
+   "def middle():",
+   "    print('middle starts')",
+   "    inner()",
+   "    print('middle returns')",
+   "",
+   "def inner():",
+   "    print('inner runs')",
+   "",
+   "outer()"
+  ],
+  "steps": [
+   {
+    "event": "call",
+    "func": "outer()",
+    "line": 1,
+    "stack": [
+     "the program",
+     "outer()"
+    ],
+    "out": ""
+   },
+   {
+    "event": "call",
+    "func": "middle()",
+    "line": 6,
+    "stack": [
+     "the program",
+     "outer()",
+     "middle()"
+    ],
+    "out": "outer starts"
+   },
+   {
+    "event": "call",
+    "func": "inner()",
+    "line": 11,
+    "stack": [
+     "the program",
+     "outer()",
+     "middle()",
+     "inner()"
+    ],
+    "out": "outer starts / middle starts"
+   },
+   {
+    "event": "return",
+    "func": "inner()",
+    "line": 12,
+    "stack": [
+     "the program",
+     "outer()",
+     "middle()"
+    ],
+    "out": "outer starts / middle starts / inner runs"
+   },
+   {
+    "event": "return",
+    "func": "middle()",
+    "line": 9,
+    "stack": [
+     "the program",
+     "outer()"
+    ],
+    "out": "outer starts / middle starts / inner runs / middle returns"
+   },
+   {
+    "event": "return",
+    "func": "outer()",
+    "line": 4,
+    "stack": [
+     "the program"
+    ],
+    "out": "outer starts / middle starts / inner runs / middle returns / outer returns"
+   }
+  ],
+  "printed": "outer starts\nmiddle starts\ninner runs\nmiddle returns\nouter returns",
+  "caption": "Every call pushes a frame and every return pops one; the stack is what Python uses to find its way back."
+ },
+ "ExceptionHierarchy": {
+  "kind": "hierarchy",
+  "root": "BaseException",
+  "rows": [
+   {
+    "name": "ZeroDivisionError",
+    "chain": [
+     "ZeroDivisionError",
+     "ArithmeticError",
+     "Exception",
+     "BaseException"
+    ],
+    "under_exception": true
+   },
+   {
+    "name": "ValueError",
+    "chain": [
+     "ValueError",
+     "Exception",
+     "BaseException"
+    ],
+    "under_exception": true
+   },
+   {
+    "name": "NameError",
+    "chain": [
+     "NameError",
+     "Exception",
+     "BaseException"
+    ],
+    "under_exception": true
+   },
+   {
+    "name": "UnboundLocalError",
+    "chain": [
+     "UnboundLocalError",
+     "NameError",
+     "Exception",
+     "BaseException"
+    ],
+    "under_exception": true
+   },
+   {
+    "name": "KeyboardInterrupt",
+    "chain": [
+     "KeyboardInterrupt",
+     "BaseException"
+    ],
+    "under_exception": false
+   },
+   {
+    "name": "SystemExit",
+    "chain": [
+     "SystemExit",
+     "BaseException"
+    ],
+    "under_exception": false
+   },
+   {
+    "name": "RecursionError",
+    "chain": [
+     "RecursionError",
+     "RuntimeError",
+     "Exception",
+     "BaseException"
+    ],
+    "under_exception": true
+   },
+   {
+    "name": "TypeError",
+    "chain": [
+     "TypeError",
+     "Exception",
+     "BaseException"
+    ],
+    "under_exception": true
+   }
+  ],
+  "caption": "Read each row from the left: the class, then every class it is a kind of. Only the two on the right of the line are outside Exception, which is why except Exception does not catch them."
+ },
+ "ScopeIdentification": {
+  "kind": "scoperules",
+  "code": [
+   "def reads_global():",
+   "    print(eggs)",
+   "def makes_local():",
+   "    eggs = 'local'",
+   "    print(eggs)",
+   "def declares_global():",
+   "    global eggs",
+   "    eggs = 'changed'",
+   "def uses_before_assigning():",
+   "    print(eggs)",
+   "    eggs = 'local'",
+   "eggs = 'global'"
+  ],
+  "rows": [
+   {
+    "function": "reads_global()",
+    "condition": "uses eggs, never assigns it, and declares nothing",
+    "verdict": "global",
+    "declared_global": false,
+    "assigned": false
+   },
+   {
+    "function": "makes_local()",
+    "condition": "assigns eggs inside the function",
+    "verdict": "local",
+    "declared_global": false,
+    "assigned": true
+   },
+   {
+    "function": "declares_global()",
+    "condition": "declares global eggs and then assigns it",
+    "verdict": "global",
+    "declared_global": true,
+    "assigned": true
+   },
+   {
+    "function": "uses_before_assigning()",
+    "condition": "assigns eggs somewhere in the function, but reads it first",
+    "verdict": "local",
+    "declared_global": false,
+    "assigned": true
+   }
+  ],
+  "caption": "The verdict in each row is the compiler's own, read back from the symbol table of this program; nothing here is a reading of the rules by hand."
+ },
+ "PositionalOnlyParameter": {
+  "kind": "paramkinds",
+  "code": [
+   "def scale(value, /, factor=2):",
+   "    return value * factor",
+   "",
+   "def area(width, *, height):",
+   "    return width * height"
+  ],
+  "rows": [
+   {
+    "call": "scale(3)",
+    "signature": "def scale(value, /, factor=2)",
+    "ok": true,
+    "result": "6"
+   },
+   {
+    "call": "scale(3, 4)",
+    "signature": "def scale(value, /, factor=2)",
+    "ok": true,
+    "result": "12"
+   },
+   {
+    "call": "scale(value=3)",
+    "signature": "def scale(value, /, factor=2)",
+    "ok": false,
+    "result": "TypeError: scale() got some positional-only arguments passed as keyword arguments: 'value'"
+   },
+   {
+    "call": "area(2, height=5)",
+    "signature": "def area(width, *, height)",
+    "ok": true,
+    "result": "10"
+   },
+   {
+    "call": "area(2, 5)",
+    "signature": "def area(width, *, height)",
+    "ok": false,
+    "result": "TypeError: area() takes 1 positional argument but 2 were given"
+   }
+  ],
+  "caption": "A slash closes the parameters before it to names; a star opens the parameters after it to names only. Each line below is a real call and its real answer."
+ },
+ "NameResolution": {
+  "kind": "resolution",
+  "rows": [
+   {
+    "place": "the function's own body",
+    "code": [
+     "def look():",
+     "    where = 'local'",
+     "    return where",
+     "print(look())"
+    ],
+    "found": "local"
+   },
+   {
+    "place": "the function around it",
+    "code": [
+     "def outside():",
+     "    where = 'enclosing'",
+     "    def look():",
+     "        return where",
+     "    return look()",
+     "print(outside())"
+    ],
+    "found": "enclosing"
+   },
+   {
+    "place": "the file, outside every function",
+    "code": [
+     "where = 'global'",
+     "def look():",
+     "    return where",
+     "print(look())"
+    ],
+    "found": "global"
+   },
+   {
+    "place": "the built-in names Python always has",
+    "code": [
+     "def look():",
+     "    return len.__name__",
+     "print(look())"
+    ],
+    "found": "len"
+   }
+  ],
+  "caption": "Python looks for a name in the function first, then in any function around it, then in the file, and last among the built-in names. The first place that has the name wins."
+ },
+ "_meta": {
+  "version": "1.0.0",
+  "python": "3.14.4",
+  "note": "Executed specifications for the chapter 4 lecture deck; every value was produced by running the code above."
+ }
+}
