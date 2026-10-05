@@ -155,3 +155,29 @@ The leak is therefore a single missing step in harvesting, in two places, not si
 
 *Filed by the SEN0414 chapter-page lineage session. No file of `mastering-bitcoin-3e`, and no handover log of
 any package, was changed by this session.*
+
+---
+
+## RESOLVED — 2026-10-05
+
+This handover has been answered, and by the package's own owner rather than by a copy into an inbox: the owner
+directed the fix in the same session, so the package was repaired in place under its own discipline.
+
+What was done. The harvester now decodes HTML character references when it reads the authors' index terms. A
+census of every literal in every file found **eleven** such leaks in seven parts, not the two this handover
+named: `Byzantine Generals&#x27; Problem` (chapter 1), `Moore&#x27;s Law` (chapter 12), `Gambler&#x27;s Ruin
+problem` (appendix A), an em dash in a chapter 14 section heading, a closing quote in a chapter 8 passage, an em
+dash in a chapter 9 passage, and two in the supplements. Three concept identifiers had also been slugged from the
+undecoded label. Chapters 1, 8, 9, 12, 14, appendix A and the supplements were reissued by the new tool, and the
+other twelve parts were rebuilt and compared triple by triple to prove nothing else moved.
+
+A second class of fault was found and deliberately left for its own patch: raw AsciiDoc passthrough
+(`++++ <p>`, `pass:[...]`) in four passages. Fixing it in the same release would have destroyed the proof that
+only decoded characters changed.
+
+Released as **0.9.1**, then **0.9.2** after the package moved. The package no longer lives in the monorepo: it is
+now `altunelyusuf/mastering-bitcoin` (private), under `3e/`, with its history preserved. SEN0414 reads nothing
+from it; SEN0401 pins it there and its pages were rebuilt and tested against the corrected labels.
+
+No action remains for the addressee. This file is kept, not deleted, because it is the record of a finding that
+reached further than it first appeared.
