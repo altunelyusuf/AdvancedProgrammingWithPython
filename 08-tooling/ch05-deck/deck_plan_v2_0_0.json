@@ -1,0 +1,1048 @@
+{
+ "meta": {
+  "title": "Chapter 5: Debugging",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "2.0.0",
+  "python": "3.14.6",
+  "total": 0,
+  "redesign": "2026-10-06, to the CME materials look-and-feel standard v1.0.0"
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Chapter 5: Debugging",
+   "sub": "Tracebacks, assertions, logging - and the moth that started it all",
+   "items": [
+    {
+     "t": "code",
+     "x": 6.0,
+     "y": 1.3,
+     "w": 3.5,
+     "h": 1.7,
+     "fs": 11,
+     "cap": "run under Python 3.14.6",
+     "rows": [
+      [
+       "int('x')",
+       "ValueError: invalid literal for int() with base 10: 'x'"
+      ]
+     ]
+    }
+   ],
+   "notes": "SAY: Chapters 1-4 wrote programs; chapter 5 is for the day they misbehave: reading what Python tells you, planting tripwires, keeping logs, and pausing the program mid-thought.\nFULL TEXT: course page, chapter 5.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Five parts; every number is a slide you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 6.3,
+     "h": 3.4,
+     "fs": 12.5,
+     "items": [
+      "Questions and the chapter map  (slides 3-4)",
+      "Reading the report - tracebacks, unwinding, notes  (slides 5-8)",
+      "Assertions - executable assumptions  (slides 9-10)",
+      "Logging - levels, files, the off switch  (slides 11-15)",
+      "The hunt, summary, and resources  (slides 16-23)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "23",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "3",
+       "label": "true stories, each with WHO / WHERE / WHEN / READ"
+      },
+      {
+       "n": "16",
+       "label": "consoles and whole programs, run live"
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: Five parts, from a museum moth to a paused program - every transcript verified off this very file.\nASK: Which part do you expect to be hardest - mark it now, check at the summary.\nFULL TEXT: course page, chapter 5 - every section.",
+   "take": "Five parts - and a moth with its own museum label",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "Its own competency questions - we return to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.9,
+     "fs": 13,
+     "items": [
+      "Which constructs signal, check, record and inspect a program's behaviour, and what decides which of them a given problem calls for?",
+      "Which printed outputs and concepts of the chapter differ in current Python, and on what source?",
+      "Which terms does the chapter use that a learner would have to look up, and which concept of the corpus explains each one?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 4.3,
+     "w": 9.0,
+     "h": 0.55,
+     "fs": 12.5,
+     "items": [
+      "recorded under Python 3.14.6",
+      "bug-and-fix program pairs",
+      "the log as evidence"
+     ]
+    }
+   ],
+   "notes": "SAY: A bug is a place where a program does something other than what its author meant it to do, and debugging is the work of finding and removing such places. Chapter 5 opens with the observation that once a learner can write basic programs, the bugs become less simple, and it offers tools and techniques for finding the root cause of a bug quickly and with little effort (Sweigart, 2025).\nFULL TEXT: course page, chapter 5 - BugModel.",
+   "bg": "light",
+   "take": "If you can answer these, chapter 5 is yours"
+  },
+  {
+   "kind": "content",
+   "title": "One chapter, six branches",
+   "sub": "The concept map the whole chapter hangs on",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.5,
+     "y": 1.7,
+     "w": 9.0,
+     "h": 2.9,
+     "cols": 3,
+     "fs": 12.5,
+     "subfs": 10,
+     "accent": [
+      0
+     ],
+     "items": [
+      {
+       "label": "Bug Model",
+       "sub": "10 concepts"
+      },
+      {
+       "label": "Error Signalling",
+       "sub": "12 concepts"
+      },
+      {
+       "label": "Assertion",
+       "sub": "10 concepts"
+      },
+      {
+       "label": "Logging",
+       "sub": "18 concepts"
+      },
+      {
+       "label": "Debugger",
+       "sub": "19 concepts"
+      },
+      {
+       "label": "Modern Practice",
+       "sub": "7 concepts"
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: A bug is a place where a program does something other than what its author meant it to do, and debugging is the work of finding and removing such places. Chapter 5 opens with the observation that once a learner can write basic programs, the bugs become less simple, and it offers tools and techniques for finding the root cause of a bug quickly and with little effort (Sweigart, 2025).\nFULL TEXT: course page, chapter 5 - BugModel, Logging.",
+   "bg": "light",
+   "lede": "Six branches; the count under each is how many concepts the course page explains for it - today walks the spine.",
+   "take": "Six branches - every slide today lives on this map"
+  },
+  {
+   "kind": "section",
+   "title": "Reading the report",
+   "sub": "Tracebacks, raised errors, and notes",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.85,
+     "y": 2.95,
+     "w": 8.6,
+     "h": 1.9,
+     "cols": 4,
+     "fs": 14,
+     "subfs": 11,
+     "items": [
+      {
+       "label": "The traceback"
+      },
+      {
+       "label": "raise"
+      },
+      {
+       "label": "Unwinding"
+      },
+      {
+       "label": "Notes"
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: Error signalling is the way a program says that something has gone wrong. In Python the saying is done with exceptions: an exception is an object that carries a description of the problem and travels up through the running code until something handles it.\nFULL TEXT: course page, chapter 5 - ErrorSignalling.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The bug you can visit in a museum",
+   "sub": "1947-09-09",
+   "items": [
+    {
+     "t": "img",
+     "path": "../../03-materials/ch05/assets/photo_mark2_moth.jpg",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 4.4,
+     "h": 2.75,
+     "cap": "the Mark II logbook page, moth taped in - U.S. Navy photo, public domain"
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.5,
+     "fs": 12.5,
+     "items": [
+      "9 September 1947: the Mark II stops",
+      "Relay 70, panel F: a moth",
+      "'First actual case of bug being found'",
+      "The page survives at the Smithsonian"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Grace Hopper's Harvard Mark II team",
+     "where": "the machine's logbook - now at the Smithsonian",
+     "when": "1947-09-09",
+     "link": "https://en.wikipedia.org/wiki/Software_bug",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "STORY (1947-09-09): On 9 September 1947 the Harvard Mark II stopped, and the operators traced the fault to a moth caught in relay 70 of panel F. They taped the insect into the logbook with the note 'First actual case of bug being found' - the joke being that engineers already said 'bug' for faults. The page, moth and all, survives at the Smithsonian, and the photograph on this slide is the Navy's own. Debugging has meant removing the moth ever since.\nSOURCE: The Mark II logbook page of 1947-09-09, 'First actual case of bug being found', held by the Smithsonian's National Museum of American History; photograph courtesy of the Naval Surface Warfare Center, Dahlgren (public domain). Note: a common file title misdates it 1945; the log page itself is dated September 9, 1947.",
+   "bg": "light",
+   "take": "Every bug since has been a metaphor; this one had wings"
+  },
+  {
+   "kind": "content",
+   "title": "Read the traceback upward",
+   "sub": "A crash in a box-printing program, dissected",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.42,
+     "w": 9.0,
+     "h": 3.5,
+     "lines": [
+      "def box_print(symbol, width, height):",
+      "    if len(symbol) != 1:",
+      "        raise Exception('Symbol must be a single character string.')",
+      "    if width <= 2:",
+      "        raise Exception('Width must be greater than 2.')",
+      "    if height <= 2:",
+      "        raise Exception('Height must be greater than 2.')",
+      "    print(symbol * width)",
+      "    for i in range(height - 2):",
+      "        print(symbol + (' ' * (width - 2)) + symbol)",
+      "    print(symbol * width)",
+      "",
+      "for sym, w, h in (('*', 4, 4), ('x', 1, 3), ('ZZ', 3, 3)):",
+      "    try:",
+      "        box_print(sym, w, h)",
+      "    except Exception as err:",
+      "        print('An exception happened: ' + str(err))"
+     ],
+     "fs": 7.1,
+     "compact": true,
+     "out": "****\n*  *\n*  *\n****\nAn exception happened: Width must be greater than 2.\nAn exception happened: Symbol must be a single character string.",
+     "outLabel": "prints",
+     "cap": "program boxprint_v1_0_0.py, lines 1 to 17 of 17, run under Python 3.14.6",
+     "label": "the box prints, then the crash - read the report bottom line first"
+    }
+   ],
+   "notes": "SAY: Error signalling is the way a program says that something has gone wrong. In Python the saying is done with exceptions: an exception is an object that carries a description of the problem and travels up through the running code until something handles it.\nASK: Which line of the report names YOUR file, and which names the library's?\nFULL TEXT: course page, chapter 5 - ErrorSignalling.",
+   "bg": "light",
+   "take": "The last line names the crime; the lines above name the scene"
+  },
+  {
+   "kind": "content",
+   "title": "Unwind, catch, annotate",
+   "sub": "An exception climbs until someone claims it",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.3,
+     "h": 2.6,
+     "lines": [
+      "def read_age(text):",
+      "    return int(text)",
+      "",
+      "def load(record):",
+      "    return read_age(record['age'])",
+      "",
+      "def process(records):",
+      "    return [load(r) for r in records]",
+      "",
+      "try:",
+      "    process([{'age': '41'}, {'age': 'abc'}])",
+      "except ValueError as e:",
+      "    print('caught:', e)"
+     ],
+     "fs": 7.6,
+     "compact": true,
+     "out": "caught: invalid literal for int() with base 10: 'abc'",
+     "outLabel": "prints",
+     "cap": "program unwinding_v1_0_0.py, lines 1 to 13 of 13, run under Python 3.14.6",
+     "label": "three frames up, one except claims it"
+    },
+    {
+     "t": "prog",
+     "x": 5.1,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 2.0,
+     "lines": [
+      "try:",
+      "    try:",
+      "        int('x')",
+      "    except ValueError as e:",
+      "        e.add_note('while reading the age field')",
+      "        raise",
+      "except ValueError as e:",
+      "    print(e.__notes__)"
+     ],
+     "fs": 8.5,
+     "compact": true,
+     "out": "['while reading the age field']",
+     "outLabel": "prints",
+     "cap": "program notes_v1_0_0.py, lines 1 to 8 of 8, run under Python 3.14.6",
+     "label": "add_note: context travels WITH the error"
+    },
+    {
+     "t": "when",
+     "x": 5.1,
+     "y": 3.8,
+     "w": 4.4,
+     "body": "notes are 3.11+ modern practice"
+    }
+   ],
+   "notes": "SAY: Error signalling is the way a program says that something has gone wrong. In Python the saying is done with exceptions: an exception is an object that carries a description of the problem and travels up through the running code until something handles it.\nASK: Where would the note have saved you an hour last week?\nFULL TEXT: course page, chapter 5 - ErrorSignalling, ModernPractice.",
+   "bg": "light",
+   "take": "An exception travels up until someone claims it"
+  },
+  {
+   "kind": "section",
+   "title": "Assertions",
+   "sub": "Executable assumptions",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.85,
+     "y": 2.95,
+     "w": 8.6,
+     "h": 1.9,
+     "cols": 3,
+     "fs": 14,
+     "subfs": 11,
+     "items": [
+      {
+       "label": "assert"
+      },
+      {
+       "label": "Messages"
+      },
+      {
+       "label": "The -O caveat"
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: An assertion is a statement that a certain condition must be true at a certain point of a program, together with a check that stops the program at once if it is not. The chapter calls an assertion a sanity check, a test that makes sure the code is not doing something obviously wrong, and it performs such checks with the assert statement, which raises an AssertionError exception when the check fails (Sweigart, 2025).\nFULL TEXT: course page, chapter 5 - Assertion.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "assert: executable assumptions",
+   "sub": "Tripwires for states that must never happen",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.3,
+     "h": 1.9,
+     "lines": [
+      "ages = [26, 57, 92, 54, 22, 15, 17, 80, 47, 73]",
+      "ages.reverse()",
+      "try:",
+      "    assert ages[0] <= ages[-1]",
+      "    print('the list is sorted')",
+      "except AssertionError as e:",
+      "    print(type(e).__name__, repr(str(e)))"
+     ],
+     "fs": 8.5,
+     "compact": true,
+     "out": "AssertionError ''",
+     "outLabel": "prints",
+     "cap": "program assertdemo_v1_0_0.py, lines 1 to 7 of 7, run under Python 3.14.6",
+     "label": "bare assert: it fires, but mutely"
+    },
+    {
+     "t": "prog",
+     "x": 5.1,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 1.75,
+     "lines": [
+      "x = -1",
+      "try:",
+      "    assert x > 0, f'x must be positive, got {x}'",
+      "except AssertionError as e:",
+      "    print(e)"
+     ],
+     "fs": 8.5,
+     "compact": true,
+     "out": "x must be positive, got -1",
+     "outLabel": "prints",
+     "cap": "program assertmsg_v1_0_0.py, lines 1 to 5 of 5, run under Python 3.14.6",
+     "label": "with a message: the tripwire explains itself"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 3.42,
+     "w": 9.0,
+     "h": 1.58,
+     "lines": [
+      "src = \"assert False, 'boom'\\nprint('reached')\"",
+      "try:",
+      "    exec(compile(src, 'x', 'exec'))",
+      "except AssertionError as e:",
+      "    print('normal run:', e)",
+      "exec(compile(src, 'x', 'exec', optimize=1))"
+     ],
+     "fs": 7.1,
+     "compact": true,
+     "out": "normal run: boom\nreached",
+     "outLabel": "prints",
+     "cap": "program optimised_v1_0_0.py, lines 1 to 6 of 6, run under Python 3.14.6",
+     "label": "python -O strips asserts: they guard the programmer, never user input"
+    }
+   ],
+   "notes": "SAY: An assertion is a statement that a certain condition must be true at a certain point of a program, together with a check that stops the program at once if it is not. The chapter calls an assertion a sanity check, a test that makes sure the code is not doing something obviously wrong, and it performs such checks with the assert statement, which raises an AssertionError exception when the check fails (Sweigart, 2025).\nASK: Which chapter-4 validation would be WRONG as an assert, and why?\nFULL TEXT: course page, chapter 5 - Assertion.",
+   "bg": "light",
+   "take": "An assert is a tripwire for states that must never happen"
+  },
+  {
+   "kind": "section",
+   "title": "Logging",
+   "sub": "The print statement that grew up",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.85,
+     "y": 2.95,
+     "w": 8.6,
+     "h": 1.9,
+     "cols": 4,
+     "fs": 14,
+     "subfs": 11,
+     "items": [
+      {
+       "label": "Levels"
+      },
+      {
+       "label": "To a file"
+      },
+      {
+       "label": "force and disable"
+      },
+      {
+       "label": "Lazy formatting"
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: Logging is the practice of making a program write down what it does while it runs. The Python logging HOWTO defines it as a means of tracking events that happen when some software runs: the developer adds logging calls to the code to indicate that certain events have occurred, and each event is described by a message and has an importance, which is called its level or severity (Python Software Foundation, 2026).\nFULL TEXT: course page, chapter 5 - Logging.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The most effective debugging tool",
+   "sub": "1979",
+   "items": [
+    {
+     "t": "img",
+     "path": "../../03-materials/ch05/assets/photo_brian_kernighan.jpg",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 3.0,
+     "h": 2.9,
+     "cap": "Brian Kernighan at Bell Labs - photo: Ben Lowe, CC BY 2.0"
+    },
+    {
+     "t": "beats",
+     "x": 3.9,
+     "y": 1.5,
+     "w": 5.6,
+     "h": 2.3,
+     "fs": 12.5,
+     "items": [
+      "Bell Labs, 1979: 'careful thought, coupled with",
+      "judiciously placed print statements'",
+      "This chapter agrees - then gives print levels,",
+      "timestamps, files, and an off switch"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 3.9,
+     "y": 4.42,
+     "w": 5.6,
+     "who": "Brian Kernighan, Bell Labs",
+     "where": "'Unix for Beginners', the Bell Labs memorandum",
+     "when": "1979",
+     "link": "https://en.wikipedia.org/wiki/Brian_Kernighan",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "STORY (1979): In a 1979 Bell Labs paper Kernighan wrote the sentence every debugger vendor has to argue with: 'The most effective debugging tool is still careful thought, coupled with judiciously placed print statements.' This chapter agrees, then upgrades the print statement into logging. Same idea - but with levels, timestamps, files, and an off switch that does not require deleting your evidence.\nSOURCE: Brian W. Kernighan, 'Unix for Beginners' (Bell Laboratories, 1979), the 'careful thought... judiciously placed print statements' sentence; biography and bibliography at en.wikipedia.org/wiki/Brian_Kernighan. Photo: Ben Lowe, CC BY 2.0, at Bell Labs.",
+   "bg": "light",
+   "take": "Logging is the print statement that grew up"
+  },
+  {
+   "kind": "content",
+   "title": "A logging system with a birth certificate",
+   "sub": "PEP 282, 2002; stdlib since Python 2.3",
+   "items": [
+    {
+     "t": "beats",
+     "x": 0.5,
+     "y": 1.42,
+     "w": 9.0,
+     "h": 1.0,
+     "fs": 12.5,
+     "items": [
+      "PEP 282 (2002), Vinay Sajip and Trent Mick - modelled on log4j's levels",
+      "In the standard library since Python 2.3; these slides run that exact machinery"
+     ]
+    },
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 2.55,
+     "w": 9.0,
+     "h": 1.05,
+     "rows": [
+      [
+       "[(n, getattr(__import__('logging'), n)) for n in ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')]",
+       "[('DEBUG', 10), ('INFO', 20), ('WARNING', 30), ('ERROR', 40), ('CRITICAL', 50)]"
+      ],
+      [
+       "__import__('logging').getLogger().getEffectiveLevel()",
+       "30"
+      ]
+     ],
+     "fs": 9,
+     "cap": "run under Python 3.14.6",
+     "label": "the ladder, asked directly"
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Vinay Sajip and Trent Mick, through the PEP process",
+     "where": "peps.python.org - and the logging module these slides run",
+     "when": "PEP 282, 2002; stdlib since Python 2.3",
+     "link": "https://peps.python.org/pep-0282/",
+     "linkText": "peps.python.org"
+    }
+   ],
+   "notes": "STORY (PEP 282, 2002; stdlib since Python 2.3): Python's logging module did not drift into the language; it was proposed as PEP 282 in 2002 by Vinay Sajip and Trent Mick, modelled on log4j's levels, and entered the standard library in Python 2.3. DEBUG, INFO, WARNING, ERROR, CRITICAL - the five-step ladder on these slides is that PEP's design, and the chapter's demos run it: to the console, to a file, forced, and disabled.\nSOURCE: PEP 282, 'A Logging System', authors Vinay Sajip and Trent Mick (2002), implemented as the standard library's logging module from Python 2.3 (peps.python.org/pep-0282).",
+   "bg": "light",
+   "take": "The five log levels are a 2002 design decision"
+  },
+  {
+   "kind": "content",
+   "title": "Levels: choose what you hear",
+   "sub": "One knob from DEBUG to CRITICAL",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.2,
+     "lines": [
+      "import logging, sys",
+      "logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(levelname)s - %(message)s')",
+      "logging.debug('debug message')",
+      "logging.info('info message')",
+      "logging.warning('warning message')",
+      "logging.error('error message')",
+      "logging.critical('critical message')"
+     ],
+     "fs": 8,
+     "compact": true,
+     "out": "INFO - info message\nWARNING - warning message\nERROR - error message\nCRITICAL - critical message",
+     "outLabel": "prints",
+     "cap": "program levelsdemo_v1_0_0.py, lines 1 to 7 of 7, run under Python 3.14.6",
+     "label": "level=INFO: the DEBUG line stays silent"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 3.78,
+     "w": 9.0,
+     "h": 1.22,
+     "lines": [
+      "logging.info('first call rules')",
+      "logging.basicConfig(level=logging.DEBUG, stream=sys.stdout, format='%(levelname)s - %(message)s', force=True)",
+      "logging.debug('force=True replaces it')"
+     ],
+     "fs": 7.3,
+     "compact": true,
+     "out": "INFO - first call rules\nDEBUG - force=True replaces it",
+     "outLabel": "prints",
+     "cap": "program force_v1_0_0.py, lines 5 to 7 of 7, run under Python 3.14.6",
+     "label": "force=True rewires mid-program - 3.8+ practice"
+    }
+   ],
+   "notes": "SAY: Logging is the practice of making a program write down what it does while it runs. The Python logging HOWTO defines it as a means of tracking events that happen when some software runs: the developer adds logging calls to the code to indicate that certain events have occurred, and each event is described by a message and has an importance, which is called its level or severity (Python Software Foundation, 2026).\nASK: Which level would your coin-toss homework log its guesses at?\nFULL TEXT: course page, chapter 5 - Logging.",
+   "bg": "light",
+   "take": "Set the level, not your patience - DEBUG to CRITICAL"
+  },
+  {
+   "kind": "content",
+   "title": "Log to a file; switch it off cleanly",
+   "sub": "Evidence on disk, silence on demand",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.46,
+     "w": 9.0,
+     "h": 1.64,
+     "lines": [
+      "import logging, os, tempfile",
+      "path = os.path.join(tempfile.mkdtemp(), 'myProgramLog.txt')",
+      "logging.basicConfig(filename=path, level=logging.DEBUG, format='%(levelname)s - %(message)s')",
+      "logging.debug('to the file')",
+      "logging.critical('also to the file')",
+      "print(open(path).read(), end='')"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "DEBUG - to the file\nCRITICAL - also to the file",
+     "outLabel": "prints",
+     "cap": "program filelog_v1_0_0.py, lines 1 to 6 of 6, run under Python 3.14.6",
+     "label": "filename= sends the evidence to disk - and CRITICAL still reaches you"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 3.16,
+     "w": 9.0,
+     "h": 1.84,
+     "lines": [
+      "import logging, sys",
+      "logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(levelname)s - %(message)s')",
+      "logging.critical('before disable')",
+      "logging.disable(logging.CRITICAL)",
+      "logging.critical('after disable')",
+      "logging.error('after disable')",
+      "logging.disable(logging.NOTSET)",
+      "logging.error('after re-enabling')"
+     ],
+     "fs": 7.1,
+     "compact": true,
+     "out": "CRITICAL - before disable\nERROR - after re-enabling",
+     "outLabel": "prints",
+     "cap": "program disable_v1_0_0.py, lines 1 to 8 of 8, run under Python 3.14.6",
+     "label": "logging.disable: one line silences below a level - no deletions"
+    }
+   ],
+   "notes": "SAY: Logging is the practice of making a program write down what it does while it runs. The Python logging HOWTO defines it as a means of tracking events that happen when some software runs: the developer adds logging calls to the code to indicate that certain events have occurred, and each event is described by a message and has an importance, which is called its level or severity (Python Software Foundation, 2026).\nASK: Why does disable() beat deleting log calls the night before a demo?\nFULL TEXT: course page, chapter 5 - Logging.",
+   "bg": "light",
+   "take": "Evidence goes to files; disable beats delete"
+  },
+  {
+   "kind": "section",
+   "title": "The hunt",
+   "sub": "Two real bugs, found by their logs",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.85,
+     "y": 2.95,
+     "w": 8.6,
+     "h": 1.9,
+     "cols": 3,
+     "fs": 14,
+     "subfs": 11,
+     "items": [
+      {
+       "label": "Factorial, off by one"
+      },
+      {
+       "label": "String vs int"
+      },
+      {
+       "label": "The debugger"
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: A bug is a place where a program does something other than what its author meant it to do, and debugging is the work of finding and removing such places. Chapter 5 opens with the observation that once a learner can write basic programs, the bugs become less simple, and it offers tools and techniques for finding the root cause of a bug quickly and with little effort (Sweigart, 2025).\nFULL TEXT: course page, chapter 5 - BugModel.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Hunt one bug, with the log as witness",
+   "sub": "factorial(3) returns 0 - the log says why",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.0,
+     "lines": [
+      "import logging, sys",
+      "logging.basicConfig(level=logging.DEBUG, stream=sys.stdout, format='%(levelname)s - %(message)s')",
+      "def factorial(n):",
+      "    logging.debug('Start of factorial(%s)', n)",
+      "    total = 1",
+      "    for i in range(n + 1):",
+      "        total *= i",
+      "        logging.debug('i is %s, total is %s', i, total)",
+      "    logging.debug('End of factorial(%s)', n)",
+      "    return total",
+      "",
+      "print(factorial(3))"
+     ],
+     "fs": 7.1,
+     "compact": true,
+     "out": "DEBUG - Start of factorial(3)\nDEBUG - i is 0, total is 0\nDEBUG - i is 1, total is 0\nDEBUG - i is 2, total is 0\nDEBUG - i is 3, total is 0\nDEBUG - End of factorial(3)\n0",
+     "outLabel": "prints",
+     "cap": "program factorial_bug_v1_0_0.py, lines 1 to 12 of 12, run under Python 3.14.6",
+     "label": "read the DEBUG lines: i starts at 0, and the product dies with it"
+    }
+   ],
+   "notes": "SAY: A bug is a place where a program does something other than what its author meant it to do, and debugging is the work of finding and removing such places. Chapter 5 opens with the observation that once a learner can write basic programs, the bugs become less simple, and it offers tools and techniques for finding the root cause of a bug quickly and with little effort (Sweigart, 2025).\nASK: Before the next slide: which single argument of range() is wrong?\nFULL TEXT: course page, chapter 5 - BugModel, Logging.",
+   "bg": "light",
+   "take": "The log shows the loop die one step early"
+  },
+  {
+   "kind": "content",
+   "title": "The one-character fix, witnessed",
+   "sub": "Same program, range(1, ...) - the log now testifies",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.9,
+     "lines": [
+      "import logging, sys",
+      "logging.basicConfig(level=logging.DEBUG, stream=sys.stdout, format='%(levelname)s - %(message)s')",
+      "def factorial(n):",
+      "    logging.debug('Start of factorial(%s)', n)",
+      "    total = 1",
+      "    for i in range(1, n + 1):",
+      "        total *= i",
+      "        logging.debug('i is %s, total is %s', i, total)",
+      "    logging.debug('End of factorial(%s)', n)",
+      "    return total",
+      "",
+      "print(factorial(3))"
+     ],
+     "fs": 7.2,
+     "compact": true,
+     "out": "DEBUG - Start of factorial(3)\nDEBUG - i is 1, total is 1\nDEBUG - i is 2, total is 2\nDEBUG - i is 3, total is 6\nDEBUG - End of factorial(3)\n6",
+     "outLabel": "prints",
+     "cap": "program factorial_fixed_v1_0_0.py, lines 1 to 12 of 12, run under Python 3.14.6",
+     "label": "the log ends at 6 - and reads as the proof the fix worked"
+    },
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 4.55,
+     "w": 9.0,
+     "h": 0.42,
+     "fs": 10.5,
+     "items": [
+      "The fix is one character class: range(n + 1) became range(1, n + 1)"
+     ]
+    }
+   ],
+   "notes": "SAY: A bug is a place where a program does something other than what its author meant it to do, and debugging is the work of finding and removing such places. Chapter 5 opens with the observation that once a learner can write basic programs, the bugs become less simple, and it offers tools and techniques for finding the root cause of a bug quickly and with little effort (Sweigart, 2025).\nASK: Keep or delete these DEBUG lines after the fix - argue both ways in one sentence.\nFULL TEXT: course page, chapter 5 - BugModel, Logging.",
+   "bg": "light",
+   "take": "The log that found the bug doubles as the proof of the fix"
+  },
+  {
+   "kind": "content",
+   "title": "The string that beat the integer",
+   "sub": "The chapter's coin toss never wins - types tell",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.35,
+     "lines": [
+      "import random",
+      "random.seed(7)",
+      "guess = input('Guess the coin toss! Enter heads or tails: ')",
+      "toss = random.randint(0, 1)  # 0 is tails, 1 is heads",
+      "if toss == guess:",
+      "    print('You got it!')",
+      "else:",
+      "    print('Nope! Guess again!')",
+      "print(type(toss).__name__, type(guess).__name__)"
+     ],
+     "fs": 8.3,
+     "compact": true,
+     "out": "Guess the coin toss! Enter heads or tails: heads\nNope! Guess again!\nint str",
+     "outLabel": "prints",
+     "cap": "program cointoss_bug_v1_0_0.py, lines 1 to 9 of 9, run under Python 3.14.6",
+     "label": "seeded for the slide: toss is an int, your guess is a str - they can never be equal"
+    },
+    {
+     "t": "text",
+     "x": 0.5,
+     "y": 4.02,
+     "w": 6.1,
+     "h": 0.9,
+     "fs": 8.5,
+     "color": "mute",
+     "body": "the second recorded run, guessing tails, loses identically:\nGuess the coin toss! Enter heads or tails: tails\nNope! Guess again!\nint str"
+    },
+    {
+     "t": "when",
+     "x": 6.9,
+     "y": 4.25,
+     "w": 2.6,
+     "body": "fix: compare like with like"
+    }
+   ],
+   "notes": "SAY: A bug is a place where a program does something other than what its author meant it to do, and debugging is the work of finding and removing such places. Chapter 5 opens with the observation that once a learner can write basic programs, the bugs become less simple, and it offers tools and techniques for finding the root cause of a bug quickly and with little effort (Sweigart, 2025).\nASK: Write the one-line fix both ways - which reads better at the call site?\nFULL TEXT: course page, chapter 5 - BugModel.",
+   "bg": "light",
+   "take": "Types are part of the bug - the log prints them"
+  },
+  {
+   "kind": "content",
+   "title": "The debugger: the program, paused",
+   "sub": "breakpoint() - a conversation mid-thought",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.3,
+     "h": 2.6,
+     "lines": [
+      "def add(a, b):",
+      "    total = a + b",
+      "    return total",
+      "",
+      "def main():",
+      "    x = add(2, 3)",
+      "    y = add(x, 10)",
+      "    print(y)",
+      "",
+      "main()"
+     ],
+     "fs": 8.5,
+     "compact": true,
+     "out": "15",
+     "outLabel": "prints",
+     "cap": "program debugdemo_v1_0_0.py, lines 1 to 10 of 10, run under Python 3.14.6",
+     "label": "the demo the lab runs under pdb"
+    },
+    {
+     "t": "numlist",
+     "x": 5.1,
+     "y": 1.6,
+     "w": 4.4,
+     "h": 2.3,
+     "fs": 10.5,
+     "items": [
+      "breakpoint() drops you into pdb at that line",
+      "n steps over; s steps in; p prints a name",
+      "c continues; q quits the session",
+      "The lab: watch total grow, step by step"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 4.35,
+     "w": 9.0,
+     "h": 0.55,
+     "fs": 12,
+     "items": [
+      "n next",
+      "s step in",
+      "p name",
+      "c continue",
+      "q quit"
+     ]
+    }
+   ],
+   "notes": "SAY: The debugger is a tool that runs a program one instruction at a time and lets the programmer look at the program between the steps. The chapter defines it as a feature of the Mu editor that executes a program one instruction at a time, giving a chance to inspect the values in variables while the code runs and to track how the values change over the course of the program (Sweigart, 2025).\nASK: At which line would a breakpoint have caught the factorial bug fastest?\nFULL TEXT: course page, chapter 5 - Debugger.",
+   "bg": "light",
+   "take": "A debugger is a conversation with a paused program"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in five lines",
+   "sub": "One line per part - each one provable from its slides",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.3,
+     "fs": 12.5,
+     "items": [
+      "A traceback reads upward: the last line names the crime, the ones above the scene",
+      "Exceptions climb until claimed; add_note sends context along for the ride",
+      "assert trips on impossible states - and python -O reminds you whom it guards",
+      "Logging is print with levels, files and an off switch - a 2002 PEP you inherit",
+      "Two real bugs fell today: the log cornered one, types confessed the other"
+     ]
+    }
+   ],
+   "notes": "SAY: Five lines, one per part; the agenda names the slides that prove each.\nASK: Which line would you defend first, and with which slide?\nFULL TEXT: course page, chapter 5 - every section.",
+   "take": "If a line feels unproven, its part's slides carry the receipt",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "The chapter's own checked sources - every entry a live link",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.45,
+     "fs": 10,
+     "groups": [
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, chapter 5 - free online",
+         "https://automatetheboringstuff.com/3e/chapter5.html"
+        ],
+        [
+         "The tutorial: errors and exceptions",
+         "https://docs.python.org/3/tutorial/errors.html"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "logging - the module these slides ran",
+         "https://docs.python.org/3/library/logging.html"
+        ],
+        [
+         "pdb - the debugger",
+         "https://docs.python.org/3/library/pdb.html"
+        ],
+        [
+         "Built-in exceptions",
+         "https://docs.python.org/3/library/exceptions.html"
+        ]
+       ]
+      },
+      {
+       "head": "History",
+       "rows": [
+        [
+         "PEP 282 - a logging system (2002)",
+         "https://peps.python.org/pep-0282/"
+        ],
+        [
+         "The 1947 moth, at the Smithsonian",
+         "https://en.wikipedia.org/wiki/Software_bug"
+        ]
+       ]
+      },
+      {
+       "head": "Practice",
+       "rows": [
+        [
+         "python -O and assertions",
+         "https://docs.python.org/3/using/cmdline.html"
+        ],
+        [
+         "PEP 678 - notes on exceptions",
+         "https://peps.python.org/pep-0678/"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: Every link is a source the chapter corpus cites and checked. Homework: run the coin toss UNSEEDED, lose three times, then fix it and log every toss at DEBUG.\nASK: Bring one traceback you met this week - we will read it upward together.\nFULL TEXT: course page, chapter 5 - Logging.",
+   "bg": "light",
+   "take": "Eight links, checked by the build - one of them has a moth in it"
+  },
+  {
+   "kind": "closing",
+   "title": "What you should now be able to say",
+   "sub": "And where each claim gets its proof",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 3.05,
+     "w": 8.8,
+     "h": 1.65,
+     "fs": 16,
+     "dark": true,
+     "items": [
+      "How to read a traceback, and in which direction",
+      "What an assert guards, and what it must never guard",
+      "Five log levels, to console or file, silenced cleanly",
+      "How a log and a breakpoint corner a real bug"
+     ]
+    }
+   ],
+   "notes": "SAY: Four claims, each carried by a transcript you watched print. Five chapters, one look, every number earned - the first half of the course stands.\nFULL TEXT: course page, chapter 5.",
+   "bg": "dark"
+  }
+ ]
+}
