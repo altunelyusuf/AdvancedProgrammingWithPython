@@ -1,0 +1,1221 @@
+{
+ "meta": {
+  "title": "Chapter 4: Functions",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "2.0.0",
+  "python": "3.14.6",
+  "total": 0,
+  "redesign": "2026-10-06, to the CME materials look-and-feel standard v1.0.0"
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Chapter 4: Functions",
+   "sub": "Named blocks, honest returns - and the stack that keeps the way back",
+   "items": [
+    {
+     "t": "code",
+     "x": 6.0,
+     "y": 1.3,
+     "w": 3.5,
+     "h": 1.7,
+     "fs": 12,
+     "cap": "run under Python 3.14.6",
+     "rows": [
+      [
+       "def twice(n): return 2 * n",
+       ""
+      ],
+      [
+       "twice(21)",
+       "42"
+      ]
+     ]
+    }
+   ],
+   "notes": "SAY: Chapters 1-3 wrote code that runs top to bottom; chapter 4 names blocks of it, hands them inputs, and gets values back - plus the stack, scope and error-handling that make it safe.\nFULL TEXT: course page, chapter 4.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Five parts; every number is a slide you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 6.3,
+     "h": 3.4,
+     "fs": 12.5,
+     "items": [
+      "Questions and the chapter map  (slides 3-4)",
+      "Defining and calling - def, parameters, returns  (slides 5-8)",
+      "Frames and scope - the stack, global, nonlocal  (slides 9-15)",
+      "Errors, handled - try placement and PEP 758  (slides 16-18)",
+      "Working programs, summary, and resources  (slides 19-25)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "25",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "3",
+       "label": "true stories, each with WHO / WHERE / WHEN / READ"
+      },
+      {
+       "n": "20",
+       "label": "consoles and whole programs, run live"
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: Five parts, from Wheeler's 1952 jump to a 3.14-only except clause - every transcript verified off this very file.\nASK: Which part do you expect to be hardest - mark it now, check at the summary.\nFULL TEXT: course page, chapter 4 - every section.",
+   "take": "Five parts - and every transcript printed under 3.14.6",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "Its own competency questions - we return to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.9,
+     "fs": 13,
+     "items": [
+      "Which constructs define, call and leave a function, and what decides which variable a name refers to?",
+      "Which printed outputs and concepts of the chapter differ in current Python, and on what source?",
+      "Which terms and tools does the chapter use without explaining them, and where is each one explained?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 4.3,
+     "w": 9.0,
+     "h": 0.55,
+     "fs": 12.5,
+     "items": [
+      "recorded under Python 3.14.6",
+      "whole programs with transcripts",
+      "errors are answers too"
+     ]
+    }
+   ],
+   "notes": "SAY: A function is a named piece of code that a program can run whenever it needs that work done, from as many places as it likes. The textbook describes it as a mini program within a program (Sweigart, 2025), and the Python glossary states the same idea more formally: a series of statements which returns some value to a caller, and which can also be passed zero or more arguments that are used while its body runs (Python Software Foundation, 2026).\nFULL TEXT: course page, chapter 4 - Function.",
+   "bg": "light",
+   "take": "If you can answer these, chapter 4 is yours"
+  },
+  {
+   "kind": "content",
+   "title": "One chapter, seven branches",
+   "sub": "The concept map the whole chapter hangs on",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.5,
+     "y": 1.7,
+     "w": 9.0,
+     "h": 2.9,
+     "cols": 4,
+     "fs": 12.5,
+     "subfs": 10,
+     "accent": [
+      0
+     ],
+     "items": [
+      {
+       "label": "Function",
+       "sub": "17 concepts"
+      },
+      {
+       "label": "Result",
+       "sub": "7 concepts"
+      },
+      {
+       "label": "Frames",
+       "sub": "5 concepts"
+      },
+      {
+       "label": "Scope",
+       "sub": "16 concepts"
+      },
+      {
+       "label": "Error Handling",
+       "sub": "8 concepts"
+      },
+      {
+       "label": "Programs",
+       "sub": "9 concepts"
+      },
+      {
+       "label": "Modern Practice",
+       "sub": "7 concepts"
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: A function is a named piece of code that a program can run whenever it needs that work done, from as many places as it likes. The textbook describes it as a mini program within a program (Sweigart, 2025), and the Python glossary states the same idea more formally: a series of statements which returns some value to a caller, and which can also be passed zero or more arguments that are used while its body runs (Python Software Foundation, 2026).\nFULL TEXT: course page, chapter 4 - Function, Scope.",
+   "bg": "light",
+   "lede": "Seven branches; the count under each is how many concepts the course page explains for it - today walks the spine.",
+   "take": "Seven branches - every slide today lives on this map"
+  },
+  {
+   "kind": "section",
+   "title": "Defining and calling",
+   "sub": "def, arguments, and what comes back",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.85,
+     "y": 2.95,
+     "w": 8.6,
+     "h": 1.9,
+     "cols": 4,
+     "fs": 14,
+     "subfs": 11,
+     "items": [
+      {
+       "label": "def and call"
+      },
+      {
+       "label": "Parameters"
+      },
+      {
+       "label": "return"
+      },
+      {
+       "label": "Defaults"
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: A function is a named piece of code that a program can run whenever it needs that work done, from as many places as it likes. The textbook describes it as a mini program within a program (Sweigart, 2025), and the Python glossary states the same idea more formally: a series of statements which returns some value to a caller, and which can also be passed zero or more arguments that are used while its body runs (Python Software Foundation, 2026).\nFULL TEXT: course page, chapter 4 - Function.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "def, call, return - the whole loop",
+   "sub": "Two programs, every basic in play",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.3,
+     "h": 2.45,
+     "lines": [
+      "def hello():",
+      "    print('Good morning!')",
+      "    print('Good evening!')",
+      "hello()",
+      "print('ONE MORE TIME!')",
+      "hello()"
+     ],
+     "fs": 9,
+     "compact": true,
+     "out": "Good morning!\nGood evening!\nONE MORE TIME!\nGood morning!\nGood evening!",
+     "outLabel": "prints",
+     "cap": "program hello_v1_0_0.py, lines 1 to 6 of 6, run under Python 3.14.6",
+     "label": "define once, call twice - then once more"
+    },
+    {
+     "t": "prog",
+     "x": 5.1,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 2.3,
+     "lines": [
+      "def area(width, height):",
+      "    return width * height",
+      "def shout(text):",
+      "    print(text.upper())",
+      "print(area(3, 4) + area(1, 2))",
+      "result = shout('hi')",
+      "print(result is None)"
+     ],
+     "fs": 9,
+     "compact": true,
+     "out": "14\nHI\nTrue",
+     "outLabel": "prints",
+     "cap": "program returns_v1_0_0.py, lines 1 to 7 of 7, run under Python 3.14.6",
+     "label": "return hands back a VALUE, any type"
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 4.25,
+     "w": 9.0,
+     "h": 0.55,
+     "fs": 12,
+     "items": [
+      "def names a block",
+      "() runs it",
+      "return ends it with a value",
+      "no return means None"
+     ]
+    }
+   ],
+   "notes": "SAY: A function is a named piece of code that a program can run whenever it needs that work done, from as many places as it likes. The textbook describes it as a mini program within a program (Sweigart, 2025), and the Python glossary states the same idea more formally: a series of statements which returns some value to a caller, and which can also be passed zero or more arguments that are used while its body runs (Python Software Foundation, 2026).\nASK: What does print(print('hi')) show, and why two lines?\nFULL TEXT: course page, chapter 4 - Function, Result.",
+   "bg": "light",
+   "take": "A function is a named block with a way back"
+  },
+  {
+   "kind": "content",
+   "title": "Parameters: positional, named, defaults",
+   "sub": "Call sites that read like sentences",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.3,
+     "h": 2.5,
+     "lines": [
+      "def say_hello_to(name):",
+      "    print('Good morning, ' + name)",
+      "say_hello_to('Alice')",
+      "say_hello_to('Bob')",
+      "try:",
+      "    print(name)",
+      "except NameError as error:",
+      "    print(error)"
+     ],
+     "fs": 9,
+     "compact": true,
+     "out": "Good morning, Alice\nGood morning, Bob\nname 'name' is not defined",
+     "outLabel": "prints",
+     "cap": "program params_v1_0_0.py, lines 1 to 8 of 8, run under Python 3.14.6",
+     "label": "positional order, then names at the call"
+    },
+    {
+     "t": "prog",
+     "x": 5.1,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 1.5,
+     "lines": [
+      "print('Hello', end='')",
+      "print('World')",
+      "print('cats', 'dogs', 'mice', sep=',')"
+     ],
+     "fs": 9,
+     "compact": true,
+     "out": "HelloWorld\ncats,dogs,mice",
+     "outLabel": "prints",
+     "cap": "program named_v1_0_0.py, lines 1 to 3 of 3, run under Python 3.14.6",
+     "label": "sep and end: named arguments you already met"
+    },
+    {
+     "t": "code",
+     "x": 5.1,
+     "y": 3.35,
+     "w": 4.4,
+     "h": 1.05,
+     "rows": [
+      [
+       "type(None).__name__",
+       "'NoneType'"
+      ],
+      [
+       "(lambda: None)() is None",
+       "True"
+      ]
+     ],
+     "fs": 9.5,
+     "cap": "run under Python 3.14.6",
+     "label": "None: the quiet return of functions that only DO"
+    }
+   ],
+   "notes": "SAY: A function is a named piece of code that a program can run whenever it needs that work done, from as many places as it likes. The textbook describes it as a mini program within a program (Sweigart, 2025), and the Python glossary states the same idea more formally: a series of statements which returns some value to a caller, and which can also be passed zero or more arguments that are used while its body runs (Python Software Foundation, 2026).\nASK: Rewrite print('a','b',sep='-') with positional-only thinking - why does it refuse?\nFULL TEXT: course page, chapter 4 - Function.",
+   "bg": "light",
+   "take": "Call sites read best when arguments carry names"
+  },
+  {
+   "kind": "content",
+   "title": "The default that remembered too much",
+   "sub": "Evaluate-once defaults, caught in the act",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 3.55,
+     "h": 1.9,
+     "fs": 10.5,
+     "items": [
+      "A default value is evaluated ONCE, at def time",
+      "A mutable default then lives between calls",
+      "The fix: default to None, create inside"
+     ]
+    },
+    {
+     "t": "prog",
+     "x": 4.3,
+     "y": 1.5,
+     "w": 5.2,
+     "h": 3.3,
+     "lines": [
+      "def collect(item, box=[]):",
+      "    box.append(item)",
+      "    return box",
+      "print(collect(1))",
+      "print(collect(2))",
+      "def collect_safely(item, box=None):",
+      "    if box is None:",
+      "        box = []",
+      "    box.append(item)",
+      "    return box",
+      "print(collect_safely(1))",
+      "print(collect_safely(2))"
+     ],
+     "fs": 8.5,
+     "compact": true,
+     "out": "[1]\n[1, 2]\n[1]\n[2]",
+     "outLabel": "prints",
+     "cap": "program defaults_v1_0_0.py, lines 1 to 12 of 12, run under Python 3.14.6",
+     "label": "the classic trap, then the idiomatic repair"
+    },
+    {
+     "t": "when",
+     "x": 0.5,
+     "y": 3.75,
+     "w": 3.55,
+     "body": "def=None, make it inside"
+    }
+   ],
+   "notes": "SAY: A function is a named piece of code that a program can run whenever it needs that work done, from as many places as it likes. The textbook describes it as a mini program within a program (Sweigart, 2025), and the Python glossary states the same idea more formally: a series of statements which returns some value to a caller, and which can also be passed zero or more arguments that are used while its body runs (Python Software Foundation, 2026).\nASK: Why does the SAME list come back - where does it live between calls?\nFULL TEXT: course page, chapter 4 - Function, ModernPractice.",
+   "bg": "light",
+   "take": "Evaluate-once defaults: never use a mutable one"
+  },
+  {
+   "kind": "section",
+   "title": "Frames and scope",
+   "sub": "Where calls live, and which x you mean",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.85,
+     "y": 2.95,
+     "w": 8.6,
+     "h": 1.9,
+     "cols": 4,
+     "fs": 14,
+     "subfs": 11,
+     "items": [
+      {
+       "label": "The call stack"
+      },
+      {
+       "label": "Recursion"
+      },
+      {
+       "label": "Local vs global"
+      },
+      {
+       "label": "global / nonlocal"
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: A frame is the record that Python keeps for one running function call, and the call stack is the pile of such records that exist at a given moment. The language reference explains that a code block is executed in an execution frame, which contains some administrative information and determines where and how execution continues after the block's execution has completed (Python Software Foundation, 2026).\nFULL TEXT: course page, chapter 4 - Frames.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "1952: the function gets invented",
+   "sub": "1952",
+   "items": [
+    {
+     "t": "img",
+     "path": "../../03-materials/ch04/assets/photo_edsac.jpg",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 3.4,
+     "h": 2.5,
+     "cap": "EDSAC - Computer Laboratory, University of Cambridge, CC BY 2.0"
+    },
+    {
+     "t": "beats",
+     "x": 4.3,
+     "y": 1.5,
+     "w": 5.2,
+     "h": 2.3,
+     "fs": 12.5,
+     "items": [
+      "EDSAC, Cambridge: one of the first stored-program machines",
+      "Wheeler's problem: jump into shared code AND find the way back",
+      "His closed subroutine is the ancestor of every def here",
+      "The call stack is his return-address bookkeeping, grown up"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "David Wheeler, on EDSAC at the University of Cambridge",
+     "where": "the Cambridge Mathematical Laboratory; published through the ACM",
+     "when": "1952",
+     "link": "https://en.wikipedia.org/wiki/David_Wheeler_(computer_scientist)",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "STORY (1952): On EDSAC, one of the first stored-program computers, David Wheeler worked out how a program could jump into a reusable block of code and - the hard part - find its way back to wherever it came from. His 'closed subroutine' and the jump-and-return it needed (long called the Wheeler jump) are the ancestor of every def on these slides, and the call stack the chapter draws is the modern descendant of his return-address bookkeeping.\nSOURCE: David Wheeler's closed-subroutine work on EDSAC, Cambridge, published 1952 through the ACM ('The use of sub-routines in programmes'); the return linkage is historically known as the Wheeler jump. Photo: EDSAC, Computer Laboratory, University of Cambridge, CC BY 2.0.",
+   "bg": "light",
+   "take": "def and return are 1952 inventions you use every day"
+  },
+  {
+   "kind": "content",
+   "title": "Frames: where calls live",
+   "sub": "Three nested calls, photographed from inside",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 9.0,
+     "h": 3.3,
+     "lines": [
+      "import traceback",
+      "def outer():",
+      "    print('outer starts')",
+      "    middle()",
+      "    print('outer returns')",
+      "def middle():",
+      "    print('middle starts')",
+      "    inner()",
+      "    print('middle returns')",
+      "def inner():",
+      "    print('inner: frames are', [frame.name for frame in traceback.extract_stack()][-3:])",
+      "outer()"
+     ],
+     "fs": 8.5,
+     "compact": true,
+     "out": "outer starts\nmiddle starts\ninner: frames are ['outer', 'middle', 'inner']\nmiddle returns\nouter returns",
+     "outLabel": "prints",
+     "cap": "program stack_v1_0_0.py, lines 1 to 12 of 12, run under Python 3.14.6",
+     "label": "each call pushes a frame; inspect shows the stack mid-flight"
+    }
+   ],
+   "notes": "SAY: A frame is the record that Python keeps for one running function call, and the call stack is the pile of such records that exist at a given moment. The language reference explains that a code block is executed in an execution frame, which contains some administrative information and determines where and how execution continues after the block's execution has completed (Python Software Foundation, 2026).\nASK: Read the frame list aloud bottom-up - whose return comes first?\nFULL TEXT: course page, chapter 4 - Frames.",
+   "bg": "light",
+   "take": "Every call pushes a frame; return pops it - the stack IS the story"
+  },
+  {
+   "kind": "content",
+   "title": "Recursion meets its limit",
+   "sub": "The safety rail, measured live",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.3,
+     "h": 2.1,
+     "lines": [
+      "import sys",
+      "def forever():",
+      "    return forever()",
+      "try:",
+      "    forever()",
+      "except RecursionError as error:",
+      "    print(sys.getrecursionlimit(), error)"
+     ],
+     "fs": 9,
+     "compact": true,
+     "out": "1000 maximum recursion depth exceeded",
+     "outLabel": "prints",
+     "cap": "program recursion_v1_0_0.py, lines 1 to 7 of 7, run under Python 3.14.6",
+     "label": "a function that calls itself with no exit"
+    },
+    {
+     "t": "code",
+     "x": 5.1,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 1.1,
+     "rows": [
+      [
+       "__import__('sys').getrecursionlimit()",
+       "1000"
+      ],
+      [
+       "issubclass(RecursionError, RuntimeError)",
+       "True"
+      ]
+     ],
+     "fs": 9.5,
+     "cap": "run under Python 3.14.6",
+     "label": "the ceiling, asked directly"
+    },
+    {
+     "t": "numlist",
+     "x": 5.1,
+     "y": 2.9,
+     "w": 4.4,
+     "h": 1.5,
+     "fs": 10.5,
+     "items": [
+      "Every call adds a frame; frames cost memory",
+      "Python stops the runaway at a set depth",
+      "Real recursion needs a base case - Collatz has one"
+     ]
+    }
+   ],
+   "notes": "SAY: A frame is the record that Python keeps for one running function call, and the call stack is the pile of such records that exist at a given moment. The language reference explains that a code block is executed in an execution frame, which contains some administrative information and determines where and how execution continues after the block's execution has completed (Python Software Foundation, 2026).\nASK: What is THIS function's missing base case - add it in one line.\nFULL TEXT: course page, chapter 4 - Frames.",
+   "bg": "light",
+   "take": "The 1000-frame ceiling is a safety rail, measured live"
+  },
+  {
+   "kind": "content",
+   "title": "Scope: which x is this?",
+   "sub": "Reading reaches out; assignment stays home",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.3,
+     "h": 2.9,
+     "lines": [
+      "def inner():",
+      "    name = 'inner local'",
+      "    print(name)",
+      "def outer():",
+      "    name = 'outer local'",
+      "    print(name)",
+      "    inner()",
+      "    print(name)",
+      "name = 'global'",
+      "outer()",
+      "print(name)"
+     ],
+     "fs": 8.6,
+     "compact": true,
+     "out": "outer local\ninner local\nouter local\nglobal",
+     "outLabel": "prints",
+     "cap": "program scopes_v1_0_0.py, lines 1 to 11 of 11, run under Python 3.14.6",
+     "label": "four prints, three scopes - trace each"
+    },
+    {
+     "t": "numlist",
+     "x": 5.1,
+     "y": 1.6,
+     "w": 4.4,
+     "h": 1.9,
+     "fs": 10.5,
+     "items": [
+      "A def opens a new local scope",
+      "Reading a name searches outward: local, enclosing, global, built-in",
+      "Assigning a name claims it LOCAL - everywhere in that def"
+     ]
+    },
+    {
+     "t": "when",
+     "x": 5.1,
+     "y": 3.85,
+     "w": 4.4,
+     "body": "read reaches out; assignment stays home"
+    }
+   ],
+   "notes": "SAY: A scope is the part of a program in which a name can be used, and the scope of a variable decides which variable a name refers to. The textbook asks the reader to think of a scope as a container for variables (Sweigart, 2025), and the language reference defines it as what determines the visibility of a name within a block (Python Software Foundation, 2026).\nASK: Trace print number three: which scope answers, and why not the inner one?\nFULL TEXT: course page, chapter 4 - Scope.",
+   "bg": "light",
+   "take": "Reading reaches out; assignment stays local unless declared"
+  },
+  {
+   "kind": "content",
+   "title": "Assign later, crash earlier",
+   "sub": "The famous scope error, in full",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 9.0,
+     "h": 1.85,
+     "lines": [
+      "def show():",
+      "    print(count)",
+      "    count = 1",
+      "count = 0",
+      "try:",
+      "    show()",
+      "except UnboundLocalError as error:",
+      "    print(type(error).__name__ + ':', error)"
+     ],
+     "fs": 7.9,
+     "compact": true,
+     "out": "UnboundLocalError: cannot access local variable 'count' where it is not associated with a value",
+     "outLabel": "prints",
+     "cap": "program unbound_v1_0_0.py, lines 1 to 8 of 8, run under Python 3.14.6",
+     "label": "one assignment at the bottom makes the TOP print illegal"
+    },
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 3.7,
+     "w": 9.0,
+     "h": 1.1,
+     "fs": 10.5,
+     "items": [
+      "The assignment on the last line marks eggs local for the WHOLE function",
+      "So the first line's read finds a local that does not exist yet - UnboundLocalError"
+     ]
+    }
+   ],
+   "notes": "SAY: A scope is the part of a program in which a name can be used, and the scope of a variable decides which variable a name refers to. The textbook asks the reader to think of a scope as a container for variables (Sweigart, 2025), and the language reference defines it as what determines the visibility of a name within a block (Python Software Foundation, 2026).\nASK: Fix it two ways: rename, or declare - which would PEP 8 prefer here?\nFULL TEXT: course page, chapter 4 - Scope.",
+   "bg": "light",
+   "take": "Assignment anywhere makes it local everywhere - the error says so"
+  },
+  {
+   "kind": "content",
+   "title": "global and nonlocal, demonstrated",
+   "sub": "Declarations that move the assignment",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.3,
+     "h": 2.45,
+     "lines": [
+      "def change():",
+      "    global mood",
+      "    mood = 'changed'",
+      "def shadow():",
+      "    mood = 'local only'",
+      "mood = 'original'",
+      "shadow()",
+      "print(mood)",
+      "change()",
+      "print(mood)"
+     ],
+     "fs": 8.7,
+     "compact": true,
+     "out": "original\nchanged",
+     "outLabel": "prints",
+     "cap": "program globalstmt_v1_0_0.py, lines 1 to 10 of 10, run under Python 3.14.6",
+     "label": "global: the module's name, changed inside"
+    },
+    {
+     "t": "prog",
+     "x": 5.1,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 2.3,
+     "lines": [
+      "def counter():",
+      "    total = 0",
+      "    def add():",
+      "        nonlocal total",
+      "        total += 1",
+      "    add()",
+      "    add()",
+      "    return total",
+      "print(counter())"
+     ],
+     "fs": 9,
+     "compact": true,
+     "out": "2",
+     "outLabel": "prints",
+     "cap": "program nonlocal_v1_0_0.py, lines 1 to 9 of 9, run under Python 3.14.6",
+     "label": "nonlocal: the enclosing def's name"
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 4.25,
+     "w": 9.0,
+     "h": 0.55,
+     "fs": 12,
+     "items": [
+      "read: no declaration needed",
+      "assign: local by default",
+      "declare to aim higher"
+     ]
+    }
+   ],
+   "notes": "SAY: A scope is the part of a program in which a name can be used, and the scope of a variable decides which variable a name refers to. The textbook asks the reader to think of a scope as a container for variables (Sweigart, 2025), and the language reference defines it as what determines the visibility of a name within a block (Python Software Foundation, 2026).\nASK: Which of the two would a five-function module regret first, and why?\nFULL TEXT: course page, chapter 4 - Scope.",
+   "bg": "light",
+   "take": "Declarations change where assignment lands - use sparingly"
+  },
+  {
+   "kind": "section",
+   "title": "Errors, handled",
+   "sub": "try, except - and where to put them",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.85,
+     "y": 2.95,
+     "w": 8.6,
+     "h": 1.9,
+     "cols": 4,
+     "fs": 14,
+     "subfs": 11,
+     "items": [
+      {
+       "label": "try / except"
+      },
+      {
+       "label": "Placement"
+      },
+      {
+       "label": "PEP 758"
+      },
+      {
+       "label": "Validation"
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: Error handling is the part of a program that decides what happens when something goes wrong. In Python an error that stops a statement is called an exception, and the language has two statements for dealing with it: try marks the code that might fail, and except says what to do when it does.\nFULL TEXT: course page, chapter 4 - ErrorHandling.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "try inside or outside? Both, shown",
+   "sub": "Same crash, two placements, different programs",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.3,
+     "h": 2.7,
+     "lines": [
+      "def divide(by):",
+      "    try:",
+      "        return 42 / by",
+      "    except ZeroDivisionError:",
+      "        print('Error: Invalid argument.')",
+      "print(divide(2))",
+      "print(divide(0))",
+      "print(divide(1))"
+     ],
+     "fs": 8.5,
+     "compact": true,
+     "out": "21.0\nError: Invalid argument.\nNone\n42.0",
+     "outLabel": "prints",
+     "cap": "program inside_v1_0_0.py, lines 1 to 8 of 8, run under Python 3.14.6",
+     "label": "inside: the function apologizes and returns None"
+    },
+    {
+     "t": "prog",
+     "x": 5.1,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 2.7,
+     "lines": [
+      "def divide(by):",
+      "    return 42 / by",
+      "try:",
+      "    print(divide(2))",
+      "    print(divide(0))",
+      "    print(divide(1))",
+      "except ZeroDivisionError:",
+      "    print('Error: Invalid argument.')"
+     ],
+     "fs": 8.5,
+     "compact": true,
+     "out": "21.0\nError: Invalid argument.",
+     "outLabel": "prints",
+     "cap": "program outside_v1_0_0.py, lines 1 to 8 of 8, run under Python 3.14.6",
+     "label": "outside: the caller decides what an error means"
+    },
+    {
+     "t": "when",
+     "x": 2.8,
+     "y": 4.4,
+     "w": 4.4,
+     "body": "catch where you can act"
+    }
+   ],
+   "notes": "SAY: Error handling is the part of a program that decides what happens when something goes wrong. In Python an error that stops a statement is called an exception, and the language has two statements for dealing with it: try marks the code that might fail, and except says what to do when it does.\nASK: Which placement hides the None surprise from slide 6's chips?\nFULL TEXT: course page, chapter 4 - ErrorHandling.",
+   "bg": "light",
+   "take": "Put try where you can DO something about the error"
+  },
+  {
+   "kind": "content",
+   "title": "The except clause sheds its parentheses",
+   "sub": "Python 3.14, 2025",
+   "items": [
+    {
+     "t": "beats",
+     "x": 0.5,
+     "y": 1.42,
+     "w": 9.0,
+     "h": 1.0,
+     "fs": 12.5,
+     "items": [
+      "For decades: except (ValueError, TypeError) - parentheses required",
+      "PEP 758, shipped in 3.14: the bare pair now parses - and this build RAN it"
+     ]
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 2.55,
+     "w": 9.0,
+     "h": 1.5,
+     "lines": [
+      "try:",
+      "    int('puppy')",
+      "except ValueError, TypeError:",
+      "    print('caught either one')"
+     ],
+     "fs": 9.5,
+     "compact": true,
+     "out": "caught either one",
+     "outLabel": "prints",
+     "cap": "program except758_v1_0_0.py, lines 1 to 4 of 4, run under Python 3.14.6",
+     "label": "executed under the build's 3.14.6; on 3.13 this file is a SyntaxError"
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "proposed and accepted through the CPython core developers' PEP process",
+     "where": "PEP 758, peps.python.org",
+     "when": "Python 3.14, 2025",
+     "link": "https://peps.python.org/pep-0758/",
+     "linkText": "peps.python.org"
+    }
+   ],
+   "notes": "STORY (Python 3.14, 2025): For decades, catching two exception types required parentheses: except (ValueError, TypeError). PEP 758 let the parentheses go, and Python 3.14 ships it. This deck does not take the release notes' word for it: the chapter program with the bare except clause was EXECUTED under Python 3.14 during this build, and its transcript on the slide is what that interpreter printed. On 3.13 the same file is a SyntaxError - version truth, demonstrated.\nSOURCE: PEP 758 ('Allow except and except* expressions without parentheses'), accepted for Python 3.14 (peps.python.org/pep-0758); the chapter program except758_v1_0_0.py runs clean under the build's 3.14.6 and raises SyntaxError under 3.13 - both observed during this build.",
+   "bg": "light",
+   "take": "Language change is checkable - this slide ran on 3.14"
+  },
+  {
+   "kind": "section",
+   "title": "Working programs",
+   "sub": "Functions earning their keep",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.85,
+     "y": 2.95,
+     "w": 8.6,
+     "h": 1.9,
+     "cols": 3,
+     "fs": 14,
+     "subfs": 11,
+     "items": [
+      {
+       "label": "Collatz"
+      },
+      {
+       "label": "Input validation"
+      },
+      {
+       "label": "Annotations"
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: This branch collects the programs that the chapter uses to put its ideas to work. Two of them are short animation programs, zigzag and spike, which print lines of characters until the user stops them.\nFULL TEXT: course page, chapter 4 - Programs.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The unsolved problem in your homework",
+   "sub": "posed 1937; still open",
+   "items": [
+    {
+     "t": "beats",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 0.55,
+     "fs": 12.5,
+     "items": [
+      "Halve if even, triple-and-add-one if odd: Collatz (1937) says you always reach 1 - unproven since; Erdos offered 500 dollars"
+     ]
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 2.06,
+     "w": 9.0,
+     "h": 2.36,
+     "lines": [
+      "def collatz(number):",
+      "    if number % 2 == 0:",
+      "        result = number // 2",
+      "    else:",
+      "        result = 3 * number + 1",
+      "    print(result, end=' ')",
+      "    return result",
+      "number = int(input('Enter number: '))",
+      "print(number, end=' ')",
+      "while number != 1:",
+      "    number = collatz(number)",
+      "print()"
+     ],
+     "fs": 7.1,
+     "compact": true,
+     "out": "Enter number: 3\n3 10 5 16 8 4 2 1",
+     "outLabel": "prints",
+     "cap": "program collatz_v1_0_0.py, lines 1 to 12 of 12, run under Python 3.14.6",
+     "label": "the rule as a function, fed 3 - eight steps to 1"
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.52,
+     "w": 9.0,
+     "who": "Lothar Collatz; famously weighed by Paul Erdos",
+     "where": "Hamburg; the chapter's own collatz program",
+     "when": "posed 1937; still open",
+     "link": "https://en.wikipedia.org/wiki/Collatz_conjecture",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "STORY (posed 1937; still open): Take any positive integer: halve it if even, triple-and-add-one if odd, repeat. Lothar Collatz conjectured in 1937 that you always reach 1. Nobody has proved it; Paul Erdos said mathematics is not yet ripe for such questions and offered 500 dollars for a proof. The chapter's collatz program is this exact rule as a function - your homework walks a problem that has outlasted every mathematician since.\nSOURCE: The Collatz conjecture, posed 1937, open to this day; Erdos's remark and 500-dollar offer are standard in its literature - summarized with references at en.wikipedia.org/wiki/Collatz_conjecture. The chapter program collatz_v1_0_0.py implements the rule.",
+   "bg": "light",
+   "take": "A five-line function can hold an unsolved problem"
+  },
+  {
+   "kind": "content",
+   "title": "Validate at the door",
+   "sub": "A function that refuses bad input politely",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.9,
+     "h": 3.1,
+     "lines": [
+      "def collatz(number):",
+      "    result = number // 2 if number % 2 == 0 else 3 * number + 1",
+      "    print(result, end=' ')",
+      "    return result",
+      "while True:",
+      "    try:",
+      "        number = int(input('Enter number: '))",
+      "        break",
+      "    except ValueError:",
+      "        print('Please enter a whole number.')",
+      "print(number, end=' ')",
+      "while number != 1:",
+      "    number = collatz(number)",
+      "print()"
+     ],
+     "fs": 7.8,
+     "compact": true,
+     "out": "Enter number: puppy\nPlease enter a whole number.\nEnter number: 6\n6 3 10 5 16 8 4 2 1",
+     "outLabel": "prints",
+     "cap": "program validated_v1_0_0.py, lines 1 to 14 of 14, run under Python 3.14.6",
+     "label": "a retry loop - bad input, then good"
+    },
+    {
+     "t": "numlist",
+     "x": 5.75,
+     "y": 1.6,
+     "w": 3.75,
+     "h": 1.9,
+     "fs": 10.5,
+     "items": [
+      "Ask, check, re-ask - inside ONE function",
+      "The caller receives only a valid number",
+      "try/except from the last section does the checking"
+     ]
+    },
+    {
+     "t": "when",
+     "x": 5.75,
+     "y": 3.85,
+     "w": 3.75,
+     "body": "functions guard their own doors"
+    }
+   ],
+   "notes": "SAY: This branch collects the programs that the chapter uses to put its ideas to work. Two of them are short animation programs, zigzag and spike, which print lines of characters until the user stops them.\nASK: Move the while into the caller - what gets duplicated at every call site?\nFULL TEXT: course page, chapter 4 - Programs.",
+   "bg": "light",
+   "take": "Validation lives inside the function, so every caller inherits it"
+  },
+  {
+   "kind": "content",
+   "title": "Annotations: promises for readers and tools",
+   "sub": "And the 3.14 change underneath them",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 9.0,
+     "h": 2.1,
+     "lines": [
+      "import annotationlib",
+      "def parse(text: Document) -> Result:",
+      "    return text",
+      "print(parse('ok'))",
+      "try:",
+      "    parse.__annotations__",
+      "except NameError as error:",
+      "    print('NameError:', error)",
+      "print(sorted(annotationlib.get_annotations(parse, format=annotationlib.Format.FORWARDREF)))"
+     ],
+     "fs": 7.1,
+     "compact": true,
+     "out": "ok\nNameError: name 'Document' is not defined\n['return', 'text']",
+     "outLabel": "prints",
+     "cap": "program annotations_v1_0_0.py, lines 1 to 9 of 9, run under Python 3.14.6",
+     "label": "annotations evaluate lazily now - the forward name survives until you ASK for it"
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 3.95,
+     "w": 9.0,
+     "h": 0.55,
+     "fs": 12,
+     "items": [
+      "hints, not checks",
+      "tools and IDEs read them",
+      "3.14: deferred by default"
+     ]
+    }
+   ],
+   "notes": "SAY: This branch collects the programs that the chapter uses to put its ideas to work. Two of them are short animation programs, zigzag and spike, which print lines of characters until the user stops them.\nASK: Which line would a type checker flag here that Python itself never will?\nFULL TEXT: course page, chapter 4 - Programs, ModernPractice.",
+   "bg": "light",
+   "take": "Annotations document intent; 3.14 defers their cost"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in five lines",
+   "sub": "One line per part - each one provable from its slides",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.3,
+     "fs": 12.5,
+     "items": [
+      "def names a block; calls hand it values; return brings one back - or None, quietly",
+      "Defaults evaluate once: the remembered list is the trap, None-then-create the repair",
+      "Every call is a frame on the stack - Wheeler's 1952 bookkeeping, with a 1000-deep rail",
+      "Assignment is local unless declared; reading reaches outward - that is all of scope",
+      "try belongs where you can act; 3.14's except sheds parentheses, and this build ran it"
+     ]
+    }
+   ],
+   "notes": "SAY: Five lines, one per part; the agenda names the slides that prove each.\nASK: Which line would you defend first, and with which slide?\nFULL TEXT: course page, chapter 4 - every section.",
+   "take": "If a line feels unproven, its part's slides carry the receipt",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "The chapter's own checked sources - every entry a live link",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.45,
+     "fs": 10,
+     "groups": [
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, chapter 4 - free online",
+         "https://automatetheboringstuff.com/3e/chapter4.html"
+        ],
+        [
+         "The tutorial: defining functions",
+         "https://docs.python.org/3/tutorial/controlflow.html"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "Compound statements: def",
+         "https://docs.python.org/3/reference/compound_stmts.html"
+        ],
+        [
+         "Built-in functions",
+         "https://docs.python.org/3/library/functions.html"
+        ]
+       ]
+      },
+      {
+       "head": "Modern practice",
+       "rows": [
+        [
+         "PEP 758 - except without parentheses",
+         "https://peps.python.org/pep-0758/"
+        ],
+        [
+         "What's new in 3.14",
+         "https://docs.python.org/3/tutorial/controlflow.html"
+        ]
+       ]
+      },
+      {
+       "head": "History & puzzles",
+       "rows": [
+        [
+         "David Wheeler and the subroutine",
+         "https://en.wikipedia.org/wiki/David_Wheeler_(computer_scientist)"
+        ],
+        [
+         "The Collatz conjecture",
+         "https://en.wikipedia.org/wiki/Collatz_conjecture"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "SAY: Every link is a source the chapter corpus cites and checked - plus the two stories' own trails. Homework: give collatz a base-case twin that RETURNS the step count.\nASK: Who can explain the Wheeler jump with two bookmarks and a book?\nFULL TEXT: course page, chapter 4 - ModernPractice.",
+   "bg": "light",
+   "take": "Eight links, checked by the build - one of them is an unsolved problem"
+  },
+  {
+   "kind": "closing",
+   "title": "What you should now be able to say",
+   "sub": "And where each claim gets its proof",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 3.05,
+     "w": 8.8,
+     "h": 1.65,
+     "fs": 16,
+     "dark": true,
+     "items": [
+      "What def names, and what return hands back",
+      "Why the mutable default misbehaves, and the repair",
+      "Which x an assignment touches - and how to aim higher",
+      "Where try belongs, and what 3.14 changed about except"
+     ]
+    }
+   ],
+   "notes": "SAY: Four claims, each carried by a transcript you watched print - one of them only possible on 3.14. Next week: debugging - when the transcript surprises you.\nFULL TEXT: course page, chapter 4.",
+   "bg": "dark"
+  }
+ ]
+}
