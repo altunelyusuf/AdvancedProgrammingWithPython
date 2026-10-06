@@ -45,7 +45,7 @@ function drawProg(s,e){ codeLabel(s,e); s.addShape(pres.shapes.ROUNDED_RECTANGLE
     String(e.out).split('\n').forEach((ln,i,arr)=>{ runs.push({text:ln,options:{color:C.green,breakLine:i<arr.length-1}}); }); }
   else if(runs.length) runs[runs.length-1].options=Object.assign({},runs[runs.length-1].options,{breakLine:false});
   s.addText(runs,{x:e.x+0.2,y:e.y+0.13,w:e.w-0.4,h:e.h-0.26,fontFace:MONO,fontSize:e.fs,valign:'top',margin:0,isTextBox:true});
-  if(e.compact){ if(e.cap) s.addText(e.cap,{x:e.x+0.2,y:e.y+e.h-0.26,w:e.w-0.4,h:0.22,fontFace:B,fontSize:8,italic:true,color:'8B949E',align:'right',margin:0,isTextBox:true}); return; }
+  if(e.compact){ if(e.cap) s.addText(e.cap,{x:e.x+0.2,y:e.y+e.h-0.3,w:e.w-0.4,h:0.26,fontFace:B,fontSize:7.5,italic:true,color:'8B949E',align:'right',margin:0,isTextBox:true}); return; }
   let y=e.y+e.h+0.02;
   if(e.out){ s.addText([{text:'result  ',options:{color:C.orange,bold:true}},{text:e.out,options:{color:C.dark}}],
     {x:e.x,y:y,w:e.w,h:0.28,fontFace:MONO,fontSize:Math.max(9,e.fs),margin:0,valign:'middle',isTextBox:true}); y+=0.28; }
