@@ -1,0 +1,1565 @@
+{
+ "meta": {
+  "title": "Chapter 7: Dictionaries and Structuring Data",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "1.0.0",
+  "python": "3.14.6",
+  "total": 26
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Chapter 7: Dictionaries",
+   "sub": "Dictionaries and Structuring Data: pairs, counts, models and the text that carries them",
+   "items": [
+    {
+     "t": "code",
+     "x": 6.0,
+     "y": 0.9,
+     "w": 3.5,
+     "h": 0.8,
+     "fs": 11,
+     "cap": "run under Python 3.14.6",
+     "rows": [
+      [
+       "{'cat': 'Zophie'}['cat']",
+       "'Zophie'"
+      ]
+     ]
+    }
+   ],
+   "notes": "Chapters 1 to 6 worked with single values and with lists, where a position names an item. This chapter introduces the dictionary, where a name of your own choosing names an item, and then uses it to count letters, to group words, to model a chessboard and to write data down as text. Every example on these slides was run under Python 3.14.6 and the result printed beside it is the result Python gave.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Five parts; every range is a run of slides you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 6.3,
+     "h": 3.4,
+     "fs": 12.5,
+     "items": [
+      "The dictionary type and its keys (slides 3-9)",
+      "Loops, counting and grouping (slides 10-14)",
+      "Structuring data: the chessboard and the picnic (slides 15-19)",
+      "Copies and writing data down (slides 20-22)",
+      "Practice, summary and resources (slides 23-25)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "26",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "4",
+       "label": "true stories, each with who, where, when and a link"
+      },
+      {
+       "n": "20",
+       "label": "consoles and programs, all run before they were shown"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has five parts. It starts with the dictionary type and its keys, moves to loops, counting and grouping, then to structuring data with a chessboard and a picnic, then to copies and to writing data down, and ends with practice, a summary and further resources. The ranges name the exact slides, so you can return to the part you need, and four of the slides are true stories that explain where a feature of the language came from.",
+   "take": "Five parts, from one pair to a chessboard, all of it executed.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "The chapter's own competency questions; the summary comes back to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.35,
+     "w": 9.0,
+     "h": 2.95,
+     "fs": 11.5,
+     "items": [
+      "Which operations read, add, replace and remove the pairs of a dictionary, and what decides which of them a given problem calls for?",
+      "Which values may be keys, why must they be hashable, and which behaviours of the chapter's text differ in current Python (insertion order, the unhashable message, merge operators)?",
+      "How are counting, grouping and nesting solved with dictionaries, and when does each of the setdefault, Counter and defaultdict tools fit best?",
+      "How is a real thing modelled as a data structure, as the chessboard simulator does, and how is the structure displayed, copied and written down as text?",
+      "Which terms does the chapter use that a learner would have to look up, and which concept of the corpus explains each one?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 4.38,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 11.5,
+     "items": [
+      "7 branches",
+      "73 concepts",
+      "49 examples",
+      "Python 3.14.6"
+     ]
+    }
+   ],
+   "notes": "These five questions are the checklist for the chapter. The first asks what you can do to the pairs of a dictionary, the second asks what may serve as a key, the third asks how counting, grouping and nesting are solved, the fourth asks how a real thing is modelled and written down, and the fifth is about vocabulary. The chips below them give the size of the chapter: its branches, the concepts the course page explains, the worked examples and the Python they ran on. The summary slide answers every question in one line.",
+   "take": "Answer these five questions and you have the chapter.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The dictionary data type",
+   "sub": "A collection of key-value pairs, looked up by key",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 5.6,
+     "h": 1.48,
+     "rows": [
+      [
+       "my_cat = {'size': 'fat', 'color': 'gray', 'disposition': 'loud'}",
+       ""
+      ],
+      [
+       "my_cat['size']",
+       "'fat'"
+      ],
+      [
+       "'My cat has ' + my_cat['color'] + ' fur.'",
+       "'My cat has gray fur.'"
+      ],
+      [
+       "len(my_cat)",
+       "3"
+      ]
+     ],
+     "fs": 8.7,
+     "cap": "run under Python 3.14.6",
+     "label": "a dictionary is written in braces, and a key finds its value"
+    },
+    {
+     "t": "bullets",
+     "x": 0.5,
+     "y": 3.3600000000000003,
+     "w": 5.6,
+     "h": 1.5899999999999999,
+     "fs": 11.5,
+     "items": [
+      "Each pair joins a key to a value with a colon; the pairs sit in braces.",
+      "A key finds its value directly, however many pairs the dictionary holds.",
+      "Since Python 3.7 a dictionary also remembers the order in which keys were added."
+     ]
+    },
+    {
+     "t": "card",
+     "head": "A phone book",
+     "body": "The name is the key and the number beside it is the value. You look a person up by name and never ask which page they are on, and you do not care which entry was written first.",
+     "x": 6.4,
+     "y": 1.5,
+     "w": 3.1,
+     "h": 3.3,
+     "fs": 12
+    }
+   ],
+   "notes": "A dictionary stores pairs. The key is the part you look things up by, and the value is the part you want back. In the console on this slide the keys are the words size, color and disposition, and my_cat['size'] returns the value that was stored with the key size. A phone book is the everyday picture: you search by name, the name stands for the number, and the order in which people were added is not how you find them. The last bullet matters because older teaching, including the printed chapter, says a dictionary has no order, whereas every current Python keeps insertion order.",
+   "take": "A dictionary finds a value by its key, not by its position.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Dictionaries versus lists",
+   "sub": "Two containers, two ways to name an item",
+   "items": [
+    {
+     "t": "compare",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.3,
+     "h": 3.4,
+     "fs": 11.5,
+     "left": {
+      "head": "A list",
+      "rows": [
+       "Items are named by position: 0, 1, 2.",
+       "Two lists are equal only if the items come in the same order.",
+       "Use it for a sequence: the days of a week."
+      ]
+     },
+     "right": {
+      "head": "A dictionary",
+      "rows": [
+       "Items are named by a key you choose.",
+       "Two dictionaries are equal if they hold the same pairs, in any order.",
+       "Use it for a lookup: a birthday for each name."
+      ]
+     }
+    },
+    {
+     "t": "code",
+     "x": 5.1,
+     "y": 1.78,
+     "w": 4.4,
+     "h": 1.77,
+     "rows": [
+      [
+       "spam = ['cats', 'dogs', 'moose']",
+       ""
+      ],
+      [
+       "bacon = ['moose', 'dogs', 'cats']",
+       ""
+      ],
+      [
+       "spam == bacon",
+       "False"
+      ],
+      [
+       "eggs = {'name': 'Zophie', 'species': 'cat', 'age': '8'}",
+       ""
+      ],
+      [
+       "ham = {'age': '8', 'name': 'Zophie', 'species': 'cat'}",
+       ""
+      ],
+      [
+       "eggs == ham",
+       "True"
+      ],
+      [
+       "list(ham)",
+       "['age', 'name', 'species']"
+      ]
+     ],
+     "fs": 7.7,
+     "label": "lists compare by order, dictionaries do not"
+    },
+    {
+     "t": "card",
+     "head": "Equal, yet remembered",
+     "body": "eggs == ham is True, and list(ham) still shows the order of insertion.",
+     "x": 5.1,
+     "y": 3.65,
+     "w": 4.4,
+     "h": 1.3000000000000003,
+     "fs": 11
+    }
+   ],
+   "notes": "The comparison on the left is the difference to remember. A list is a row of boxes numbered from zero, so moving an item changes the list. A dictionary is a set of labelled drawers, so the same drawers in another order are still the same dictionary. The console on the right shows both facts: the two lists are not equal because their order differs, the two dictionaries are equal although their pairs were written in a different order, and the keys of the second one still come out in the order in which they were added.",
+   "take": "Dictionaries with the same pairs are equal, in any order.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Five words that gave dictionaries an order",
+   "sub": "2017-12-15",
+   "items": [
+    {
+     "t": "img",
+     "path": "../../03-materials/ch07/assets/photo_guido_van_rossum_2014.jpg",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 3.6,
+     "h": 2.4,
+     "cap": "Guido van Rossum - photo: Daniel Stroud, CC BY-SA 4.0"
+    },
+    {
+     "t": "beats",
+     "x": 4.4,
+     "y": 1.5,
+     "w": 5.1,
+     "h": 2.7,
+     "fs": 12,
+     "items": [
+      "Python 3.6 (2016): a compact dictionary happens to keep insertion order",
+      "It was a detail of CPython, not a promise of the language",
+      "15 December 2017: Guido van Rossum writes 'Make it so.'",
+      "From Python 3.7 the language guarantees insertion order"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Guido van Rossum, the creator of Python, on the python-dev mailing list",
+     "where": "the python-dev mailing list - and the dictionary section of the Python documentation",
+     "when": "2017-12-15",
+     "link": "https://mail.python.org/pipermail/python-dev/2017-December/151283.html",
+     "linkText": "mail.python.org"
+    }
+   ],
+   "notes": "Python 3.6, released in 2016, made dictionaries remember the order of insertion, but only as a detail of the CPython implementation. Its new compact layout followed a proposal by Raymond Hettinger and the dictionary design of the PyPy interpreter, and it used 20 to 25 percent less memory than Python 3.5. On 15 December 2017 Guido van Rossum settled the question for the whole language with 'Make it so. \"Dict keeps insertion order\" is the ruling. Thanks!' From Python 3.7 the language itself guarantees it. The chapter's sentence that a dictionary has no first item is the one thing in it that this ruling overtook. The account rests on these sources. Guido van Rossum, message to python-dev, 15 December 2017 (mail.python.org/pipermail/python-dev/2017-December/151283.html); What's New in Python 3.6, 'New dict implementation' (proposal by Raymond Hettinger, first implemented by PyPy; 20% to 25% less memory); What's New in Python 3.7 and the Python documentation of mapping types (order is insertion order since 3.7). Photo: Daniel Stroud, CC BY-SA 4.0, Wikimedia Commons.",
+   "take": "One ruling made insertion order part of the language.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Keys must be hashable",
+   "sub": "A key has to be a value that never changes",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 1.97,
+     "rows": [
+      [
+       "d = {}",
+       ""
+      ],
+      [
+       "d[(1, 2)] = 'a tuple can be a key'",
+       ""
+      ],
+      [
+       "d[[1, 2]] = 'a list cannot'",
+       "TypeError: cannot use 'list' as a dict key (unhashable type: 'list')"
+      ],
+      [
+       "{1: 'int', 1.0: 'float', True: 'bool'}",
+       "{1: 'bool'}"
+      ],
+      [
+       "hash('cat') == hash('cat')",
+       "True"
+      ]
+     ],
+     "fs": 11,
+     "cap": "run under Python 3.14.6",
+     "label": "a tuple is accepted as a key, a list is refused, and 1, 1.0 and True collide"
+    },
+    {
+     "t": "boxes",
+     "x": 0.5,
+     "y": 3.83,
+     "w": 9.0,
+     "h": 1.12,
+     "cols": 3,
+     "fs": 12,
+     "subfs": 10,
+     "accent": [],
+     "items": [
+      {
+       "label": "Hashable",
+       "sub": "int, float, str, bool, and tuples of these"
+      },
+      {
+       "label": "Not hashable",
+       "sub": "list, dict and set can change"
+      },
+      {
+       "label": "One key, three spellings",
+       "sub": "1, 1.0 and True are equal"
+      }
+     ]
+    }
+   ],
+   "notes": "A dictionary finds a key by computing a number from it, called its hash, and that number is only trustworthy if the key can never change. This is why a tuple works as a key and a list does not. Python 3.14 words the error as cannot use list as a dict key, and older versions said unhashable type list, so the wording on your machine may differ while the rule stays the same. The last console row shows a quirk: because 1, 1.0 and True are equal and hash alike, the dictionary keeps a single key, the first one written, and the last value assigned to it.",
+   "take": "Keys must never change, and 1, 1.0 and True are one key.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Reading a key",
+   "sub": "Test first, ask with a fallback, or add only if missing",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 5.6,
+     "h": 2.86,
+     "rows": [
+      [
+       "picnic = {'apples': 5, 'cups': 2}",
+       ""
+      ],
+      [
+       "'cups' in picnic",
+       "True"
+      ],
+      [
+       "'eggs' not in picnic",
+       "True"
+      ],
+      [
+       "picnic.get('eggs', 0)",
+       "0"
+      ],
+      [
+       "picnic['eggs']",
+       "KeyError: 'eggs'"
+      ],
+      [
+       "picnic.setdefault('eggs', 12)",
+       "12"
+      ],
+      [
+       "picnic",
+       "{'apples': 5, 'cups': 2, 'eggs': 12}"
+      ]
+     ],
+     "fs": 10.5,
+     "cap": "run under Python 3.14.6",
+     "label": "in, get(), a missing key, and setdefault()"
+    },
+    {
+     "t": "card",
+     "head": "A coat-check ticket",
+     "body": "Hand over a ticket you were given and you get your coat. A ticket never issued gets you a refusal, which is a KeyError. get() is the attendant who answers 'none' instead of refusing, and setdefault() hangs a new coat up when the ticket is new.",
+     "x": 6.4,
+     "y": 1.5,
+     "w": 3.1,
+     "h": 3.4,
+     "fs": 11.5
+    }
+   ],
+   "notes": "There are three ways to read a key that might not be there. The in operator asks whether the key exists and gives True or False. The get method returns the value or a default you supply, and it leaves the dictionary unchanged, so the 'eggs' lookup returns 0 and adds nothing. Square brackets raise a KeyError for a missing key, which you see in the console as KeyError: 'eggs', and setdefault stores a value only when the key is missing, then returns whatever the dictionary now holds for that key. The last row proves that setdefault changed the dictionary and get did not.",
+   "take": "Use get() when a missing key is normal.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Changing pairs",
+   "sub": "Add, replace, remove and merge",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 5.4,
+     "h": 2.58,
+     "rows": [
+      [
+       "spam = {'color': 'red', 'age': 42}",
+       ""
+      ],
+      [
+       "spam['name'] = 'Pooka'",
+       ""
+      ],
+      [
+       "del spam['age']",
+       ""
+      ],
+      [
+       "spam.pop('color')",
+       "'red'"
+      ],
+      [
+       "spam | {'age': 7}",
+       "{'name': 'Pooka', 'age': 7}"
+      ],
+      [
+       "spam",
+       "{'name': 'Pooka'}"
+      ],
+      [
+       "dict.fromkeys(['a', 'b'], 0)",
+       "{'a': 0, 'b': 0}"
+      ]
+     ],
+     "fs": 11,
+     "cap": "run under Python 3.14.6",
+     "label": "assign to add or replace, del and pop to remove, | to merge"
+    },
+    {
+     "t": "card",
+     "head": "What each line did",
+     "body": "spam['name'] = ... added a pair. del removed the age pair, and a missing key would raise a KeyError. pop() removed color and handed its value back. The | operator built a new dictionary from two, and where both have a key the right-hand value wins; spam itself did not change.",
+     "x": 6.2,
+     "y": 1.5,
+     "w": 3.3,
+     "h": 3.45,
+     "fs": 11.5
+    }
+   ],
+   "notes": "Assigning to a key does two jobs: it adds the pair if the key is new and replaces the value if the key already exists. The del statement and the pop method remove a pair, and pop also returns the value, which is handy when you want to use what you remove. Since Python 3.9 the | operator merges two dictionaries into a new one in which the right-hand side wins on a shared key, and |= does the same in place. The last row, dict.fromkeys, builds a dictionary from a list of keys with one starting value.",
+   "take": "Assignment adds or replaces, pop removes, and | merges.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A program that remembers: birthdays",
+   "sub": "The in test chooses between a lookup and a new pair",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 5.0,
+     "h": 2.83,
+     "lines": [
+      "birthdays = {'Alice': 'Apr 1', 'Bob': 'Dec 12',  # name -> birthday",
+      "             'Carol': 'Mar 4'}",
+      "",
+      "while True:",
+      "    print('Enter a name: (blank to quit)')",
+      "    name = input()",
+      "    if name == '':",
+      "        break",
+      "",
+      "    if name in birthdays:  # is the name one of the keys?",
+      "        print(birthdays[name] + ' is the birthday of ' + name)",
+      "    else:",
+      "        print('I do not have birthday information for ' + name)",
+      "        print('What is their birthday?')",
+      "        bday = input()",
+      "        birthdays[name] = bday  # a new key-value pair",
+      "        print('Birthday database updated.')"
+     ],
+     "fs": 7.8,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program birthdays_v1_0_0.py, lines 1 to 17 of 17"
+    },
+    {
+     "t": "prog",
+     "x": 5.6,
+     "y": 1.5,
+     "w": 3.9,
+     "h": 2.83,
+     "lines": [],
+     "fs": 8.1,
+     "compact": true,
+     "out": "Enter a name: (blank to quit)\nAlice\nApr 1 is the birthday of Alice\nEnter a name: (blank to quit)\nEve\nI do not have birthday information for Eve\nWhat is their birthday?\nDec 5\nBirthday database updated.\nEnter a name: (blank to quit)\nEve\nDec 5 is the birthday of Eve\nEnter a name: (blank to quit)",
+     "outLabel": "prints",
+     "label": "typed: Alice, Eve, Dec 5, Eve"
+    },
+    {
+     "t": "text",
+     "x": 0.5,
+     "y": 4.48,
+     "w": 9.0,
+     "h": 0.4700000000000001,
+     "fs": 12,
+     "body": "An unknown name is asked for its birthday and stored, so the next lookup of the same name succeeds."
+    }
+   ],
+   "notes": "This is the chapter's first whole program. The dictionary holds a birthday for each name, the in operator decides whether the name is known, and an unknown name is added with an assignment so that the next lookup succeeds. In the run on the right the typed names were Alice, Eve, Dec 5 and Eve, followed by an empty line that ends the loop. Eve was unknown the first time, so the program asked for her birthday and stored it, and the second time it answered from the dictionary. The data lives only as long as the program does, which is the reason for the last part of the chapter on writing data down.",
+   "take": "One in test and one assignment make a program that learns.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Views and loops",
+   "sub": "items() unpacks pairs, and keys() is a view that sees later changes",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 6.3,
+     "h": 2.19,
+     "lines": [
+      "spam = {'color': 'red', 'age': 42}",
+      "for k, v in spam.items():                      # each pass unpacks one (key, value) tuple",
+      "    print('Key: ' + str(k) + ' Value: ' + str(v))",
+      "keys = spam.keys()                             # a view, not a copy",
+      "spam['name'] = 'Pooka'",
+      "print(list(keys))                              # the view shows the later change",
+      "print(sorted(spam))                            # a sorted list of the keys",
+      "print(list(reversed(spam)))                    # newest key first"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "Key: color Value: red\nKey: age Value: 42\n['color', 'age', 'name']\n['age', 'color', 'name']\n['name', 'age', 'color']",
+     "outLabel": "prints",
+     "label": "program loops_v1_0_0.py, lines 1 to 8 of 8 - Python 3.14.6"
+    },
+    {
+     "t": "card",
+     "head": "A shop window",
+     "body": "A view is a window onto the shop, not a photograph of it. When the shelf changes, the window changes. A list() or sorted() is the photograph.",
+     "x": 7.0,
+     "y": 1.5,
+     "w": 2.5,
+     "h": 3.0,
+     "fs": 11
+    },
+    {
+     "t": "text",
+     "x": 0.5,
+     "y": 3.81,
+     "w": 6.3,
+     "h": 1.1400000000000001,
+     "fs": 11.5,
+     "body": "for k, v in d.items() gives each pair; sorted(d) is a new sorted list of keys; reversed(d) walks the newest key first."
+    }
+   ],
+   "notes": "Looping over a dictionary gives its keys, and the methods keys, values and items give views of the keys, the values and the pairs. A view is live: the program takes spam.keys() before adding the key name, and printing the view afterwards still shows name, because the view looks at the dictionary and not at a snapshot. When you want a snapshot, or a sorted order, wrap the view in list() or call sorted() on the dictionary. Python 3.8 added reversed() for dictionaries, which is why the last line prints the newest key first.",
+   "take": "A view follows the dictionary; list() and sorted() freeze it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Counting characters",
+   "sub": "setdefault() starts each count at 0, then one is added per character",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 6.1,
+     "h": 1.85,
+     "lines": [
+      "message = 'It was a bright cold day in April, and the clocks were striking thirteen.'",
+      "count = {}                                     # character -> how many times it was seen",
+      "",
+      "for character in message:",
+      "    count.setdefault(character, 0)             # make sure the key exists, starting at 0",
+      "    count[character] = count[character] + 1    # then add one",
+      "",
+      "print(count['c'], count[' '], count['A'])      # the book reads these three off its output",
+      "print(len(count), 'different characters in', sum(count.values()), 'characters')"
+     ],
+     "fs": 7.2,
+     "compact": true,
+     "out": "3 13 1\n23 different characters in 73 characters",
+     "outLabel": "prints",
+     "label": "program charcount_short_v1_0_0.py, lines 1 to 9 of 9 - Python 3.14.6"
+    },
+    {
+     "t": "chart",
+     "x": 6.7,
+     "y": 1.5,
+     "w": 2.8,
+     "h": 3.2,
+     "ctype": "bar",
+     "dataLabels": true,
+     "dlFs": 9,
+     "title": "Eight most common characters",
+     "labels": [
+      "' '",
+      "'t'",
+      "'i'",
+      "'r'",
+      "'e'",
+      "'a'",
+      "'n'",
+      "'s'"
+     ],
+     "series": [
+      {
+       "name": "count",
+       "data": [
+        13,
+        6,
+        6,
+        5,
+        5,
+        4,
+        4,
+        3
+       ]
+      }
+     ]
+    },
+    {
+     "t": "text",
+     "x": 0.5,
+     "y": 3.43,
+     "w": 6.1,
+     "h": 1.52,
+     "fs": 11,
+     "body": "Tally marks on paper: one stroke per sighting, one row per character, and the chart shows the longest rows."
+    }
+   ],
+   "notes": "Counting is the dictionary pattern you will use most. The key is the thing being counted, here a character, and the value is how many times it has been seen. The setdefault call makes sure the key exists with a count of zero, and the next line adds one. The program prints three counts that the chapter's output also shows, and then the number of different characters, 23, against the 73 characters of the message. The chart beside the code takes its eight tallest bars from the same message, counted by a Counter, and the space is the most common character.",
+   "take": "Counting by key turns any text into a table of totals.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The sentence the character counter counts",
+   "sub": "1949-06-08",
+   "items": [
+    {
+     "t": "img",
+     "path": "../../03-materials/ch07/assets/photo_george_orwell.jpg",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 2.0,
+     "h": 2.5
+    },
+    {
+     "t": "text",
+     "x": 2.9,
+     "y": 3.95,
+     "w": 6.6,
+     "h": 0.3,
+     "fs": 9,
+     "italic": true,
+     "color": "mute",
+     "body": "Photo: George Orwell's press card photo, 1943 - National Union of Journalists, public domain"
+    },
+    {
+     "t": "beats",
+     "x": 2.9,
+     "y": 1.5,
+     "w": 6.6,
+     "h": 2.4,
+     "fs": 12,
+     "items": [
+      "The message in the program is the first sentence of Nineteen Eighty-Four",
+      "Secker and Warburg published the novel in London on 8 June 1949",
+      "Counted by the program: 73 characters, 23 of them different",
+      "Thirteen spaces and three letters c, from the same table"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "George Orwell, published by Secker and Warburg",
+     "where": "London - the opening line of Nineteen Eighty-Four",
+     "when": "1949-06-08",
+     "link": "https://en.wikipedia.org/wiki/Nineteen_Eighty-Four",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "The message in characterCount.py, 'It was a bright cold day in April, and the clocks were striking thirteen.', is the opening line of George Orwell's novel Nineteen Eighty-Four, which Secker and Warburg published in London on 8 June 1949. Counting its 73 characters with a dictionary gives 23 different characters, 13 spaces and 3 letters c. The same table shows 6 letters t and one capital A, and the thirteen strokes of the clocks are what tells the reader at once that this world is wrong. The same few lines count the words of a whole novel. The account rests on these sources. George Orwell, Nineteen Eighty-Four (Secker and Warburg, London, 8 June 1949), first sentence; Al Sweigart, Automate the Boring Stuff with Python, 3rd edition (2025), chapter 7, characterCount.py. The counts are the output of the executed program of this chapter. Photo: Branch of the National Union of Journalists (1943), public domain, Wikimedia Commons.",
+   "take": "The lines that count one sentence count a whole novel.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Counter, defaultdict and grouping",
+   "sub": "setdefault() or defaultdict(list) groups words; Counter counts in one call",
+   "items": [
+    {
+     "t": "code",
+     "x": 6.9,
+     "y": 1.8,
+     "w": 2.6,
+     "h": 1.66,
+     "rows": [
+      [
+       "from collections import Counter",
+       ""
+      ],
+      [
+       "c = Counter('abracadabra')",
+       ""
+      ],
+      [
+       "c.most_common(2)",
+       "[('a', 5), ('b', 2)]"
+      ],
+      [
+       "c['a']",
+       "5"
+      ],
+      [
+       "c['z']",
+       "0"
+      ],
+      [
+       "sum(c.values())",
+       "11"
+      ]
+     ],
+     "fs": 7.1,
+     "cap": "run under Python 3.14.6",
+     "label": "Counter counts in one call"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.8,
+     "w": 6.3,
+     "h": 2.48,
+     "lines": [
+      "words = ['apple', 'avocado', 'banana', 'blueberry', 'cherry', 'apricot']",
+      "groups = {}                                    # first letter -> list of words",
+      "for word in words:",
+      "    groups.setdefault(word[0], []).append(word)   # create the list once, then append",
+      "for letter, found in groups.items():",
+      "    print(letter, found)",
+      "",
+      "from collections import defaultdict",
+      "same = defaultdict(list)                       # the same job, the missing key creates its list",
+      "for word in words:",
+      "    same[word[0]].append(word)",
+      "print(dict(same) == groups)"
+     ],
+     "fs": 7.1,
+     "compact": true,
+     "out": "a ['apple', 'avocado', 'apricot']\nb ['banana', 'blueberry']\nc ['cherry']\nTrue",
+     "outLabel": "prints",
+     "label": "program grouping_v1_0_0.py, lines 1 to 12 of 12 - Python 3.14.6"
+    },
+    {
+     "t": "text",
+     "x": 0.5,
+     "y": 4.38,
+     "w": 9.0,
+     "h": 0.57,
+     "fs": 11.5,
+     "body": "Pigeonholes: each word is slipped into the hole for its first letter, and a new hole appears when needed."
+    }
+   ],
+   "notes": "Two tools from the collections module remove the setdefault line. A Counter takes any iterable and returns a dictionary of counts, and its most_common method lists the biggest first. A missing key in a Counter reads as 0 instead of raising an error. The grouping program on the right solves a related problem, sorting words into lists by first letter, first with setdefault and then with a defaultdict, and its last line prints True because the two dictionaries are equal. Pigeonholes are the picture: each word goes into the hole labelled with its first letter.",
+   "take": "Counter counts, defaultdict groups, both create missing keys.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Modelling a real thing",
+   "sub": "A chessboard becomes a dictionary",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.8,
+     "w": 5.5,
+     "h": 1.68,
+     "rows": [
+      [
+       "board = {'h1': 'bK', 'c6': 'wQ', 'g2': 'bB', 'h5': 'bQ', 'e3': 'wK'}",
+       ""
+      ],
+      [
+       "'c6' in board",
+       "True"
+      ],
+      [
+       "board.get('a1', 'empty')",
+       "'empty'"
+      ],
+      [
+       "sorted(board)",
+       "['c6', 'e3', 'g2', 'h1', 'h5']"
+      ],
+      [
+       "len(board)",
+       "5"
+      ]
+     ],
+     "fs": 8.0,
+     "cap": "run under Python 3.14.6",
+     "label": "Figure 7-2's board as a dictionary"
+    },
+    {
+     "t": "img",
+     "path": "../../03-materials/ch07/assets/book_fig_000103.jpg",
+     "x": 6.3,
+     "y": 1.4,
+     "w": 2.9,
+     "h": 3.0,
+     "cap": "Sweigart (2025), Figure 7-2: the board that the dictionary describes"
+    },
+    {
+     "t": "text",
+     "x": 0.5,
+     "y": 3.8400000000000003,
+     "w": 5.5,
+     "h": 1.1099999999999999,
+     "fs": 11.5,
+     "body": "A square is a key such as 'c6'; the piece is the value, a colour letter and a piece letter."
+    }
+   ],
+   "notes": "To model a real thing you decide what the keys and the values are. For a chessboard the book uses the name of a square, such as c6, as the key and a two-letter piece, such as wQ for a white queen, as the value. Only occupied squares are stored, so an empty square is simply a key that is absent, which the console shows with board.get('a1', 'empty'). The figure is Figure 7-2 of Sweigart's chapter, used for teaching with its credit, and it shows the five pieces that the dictionary on the left describes.",
+   "take": "A good model stores only what is there.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The squares a1 to h8 are three centuries old",
+   "sub": "1730s; 1847; 1981",
+   "items": [
+    {
+     "t": "img",
+     "path": "../../03-materials/ch07/assets/photo_chess_staunton.jpg",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 3.6,
+     "h": 2.36,
+     "cap": "A Staunton chess set - photo: Wilfredor, CC0"
+    },
+    {
+     "t": "beats",
+     "x": 4.4,
+     "y": 1.5,
+     "w": 5.1,
+     "h": 2.7,
+     "fs": 12,
+     "items": [
+      "1730s: Philipp Stamma devises an early form of algebraic notation",
+      "1847: Howard Staunton describes the system in his handbook",
+      "1981: FIDE stops recognising descriptive notation",
+      "The program's keys 'a1' to 'h8' reuse that notation"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Philipp Stamma, Howard Staunton and FIDE",
+     "where": "the chess books of an eighteenth-century Syrian player, Staunton's London handbook, and the world chess federation",
+     "when": "1730s; 1847; 1981",
+     "link": "https://en.wikipedia.org/wiki/Algebraic_notation_(chess)",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "The dictionary keys 'a1' to 'h8' of the chessboard program are a data structure that chess players have used for almost three hundred years. An early form of algebraic notation was devised by the Syrian player Philipp Stamma in the 1730s. Howard Staunton described the system in his Chess-Player's Handbook in 1847, and German chess literature took it up in the nineteenth century. English-language books preferred descriptive notation for most of the twentieth century, until in 1981 FIDE stopped recognising it and algebraic notation became the international standard. The author's program simply turned an old notation into the keys of a Python dictionary. The account rests on these sources. 'Algebraic notation (chess)', Wikipedia, citing Stamma (1737), Staunton, The Chess-Player's Handbook (1847) and the FIDE decision of 1981; Al Sweigart, Automate the Boring Stuff with Python, 3rd edition (2025), chapter 7. Photo: Wilfredor, CC0, Wikimedia Commons.",
+   "take": "The best keys are often a notation people already use.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The board as a table",
+   "sub": "The starting position, drawn from the dictionary",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 5.4,
+     "rows": [
+      [
+       " ",
+       "a",
+       "b",
+       "c",
+       "d",
+       "e",
+       "f",
+       "g",
+       "h"
+      ],
+      [
+       "8",
+       "bR",
+       "bN",
+       "bB",
+       "bQ",
+       "bK",
+       "bB",
+       "bN",
+       "bR"
+      ],
+      [
+       "7",
+       "bP",
+       "bP",
+       "bP",
+       "bP",
+       "bP",
+       "bP",
+       "bP",
+       "bP"
+      ],
+      [
+       "6",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       ""
+      ],
+      [
+       "5",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       ""
+      ],
+      [
+       "4",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       ""
+      ],
+      [
+       "3",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       ""
+      ],
+      [
+       "2",
+       "wP",
+       "wP",
+       "wP",
+       "wP",
+       "wP",
+       "wP",
+       "wP",
+       "wP"
+      ],
+      [
+       "1",
+       "wR",
+       "wN",
+       "wB",
+       "wQ",
+       "wK",
+       "wB",
+       "wN",
+       "wR"
+      ]
+     ],
+     "colW": [
+      0.4,
+      0.625,
+      0.625,
+      0.625,
+      0.625,
+      0.625,
+      0.625,
+      0.625,
+      0.625
+     ],
+     "fs": 11,
+     "rowH": 0.37
+    },
+    {
+     "t": "stat",
+     "x": 6.3,
+     "y": 1.45,
+     "w": 3.2,
+     "h": 2.0,
+     "vert": true,
+     "items": [
+      {
+       "n": "32",
+       "label": "squares hold a piece, so 32 keys"
+      },
+      {
+       "n": "32",
+       "label": "squares have no key at all"
+      }
+     ]
+    },
+    {
+     "t": "card",
+     "head": "A seating chart",
+     "body": "It lists only the seats that someone occupies. Nobody writes 'empty' 32 times.",
+     "x": 6.3,
+     "y": 3.6,
+     "w": 3.2,
+     "h": 1.3,
+     "fs": 11
+    }
+   ],
+   "notes": "The table is not typed in; it was produced by looking up each of the 64 square names in the starting-position dictionary, and an empty cell means the lookup found no key. Of the 64 squares 32 hold a piece, so the dictionary has 32 keys and the other 32 squares do not appear in it. The dictionary is the model, and the table is only one way of displaying it, which is the point of keeping the data separate from the printing function. The book's program draws this same board as text in a terminal window.",
+   "take": "The dictionary is the data; the table is one view of it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Chess commands are dictionary operations",
+   "sub": "Every command of the simulator is one or two operations on the board",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.4,
+     "lines": [
+      "import copy",
+      "",
+      "STARTING_PIECES = {'a1': 'wR', 'e1': 'wK', 'e2': 'wP', 'd7': 'bP', 'e8': 'bK', 'h8': 'bR'}   # a small start position",
+      "board = copy.copy(STARTING_PIECES)             # a copy, so STARTING_PIECES stays intact",
+      "",
+      "board['e4'] = board['e2']                      # move e2 e4: copy the piece to the new key ...",
+      "del board['e2']                                #             ... then delete the old key",
+      "print('after move e2 e4:', sorted(board))",
+      "",
+      "del board['d7']                                # remove d7",
+      "board['d5'] = 'wP'                             # set d5 wP",
+      "print('after remove and set:', sorted(board))",
+      "",
+      "board = copy.copy(STARTING_PIECES)             # reset",
+      "print('after reset:', len(board), 'pieces, e2 holds', board['e2'])",
+      "board = {}                                     # clear",
+      "print('after clear:', len(board), 'pieces')"
+     ],
+     "fs": 7.8,
+     "compact": true,
+     "out": "after move e2 e4: ['a1', 'd7', 'e1', 'e4', 'e8', 'h8']\nafter remove and set: ['a1', 'd5', 'e1', 'e4', 'e8', 'h8']\nafter reset: 6 pieces, e2 holds wP\nafter clear: 0 pieces",
+     "outLabel": "prints",
+     "label": "program chessMoves_v1_0_0.py, lines 1 to 17 of 17 - Python 3.14.6"
+    }
+   ],
+   "notes": "The chapter's simulator accepts the commands move, remove, set, reset, clear and quit, and each one is a single dictionary operation or two. A move copies the piece to the new key and then deletes the old key, remove deletes a key, set assigns one, reset replaces the board with a copy of the starting position, and clear empties it. This short program drives the same operations without the text board so that you can see each effect in the printed list of keys. The copy in the reset line is important and it is the subject of slide 20.",
+   "take": "Moving a piece is copy-then-delete.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Nested dictionaries: the picnic",
+   "sub": "Dictionaries inside a dictionary hold records inside a record",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.47,
+     "lines": [
+      "all_guests = {'Alice': {'apples': 5, 'pretzels': 12},",
+      "              'Bob': {'ham sandwiches': 3, 'apples': 2},",
+      "              'Carol': {'cups': 3, 'apple pies': 1}}",
+      "",
+      "def total_brought(guests, item):",
+      "    num_brought = 0",
+      "    for k, v in guests.items():                    # k is a guest, v is that guest's dictionary",
+      "        num_brought = num_brought + v.get(item, 0)  # 0 when the guest brings none",
+      "    return num_brought",
+      "",
+      "print('Number of things being brought:')",
+      "print(' - Apples         ' + str(total_brought(all_guests, 'apples')))",
+      "print(' - Cups           ' + str(total_brought(all_guests, 'cups')))",
+      "print(' - Cakes          ' + str(total_brought(all_guests, 'cakes')))",
+      "print(' - Ham Sandwiches ' + str(total_brought(all_guests, 'ham sandwiches')))",
+      "print(' - Apple Pies     ' + str(total_brought(all_guests, 'apple pies')))"
+     ],
+     "fs": 7.6,
+     "compact": true,
+     "out": "Number of things being brought:\n - Apples         7\n - Cups           3\n - Cakes          0\n - Ham Sandwiches 3\n - Apple Pies     1",
+     "outLabel": "prints",
+     "label": "program guestpicnic_v1_0_0.py, lines 1 to 16 of 16 - Python 3.14.6"
+    }
+   ],
+   "notes": "A guest list is a dictionary of dictionaries: each guest is a key, and each guest's value is another dictionary of items and quantities. The function total_brought walks the guests and uses get with a default of zero, so a guest who brings none of an item simply adds nothing. The printed totals are 7 apples, 3 cups, no cakes, 3 ham sandwiches and 1 apple pie. A filing cabinet is the picture, with a folder for each guest and a sheet inside it for each kind of food.",
+   "take": "get() with a default keeps the picnic totals honest.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Copying: alias, shallow and deep",
+   "sub": "Changing an inner dictionary shows which copies share it",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.75,
+     "lines": [
+      "import copy",
+      "",
+      "original = {'Alice': {'apples': 5}, 'Bob': {'apples': 2}}",
+      "alias = original                               # no copy at all: a second name",
+      "shallow = copy.copy(original)                  # a new outer dictionary, the same inner ones",
+      "deep = copy.deepcopy(original)                 # new at every level",
+      "",
+      "original['Alice']['apples'] = 99               # change an inner dictionary",
+      "print(alias['Alice']['apples'])",
+      "print(shallow['Alice']['apples'])",
+      "print(deep['Alice']['apples'])",
+      "print(shallow['Alice'] is original['Alice'], deep['Alice'] is original['Alice'])"
+     ],
+     "fs": 8,
+     "compact": true,
+     "out": "99\n99\n5\nTrue False",
+     "outLabel": "prints",
+     "label": "program copying_v1_0_0.py, lines 1 to 12 of 12 - Python 3.14.6"
+    },
+    {
+     "t": "boxes",
+     "x": 0.5,
+     "y": 4.35,
+     "w": 9.0,
+     "h": 0.6199999999999998,
+     "cols": 3,
+     "fs": 11,
+     "subfs": 9.5,
+     "accent": [],
+     "items": [
+      {
+       "label": "Alias",
+       "sub": "two names for one person"
+      },
+      {
+       "label": "Shallow copy",
+       "sub": "shortcuts to the same files"
+      },
+      {
+       "label": "Deep copy",
+       "sub": "a full photocopy of everything"
+      }
+     ]
+    }
+   ],
+   "notes": "Three lines make three different things. The assignment alias = original creates no copy, it only gives the same dictionary a second name. The call copy.copy builds a new outer dictionary whose inner dictionaries are still the same objects, so changing an inner value is seen through the shallow copy, while copy.deepcopy copies every level. After the program changes an inner value to 99, the alias and the shallow copy print 99 and the deep copy still prints 5, and the last line prints True False, because the shallow copy shares the inner dictionary and the deep copy does not.",
+   "take": "A shallow copy shares inner dictionaries; deepcopy does not.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Writing data down and checking its shape",
+   "sub": "Text, tidy printing, typed records and patterns",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.75,
+     "w": 4.6,
+     "h": 1.97,
+     "rows": [
+      [
+       "import json, pprint, typing",
+       ""
+      ],
+      [
+       "cat = {'name': 'Zophie', 'age': 8}",
+       ""
+      ],
+      [
+       "json.dumps(cat)",
+       "'{\"name\": \"Zophie\", \"age\": 8}'"
+      ],
+      [
+       "json.loads('{\"cats\": [1, 2]}')",
+       "{'cats': [1, 2]}"
+      ],
+      [
+       "pprint.pformat({'b': 1, 'a': 2})",
+       "\"{'a': 2, 'b': 1}\""
+      ],
+      [
+       "Cat = typing.TypedDict('Cat', {'name': str, 'age': int})",
+       ""
+      ],
+      [
+       "type(Cat(name='Zophie', age=8))",
+       "<class 'dict'>"
+      ]
+     ],
+     "fs": 8,
+     "cap": "run under Python 3.14.6",
+     "label": "json, pprint and TypedDict in a console"
+    },
+    {
+     "t": "prog",
+     "x": 5.3,
+     "y": 1.75,
+     "w": 4.2,
+     "h": 1.43,
+     "lines": [
+      "cat = {'name': 'Zophie', 'age': 8}",
+      "match cat:   # keys are tested, values are bound",
+      "    case {'name': name, 'age': age} if age > 5:",
+      "        print(name, 'is a senior cat of', age)",
+      "    case {'name': name}:",
+      "        print(name, 'is a cat')"
+     ],
+     "fs": 8,
+     "compact": true,
+     "out": "Zophie is a senior cat of 8",
+     "outLabel": "prints",
+     "label": "program matching_v1_0_0.py, lines 1 to 6 of 6"
+    },
+    {
+     "t": "text",
+     "x": 5.3,
+     "y": 3.33,
+     "w": 4.2,
+     "h": 1.62,
+     "fs": 11.5,
+     "body": "The first case needs both keys and an age above 5; otherwise the second case matches."
+    },
+    {
+     "t": "text",
+     "x": 0.5,
+     "y": 4.08,
+     "w": 4.6,
+     "h": 0.8700000000000002,
+     "fs": 11.5,
+     "body": "TypedDict is checked by type checkers only: at run time Cat(...) is a plain dict."
+    }
+   ],
+   "notes": "A dictionary vanishes when the program ends, so it has to be turned into text to be saved or sent. The json module's dumps turns a dictionary into JSON text and loads turns it back, and pprint.pformat lays a big dictionary out tidily, with its keys sorted. The TypedDict describes which keys a record must have, but Python does not enforce it when the program runs, as the last row shows with its plain dict, and only a type checker complains. The match statement on the right tests a dictionary against a pattern and binds the values it finds, so the first case needs both keys and an age above 5.",
+   "take": "JSON carries a dictionary out of a program.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The notation that carries dictionaries",
+   "sub": "2001-04; 2017-12-13",
+   "items": [
+    {
+     "t": "img",
+     "path": "../../03-materials/ch07/assets/photo_douglas_crockford.jpg",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 3.6,
+     "h": 2.38,
+     "cap": "Douglas Crockford, 2013 - photo: Robert Claypool, CC0"
+    },
+    {
+     "t": "beats",
+     "x": 4.4,
+     "y": 1.5,
+     "w": 5.1,
+     "h": 2.7,
+     "fs": 12,
+     "items": [
+      "April 2001: Crockford and Morningstar send the first JSON message",
+      "December 2005: Yahoo offers some web services in JSON",
+      "13 December 2017: the IETF publishes JSON as RFC 8259",
+      "Python's json module converts a dictionary to that text and back"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Douglas Crockford and Chip Morningstar, State Software",
+     "where": "California - and json.org and the IETF's RFC 8259",
+     "when": "2001-04; 2017-12-13",
+     "link": "https://www.json.org/json-en.html",
+     "linkText": "json.org"
+    }
+   ],
+   "notes": "A dictionary exists only while its program runs, so something must carry it to another program. Douglas Crockford, who co-founded State Software in March 2001, and Chip Morningstar sent the first JSON message in April 2001, and json.org began in 2001 to describe the format. Yahoo offered some of its web services in JSON in December 2005. The IETF published JSON as RFC 8259, an Internet Standard, on 13 December 2017, two days before the Python ruling on dictionary order. Python's json module turns a dictionary into that text and back. The account rests on these sources. 'JSON', Wikipedia (first message April 2001; State Software founded March 2001; Yahoo, December 2005; RFC 8259, 13 December 2017); json.org; the Python json module documentation. Photo: Robert Claypool, CC0, Wikimedia Commons.",
+   "take": "JSON is how a dictionary leaves a program and comes back.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Practice: the fantasy game inventory",
+   "sub": "Display a dictionary of items, then add the dragon's loot to it",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 6.1,
+     "h": 3.22,
+     "lines": [
+      "stuff = {'rope': 1, 'torch': 6, 'gold coin': 42, 'dagger': 1, 'arrow': 12}",
+      "",
+      "def display_inventory(inventory):",
+      "    print('Inventory:')",
+      "    item_total = 0",
+      "    for k, v in inventory.items():             # key: the item, value: how many",
+      "        print(str(v) + ' ' + k)",
+      "        item_total = item_total + v",
+      "    print('Total number of items: ' + str(item_total))",
+      "",
+      "def add_to_inventory(inventory, added_items):",
+      "    for item in added_items:                   # the loot is a list and may repeat an item",
+      "        inventory.setdefault(item, 0)          # a new item starts at 0 ...",
+      "        inventory[item] = inventory[item] + 1  # ... and every sighting adds one",
+      "    return inventory",
+      "",
+      "display_inventory(stuff)",
+      "print()",
+      "inv = {'gold coin': 42, 'rope': 1}",
+      "dragon_loot = ['gold coin', 'dagger', 'gold coin', 'gold coin', 'ruby']",
+      "inv = add_to_inventory(inv, dragon_loot)",
+      "display_inventory(inv)"
+     ],
+     "fs": 7,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program inventory_v1_0_0.py, lines 1 to 22 of 22 - Python 3.14.6"
+    },
+    {
+     "t": "prog",
+     "x": 6.75,
+     "y": 1.5,
+     "w": 2.75,
+     "h": 3.22,
+     "lines": [],
+     "fs": 8.3,
+     "compact": true,
+     "out": "Inventory:\n1 rope\n6 torch\n42 gold coin\n1 dagger\n12 arrow\nTotal number of items: 62\n\nInventory:\n45 gold coin\n1 rope\n1 dagger\n1 ruby\nTotal number of items: 48",
+     "outLabel": "prints",
+     "label": "what the run printed"
+    }
+   ],
+   "notes": "The practice project of the chapter stores a player's items as a dictionary from the item name to the count. The first function prints each item and the total, which is 62 for the starting stuff, and the second function adds a list of loot to an inventory, using setdefault so that a new item starts at zero. The loot list repeats gold coin three times, so the inventory ends with 45 gold coins, since it started with 42, and 48 items in all. The chessboard validator project is on the course page, in the practice section.",
+   "take": "Each practice program reads a dictionary and applies a rule.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in five lines",
+   "sub": "One line for each question the chapter set",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.4,
+     "fs": 12,
+     "items": [
+      "Assign to add or replace a pair, and use del or pop to remove one, with get() when a missing key is normal.",
+      "A key must be hashable, so a tuple is welcome and a list is not, and dictionaries have kept insertion order since 3.7.",
+      "Counting and grouping take setdefault, Counter or defaultdict, and a view follows the dictionary while list() freezes it.",
+      "A chessboard is a dictionary of occupied squares, and a nested dictionary holds a record inside a record.",
+      "copy.copy shares the inner dictionaries, deepcopy does not, and JSON writes the data down as text."
+     ]
+    }
+   ],
+   "notes": "These five lines answer the five questions of slide 3, one each. The first line covers the operations on pairs, the second covers the rules for keys and the changes between the printed chapter and today's Python, and the third covers counting, grouping and views. The fourth is about modelling and nesting, and the fifth is about copying and writing data down. If a line feels unproven, the part of the route that carries it has the slides with the executed examples.",
+   "take": "If a line feels unproven, its slides hold the example.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Every link was opened on the day this deck was made",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.55,
+     "fs": 9.5,
+     "groups": [
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, chapter 7 - free online",
+         "https://automatetheboringstuff.com/3e/chapter7.html"
+        ],
+        [
+         "Python tutorial: data structures",
+         "https://docs.python.org/3/tutorial/datastructures.html"
+        ],
+        [
+         "Built-in types: dict and its views",
+         "https://docs.python.org/3/library/stdtypes.html"
+        ]
+       ]
+      },
+      {
+       "head": "Libraries",
+       "rows": [
+        [
+         "collections: Counter and defaultdict",
+         "https://docs.python.org/3/library/collections.html"
+        ],
+        [
+         "copy: shallow and deep copies",
+         "https://docs.python.org/3/library/copy.html"
+        ],
+        [
+         "json and pprint",
+         "https://docs.python.org/3/library/json.html"
+        ]
+       ]
+      },
+      {
+       "head": "History",
+       "rows": [
+        [
+         "Guido's ruling on dictionary order, 2017",
+         "https://mail.python.org/pipermail/python-dev/2017-December/151283.html"
+        ],
+        [
+         "PEP 584: merge operators for dict",
+         "https://peps.python.org/pep-0584/"
+        ],
+        [
+         "RFC 8259: the JSON standard",
+         "https://datatracker.ietf.org/doc/html/rfc8259"
+        ]
+       ]
+      },
+      {
+       "head": "Watch and try",
+       "rows": [
+        [
+         "Modern Dictionaries, Raymond Hettinger",
+         "https://www.youtube.com/watch?v=p33CVV29OG8"
+        ],
+        [
+         "Python Tutor: step through your code",
+         "https://pythontutor.com/"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Every link on this slide was opened on the day the deck was made. The textbook chapter is free to read online and has the chessboard and picnic programs, and the documentation links lead to the exact module of each library used today. The history links are for the curious: the python-dev message is the ruling that gave dictionaries their order, and the video is a talk by the core developer who proposed the compact layout. Python Tutor lets you step through a program and watch a dictionary change, which is the best way to understand the copying slide.",
+   "take": "Eleven links, each opened on the day this deck was built.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What you should now be able to say",
+   "sub": "Four claims, each carried by a result you saw printed",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 1.55,
+     "w": 8.8,
+     "h": 2.0,
+     "fs": 17,
+     "items": [
+      "A dictionary finds values by key, and keys must be hashable.",
+      "Counting and grouping are three lines with setdefault, or one with Counter.",
+      "A real thing becomes a dictionary of the parts that are there.",
+      "A shallow copy shares the inner dictionaries, and JSON writes the data down."
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.6,
+     "y": 4.1,
+     "w": 8.8,
+     "h": 0.6,
+     "fs": 13,
+     "big": true,
+     "items": [
+      "49 console rows run",
+      "9 programs run",
+      "4 true stories"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The next chapter moves on to strings and text editing.",
+   "take": "Questions are welcome; bring one example you could not predict.",
+   "bg": "light"
+  }
+ ]
+}

@@ -1,0 +1,1619 @@
+{
+ "meta": {
+  "title": "Chapter 6: Lists",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "2.0.0",
+  "python": "3.14.6",
+  "total": 0,
+  "redesign": "2026-10-08, to the chapter-1 v2.8.0 standard (CME materials look-and-feel v1.0.0), notes as reader's prose"
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Chapter 6: Lists",
+   "sub": "One ordered, changeable row of values",
+   "items": [
+    {
+     "t": "img",
+     "path": "../../03-materials/ch06/assets/book_fig_000100.jpg",
+     "x": 6.0,
+     "y": 1.15,
+     "w": 3.5,
+     "h": 2.12,
+     "cap": "a list is one value that holds numbered items - Sweigart, ATBS 3e, CC BY-NC-SA"
+    }
+   ],
+   "notes": "This deck teaches the list, the first container of Python: one value that holds many values in order and can be changed after it is made. Every console and program on the slides was executed under Python 3.14.6, and the deck checks re-ran them on the finished file, so a result shown here is a result Python printed. The full text of every slide is on the course page for chapter 6, and the four true stories on the slides carry their sources.",
+   "bg": "light",
+   "concept": ""
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Six parts; every number is a slide you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 6.4,
+     "h": 3.4,
+     "fs": 12,
+     "items": [
+      "Questions and the chapter map  (slides 3-4)",
+      "The list as a value - indexes, Dijkstra, slices  (slides 5-8)",
+      "Changing, combining, searching, ordering - and the eight ball  (slides 9-12)",
+      "Loops and unpacking - the removal trap  (slides 13-16)",
+      "Names and copies - aliasing, deep copies  (slides 17-19)",
+      "Random choices and programs - shuffle, rain, comma code, coin flips  (slides 20-23)",
+      "Summary, resources and what you can now say  (slides 24-26)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.15,
+     "y": 1.5,
+     "w": 2.35,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "26",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "4",
+       "label": "true stories, each with WHO / WHERE / WHEN / READ"
+      },
+      {
+       "n": "17",
+       "label": "consoles and programs, each with its result"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has six parts and ends with programs that the reader can follow line by line. One story is a note that a Dutch computer scientist wrote in 1982 about starting to count at zero, one is the fair shuffle of 1938 and 1964, one is a toy that answers questions from a list of twenty replies, and one is the green rain of a famous film. The part a reader expects to be hardest is names and copies, and it is worth marking now and checking again at the summary slide.",
+   "take": "Six parts - and at the end, programs you can read line by line",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "Its own competency questions - we return to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.4,
+     "fs": 12.5,
+     "items": [
+      "Which operations of the list data type read, replace, add, remove, find, order and combine items, and which of them change the list in place and which give a new value?",
+      "How do names, references, copies and function arguments decide whether a change to a list is seen elsewhere in a program, and when must a program copy?",
+      "Which printed outputs and error messages of the chapter differ in current Python, and which forms that current practice uses (enumerate, comprehensions, starred unpacking, sorted) does the chapter leave out?"
+     ]
+    }
+   ],
+   "notes": "The chapter is organised around three competency questions, and they are printed on this slide so that the reader can come back to them at the end. The first asks which list operations read, replace, add, remove, find, order and combine items, and which change the list in place. The second asks how names, copies and function arguments decide whether a change is seen elsewhere in a program. The third asks which printed outputs of the book differ in current Python and which modern forms the book leaves out. Each is answered by a range of slides in this deck, which the agenda names, and in full on the course page for chapter 6. As a question to think about, consider which of the three you could already answer from what you know about variables and strings.",
+   "bg": "light",
+   "concept": "",
+   "take": "If you can answer these three, chapter 6 is yours"
+  },
+  {
+   "kind": "content",
+   "title": "One chapter, six branches",
+   "sub": "The concept map the whole chapter hangs on",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.5,
+     "y": 1.75,
+     "w": 9.0,
+     "h": 2.95,
+     "cols": 3,
+     "fs": 13,
+     "subfs": 10.5,
+     "accent": [
+      4
+     ],
+     "items": [
+      {
+       "label": "The list data type",
+       "sub": "11 concepts"
+      },
+      {
+       "label": "Changing a list",
+       "sub": "14 concepts"
+      },
+      {
+       "label": "Searching and ordering",
+       "sub": "11 concepts"
+      },
+      {
+       "label": "Looping and unpacking",
+       "sub": "8 concepts"
+      },
+      {
+       "label": "Sequences and references",
+       "sub": "11 concepts"
+      },
+      {
+       "label": "Random choices and programs",
+       "sub": "8 concepts"
+      }
+     ]
+    }
+   ],
+   "notes": "A list is a value that contains multiple values in an ordered sequence. The chapter opens with the observation that lists and their cousin the tuple can hold many values, which makes it easier to write programs that handle large amounts of data, and that since lists can contain other lists they can arrange data in hierarchical structures (Sweigart, 2025). The count under each branch is how many concepts the course page explains for it; the deck walks the branches in order, and the fifth, names and copies, is the one that surprises most beginners. As a question to think about, consider why a chapter about a container needs a whole branch about names. The full explanation is on the course page, chapter 6, under Sequences and references and The list data type, in the concepts The list data type, Sequences and references.",
+   "bg": "light",
+   "concept": "ListModel",
+   "lede": "Six branches, from what a list is to the programs it makes possible; the deck follows them in order and stops at four true stories.",
+   "take": "Six branches - every slide today lives on this map"
+  },
+  {
+   "kind": "section",
+   "title": "The list as a value",
+   "sub": "Items, numbers from zero, and slices that cut out a part",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.85,
+     "y": 2.95,
+     "w": 5.3,
+     "h": 1.9,
+     "cols": 2,
+     "fs": 14,
+     "subfs": 11,
+     "items": [
+      {
+       "label": "A list"
+      },
+      {
+       "label": "Indexes"
+      },
+      {
+       "label": "Negative indexes"
+      },
+      {
+       "label": "Slices"
+      }
+     ]
+    },
+    {
+     "t": "img",
+     "path": "../../03-materials/ch06/assets/book_fig_000097.jpg",
+     "x": 6.4,
+     "y": 2.35,
+     "w": 3.2,
+     "h": 0.69,
+     "cap": "a list and its indexes - Sweigart, ATBS 3e, CC BY-NC-SA"
+    }
+   ],
+   "notes": "A list value is the list itself, as opposed to the values inside it. The chapter makes the distinction in its first sentences: the term list value refers to the list, which can be stored in a variable or passed to a function like any other value, and not to the values inside the list value (Sweigart, 2025). The picture is the book's own figure of a list and the four indexes that reach its items, which the next slides try out in a console. As a question to think about, consider what a row of four lockers would have to look like for the first one to be number zero. The full explanation is on the course page, chapter 6, under List values and Positions in a list, in the concepts List values, Positions in a list.",
+   "bg": "light",
+   "concept": "ListValues"
+  },
+  {
+   "kind": "content",
+   "title": "Indexes: a row of numbered lockers",
+   "sub": "spam[0] is the first item, spam[-1] the last, and an index past the end is an error",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.98,
+     "w": 5.4,
+     "h": 2.75,
+     "rows": [
+      [
+       "spam = ['cat', 'bat', 'rat', 'elephant']",
+       ""
+      ],
+      [
+       "spam[0]",
+       "'cat'"
+      ],
+      [
+       "spam[3]",
+       "'elephant'"
+      ],
+      [
+       "spam[-1]",
+       "'elephant'"
+      ],
+      [
+       "spam[-3]",
+       "'bat'"
+      ],
+      [
+       "len(spam)",
+       "4"
+      ],
+      [
+       "spam[10]",
+       "IndexError: list index out of range"
+      ]
+     ],
+     "fs": 10.4,
+     "cap": "run under Python 3.14.6",
+     "label": "one list read from the front, the back, and past its end"
+    },
+    {
+     "t": "img",
+     "path": "../../03-materials/ch06/assets/book_fig_000097.jpg",
+     "x": 6.15,
+     "y": 1.75,
+     "w": 3.35,
+     "h": 0.72
+    },
+    {
+     "t": "beats",
+     "x": 6.15,
+     "y": 2.75,
+     "w": 3.35,
+     "h": 2.15,
+     "fs": 10.5,
+     "items": [
+      "Think of a row of lockers numbered from zero: the first locker is number 0 and the last is one less than the count.",
+      "A negative index counts back from the end, so spam[-1] is always the last item.",
+      "An index at or past the length raises IndexError, as the last row shows."
+     ]
+    }
+   ],
+   "notes": "An index is the integer inside the square brackets that follow a list, and it names the position of the item to select. With spam holding ['cat', 'bat', 'rat', 'elephant'], spam[0] evaluates to 'cat', spam[1] to 'bat', and so on. Read the console from the top: the first four rows reach the same list from both ends, the fifth gives the length, and the last row is the error that an index past the end raises. As a question to think about, consider what spam[len(spam)] would give, and why the largest valid index is one less than the length. The full explanation is on the course page, chapter 6, under Positions in a list, in the concepts Index, Negative index.",
+   "bg": "light",
+   "concept": "Index",
+   "lede": "A list is a value in square brackets; each item has a number, and the numbers start at zero.",
+   "take": "Items are numbered from zero; negative numbers count from the end"
+  },
+  {
+   "kind": "content",
+   "title": "Why the first item is number zero",
+   "sub": "1982-08-11",
+   "items": [
+    {
+     "t": "img",
+     "path": "../../03-materials/ch06/assets/photo_edsger_dijkstra.jpg",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 2.95,
+     "h": 2.02,
+     "cap": "Dijkstra, 1994 - photo: A. F. Borchert, CC BY-SA 4.0"
+    },
+    {
+     "t": "beats",
+     "x": 3.75,
+     "y": 1.4,
+     "w": 5.75,
+     "h": 1.1,
+     "fs": 11,
+     "items": [
+      "11 August 1982: Dijkstra writes a note asking why numbering should start at zero",
+      "He chooses ranges that include the start and exclude the end",
+      "Then the difference of the bounds is the length, and neighbours meet without a gap"
+     ]
+    },
+    {
+     "t": "code",
+     "x": 3.75,
+     "y": 2.9,
+     "w": 5.75,
+     "h": 1.45,
+     "rows": [
+      [
+       "s = list(range(10))",
+       ""
+      ],
+      [
+       "s[2:5]",
+       "[2, 3, 4]"
+      ],
+      [
+       "len(s[2:5])",
+       "3"
+      ],
+      [
+       "s[0:3] + s[3:10] == s",
+       "True"
+      ]
+     ],
+     "fs": 9.1,
+     "cap": "run under Python 3.14.6",
+     "label": "Python's slices keep Dijkstra's convention"
+    },
+    {
+     "t": "when",
+     "x": 0.5,
+     "y": 3.95,
+     "w": 2.95,
+     "body": "start in, end out"
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.66,
+     "w": 9.0,
+     "who": "Edsger W. Dijkstra, Burroughs Research Fellow",
+     "where": "Nuenen, the Netherlands - note EWD831, kept in the University of Texas archive",
+     "when": "1982-08-11",
+     "link": "https://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD831.html",
+     "linkText": "cs.utexas.edu"
+    }
+   ],
+   "notes": "This is a true story, dated 1982-08-11. On 11 August 1982 Edsger Dijkstra, at home in Nuenen, wrote a short note called 'Why numbering should start at zero'. He asked how to write the numbers 2 to 12 without three dots, compared four ways of writing the bounds, and chose 2 <= i < 13: the difference of the bounds is the length, and two neighbouring ranges meet without a gap. For a sequence of N items the same choice gives 0 <= i < N, so an element's number equals the count of elements before it. The note was triggered by a mathematician who called young computing scientists pedantic for counting from zero. Python's spam[0] and spam[1:3] follow this convention. The console cuts items 2 to 5 out of a list of ten, finds that the slice has 5 minus 2 items, and shows that two neighbouring slices put together make the whole list again. The lesson of the story, in one sentence, is this. Counting from zero makes the index equal to the number of items before it. The sources are these. E. W. Dijkstra, 'Why numbering should start at zero', EWD831, Nuenen, 11 August 1982 (transcription at cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD831.html). Photo: Edsger Dijkstra, 1994, by Andreas F. Borchert, Wikimedia Commons, CC BY-SA 4.0.",
+   "bg": "light",
+   "concept": "Index"
+  },
+  {
+   "kind": "content",
+   "title": "Slices: a part of a list, as a new list",
+   "sub": "list[start:stop:step] - the stop is never included",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.98,
+     "w": 5.4,
+     "h": 2.75,
+     "rows": [
+      [
+       "spam = ['cat', 'bat', 'rat', 'elephant']",
+       ""
+      ],
+      [
+       "spam[1:3]",
+       "['bat', 'rat']"
+      ],
+      [
+       "spam[:2]",
+       "['cat', 'bat']"
+      ],
+      [
+       "spam[2:]",
+       "['rat', 'elephant']"
+      ],
+      [
+       "spam[::2]",
+       "['cat', 'rat']"
+      ],
+      [
+       "spam[::-1]",
+       "['elephant', 'rat', 'bat', 'cat']"
+      ],
+      [
+       "spam[:]",
+       "['cat', 'bat', 'rat', 'elephant']"
+      ],
+      [
+       "list(range(10))[::3]",
+       "[0, 3, 6, 9]"
+      ]
+     ],
+     "fs": 9.0,
+     "cap": "run under Python 3.14.6",
+     "label": "slices of one list: middle, front, back, every second, reversed"
+    },
+    {
+     "t": "beats",
+     "x": 6.15,
+     "y": 1.85,
+     "w": 3.35,
+     "h": 3.0,
+     "fs": 10.5,
+     "items": [
+      "Think of a ruler: the numbers mark the gaps between the items, and a slice takes what lies between two marks.",
+      "Leaving out the start or the stop means the beginning or the end of the list.",
+      "A step of -1 walks backwards, and spam[:] is a copy of the whole list.",
+      "A slice is a new list, so changing it never changes the original."
+     ]
+    }
+   ],
+   "notes": "A slice gets several values from a list in the form of a new list. It is entered between square brackets, like an index, but with two integers separated by a colon. Each row of the console cuts the same four-item list differently, and the last row applies a step of three to the numbers 0 to 9, which keeps 0, 3, 6 and 9. As a question to think about, consider how many items spam[1:3] holds, and how you could have known without running it. The full explanation is on the course page, chapter 6, under Slicing, in the concepts Slice, Omitted slice ends, Slice step.",
+   "bg": "light",
+   "concept": "Slice",
+   "lede": "A slice cuts a part out of a list and returns it as a new list; its first number is included and its second is not.",
+   "take": "A slice runs from the start up to, never including, the stop"
+  },
+  {
+   "kind": "content",
+   "title": "Replace, add, remove",
+   "sub": "One list changed in place, step by step - the same list the whole time",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.98,
+     "w": 6.0,
+     "h": 2.75,
+     "rows": [
+      [
+       "spam = ['cat', 'bat', 'rat', 'elephant']",
+       ""
+      ],
+      [
+       "spam[1] = 'aardvark'",
+       ""
+      ],
+      [
+       "spam.append('moose')",
+       ""
+      ],
+      [
+       "spam.insert(1, 'chicken')",
+       ""
+      ],
+      [
+       "spam",
+       "['cat', 'chicken', 'aardvark', 'rat', 'elephant', 'moose']"
+      ],
+      [
+       "spam.pop()",
+       "'moose'"
+      ],
+      [
+       "del spam[0]",
+       ""
+      ],
+      [
+       "spam.remove('rat')",
+       ""
+      ],
+      [
+       "spam",
+       "['chicken', 'aardvark', 'elephant']"
+      ]
+     ],
+     "fs": 10.5,
+     "cap": "run under Python 3.14.6",
+     "label": "six changes to one list, in order"
+    },
+    {
+     "t": "beats",
+     "x": 6.75,
+     "y": 1.85,
+     "w": 2.75,
+     "h": 3.0,
+     "fs": 10.5,
+     "items": [
+      "A list is like a shopping list in pencil: you may rewrite, add and cross out items.",
+      "append adds at the end and insert at a chosen place.",
+      "pop, del and remove all take items out; pop also hands the item back."
+     ]
+    }
+   ],
+   "notes": "Item assignment puts a variable name on the left of an assignment statement normally, as in spam = 42, but a list index can stand there instead: the assignment changes the value at that index (Sweigart, 2025). With spam holding ['cat', 'bat', 'rat', 'elephant'], the statement spam[1] = 'aardvark' means that the value at index 1 in the list spam is assigned the string 'aardvark', and the list becomes ['cat', 'aardvark', 'rat', 'elephant']. After each change the console shows the list or the value returned, so the order of the rows is the order in which the list changes. As a question to think about, consider which of the three ways to remove an item you would use when you know its position and which when you know its value. The full explanation is on the course page, chapter 6, under Adding items and Removing items and Replacing items, in the concepts Item assignment, append, insert, pop, remove.",
+   "bg": "light",
+   "concept": "ItemAssignment",
+   "lede": "Lists are mutable: these methods change the very list they are called on and return no new list, except pop, which returns the item removed.",
+   "take": "append, insert, pop, del and remove change the list itself"
+  },
+  {
+   "kind": "content",
+   "title": "Combine and search",
+   "sub": "+ and * build new lists; in and index look for a value",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.98,
+     "w": 4.4,
+     "h": 2.3,
+     "rows": [
+      [
+       "spam = [1, 2, 3]",
+       ""
+      ],
+      [
+       "spam + ['A', 'B']",
+       "[1, 2, 3, 'A', 'B']"
+      ],
+      [
+       "['X', 'Y'] * 3",
+       "['X', 'Y', 'X', 'Y', 'X', 'Y']"
+      ],
+      [
+       "spam += [4]",
+       ""
+      ],
+      [
+       "spam",
+       "[1, 2, 3, 4]"
+      ],
+      [
+       "spam.extend(['A', 'B'])",
+       ""
+      ],
+      [
+       "spam",
+       "[1, 2, 3, 4, 'A', 'B']"
+      ]
+     ],
+     "fs": 10.1,
+     "cap": "run under Python 3.14.6",
+     "label": "joining and repeating lists"
+    },
+    {
+     "t": "code",
+     "x": 5.1,
+     "y": 1.98,
+     "w": 4.4,
+     "h": 2.3,
+     "rows": [
+      [
+       "pets = ['Zophie', 'Pooka', 'Fat-tail', 'Pooka']",
+       ""
+      ],
+      [
+       "'Pooka' in pets",
+       "True"
+      ],
+      [
+       "'Cat' not in pets",
+       "True"
+      ],
+      [
+       "pets.index('Pooka')",
+       "1"
+      ],
+      [
+       "pets.index('Cat')",
+       "ValueError: list.index(x): x not in list"
+      ],
+      [
+       "[] and [][0] == 'cat'",
+       "[]"
+      ]
+     ],
+     "fs": 8.5,
+     "cap": "run under Python 3.14.6",
+     "label": "looking for a value in a list"
+    },
+    {
+     "t": "when",
+     "x": 0.5,
+     "y": 4.5,
+     "w": 9.0,
+     "body": "+ builds a new list; extend grows one; in asks whether; index asks where"
+    }
+   ],
+   "notes": "List concatenation joins two lists end to end with the plus operator. The expression [1, 2, 3] + ['A', 'B', 'C'] evaluates to [1, 2, 3, 'A', 'B', 'C']. On the left the plus sign gives a new list while extend changes the old one; on the right in answers True or False and index answers with a place, or with an error when the value is absent. As a question to think about, consider why an expression that begins with an empty list and the word and never reaches the index that would fail. The full explanation is on the course page, chapter 6, under Combining lists and Searching a list, in the concepts List concatenation, in and not in operators, index method.",
+   "bg": "light",
+   "concept": "Concatenation",
+   "lede": "Plus and times make new lists, while extend and plus-equals grow an existing one; in asks whether a value is there and index asks where.",
+   "take": "Use in to ask whether, index to ask where"
+  },
+  {
+   "kind": "content",
+   "title": "Order a list",
+   "sub": "sort changes the list; sorted returns a new one",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.98,
+     "w": 5.9,
+     "h": 2.75,
+     "rows": [
+      [
+       "nums = [2, 5, 3.14, 1, -7]",
+       ""
+      ],
+      [
+       "nums.sort()",
+       ""
+      ],
+      [
+       "nums",
+       "[-7, 1, 2, 3.14, 5]"
+      ],
+      [
+       "nums.sort(reverse=True)",
+       ""
+      ],
+      [
+       "nums",
+       "[5, 3.14, 2, 1, -7]"
+      ],
+      [
+       "sorted(['a', 'z', 'A', 'Z'])",
+       "['A', 'Z', 'a', 'z']"
+      ],
+      [
+       "sorted(['a', 'z', 'A', 'Z'], key=str.lower)",
+       "['a', 'A', 'z', 'Z']"
+      ],
+      [
+       "[1, 'a'].sort()",
+       "TypeError: '<' not supported between instances of 'str' and 'int'"
+      ]
+     ],
+     "fs": 9.2,
+     "cap": "run under Python 3.14.6",
+     "label": "numbers both ways, words two ways, a mixed list fails"
+    },
+    {
+     "t": "beats",
+     "x": 6.65,
+     "y": 1.85,
+     "w": 2.85,
+     "h": 3.0,
+     "fs": 10.5,
+     "items": [
+      "Think of a shelf of books: sort rearranges the books on the shelf, sorted makes a sorted copy of the list of titles.",
+      "Capital letters sort before small ones unless the key lowercases them.",
+      "Numbers and words cannot be compared, so sorting them together fails."
+     ]
+    }
+   ],
+   "notes": "You can sort lists of number values or lists of strings with the sort method. It returns the numbers in numerical order and the strings in alphabetical order; with spam holding [2, 5, 3.14, 1, -7], the call spam.sort() leaves [-7, 1, 2, 3.14, 5], and with ['Ants', 'Cats', 'Dogs', 'Badgers', 'Elephants'] it leaves ['Ants', 'Badgers', 'Cats', 'Dogs', 'Elephants'] (Sweigart, 2025). The first rows sort the numbers in place and then backwards, the next two rows show that plain sorting puts every capital letter before every small one and that the key argument repairs this, and the last row is the TypeError of a list that mixes a number and a word. As a question to think about, consider when you would choose sorted over sort. The full explanation is on the course page, chapter 6, under Ordering a list, in the concepts sort method, key and reverse arguments, sorted function.",
+   "bg": "light",
+   "concept": "SortMethod",
+   "lede": "sort rearranges the list it is called on and returns nothing; the sorted function leaves its argument alone and returns a new list.",
+   "take": "sort changes the list; sorted gives a new one"
+  },
+  {
+   "kind": "content",
+   "title": "Twenty answers in a toy, nine in the program",
+   "sub": "1946 (patent filed), 1950 (the eight-ball shape)",
+   "items": [
+    {
+     "t": "img",
+     "path": "../../03-materials/ch06/assets/photo_magic_8_ball.jpg",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 1.9,
+     "h": 1.9,
+     "cap": "'It is certain.' - photo: Zaneology, CC BY 2.0"
+    },
+    {
+     "t": "beats",
+     "x": 0.5,
+     "y": 3.75,
+     "w": 2.9,
+     "h": 0.8,
+     "fs": 10.5,
+     "items": [
+      "1946: Carter and Bookman invent it",
+      "20 answers inside, nine in the program"
+     ]
+    },
+    {
+     "t": "prog",
+     "x": 3.65,
+     "y": 1.45,
+     "w": 5.85,
+     "h": 2.9,
+     "lines": [
+      "import random",
+      "",
+      "# the answers live in a list, so adding an answer needs no new code",
+      "messages = ['It is certain', 'It is decidedly so', 'Yes definitely',",
+      "            'Reply hazy try again', 'Ask again later', 'Concentrate and ask again',",
+      "            'My reply is no', 'Outlook not so good', 'Very doubtful']",
+      "",
+      "random.seed(1946)  # fixed so every run shows the same three answers",
+      "for _ in range(3):",
+      "    print(messages[random.randint(0, len(messages) - 1)])  # a random index"
+     ],
+     "fs": 7.1,
+     "compact": true,
+     "out": "Reply hazy try again\nIt is decidedly so\nReply hazy try again",
+     "outLabel": "prints",
+     "cap": "program magic8ball_v1_0_0.py, lines 1 to 10 of 10, run under Python 3.14.6"
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.66,
+     "w": 9.0,
+     "who": "Albert C. Carter and Abe Bookman, Alabe Crafts of Cincinnati",
+     "where": "Cincinnati, Ohio - today made by Mattel",
+     "when": "1946 (patent filed), 1950 (the eight-ball shape)",
+     "link": "https://en.wikipedia.org/wiki/Magic_8_Ball",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "This is a true story, dated 1946 (patent filed), 1950 (the eight-ball shape). The Magic 8 Ball was invented in 1946 by Albert Carter and Abe Bookman, whose company Alabe Crafts in Cincinnati first sold it as a cylinder, and in 1950 made it the black-and-white eight ball we know. Inside, a twenty-sided die floats in dark blue liquid, and each face carries one answer: ten affirmative, five neutral and five negative. The chapter's program keeps nine of those answers, such as 'It is certain' and 'Very doubtful', in a Python list and prints one at a random index. A tenth answer needs no new code, which is the point of the list. On the slide, the program prints three of the nine answers at random indexes, with the random seed fixed so that every run shows the same three answers. The lesson of the story, in one sentence, is this. Put the answers in a list and the program need not change. The sources are these. Magic 8 Ball, Wikipedia (history, the 20 answers and their split); the answer list of the program in Sweigart (2025), chapter 6. Photo: the answer 'It is certain.' on a Magic 8 Ball, by Zaneology, Dallas, 2012, Wikimedia Commons, CC BY 2.0.",
+   "bg": "light",
+   "concept": "MagicEightBall"
+  },
+  {
+   "kind": "section",
+   "title": "Loops and unpacking",
+   "sub": "Walking a list, changing it safely, and giving its items names",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.85,
+     "y": 2.95,
+     "w": 5.3,
+     "h": 1.9,
+     "cols": 2,
+     "fs": 14,
+     "subfs": 11,
+     "items": [
+      {
+       "label": "range and len"
+      },
+      {
+       "label": "enumerate"
+      },
+      {
+       "label": "The removal trap"
+      },
+      {
+       "label": "Starred unpacking"
+      }
+     ]
+    },
+    {
+     "t": "img",
+     "path": "../../03-materials/ch06/assets/book_fig_000100.jpg",
+     "x": 6.4,
+     "y": 2.15,
+     "w": 3.2,
+     "h": 1.94,
+     "cap": "a list holds items; its indexes are labels on them - Sweigart, ATBS 3e, CC BY-NC-SA"
+    }
+   ],
+   "notes": "Technically, a for loop repeats its block once for each item in a list value (Sweigart, 2025). The group explains the four forms that matter in practice: the loop over the indexes, the loop that counts with enumerate, the loop that must not change its own list, and the comprehension that replaces a loop that builds a list. The picture is the book's figure of a list whose items each carry a numbered tag, which is what enumerate pairs with the items. As a question to think about, consider when you need the position of an item and when the item alone is enough. The full explanation is on the course page, chapter 6, under Looping over a list and Unpacking a list, in the concepts Looping over a list, Unpacking a list.",
+   "bg": "light",
+   "concept": "Looping"
+  },
+  {
+   "kind": "content",
+   "title": "Loop over a list",
+   "sub": "Item by item, or with the number beside each item",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.98,
+     "w": 6.3,
+     "h": 2.2,
+     "rows": [
+      [
+       "supplies = ['pens', 'staplers', 'flamethrowers', 'binders']",
+       ""
+      ],
+      [
+       "list(enumerate(supplies))",
+       "[(0, 'pens'), (1, 'staplers'), (2, 'flamethrowers'), (3, 'binders')]"
+      ],
+      [
+       "[len(s) for s in supplies]",
+       "[4, 8, 13, 7]"
+      ],
+      [
+       "[i for i in range(len(supplies)) if supplies[i] == 'binders']",
+       "[3]"
+      ]
+     ],
+     "fs": 9.4,
+     "cap": "run under Python 3.14.6",
+     "label": "enumerate pairs; a comprehension builds a new list"
+    },
+    {
+     "t": "chart",
+     "x": 7.0,
+     "y": 1.75,
+     "w": 2.5,
+     "h": 2.75,
+     "ctype": "bar",
+     "title": "Letters per name",
+     "dataLabels": true,
+     "dlFmt": "0",
+     "dlFs": 10,
+     "labels": [
+      "pens",
+      "staplers",
+      "flamethrowers",
+      "binders"
+     ],
+     "series": [
+      {
+       "name": "letters",
+       "data": [
+        4,
+        8,
+        13,
+        7
+       ]
+      }
+     ]
+    },
+    {
+     "t": "when",
+     "x": 0.5,
+     "y": 4.5,
+     "w": 6.3,
+     "body": "enumerate when you need the numbers"
+    }
+   ],
+   "notes": "Instead of the range(len(some_list)) technique, a program can call the enumerate function. On each iteration of the loop, enumerate returns two values: the index of the item in the list, and the item in the list itself (Sweigart, 2025). The bars are computed, not typed: the second console row is the list of lengths [4, 8, 13, 7] that gives their heights, and the first row shows the pairs that enumerate produces. As a question to think about, consider why enumerate is usually clearer than a loop over range(len(supplies)). The full explanation is on the course page, chapter 6, under Looping over a list, in the concepts enumerate function, Loop over the indexes, List comprehension.",
+   "bg": "light",
+   "concept": "EnumerateLoop",
+   "lede": "A for loop visits the items in order; enumerate adds each item's number, and a comprehension turns a loop into a new list.",
+   "take": "Loop over the items; ask enumerate when you also need the numbers"
+  },
+  {
+   "kind": "content",
+   "title": "Never remove from the list you loop over",
+   "sub": "Like taking chairs out of a row while you count along it",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.98,
+     "w": 5.3,
+     "h": 2.75,
+     "rows": [
+      [
+       "items = ['a', 'b', 'c', 'd']",
+       ""
+      ],
+      [
+       "[items.remove(x) for x in items]",
+       "[None, None]"
+      ],
+      [
+       "items",
+       "['b', 'd']"
+      ],
+      [
+       "squares = [x**2 for x in range(1, 7)]",
+       ""
+      ],
+      [
+       "squares",
+       "[1, 4, 9, 16, 25, 36]"
+      ],
+      [
+       "[x for x in range(10) if x % 2 == 0]",
+       "[0, 2, 4, 6, 8]"
+      ]
+     ],
+     "fs": 12,
+     "cap": "run under Python 3.14.6",
+     "label": "the loop skips items; a comprehension is safe"
+    },
+    {
+     "t": "chart",
+     "x": 6.0,
+     "y": 1.75,
+     "w": 3.5,
+     "h": 2.2,
+     "ctype": "bar",
+     "title": "The first six squares, from a comprehension",
+     "dataLabels": true,
+     "dlFmt": "0",
+     "dlFs": 10,
+     "labels": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6"
+     ],
+     "series": [
+      {
+       "name": "square",
+       "data": [
+        1,
+        4,
+        9,
+        16,
+        25,
+        36
+       ]
+      }
+     ]
+    },
+    {
+     "t": "when",
+     "x": 6.0,
+     "y": 4.15,
+     "w": 3.5,
+     "body": "build a new list instead"
+    }
+   ],
+   "notes": "Code that changes a list while a for loop is walking through that same list can be tricky to get right, as the tutorial warns, and the usual advice is to loop over a copy of the collection or to create a new collection (Python Software Foundation, 2026). The behaviour has a simple cause: the loop does not remember the items, it remembers a position, and it asks the list for the item at that position on every pass. The loop meant to remove all four letters removes only two and leaves b and d, because each removal moves the next item into the place the loop has just passed; the bars below the console show what a comprehension builds without touching the source. As a question to think about, consider what the loop would have left if the list had held six letters. The full explanation is on the course page, chapter 6, under Looping over a list, in the concepts Changing a list during a loop, List comprehension.",
+   "bg": "light",
+   "concept": "MutationWhileIterating",
+   "lede": "The loop meant to empty the list leaves two items behind, because the numbering shifts under it after every removal.",
+   "take": "Change a copy or build a new list; never edit what you are looping over"
+  },
+  {
+   "kind": "content",
+   "title": "Unpacking: names for the items",
+   "sub": "One assignment, several names - and a star that takes the rest",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.98,
+     "w": 5.6,
+     "h": 2.75,
+     "rows": [
+      [
+       "size, color, disposition = ['fat', 'gray', 'loud']",
+       ""
+      ],
+      [
+       "(size, color, disposition)",
+       "('fat', 'gray', 'loud')"
+      ],
+      [
+       "first, *rest = [1, 2, 3, 4]",
+       ""
+      ],
+      [
+       "(first, rest)",
+       "(1, [2, 3, 4])"
+      ],
+      [
+       "a, b = 'x', 'y'",
+       ""
+      ],
+      [
+       "a, b = b, a",
+       ""
+      ],
+      [
+       "(a, b)",
+       "('y', 'x')"
+      ],
+      [
+       "a, b = [1, 2, 3]",
+       "ValueError: too many values to unpack (expected 2, got 3)"
+      ]
+     ],
+     "fs": 9.9,
+     "cap": "run under Python 3.14.6",
+     "label": "names, a starred name, a swap, a wrong count"
+    },
+    {
+     "t": "beats",
+     "x": 6.35,
+     "y": 1.85,
+     "w": 3.15,
+     "h": 3.0,
+     "fs": 10.5,
+     "items": [
+      "Think of sorting a parcel into labelled pigeonholes: one item for each name.",
+      "The star name takes every item the others leave, as a list.",
+      "a, b = b, a swaps two values without a helper variable.",
+      "With too few or too many names Python raises ValueError."
+     ]
+    }
+   ],
+   "notes": "The multiple assignment trick, technically called tuple unpacking, is a shortcut that lets you assign multiple variables with the values in a list in one line of code (Sweigart, 2025). Instead of writing size = cat[0], color = cat[1] and disposition = cat[2], the program writes size, color, disposition = cat, with cat holding ['fat', 'gray', 'loud']. The first two rows give three names to three items; the starred row gives first one item and rest the other three; the swap exchanges two values; and the last row is the ValueError of a count that does not match. As a question to think about, consider how many items a starred name receives when the list has exactly as many items as the other names. The full explanation is on the course page, chapter 6, under Unpacking a list, in the concepts Multiple assignment trick, Starred unpacking.",
+   "bg": "light",
+   "concept": "MultipleAssignment",
+   "lede": "Unpacking assigns each item of a list to its own name in one statement; one starred name may collect the remaining items.",
+   "take": "Match names to items, or star one name to take the rest"
+  },
+  {
+   "kind": "section",
+   "title": "Names and copies",
+   "sub": "A list is one thing with many possible name tags",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.85,
+     "y": 2.95,
+     "w": 5.3,
+     "h": 1.9,
+     "cols": 2,
+     "fs": 14,
+     "subfs": 11,
+     "items": [
+      {
+       "label": "Mutable and immutable"
+      },
+      {
+       "label": "Aliasing"
+      },
+      {
+       "label": "Arguments"
+      },
+      {
+       "label": "Shallow and deep"
+      }
+     ]
+    },
+    {
+     "t": "img",
+     "path": "../../03-materials/ch06/assets/book_fig_000098.jpg",
+     "x": 6.4,
+     "y": 2.15,
+     "w": 3.2,
+     "h": 1.13,
+     "cap": "a name is a tag on a value - Sweigart, ATBS 3e, CC BY-NC-SA"
+    }
+   ],
+   "notes": "A common metaphor is that variables are boxes that store values, but this explanation is a simplification of what Python does. A better metaphor is that variables are paper name tags attached to values with string (Sweigart, 2025). The picture is the book's figure of a number with a name tag and then two tags, which shows that assignment attaches a tag to a value and does not copy the value. As a question to think about, consider what the third panel of the picture says happens to the old value when spam receives a new one. The full explanation is on the course page, chapter 6, under Names and references and Sequence types, in the concepts Names and references, Sequence types.",
+   "bg": "light",
+   "concept": "References"
+  },
+  {
+   "kind": "content",
+   "title": "Two names, one list",
+   "sub": "eggs = spam copies the tag, not the list - and a function receives the same list",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.98,
+     "w": 5.4,
+     "h": 2.75,
+     "rows": [
+      [
+       "spam = [0, 1, 2, 3]",
+       ""
+      ],
+      [
+       "eggs = spam",
+       ""
+      ],
+      [
+       "eggs[1] = 'Hello!'",
+       ""
+      ],
+      [
+       "spam",
+       "[0, 'Hello!', 2, 3]"
+      ],
+      [
+       "eggs is spam",
+       "True"
+      ],
+      [
+       "change = lambda p: p.append('Hello')",
+       ""
+      ],
+      [
+       "nums = [1, 2, 3]",
+       ""
+      ],
+      [
+       "change(nums)",
+       ""
+      ],
+      [
+       "nums",
+       "[1, 2, 3, 'Hello']"
+      ]
+     ],
+     "fs": 11.3,
+     "cap": "run under Python 3.14.6",
+     "label": "a change seen through two names, and through a parameter"
+    },
+    {
+     "t": "img",
+     "path": "../../03-materials/ch06/assets/book_fig_000099.jpg",
+     "x": 6.1,
+     "y": 1.75,
+     "w": 3.4,
+     "h": 1.07,
+     "cap": "the book's figure of two tags on one list"
+    },
+    {
+     "t": "beats",
+     "x": 6.1,
+     "y": 3.25,
+     "w": 3.4,
+     "h": 1.65,
+     "fs": 10.5,
+     "items": [
+      "Think of two keys to one locker: opening it with either shows the same contents.",
+      "A function that changes its list parameter changes the caller's list."
+     ]
+    }
+   ],
+   "notes": "When you assign 42 to the variable spam, you are creating the 42 value in the computer's memory and storing a reference to it in the variable. When you copy the value in spam and assign it to eggs, you are copying the reference; both variables refer to the same 42 (Sweigart, 2025). After eggs receives the new item spam shows it too and the is operator confirms that both names point at one list; the last four rows show that a function which appends to its parameter changes the list the caller passed. As a question to think about, consider what a program must do when it needs to change a list without the caller seeing the change. The full explanation is on the course page, chapter 6, under Names and references, in the concepts Aliasing, Lists as function arguments.",
+   "bg": "light",
+   "concept": "Aliasing",
+   "lede": "Assigning a list to another name attaches a second tag to the same list, so a change through either name is seen through both.",
+   "take": "Assignment copies the name, not the list"
+  },
+  {
+   "kind": "content",
+   "title": "Copies: shallow and deep",
+   "sub": "A list of lists needs a deep copy - and [[0] * 3] * 2 is the classic trap",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.98,
+     "w": 5.6,
+     "h": 2.75,
+     "rows": [
+      [
+       "import copy",
+       ""
+      ],
+      [
+       "grid = [[1, 2], [3, 4]]",
+       ""
+      ],
+      [
+       "shallow = copy.copy(grid)",
+       ""
+      ],
+      [
+       "deep = copy.deepcopy(grid)",
+       ""
+      ],
+      [
+       "grid[0][0] = 99",
+       ""
+      ],
+      [
+       "shallow[0][0]",
+       "99"
+      ],
+      [
+       "deep[0][0]",
+       "1"
+      ],
+      [
+       "board = [[0] * 3] * 2",
+       ""
+      ],
+      [
+       "board[0][0] = 9",
+       ""
+      ],
+      [
+       "board",
+       "[[9, 0, 0], [9, 0, 0]]"
+      ]
+     ],
+     "fs": 10.4,
+     "cap": "run under Python 3.14.6",
+     "label": "a shallow copy shares the inner lists; deepcopy does not"
+    },
+    {
+     "t": "beats",
+     "x": 6.35,
+     "y": 1.85,
+     "w": 3.15,
+     "h": 3.0,
+     "fs": 10.5,
+     "items": [
+      "Think of photocopying a folder: a shallow copy copies the folder, but the pages inside are still the originals.",
+      "copy.deepcopy copies the pages too, however deeply they are nested.",
+      "Repeating a list of lists with * repeats the reference, so every row is the same row."
+     ]
+    }
+   ],
+   "notes": "The function copy.copy can make a duplicate copy of a mutable value like a list. After import copy, spam = ['A', 'B', 'C'] and cheese = copy.copy(spam), the assignment cheese[1] = 42 changes the copy and leaves spam as ['A', 'B', 'C'], while cheese becomes ['A', 42, 'C']. After the first change the shallow copy shows 99 in the inner list it shares with the original, while the deep copy still shows 1; the last three rows show that two rows made by repetition change together. As a question to think about, consider how you would build a grid of three rows of three zeros that does not share its rows. The full explanation is on the course page, chapter 6, under Copying lists and Names and references, in the concepts Shallow copy, Deep copy, Repeating a list of lists.",
+   "bg": "light",
+   "concept": "ShallowCopy",
+   "lede": "A shallow copy duplicates only the outer list, so the inner lists are shared with the original; a deep copy duplicates every level.",
+   "take": "Copy nested lists with deepcopy, and never repeat them with *"
+  },
+  {
+   "kind": "content",
+   "title": "A fair shuffle with a pencil, then with a computer",
+   "sub": "1938 (pencil and paper), 1964 (computer version)",
+   "items": [
+    {
+     "t": "img",
+     "path": "../../03-materials/ch06/assets/photo_ronald_fisher.jpg",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 2.0,
+     "h": 2.38,
+     "cap": "Fisher, 1952 - B. Eagel, CC BY-SA 4.0"
+    },
+    {
+     "t": "beats",
+     "x": 3.0,
+     "y": 1.45,
+     "w": 6.5,
+     "h": 1.0,
+     "fs": 11,
+     "items": [
+      "1938: Fisher and Yates print a pencil-and-paper shuffle",
+      "1964: Durstenfeld's computer version, still behind random.shuffle",
+      "Fair: every order equally likely, so about 1000 each in 6000 deals"
+     ]
+    },
+    {
+     "t": "code",
+     "x": 3.0,
+     "y": 2.78,
+     "w": 4.4,
+     "h": 1.65,
+     "rows": [
+      [
+       "import random",
+       ""
+      ],
+      [
+       "from collections import Counter",
+       ""
+      ],
+      [
+       "random.seed(1938)",
+       ""
+      ],
+      [
+       "cards = list('abc')",
+       ""
+      ],
+      [
+       "deal = lambda: (random.shuffle(cards), ''.join(cards))[1]",
+       ""
+      ],
+      [
+       "c = Counter(deal() for _ in range(6000))",
+       ""
+      ],
+      [
+       "sorted(c)",
+       "['abc', 'acb', 'bac', 'bca', 'cab', 'cba']"
+      ],
+      [
+       "[c[k] - 1000 for k in sorted(c)]",
+       "[-29, -27, 9, 14, 45, -12]"
+      ]
+     ],
+     "fs": 7.1,
+     "cap": "run under Python 3.14.6",
+     "label": "six thousand shuffles of three cards"
+    },
+    {
+     "t": "chart",
+     "x": 7.45,
+     "y": 2.45,
+     "w": 2.05,
+     "h": 2.1,
+     "ctype": "bar",
+     "title": "Deals above or below 1000",
+     "dataLabels": true,
+     "dlFmt": "0",
+     "dlFs": 8,
+     "labels": [
+      "abc",
+      "acb",
+      "bac",
+      "bca",
+      "cab",
+      "cba"
+     ],
+     "series": [
+      {
+       "name": "deals above or below 1000",
+       "data": [
+        -29,
+        -27,
+        9,
+        14,
+        45,
+        -12
+       ]
+      }
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.66,
+     "w": 9.0,
+     "who": "Ronald Fisher and Frank Yates (1938); Richard Durstenfeld (1964); Donald Knuth (popularised)",
+     "where": "the statistical tables of Oliver and Boyd, Edinburgh and London; Communications of the ACM",
+     "when": "1938 (pencil and paper), 1964 (computer version)",
+     "link": "https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "This is a true story, dated 1938 (pencil and paper), 1964 (computer version). In 1938 Ronald Fisher and Frank Yates printed a pencil-and-paper way to put numbers into random order in their book of statistical tables. In 1964 Richard Durstenfeld published a computer version in the Communications of the ACM, which swaps each item with a randomly chosen one that is not behind it, and Donald Knuth described it in his series on algorithms. The method gives every order the same chance. It is what Python's random.shuffle still does: its source walks the list from the end and swaps each place with a random place at or before it. The console deals three cards six thousand times, counts how often each of the six possible orders appears and subtracts the expected one thousand; the largest difference is 45 deals in six thousand, which is what a fair shuffle gives, and the bars show the six differences. The lesson of the story, in one sentence, is this. A shuffle is only fair if every order is equally likely. The sources are these. R. A. Fisher and F. Yates, Statistical Tables for Biological, Agricultural and Medical Research (Oliver and Boyd, 1938); R. Durstenfeld, 'Algorithm 235: Random permutation', Communications of the ACM 7(7), 1964, p. 420; D. E. Knuth, The Art of Computer Programming, vol. 2 (Algorithm P); CPython's Lib/random.py. Photo: Ronald Aylmer Fisher, 1952, by Barry Eagel, Wikimedia Commons, CC BY-SA 4.0.",
+   "bg": "light",
+   "concept": "RandomShuffle"
+  },
+  {
+   "kind": "content",
+   "title": "The green rain that was never a code",
+   "sub": "1999 (film), 2017 (the designer's remark)",
+   "items": [
+    {
+     "t": "img",
+     "path": "../../03-materials/ch06/assets/book_fig_000101.jpg",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 3.4,
+     "h": 2.06,
+     "cap": "the screensaver program run in a console - Sweigart, ATBS 3e, CC BY-NC-SA"
+    },
+    {
+     "t": "beats",
+     "x": 0.5,
+     "y": 3.85,
+     "w": 3.4,
+     "h": 0.7,
+     "fs": 10,
+     "items": [
+      "1999: film glyphs by Simon Whiteley",
+      "The screensaver is a list of counters"
+     ]
+    },
+    {
+     "t": "prog",
+     "x": 4.1,
+     "y": 1.45,
+     "w": 5.4,
+     "h": 2.9,
+     "lines": [
+      "import random",
+      "random.seed(7)  # fixed, so the rain falls the same way each run",
+      "WIDTH = 20",
+      "counters = [0] * WIDTH  # rows of rain still to draw in each column",
+      "for row in range(5):",
+      "    line = ''",
+      "    for col in range(WIDTH):",
+      "        if counters[col] == 0 and random.random() < 0.25:",
+      "            counters[col] = random.randint(2, 4)  # a new stream",
+      "        line += random.choice('01') if counters[col] > 0 else ' '",
+      "        counters[col] = max(0, counters[col] - 1)",
+      "    print(line.rstrip())"
+     ],
+     "fs": 7.6,
+     "compact": true,
+     "out": "00 0110   10 0    0\n 00 1111   0011   01\n100 11 1   1 00   11\n110 1100   0 1    11\n1 00 01 1  0",
+     "outLabel": "prints",
+     "cap": "program matrix_v1_0_0.py, lines 1 to 12 of 12, run under Python 3.14.6"
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.66,
+     "w": 9.0,
+     "who": "Simon Whiteley, who designed the glyphs for The Matrix",
+     "where": "the film The Matrix (1999) - and an interview with CNET on 19 October 2017",
+     "when": "1999 (film), 2017 (the designer's remark)",
+     "link": "https://en.wikipedia.org/wiki/Matrix_digital_rain",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "This is a true story, dated 1999 (film), 2017 (the designer's remark). The falling green characters of the film The Matrix (1999) come from a typeface that Simon Whiteley designed: mirrored half-width Japanese kana, Latin letters and numerals. In a 2017 CNET interview he joked that the code was made from the sushi recipes of his wife's cookbooks, a story that others have since questioned. The chapter's screensaver imitates the rain with a list of 70 counters, one per column: a counter above zero prints a random 0 or 1 and counts down, and a counter at zero prints a space. The effect is a whole animation made from one list. The program keeps one counter per column in a list: a counter above zero prints a random digit and counts down, and a counter at zero prints a space, so streams of digits start and end on their own. The lesson of the story, in one sentence, is this. A list of counters can animate a screen. The sources are these. Matrix digital rain, Wikipedia (designer, glyphs, the 2017 CNET interview); the screensaver program in Sweigart (2025), chapter 6. Image: Figure 6-5 of Sweigart (2025), the chapter's own screensaver running in a console window, CC BY-NC-SA.",
+   "bg": "light",
+   "concept": "MatrixScreensaver"
+  },
+  {
+   "kind": "content",
+   "title": "Comma Code: a list into a sentence",
+   "sub": "One function, four lists - including the two awkward short ones",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.98,
+     "w": 5.9,
+     "h": 2.7,
+     "lines": [
+      "def list_to_text(items):",
+      "    # fewer than three items need no commas",
+      "    if len(items) < 3:",
+      "        return ' and '.join(items)",
+      "    return ', '.join(items[:-1]) + ', and ' + items[-1]  # slice off the last",
+      "",
+      "tests = [['apples', 'bananas', 'tofu', 'cats'], ['tea', 'toast'], ['spam'], []]",
+      "for t in tests:",
+      "    print(repr(list_to_text(t)))"
+     ],
+     "fs": 7.6,
+     "compact": true,
+     "out": "'apples, bananas, tofu, and cats'\n'tea and toast'\n'spam'\n''",
+     "outLabel": "prints",
+     "cap": "program commacode_v1_0_0.py, lines 1 to 9 of 9, run under Python 3.14.6"
+    },
+    {
+     "t": "beats",
+     "x": 6.65,
+     "y": 1.85,
+     "w": 2.85,
+     "h": 3.0,
+     "fs": 10.5,
+     "items": [
+      "Think of reading a shopping list aloud: commas between the items and an 'and' before the last.",
+      "items[:-1] slices off the last item, and items[-1] is that item.",
+      "Fewer than three items need no commas at all."
+     ]
+    }
+   ],
+   "notes": "The first practice program of the chapter asks for a function that takes a list value as an argument and returns a string with all the items separated by a comma and a space, with and inserted before the last item. For the list ['apples', 'bananas', 'tofu', 'cats'] the function returns 'apples, bananas, tofu, and cats'. The function joins everything but the last item with commas and then adds the word and and the last item; the four transcripts show the usual case, the two-item case, the one-item case and the empty list. As a question to think about, consider which of the four test lists would fail if the function always put a comma before the and. The full explanation is on the course page, chapter 6, under Programs with lists and Slicing, in the concepts Comma Code, Slice.",
+   "bg": "light",
+   "concept": "CommaCode",
+   "lede": "A slice and a join turn any list into an English phrase; the program is tested on four lists, including the empty one.",
+   "take": "Slices and join turn a list into a sentence"
+  },
+  {
+   "kind": "content",
+   "title": "Coin Flip Streaks: a simulation with lists",
+   "sub": "10,000 experiments of 100 flips each - how often does six in a row appear?",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.98,
+     "w": 6.0,
+     "h": 2.85,
+     "lines": [
+      "import random",
+      "random.seed(6)  # fixed so the estimate is the same on every run",
+      "streaks = 0",
+      "for experiment in range(10000):",
+      "    flips = [random.choice('HT') for _ in range(100)]  # one experiment",
+      "    run = longest = 1",
+      "    for i in range(1, 100):",
+      "        run = run + 1 if flips[i] == flips[i - 1] else 1  # extend or restart",
+      "        longest = max(longest, run)",
+      "    if longest >= 6:",
+      "        streaks += 1",
+      "print('Chance of a streak of 6: %s %%' % (100 * streaks / 10000))"
+     ],
+     "fs": 7.9,
+     "compact": true,
+     "out": "Chance of a streak of 6: 81.48 %",
+     "outLabel": "prints",
+     "cap": "program coinstreaks_v1_0_0.py, lines 1 to 12 of 12, run under Python 3.14.6"
+    },
+    {
+     "t": "beats",
+     "x": 6.75,
+     "y": 1.85,
+     "w": 2.75,
+     "h": 3.0,
+     "fs": 10.5,
+     "items": [
+      "Think of flipping a coin until your arm tires: most people expect six in a row to be rare.",
+      "Each experiment is a list of 100 random choices of H or T.",
+      "The estimate, about 81 in 100, shows that long streaks are normal."
+     ]
+    }
+   ],
+   "notes": "The second practice program is an experiment. If you flip a coin 100 times and write down an H for each heads and a T for each tails, you create a list like T T T T H H H H T T. Each pass of the outer loop makes one list of a hundred flips and the inner loop walks along it, extending the current run when two neighbours are equal and restarting it otherwise; the single line printed is the percentage of experiments whose longest run reached six. As a question to think about, consider why the fixed random seed matters if you want to compare two versions of the program. The full explanation is on the course page, chapter 6, under Programs with lists and Random selection and ordering, in the concepts Coin Flip Streaks, random.choice.",
+   "bg": "light",
+   "concept": "CoinFlipStreaks",
+   "lede": "The program flips a coin 100 times, looks for a run of six equal results in the list, and repeats the experiment 10,000 times.",
+   "take": "A list of random choices lets you measure what intuition guesses"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in five lines",
+   "sub": "One line per part - each one provable from its slides",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.3,
+     "fs": 12.5,
+     "items": [
+      "A list is one value holding many items in order; its numbers start at zero, negative numbers count from the end, and a slice returns a new list",
+      "A list changes in place: assign, append, insert, pop, del, remove; sort orders it, and sorted returns an ordered copy",
+      "Loop over the items, ask enumerate for the numbers, never remove from the list you are looping over, and unpack items into names",
+      "Assignment copies a name, not a list: two names can reach one list, a function can change its caller's list, and nested lists need deepcopy",
+      "random.choice and random.shuffle make lists the heart of programs: an eight ball, a screensaver, a comma sentence and a simulation"
+     ]
+    }
+   ],
+   "notes": "These five lines are the deck in miniature, one per part, and each of them is carried by a range of slides that the agenda names. A line that feels unproven should send the reader back to its consoles, because every result in it was executed. The full text behind all five lines is on the course page for chapter 6.",
+   "bg": "light",
+   "concept": "",
+   "take": "If a line feels unproven, its part's slides carry the receipt"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Checked 2026-10-08; every entry is a live link in this file",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.45,
+     "fs": 10,
+     "groups": [
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "This chapter, free online",
+         "https://automatetheboringstuff.com/3e/chapter6.html"
+        ],
+        [
+         "Python tutorial: data structures",
+         "https://docs.python.org/3/tutorial/datastructures.html"
+        ],
+        [
+         "Sorting Techniques - the official HOWTO",
+         "https://docs.python.org/3/howto/sorting.html"
+        ]
+       ]
+      },
+      {
+       "head": "Standards and documentation",
+       "rows": [
+        [
+         "copy - shallow and deep copy operations",
+         "https://docs.python.org/3/library/copy.html"
+        ],
+        [
+         "PEP 3132 - extended iterable unpacking",
+         "https://peps.python.org/pep-3132/"
+        ],
+        [
+         "random - pseudo-random numbers",
+         "https://docs.python.org/3/library/random.html"
+        ]
+       ]
+      },
+      {
+       "head": "Watch and try",
+       "rows": [
+        [
+         "Facts and myths about Python names and values",
+         "https://nedbatchelder.com/text/names.html"
+        ],
+        [
+         "Python Tutor - draw your list and its names",
+         "https://pythontutor.com/"
+        ]
+       ]
+      },
+      {
+       "head": "The stories",
+       "rows": [
+        [
+         "Dijkstra, why numbering should start at zero",
+         "https://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD831.html"
+        ],
+        [
+         "The Fisher-Yates shuffle",
+         "https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Everything here is free to read, and every link was opened on the date in the subtitle. A good exercise is to paste the aliasing console of this deck into Python Tutor and watch the two name tags arrive on one list, and then to read the official sorting guide for the key argument. The course page for chapter 6 carries the full resource list with a sentence on why each entry is there.",
+   "bg": "light",
+   "concept": "",
+   "take": "Draw your lists in Python Tutor and watch the names"
+  },
+  {
+   "kind": "closing",
+   "title": "What you should now be able to say",
+   "sub": "And where each claim gets its proof",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 3.05,
+     "w": 8.8,
+     "h": 1.65,
+     "fs": 16,
+     "dark": true,
+     "items": [
+      "What a list holds, and how indexes and slices reach it",
+      "Which methods change a list in place and which return a new one",
+      "Why two names can reach one list, and when a program must copy",
+      "How a list drives an eight ball, a screensaver and a simulation"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by consoles and programs that ran on a slide of this deck. The course page for chapter 6 carries every word behind them, the four stories with their sources, and the question bank to test the four claims on yourself.",
+   "bg": "dark",
+   "concept": ""
+  }
+ ]
+}

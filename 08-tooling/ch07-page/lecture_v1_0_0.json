@@ -1,0 +1,189 @@
+{
+ "_version": "1.0.0",
+ "_deck": "1.0.0",
+ "_python": "3.14.6",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 7: Dictionaries",
+   "say": "Chapters 1 to 6 worked with single values and with lists, where a position names an item. This chapter introduces the dictionary, where a name of your own choosing names an item, and then uses it to count letters, to group words, to model a chessboard and to write data down as text. Every example on these slides was run under Python 3.14.6 and the result printed beside it is the result Python gave.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "Today's route",
+   "say": "The route has five parts. It starts with the dictionary type and its keys, moves to loops, counting and grouping, then to structuring data with a chessboard and a picnic, then to copies and to writing data down, and ends with practice, a summary and further resources. The ranges name the exact slides, so you can return to the part you need, and four of the slides are true stories that explain where a feature of the language came from.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "The questions this chapter answers",
+   "say": "These five questions are the checklist for the chapter. The first asks what you can do to the pairs of a dictionary, the second asks what may serve as a key, the third asks how counting, grouping and nesting are solved, the fourth asks how a real thing is modelled and written down, and the fifth is about vocabulary. The chips below them give the size of the chapter: its branches, the concepts the course page explains, the worked examples and the Python they ran on. The summary slide answers every question in one line.",
+   "concept": "DictionaryModel",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "The dictionary data type",
+   "say": "A dictionary stores pairs. The key is the part you look things up by, and the value is the part you want back. In the console on this slide the keys are the words size, color and disposition, and my_cat['size'] returns the value that was stored with the key size. A phone book is the everyday picture: you search by name, the name stands for the number, and the order in which people were added is not how you find them. The last bullet matters because older teaching, including the printed chapter, says a dictionary has no order, whereas every current Python keeps insertion order.",
+   "concept": "DictionaryType",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "Dictionaries versus lists",
+   "say": "The comparison on the left is the difference to remember. A list is a row of boxes numbered from zero, so moving an item changes the list. A dictionary is a set of labelled drawers, so the same drawers in another order are still the same dictionary. The console on the right shows both facts: the two lists are not equal because their order differs, the two dictionaries are equal although their pairs were written in a different order, and the keys of the second one still come out in the order in which they were added.",
+   "concept": "ListContrast",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "Five words that gave dictionaries an order",
+   "say": "Python 3.6, released in 2016, made dictionaries remember the order of insertion, but only as a detail of the CPython implementation. Its new compact layout followed a proposal by Raymond Hettinger and the dictionary design of the PyPy interpreter, and it used 20 to 25 percent less memory than Python 3.5. On 15 December 2017 Guido van Rossum settled the question for the whole language with 'Make it so. \"Dict keeps insertion order\" is the ruling. Thanks!' From Python 3.7 the language itself guarantees it. The chapter's sentence that a dictionary has no first item is the one thing in it that this ruling overtook. The account rests on these sources. Guido van Rossum, message to python-dev, 15 December 2017 (mail.python.org/pipermail/python-dev/2017-December/151283.html); What's New in Python 3.6, 'New dict implementation' (proposal by Raymond Hettinger, first implemented by PyPy; 20% to 25% less memory); What's New in Python 3.7 and the Python documentation of mapping types (order is insertion order since 3.7). Photo: Daniel Stroud, CC BY-SA 4.0, Wikimedia Commons.",
+   "concept": "InsertionOrder",
+   "visual": ""
+  },
+  {
+   "n": 7,
+   "title": "Keys must be hashable",
+   "say": "A dictionary finds a key by computing a number from it, called its hash, and that number is only trustworthy if the key can never change. This is why a tuple works as a key and a list does not. Python 3.14 words the error as cannot use list as a dict key, and older versions said unhashable type list, so the wording on your machine may differ while the rule stays the same. The last console row shows a quirk: because 1, 1.0 and True are equal and hash alike, the dictionary keeps a single key, the first one written, and the last value assigned to it.",
+   "concept": "HashableKeys",
+   "visual": ""
+  },
+  {
+   "n": 8,
+   "title": "Reading a key",
+   "say": "There are three ways to read a key that might not be there. The in operator asks whether the key exists and gives True or False. The get method returns the value or a default you supply, and it leaves the dictionary unchanged, so the 'eggs' lookup returns 0 and adds nothing. Square brackets raise a KeyError for a missing key, which you see in the console as KeyError: 'eggs', and setdefault stores a value only when the key is missing, then returns whatever the dictionary now holds for that key. The last row proves that setdefault changed the dictionary and get did not.",
+   "concept": "GetMethod",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "Changing pairs",
+   "say": "Assigning to a key does two jobs: it adds the pair if the key is new and replaces the value if the key already exists. The del statement and the pop method remove a pair, and pop also returns the value, which is handy when you want to use what you remove. Since Python 3.9 the | operator merges two dictionaries into a new one in which the right-hand side wins on a shared key, and |= does the same in place. The last row, dict.fromkeys, builds a dictionary from a list of keys with one starting value.",
+   "concept": "UpdateAndMerge",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "A program that remembers: birthdays",
+   "say": "This is the chapter's first whole program. The dictionary holds a birthday for each name, the in operator decides whether the name is known, and an unknown name is added with an assignment so that the next lookup succeeds. In the run on the right the typed names were Alice, Eve, Dec 5 and Eve, followed by an empty line that ends the loop. Eve was unknown the first time, so the program asked for her birthday and stored it, and the second time it answered from the dictionary. The data lives only as long as the program does, which is the reason for the last part of the chapter on writing data down.",
+   "concept": "BirthdayLookup",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "Views and loops",
+   "say": "Looping over a dictionary gives its keys, and the methods keys, values and items give views of the keys, the values and the pairs. A view is live: the program takes spam.keys() before adding the key name, and printing the view afterwards still shows name, because the view looks at the dictionary and not at a snapshot. When you want a snapshot, or a sorted order, wrap the view in list() or call sorted() on the dictionary. Python 3.8 added reversed() for dictionaries, which is why the last line prints the newest key first.",
+   "concept": "Views",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "Counting characters",
+   "say": "Counting is the dictionary pattern you will use most. The key is the thing being counted, here a character, and the value is how many times it has been seen. The setdefault call makes sure the key exists with a count of zero, and the next line adds one. The program prints three counts that the chapter's output also shows, and then the number of different characters, 23, against the 73 characters of the message. The chart beside the code takes its eight tallest bars from the same message, counted by a Counter, and the space is the most common character.",
+   "concept": "CharacterCount",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "The sentence the character counter counts",
+   "say": "The message in characterCount.py, 'It was a bright cold day in April, and the clocks were striking thirteen.', is the opening line of George Orwell's novel Nineteen Eighty-Four, which Secker and Warburg published in London on 8 June 1949. Counting its 73 characters with a dictionary gives 23 different characters, 13 spaces and 3 letters c. The same table shows 6 letters t and one capital A, and the thirteen strokes of the clocks are what tells the reader at once that this world is wrong. The same few lines count the words of a whole novel. The account rests on these sources. George Orwell, Nineteen Eighty-Four (Secker and Warburg, London, 8 June 1949), first sentence; Al Sweigart, Automate the Boring Stuff with Python, 3rd edition (2025), chapter 7, characterCount.py. The counts are the output of the executed program of this chapter. Photo: Branch of the National Union of Journalists (1943), public domain, Wikimedia Commons.",
+   "concept": "CounterClass",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "Counter, defaultdict and grouping",
+   "say": "Two tools from the collections module remove the setdefault line. A Counter takes any iterable and returns a dictionary of counts, and its most_common method lists the biggest first. A missing key in a Counter reads as 0 instead of raising an error. The grouping program on the right solves a related problem, sorting words into lists by first letter, first with setdefault and then with a defaultdict, and its last line prints True because the two dictionaries are equal. Pigeonholes are the picture: each word goes into the hole labelled with its first letter.",
+   "concept": "GroupingIntoLists",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "Modelling a real thing",
+   "say": "To model a real thing you decide what the keys and the values are. For a chessboard the book uses the name of a square, such as c6, as the key and a two-letter piece, such as wQ for a white queen, as the value. Only occupied squares are stored, so an empty square is simply a key that is absent, which the console shows with board.get('a1', 'empty'). The figure is Figure 7-2 of Sweigart's chapter, used for teaching with its credit, and it shows the five pieces that the dictionary on the left describes.",
+   "concept": "DataStructureModel",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "The squares a1 to h8 are three centuries old",
+   "say": "The dictionary keys 'a1' to 'h8' of the chessboard program are a data structure that chess players have used for almost three hundred years. An early form of algebraic notation was devised by the Syrian player Philipp Stamma in the 1730s. Howard Staunton described the system in his Chess-Player's Handbook in 1847, and German chess literature took it up in the nineteenth century. English-language books preferred descriptive notation for most of the twentieth century, until in 1981 FIDE stopped recognising it and algebraic notation became the international standard. The author's program simply turned an old notation into the keys of a Python dictionary. The account rests on these sources. 'Algebraic notation (chess)', Wikipedia, citing Stamma (1737), Staunton, The Chess-Player's Handbook (1847) and the FIDE decision of 1981; Al Sweigart, Automate the Boring Stuff with Python, 3rd edition (2025), chapter 7. Photo: Wilfredor, CC0, Wikimedia Commons.",
+   "concept": "ChessboardModel",
+   "visual": ""
+  },
+  {
+   "n": 17,
+   "title": "The board as a table",
+   "say": "The table is not typed in; it was produced by looking up each of the 64 square names in the starting-position dictionary, and an empty cell means the lookup found no key. Of the 64 squares 32 hold a piece, so the dictionary has 32 keys and the other 32 squares do not appear in it. The dictionary is the model, and the table is only one way of displaying it, which is the point of keeping the data separate from the printing function. The book's program draws this same board as text in a terminal window.",
+   "concept": "ChessboardPrinter",
+   "visual": ""
+  },
+  {
+   "n": 18,
+   "title": "Chess commands are dictionary operations",
+   "say": "The chapter's simulator accepts the commands move, remove, set, reset, clear and quit, and each one is a single dictionary operation or two. A move copies the piece to the new key and then deletes the old key, remove deletes a key, set assigns one, reset replaces the board with a copy of the starting position, and clear empties it. This short program drives the same operations without the text board so that you can see each effect in the printed list of keys. The copy in the reset line is important and it is the subject of slide 20.",
+   "concept": "ChessboardCommands",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "Nested dictionaries: the picnic",
+   "say": "A guest list is a dictionary of dictionaries: each guest is a key, and each guest's value is another dictionary of items and quantities. The function total_brought walks the guests and uses get with a default of zero, so a guest who brings none of an item simply adds nothing. The printed totals are 7 apples, 3 cups, no cakes, 3 ham sandwiches and 1 apple pie. A filing cabinet is the picture, with a folder for each guest and a sheet inside it for each kind of food.",
+   "concept": "TotalBrought",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "Copying: alias, shallow and deep",
+   "say": "Three lines make three different things. The assignment alias = original creates no copy, it only gives the same dictionary a second name. The call copy.copy builds a new outer dictionary whose inner dictionaries are still the same objects, so changing an inner value is seen through the shallow copy, while copy.deepcopy copies every level. After the program changes an inner value to 99, the alias and the shallow copy print 99 and the deep copy still prints 5, and the last line prints True False, because the shallow copy shares the inner dictionary and the deep copy does not.",
+   "concept": "CopyingDictionaries",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "Writing data down and checking its shape",
+   "say": "A dictionary vanishes when the program ends, so it has to be turned into text to be saved or sent. The json module's dumps turns a dictionary into JSON text and loads turns it back, and pprint.pformat lays a big dictionary out tidily, with its keys sorted. The TypedDict describes which keys a record must have, but Python does not enforce it when the program runs, as the last row shows with its plain dict, and only a type checker complains. The match statement on the right tests a dictionary against a pattern and binds the values it finds, so the first case needs both keys and an age above 5.",
+   "concept": "JsonText",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "The notation that carries dictionaries",
+   "say": "A dictionary exists only while its program runs, so something must carry it to another program. Douglas Crockford, who co-founded State Software in March 2001, and Chip Morningstar sent the first JSON message in April 2001, and json.org began in 2001 to describe the format. Yahoo offered some of its web services in JSON in December 2005. The IETF published JSON as RFC 8259, an Internet Standard, on 13 December 2017, two days before the Python ruling on dictionary order. Python's json module turns a dictionary into that text and back. The account rests on these sources. 'JSON', Wikipedia (first message April 2001; State Software founded March 2001; Yahoo, December 2005; RFC 8259, 13 December 2017); json.org; the Python json module documentation. Photo: Robert Claypool, CC0, Wikimedia Commons.",
+   "concept": "JsonText",
+   "visual": ""
+  },
+  {
+   "n": 23,
+   "title": "Practice: the fantasy game inventory",
+   "say": "The practice project of the chapter stores a player's items as a dictionary from the item name to the count. The first function prints each item and the total, which is 62 for the starting stuff, and the second function adds a list of loot to an inventory, using setdefault so that a new item starts at zero. The loot list repeats gold coin three times, so the inventory ends with 45 gold coins, since it started with 42, and 48 items in all. The chessboard validator project is on the course page, in the practice section.",
+   "concept": "FantasyInventory",
+   "visual": ""
+  },
+  {
+   "n": 24,
+   "title": "The chapter in five lines",
+   "say": "These five lines answer the five questions of slide 3, one each. The first line covers the operations on pairs, the second covers the rules for keys and the changes between the printed chapter and today's Python, and the third covers counting, grouping and views. The fourth is about modelling and nesting, and the fifth is about copying and writing data down. If a line feels unproven, the part of the route that carries it has the slides with the executed examples.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 25,
+   "title": "Where to go from here",
+   "say": "Every link on this slide was opened on the day the deck was made. The textbook chapter is free to read online and has the chessboard and picnic programs, and the documentation links lead to the exact module of each library used today. The history links are for the curious: the python-dev message is the ruling that gave dictionaries their order, and the video is a talk by the core developer who proposed the compact layout. Python Tutor lets you step through a program and watch a dictionary change, which is the best way to understand the copying slide.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 26,
+   "title": "What you should now be able to say",
+   "say": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The next chapter moves on to strings and text editing.",
+   "concept": "",
+   "visual": ""
+  }
+ ]
+}
