@@ -45,3 +45,28 @@ program calling a positional-only parameter by name) - the full test's own re-ru
 - The materials register had named pages 9.24.0 while the released pages were 9.26.0; 1.37.0 names 9.27.0.
 - The 9.26-9.32 audit repairs of the sibling line (the book-layer query shape, the mobile progress badge) remain a separate
   thread, as the handover said; the exam-identity repair could not wait and is 9.38.0 here.
+
+## 2026-10-09: the Lab tab's code never matched the slide deck's code
+The owner found that the page's own worked examples and the chapter's slide deck showed different Python. The cause:
+the page's per-concept `io` examples (data builder, one hand-curated expression per concept) and the deck's named,
+multi-line `examples_out_v*.json` transcripts (deck build, the real source of what a slide shows) were always two
+separate, independently-authored sets - never meant to be identical, and drifted. The Lab tab's Code Lab pane made it
+worse: its snippets are entirely generic meta-queries over the page's own JSON, with no link to any chapter's taught
+code at all.
+
+Fix, PAGE_VER 9_28_0 (ch01-07; ch08-24 are still the older 9.19.0 template generation, out of scope here): the page
+data builder (2.7.0) reads the chapter's own newest `chNN-deck/examples_out_v*.json` and flattens each named example's
+`[code, out]` cells into one runnable script (data["examples"]) - a cell with no real output is emitted verbatim, a
+cell whose output is a genuine `<ExceptionError>: ...` is also emitted verbatim (several chapters teach from a
+deliberate mistake, e.g. chapter 3's `randint` used before its import, which belongs in a page's Lab tab exactly as
+it is on the slide), everything else is wrapped as `print(repr(...))` to reproduce the shown REPL echo. The template
+(9.42.0) adds a dedicated "Chapter examples" pane to the Lab tab group, beside (not replacing) Code Lab: a select
+listing the chapter's own example names in the deck's own order, an editable textarea, Run (the same background
+runPy as the Playground), and copy-code/copy-output. sen0414_page_test_v9_27_0.py checks all three: the name list
+matches the deck's own names and order, choosing an example fills the code at once with no Load button, and running
+an example whose deck transcript genuinely ends in an error raises that same error here. Full suite, 0 failures:
+chapters 1, 2, 3, 4, 5, 6 (test_results_v9_28_0.json each). Chapter 7's run crashed on an unrelated, pre-existing
+step of the page-wide passage search (`#srchpass .hit` never appears for the word "constructor" within 120 s,
+reproduced twice, same chapter, same word) - confirmed unrelated to this fix (the new pane's own three checks pass
+cleanly in both runs, before the unrelated crash), and left as a deferred finding alongside the chapter 3/4 ones
+above, not fixed here.
