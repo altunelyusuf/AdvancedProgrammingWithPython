@@ -1,0 +1,182 @@
+{
+ "_version": "1.0.0",
+ "_deck": "1.0.0",
+ "_python": "3.14.6",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 8: Manipulating Strings",
+   "say": "Chapters 1 to 7 worked with numbers, lists and dictionaries. This chapter is about the string: how one is written, read and rebuilt into a new string, since no method can ever change the string it was called on. Every example on these slides was run under Python 3.14.6 and the result printed beside it is the result Python gave.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "Today's route",
+   "say": "The route has six parts. It starts with literals and reading a string, moves to formatting with f-strings and the older styles, then to case, content tests and cutting text apart, then to characters, bytes and Pig Latin, then to the clipboard, practice and the summary, and ends with resources and closing. The ranges name the exact slides, so you can return to the part you need, and four of the slides are true stories that explain where a feature came from.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "The questions this chapter answers",
+   "say": "The first question is the chapter's spine: a string method either builds a new string, such as upper() and split(), or it only looks at the string and answers with a Boolean or a number, such as isupper() and find(), and the reason is that a string is immutable, so no method ever has a string to change. The second question is this chapter's own watch-out: the chapter was printed before f-strings' debug specifier, before t-strings and before several of the methods now current in Python 3.14, so a few of its claims need a source check against the version actually running. The chips give the size of the chapter.",
+   "concept": "StringLiterals",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "String literals and quoting",
+   "say": "A string literal sits inside single or double quotes, and choosing the other kind of quote is the easiest way to hold an apostrophe. The backslash begins an escape sequence: \\t is a tab and \\n is a newline, both counted as one character by len() though they are two characters in the source. A raw string, written r'...', turns every backslash into a plain character, which is why a Windows path is typed as r'C:\\Users\\Alice\\Desktop' without doubling anything, and a bytes literal, b'a', holds raw bytes rather than text at all.",
+   "concept": "StringQuoting",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "Raw strings and multiline strings",
+   "say": "A raw string is for text where backslashes are meant literally, such as a Windows path or a regular expression pattern, and len(r'\\n') is 2 while len('\\n') is 1, because the raw string never turns \\n into a newline character. A triple-quoted string, opened and closed with three quote marks, can run across several lines of source code and keeps every line break and blank line exactly as typed; the console on this slide types the same four-line letter as one REPL line with explicit \\n escapes instead, to the same effect, and splits it back into its lines on '\\n'.",
+   "concept": "MultilineStrings",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "Indexing and slicing",
+   "say": "Indexing with one number, greeting[4], returns a single character, and a negative index counts from the end, so greeting[-1] is always the last character without knowing the string's length. Slicing with a colon, greeting[0:5], returns every character from the first index up to but not including the second, and either number can be left out to mean the start or the end of the string. A slice with a step of -1, greeting[::-1], walks the string backwards one character at a time and so reverses it, a trick the chapter relies on more than once.",
+   "concept": "StringIndexing",
+   "visual": ""
+  },
+  {
+   "n": 7,
+   "title": "The in operator and immutability",
+   "say": "The in operator, written 'Hello' in 'Hello, World', tests whether the left string occurs anywhere inside the right one and returns a Boolean, with not in as its opposite; the empty string is found inside every string, so '' in 'spam' is always True. A string is immutable: once created it can never be edited in place, so to change part of a message you slice out the parts you want and concatenate them into a new string with +, exactly as the console does to replace the middle of a cat's name.",
+   "concept": "StringImmutability",
+   "visual": ""
+  },
+  {
+   "n": 8,
+   "title": "F-strings",
+   "say": "Writing f before the opening quote turns a string literal into an f-string, and anything inside braces is evaluated as a Python expression and substituted into the text, so f'{age + 10}' prints 4010 rather than the text age + 10. A format specifier after a colon controls the display, as in {3.14159:.2f} for two decimal places or {255:#x} for hexadecimal, and a double brace, {{name}}, prints a literal brace. The self-documenting {name=} and {age + 1 = } forms, added in Python 3.8, print the expression's own source text beside its value, a convenience the printed chapter could not show because it did not exist when the chapter was written.",
+   "concept": "FStrings",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "One PEP gave Python its f-string, in a single day",
+   "say": "PEP 498, 'Literal String Interpolation', records its own creation date as 1 August 2015, with Eric V. Smith named as its author and Python 3.6 named as the version it targets. The proposal's own example is almost exactly the chapter's: f'My name is {name}, my age next year is {age+1}'. Python 3.6 shipped the feature at the end of 2016, and f'My name is {name}. I am {age} years old.' has worked the same way in every Python release since. The account rests on these sources. PEP 498, 'Literal String Interpolation', peps.python.org/pep-0498 (Created: 01-Aug-2015; Author: Eric V. Smith; Python-Version: 3.6); What's New in Python 3.6. Photo: Wikimedia Commons.",
+   "concept": "FStrings",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "Older ways to build the same string",
+   "say": "Before f-strings, the chapter builds the same sentence three ways: by concatenating pieces with + and converting the number with str(), with the %-operator and a tuple of values, and with str.format() and numbered placeholders that can repeat an argument, as {0} does twice. All three still run correctly in Python 3.14, so the chapter's own point stands: f-strings are newer and usually clearer, but nothing here was removed. Two adjacent string literals with nothing between them, 'Py' 'thon', are concatenated by the compiler into one string at compile time, and the * operator repeats a string that many times.",
+   "concept": "FormatInterpolation",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "Changing case and testing it",
+   "say": "upper() and lower() each return a new string with every letter changed, leaving the original exactly as it was, and isupper() only tests whether the letters already present are all uppercase and returns a Boolean, so 'great' == 'GREat'.lower() is the idiom for a case-insensitive comparison. casefold(), added for stronger comparisons than lower(), also folds special characters such as the German sharp s so that two spellings that a human reads as equal compare as equal; it is meant only for comparison, not for showing text to a reader.",
+   "concept": "ChangingCase",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "Testing a string's content",
+   "say": "Every is-method tests every character in the string and returns a single Boolean: isalpha() is true only if every character is a letter and the string is not empty, and isalnum() allows letters and digits together. isdecimal() is stricter than it looks: '\\u0663'.isdecimal() is True for an Arabic-Indic digit, yet int() on that same character still succeeds, converting it to the ordinary integer 3, a case the chapter's printed text does not show. startswith() and endswith() test one end of the string and, since they accept a tuple, 'notes.txt'.endswith(('.py', '.txt')) checks two endings in a single call.",
+   "concept": "CharacterTests",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "Joining and splitting text",
+   "say": "join() is called on the separator string and takes a list of strings to glue together, which is why ', '.join(['cats', 'rats', 'bats']) reads backwards to someone used to other languages. split(sep) cuts a string at every occurrence of sep and returns the pieces as a list; split() with no argument at all is a special case that cuts at any run of whitespace and ignores it at the ends, which is why 'My name is Simon'.split() and split('m') give different results. partition(sep) cuts at only the first occurrence and returns a three-item tuple that keeps the separator itself, where split() would discard it.",
+   "concept": "JoinMethod",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "Justifying and stripping whitespace",
+   "say": "rjust() and ljust() pad a string to a given width with spaces or a fill character on one side, and center() pads on both sides, all three used by the chapter's own table-printing program. strip() removes whitespace from both ends by default, and when given a string of characters it removes any of those characters, in any order, from either end until it meets one that is not in the set, which is why strip('ampS') eats through 'SpamSpamBaconSpamEggsSpamSpam' down to 'BaconSpamEggs'. removeprefix() and removesuffix(), added in Python 3.9, are the exact-match tools the chapter's own printed text predates.",
+   "concept": "StripMethods",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "Nine companies agree on one table of characters",
+   "say": "On 19 February 1991 a press release from Mountain View announced that nine computer companies had formally affiliated as Unicode Inc., with board members from Apple, GO, IBM, Metaphor, Microsoft, NeXT, Novell, the Research Libraries Group and Sun Microsystems, and Xerox's Joe Becker named as the new consortium's technical vice president. The table of code points this group began maintaining is exactly what ord() and chr() read from today: ord('A') is 65 and chr(8364) is the euro sign because the Unicode Consortium assigned those numbers to those characters. The account rests on these sources. 'Major Computer Companies Join to Promote Worldwide Standard Character Encoding', Unicode Inc. press release, 19 February 1991 (unicode.org/history/first-pr.htm); Python documentation, the unicodedata module. Photo: Wikimedia Commons.",
+   "concept": "OrdAndChr",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "Finding and replacing",
+   "say": "find() searches for a substring and returns the index of its first occurrence, or -1 if it is not there at all, and an optional second argument starts the search from a later position, which is how the same call finds a second 'spam' further along the string. count() returns how many times a substring occurs, without overlapping matches. replace() returns a new string with every occurrence of the first argument swapped for the second, and an optional third argument limits how many replacements are made, as in replacing only the first of three occurrences of 'spam' with 'eggs'.",
+   "concept": "FindAndCount",
+   "visual": ""
+  },
+  {
+   "n": 17,
+   "title": "ord(), chr() and UTF-8 encoding",
+   "say": "Every character has a code point, a number the Unicode standard assigns to it, and ord() and chr() convert between a character and that number in either direction. Encoding turns text into bytes for a particular scheme: utf-8 is the right choice almost all of the time, because it can represent every Unicode character and stays compatible with plain ASCII, though a character outside ASCII, such as e-acute, can take more than one byte, so len() of the text and len() of its utf-8 encoding can differ. Encoding to plain ascii raises a UnicodeEncodeError on a character ascii cannot hold, unless an errors argument such as 'replace' is given.",
+   "concept": "Utf8Encoding",
+   "visual": ""
+  },
+  {
+   "n": 18,
+   "title": "The encoding written on a diner placemat",
+   "say": "In September 1992 Ken Thompson and Rob Pike were designing a new encoding for the Plan 9 operating system at Bell Labs. Rob Pike later wrote that UTF-8 'was designed, in front of my eyes, on a placemat in a New Jersey diner one night in September or so 1992', and that he 'very clearly remember[s] Ken writing on the placemat'. The scheme they sketched that night let a character take from one to four bytes while staying compatible with plain ASCII, which is why 'caf\\xe9'.encode('utf-8') is five bytes for four characters. That same encoding is what the chapter calls the right choice 99 percent of the time. The account rests on these sources. Rob Pike, 'UTF-8 history', doc.cat-v.org/bell_labs/utf-8_history (first-hand account, dated September 1992); Al Sweigart, Automate the Boring Stuff with Python, 3rd edition (2025), chapter 8. Photo: Wikimedia Commons.",
+   "concept": "Utf8Encoding",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "The Pig Latin program",
+   "say": "Pig Latin moves the leading consonants of a word to its end and adds ay, or simply adds yay to a word that starts with a vowel, and the program keeps any leading or trailing punctuation untouched around the word it transforms. Typed against 'My name is Al Sweigart. I am 4,000 years old.' the program printed 'Ymay amenay isyay Alyay Eigartsway. IYAY amyay 4,000 yearsyay oldyay.', and the single-letter word 'I' becomes the all-capital 'IYAY' rather than a capitalised 'Iyay', because the program's own case-restoring rule treats a fully uppercase one-letter word as upper rather than title case; a genuine, worth-noticing quirk of the algorithm, not a bug the demonstration hides.",
+   "concept": "PigLatin",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "Practice: printing a table, alternating case",
+   "say": "The table-printing program computes the widest string in each column before printing a single row, so the table lines up whatever the data happens to be, rather than assuming a fixed width. Each cell is right-justified to its column's own width with rjust() and printed with a trailing space, which is why the four columns of names and animals line up exactly as shown. A second practice program, alternating case, walks a string by position with enumerate() and lowercases even-indexed characters while uppercasing odd ones, turning 'Hello, world!' into 'hElLo, WoRlD!'.",
+   "concept": "TablePrinter",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "The clipboard and pyperclip",
+   "say": "pyperclip is a third-party module the chapter installs with pip, and its two functions, copy() and paste(), are the entire interface: paste() returns the text currently on the operating system's clipboard as a string, and copy() places a string there for the next paste anywhere on the machine. The bullet-point-adder program pastes whatever text was copied, adds an asterisk and a space to the front of every line, and copies the result back, so the next paste anywhere, in any application, has the bulleted version. This slide's own right-hand card is an honest record of a real error this session hit trying to run that exact program without a desktop clipboard, rather than a claim the program was never actually run.",
+   "concept": "ClipboardModule",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "The chapter's clipboard model is fifty years old",
+   "say": "Larry Tesler joined Xerox PARC in 1973 and, working with Tim Mott on the Gypsy word processor, gave computing the cut, copy and paste model: select some text, move it to a holding place, and insert it somewhere else. pyperclip.copy() and pyperclip.paste(), the two functions the chapter's clipboard programs call, are that same fifty-year-old model, now reached from three lines of Python instead of a menu. Tesler died on 16 February 2020, at 74, and newspapers around the world wrote his obituary headline with the very model he had invented: 'the inventor of copy and paste'. The account rests on these sources. 'Larry Tesler', Wikipedia, en.wikipedia.org/wiki/Larry_Tesler (PARC from 1973; the Gypsy word processor with Tim Mott; died 16 February 2020); Al Sweigart, Automate the Boring Stuff with Python, 3rd edition (2025), chapter 8, the pyperclip module. Photo: Wikimedia Commons.",
+   "concept": "ClipboardModule",
+   "visual": ""
+  },
+  {
+   "n": 23,
+   "title": "The chapter in six lines",
+   "say": "These six lines answer the route one part at a time. The first two cover how a string is written and read, the third and fourth cover building and testing it, the fifth covers cutting and joining text, and the sixth covers bytes and the clipboard. If a line feels unproven, the part of the route that carries it has the slides with the executed examples.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 24,
+   "title": "Where to go from here",
+   "say": "Every link on this slide was opened on the day the deck was made. The textbook chapter is free to read online and has the Pig Latin, table-printing and clipboard programs in full, the proposal links lead to the exact PEPs behind f-strings, PEP 701 and t-strings, and the history links are the primary sources behind this chapter's three stories. Python Tutor lets you step through a program and watch a string stay the same while a new one appears beside it, which is the clearest way to see immutability.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 25,
+   "title": "What you should now be able to say",
+   "say": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The next chapter moves on to functions.",
+   "concept": "",
+   "visual": ""
+  }
+ ]
+}

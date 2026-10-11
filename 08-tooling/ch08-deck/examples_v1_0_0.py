@@ -1,0 +1,98 @@
+"""Chapter 8 deck examples: every console session and whole program the lecture deck shows and the page's Lab tab offers.
+Nothing here carries a result; examples_run_v1_0_0.py runs it all under the interpreter given and records the results.
+A console group is one session: its rows run in order in one namespace (as the deck check re-runs them per slide)."""
+__version__ = "1.0.0"
+import importlib.util
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+_s = importlib.util.spec_from_file_location("base8", os.path.join(HERE, "..", "sen0414_ch08_corpus_base_v1_0_0.py"))
+B = importlib.util.module_from_spec(_s)
+_s.loader.exec_module(B)
+
+CONSOLES = {
+    "title": ["'Hello, world!'.upper()"],
+    "quoting": ["\"Alice's cat\"",
+                "'Bob\\'s'",
+                "len('Bob\\'s')",
+                "'a\\tb'",
+                "len('a\\tb')",
+                "'line1\\nline2'.split('\\n')",
+                "type(b'a').__name__",
+                "type(r'a').__name__",
+                "len(rb'\\n')",
+                "list('\\\\q')"],
+    "literalforms": ["r'C:\\Users\\Alice\\Desktop'",
+                      "len(r'\\n')",
+                      "len('\\n')",
+                      "letter = '''Dear Alice,\\n\\nSee you soon,\\nBob'''",
+                      "letter.split('\\n')"],
+    "access": ["greeting = 'Hello, world!'",
+               "greeting[0]",
+               "greeting[4]",
+               "greeting[-1]",
+               "greeting[0:5]",
+               "greeting[7:-1]",
+               "greeting[::-1]"],
+    "properties": ["name = 'Zophie a cat'",
+                   "name[0:7] + 'the' + name[8:12]",
+                   "'Hello' in 'Hello, World'",
+                   "'HELLO' in 'Hello, World'",
+                   "'' in 'spam'",
+                   "'cats' not in 'cats and dogs'"],
+    "fstrings": ["name = 'Al'",
+                 "age = 4000",
+                 "f'My name is {name}. I am {age} years old. In ten years I will be {age + 10}. {{name}}'",
+                 "f'{3.14159:.2f}|{42:>6}|{42:^6}|{1234567:,}|{255:#x}'",
+                 "f'{name=}'",
+                 "f'{age + 1 = }'"],
+    "older": ["name = 'Al'",
+              "age = 4000",
+              "'Hello, my name is ' + name + '. I am ' + str(age) + ' years old.'",
+              "'Py' 'thon'",
+              "3 * 'un' + 'ium'",
+              "'My name is %s. I am %s years old.' % (name, age)",
+              "'{1} years ago, {0} was born and named {0}.'.format(name, age)"],
+    "case": ["'Hello, world!'.upper()",
+             "'Hello, world!'.lower()",
+             "'great' == 'GREat'.lower()",
+             "'HELLO'.isupper()",
+             "'stra\\xdfe'.casefold() == 'strasse'",
+             "'a-b'.upper().replace('-', '+')"],
+    "checks": ["'hello123'.isalpha()",
+               "'hello123'.isalnum()",
+               "'123'.isdecimal()",
+               "'\\u0663'.isdecimal()",
+               "int('\\u0663')",
+               "'Hello, world!'.startswith('Hello')",
+               "'notes.txt'.endswith(('.py', '.txt'))"],
+    "joinsplit": ["', '.join(['cats', 'rats', 'bats'])",
+                  "'My name is Simon'.split('m')",
+                  "'My name is Simon'.split()",
+                  "'one\\r\\ntwo\\nthree'.splitlines()",
+                  "'Monty Python'.partition(' ')"],
+    "spacing": ["'Hello'.rjust(10)",
+                "'Hello'.ljust(10, '-')",
+                "'Hello'.center(20, '=')",
+                "'    Hello, World    '.strip()",
+                "'SpamSpamBaconSpamEggsSpamSpam'.strip('ampS')",
+                "'report.txt'.removesuffix('.txt')"],
+    "search": ["'spam eggs spam'.find('spam')",
+               "'spam eggs spam'.find('spam', 1)",
+               "'spam eggs spam'.count('spam')",
+               "'spam, spam, spam'.replace('spam', 'eggs', 1)"],
+    "bytes": ["ord('A')",
+              "chr(65)",
+              "chr(ord('A') + 1)",
+              "'caf\\xe9'.encode('utf-8')",
+              "len('caf\\xe9')",
+              "len('caf\\xe9'.encode('utf-8'))",
+              "'caf\\xe9'.encode('ascii', errors='replace')"],
+}
+
+# name -> (code, stdin text or None)
+PROGRAMS = {
+    "alternateCase_v1_0_0.py": (B.ALTERNATING_CASE, None),
+    "pigLatin_v1_0_0.py": (B.PIG_LATIN, B.PIG_LATIN_INPUT),
+    "tablePrinter_v1_0_0.py": (B.TABLE_PRINTER, None),
+}
