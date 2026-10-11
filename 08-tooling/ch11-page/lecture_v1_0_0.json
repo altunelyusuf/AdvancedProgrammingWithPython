@@ -1,0 +1,168 @@
+{
+ "_version": "1.0.0",
+ "_deck": "1.0.0",
+ "_python": "3.14.6",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 11: Organizing Files",
+   "say": "Chapter 10 was about one file at a time, read or written through a path. This chapter moves up to whole files and folders: shutil copies and moves them, os and shutil delete them, os.walk and pathlib visit every folder in a tree, and zipfile packs a tree into one archive and takes it back out again. Every example on these slides was run under Python 3.14.6 and the result printed beside it is the result Python gave on this machine.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "Today's route",
+   "say": "The route has six parts. It starts with copying and moving, which both keep or lose the source depending on the function, moves to deleting, where a dry run and the recycle bin are the chapter's own two safeguards, then to folder trees, listing one folder and walking a whole one, then to zip archives, writing, reading, extracting and shutil's own one-call helpers, then to the chapter's own backup project and its practice programs, and ends with the summary and resources. The ranges name the exact slides, so you can return to the part you need, and four of the slides are true stories that explain where a piece of this chapter's own vocabulary came from.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "The questions this chapter answers",
+   "say": "The first question is this chapter's own spine: shutil.copy and shutil.copytree keep the source and leave it untouched, shutil.move removes it, and os.unlink, os.rmdir and shutil.rmtree remove something for good with no copy left anywhere, so a dry run, a print in the dangerous call's place, is the chapter's own answer for seeing the damage before it happens. The second question is this chapter's own watch-out: the chapter's own prose and its own listed code disagree in at least two places, a move onto an existing name and the size the chapter's own ZIP example claims to compress to, and this deck's own research record keeps every such gap on the record rather than silently fixing it. The chips give the size of the chapter.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "Copying: shutil.copy and shutil.copytree",
+   "say": "shutil.copy(source, destination) copies one file to a folder, which keeps the name, or to a file name, which becomes the copy's own name, and shutil.copytree copies a whole folder with everything in it to a destination that must not already exist, unless dirs_exist_ok=True lets it continue into one that is already there, overwriting only the files of the same name. Neither function is in the chapter's own prose returning anything useful, but both return the path they wrote to, and shutil.copy2, which copytree itself uses internally for every file, keeps metadata such as the modification time that a plain shutil.copy does not, as this console's own os.utime() row shows directly.",
+   "concept": "CopyFile",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "Moving: shutil.move and the pathlib methods",
+   "say": "shutil.move(source, destination) moves a file or folder to a destination; when that destination is an existing folder the source goes inside it under its own name, and when it is not, the call renames in place, so one function covers both jobs depending only on what the destination turns out to be. The chapter's own prose says a same-named file in the destination would be overwritten; run under 3.14.6 the call instead raised shutil.Error and moved nothing at all, leaving the old file and the source both exactly where they were, which is what the documentation itself promises rather than what the chapter's own prose claims. Since Python 3.14 a Path object can copy and move itself directly, Path.copy and Path.move, without importing shutil at all, shown closing this console.",
+   "concept": "MoveFileOrFolder",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "Deleting: unlink, rmdir, and rmtree",
+   "say": "os.unlink(path) deletes one file permanently, os.rmdir(path) deletes one folder and only if it is empty, raising OSError otherwise, and shutil.rmtree(path) deletes a whole folder tree with everything in it in a single call; all three raise FileNotFoundError for a path that is not there at all, except rmtree with ignore_errors=True, which raises nothing. Since Python 3.12 the onexc parameter names a function that receives the failing function, the path and the exception itself, so a tree with one missing folder can be walked past rather than stopping rmtree at its very first failure, which this console's own closing rows show directly, a missing folder's own name paired with FileNotFoundError.",
+   "concept": "DeleteFile",
+   "visual": ""
+  },
+  {
+   "n": 7,
+   "title": "The recycle bin's own icon is a 1983 drawing",
+   "say": "Susan Kare joined Apple in 1983 with no formal training in computer graphics at all, and was asked to draw the small pictures the first Macintosh would need for its own commands; working on a 32-by-32 pixel grid that lead software architect Andy Hertzfeld had proposed, she first blocked the squares out by hand on graph paper before redrawing each one electronically in an icon editor Hertzfeld built on the Macintosh prototype itself. Among the icons Kare drew that year was the trash can, the picture that shipped on the Macintosh's own desktop in 1984 and has stood for a reversible delete on a graphical desktop ever since. The third-party send2trash module this chapter names moves a file to exactly that bin instead of deleting it outright, the one operation of this whole chapter that can still be undone by a user's own hand. The account rests on these sources. Jackie Mansky, 'How Susan Kare Designed User-Friendly Icons for the First Macintosh', Smithsonian Magazine, smithsonianmag.com (Kare joined Apple 1983; Macintosh released 1984; Andy Hertzfeld's 32x32 grid and icon editor). Photo: Wikimedia Commons.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 8,
+   "title": "Safer deletion: the dry run and the recycle bin",
+   "say": "A dry run replaces a dangerous call, a delete, a copy, a rename or a move, with a print that shows exactly what the real call would touch, and the chapter's own worked example is a typo: glob('*.rxt') in place of '*.txt' would delete nothing visible until it was too late, where the dry run's own print matches zero files against the broken pattern and both files against the corrected one. The third-party send2trash module moves a file or folder to the recycle bin or trash instead of deleting it outright, so a mistake stays recoverable, though it frees no disk space and cannot take anything back out of the bin on its own; it is not installed on this machine, so nothing about it runs in this deck.",
+   "concept": "DryRun",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "Listing: names, path objects, and glob patterns",
+   "say": "os.listdir(path) returns the names inside one folder as a list of strings, and Path.iterdir() gives the identical entries back as path objects instead, each one ready for is_dir() or is_file() without a second call; neither one looks inside a subfolder at all. A glob pattern such as '*.txt', the exact pattern the chapter's own deletion example matches against, searches one folder with Path.glob, and Path.rglob searches every subfolder beneath it as well, so against a.txt, b.pdf and a nested c.txt, glob found only a.txt and rglob found both a.txt and c.txt.",
+   "concept": "GlobPattern",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "The folder tree os.walk visits is a 1965 design",
+   "say": "R.C. Daley of MIT's Project MAC, with P.G. Neumann of Bell Labs, presented 'A General Purpose File System for Secondary Storage' at the 1965 Fall Joint Computer Conference, laying out Multics's own tree-structured file system, folders holding folders holding files, built for a system meant to be shared by many users and administered in pieces at once. Ken Thompson and Dennis Ritchie, together with Doug McIlroy and J.F. Ossanna, had all worked on Multics at Bell Labs before the project's own slow progress pushed Bell Labs out of it, and the small operating system the four built next, Unix, kept the identical tree of folders inside folders at its very core. Every folder os.walk visits today, descending from one folder into its own subfolders in turn, walks the same shape Daley and Neumann described in 1965, fifty-six years before this chapter's own program renamed a single file inside it. The account rests on these sources. 'Multics History', multicians.org/history.html (R.C. Daley and P.G. Neumann, 'A General Purpose File System for Secondary Storage', Fall Joint Computer Conference, 1965; Ken Thompson, Dennis Ritchie and colleagues carried the tree into Unix after working on Multics). Photo: Wikimedia Commons.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "Walking: os.walk and Path.walk",
+   "say": "for folder_name, subfolders, filenames in os.walk(top) visits a folder and every folder beneath it, handing back on each pass the current folder's name as a string, its own subfolder names and its own file names; by default a folder comes before its subfolders, and topdown=False reverses that into the bottom-up order needed to empty a tree with rmdir, exactly as the standard library's own rmtree example does. Path.walk, added in Python 3.12, is the identical loop for path objects, handing back a Path rather than a plain string for the current folder, and a program walking top-down can prune a whole folder out of the rest of the walk simply by removing its name from the subfolder list in place.",
+   "concept": "WalkTree",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "The ZIP format was given away free on 14 Feb 1989",
+   "say": "Phil Katz had already been sued by Systems Enhancement Associates, which claimed his own PKARC archiver copied its ARC format too closely; rather than fight over one more compatible format, Katz and Gary Conway of Infinity Design Concepts designed a new one of their own and, on 14 February 1989, PKWARE and Infinity Design Concepts issued a joint press release placing the .ZIP format in the public domain, free for any program to read or write. Katz's friend Robert Mahoney suggested the name itself, 'zip', meaning to move at high speed, to promise a program faster than ARC; the first specification, APPNOTE.TXT, shipped that same year inside Katz's own PKZIP 0.9. Every zipfile.ZipFile this chapter opens, in mode 'w', 'a' or 'r', reads and writes exactly the public-domain structure that one press release described. The account rests on these sources. 'ZIP (file format)', Wikipedia, en.wikipedia.org/wiki/ZIP_(file_format) (Phil Katz and Gary Conway, PKWARE and Infinity Design Concepts, public-domain press release 14 February 1989; APPNOTE.TXT first published in PKZIP 0.9, 1989). Photo: Wikimedia Commons.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "Writing zip archives: modes and compression",
+   "say": "zipfile.ZipFile(name, 'w') creates a new archive, erasing one that already exists, and write() adds a file from disk under its own path, compressing it only when compress_type=zipfile.ZIP_DEFLATED is actually passed; without it, a file is stored at its own regular size, which is exactly the gap between the chapter's own two ZIP examples, one compressed and one not. Mode 'a' instead keeps what is already in the archive and adds to it, and mode 'x', not in the chapter's own prose at all, refuses to touch a file that already exists, raising FileExistsError the moment its name is already taken, exactly as this console's own closing row shows.",
+   "concept": "CreateZip",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "Compression under ZIP_DEFLATED began free in 1995",
+   "say": "Jean-Loup Gailly, who had already written the compression half of gzip, and Mark Adler, who wrote the matching decompression half, joined their work into a single free library they called zlib, built first for Thomas Boutell's own libpng image library rather than for any archiver at all. Gailly handled compressing and Adler handled decompressing, and together they released zlib 0.9 on 1 May 1995, a clean-room implementation of the DEFLATE algorithm that owed nothing to Phil Katz's own patented code, free of charge and free to embed in any program at all. Python's own zipfile module links against exactly this library whenever a write names compress_type=zipfile.ZIP_DEFLATED, the method this chapter's own backup project never actually asks for. The account rests on these sources. 'Zlib', Wikipedia, en.wikipedia.org/wiki/Zlib (Jean-Loup Gailly and Mark Adler, version 0.9 released 1 May 1995, written first for the libpng library). Photo: Wikimedia Commons.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "Reading zip archives: namelist and getinfo",
+   "say": "zipfile.ZipFile(name) opens an archive for reading, and namelist() returns every member's own name as a list of strings, a folder entry appearing with a closing slash; getinfo('file1.txt') then returns a ZipInfo whose file_size and compress_size hold that one member's own original and compressed size. The chapter divides those two numbers and prints 'Compressed file is 515.46x smaller!', a line that reproduces exactly under 3.14.6 for fifty thousand bytes stored in ninety-seven, while the chapter's own separate prose puts the compressed size at about 213 bytes, a figure that neither compresslevel 9 nor the default level 6 actually gives.",
+   "concept": "NameList",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "Extracting zip archives and staying safe",
+   "say": "extractall() writes every member of an archive into the current folder, or into a named one created when missing, overwriting files of the same name without asking, and extract('file1.txt', folder) does the identical job for one chosen member, raising KeyError the moment that name is not actually one namelist() returns. The chapter never warns about an untrusted archive at all, but the module itself already strips a member name such as '../../evil.txt' or a leading slash down to something that stays inside the target folder, which is why the documentation's own advice to inspect an archive first is still worth repeating rather than relied on alone.",
+   "concept": "ExtractAll",
+   "visual": ""
+  },
+  {
+   "n": 17,
+   "title": "Archive helpers: make_archive and unpack_archive",
+   "say": "shutil.make_archive(base_name, 'zip', root_dir, base_dir) builds a ZIP archive of a whole folder in a single call and returns the archive's own name, deflating every file inside it by default, which is more compression than the chapter's own hand-written write() calls ever ask for on their own. shutil.unpack_archive(filename, extract_dir) is the matching single call the other way, choosing the archive's own format from its file name's extension and using the zipfile module underneath for a ZIP file exactly as extractall does, neither helper appearing in the chapter's own prose at all.",
+   "concept": "MakeArchive",
+   "visual": ""
+  },
+  {
+   "n": 18,
+   "title": "Project 5: backing a folder up into a ZIP",
+   "say": "Project 5 first works out the archive's own name, the folder's last path part, an underscore and a number that grows until no file of that name exists yet, then opens a ZipFile in write mode and, inside os.walk, writes every file it finds with backup_zip.write(folder_name / filename). Run exactly as the chapter lists the code, it reproduces the chapter's own research record in full: the archive is opened with no compression type at all, so it is never actually compressed, and a second run against the same folder correctly names the next number in turn, spam_2.zip rather than overwriting spam_1.zip, exactly as next zip name's own worked example predicts.",
+   "concept": "StoredByDefault",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "Practice: copying files of one chosen extension",
+   "say": "The first practice program walks a tree with os.walk and copies every file whose name ends in a chosen extension into a new folder with shutil.copy, and comparing the lower-cased name rather than the plain extension is exactly what lets two.PDF, written with capital letters, still match '.pdf' alongside one.pdf and four.pdf. three.txt, the one file of a different extension inside the same tree, is correctly left behind in the source tree rather than copied at all, confirming the extension test does its one job and nothing more.",
+   "concept": "SelectiveCopy",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "Practice: swapping a date, and chapter questions",
+   "say": "The fourth practice program matches the pattern (\\d\\d)-(\\d\\d)-(\\d\\d\\d\\d) against a file's own name and calls re.sub with its own three groups reordered 2, 1, 3, turning spam12-31-1900.txt into spam31-12-1900.txt and report01-02-2020.txt into report02-01-2020.txt, while shutil.move actually carries out each rename; notes.txt, carrying no date at all, is correctly left alone by the pattern. The chapter's own eleven practice questions close the chapter the same way this deck's own summary closes it, asking a reader to say in their own words what shutil.copy, shutil.move, a dry run and the ZipFile method equivalent to open() each actually are, every one of them answered exactly once already on an earlier slide.",
+   "concept": "DateRenaming",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "The chapter in six lines",
+   "say": "These six lines answer the route one part at a time. The first two cover copying, moving and deleting a file or folder, the third covers reaching every file of a tree, the fourth and fifth cover writing, reading and extracting a ZIP archive, and the sixth covers the chapter's own backup project, which walks a tree exactly as the third line's own os.walk does. If a line feels unproven, the part of the route that carries it has the slides with the executed examples.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "Where to go from here",
+   "say": "Every link on this slide was opened on the day the deck was made. The textbook chapter is free to read online and has Project 5 and all four practice programs in full, the reference links are the official documentation behind every quirk this deck flagged, and the history links are the primary sources behind this chapter's own four stories, the format, the compression library, the recycle bin's icon and the folder tree itself.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 23,
+   "title": "What you should now be able to say",
+   "say": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The next chapter moves on from a program's own files to the web pages it can read.",
+   "concept": "",
+   "visual": ""
+  }
+ ]
+}
