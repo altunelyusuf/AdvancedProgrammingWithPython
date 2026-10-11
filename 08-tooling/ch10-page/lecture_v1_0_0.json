@@ -1,0 +1,175 @@
+{
+ "_version": "1.0.0",
+ "_deck": "1.0.0",
+ "_python": "3.14.6",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 10: Reading and Writing Files",
+   "say": "Chapter 9 was about finding a pattern inside text you already had. This chapter is about where that text lives: a path names a file without touching it, pathlib builds that name as an object rather than a plain string, and once a path is in hand a program can create a folder, search it, and read or write the file it names, whole or piece by piece. Every example on these slides was run under Python 3.14.6 and the result printed beside it is the result Python gave on this machine.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "Today's route",
+   "say": "The route has six parts. It starts with filepaths, a path as an object and the pieces it breaks into, moves to folders and file information, then to text files, opened by hand and converted between bytes and characters, then to saved data, a shelf and its plain alternative, then to the chapter's own programs, the quiz generator and the two practice programs, and ends with the summary and resources. The ranges name the exact slides, so you can return to the part you need, and four of the slides are true stories that explain where a piece of this chapter's own vocabulary came from.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "The questions this chapter answers",
+   "say": "The first question is the chapter's own spine: a path method either only computes a new path object, such as with_suffix or the / operator, or it only asks the file system a question, such as exists(), or it actually changes a file or folder on disk, such as mkdir() or write_text(), and which of the three it is decides whether running it twice is safe. The second question is this chapter's own watch-out: the chapter was written and printed on Windows, so several of its own outputs, file lists, error messages, and even one printed quiz transcript, read differently once actually run on today's Python on a different operating system, and the research record keeps every such gap on the record rather than silently fixing it. The chips give the size of the chapter.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "Path objects: building and joining a path",
+   "say": "Path('spam', 'bacon', 'eggs') joins the names it is given with the separator of the operating system it runs on and returns a path object, not a string; str() is the separate step that turns that object back into text, which is why the chapter's own claim that Path() 'returns a string' is corrected the moment type() is actually called on it. The / operator does the identical join one step at a time and replaces the older os.path.join(), but it needs a path object on at least one side: 'spam' / 'bacon', two plain strings, raises TypeError, exactly as this console's own last row shows.",
+   "concept": "PathJoining",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "A 2012 proposal is why a path is an object",
+   "say": "Antoine Pitrou wrote PEP 428, 'The pathlib module - object-oriented filesystem paths', dated 30 July 2012, proposing that a filesystem path be its own object with its own methods rather than a plain string passed to separate os.path functions. The proposal was discussed through 2013 and the module shipped two years after it was written, in Python 3.4, released in March 2014, bringing with it the pure and concrete path classes, the / join operator and the rich set of attributes, parts, parent, stem and suffix among them, that this chapter's own Path objects section now teaches as the ordinary way to build and take apart a path. Path('spam', 'bacon', 'eggs') and the chapter's own os.path.join() both existed before 2012; only one of them is an object with a is_file() method of its own, and that is Pitrou's one proposal. The account rests on these sources. PEP 428, 'The pathlib module', peps.python.org/pep-0428 (created 30 July 2012, Antoine Pitrou; shipped in Python 3.4, March 2014); Python documentation, pathlib. Photo: Wikimedia Commons.",
+   "concept": "PathObjects",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "Working locations: the working directory and home",
+   "say": "Every running program has a current working directory, and a relative path such as Path('spam/bacon/eggs') is read starting from it; Path.cwd() and os.getcwd() both read that folder, and only os.chdir() changes it, which is why this console's own first row resets to a fixed folder before anything else runs. Path.home() returns the account's own home folder, always an absolute path wherever it is on disk, and Path.cwd().is_absolute() and Path.home().is_absolute() are both true for exactly that reason, while a plain relative path such as 'spam/bacon/eggs' is not.",
+   "concept": "WorkingDirectory",
+   "visual": ""
+  },
+  {
+   "n": 7,
+   "title": "Path anatomy and derived paths",
+   "say": "A path object breaks apart into named pieces with no disk touched at all: name is its very last part, stem is that name with its suffix removed, suffix is the extension itself, and drive names the Windows drive letter where one exists; parent is itself another path object, one level up, while parts is the same path read instead as an ordered tuple and parents an ordered sequence of every folder above it. with_suffix() and relative_to(), shown closing this console, build a brand-new path from an existing one's own pieces without ever reading or writing a file; the chapter itself, as printed, does not present either method.",
+   "concept": "PathAttributes",
+   "visual": ""
+  },
+  {
+   "n": 8,
+   "title": "Creating folders and finding files",
+   "say": "Path.mkdir() makes exactly one folder and needs parents=True to also create every folder above it that is missing, exactly the way os.makedirs() always behaves on its own; both raise FileExistsError for a folder that is already there unless exist_ok=True is given. A glob pattern such as '*.txt' or the single-character '?' of 'project?.txt' searches one folder's own files, correctly leaving out a name such as project10.txt whose extra digit does not fit a single '?' at all; a ** segment or the dedicated rglob() method, not shown on this console, instead searches the whole tree of folders beneath one.",
+   "concept": "MakingFolders",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "File information: exists, is_file, and stat",
+   "say": "exists(), is_file() and is_dir() each answer a plain true or false about a path, every one of them False together for a path that is simply not there, and from Python 3.14 on none of the three raises an OSError even when the check itself is refused. stat() answers a richer question about a file that does exist: st_size is its size in bytes, and st_mtime, read here after being set by hand with os.utime(), is the time it was last changed, counted in seconds since 1 January 1970, which time.asctime(time.gmtime(...)) turns back into a readable date exactly five hours away from the chapter's own local-time answer for the identical instant.",
+   "concept": "FileStat",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "Whole file methods: write_text and read_text",
+   "say": "write_text() creates or overwrites a file with a string in one call and returns the number of characters written, which is not always the number of bytes actually stored on disk: this console's own accented character, encoded as UTF-8, costs two bytes for the one character, so write_text() returns 4 while stat() then reports 5 bytes on disk for the same file. read_text() opens, reads and closes the file in one call as well, returning its whole content as one string; write_bytes() and read_bytes() do the identical one-call job for binary data such as b'\\x00\\x01\\xff', which has no text meaning at all and is never passed through an encoding.",
+   "concept": "WriteAndReadText",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "Opened files: modes, reading and closing",
+   "say": "open() returns a file object in whichever mode it is given: 'r' reads and is the default, 'w' overwrites after emptying the file, 'a' appends to the end of it, and 'x' creates a brand-new file but raises FileExistsError the moment the name is already taken, exactly as this console's own last row shows. write() returns the number of characters written and, unlike print(), never adds its own newline; readlines() returns every remaining line as a list, and a file object remembers its own position between calls, so a second read right after readlines() returns only the empty string, until seek(0) moves that position back to the very start.",
+   "concept": "OpenAndModes",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "UTF-8, designed on a 1992 diner placemat",
+   "say": "Rob Pike wrote that UTF-8 was 'designed, in front of my eyes, on a placemat in a New Jersey diner one night in September' 1992, with Ken Thompson working out the bit-packing by hand while Pike watched; the surviving source changes date the first working code to 4 September 1992 and a proposal mailed to the X/Open committee to 8 September 1992. The two had been asked to review a rival encoding, FSS/UTF, for the Plan 9 operating system they were building at Bell Labs, found it unable to recover a byte stream picked up mid-character, and designed a fix overnight instead; by the end of that week, Plan 9 ran entirely on the format. The chapter's own encoding argument to open(), almost always 'utf-8' by the chapter's own count, names the format that one dinner produced, now the assumed encoding of the web and, from Python 3.15 on, the language's own default. The account rests on these sources. Rob Pike, 'UTF-8 history', doc.cat-v.org/bell_labs/utf-8_history (first code 4 Sep 1992, X/Open proposal 8 Sep 1992); Python documentation, io - the encoding argument, and PEP 686. Photo: Wikimedia Commons.",
+   "concept": "TextEncoding",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "Text encoding: encoding, newline, and errors",
+   "say": "The encoding argument names the map used to turn the bytes of a file into the characters of a string; 'utf-8' is almost always the right choice, and reading the identical two-byte accented character under 'ascii' instead raises UnicodeDecodeError, exactly as this console shows, because ascii has no mapping for a byte above 127 at all. The errors argument changes what happens next: 'replace', shown here, puts the placeholder character U+FFFD in an unreadable byte's place rather than stopping the program outright. The newline argument governs a separate translation, between the \\n Python always uses internally and whichever line ending the running operating system expects on disk.",
+   "concept": "EncodingArgument",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "Automatic closing: the with statement",
+   "say": "A with statement creates a context manager and closes the file object the moment its own block is left, by reaching the block's end, by a return, or by an exception, which is why code written as with open(...) as file_obj: never needs close() called on it by hand at all. Once that block has ended, the file object's own closed attribute reads True, and a read or a write on it afterward raises exactly ValueError: I/O operation on closed file, the same error a file opened by hand and closed explicitly also raises once used again.",
+   "concept": "WithStatement",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "The file format behind a shelf is a 1979 idea",
+   "say": "Ken Thompson, already known for Unix and for the regular-expression search algorithm of an earlier chapter, wrote the first dbm, a simple key-value store that AT&T released in 1979 as part of Unix. dbm let a program store a string under a string key and get it back by that key alone, with no query language and no server, exactly the shape shelve.open() still presents today. Later rewrites, ndbm for extra features, GNU's own gdbm for crash tolerance, and Berkeley DB in 1991 from Sleepycat Software, replaced the original code but kept the same one-key-one-value idea, and Python's dbm package still picks among several such backends, dbm.sqlite3 first since Python 3.13, when a shelf is opened. Every shelf this chapter opens rests on a forty-six-year-old design for exactly one reason: looking a value up by one key is still the simplest way to save a Python program's own variables to disk. The account rests on these sources. 'DBM (computing)', Wikipedia, en.wikipedia.org/wiki/DBM_(computing) (written by Ken Thompson, released by AT&T, 1979; Berkeley DB, Sleepycat Software, 1991); Python documentation, dbm and shelve. Photo: Wikimedia Commons.",
+   "concept": "Shelves",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "Shelves: a dictionary that outlives the program",
+   "say": "shelve.open() opens a binary file on disk and hands back a shelf object that is read, written, counted and deleted from exactly like a dictionary, with keys() and values() both included, as long as every key is a string; close() must be called, or the shelf used in a with statement, before everything is reliably written out. A mutable value such as a list, read back out of a shelf and then changed in place with append(), is not noticed by the shelf at all unless it is assigned straight back to its key or the shelf is opened with writeback=True; dbm.whichdb(), shown closing this console, names dbm.sqlite3 as the backend chosen on this machine, first in line since Python 3.13.",
+   "concept": "ShelveOpen",
+   "visual": ""
+  },
+  {
+   "n": 17,
+   "title": "A 2001 write-up is shelve's plain alternative",
+   "say": "Working together at State Software, Douglas Crockford and Chip Morningstar wanted a browser and a server to exchange data without reloading the page, and built it on a technique Crockford had learned of from Netscape: writing a JavaScript object straight into a hidden frame. The reserved word 'do' broke an early version as a bare key, so Crockford quoted every key instead, and the quoted, minimal format he wrote up in 2001 became JSON; he opened json.org on 12 November 2002 and kept adding compatible parsers to it as other programmers wrote them, by design small enough to fit on a business card. The chapter sets exactly this format beside shelve as the alternative for data meant to be read by another program or language, with json.dump() and json.load() replacing shelve's own Python-only pickle. The account rests on these sources. 'JSON', Wikipedia, en.wikipedia.org/wiki/JSON (Crockford and Morningstar, State Software, 2001; json.org opened 12 November 2002); Python documentation, json - JSON encoder and decoder. Photo: Wikimedia Commons.",
+   "concept": "JsonSaving",
+   "visual": ""
+  },
+  {
+   "n": 18,
+   "title": "Plain alternative: saving data as json",
+   "say": "json.dump() and json.load() move plain data, strings, numbers, lists, dictionaries, true, false and null, between a Python program and a text file that any other program or language can also read, unlike a shelf's own Python-only pickle format. json.dumps() of a dictionary holding a tuple and an integer key shows exactly where that plain-text format falls short of Python's own richer types: the tuple is printed, and read back, as a plain list, and the integer key 5 is printed, and read back, as the string '5', neither loss something shelve's own binary format would ever make.",
+   "concept": "JsonSaving",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "Project 4: the state capitals quiz generator",
+   "say": "Project 4 keeps the 50 states and their capitals in one dictionary, shuffles the order of the states for each quiz, picks three wrong capitals at random for every question with random.sample(), shuffles those three together with the one right answer, and writes both a quiz file and an answer key file for each pass of its own loop, two files per quiz, seventy files in all across the chapter's own thirty-five. Run exactly as the chapter lists the code, with random.seed(10) added only so this result can be checked again, it reproduces the chapter's own research record in full: the header prints with no space at all, '(Form1)', and the whole answer key is written as one unbroken line with no newline between its own answers, a real gap between the chapter's prose and the code it actually lists, not a mistake introduced here.",
+   "concept": "QuizProgram",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "Practice: Mad Libs with a regex replacement",
+   "say": "Practice program 1 reads a short text file holding the placeholders ADJECTIVE, NOUN, ADVERB and VERB, and re.sub() with a function in place of a replacement string calls that function once for every match, in the order the placeholders appear, asking the user for one new word each time; the four answers typed here, silly, chandelier, screamed and pickup truck, fill the chapter's own four blanks in exactly that order. The finished string is printed and then saved to a brand-new file with write_text(), leaving the original source file untouched, and read back afterward to confirm the two copies are equal character for character.",
+   "concept": "MadLibs",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "Practice: searching files, and chapter questions",
+   "say": "Practice program 2 opens every .txt file a folder's own glob('*.txt') lists, and prints each line in any of them that matches a regular expression typed in by the user, with enumerate(f, start=1) numbering every line as it is read; the one .csv file in this console's own folder is correctly left out of every search. The chapter's own eleven practice questions close the chapter the same way this deck's own summary closes it, asking a reader to say in their own words what a relative path, an absolute path, the open() modes, and a shelf's own dictionary-like behaviour each actually are, every one of them answered exactly once already on an earlier slide.",
+   "concept": "RegexSearch",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "The chapter in six lines",
+   "say": "These six lines answer the route one part at a time. The first two cover a path as an object and the pieces it breaks into, the third covers a folder, the fourth and fifth cover a file opened by hand and the arguments that decide how its bytes become characters, and the sixth covers a program's own variables saved for a later run. If a line feels unproven, the part of the route that carries it has the slides with the executed examples.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 23,
+   "title": "Where to go from here",
+   "say": "Every link on this slide was opened on the day the deck was made. The textbook chapter is free to read online and has Project 4 and both practice programs in full, the reference links are the official documentation behind every quirk this deck flagged, and the PEPs and history links are the primary sources behind this chapter's own four stories and the two language changes, UTF-8 mode and the pathlib protocol, that most directly touch this chapter's own code.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 24,
+   "title": "What you should now be able to say",
+   "say": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The next chapter moves on from a program's own files to the web pages it can read.",
+   "concept": "",
+   "visual": ""
+  }
+ ]
+}

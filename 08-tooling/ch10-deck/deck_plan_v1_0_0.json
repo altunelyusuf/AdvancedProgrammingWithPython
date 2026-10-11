@@ -1,0 +1,1185 @@
+{
+ "meta": {
+  "title": "Chapter 10: Reading and Writing Files",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "1.0.0",
+  "python": "3.14.6",
+  "total": 24
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Chapter 10: Paths and Files",
+   "sub": "Naming a path, acting on a folder, and moving text and data through a file",
+   "items": [
+    {
+     "t": "code",
+     "x": 6.0,
+     "y": 0.85,
+     "w": 3.5,
+     "h": 0.95,
+     "fs": 11,
+     "cap": "run under Python 3.14.6",
+     "rows": [
+      [
+       "from pathlib import Path",
+       ""
+      ],
+      [
+       "Path('spam', 'bacon', 'eggs')",
+       "PosixPath('spam/bacon/eggs')"
+      ]
+     ]
+    }
+   ],
+   "notes": "Chapter 9 was about finding a pattern inside text you already had. This chapter is about where that text lives: a path names a file without touching it, pathlib builds that name as an object rather than a plain string, and once a path is in hand a program can create a folder, search it, and read or write the file it names, whole or piece by piece. Every example on these slides was run under Python 3.14.6 and the result printed beside it is the result Python gave on this machine.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Six parts; every range is a run of slides you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 6.3,
+     "h": 3.4,
+     "fs": 11.5,
+     "items": [
+      "Filepaths: path objects and working locations (slides 4-7)",
+      "Folders and file information (slides 8-9)",
+      "Text files: whole methods, opened files, encoding (slides 10-14)",
+      "Saved data: shelves and the plain alternative (slides 15-18)",
+      "Chapter programs: the quiz, Mad Libs, and search (slides 19-21)",
+      "Summary and resources (slides 22-23)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "24",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "4",
+       "label": "true stories, each with who, where, when and a link"
+      },
+      {
+       "n": "17",
+       "label": "consoles and programs, all run before they were shown"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has six parts. It starts with filepaths, a path as an object and the pieces it breaks into, moves to folders and file information, then to text files, opened by hand and converted between bytes and characters, then to saved data, a shelf and its plain alternative, then to the chapter's own programs, the quiz generator and the two practice programs, and ends with the summary and resources. The ranges name the exact slides, so you can return to the part you need, and four of the slides are true stories that explain where a piece of this chapter's own vocabulary came from.",
+   "take": "Six parts, from a path object to a saved shelf.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "The chapter's own competency questions; the summary comes back to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 2.2,
+     "fs": 13,
+     "items": [
+      "Which operations on a path only compute a new path, which ask the file system a question, and which change files or folders, and what decides that?",
+      "Which printed outputs and concepts of the chapter differ in current Python or between operating systems, and on what source?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 3.8,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 11.5,
+     "items": [
+      "5 branches",
+      "59 concepts",
+      "85 console rows",
+      "Python 3.14.6"
+     ]
+    }
+   ],
+   "notes": "The first question is the chapter's own spine: a path method either only computes a new path object, such as with_suffix or the / operator, or it only asks the file system a question, such as exists(), or it actually changes a file or folder on disk, such as mkdir() or write_text(), and which of the three it is decides whether running it twice is safe. The second question is this chapter's own watch-out: the chapter was written and printed on Windows, so several of its own outputs, file lists, error messages, and even one printed quiz transcript, read differently once actually run on today's Python on a different operating system, and the research record keeps every such gap on the record rather than silently fixing it. The chips give the size of the chapter.",
+   "take": "A path's own method only computes, only asks, or actually changes a file.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Path objects: building and joining a path",
+   "sub": "Path() returns an object, not a string; the / operator joins it to more names",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.58,
+     "rows": [
+      [
+       "from pathlib import Path, PureWindowsPath",
+       ""
+      ],
+      [
+       "Path('spam', 'bacon', 'eggs')",
+       "PosixPath('spam/bacon/eggs')"
+      ],
+      [
+       "str(Path('spam', 'bacon', 'eggs'))",
+       "'spam/bacon/eggs'"
+      ],
+      [
+       "str(PureWindowsPath('spam', 'bacon', 'eggs'))",
+       "'spam\\\\bacon\\\\eggs'"
+      ],
+      [
+       "Path('spam') / 'bacon' / 'eggs'",
+       "PosixPath('spam/bacon/eggs')"
+      ],
+      [
+       "'spam' / 'bacon'",
+       "TypeError: unsupported operand type(s) for /: 'str' and 'str'"
+      ]
+     ],
+     "fs": 11,
+     "cap": "run under Python 3.14.6",
+     "label": "Path() joins names into an object; / joins a path to a string or another path"
+    }
+   ],
+   "notes": "Path('spam', 'bacon', 'eggs') joins the names it is given with the separator of the operating system it runs on and returns a path object, not a string; str() is the separate step that turns that object back into text, which is why the chapter's own claim that Path() 'returns a string' is corrected the moment type() is actually called on it. The / operator does the identical join one step at a time and replaces the older os.path.join(), but it needs a path object on at least one side: 'spam' / 'bacon', two plain strings, raises TypeError, exactly as this console's own last row shows.",
+   "take": "Path() returns an object; / joins paths the way os.path.join() once did.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A 2012 proposal is why a path is an object",
+   "sub": "2012-07-30",
+   "items": [
+    {
+     "t": "card",
+     "head": "Antoine Pitrou, PEP 428",
+     "body": "'The pathlib module - object-oriented filesystem paths', dated 30 July 2012: a filesystem path should be its own object with its own methods, not a plain string passed to separate os.path functions.",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.5,
+     "h": 2.8,
+     "fs": 12.5
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "30 July 2012: PEP 428 is written, Antoine Pitrou",
+      "Discussed through 2013 on python-dev",
+      "Shipped in Python 3.4, March 2014",
+      "Path() is an object because of this one proposal"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Antoine Pitrou",
+     "where": "the Python Enhancement Proposals process",
+     "when": "2012-07-30",
+     "link": "https://peps.python.org/pep-0428/",
+     "linkText": "peps.python.org"
+    }
+   ],
+   "notes": "Antoine Pitrou wrote PEP 428, 'The pathlib module - object-oriented filesystem paths', dated 30 July 2012, proposing that a filesystem path be its own object with its own methods rather than a plain string passed to separate os.path functions. The proposal was discussed through 2013 and the module shipped two years after it was written, in Python 3.4, released in March 2014, bringing with it the pure and concrete path classes, the / join operator and the rich set of attributes, parts, parent, stem and suffix among them, that this chapter's own Path objects section now teaches as the ordinary way to build and take apart a path. Path('spam', 'bacon', 'eggs') and the chapter's own os.path.join() both existed before 2012; only one of them is an object with a is_file() method of its own, and that is Pitrou's one proposal. The account rests on these sources. PEP 428, 'The pathlib module', peps.python.org/pep-0428 (created 30 July 2012, Antoine Pitrou; shipped in Python 3.4, March 2014); Python documentation, pathlib. Photo: Wikimedia Commons.",
+   "take": "Path() is an object because of Pitrou's 2012 proposal, PEP 428.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Working locations: the working directory and home",
+   "sub": "A relative path is read from the working directory; Path.home() is always absolute",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 1.73,
+     "rows": [
+      [
+       "import os, shutil; shutil.rmtree('/tmp/ch10_lab', ignore_errors=True); os.makedirs('/tmp/ch10_lab'); os.chdir('/tmp/ch10_lab')",
+       ""
+      ],
+      [
+       "from pathlib import Path",
+       ""
+      ],
+      [
+       "Path.cwd().is_absolute()",
+       "True"
+      ],
+      [
+       "Path.home().is_absolute()",
+       "True"
+      ],
+      [
+       "Path('spam/bacon/eggs').is_absolute()",
+       "False"
+      ],
+      [
+       "Path('./spam.txt') == Path('spam.txt')",
+       "True"
+      ]
+     ],
+     "fs": 7.5,
+     "cap": "run under Python 3.14.6",
+     "label": "Path.cwd() and Path.home() are both absolute; a relative path is read from cwd"
+    },
+    {
+     "t": "text",
+     "x": 0.5,
+     "y": 3.6100000000000003,
+     "w": 9.0,
+     "h": 1.3399999999999999,
+     "fs": 11.5,
+     "body": "os.chdir() changes the working directory; pathlib has no method of its own for that one job. A single dot names this folder and two dots its parent; a leading ./ is optional, which is why Path('./spam.txt') and Path('spam.txt') compare equal."
+    }
+   ],
+   "notes": "Every running program has a current working directory, and a relative path such as Path('spam/bacon/eggs') is read starting from it; Path.cwd() and os.getcwd() both read that folder, and only os.chdir() changes it, which is why this console's own first row resets to a fixed folder before anything else runs. Path.home() returns the account's own home folder, always an absolute path wherever it is on disk, and Path.cwd().is_absolute() and Path.home().is_absolute() are both true for exactly that reason, while a plain relative path such as 'spam/bacon/eggs' is not.",
+   "take": "A relative path reads from cwd; Path.home() is always absolute.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Path anatomy and derived paths",
+   "sub": "A path breaks apart into name, stem, suffix and parent; with_suffix builds a new one",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.18,
+     "rows": [
+      [
+       "from pathlib import PureWindowsPath, PurePosixPath",
+       ""
+      ],
+      [
+       "p = PureWindowsPath('C:/Users/Al/spam.txt')",
+       ""
+      ],
+      [
+       "(p.name, p.stem, p.suffix, p.drive)",
+       "('spam.txt', 'spam', '.txt', 'C:')"
+      ],
+      [
+       "p.parent",
+       "PureWindowsPath('C:/Users/Al')"
+      ],
+      [
+       "p.parts",
+       "('C:\\\\', 'Users', 'Al', 'spam.txt')"
+      ],
+      [
+       "p.parents[1]",
+       "PureWindowsPath('C:/Users')"
+      ],
+      [
+       "p.with_suffix('.csv')",
+       "PureWindowsPath('C:/Users/Al/spam.csv')"
+      ],
+      [
+       "PurePosixPath('/home/al/reports/spam.txt').relative_to('/home/al')",
+       "PurePosixPath('reports/spam.txt')"
+      ]
+     ],
+     "fs": 11,
+     "cap": "run under Python 3.14.6",
+     "label": "name, stem, suffix, drive and parent read a path apart; with_suffix and relative_to build a new one"
+    }
+   ],
+   "notes": "A path object breaks apart into named pieces with no disk touched at all: name is its very last part, stem is that name with its suffix removed, suffix is the extension itself, and drive names the Windows drive letter where one exists; parent is itself another path object, one level up, while parts is the same path read instead as an ordered tuple and parents an ordered sequence of every folder above it. with_suffix() and relative_to(), shown closing this console, build a brand-new path from an existing one's own pieces without ever reading or writing a file; the chapter itself, as printed, does not present either method.",
+   "take": "name, stem, suffix and parent read a path apart with no disk touched.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Creating folders and finding files",
+   "sub": "mkdir(parents=True) makes a whole chain of folders; a glob pattern lists matching files",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 1.73,
+     "rows": [
+      [
+       "import os, shutil; shutil.rmtree('/tmp/ch10_lab', ignore_errors=True); os.makedirs('/tmp/ch10_lab'); os.chdir('/tmp/ch10_lab')",
+       ""
+      ],
+      [
+       "from pathlib import Path",
+       ""
+      ],
+      [
+       "Path('delicious/walnut/waffles').mkdir(parents=True)",
+       ""
+      ],
+      [
+       "sorted(p.name for p in Path('.').rglob('*'))",
+       "['delicious', 'waffles', 'walnut']"
+      ],
+      [
+       "for n in ('project1.txt', 'project2.txt', 'projectX.txt', 'project10.txt'): Path(n).write_text('x')",
+       ""
+      ],
+      [
+       "sorted(Path('.').glob('project?.txt'))",
+       "[PosixPath('project1.txt'), PosixPath('project2.txt'), PosixPath('projectX.txt')]"
+      ],
+      [
+       "sorted(str(p) for p in Path('.').glob('*.txt'))",
+       "['project1.txt', 'project10.txt', 'project2.txt', 'projectX.txt']"
+      ]
+     ],
+     "fs": 7.5,
+     "cap": "run under Python 3.14.6",
+     "label": "mkdir(parents=True) creates every missing folder; glob('*.txt') lists a folder's own matching files"
+    }
+   ],
+   "notes": "Path.mkdir() makes exactly one folder and needs parents=True to also create every folder above it that is missing, exactly the way os.makedirs() always behaves on its own; both raise FileExistsError for a folder that is already there unless exist_ok=True is given. A glob pattern such as '*.txt' or the single-character '?' of 'project?.txt' searches one folder's own files, correctly leaving out a name such as project10.txt whose extra digit does not fit a single '?' at all; a ** segment or the dedicated rglob() method, not shown on this console, instead searches the whole tree of folders beneath one.",
+   "take": "mkdir(parents=True) builds a chain; a glob pattern lists matching names.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "File information: exists, is_file, and stat",
+   "sub": "exists(), is_file() and is_dir() ask without raising; stat() answers size and time",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.28,
+     "rows": [
+      [
+       "import os, shutil; shutil.rmtree('/tmp/ch10_lab', ignore_errors=True); os.makedirs('/tmp/ch10_lab'); os.chdir('/tmp/ch10_lab')",
+       ""
+      ],
+      [
+       "from pathlib import Path",
+       ""
+      ],
+      [
+       "import time",
+       ""
+      ],
+      [
+       "Path('f.txt').write_text('Hello, world!')",
+       "13"
+      ],
+      [
+       "[(q.exists(), q.is_file(), q.is_dir()) for q in (Path('.'), Path('f.txt'), Path('nothing'))]",
+       "[(True, False, True), (True, True, False), (False, False, False)]"
+      ],
+      [
+       "Path('f.txt').stat().st_size",
+       "13"
+      ],
+      [
+       "os.utime('f.txt', (1712627129, 1712627129))",
+       ""
+      ],
+      [
+       "Path('f.txt').stat().st_mtime",
+       "1712627129.0"
+      ],
+      [
+       "time.asctime(time.gmtime(Path('f.txt').stat().st_mtime))",
+       "'Tue Apr  9 01:45:29 2024'"
+      ]
+     ],
+     "fs": 7.5,
+     "cap": "run under Python 3.14.6",
+     "label": "exists(), is_file() and is_dir() never raise; stat() answers size and time together"
+    }
+   ],
+   "notes": "exists(), is_file() and is_dir() each answer a plain true or false about a path, every one of them False together for a path that is simply not there, and from Python 3.14 on none of the three raises an OSError even when the check itself is refused. stat() answers a richer question about a file that does exist: st_size is its size in bytes, and st_mtime, read here after being set by hand with os.utime(), is the time it was last changed, counted in seconds since 1 January 1970, which time.asctime(time.gmtime(...)) turns back into a readable date exactly five hours away from the chapter's own local-time answer for the identical instant.",
+   "take": "exists/is_file/is_dir never raise; stat() answers size and time together.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Whole file methods: write_text and read_text",
+   "sub": "One call each opens, acts, and closes; the character count returned is not a byte count.",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.28,
+     "rows": [
+      [
+       "import os, shutil; shutil.rmtree('/tmp/ch10_lab', ignore_errors=True); os.makedirs('/tmp/ch10_lab'); os.chdir('/tmp/ch10_lab')",
+       ""
+      ],
+      [
+       "from pathlib import Path",
+       ""
+      ],
+      [
+       "Path('spam.txt').write_text('Hello, world!')",
+       "13"
+      ],
+      [
+       "Path('spam.txt').read_text()",
+       "'Hello, world!'"
+      ],
+      [
+       "Path('spam.txt').write_text('caf\\u00e9', encoding='utf-8')",
+       "4"
+      ],
+      [
+       "Path('spam.txt').stat().st_size",
+       "5"
+      ],
+      [
+       "Path('b.bin').write_bytes(bytes([0, 1, 255]))",
+       "3"
+      ],
+      [
+       "Path('b.bin').read_bytes()",
+       "b'\\x00\\x01\\xff'"
+      ]
+     ],
+     "fs": 7.5,
+     "cap": "run under Python 3.14.6",
+     "label": "write_text/read_text move a whole string; write_bytes/read_bytes do the same for binary data"
+    }
+   ],
+   "notes": "write_text() creates or overwrites a file with a string in one call and returns the number of characters written, which is not always the number of bytes actually stored on disk: this console's own accented character, encoded as UTF-8, costs two bytes for the one character, so write_text() returns 4 while stat() then reports 5 bytes on disk for the same file. read_text() opens, reads and closes the file in one call as well, returning its whole content as one string; write_bytes() and read_bytes() do the identical one-call job for binary data such as b'\\x00\\x01\\xff', which has no text meaning at all and is never passed through an encoding.",
+   "take": "write_text() returns a character count, which is not a byte count.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Opened files: modes, reading and closing",
+   "sub": "open() returns a file object; read, readlines, write and close each act on it in turn",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.25,
+     "rows": [
+      [
+       "import os, shutil; shutil.rmtree('/tmp/ch10_lab', ignore_errors=True); os.makedirs('/tmp/ch10_lab'); os.chdir('/tmp/ch10_lab')",
+       ""
+      ],
+      [
+       "bacon_file = open('bacon.txt', 'w', encoding='UTF-8')",
+       ""
+      ],
+      [
+       "bacon_file.write('Hello, world!\\n')",
+       "14"
+      ],
+      [
+       "bacon_file.write('Bacon is not a vegetable.')",
+       "25"
+      ],
+      [
+       "bacon_file.close()",
+       ""
+      ],
+      [
+       "open('bacon.txt', encoding='UTF-8').read()",
+       "'Hello, world!\\nBacon is not a vegetable.'"
+      ],
+      [
+       "g = open('bacon.txt', encoding='UTF-8')",
+       ""
+      ],
+      [
+       "g.readlines()",
+       "['Hello, world!\\n', 'Bacon is not a vegetable.']"
+      ],
+      [
+       "g.read()",
+       "''"
+      ],
+      [
+       "g.seek(0)",
+       "0"
+      ],
+      [
+       "g.readline()",
+       "'Hello, world!\\n'"
+      ],
+      [
+       "g.close()",
+       ""
+      ],
+      [
+       "open('bacon.txt', 'x')",
+       "FileExistsError: [Errno 17] File exists: 'bacon.txt'"
+      ]
+     ],
+     "fs": 7.5,
+     "cap": "run under Python 3.14.6",
+     "label": "open() in mode r, w, a or x returns a file object read, written and closed by hand"
+    }
+   ],
+   "notes": "open() returns a file object in whichever mode it is given: 'r' reads and is the default, 'w' overwrites after emptying the file, 'a' appends to the end of it, and 'x' creates a brand-new file but raises FileExistsError the moment the name is already taken, exactly as this console's own last row shows. write() returns the number of characters written and, unlike print(), never adds its own newline; readlines() returns every remaining line as a list, and a file object remembers its own position between calls, so a second read right after readlines() returns only the empty string, until seek(0) moves that position back to the very start.",
+   "take": "open() in mode x fails the moment the file is already there.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "UTF-8, designed on a 1992 diner placemat",
+   "sub": "1992-09",
+   "items": [
+    {
+     "t": "card",
+     "head": "Ken Thompson and Rob Pike",
+     "body": "Rob Pike: UTF-8 was 'designed, in front of my eyes, on a placemat in a New Jersey diner' in September 1992, Thompson working out the bit-packing by hand; Plan 9 ran on it within the week.",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.5,
+     "h": 2.8,
+     "fs": 12.5
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "4 Sep 1992: first working Plan 9 code",
+      "8 Sep 1992: proposal mailed to X/Open",
+      "Bell Labs, Murray Hill, New Jersey",
+      "'utf-8' in open() names this one dinner"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Ken Thompson and Rob Pike",
+     "where": "a diner in New Jersey, and Bell Labs, Murray Hill",
+     "when": "1992-09",
+     "link": "https://doc.cat-v.org/bell_labs/utf-8_history",
+     "linkText": "doc.cat-v.org"
+    }
+   ],
+   "notes": "Rob Pike wrote that UTF-8 was 'designed, in front of my eyes, on a placemat in a New Jersey diner one night in September' 1992, with Ken Thompson working out the bit-packing by hand while Pike watched; the surviving source changes date the first working code to 4 September 1992 and a proposal mailed to the X/Open committee to 8 September 1992. The two had been asked to review a rival encoding, FSS/UTF, for the Plan 9 operating system they were building at Bell Labs, found it unable to recover a byte stream picked up mid-character, and designed a fix overnight instead; by the end of that week, Plan 9 ran entirely on the format. The chapter's own encoding argument to open(), almost always 'utf-8' by the chapter's own count, names the format that one dinner produced, now the assumed encoding of the web and, from Python 3.15 on, the language's own default. The account rests on these sources. Rob Pike, 'UTF-8 history', doc.cat-v.org/bell_labs/utf-8_history (first code 4 Sep 1992, X/Open proposal 8 Sep 1992); Python documentation, io - the encoding argument, and PEP 686. Photo: Wikimedia Commons.",
+   "take": "'utf-8' in open() names a format from one 1992 dinner.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Text encoding: encoding, newline, and errors",
+   "sub": "encoding converts bytes to characters; errors decides what happens to a byte it cannot map",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.56,
+     "rows": [
+      [
+       "import os, shutil; shutil.rmtree('/tmp/ch10_lab', ignore_errors=True); os.makedirs('/tmp/ch10_lab'); os.chdir('/tmp/ch10_lab')",
+       ""
+      ],
+      [
+       "from pathlib import Path",
+       ""
+      ],
+      [
+       "open('a.txt', 'wb').write('caf\\u00e9'.encode('utf-8'))",
+       "5"
+      ],
+      [
+       "open('a.txt', encoding='utf-8').read()",
+       "'caf\u00e9'"
+      ],
+      [
+       "open('a.txt', encoding='ascii').read()",
+       "UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in position 3: ordinal not in range(128)"
+      ],
+      [
+       "open('a.txt', encoding='ascii', errors='replace').read()",
+       "'caf\ufffd\ufffd'"
+      ],
+      [
+       "Path('n.txt').write_text('a\\nb', newline='\\r\\n')",
+       "3"
+      ],
+      [
+       "Path('n.txt').read_bytes()",
+       "b'a\\r\\nb'"
+      ],
+      [
+       "Path('n.txt').read_text(newline='')",
+       "'a\\r\\nb'"
+      ]
+     ],
+     "fs": 7.5,
+     "cap": "run under Python 3.14.6",
+     "label": "encoding chooses the byte-to-character map; errors chooses what happens when a byte cannot be mapped"
+    }
+   ],
+   "notes": "The encoding argument names the map used to turn the bytes of a file into the characters of a string; 'utf-8' is almost always the right choice, and reading the identical two-byte accented character under 'ascii' instead raises UnicodeDecodeError, exactly as this console shows, because ascii has no mapping for a byte above 127 at all. The errors argument changes what happens next: 'replace', shown here, puts the placeholder character U+FFFD in an unreadable byte's place rather than stopping the program outright. The newline argument governs a separate translation, between the \\n Python always uses internally and whichever line ending the running operating system expects on disk.",
+   "take": "ascii cannot decode a byte above 127; errors='replace' papers over it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Automatic closing: the with statement",
+   "sub": "with closes a file however its block ends; a closed file raises ValueError if used again",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 1.19,
+     "rows": [
+      [
+       "import os, shutil; shutil.rmtree('/tmp/ch10_lab', ignore_errors=True); os.makedirs('/tmp/ch10_lab'); os.chdir('/tmp/ch10_lab')",
+       ""
+      ],
+      [
+       "with open('data.txt', 'w', encoding='UTF-8') as file_obj: file_obj.write('abc')",
+       ""
+      ],
+      [
+       "file_obj.closed",
+       "True"
+      ],
+      [
+       "file_obj.write('more')",
+       "ValueError: I/O operation on closed file."
+      ]
+     ],
+     "fs": 7.5,
+     "cap": "run under Python 3.14.6",
+     "label": "a with statement closes the file on every way out of its block, even an exception"
+    },
+    {
+     "t": "card",
+     "head": "Why with, not close()",
+     "body": "A with statement's own __exit__ method is guaranteed to run once its __enter__ has returned, whether the block ends normally, returns early, or raises - a guarantee a bare close() call placed by hand can always be skipped by an exception in between.",
+     "x": 0.5,
+     "y": 3.0700000000000003,
+     "w": 9.0,
+     "h": 1.88,
+     "fs": 12
+    }
+   ],
+   "notes": "A with statement creates a context manager and closes the file object the moment its own block is left, by reaching the block's end, by a return, or by an exception, which is why code written as with open(...) as file_obj: never needs close() called on it by hand at all. Once that block has ended, the file object's own closed attribute reads True, and a read or a write on it afterward raises exactly ValueError: I/O operation on closed file, the same error a file opened by hand and closed explicitly also raises once used again.",
+   "take": "A with block's file is closed on every way out, even an exception.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The file format behind a shelf is a 1979 idea",
+   "sub": "1979",
+   "items": [
+    {
+     "t": "card",
+     "head": "Ken Thompson, dbm",
+     "body": "AT&T released dbm, written by Ken Thompson, in 1979: a key-value file with no query language and no server at all, exactly the shape shelve.open() still presents today.",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.5,
+     "h": 2.8,
+     "fs": 12.5
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "1979: dbm, Ken Thompson, AT&T Bell Labs",
+      "1991: Berkeley DB, a ndbm replacement",
+      "Python's dbm picks a backend at run time",
+      "A shelf's one-key-one-value shape is 1979's"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Ken Thompson",
+     "where": "AT&T Bell Laboratories, Murray Hill, New Jersey",
+     "when": "1979",
+     "link": "https://en.wikipedia.org/wiki/DBM_(computing)",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Ken Thompson, already known for Unix and for the regular-expression search algorithm of an earlier chapter, wrote the first dbm, a simple key-value store that AT&T released in 1979 as part of Unix. dbm let a program store a string under a string key and get it back by that key alone, with no query language and no server, exactly the shape shelve.open() still presents today. Later rewrites, ndbm for extra features, GNU's own gdbm for crash tolerance, and Berkeley DB in 1991 from Sleepycat Software, replaced the original code but kept the same one-key-one-value idea, and Python's dbm package still picks among several such backends, dbm.sqlite3 first since Python 3.13, when a shelf is opened. Every shelf this chapter opens rests on a forty-six-year-old design for exactly one reason: looking a value up by one key is still the simplest way to save a Python program's own variables to disk. The account rests on these sources. 'DBM (computing)', Wikipedia, en.wikipedia.org/wiki/DBM_(computing) (written by Ken Thompson, released by AT&T, 1979; Berkeley DB, Sleepycat Software, 1991); Python documentation, dbm and shelve. Photo: Wikimedia Commons.",
+   "take": "A shelf's one-key-one-value file dates to Thompson's 1979 dbm.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Shelves: a dictionary that outlives the program",
+   "sub": "shelve.open() behaves like a dictionary; a changed mutable value can still be lost",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.15,
+     "rows": [
+      [
+       "import os, shutil; shutil.rmtree('/tmp/ch10_lab', ignore_errors=True); os.makedirs('/tmp/ch10_lab'); os.chdir('/tmp/ch10_lab')",
+       ""
+      ],
+      [
+       "import shelve, dbm",
+       ""
+      ],
+      [
+       "shelf_file = shelve.open('mydata')",
+       ""
+      ],
+      [
+       "shelf_file['cats'] = ['Zophie', 'Pooka', 'Simon']",
+       ""
+      ],
+      [
+       "shelf_file.close()",
+       ""
+      ],
+      [
+       "shelf_file = shelve.open('mydata')",
+       ""
+      ],
+      [
+       "list(shelf_file.keys())",
+       "['cats']"
+      ],
+      [
+       "shelf_file['cats']",
+       "['Zophie', 'Pooka', 'Simon']"
+      ],
+      [
+       "shelf_file.close()",
+       ""
+      ],
+      [
+       "dbm.whichdb('mydata')",
+       "'dbm.sqlite3'"
+      ]
+     ],
+     "fs": 7.5,
+     "cap": "run under Python 3.14.6",
+     "label": "shelve.open() behaves like a dictionary saved to disk; dbm.whichdb() names the backend it chose"
+    }
+   ],
+   "notes": "shelve.open() opens a binary file on disk and hands back a shelf object that is read, written, counted and deleted from exactly like a dictionary, with keys() and values() both included, as long as every key is a string; close() must be called, or the shelf used in a with statement, before everything is reliably written out. A mutable value such as a list, read back out of a shelf and then changed in place with append(), is not noticed by the shelf at all unless it is assigned straight back to its key or the shelf is opened with writeback=True; dbm.whichdb(), shown closing this console, names dbm.sqlite3 as the backend chosen on this machine, first in line since Python 3.13.",
+   "take": "A shelf never notices a mutable value changed in place, unmarked.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A 2001 write-up is shelve's plain alternative",
+   "sub": "2001",
+   "items": [
+    {
+     "t": "card",
+     "head": "Crockford and Morningstar",
+     "body": "At State Software, the two wrote up a minimal, quoted-key format in 2001 so a browser and a server could exchange data without a page reload; Crockford opened json.org on 12 November 2002.",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.5,
+     "h": 2.8,
+     "fs": 12
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "2001: the format is written up, State Software",
+      "12 Nov 2002: json.org opens",
+      "Designed small enough for a business card",
+      "json.dump/load replace shelve's own pickle"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Douglas Crockford and Chip Morningstar",
+     "where": "State Software, a consulting firm in California",
+     "when": "2001",
+     "link": "https://en.wikipedia.org/wiki/JSON",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Working together at State Software, Douglas Crockford and Chip Morningstar wanted a browser and a server to exchange data without reloading the page, and built it on a technique Crockford had learned of from Netscape: writing a JavaScript object straight into a hidden frame. The reserved word 'do' broke an early version as a bare key, so Crockford quoted every key instead, and the quoted, minimal format he wrote up in 2001 became JSON; he opened json.org on 12 November 2002 and kept adding compatible parsers to it as other programmers wrote them, by design small enough to fit on a business card. The chapter sets exactly this format beside shelve as the alternative for data meant to be read by another program or language, with json.dump() and json.load() replacing shelve's own Python-only pickle. The account rests on these sources. 'JSON', Wikipedia, en.wikipedia.org/wiki/JSON (Crockford and Morningstar, State Software, 2001; json.org opened 12 November 2002); Python documentation, json - JSON encoder and decoder. Photo: Wikimedia Commons.",
+   "take": "json, shelve's plain alternative, was written up in 2001.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Plain alternative: saving data as json",
+   "sub": "json writes plain data as readable text any program can read; a tuple comes back as a list",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 1.73,
+     "rows": [
+      [
+       "import json",
+       ""
+      ],
+      [
+       "json.dumps({'cats': ['Zophie'], 'pair': (1, 2), 5: 'five'})",
+       "'{\"cats\": [\"Zophie\"], \"pair\": [1, 2], \"5\": \"five\"}'"
+      ],
+      [
+       "json.loads(json.dumps({'pair': (1, 2)}))",
+       "{'pair': [1, 2]}"
+      ]
+     ],
+     "fs": 15,
+     "cap": "run under Python 3.14.6",
+     "label": "json.dumps/loads round-trip plain data as text; a tuple comes back a list, an int key a string"
+    },
+    {
+     "t": "card",
+     "head": "What json cannot keep",
+     "body": "A tuple written with json.dumps() always comes back as a list, and a non-string dictionary key such as the integer 5 always comes back as the string '5'; shelve, by contrast, keeps both exactly, at the cost of being readable only by Python's own pickle.",
+     "x": 0.5,
+     "y": 3.6100000000000003,
+     "w": 9.0,
+     "h": 1.3399999999999999,
+     "fs": 12.5
+    }
+   ],
+   "notes": "json.dump() and json.load() move plain data, strings, numbers, lists, dictionaries, true, false and null, between a Python program and a text file that any other program or language can also read, unlike a shelf's own Python-only pickle format. json.dumps() of a dictionary holding a tuple and an integer key shows exactly where that plain-text format falls short of Python's own richer types: the tuple is printed, and read back, as a plain list, and the integer key 5 is printed, and read back, as the string '5', neither loss something shelve's own binary format would ever make.",
+   "take": "json keeps every value readable, but a tuple becomes a list.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Project 4: the state capitals quiz generator",
+   "sub": "A dictionary of 50 capitals, shuffled per quiz, written to a quiz file and an answer key",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 1.56,
+     "lines": [
+      "            random.shuffle(answer_options)",
+      "",
+      "            quiz_file.write(f'{question_num + 1}. Capital of {states[question_num]}:\\n')",
+      "            for i in range(4):",
+      "                quiz_file.write(f\"    {'ABCD'[i]}. {answer_options[i]}\\n\")",
+      "            quiz_file.write('\\n')",
+      "",
+      "            answer_key_file.write('%d.%s' % (question_num + 1, 'ABCD'[answer_options.index(correct_capital)]))",
+      ""
+     ],
+     "fs": 7,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program capitalsQuiz_v1_0_0.py, lines 48 to 56 of 62 - Python 3.14.6"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 3.2600000000000002,
+     "w": 9.0,
+     "h": 1.75,
+     "lines": [],
+     "fs": 7,
+     "compact": true,
+     "out": "Name:\n\nDate:\n\nPeriod:\n\n                    State Capitals Quiz (Form1)\n\n1. Capital of South Dakota:\n\n--- answer key 1, first 20 characters (one unbroken line) ---\n1.D2.C3.C4.B5.C6.B7.",
+     "outLabel": "prints",
+     "label": "prints: the start of quiz 1 and its answer key, one unbroken line, letters only"
+    }
+   ],
+   "notes": "Project 4 keeps the 50 states and their capitals in one dictionary, shuffles the order of the states for each quiz, picks three wrong capitals at random for every question with random.sample(), shuffles those three together with the one right answer, and writes both a quiz file and an answer key file for each pass of its own loop, two files per quiz, seventy files in all across the chapter's own thirty-five. Run exactly as the chapter lists the code, with random.seed(10) added only so this result can be checked again, it reproduces the chapter's own research record in full: the header prints with no space at all, '(Form1)', and the whole answer key is written as one unbroken line with no newline between its own answers, a real gap between the chapter's prose and the code it actually lists, not a mistake introduced here.",
+   "take": "The chapter's own listed code writes '(Form1)' and one joined key line.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Practice: Mad Libs with a regex replacement",
+   "sub": "re.sub() with a function asks for a new word at every ADJECTIVE, NOUN, ADVERB or VERB",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 1.72,
+     "lines": [
+      "    os.chdir(folder)",
+      "    source = Path('panda.txt')",
+      "    source.write_text(",
+      "        'The ADJECTIVE panda walked to the NOUN and then VERB. A nearby NOUN was\\n'",
+      "        'unaffected by these events.', encoding='utf-8')",
+      "",
+      "    text = source.read_text(encoding='utf-8')",
+      "",
+      "    def ask(match):"
+     ],
+     "fs": 8,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program madLibs_v1_0_0.py, lines 7 to 15 of 26 - Python 3.14.6"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 3.4200000000000004,
+     "w": 9.0,
+     "h": 1.5,
+     "lines": [],
+     "fs": 8,
+     "compact": true,
+     "out": "silly\nchandelier\nscreamed\npickup truck\nThe silly panda walked to the chandelier and then screamed. A nearby pickup truck was\nunaffected by these events.\npanda_filled.txt 113 True",
+     "outLabel": "prints",
+     "label": "typed: silly, chandelier, screamed, pickup truck - one answer per blank, in order"
+    }
+   ],
+   "notes": "Practice program 1 reads a short text file holding the placeholders ADJECTIVE, NOUN, ADVERB and VERB, and re.sub() with a function in place of a replacement string calls that function once for every match, in the order the placeholders appear, asking the user for one new word each time; the four answers typed here, silly, chandelier, screamed and pickup truck, fill the chapter's own four blanks in exactly that order. The finished string is printed and then saved to a brand-new file with write_text(), leaving the original source file untouched, and read back afterward to confirm the two copies are equal character for character.",
+   "take": "re.sub() with a function asks for one new word at each match, in order.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Practice: searching files, and chapter questions",
+   "sub": "glob('*.txt') lists the files; enumerate(f, start=1) numbers every line a pattern matches",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.65,
+     "lines": [
+      "def find_matches(folder, pattern):",
+      "    regex = re.compile(pattern)",
+      "    matches = []",
+      "    for path in sorted(Path(folder).glob('*.txt')):",
+      "        with open(path, encoding='utf-8') as text_file:",
+      "            for number, line in enumerate(text_file, start=1):",
+      "                if regex.search(line):",
+      "                    matches.append(f'{path.name}:{number}: {line.rstrip()}')",
+      "    return matches",
+      "",
+      "",
+      "with tempfile.TemporaryDirectory() as folder:",
+      "    os.chdir(folder)",
+      "    Path('a.txt').write_text('spam and eggs\\nbacon alone\\nSPAM again\\n', encoding='utf-8')",
+      "    Path('b.txt').write_text('nothing here\\nspam, glorious spam\\n', encoding='utf-8')",
+      "    Path('notes.csv').write_text('spam,1\\n', encoding='utf-8')",
+      "",
+      "    pattern = input('Enter a regular expression to search for: ')",
+      "    for line in find_matches(folder, pattern):",
+      "        print(line)"
+     ],
+     "fs": 8,
+     "compact": true,
+     "out": "spam\na.txt:1: spam and eggs\nb.txt:2: spam, glorious spam",
+     "outLabel": "prints",
+     "label": "program regexSearchFiles_v1_0_0.py, lines 7 to 26 of 26 - Python 3.14.6"
+    }
+   ],
+   "notes": "Practice program 2 opens every .txt file a folder's own glob('*.txt') lists, and prints each line in any of them that matches a regular expression typed in by the user, with enumerate(f, start=1) numbering every line as it is read; the one .csv file in this console's own folder is correctly left out of every search. The chapter's own eleven practice questions close the chapter the same way this deck's own summary closes it, asking a reader to say in their own words what a relative path, an absolute path, the open() modes, and a shelf's own dictionary-like behaviour each actually are, every one of them answered exactly once already on an earlier slide.",
+   "take": "glob('*.txt') lists the files a user-typed pattern then searches.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in six lines",
+   "sub": "One line for each part of the route",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.5,
+     "fs": 11.5,
+     "items": [
+      "Path() returns an object, not a string; / joins it to more names the way os.path.join() once did.",
+      "A relative path reads from the working directory; name, stem, suffix and parent read a path apart.",
+      "mkdir(parents=True) builds a chain of folders; a glob pattern lists the files that match it.",
+      "write_text/read_text move a whole file in one call; open() in mode r, w, a or x returns a file object.",
+      "The encoding argument converts bytes to characters; a with block closes its file on every way out.",
+      "A shelf behaves like a dictionary saved to disk; json keeps the same data readable by any program."
+     ]
+    }
+   ],
+   "notes": "These six lines answer the route one part at a time. The first two cover a path as an object and the pieces it breaks into, the third covers a folder, the fourth and fifth cover a file opened by hand and the arguments that decide how its bytes become characters, and the sixth covers a program's own variables saved for a later run. If a line feels unproven, the part of the route that carries it has the slides with the executed examples.",
+   "take": "If a line feels unproven, its slides hold the example.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Every link was opened on the day this deck was made",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.55,
+     "fs": 9.5,
+     "groups": [
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "Automate the Boring Stuff with Python, 3rd edition",
+         "https://automatetheboringstuff.com/3e/chapter10.html"
+        ],
+        [
+         "pathlib \u2014 Object-oriented filesystem paths",
+         "https://docs.python.org/3/library/pathlib.html"
+        ],
+        [
+         "shelve \u2014 Python object persistence",
+         "https://docs.python.org/3/library/shelve.html"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "Built-in Functions (open)",
+         "https://docs.python.org/3/library/functions.html"
+        ],
+        [
+         "os \u2014 Miscellaneous operating system interfaces",
+         "https://docs.python.org/3/library/os.html"
+        ],
+        [
+         "json \u2014 JSON encoder and decoder",
+         "https://docs.python.org/3/library/json.html"
+        ]
+       ]
+      },
+      {
+       "head": "PEPs and history",
+       "rows": [
+        [
+         "PEP 686 \u2013 Make UTF-8 mode default",
+         "https://peps.python.org/pep-0686/"
+        ],
+        [
+         "PEP 597 \u2013 Add optional EncodingWarning",
+         "https://peps.python.org/pep-0597/"
+        ],
+        [
+         "PEP 428 \u2013 The pathlib module \u2013 object-oriented filesystem paths",
+         "https://peps.python.org/pep-0428/"
+        ],
+        [
+         "PEP 519 \u2013 Adding a file system path protocol",
+         "https://peps.python.org/pep-0519/"
+        ],
+        [
+         "Rob Pike's UTF-8 history",
+         "https://doc.cat-v.org/bell_labs/utf-8_history"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Every link on this slide was opened on the day the deck was made. The textbook chapter is free to read online and has Project 4 and both practice programs in full, the reference links are the official documentation behind every quirk this deck flagged, and the PEPs and history links are the primary sources behind this chapter's own four stories and the two language changes, UTF-8 mode and the pathlib protocol, that most directly touch this chapter's own code.",
+   "take": "History, documentation and PEPs, opened the day this deck was built.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What you should now be able to say",
+   "sub": "Four claims, each carried by a result you saw printed",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 1.5,
+     "w": 8.8,
+     "h": 2.4,
+     "fs": 15,
+     "items": [
+      "Path() returns an object; a method either computes a path, asks a question, or changes the disk.",
+      "write_text/read_text and open() in mode r, w, a or x both read and write a file, whole or by hand.",
+      "The encoding argument converts bytes to characters; a with block closes its file no matter how it ends.",
+      "A shelf behaves like a dictionary saved to disk; json keeps the same plain data readable by any program."
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.6,
+     "y": 4.1,
+     "w": 8.8,
+     "h": 0.6,
+     "fs": 13,
+     "big": true,
+     "items": [
+      "85 console rows run",
+      "3 programs run",
+      "4 true stories"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The next chapter moves on from a program's own files to the web pages it can read.",
+   "take": "Questions are welcome; bring one path operation you could not predict.",
+   "bg": "light"
+  }
+ ]
+}
