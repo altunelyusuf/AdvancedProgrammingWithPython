@@ -4,7 +4,7 @@ runs each program under every older interpreter found on this machine and requir
 import glob, json, os, subprocess, sys, collections
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PY = "/tmp/claude-0/core/v314/bin/python"
+PY = "/root/.local/bin/python3.14"
 OLDER = [p for p in ("/usr/bin/python3.11", "/usr/bin/python3.12", "/usr/bin/python3.13") if os.path.exists(p)]  # stand-ins for the page's Pyodide
 LEVELS = {"Remember", "Understand", "Apply", "Analyze"}
 NOOUT = "(no output)"

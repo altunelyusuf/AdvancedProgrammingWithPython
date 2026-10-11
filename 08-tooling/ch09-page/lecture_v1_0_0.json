@@ -1,0 +1,161 @@
+{
+ "_version": "1.0.0",
+ "_deck": "1.0.0",
+ "_python": "3.14.6",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 9: Regular Expressions",
+   "say": "Chapter 8 was about a string once you already had it. This chapter is about finding one: a regular expression is a small language, written inside a string, for describing the shape of text rather than its exact characters, and the re module compiles that description once and then asks it to search, find every match, or replace what it finds. Every example on these slides was run under Python 3.14.6 and the result printed beside it is the result Python gave.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "Today's route",
+   "say": "The route has six parts. It starts with finding patterns and the Pattern and Match objects, moves to pattern syntax for grouping and character sets, then to repetition and anchors, then to pattern operations for finding, replacing and flags, then to patterns inside real programs - Project 3, the practice programs and Humre - and ends with the summary and resources. The ranges name the exact slides, so you can return to the part you need, and four of the slides are true stories that explain where a piece of syntax came from.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "The questions this chapter answers",
+   "say": "The first question is the chapter's own spine: a pattern's syntax answers four separate questions - what may sit at one position (a character set or a shorthand class), how many times it repeats (a quantifier, greedy or lazy), where it must sit (an anchor), and what the match keeps for later (a group) - and a method such as search, findall or sub then does something with the answer. The second question is this chapter's own watch-out: the chapter was printed before Python renamed its own error type, before its own dollar sign and word-boundary behaviour were clarified in the documentation, and before Humre reached a release that differs from the chapter's own listing, so a few of its claims need a source check against the version actually running. The chips give the size of the chapter.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "Finding patterns without a regular expression",
+   "say": "Before the re module appears, the chapter writes is_phone_number() by hand: it rejects any text that is not exactly twelve characters, then checks that the three digit groups are each decimal with isdecimal() and that a hyphen sits at positions 3 and 7, exactly where a phone number such as 415-555-1011 needs one. A list comprehension slides a twelve-character window across a longer message and keeps only the slices that pass the test, which is how the message in this console yields its two phone numbers and ignores everything else; 'Moshi moshi' fails immediately because it is not even the right length.",
+   "concept": "ManualChecking",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "Pattern objects: compile, then search",
+   "say": "re.compile() turns a pattern string into a Pattern object, and compiling once before searching many times is both the documented idiom and the chapter's own practice. The Pattern's search() method scans the text for the first place the pattern matches and returns a Match object holding that result, or None if the pattern is not found anywhere, which is why phoneNumRegex.search('no digits here') prints nothing rather than raising an error. match() and fullmatch(), both shown here, are the stricter relatives search() has: match() only tries the very start of the string, and fullmatch() additionally requires the match to reach the string's end.",
+   "concept": "CompileAndSearch",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "A 1968 paper is why compile() comes before search()",
+   "say": "In June 1968 Ken Thompson published 'Regular Expression Search Algorithm' in Communications of the ACM, volume 11, number 6, article 12736, describing an algorithm that first compiles a regular expression into machine code and then uses that compiled form to search text by simulating a non-deterministic finite automaton. Thompson had already built this two-step idea, compile once and then search, into the QED text editor he wrote for Bell Labs' CTSS system, the first editor to add regular expressions to a text search at all; he later received US Patent 3,568,156 for the technique. The chapter's own four steps, re.compile() for a Pattern object and then search() for a Match, are the same two-step shape fifty-seven years later, now a Python method call apart instead of a step in an editor's own command loop. The account rests on these sources. Ken Thompson, 'Regular Expression Search Algorithm', Communications of the ACM 11(6), June 1968, article 12736 (cacmb4.acm.org); Doug McIlroy, 'A Research UNIX Reader', the QED history at plan9.io/cm/cs/who/dmr/qed.html. Photo: Wikimedia Commons.",
+   "concept": "CompileAndSearch",
+   "visual": ""
+  },
+  {
+   "n": 7,
+   "title": "A company's own engine, still runs under re",
+   "say": "Python's _sre.c, the C source behind every Pattern and Match object the re module hands back, carries a history log inside its own comments that opens on 24 October 1999, crediting the initials 'fl' for most of the early engine and naming Secret Labs AB, reachable at info@pythonware.com, as the copyright holder from 1997 to 2001. The same log records Hewlett-Packard funding the work needed to fold the engine into Python 1.6, Martin von Loewis adding support for wide character sets, and Guido van Rossum himself fixing a memory leak in sub() and subn(). Every mo.group(), mo.span() and mo.start() this chapter calls on a Match object reaches, underneath, into an engine whose own change log is now a quarter of a century old. The account rests on these sources. Modules/_sre.c, CPython source history, chromium.googlesource.com (copyright Secret Labs AB 1997-2001, contact info@pythonware.com; history log from 1999-10-24); Python documentation, re - Regular expression operations, the Match object. Photo: Wikimedia Commons.",
+   "concept": "MatchObjectAccess",
+   "visual": ""
+  },
+  {
+   "n": 8,
+   "title": "Grouping: parentheses, the pipe, and names",
+   "say": "Parentheses around part of a pattern create a group, numbered from 1 in the order the opening parentheses appear, and group(1), group(2) and groups() read the text each one matched out of a Match object. The pipe inside parentheses offers several alternatives and tries them left to right, taking the first one that matches, which is why Cat(erpillar|astrophe|ch|egory) matches 'Catch' by trying erpillar and astrophe first and finding neither. A named group, written (?P<name>...), is read by groupdict() as well as by number, and a back reference inside the pattern itself, \\1, requires group 1's own match to repeat verbatim, which is how 'this is is a typo' is caught as a doubled word.",
+   "concept": "Grouping",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "A mathematician named the pattern, in 1951",
+   "say": "In 1951, working for the RAND Corporation as an Air Force Project RAND research memorandum, the mathematician Stephen Cole Kleene wrote 'Representation of Events in Nerve Nets and Finite Automata', Research Memorandum RM-704, defining what he called a regular event: a set of symbol sequences built up from single symbols by exactly three operations, concatenation, union and repetition. Kleene, born 5 January 1909 in Hartford, Connecticut, spent almost his whole career at the University of Wisconsin-Madison, from 1935 until his retirement in 1979, and died on 25 January 1994, aged 85. The union of his 1951 definition is exactly the pipe this chapter calls alternation, Cat(erpillar|astrophe|ch|egory), and the repetition is exactly the star and plus quantifiers; every pattern string this chapter writes is, formally, one more instance of the object Kleene named seventy-four years before Python 3.14 compiled it. The account rests on these sources. 'Stephen Cole Kleene', Wikipedia, en.wikipedia.org/wiki/Stephen_Cole_Kleene (RM-704, RAND Corporation, 1951; born 5 January 1909, died 25 January 1994); Al Sweigart, Automate the Boring Stuff with Python, 3rd edition (2025), chapter 9. Photo: Wikimedia Commons.",
+   "concept": "Alternation",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "Character sets and shorthand classes",
+   "say": "A character class in square brackets, [aeiouAEIOU], matches exactly one character from the set listed inside it, and a caret right after the opening bracket negates the class instead, matching any character not in the set. The shorthand classes \\d, \\w and \\s stand for a digit, a word character and whitespace respectively, with their capitalised opposites \\D, \\W and \\S, and the chapter's own documentation now notes that \\d matches any Unicode decimal digit, not only 0 to 9, unless the pattern is compiled with re.ASCII. \\d+\\s\\w+ finds a run of digits, one space, and a run of word characters together, which is how '12 drummers' is pulled whole out of a longer list.",
+   "concept": "CharacterSets",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "\\d, \\w and \\s came from a language, in 1987",
+   "say": "Larry Wall released Perl 1.0 on 18 December 1987 while working as a programmer at Unisys, and Perl 2, in June 1988, shipped a markedly better regular expression engine built around the same backslash shorthand classes this chapter teaches, \\d for a digit, \\w for a word character and \\s for whitespace, together with their capitalised opposites. Perl's own regex and text-handling strength is what carried it to wide popularity as a CGI scripting language through the 1990s, and the shorthand notation travelled with the language's reputation into most regex engines written afterward. Python's own re module documentation still introduces itself by stating that it provides matching operations similar to those found in Perl, which is the one sentence that ties the chapter's \\d+\\s\\w+ most directly back to 1987. The account rests on these sources. 'Perl', Wikipedia, en.wikipedia.org/wiki/Perl (Perl 1.0, 18 December 1987; Larry Wall at Unisys; Perl 2, June 1988); Python documentation, re - Regular expression operations, opening sentence. Photo: Wikimedia Commons.",
+   "concept": "ShorthandClasses",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "Repetition: quantifiers, greedy and lazy",
+   "say": "A question mark makes the item before it optional, zero or one time; a star matches it zero or more times; a plus requires at least one; and curly brackets give an exact count, {3,5}, or an open range. Every one of these quantifiers is greedy by default, taking as many repetitions as it can and backing off only if the rest of the pattern then fails, which is why (Ha){3,5} against five Ha's takes all five; a trailing question mark after any quantifier makes it lazy instead, taking as few repetitions as it can, which is why <.*?> stops at the first '>' it finds instead of the last. The same greedy-versus-lazy choice is why .* and .*? give very different answers against text with more than one closing character. A word of caution worth repeating from the chapter itself: its own printed Eggs( and spam)* example has a leading space inside the group, where this console's pattern has none, so the span printed here, (0, 22), is correct for this console's own pattern and should not be read as a claim about the chapter's.",
+   "concept": "Repetition",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "Anchors: start, end, word boundary, look-around",
+   "say": "A caret at the start of a pattern anchors it to the start of the string and a dollar sign anchors it to the end, so re.fullmatch is not the only way to require the whole string to match. \\b marks the boundary between a word character and a non-word character, and its opposite \\B marks a position that is not such a boundary, which is how \\Bcat\\B finds 'cat' buried inside 'certificate' but not a 'cat' standing at a word's edge. A lookahead, (?= dollars), and a lookbehind, (?<=\\$), each test the text beside a position without consuming it, so \\d+(?= dollars) returns the digits alone, with the word 'dollars' left in the text for whatever is searched next.",
+   "concept": "Anchors",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "Finding every match: findall and finditer",
+   "say": "findall() searches the whole text and returns every match it finds without overlapping, in order; the shape of what comes back depends entirely on the pattern's own groups, a plain list of matched strings for no groups or exactly one, and a list of tuples of each group's text once there are two or more, which is why (\\w+)=(\\d+) returns a list of (name, number) pairs rather than a list of the whole matched text. finditer() is the same search but returns an iterator of Match objects instead of committing to one shape up front, which is how this console reads off each match's own start() and end() position alongside its text.",
+   "concept": "Finding",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "Replacing text with sub()",
+   "say": "sub(), called on a compiled Pattern, returns a new string with every match of the pattern replaced by the given replacement, leaving the original string untouched exactly as every other string operation does. The replacement can hold a back reference, \\1, to keep part of what matched while replacing the rest, as 'Agent (\\w)\\w*' keeps the first letter of each agent's name and replaces the rest with asterisks. The replacement can also be a function instead of a string: re.sub() calls it once per match with the Match object and substitutes whatever it returns, which is how every number in '3 cats 12 dogs' is doubled in one call. escape() returns a pattern that matches a literal string exactly, backslash-escaping every character a pattern would otherwise treat specially.",
+   "concept": "Replacing",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "Flags: ignorecase, dotall, verbose, and combined",
+   "say": "re.IGNORECASE, usually written re.I, makes a pattern match regardless of case, so 'robocop' matches 'ROBOCOP' with the flag set. re.DOTALL, re.S, lets the dot match a newline too, which it otherwise never does, letting a pattern span several printed lines. re.VERBOSE, re.X, lets a pattern be written across several lines with whitespace and # comments for readability, both ignored when the pattern is compiled unless the whitespace is escaped or inside a class; this console's own VERBOSE pattern shows the trap, a comment with no real line break after it quietly eats the rest of the pattern. Flags combine with the pipe, re.I | re.S | re.X, into one integer passed as the third argument.",
+   "concept": "Flags",
+   "visual": ""
+  },
+  {
+   "n": 17,
+   "title": "Project 3: extract contact information",
+   "say": "Project 3 searches a page of text for phone numbers and e-mail addresses with two VERBOSE-mode patterns, joins the groups of each phone match with hyphens, and copies every match it finds back for the user, standing in here for the clipboard pyperclip would otherwise reach. The chapter itself prints a real quirk worth keeping rather than quietly fixing: the extension clause is joined from group 6, the whole clause including its own 'x' or 'ext', not from group 8, the extension digits alone, so a number with an extension prints as '415-555-9950 x ext. 123' with the word doubled, and a number with no area code keeps a stray leading hyphen, '-555-1234'. Running the program here confirms both quirks exactly as the chapter's own printed transcript shows them.",
+   "concept": "ContactExtractor",
+   "visual": ""
+  },
+  {
+   "n": 18,
+   "title": "Practice: the strong-password check",
+   "say": "is_strong_password() holds four small, separate patterns, r'.{8}' for length, r'[a-z]' for a lowercase letter, r'[A-Z]' for an uppercase letter and r'\\d' for a digit, and all() requires every one of them to be found somewhere in the password before it is accepted. Typed against password1, PASSWORD1, Password and Sh0rt, each is rejected for missing exactly one of the four conditions, and Passw0rdOK is accepted the moment all four are satisfied at once; the loop then breaks rather than asking again. Four short patterns checked together with all() read far more clearly than one long pattern would have tried to be.",
+   "concept": "StrongPassword",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "Practice: regex_strip(), and the Humre module",
+   "say": "regex_strip() rebuilds str.strip() with a pattern: with no character argument it strips leading or trailing whitespace, r'^\\s+|\\s+$', and with one it builds a character class from the given characters with re.escape() and strips a run of any of them from either end, which is how strip('xy') removes 'xy' from both ends of 'xyhixy' down to 'hi'. Humre is a separate, third-party module the chapter introduces for programmers who find backslash-heavy patterns hard to read, replacing them with chained function calls that spell out the pattern in English; its newest release reproduces the chapter's own worked example faithfully but has renamed a few constants and left one function, parse(), unfinished since the chapter was written, exactly the kind of drift this course checks for rather than assumes away.",
+   "concept": "HumreModule",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "The chapter in six lines",
+   "say": "These six lines answer the route one part at a time. The first two cover finding a pattern and grouping what it keeps, the third and fourth cover what one position may be and how many times it repeats, the fifth covers anchoring a pattern in the text, and the sixth covers doing something with every match. If a line feels unproven, the part of the route that carries it has the slides with the executed examples.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "Where to go from here",
+   "say": "Every link on this slide was opened on the day the deck was made. The textbook chapter is free to read online and has Project 3 and both practice programs in full, the reference links are the official documentation behind every quirk this deck flagged, and the history links are three of the primary sources behind this chapter's four stories (Ken Thompson's own 1968 paper is linked from its own story slide instead, its reference too long to set beside a label here). regex101 and Pythex each let you step a pattern across real text and watch which part matches, the clearest way to see greedy and lazy quantifiers disagree.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "What you should now be able to say",
+   "say": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The next chapter moves on to reading, writing and copying files.",
+   "concept": "",
+   "visual": ""
+  }
+ ]
+}
