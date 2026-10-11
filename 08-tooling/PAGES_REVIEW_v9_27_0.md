@@ -70,3 +70,25 @@ step of the page-wide passage search (`#srchpass .hit` never appears for the wor
 reproduced twice, same chapter, same word) - confirmed unrelated to this fix (the new pane's own three checks pass
 cleanly in both runs, before the unrelated crash), and left as a deferred finding alongside the chapter 3/4 ones
 above, not fixed here.
+
+## 2026-10-11: the chapter 3/4 "deferred findings" resolved - never a page defect
+Investigated in full, as directed, before porting more chapters. Both named findings (chapter 3's `randint` called
+without its import, chapter 4's positional-only parameter called by name) trace to one question-bank item each:
+a program deliberately written to raise an error, whose multiple-choice right answer is the bare exception class
+name ("NameError", "TypeError") rather than the full message a real run prints. The sibling course's borrowed,
+unshipped smoke test (`sen0401_page_smoke_v1_0_1.py` check 3c) compares a bank program's real output to its answer
+text by strict string equality, so it always disagreed on these two - a mismeasurement of that test, never shipped
+for exactly this reason, not a defect of either page.
+
+This course's own test (`sen0414_page_test_v9_28_0.py`, "every written item with code is re-run...", present since
+9.10.0) already allowed for this with a chain of ad-hoc string fallbacks, and already passed clean on both chapters
+before this review - reconfirmed directly against the two named items. One genuine latent fragility turned up while
+checking it: the old fallback tested the answer with `.endswith("Error")`, which a bare "Exception" or "...Warning"
+answer would only pass by the coincidence of an earlier `.rstrip(":")` fallback matching a message-less raise
+(chapter 5 has exactly one such item: `raise Exception`, answer "Exception") - the same shape with a message
+attached would have slipped through unverified. Replaced the whole fallback chain with one clear regex sharing the
+page's own `exIsErr` convention (used by the Lab tab's repair exercises for the identical judgement), verified
+behaviourally identical (0 change in pass/fail) on all seven chapters before shipping it, then ran the full suite
+again under the new test version: 0 failures on chapters 1-6 (test_results_v9_28_0.json, superseding the prior
+version's file of the same name). Chapter 7 still has only the unrelated search-passage timeout noted above, which
+this pass did not touch.
