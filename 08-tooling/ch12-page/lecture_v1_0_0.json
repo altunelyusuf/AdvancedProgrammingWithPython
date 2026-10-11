@@ -1,0 +1,189 @@
+{
+ "_version": "1.0.0",
+ "_deck": "1.0.0",
+ "_python": "3.14.6",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 12: Command Line Programs",
+   "say": "Every program so far has been started from the code editor. This chapter takes programs out of the editor and into the terminal: how the terminal finds a program, how a virtual environment keeps each program's packages apart, how a program reads the words typed after its name, how its text interface should behave, and how a small launcher file or PyInstaller turns a script into a command anyone can run. Every example on these slides was run under Python 3.14.6 on Ubuntu, and the result printed beside it is the result Python gave on that machine.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "Today's route",
+   "say": "The route has six parts. It starts with the terminal and the PATH variable that lets it find a program, moves to virtual environments and pip, then to programs that know about themselves and read their command line arguments, then to the design of a text interface, with the snowstorm animation, and then to deployment with launcher files, the chapter's two short programs and PyInstaller, and ends with the summary and resources. The ranges name the exact slides, so you can return to the part you need, and four of the slides are true stories that explain where a piece of this chapter's vocabulary came from.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "The questions this chapter answers",
+   "say": "The first question is the chapter's spine: a typed name is looked up in the folders of PATH, it usually finds a small launcher file, the launcher activates a virtual environment and starts the interpreter, and the interpreter hands the typed words to the program in sys.argv. Each step can fail in its own way, and this deck runs every step to show where. The second question is the deck's watch-out: the chapter was written for Python 3.13 and three operating systems, and a few of its printed lines differ on Python 3.14 or Ubuntu today, from the packages a new environment holds to an en dash where a hyphen belongs. The chips give the size of the chapter.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "The terminal: cd, pwd, dir and ls",
+   "say": "The terminal has a current working directory, shown in its prompt: cd followed by a path changes it, pwd on macOS and Linux or cd alone on Windows shows it, and dir on Windows or ls on macOS and Linux lists what it holds. A Python program does the same with os.chdir(), os.getcwd() and os.listdir(), as this console shows, and dir *.exe becomes a test on the .exe ending. A program in the current folder runs as example.exe on Windows but must be typed as ./example on macOS and Linux. The chips are six of the chapter's seven words for a program, the seventh being app: a script is run by an interpreter from its source, a command is run from a terminal with its options given up front, and a shell script is a file of terminal commands, the form of every launcher later in this deck.",
+   "concept": "ChangeDirectory",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "PATH: how the terminal finds a program",
+   "say": "PATH is an environment variable holding a list of folders, separated by colons on macOS and Linux and by semicolons on Windows. When a name is typed, the terminal looks in each folder in order and runs the first match, which is why which python3 or where python is the way to find out which program a name really starts. The console builds a small PATH of two folders, a and b, and shutil.which, Python's own which, finds spam in b although a holds a spam of its own one level down, because folders inside a PATH folder are never searched. Adding a folder to PATH is the chapter's first step towards deployment: once the Scripts folder is on PATH, any launcher placed there runs by its bare name from any folder.",
+   "concept": "PathSearchOrder",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "Virtual environments: python -m venv .venv",
+   "say": "python -m venv .venv makes a separate Python installation in a hidden folder named .venv, with its own set of installed packages, so two programs that need different versions of one package can each have their own. This program really creates one. The folder holds bin with the activate script, pyvenv.cfg, which keeps the original installation's packages out, and, new since Python 3.13, a .gitignore. Inside it pip list shows pip alone: the chapter's own listing also shows setuptools, which Python stopped installing into new environments in version 3.12. Activation, with source activate on macOS and Linux or activate.bat on Windows, puts the environment's folder first on PATH in that one terminal window; the last two lines are the test a running program can make itself, sys.prefix != sys.base_prefix, False outside and True inside.",
+   "concept": "CreatingAVenv",
+   "visual": ""
+  },
+  {
+   "n": 7,
+   "title": "pip began as pyinstall in September 2008",
+   "say": "Ian Bicking, who had already written virtualenv, announced a new installer called pyinstall in a post titled 'pyinstall: A New Hope' on 24 September 2008, as an alternative to easy_install. On 28 October 2008 he renamed it in a post titled 'pyinstall is dead, long live pip!', and pip, by Bicking's own account a recursive acronym for Pip Installs Packages, became the installer Python now ships with. Carl Meyer then wrote PEP 405, created on 13 June 2011, which named Bicking's virtualenv as the tool that had shown the value of isolated environments and made them part of Python 3.3 as the venv module. The chapter's two commands, python -m venv .venv and python -m pip install, are those two pieces of work side by side. The account rests on these sources. 'pip (package manager)', Wikipedia, en.wikipedia.org/wiki/Pip_(package_manager) (Ian Bicking, 'pyinstall: A New Hope', 24 September 2008; 'pyinstall is dead, long live pip!', 28 October 2008); PEP 405, Python Virtual Environments, Carl Meyer, created 13 June 2011, Python 3.3, peps.python.org/pep-0405/.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 8,
+   "title": "pip: install, pin, list and uninstall",
+   "say": "pip, a recursive acronym for pip installs packages, downloads third-party packages from PyPI, the Python Package Index. A package is code published there and a module is one .py file, so pip installs packages and import imports modules, which is why json, a standard library module, has the type module. The chapter runs pip as python -m pip rather than as pip, because that installs into exactly the Python that python starts, never into another installation whose pip happens to come first on PATH; the online chapter prints that -m with an en dash in several places, which Python reads as a file name, so type a plain hyphen. On the machine that built this deck pyperclip is not installed in the base Python, so the chapter's clipboard programs need it installed into their environment first.",
+   "concept": "RunningPipAsAModule",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "Self-aware programs: system and version",
+   "say": "The interpreter sets several values that let a program learn about itself. os.name is 'nt' on Windows and 'posix' on macOS and Linux, sys.platform is 'win32', 'darwin' or 'linux', and sys.version_info holds the version as integers, so comparing it with a tuple such as (3, 9) is a direct version check. __file__, the path of the running .py file, exists only when code comes from a file, so in this console, which runs code typed in, it is absent, and sys.prefix equals sys.base_prefix because this Python is not a virtual environment. The chapter's own printed list of version numbers lacks one comma, a typing slip rather than a different value.",
+   "concept": "OperatingSystemName",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "Missing modules and sys.exit with a message",
+   "say": "Putting an import statement in a try block and catching ModuleNotFoundError lets a program say in its own words that a package is missing, instead of stopping with a traceback, and sys.exit() then ends it. sys.exit() works by raising SystemExit, which is deliberately not a subclass of Exception, so a broad except Exception does not swallow it. The program writes such a script to a file and runs it: __file__ is an absolute path although the script was started by a relative name, the version and system checks pass, and the missing module ends the run with the message on standard error and exit code 1, the number a launcher or another program can test.",
+   "concept": "ExitWithMessage",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "Command line arguments: sys.argv",
+   "say": "The words typed after a command are its command line arguments, and a Python script receives them in the list sys.argv: the script's own file name first, then each word, split at spaces. This program starts the chapter's yourScript.py three times, and the first line is exactly the chapter's example, ['yourScript.py', 'hello', 'world']. Quotation marks keep a space inside one argument, so the second run gets 'hello world' as a single item; shlex.split, used here to split each typed line, follows the same rules as a POSIX shell. With no words typed, sys.argv still holds the script's name, which is why the chapter's programs test len(sys.argv) > 1 before reading an argument.",
+   "concept": "ArgvList",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "argparse: when the arguments multiply",
+   "say": "Reading sys.argv by hand is right for one or two arguments, but the chapter warns that combinations soon pile up: does spam eggs mean eggs spam, what if two exclusive options are both given? Its advice is Python's argparse module, which it leaves to the documentation, so this deck shows it. Each argument is declared once, here the snowstorm's density as an optional integer defaulting to 4 and a --verbose switch, and parse_args turns a list of words into named values, converting the type on the way. In the console the parser was made with exit_on_error=False, so a word that is not a number raises ArgumentError; run as a real command, the same parser prints a usage error and exits with code 2, the convention for a command line mistake.",
+   "concept": "ArgparseModule",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "A text interface that felt like a desktop, 1986",
+   "say": "John Socha started work in 1984 on a file manager for MS-DOS that he first called Visual DOS, or VDOS, and Peter Norton Computing released it as Norton Commander in 1986. After starting it, a user saw two panels of file lists side by side, with a list of commands along the bottom of the screen, a built-in viewer on F3 and an editor on F4, all drawn with text characters on a plain MS-DOS screen. Symantec bought Peter Norton Computing in 1990, and the last MS-DOS version, 5.51, came out on 1 July 1998. The chapter shows Norton Commander in Figure 12-1 as its example of a text-based user interface, a style its own snowstorm program imitates with block characters and a cleared screen. The account rests on these sources. 'Norton Commander', Wikipedia, en.wikipedia.org/wiki/Norton_Commander (John Socha, work begun 1984 as Visual DOS; initial release 1986 by Peter Norton Computing; two panels; Symantec acquisition 1990; version 5.51 on 1 July 1998).",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "Terminal output: clearing, blocks and colour",
+   "say": "A text program can clear its window with a one-line function: os.system('cls' if os.name == 'nt' else 'clear') runs cls on Windows and clear on macOS and Linux, choosing with a conditional expression, value1 if condition else value2, which gives 'clear' on this machine. The snowstorm program draws with three block characters, the top half block, the bottom half block and the full block, which chr() returns for 9600, 9604 and 9608. Colour comes from the third-party Bext package, built on Colorama; installed for this deck, its version 0.1.1 has the colour, clear, size, title, goto and get_key functions the chapter lists, but calls its cursor functions hide_cursor and show_cursor. The chapter's warning stands: a light or dark terminal theme changes how colours look, and too much colour makes a program hard to read.",
+   "concept": "TerminalClearing",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "Snowstorm: one frame of the animation",
+   "say": "snowstorm.py starts with a density of 4 percent and, when an argument is given, replaces it with int(sys.argv[1]), so python snowstorm.py 20 makes a heavier storm without touching the code; this run sets sys.argv to exactly that list. Two nested loops print 6 rows of 40 cells, each either a random half block or a space, with end='' so a row stays on one line, then two rows of full blocks for the ground. The chapter's program repeats this forever, clearing the terminal before each frame and pausing 0.2 seconds after it, a flipbook animation stopped with CTRL-C; this run prints one seeded frame so the slide can be checked. The same clear, print and pause loop makes the dashboard the chapter suggests.",
+   "concept": "FlipbookAnimation",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "Pipes, 1973: why a command should be quiet",
+   "say": "Doug McIlroy, head from 1965 to 1986 of the Bell Labs Computing Techniques Research Department, the birthplace of Unix, had proposed the concept of a pipe in a 1964 memo, the output of one program becoming the input of the next. In 1973 Ken Thompson added the pipe() system call and pipes to the shell and several utilities of Version 3 Unix, in what McIlroy called one feverish night, and the next day saw, in McIlroy's words, an unforgettable orgy of one-liners as everybody joined in the excitement of plumbing. In the 1978 Bell System Technical Journal foreword, McIlroy and his two co-authors wrote down the maxims of the style: make each program do one thing well, expect the output of every program to become the input to another, as yet unknown, program, and do not clutter output with extraneous information. That last maxim is the chapter's advice to keep a command silent by default and print more only when --verbose asks for it. The account rests on these sources. 'Douglas McIlroy', Wikipedia (head of the Computing Techniques Research Department, 1965-1986); 'Pipeline (Unix)', Wikipedia, en.wikipedia.org/wiki/Pipeline_(Unix) (McIlroy's 1964 memo; Thompson's pipe() in Version 3 Unix, 1973; the | notation in Version 4); 'Unix philosophy', Wikipedia (M. D. McIlroy, E. N. Pinson and B. A. Tague, 'Unix Time-Sharing System: Foreword', Bell System Technical Journal, 8 July 1978, pp. 1902-1903).",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 17,
+   "title": "Sound, quiet output and message boxes",
+   "say": "The playsound3 package plays an MP3 or WAV file and does not return until it ends, so a long sound halts the program for a while; sound can announce that a task finished, but it is easily overused and wasted on a muted computer. The same restraint applies to text: under the Unix philosophy a command prints only what another command could use, reports success or failure through its exit code, and offers --verbose for more or --quiet for none. For an occasional message or answer the PyMsgBox package shows small Tkinter dialogs whose functions mirror JavaScript's and block like input(). None of these ran on the machine that built this deck, which has no speaker and no display; the book's automateboringstuff3 package also pins the older playsound 1.3.0 rather than the playsound3 its prose teaches.",
+   "concept": "SoundAndTextNotification",
+   "visual": ""
+  },
+  {
+   "n": 18,
+   "title": "Launcher files on three systems",
+   "say": "Deployment puts each script in a Scripts folder on PATH, with one small launcher per operating system that activates the folder's virtual environment, runs the script with that environment's Python and deactivates. On Windows it is a batch file run from the Run dialog, on macOS a .command file run from Spotlight, and on Ubuntu a shell script with no extension, plus a .desktop file to reach it from Dash. On macOS and Linux chmod u+x adds the owner's execute bit, turning -rw-r--r-- into -rwxr--r--, and the Ubuntu launcher's first line, #!/usr/bin/env bash, names the program that reads the rest. The desktop entry is plain key=value text, and its Exec line must spell out /home/al because ~ is not expanded there.",
+   "concept": "ShellScriptLauncher",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "The #! line, announced on 10 January 1980",
+   "say": "Dennis Ritchie added kernel support for interpreter directives at Bell Laboratories between Edition 7 and Edition 8 of Unix, and announced it in an email dated Thursday, 10 January 1980: if a file being executed begins with the magic characters #!, the rest of the line names the interpreter that runs it. He advised users to put #! /bin/sh at the left margin of the first line of their shell scripts, noting that a complete pathname was needed because no search was done. Since Edition 8 was never publicly released, the feature reached most users through Berkeley's BSD, appearing in 2.8BSD and enabled by default in 4.2BSD. Asked in 2009 what the construction was called, Ritchie replied that he could not recall it ever being given a proper name; the later form #!/usr/bin/env bash, the first line of the chapter's Ubuntu launcher, adds the PATH search his first version left out. The account rests on these sources. 'Shebang (Unix)', Wikipedia, en.wikipedia.org/wiki/Shebang_(Unix) (Dennis Ritchie's email of 10 January 1980; 2.8BSD and 4.2BSD; Ritchie's 2009 reply on the name; the /usr/bin/env form).",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "The Ubuntu launcher, run",
+   "say": "This program carries out the chapter's Ubuntu deployment for real: a Scripts folder with a virtual environment, yourScript.py, and the launcher exactly as printed, with a plain hyphen where the online chapter's read line has an en dash, which bash rejects as not a valid identifier. After chmod u+x and with the folder on PATH, shutil.which finds the launcher and typing yourScript spam eggs runs it, inside the environment. But the script receives no arguments: the launcher's python3 line has nothing after the script's path, so spam and eggs are dropped, while a copy with \"$@\" added forwards both, as %* does in the Windows batch file. The chapter's macOS and Linux ccwd launchers have the same gap, so ccwd .. deployed there would copy the current folder, not its parent.",
+   "concept": "ArgumentForwarding",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "ccwd: copying the current working directory",
+   "say": "ccwd, short for copy current working directory, is four lines: import pyperclip, os and sys; change to sys.argv[1] if an argument was given; copy os.getcwd() to the clipboard. A short name like this is the chapter's advice for a command typed many times a day, checked first with which or where. Run from a bash shell sitting in ~/Scripts, it copied ~/Scripts, and with .. it copied the home folder, yet the shell's own pwd afterwards still printed ~/Scripts: every program has its own working directory, and os.chdir() moves only that one. The program prints nothing, so its batch file needs no @pause.",
+   "concept": "CcwdScript",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "Clipboard Recorder: polling and CTRL-C",
+   "say": "cliprec.py turns copying many links into a two-step job: it reads the clipboard in an endless loop, prints the text only when it differs from previous_content, and sleeps 0.01 seconds between reads, a hundred checks a second instead of tens of thousands. The chapter's own program ran unchanged against a stand-in clipboard serving three links, two of them copied twice, and printed each once. The loop sits in a try block, and pressing CTRL-C raises KeyboardInterrupt, which the except clause catches with pass, so the program ends with exit code 0 and no traceback; the stand-in raises it when its links run out. KeyboardInterrupt derives from BaseException, not Exception, so a broad except Exception would let CTRL-C through, which is why the clause names it.",
+   "concept": "ClipboardPolling",
+   "visual": ""
+  },
+  {
+   "n": 23,
+   "title": "PyInstaller: one file, a whole interpreter",
+   "say": "PyInstaller makes a program that runs on a computer without Python: python -m PyInstaller --onefile yourScript.py, with --onefile's two dashes and PyInstaller's two capital letters, since the lower-case module name fails exactly as this console shows. It leaves a build folder, which can be deleted, a .spec file and a dist folder with the executable. It does not compile to machine code: it packs a copy of the interpreter with the script, so the chapter's Hello, world is close to 8MB on Windows, and the build made for this course on Ubuntu was 12,950,120 bytes. PyInstaller builds only for the operating system and Python version it runs under, so a Windows executable needs a Windows build.",
+   "concept": "OneFileBuild",
+   "visual": ""
+  },
+  {
+   "n": 24,
+   "title": "The chapter in five lines",
+   "say": "These five lines answer the route one part at a time. The first covers the terminal and PATH, the second virtual environments and pip, the third self-aware programs and command line arguments, the fourth text-based design, and the fifth deployment with launchers or PyInstaller, including the one gap in the chapter's macOS and Linux launchers. Together they answer the first question of the chapter, how a typed name becomes a running program, and the slides of each part answer the second, where the chapter's printed lines differ today.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 25,
+   "title": "Where to go from here",
+   "say": "Every link on this slide was opened on the day the deck was made. The textbook chapter is free to read online and has every launcher file and both short programs in full, the venv and argparse documentation covers what this deck added to the chapter, and the reference links are the official pages behind sys.argv, sys.exit, python -m pip and PyInstaller's options. The history links are the sources behind the four stories of this chapter: pipes, the #! line, Norton Commander and pip.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 26,
+   "title": "What you should now be able to say",
+   "say": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The next chapter starts Part II of the book, with programs that fetch and read web pages, and every one of them can be deployed the way this chapter showed.",
+   "concept": "",
+   "visual": ""
+  }
+ ]
+}

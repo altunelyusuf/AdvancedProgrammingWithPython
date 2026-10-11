@@ -1,0 +1,1354 @@
+{
+ "meta": {
+  "title": "Chapter 12: Command Line Programs",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "1.0.0",
+  "python": "3.14.6",
+  "total": 26
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Chapter 12: Command Line Programs",
+   "sub": "Designing and deploying them: the terminal, PATH, virtual environments, sys.argv, launchers and PyInstaller",
+   "items": [
+    {
+     "t": "code",
+     "x": 6.0,
+     "y": 0.85,
+     "w": 3.5,
+     "h": 0.95,
+     "fs": 11,
+     "cap": "run under Python 3.14.6",
+     "rows": [
+      [
+       "'python3 snowstorm.py 20'.split()[1:]",
+       "['snowstorm.py', '20']"
+      ]
+     ]
+    }
+   ],
+   "notes": "Every program so far has been started from the code editor. This chapter takes programs out of the editor and into the terminal: how the terminal finds a program, how a virtual environment keeps each program's packages apart, how a program reads the words typed after its name, how its text interface should behave, and how a small launcher file or PyInstaller turns a script into a command anyone can run. Every example on these slides was run under Python 3.14.6 on Ubuntu, and the result printed beside it is the result Python gave on that machine.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Six parts; every range is a run of slides you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 6.3,
+     "h": 3.4,
+     "fs": 11,
+     "items": [
+      "The terminal and PATH (slides 4-5)",
+      "Virtual environments and pip (slides 6-8)",
+      "Self-aware programs and command line arguments (slides 9-12)",
+      "Text-based design: output, the snowstorm, quiet commands and dialogs (slides 13-17)",
+      "Deploying: launchers, ccwd, the Clipboard Recorder and PyInstaller (slides 18-23)",
+      "Summary and resources (slides 24-25)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "26",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "4",
+       "label": "true stories, each with who, where, when and a link"
+      },
+      {
+       "n": "23",
+       "label": "consoles and programs, all run before they were shown"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has six parts. It starts with the terminal and the PATH variable that lets it find a program, moves to virtual environments and pip, then to programs that know about themselves and read their command line arguments, then to the design of a text interface, with the snowstorm animation, and then to deployment with launcher files, the chapter's two short programs and PyInstaller, and ends with the summary and resources. The ranges name the exact slides, so you can return to the part you need, and four of the slides are true stories that explain where a piece of this chapter's vocabulary came from.",
+   "take": "Six parts, from a typed command to a deployed program.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "The chapter's own competency questions; the summary comes back to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 2.2,
+     "fs": 13,
+     "items": [
+      "How does a typed command reach a Python program - through the terminal's search of PATH, a launcher script, a virtual environment and sys.argv - and where along that way can it go wrong?",
+      "Which printed outputs, commands and programs of the chapter differ in current Python or on a current system, and on what source?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 3.8,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 11.5,
+     "items": [
+      "6 branches",
+      "78 concepts",
+      "62 console rows",
+      "8 programs run",
+      "Python 3.14.6"
+     ]
+    }
+   ],
+   "notes": "The first question is the chapter's spine: a typed name is looked up in the folders of PATH, it usually finds a small launcher file, the launcher activates a virtual environment and starts the interpreter, and the interpreter hands the typed words to the program in sys.argv. Each step can fail in its own way, and this deck runs every step to show where. The second question is the deck's watch-out: the chapter was written for Python 3.13 and three operating systems, and a few of its printed lines differ on Python 3.14 or Ubuntu today, from the packages a new environment holds to an en dash where a hyphen belongs. The chips give the size of the chapter.",
+   "take": "A typed name passes PATH, a launcher, a venv and sys.argv before it runs.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The terminal: cd, pwd, dir and ls",
+   "sub": "A terminal has a current working directory; a program has one of its own",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.23,
+     "rows": [
+      [
+       "import os, shutil; shutil.rmtree('/tmp/ch12_lab', ignore_errors=True); os.makedirs('/tmp/ch12_lab'); os.chdir('/tmp/ch12_lab')",
+       ""
+      ],
+      [
+       "os.path.basename(os.getcwd())",
+       "'ch12_lab'"
+      ],
+      [
+       "os.mkdir('Desktop'); os.chdir('Desktop')",
+       ""
+      ],
+      [
+       "os.path.basename(os.getcwd())",
+       "'Desktop'"
+      ],
+      [
+       "os.chdir('..')",
+       ""
+      ],
+      [
+       "for n in ('spam.exe', 'eggs.exe', 'notes.txt'): open(n, 'w').close()",
+       ""
+      ],
+      [
+       "sorted(os.listdir('.'))",
+       "['Desktop', 'eggs.exe', 'notes.txt', 'spam.exe']"
+      ],
+      [
+       "sorted(n for n in os.listdir('.') if n.endswith('.exe'))",
+       "['eggs.exe', 'spam.exe']"
+      ]
+     ],
+     "fs": 7.5,
+     "cap": "run under Python 3.14.6",
+     "label": "os.chdir and os.listdir do in Python what cd and dir or ls do in the terminal"
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 4.11,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 9,
+     "items": [
+      "program",
+      "script",
+      "command",
+      "shell script",
+      "application",
+      "web app"
+     ]
+    }
+   ],
+   "notes": "The terminal has a current working directory, shown in its prompt: cd followed by a path changes it, pwd on macOS and Linux or cd alone on Windows shows it, and dir on Windows or ls on macOS and Linux lists what it holds. A Python program does the same with os.chdir(), os.getcwd() and os.listdir(), as this console shows, and dir *.exe becomes a test on the .exe ending. A program in the current folder runs as example.exe on Windows but must be typed as ./example on macOS and Linux. The chips are six of the chapter's seven words for a program, the seventh being app: a script is run by an interpreter from its source, a command is run from a terminal with its options given up front, and a shell script is a file of terminal commands, the form of every launcher later in this deck.",
+   "take": "cd, pwd, dir and ls have Python twins: os.chdir, os.getcwd and os.listdir.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "PATH: how the terminal finds a program",
+   "sub": "A list of folders, searched in order; the first match runs",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.12,
+     "rows": [
+      [
+       "import os, shutil; shutil.rmtree('/tmp/ch12_lab', ignore_errors=True); os.makedirs('/tmp/ch12_lab'); os.chdir('/tmp/ch12_lab')",
+       ""
+      ],
+      [
+       "PATH = '/home/al/.local/bin:/home/al/bin:/usr/local/bin:/usr/bin:/bin'",
+       ""
+      ],
+      [
+       "PATH.split(':').index('/usr/bin')",
+       "3"
+      ],
+      [
+       "':'.join(['/home/al/Scripts'] + PATH.split(':')[:2])",
+       "'/home/al/Scripts:/home/al/.local/bin:/home/al/bin'"
+      ],
+      [
+       "for d in ('a/sub', 'b'): os.makedirs(d)",
+       ""
+      ],
+      [
+       "for d in ('a/sub', 'b'): open(d + '/spam', 'w').close(); os.chmod(d + '/spam', 0o744)",
+       ""
+      ],
+      [
+       "shutil.which('spam', path='a:b')",
+       "'b/spam'"
+      ],
+      [
+       "shutil.which('spam', path='a') is None",
+       "True"
+      ]
+     ],
+     "fs": 7,
+     "cap": "run under Python 3.14.6",
+     "label": "the first PATH folder holding the name wins; a subfolder of a PATH folder is never searched"
+    },
+    {
+     "t": "card",
+     "head": "Windows, macOS and Linux differ",
+     "body": "Windows looks in the current folder first, then PATH; macOS and Linux look only in PATH, so ./example is needed there.",
+     "x": 0.5,
+     "y": 3.94,
+     "w": 9.0,
+     "h": 1.0400000000000005,
+     "fs": 10.5
+    }
+   ],
+   "notes": "PATH is an environment variable holding a list of folders, separated by colons on macOS and Linux and by semicolons on Windows. When a name is typed, the terminal looks in each folder in order and runs the first match, which is why which python3 or where python is the way to find out which program a name really starts. The console builds a small PATH of two folders, a and b, and shutil.which, Python's own which, finds spam in b although a holds a spam of its own one level down, because folders inside a PATH folder are never searched. Adding a folder to PATH is the chapter's first step towards deployment: once the Scripts folder is on PATH, any launcher placed there runs by its bare name from any folder.",
+   "take": "The first PATH folder that holds the name wins; subfolders never count.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Virtual environments: python -m venv .venv",
+   "sub": "A separate Python with its own packages, one per project",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 1.38,
+     "lines": [
+      "    subprocess.run([sys.executable, '-m', 'venv', '.venv'], cwd=scripts, check=True)",
+      "    venv = Path(scripts, '.venv')",
+      "    print('.venv holds:', sorted(p.name for p in venv.iterdir()))",
+      "    print('activate:', (venv / 'bin' / 'activate').exists())",
+      "    cfg = (venv / 'pyvenv.cfg').read_text().splitlines()",
+      "    print([line for line in cfg if line.startswith('include')])"
+     ],
+     "fs": 8,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program venvTour_v1_0_0.py, lines 9 to 14 of 21 - Python 3.14.6"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 3.26,
+     "w": 9.0,
+     "h": 1.6900000000000004,
+     "lines": [],
+     "fs": 9,
+     "compact": true,
+     "out": ".venv holds: ['.gitignore', 'bin', 'include', 'lib', 'lib64', 'pyvenv.cfg']\nactivate: True\n['include-system-site-packages = false']\npip list in the new .venv: ['pip']\nin a virtual environment: False\nin a virtual environment: True",
+     "outLabel": "prints",
+     "label": "prints: the new .venv folder, its settings, pip list inside it, and the prefix test"
+    }
+   ],
+   "notes": "python -m venv .venv makes a separate Python installation in a hidden folder named .venv, with its own set of installed packages, so two programs that need different versions of one package can each have their own. This program really creates one. The folder holds bin with the activate script, pyvenv.cfg, which keeps the original installation's packages out, and, new since Python 3.13, a .gitignore. Inside it pip list shows pip alone: the chapter's own listing also shows setuptools, which Python stopped installing into new environments in version 3.12. Activation, with source activate on macOS and Linux or activate.bat on Windows, puts the environment's folder first on PATH in that one terminal window; the last two lines are the test a running program can make itself, sys.prefix != sys.base_prefix, False outside and True inside.",
+   "take": "A new venv holds only pip; inside it sys.prefix != sys.base_prefix.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "pip began as pyinstall in September 2008",
+   "sub": "2008-09-24",
+   "items": [
+    {
+     "t": "card",
+     "head": "Ian Bicking, then Carl Meyer",
+     "body": "Bicking, who had already written virtualenv, announced pyinstall on 24 September 2008 and renamed it pip five weeks later; Carl Meyer's PEP 405 of 2011 made venv part of Python 3.3.",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.5,
+     "h": 2.8,
+     "fs": 12.5
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "24 Sep 2008: 'pyinstall: A New Hope'",
+      "28 Oct 2008: renamed pip, Pip Installs Packages",
+      "13 Jun 2011: PEP 405 credits virtualenv",
+      "Python 3.3 ships the venv module"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Ian Bicking; later Carl Meyer for PEP 405",
+     "where": "Ian Bicking's blog; the Python Enhancement Proposals",
+     "when": "2008-09-24",
+     "link": "https://en.wikipedia.org/wiki/Pip_(package_manager)",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Ian Bicking, who had already written virtualenv, announced a new installer called pyinstall in a post titled 'pyinstall: A New Hope' on 24 September 2008, as an alternative to easy_install. On 28 October 2008 he renamed it in a post titled 'pyinstall is dead, long live pip!', and pip, by Bicking's own account a recursive acronym for Pip Installs Packages, became the installer Python now ships with. Carl Meyer then wrote PEP 405, created on 13 June 2011, which named Bicking's virtualenv as the tool that had shown the value of isolated environments and made them part of Python 3.3 as the venv module. The chapter's two commands, python -m venv .venv and python -m pip install, are those two pieces of work side by side. The account rests on these sources. 'pip (package manager)', Wikipedia, en.wikipedia.org/wiki/Pip_(package_manager) (Ian Bicking, 'pyinstall: A New Hope', 24 September 2008; 'pyinstall is dead, long live pip!', 28 October 2008); PEP 405, Python Virtual Environments, Carl Meyer, created 13 June 2011, Python 3.3, peps.python.org/pep-0405/.",
+   "take": "venv and pip grew from Ian Bicking's virtualenv and pyinstall.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "pip: install, pin, list and uninstall",
+   "sub": "Run it as python -m pip, so it installs into the Python you run",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.6,
+     "h": 1.92,
+     "rows": [
+      [
+       "'package_name==1.17.4'.partition('==')",
+       "('package_name', '==', '1.17.4')"
+      ],
+      [
+       "import json",
+       ""
+      ],
+      [
+       "type(json).__name__",
+       "'module'"
+      ],
+      [
+       "import importlib.util",
+       ""
+      ],
+      [
+       "importlib.util.find_spec('pyperclip') is None",
+       "True"
+      ]
+     ],
+     "fs": 9.7,
+     "cap": "run under Python 3.14.6",
+     "label": "a pin names one version; an import gives a module"
+    },
+    {
+     "t": "boxes",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 3.4,
+     "cols": 1,
+     "fs": 11,
+     "subfs": 9.5,
+     "accent": [
+      0
+     ],
+     "items": [
+      {
+       "label": "python -m pip install package_name",
+       "sub": "adds a package from PyPI"
+      },
+      {
+       "label": "install -U  /  install name==1.17.4",
+       "sub": "upgrades it, or installs one version"
+      },
+      {
+       "label": "python -m pip list",
+       "sub": "every installed package and its version"
+      },
+      {
+       "label": "python -m pip uninstall package_name",
+       "sub": "removes it again"
+      }
+     ]
+    }
+   ],
+   "notes": "pip, a recursive acronym for pip installs packages, downloads third-party packages from PyPI, the Python Package Index. A package is code published there and a module is one .py file, so pip installs packages and import imports modules, which is why json, a standard library module, has the type module. The chapter runs pip as python -m pip rather than as pip, because that installs into exactly the Python that python starts, never into another installation whose pip happens to come first on PATH; the online chapter prints that -m with an en dash in several places, which Python reads as a file name, so type a plain hyphen. On the machine that built this deck pyperclip is not installed in the base Python, so the chapter's clipboard programs need it installed into their environment first.",
+   "take": "pip installs packages from PyPI; run it as python -m pip, with a plain hyphen.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Self-aware programs: system and version",
+   "sub": "Built-in values the interpreter sets: os.name, sys.platform, sys.version_info",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.6,
+     "h": 2.98,
+     "rows": [
+      [
+       "import os, sys",
+       ""
+      ],
+      [
+       "os.name",
+       "'posix'"
+      ],
+      [
+       "sys.platform",
+       "'linux'"
+      ],
+      [
+       "sys.version_info >= (3, 9)",
+       "True"
+      ],
+      [
+       "list(sys.version_info)",
+       "[3, 14, 6, 'final', 0]"
+      ],
+      [
+       "'__file__' in globals()",
+       "False"
+      ],
+      [
+       "sys.prefix != sys.base_prefix",
+       "False"
+      ]
+     ],
+     "fs": 10,
+     "cap": "run under Python 3.14.6",
+     "label": "what the running Python says about itself"
+    },
+    {
+     "t": "card",
+     "head": "A missing comma",
+     "body": "The chapter prints list(sys.version_info) as [3, 13, 1 'final', 0]; a comma is missing after the 1. Tuples compare item by item, so sys.version_info >= (3, 9) is the clean version test.",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 3.4,
+     "fs": 12
+    }
+   ],
+   "notes": "The interpreter sets several values that let a program learn about itself. os.name is 'nt' on Windows and 'posix' on macOS and Linux, sys.platform is 'win32', 'darwin' or 'linux', and sys.version_info holds the version as integers, so comparing it with a tuple such as (3, 9) is a direct version check. __file__, the path of the running .py file, exists only when code comes from a file, so in this console, which runs code typed in, it is absent, and sys.prefix equals sys.base_prefix because this Python is not a virtual environment. The chapter's own printed list of version numbers lacks one comma, a typing slip rather than a different value.",
+   "take": "os.name, sys.platform and sys.version_info adapt one script to each system.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Missing modules and sys.exit with a message",
+   "sub": "Catch ModuleNotFoundError; stop with a message the user can act on",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.05,
+     "lines": [
+      "SCRIPT = '''import os, sys",
+      "from pathlib import Path",
+      "print('__file__ absolute:', Path(__file__).is_absolute(), Path(__file__).name)",
+      "print('Python 3.9 or newer:', sys.version_info >= (3, 9))",
+      "print('os.name:', os.name, '  sys.platform:', sys.platform)",
+      "try:",
+      "    import nonexistentModule",
+      "except ModuleNotFoundError:",
+      "    sys.exit('This program needs nonexistentModule: python -m pip install it.')",
+      "print('never printed')"
+     ],
+     "fs": 8,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program selfAware_v1_0_0.py, lines 6 to 15 of 23 - Python 3.14.6"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 3.9299999999999997,
+     "w": 9.0,
+     "h": 1.0200000000000005,
+     "lines": [],
+     "fs": 8,
+     "compact": true,
+     "out": "__file__ absolute: True yourScript.py\nPython 3.9 or newer: True\nos.name: posix   sys.platform: linux\nstderr: This program needs nonexistentModule: python -m pip install it.\nexit code: 1",
+     "outLabel": "prints",
+     "label": "prints: the script run from its file - __file__, the checks, then sys.exit with a message"
+    }
+   ],
+   "notes": "Putting an import statement in a try block and catching ModuleNotFoundError lets a program say in its own words that a package is missing, instead of stopping with a traceback, and sys.exit() then ends it. sys.exit() works by raising SystemExit, which is deliberately not a subclass of Exception, so a broad except Exception does not swallow it. The program writes such a script to a file and runs it: __file__ is an absolute path although the script was started by a relative name, the version and system checks pass, and the missing module ends the run with the message on standard error and exit code 1, the number a launcher or another program can test.",
+   "take": "Catch ModuleNotFoundError; sys.exit(message) writes to stderr, exit code 1.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Command line arguments: sys.argv",
+   "sub": "The script's name first, then the typed words, split at spaces",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.54,
+     "lines": [
+      "import shlex",
+      "import subprocess",
+      "import sys",
+      "import tempfile",
+      "from pathlib import Path",
+      "",
+      "with tempfile.TemporaryDirectory() as scripts:",
+      "    Path(scripts, 'yourScript.py').write_text('import sys\\nprint(sys.argv)\\n')",
+      "    for typed in ('python3 yourScript.py hello world',",
+      "                  'python3 yourScript.py \"hello world\"',",
+      "                  'python3 yourScript.py'):",
+      "        words = shlex.split(typed)          # the shell splits the typed line into words",
+      "        words[0] = sys.executable           # python3: this machine's own interpreter",
+      "        run = subprocess.run(words, cwd=scripts, capture_output=True, text=True)",
+      "        print(typed.ljust(36), '->', run.stdout.strip())"
+     ],
+     "fs": 8.5,
+     "compact": true,
+     "out": "python3 yourScript.py hello world    -> ['yourScript.py', 'hello', 'world']\npython3 yourScript.py \"hello world\"  -> ['yourScript.py', 'hello world']\npython3 yourScript.py                -> ['yourScript.py']",
+     "outLabel": "prints",
+     "label": "program argvAndQuoting_v1_0_0.py, lines 1 to 15 of 15 - Python 3.14.6"
+    }
+   ],
+   "notes": "The words typed after a command are its command line arguments, and a Python script receives them in the list sys.argv: the script's own file name first, then each word, split at spaces. This program starts the chapter's yourScript.py three times, and the first line is exactly the chapter's example, ['yourScript.py', 'hello', 'world']. Quotation marks keep a space inside one argument, so the second run gets 'hello world' as a single item; shlex.split, used here to split each typed line, follows the same rules as a POSIX shell. With no words typed, sys.argv still holds the script's name, which is why the chapter's programs test len(sys.argv) > 1 before reading an argument.",
+   "take": "sys.argv holds the script name, then the typed words; quotes keep spaces.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "argparse: when the arguments multiply",
+   "sub": "The module the chapter recommends and leaves to its documentation",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.01,
+     "rows": [
+      [
+       "import argparse",
+       ""
+      ],
+      [
+       "p = argparse.ArgumentParser(prog='snowstorm', exit_on_error=False)",
+       ""
+      ],
+      [
+       "_ = p.add_argument('density', type=int, nargs='?', default=4)",
+       ""
+      ],
+      [
+       "_ = p.add_argument('-v', '--verbose', action='store_true')",
+       ""
+      ],
+      [
+       "vars(p.parse_args([]))",
+       "{'density': 4, 'verbose': False}"
+      ],
+      [
+       "vars(p.parse_args(['20', '-v']))",
+       "{'density': 20, 'verbose': True}"
+      ],
+      [
+       "p.parse_args(['lots'])",
+       "ArgumentError: argument density: invalid int value: 'lots'"
+      ]
+     ],
+     "fs": 8,
+     "cap": "run under Python 3.14.6",
+     "label": "argparse declares each argument once; a bad value raises ArgumentError, not a deep traceback"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 4.15,
+     "w": 9.0,
+     "h": 0.8000000000000002,
+     "lines": [],
+     "fs": 8,
+     "compact": true,
+     "out": "snowstorm         -> exit 0 | density 4 verbose False\nsnowstorm 20 -v   -> exit 0 | density 20 verbose True\nsnowstorm lots    -> exit 2 | snowstorm: error: argument density: invalid int value: 'lots'",
+     "outLabel": "prints",
+     "label": "transcript of program argparseSnowstorm_v1_0_0.py: a bad value exits with code 2"
+    }
+   ],
+   "notes": "Reading sys.argv by hand is right for one or two arguments, but the chapter warns that combinations soon pile up: does spam eggs mean eggs spam, what if two exclusive options are both given? Its advice is Python's argparse module, which it leaves to the documentation, so this deck shows it. Each argument is declared once, here the snowstorm's density as an optional integer defaulting to 4 and a --verbose switch, and parse_args turns a list of words into named values, converting the type on the way. In the console the parser was made with exit_on_error=False, so a word that is not a number raises ArgumentError; run as a real command, the same parser prints a usage error and exits with code 2, the convention for a command line mistake.",
+   "take": "argparse parses, converts, defaults and reports errors for you.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A text interface that felt like a desktop, 1986",
+   "sub": "1986",
+   "items": [
+    {
+     "t": "card",
+     "head": "John Socha, Norton Commander",
+     "body": "Socha began a two-panel file manager for MS-DOS in 1984, called Visual DOS, and Peter Norton Computing released it in 1986 as Norton Commander, the chapter's Figure 12-1.",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.5,
+     "h": 2.8,
+     "fs": 12.5
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "1984: work begins as Visual DOS, or VDOS",
+      "1986: released by Peter Norton Computing",
+      "Two panels of files, commands along the bottom",
+      "1990: Symantec buys Peter Norton Computing"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "John Socha",
+     "where": "Peter Norton Computing, for MS-DOS",
+     "when": "1986",
+     "link": "https://en.wikipedia.org/wiki/Norton_Commander",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "John Socha started work in 1984 on a file manager for MS-DOS that he first called Visual DOS, or VDOS, and Peter Norton Computing released it as Norton Commander in 1986. After starting it, a user saw two panels of file lists side by side, with a list of commands along the bottom of the screen, a built-in viewer on F3 and an editor on F4, all drawn with text characters on a plain MS-DOS screen. Symantec bought Peter Norton Computing in 1990, and the last MS-DOS version, 5.51, came out on 1 July 1998. The chapter shows Norton Commander in Figure 12-1 as its example of a text-based user interface, a style its own snowstorm program imitates with block characters and a cleared screen. The account rests on these sources. 'Norton Commander', Wikipedia, en.wikipedia.org/wiki/Norton_Commander (John Socha, work begun 1984 as Visual DOS; initial release 1986 by Peter Norton Computing; two panels; Symantec acquisition 1990; version 5.51 on 1 July 1998).",
+   "take": "A text interface can be rich: Norton Commander drew a desktop in text.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Terminal output: clearing, blocks and colour",
+   "sub": "A conditional expression picks cls or clear; chr() gives the block characters",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.8,
+     "h": 2.21,
+     "rows": [
+      [
+       "import os",
+       ""
+      ],
+      [
+       "'cls' if os.name == 'nt' else 'clear'",
+       "'clear'"
+      ],
+      [
+       "TOP, BOTTOM, FULL = chr(9600), chr(9604), chr(9608)",
+       ""
+      ],
+      [
+       "[TOP, BOTTOM, FULL]",
+       "['\u2580', '\u2584', '\u2588']"
+      ],
+      [
+       "[ord(c) for c in (TOP, BOTTOM, FULL)]",
+       "[9600, 9604, 9608]"
+      ],
+      [
+       "FULL * 20",
+       "'\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588'"
+      ]
+     ],
+     "fs": 9.1,
+     "cap": "run under Python 3.14.6",
+     "label": "the clear() one-liner, and the snowstorm's three blocks"
+    },
+    {
+     "t": "card",
+     "head": "Colour with Bext",
+     "body": "bext.fg('red') and bext.bg('blue') colour the text; 'reset' restores it. Bext 0.1.1 names the cursor functions hide_cursor() and show_cursor(), not the hide() and show() the chapter lists. It works in a terminal, not in Mu.",
+     "x": 5.5,
+     "y": 1.5,
+     "w": 4.0,
+     "h": 3.4,
+     "fs": 11.5
+    }
+   ],
+   "notes": "A text program can clear its window with a one-line function: os.system('cls' if os.name == 'nt' else 'clear') runs cls on Windows and clear on macOS and Linux, choosing with a conditional expression, value1 if condition else value2, which gives 'clear' on this machine. The snowstorm program draws with three block characters, the top half block, the bottom half block and the full block, which chr() returns for 9600, 9604 and 9608. Colour comes from the third-party Bext package, built on Colorama; installed for this deck, its version 0.1.1 has the colour, clear, size, title, goto and get_key functions the chapter lists, but calls its cursor functions hide_cursor and show_cursor. The chapter's warning stands: a light or dark terminal theme changes how colours look, and too much colour makes a program hard to read.",
+   "take": "cls or clear by a conditional expression; chr gives blocks; Bext, colour.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Snowstorm: one frame of the animation",
+   "sub": "The density comes from sys.argv; each frame is cleared, printed and held 0.2 s",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 5.45,
+     "h": 2.84,
+     "lines": [
+      "sys.argv = ['snowstorm.py', '20']  # as if started with: python snowstorm.py 20",
+      "",
+      "# Set the snowstorm density to the command line argument:",
+      "DENSITY = 4  # Default snow density is 4%",
+      "if len(sys.argv) > 1:",
+      "    DENSITY = int(sys.argv[1])",
+      "",
+      "random.seed(12)  # one fixed frame; the chapter loops forever",
+      "for y in range(6):",
+      "    for x in range(40):",
+      "        if random.randint(0, 99) < DENSITY:",
+      "            print(random.choice([TOP, BOTTOM]), end='')  # Print snow",
+      "        else:",
+      "            print(' ', end='')  # Print empty space",
+      "    print()  # Print a newline.",
+      "print(FULL * 40 + '\\n' + FULL * 40)  # the snow-covered ground"
+     ],
+     "fs": 7.3,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program snowstormFrame_v1_0_0.py, lines 7 to 22 of 23"
+    },
+    {
+     "t": "prog",
+     "x": 6.1,
+     "y": 1.5,
+     "w": 3.4,
+     "h": 3.45,
+     "lines": [],
+     "fs": 7.3,
+     "compact": true,
+     "out": "      \u2584\u2584        \u2580     \u2580\u2584  \u2580\u2580\u2584 \u2584\u2584    \u2580 \u2584 \n        \u2580         \u2584         \u2584 \u2580   \u2584   \u2580 \n\u2584\u2584      \u2584                   \u2584    \u2580  \u2584  \u2580\n    \u2580              \u2584           \u2580 \u2580   \u2580  \n \u2584 \u2584  \u2584          \u2580\u2580\u2584   \u2584         \u2580      \n \u2584  \u2584\u2580            \u2580     \u2584   \u2580\u2584        \u2584 \n\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\n\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\n(Ctrl-C to stop.)",
+     "outLabel": "prints",
+     "label": "one frame, density 20"
+    }
+   ],
+   "notes": "snowstorm.py starts with a density of 4 percent and, when an argument is given, replaces it with int(sys.argv[1]), so python snowstorm.py 20 makes a heavier storm without touching the code; this run sets sys.argv to exactly that list. Two nested loops print 6 rows of 40 cells, each either a random half block or a space, with end='' so a row stays on one line, then two rows of full blocks for the ground. The chapter's program repeats this forever, clearing the terminal before each frame and pausing 0.2 seconds after it, a flipbook animation stopped with CTRL-C; this run prints one seeded frame so the slide can be checked. The same clear, print and pause loop makes the dashboard the chapter suggests.",
+   "take": "One argument changes the storm; clear, print and pause in a loop make it move.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Pipes, 1973: why a command should be quiet",
+   "sub": "1973",
+   "items": [
+    {
+     "t": "card",
+     "head": "Doug McIlroy and Ken Thompson",
+     "body": "McIlroy proposed the pipe in a 1964 memo; in 1973 Thompson added pipes to Version 3 Unix in one night, and in 1978 McIlroy wrote: don't clutter output with extraneous information.",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.5,
+     "h": 2.8,
+     "fs": 12.5
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "1964: McIlroy's memo proposes the pipe",
+      "1973: Thompson adds pipe() to Version 3 Unix",
+      "Version 4: the | notation",
+      "1978: the maxims in the Bell System journal"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Doug McIlroy and Ken Thompson",
+     "where": "Bell Labs, Version 3 Unix",
+     "when": "1973",
+     "link": "https://en.wikipedia.org/wiki/Pipeline_(Unix)",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Doug McIlroy, head from 1965 to 1986 of the Bell Labs Computing Techniques Research Department, the birthplace of Unix, had proposed the concept of a pipe in a 1964 memo, the output of one program becoming the input of the next. In 1973 Ken Thompson added the pipe() system call and pipes to the shell and several utilities of Version 3 Unix, in what McIlroy called one feverish night, and the next day saw, in McIlroy's words, an unforgettable orgy of one-liners as everybody joined in the excitement of plumbing. In the 1978 Bell System Technical Journal foreword, McIlroy and his two co-authors wrote down the maxims of the style: make each program do one thing well, expect the output of every program to become the input to another, as yet unknown, program, and do not clutter output with extraneous information. That last maxim is the chapter's advice to keep a command silent by default and print more only when --verbose asks for it. The account rests on these sources. 'Douglas McIlroy', Wikipedia (head of the Computing Techniques Research Department, 1965-1986); 'Pipeline (Unix)', Wikipedia, en.wikipedia.org/wiki/Pipeline_(Unix) (McIlroy's 1964 memo; Thompson's pipe() in Version 3 Unix, 1973; the | notation in Version 4); 'Unix philosophy', Wikipedia (M. D. McIlroy, E. N. Pinson and B. A. Tague, 'Unix Time-Sharing System: Foreword', Bell System Technical Journal, 8 July 1978, pp. 1902-1903).",
+   "take": "Output may feed another program, so a command stays quiet unless asked.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Sound, quiet output and message boxes",
+   "sub": "Say little by default; PyMsgBox can replace print() and input()",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 1.5,
+     "cols": 3,
+     "fs": 12,
+     "subfs": 10,
+     "accent": [
+      1
+     ],
+     "items": [
+      {
+       "label": "playsound3.playsound('hello.mp3')",
+       "sub": "plays a sound and blocks until it ends"
+      },
+      {
+       "label": "--verbose  /  --quiet",
+       "sub": "more output on request, or none; silence by default"
+      },
+      {
+       "label": "the exit code",
+       "sub": "success or failure without a word of text"
+      }
+     ]
+    },
+    {
+     "t": "boxes",
+     "x": 0.5,
+     "y": 3.2,
+     "w": 9.0,
+     "h": 1.7,
+     "cols": 4,
+     "fs": 12,
+     "subfs": 10,
+     "accent": [],
+     "items": [
+      {
+       "label": "pymsgbox.alert(text)",
+       "sub": "waits for OK; returns 'OK'"
+      },
+      {
+       "label": "pymsgbox.confirm(text)",
+       "sub": "returns 'OK' or 'Cancel'"
+      },
+      {
+       "label": "pymsgbox.prompt(text)",
+       "sub": "returns the typed text, or None"
+      },
+      {
+       "label": "pymsgbox.password(text)",
+       "sub": "the same, typing hidden by asterisks"
+      }
+     ]
+    }
+   ],
+   "notes": "The playsound3 package plays an MP3 or WAV file and does not return until it ends, so a long sound halts the program for a while; sound can announce that a task finished, but it is easily overused and wasted on a muted computer. The same restraint applies to text: under the Unix philosophy a command prints only what another command could use, reports success or failure through its exit code, and offers --verbose for more or --quiet for none. For an occasional message or answer the PyMsgBox package shows small Tkinter dialogs whose functions mirror JavaScript's and block like input(). None of these ran on the machine that built this deck, which has no speaker and no display; the book's automateboringstuff3 package also pins the older playsound 1.3.0 rather than the playsound3 its prose teaches.",
+   "take": "Quiet by default, sound sparingly, a dialog box when there is no terminal.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Launcher files on three systems",
+   "sub": "A small text file per system activates the environment and runs the script",
+   "items": [
+    {
+     "t": "boxes",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 9.0,
+     "h": 1.0,
+     "cols": 3,
+     "fs": 11.5,
+     "subfs": 9,
+     "accent": [
+      2
+     ],
+     "items": [
+      {
+       "label": "Windows: yourScript.bat",
+       "sub": "@call activate.bat, @python ... %*, @pause; Run dialog"
+      },
+      {
+       "label": "macOS: yourScript.command",
+       "sub": "source activate, python3 ...; chmod u+x; Spotlight"
+      },
+      {
+       "label": "Ubuntu: yourScript",
+       "sub": "#!/usr/bin/env bash, source, python3; chmod u+x; Dash"
+      }
+     ]
+    },
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 2.85,
+     "w": 9.0,
+     "h": 1.81,
+     "rows": [
+      [
+       "import stat, configparser",
+       ""
+      ],
+      [
+       "stat.filemode(0o100644 | stat.S_IXUSR)",
+       "'-rwxr--r--'"
+      ],
+      [
+       "'#!/usr/bin/env bash'[2:].split()",
+       "['/usr/bin/env', 'bash']"
+      ],
+      [
+       "c = configparser.ConfigParser()",
+       ""
+      ],
+      [
+       "c.read_string('[Desktop Entry]\\nName=yourScript\\nExec=gnome-terminal -- /home/al/Scripts/yourScript\\nType=Application\\n')",
+       ""
+      ],
+      [
+       "c['Desktop Entry']['Exec']",
+       "'gnome-terminal -- /home/al/Scripts/yourScript'"
+      ]
+     ],
+     "fs": 7.8,
+     "cap": "run under Python 3.14.6",
+     "label": "a launcher's mode, its first line, and a desktop entry read as key=value lines"
+    }
+   ],
+   "notes": "Deployment puts each script in a Scripts folder on PATH, with one small launcher per operating system that activates the folder's virtual environment, runs the script with that environment's Python and deactivates. On Windows it is a batch file run from the Run dialog, on macOS a .command file run from Spotlight, and on Ubuntu a shell script with no extension, plus a .desktop file to reach it from Dash. On macOS and Linux chmod u+x adds the owner's execute bit, turning -rw-r--r-- into -rwxr--r--, and the Ubuntu launcher's first line, #!/usr/bin/env bash, names the program that reads the rest. The desktop entry is plain key=value text, and its Exec line must spell out /home/al because ~ is not expanded there.",
+   "take": "One launcher per system; chmod u+x and #! make it run on macOS and Linux.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The #! line, announced on 10 January 1980",
+   "sub": "1980-01-10",
+   "items": [
+    {
+     "t": "card",
+     "head": "Dennis Ritchie, Bell Laboratories",
+     "body": "Ritchie added #! to the Unix kernel between Editions 7 and 8 and announced it by email: the rest of the first line names the interpreter. BSD carried it to everyone.",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.5,
+     "h": 2.8,
+     "fs": 12.5
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "10 Jan 1980: Ritchie's email announces #!",
+      "#! /bin/sh: a full path, no search",
+      "2.8BSD, then on by default in 4.2BSD",
+      "#!/usr/bin/env bash adds the PATH search"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Dennis Ritchie",
+     "where": "Bell Laboratories, between Edition 7 and Edition 8 Unix",
+     "when": "1980-01-10",
+     "link": "https://en.wikipedia.org/wiki/Shebang_(Unix)",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Dennis Ritchie added kernel support for interpreter directives at Bell Laboratories between Edition 7 and Edition 8 of Unix, and announced it in an email dated Thursday, 10 January 1980: if a file being executed begins with the magic characters #!, the rest of the line names the interpreter that runs it. He advised users to put #! /bin/sh at the left margin of the first line of their shell scripts, noting that a complete pathname was needed because no search was done. Since Edition 8 was never publicly released, the feature reached most users through Berkeley's BSD, appearing in 2.8BSD and enabled by default in 4.2BSD. Asked in 2009 what the construction was called, Ritchie replied that he could not recall it ever being given a proper name; the later form #!/usr/bin/env bash, the first line of the chapter's Ubuntu launcher, adds the PATH search his first version left out. The account rests on these sources. 'Shebang (Unix)', Wikipedia, en.wikipedia.org/wiki/Shebang_(Unix) (Dennis Ritchie's email of 10 January 1980; 2.8BSD and 4.2BSD; Ritchie's 2009 reply on the name; the /usr/bin/env form).",
+   "take": "The launcher's first line is Ritchie's 1980 #!; env adds a PATH search.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The Ubuntu launcher, run",
+   "sub": "The chapter's launcher has nothing after the script's path",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 1.55,
+     "lines": [
+      "SCRIPT = 'import sys\\nprint(sys.argv[1:], sys.prefix != sys.base_prefix)\\n'",
+      "LAUNCHER = '''#!/usr/bin/env bash",
+      "source ~/Scripts/.venv/bin/activate",
+      "python3 ~/Scripts/yourScript.py",
+      "read -p \"Press any key to continue...\" -n1 -s",
+      "deactivate",
+      "'''"
+     ],
+     "fs": 8,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program linuxLauncher_v1_0_0.py, lines 4 to 10 of 26 - Python 3.14.6"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 3.4299999999999997,
+     "w": 9.0,
+     "h": 1.5200000000000005,
+     "lines": [],
+     "fs": 9.5,
+     "compact": true,
+     "out": "which yourScript -> ~/Scripts/yourScript\nmode after chmod u+x: -rwxr--r--\nyourScript spam eggs -> arguments, in .venv: [] True\nyourScriptArgs spam eggs -> arguments, in .venv: ['spam', 'eggs'] True",
+     "outLabel": "prints",
+     "label": "prints: found on PATH, made executable, run by name - with and without \"$@\""
+    }
+   ],
+   "notes": "This program carries out the chapter's Ubuntu deployment for real: a Scripts folder with a virtual environment, yourScript.py, and the launcher exactly as printed, with a plain hyphen where the online chapter's read line has an en dash, which bash rejects as not a valid identifier. After chmod u+x and with the folder on PATH, shutil.which finds the launcher and typing yourScript spam eggs runs it, inside the environment. But the script receives no arguments: the launcher's python3 line has nothing after the script's path, so spam and eggs are dropped, while a copy with \"$@\" added forwards both, as %* does in the Windows batch file. The chapter's macOS and Linux ccwd launchers have the same gap, so ccwd .. deployed there would copy the current folder, not its parent.",
+   "take": "Without \"$@\" (or %* on Windows) a launcher drops the typed arguments.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "ccwd: copying the current working directory",
+   "sub": "Four lines; os.chdir moves only the program, never its terminal",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 5.2,
+     "h": 1.35,
+     "lines": [
+      "CCWD = '''import pyperclip, os, sys",
+      "if len(sys.argv) > 1:",
+      "    os.chdir(sys.argv[1])",
+      "pyperclip.copy(os.getcwd())",
+      "'''"
+     ],
+     "fs": 9.5,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program ccwd_v1_0_0.py, lines 6 to 10 of 27 - Python 3.14.6"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 3.75,
+     "w": 9.0,
+     "h": 1.2,
+     "lines": [],
+     "fs": 10,
+     "compact": true,
+     "out": "ccwd     -> clipboard: ~/Scripts | the shell is still in ~/Scripts\nccwd ..  -> clipboard: ~ | the shell is still in ~/Scripts",
+     "outLabel": "prints",
+     "label": "prints: what ccwd copied, and where the shell that ran it still is"
+    },
+    {
+     "t": "card",
+     "head": "No clipboard here",
+     "body": "A stand-in pyperclip.py with the same copy() and paste() keeps the text in a file; ccwd.py itself runs unchanged.",
+     "x": 5.9,
+     "y": 1.5,
+     "w": 3.6,
+     "h": 1.85,
+     "fs": 11
+    }
+   ],
+   "notes": "ccwd, short for copy current working directory, is four lines: import pyperclip, os and sys; change to sys.argv[1] if an argument was given; copy os.getcwd() to the clipboard. A short name like this is the chapter's advice for a command typed many times a day, checked first with which or where. Run from a bash shell sitting in ~/Scripts, it copied ~/Scripts, and with .. it copied the home folder, yet the shell's own pwd afterwards still printed ~/Scripts: every program has its own working directory, and os.chdir() moves only that one. The program prints nothing, so its batch file needs no @pause.",
+   "take": "ccwd .. copies the parent folder; the terminal that ran it stays where it was.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Clipboard Recorder: polling and CTRL-C",
+   "sub": "Print new clipboard text once; end quietly on KeyboardInterrupt",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 1.3,
+     "lines": [],
+     "fs": 10,
+     "compact": true,
+     "out": "Recording clipboard... (Ctrl-C to stop)\nhttps://automatetheboringstuff.com/3e/chapter11.html\nhttps://automatetheboringstuff.com/3e/chapter12.html\nhttps://automatetheboringstuff.com/3e/chapter13.html\nexit code: 0 | traceback printed: False",
+     "outLabel": "prints",
+     "label": "transcript of program clipRecorder_v1_0_0.py: cliprec.py run unchanged"
+    },
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 3.13,
+     "w": 9.0,
+     "h": 1.51,
+     "rows": [
+      [
+       "seen = ['a', 'a', 'b', 'b', 'a']",
+       ""
+      ],
+      [
+       "[x for i, x in enumerate(seen) if i == 0 or x != seen[i - 1]]",
+       "['a', 'b', 'a']"
+      ],
+      [
+       "1 / 0.01",
+       "100.0"
+      ],
+      [
+       "issubclass(KeyboardInterrupt, Exception)",
+       "False"
+      ]
+     ],
+     "fs": 8,
+     "cap": "run under Python 3.14.6",
+     "label": "print only what changed; 100 checks a second; CTRL-C is not an Exception"
+    }
+   ],
+   "notes": "cliprec.py turns copying many links into a two-step job: it reads the clipboard in an endless loop, prints the text only when it differs from previous_content, and sleeps 0.01 seconds between reads, a hundred checks a second instead of tens of thousands. The chapter's own program ran unchanged against a stand-in clipboard serving three links, two of them copied twice, and printed each once. The loop sits in a try block, and pressing CTRL-C raises KeyboardInterrupt, which the except clause catches with pass, so the program ends with exit code 0 and no traceback; the stand-in raises it when its links run out. KeyboardInterrupt derives from BaseException, not Exception, so a broad except Exception would let CTRL-C through, which is why the clause names it.",
+   "take": "Compare with the last text, sleep briefly, catch KeyboardInterrupt by name.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "PyInstaller: one file, a whole interpreter",
+   "sub": "python -m PyInstaller --onefile yourScript.py builds one executable",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 5.0,
+     "h": 1.38,
+     "rows": [
+      [
+       "import importlib.util",
+       ""
+      ],
+      [
+       "importlib.util.find_spec('PyInstaller') is None",
+       "True"
+      ],
+      [
+       "import pyinstaller",
+       "ModuleNotFoundError: No module named 'pyinstaller'"
+      ]
+     ],
+     "fs": 10.2,
+     "cap": "run under Python 3.14.6",
+     "label": "the module's name has two capital letters"
+    },
+    {
+     "t": "stat",
+     "x": 5.8,
+     "y": 1.5,
+     "w": 3.7,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "12,950,120",
+       "label": "bytes: dist/hello for a 23-byte Hello, world (Linux)"
+      },
+      {
+       "n": "~15 s",
+       "label": "to build with PyInstaller 6.22.3, Python 3.14.6"
+      }
+     ]
+    },
+    {
+     "t": "card",
+     "head": "Measured once, not on every build",
+     "body": "The numbers come from the chapter's research record: a build needs a download and fifteen seconds, too much to repeat each time this deck is made.",
+     "x": 0.5,
+     "y": 3.24,
+     "w": 5.0,
+     "h": 1.71,
+     "fs": 10.5
+    }
+   ],
+   "notes": "PyInstaller makes a program that runs on a computer without Python: python -m PyInstaller --onefile yourScript.py, with --onefile's two dashes and PyInstaller's two capital letters, since the lower-case module name fails exactly as this console shows. It leaves a build folder, which can be deleted, a .spec file and a dist folder with the executable. It does not compile to machine code: it packs a copy of the interpreter with the script, so the chapter's Hello, world is close to 8MB on Windows, and the build made for this course on Ubuntu was 12,950,120 bytes. PyInstaller builds only for the operating system and Python version it runs under, so a Windows executable needs a Windows build.",
+   "take": "PyInstaller bundles the interpreter: megabytes, built per system.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in five lines",
+   "sub": "One line for each part of the route",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.5,
+     "fs": 11.5,
+     "items": [
+      "The terminal searches the PATH folders in order for a typed name; the first match runs.",
+      "python -m venv .venv makes a separate Python; python -m pip fills it from PyPI.",
+      "sys.argv, argparse, os.name and sys.exit let a program read its words and report back.",
+      "A text program stays quiet by default, clears with cls or clear, and colours with Bext.",
+      "A launcher on PATH or a PyInstaller build deploys it; \"$@\" or %* forwards the arguments."
+     ]
+    }
+   ],
+   "notes": "These five lines answer the route one part at a time. The first covers the terminal and PATH, the second virtual environments and pip, the third self-aware programs and command line arguments, the fourth text-based design, and the fifth deployment with launchers or PyInstaller, including the one gap in the chapter's macOS and Linux launchers. Together they answer the first question of the chapter, how a typed name becomes a running program, and the slides of each part answer the second, where the chapter's printed lines differ today.",
+   "take": "If a line feels unproven, its slides hold the example.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Every link was opened on the day this deck was made",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.55,
+     "fs": 9.5,
+     "groups": [
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, chapter 12 - free online",
+         "https://automatetheboringstuff.com/3e/chapter12.html"
+        ],
+        [
+         "venv \u2014 Creation of virtual environments",
+         "https://docs.python.org/3.14/library/venv.html"
+        ],
+        [
+         "argparse \u2014 Parser for command-line options, arguments and subcommands",
+         "https://docs.python.org/3.14/library/argparse.html"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "sys \u2014 System-specific parameters and functions",
+         "https://docs.python.org/3.14/library/sys.html"
+        ],
+        [
+         "User Guide - pip documentation",
+         "https://pip.pypa.io/en/stable/user_guide/"
+        ],
+        [
+         "Using PyInstaller",
+         "https://pyinstaller.org/en/stable/usage.html"
+        ]
+       ]
+      },
+      {
+       "head": "History",
+       "rows": [
+        [
+         "Pipeline (Unix), Wikipedia",
+         "https://en.wikipedia.org/wiki/Pipeline_(Unix)"
+        ],
+        [
+         "Shebang (Unix), Wikipedia",
+         "https://en.wikipedia.org/wiki/Shebang_(Unix)"
+        ],
+        [
+         "Norton Commander, Wikipedia",
+         "https://en.wikipedia.org/wiki/Norton_Commander"
+        ],
+        [
+         "pip (package manager), Wikipedia",
+         "https://en.wikipedia.org/wiki/Pip_(package_manager)"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Every link on this slide was opened on the day the deck was made. The textbook chapter is free to read online and has every launcher file and both short programs in full, the venv and argparse documentation covers what this deck added to the chapter, and the reference links are the official pages behind sys.argv, sys.exit, python -m pip and PyInstaller's options. The history links are the sources behind the four stories of this chapter: pipes, the #! line, Norton Commander and pip.",
+   "take": "Textbook, documentation and history, opened the day this deck was built.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What you should now be able to say",
+   "sub": "Four claims, each carried by a result you saw printed",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 1.5,
+     "w": 8.8,
+     "h": 2.4,
+     "fs": 15,
+     "items": [
+      "A typed name runs the first match in the PATH folders, never a subfolder.",
+      "A virtual environment is a separate Python; activation puts it first on PATH.",
+      "sys.argv holds the script name and the typed words; argparse checks and converts them.",
+      "A launcher needs chmod u+x on macOS and Linux, and \"$@\" to forward arguments."
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.6,
+     "y": 4.1,
+     "w": 8.8,
+     "h": 0.6,
+     "fs": 13,
+     "big": true,
+     "items": [
+      "62 rows run",
+      "8 programs run",
+      "4 true stories"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The next chapter starts Part II of the book, with programs that fetch and read web pages, and every one of them can be deployed the way this chapter showed.",
+   "take": "Questions are welcome; bring one launcher that did not run and say why.",
+   "bg": "light"
+  }
+ ]
+}
