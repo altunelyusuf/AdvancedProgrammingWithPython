@@ -1,0 +1,4388 @@
+{
+ "meta": {
+  "title": "Ch. 18: CSV, JSON, and XML Files",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "1.0.0",
+  "python": "3.14.6",
+  "total": 26,
+  "diagrams": {
+   "WhatAProgramCanDoWithCsv": 4,
+   "ReadingACsvFile": 6,
+   "WritingACsvFileOnWindows": 9,
+   "RemovingCsvHeaders": 14,
+   "AValueThroughJson": 17,
+   "WhatAProgramCanDoWithElementTree": 19,
+   "ParsingUntrustedXml": 23,
+   "CsvJsonAndXmlAtAGlance": 24
+  },
+  "notExecuted": [
+   10,
+   13
+  ],
+  "measured": [
+   7
+  ],
+  "emulated": [
+   10
+  ]
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Ch. 18: CSV, JSON, and XML Files",
+   "sub": "Three plain-text formats for data: the csv module, json, xml.etree.ElementTree, and where the chapter and Python differ",
+   "items": [
+    {
+     "t": "code",
+     "x": 5.0,
+     "y": 0.4,
+     "w": 4.5,
+     "h": 1.68,
+     "rows": [
+      [
+       "import platform, importlib.metadata as m",
+       ""
+      ],
+      [
+       "platform.python_version()",
+       "'3.14.6'"
+      ],
+      [
+       "m.version('xmltodict')",
+       "'1.0.4'"
+      ],
+      [
+       "m.version('defusedxml')",
+       "'0.7.1'"
+      ]
+     ],
+     "fs": 10
+    },
+    {
+     "t": "foot",
+     "x": 0.6,
+     "y": 3.85,
+     "w": 8.8,
+     "h": 0.41,
+     "fs": 11,
+     "body": "Every output on these slides was printed by the Python above when the deck was made. What could not be run is marked on its slide."
+    }
+   ],
+   "notes": "Chapter 17 worked with files that other people made for other people to read. Chapter 18 turns to files that programs read and write: plain text in three formats, comma-separated values, JSON and XML, and asks what a program must still do to read them correctly, since all three look like text that could simply be split. This deck follows the chapter in its own order: the csv module with its reader and writer, the tab-separated file, the DictReader and DictWriter and Project 13 that removes the header row of every CSV file in a folder; JSON with json.loads() and json.dumps(); XML with xml.etree.ElementTree and the third-party xmltodict. It adds what the chapter leaves out and what the research found when every printed output was run again: Appendix B answers a question about file modes in a way the chapter's own code contradicts, line_num counts lines and not records, the chapter never names an encoding, the newline argument has a reason the book calls beyond its scope, JSON refuses or changes several Python values, ElementTree does not interpret xsi:nil and reports whitespace, and XML from someone else can be an attack. Everything printed on these slides was produced by Python 3.14.6, installed with uv, with xmltodict 1.0.4 and defusedxml 0.7.1; csv, json and ElementTree are the standard library. The programs build their own files in a temporary folder and use no network. What could not be run, Microsoft Excel, a real Windows computer and the final release of Python 3.15, is marked on its slide, and the one place where a Python object stands in for Windows says EMULATED.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Six parts; every range is a run of slides you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 6.3,
+     "h": 3.55,
+     "fs": 11.5,
+     "items": [
+      "The CSV format and reading it (slides 4-8)",
+      "Writing CSV, and the details around it (slides 9-14)",
+      "JSON (slides 15-18)",
+      "XML with ElementTree (slides 19-21)",
+      "xmltodict, and XML you did not write (slides 22-23)",
+      "Summary and resources (slides 24-25)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "26",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "2 + 4",
+       "label": "true stories: 2 on slides, 4 in the notes"
+      },
+      {
+       "n": "24",
+       "label": "consoles and programs, all run before they were shown"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has six parts. It starts with CSV: what a program can do with the csv module, the 1972 compiler that read commas between values, the reader and its single pass, the memory a for loop saves, and the place where Appendix B disagrees with the chapter. Then writing CSV and the details around it: the writer and its types, the newline argument and the double-spaced file, DictReader and DictWriter, the quoting constants and the field limit, the encoding the chapter never names, and Project 13 with the header row. Then JSON: the first message of April 2001, the syntax Python refuses, a value through dumps and loads, and the gaps of NaN, the byte order mark and the 4,300-digit limit. Then XML with ElementTree: what a program can do with it, whitespace, the truth value and iterparse, and writing XML with namespaces and xsi:nil. The fifth part is xmltodict and XML that someone else wrote, with the billion laughs. The last part is a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. Two of the slides are true stories and four more are told in the notes; the eight narrative diagrams of the chapter are drawn from the same specifications as the interactive page. Every output was printed by Python 3.14.6 with xmltodict 1.0.4 and defusedxml 0.7.1, and what could not be run is marked on its slide.",
+   "take": "Six parts, from a comma in quotes to a billion laughs.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "The chapter's own competency questions; the summary comes back to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 2.2,
+     "fs": 13,
+     "items": [
+      "Which rules does each of the three formats impose, which operations read and write them, and which values or structures does each format lose or refuse, given that all three are plain text that a program must still parse and not split?",
+      "Which printed outputs, programs, numbers and statements of the chapter differ in current releases of Python and the packages, in the files the book ships or in the pages it points to, and on what source?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 3.8,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 10,
+     "items": [
+      "6 branches",
+      "95 topics",
+      "25 console rows",
+      "28 programs run",
+      "8 diagrams",
+      "Python 3.14.6",
+      "xmltodict 1.0.4",
+      "defusedxml 0.7.1"
+     ]
+    }
+   ],
+   "notes": "The first question is the chapter's spine. Each of the three formats imposes rules: a CSV field that holds a comma or a line break must be in quotes, JSON allows six kinds of value and no trailing comma, and an XML document needs one root element and matching tags. Each has operations that read and write it, the csv reader and writer, json.loads() and json.dumps(), and ElementTree, and each loses or refuses something: CSV gives back only strings, JSON turns a tuple into a list and refuses a set, and XML read through ElementTree also gives only strings. All three are plain text that a program must parse and not split. The second question is the watch-out of the deck. The chapter page of 12 October 2026 has 35 listings, 20 of them interactive sessions of 97 statements, and one figure. All 97 statements were replayed in the order of the page under Python 3.14.6. As printed, 89 matched. The two xml_string listings fail as typed because the closing quotation mark of the xsi namespace is a curly quotation mark, and json_string is wrapped over four lines inside its quotes, which is a SyntaxError. With the curly quotation mark replaced, 93 matched, and the same came with the versions Appendix A pins, xmltodict 0.13.0 and openpyxl 3.1.5. The online materials of the book, 91 files, hold exampleWithHeader3.csv and the Excel files but no example3.csv and no XML or JSON file at all, so a reader has to type the files the chapter opens. Each slide says where a printed line differs and on what evidence. The chips give the size of the chapter as this deck covers it.",
+   "take": "Know what each format imposes and loses, and where the book's lines differ.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What a program can do with a CSV file",
+   "sub": "Six things through the csv module; the chapter names neither its quoting nor its limit",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 5.0,
+     "y": 1.45,
+     "w": 4.5,
+     "h": 3.15,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 5.8,
+       "y": 1.73,
+       "w": 3.7,
+       "h": 2.87,
+       "fill": "FBF8F2",
+       "line": "6E655C",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "A CSV FILE IN PYTHON",
+       "x": 5.88,
+       "y": 1.47,
+       "w": 3.55,
+       "h": 0.24,
+       "fs": 8.5,
+       "color": "6E655C",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 1.84,
+       "w": 3.4,
+       "h": 0.405,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the rows of a file",
+       "x": 6.23,
+       "y": 1.965,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 2.305,
+       "w": 3.4,
+       "h": 0.405,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Write rows to a file",
+       "x": 6.23,
+       "y": 2.43,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 2.77,
+       "w": 3.4,
+       "h": 0.405,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read rows as dictionaries",
+       "x": 6.23,
+       "y": 2.895,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 3.235,
+       "w": 3.4,
+       "h": 0.405,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Write dictionaries as rows",
+       "x": 6.23,
+       "y": 3.36,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 3.7,
+       "w": 3.4,
+       "h": 0.405,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Change the delimiter to a tab",
+       "x": 6.23,
+       "y": 3.825,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 4.165,
+       "w": 3.4,
+       "h": 0.405,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read a field above the size limit",
+       "x": 6.23,
+       "y": 4.29,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.24,
+       "y": 2.325,
+       "w": 0.22,
+       "h": 0.22,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 1.5
+      },
+      {
+       "k": "line",
+       "x1": 5.35,
+       "y1": 2.545,
+       "x2": 5.35,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.15,
+       "y1": 2.645,
+       "x2": 5.55,
+       "y2": 2.645,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.35,
+       "y1": 2.925,
+       "x2": 5.19,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.35,
+       "y1": 2.925,
+       "x2": 5.51,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A program",
+       "x": 5.0,
+       "y": 3.225,
+       "w": 0.8,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 2.042,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 2.507,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 2.973,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 3.438,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 3.902,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 4.367,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      }
+     ],
+     "did": "WhatAProgramCanDoWithCsv"
+    },
+    {
+     "t": "foot",
+     "x": 5.0,
+     "y": 4.63,
+     "w": 4.5,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WhatAProgramCanDoWithCsv - SetOfUses pattern, 22 of 24 words grounded in the chapter's text"
+    },
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.3,
+     "h": 1.42,
+     "rows": [
+      [
+       "import csv",
+       ""
+      ],
+      [
+       "sorted(csv.list_dialects())",
+       "['excel', 'excel-tab', 'unix']"
+      ],
+      [
+       "len([n for n in dir(csv) if n.startswith('QUOTE_')])",
+       "6"
+      ],
+      [
+       "csv.field_size_limit()",
+       "131072"
+      ]
+     ],
+     "fs": 7.9,
+     "cap": "run under Python 3.14.6, xmltodict 1.0.4, defusedxml 0.7.1"
+    },
+    {
+     "t": "card",
+     "head": "Not in the standard library",
+     "body": "In a Python 3.14.6 with the standard library only: ModuleNotFoundError: No module named 'xmltodict'; ModuleNotFoundError: No module named 'defusedxml'. csv imported.",
+     "x": 0.5,
+     "y": 3.33,
+     "w": 4.3,
+     "h": 1.62,
+     "fs": 9.5,
+     "accent": "slate"
+    }
+   ],
+   "notes": "The use-case diagram lists what the chapter does with a CSV file through one module: read the rows of a file, write rows to a file, read rows as dictionaries, write dictionaries as rows, change the delimiter to a tab and, beyond the chapter, read a field above the size limit. They are independent uses of the same module and not a sequence, which is why the picture is a set of uses. The console beside it lists what the module offers that the chapter never mentions. csv.list_dialects() returns excel, excel-tab and unix; the module has six quoting constants, QUOTE_ALL, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC and, since Python 3.12, QUOTE_NOTNULL and QUOTE_STRINGS; and a field may hold at most 131,072 characters. The words QUOTE_, Sniffer and utf-8-sig are not on the chapter page. The card keeps the line between the standard library and the rest: csv, json and xml.etree.ElementTree come with Python, while xmltodict and defusedxml, which the XML slides use, do not; in a bare environment of Python 3.14.6 importing either failed with ModuleNotFoundError. The chapter tells the reader to install xmltodict, and Appendix A pins version 0.13.0 of it while PyPI offered 1.0.4 on the day of the study; the difference matters on the slide about untrusted XML.",
+   "take": "csv reads and writes rows and dicts; the chapter shows only a part of it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "CSV before the PC: a 1972 compiler",
+   "sub": "1972, and by 1983 under the name CSV",
+   "items": [
+    {
+     "t": "card",
+     "head": "Commas between the values",
+     "body": "The IBM Fortran (level H extended) compiler under OS/360 read free-form input with commas between values in 1972. An unquoted string could not hold a comma.",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 4.5,
+     "h": 1.3,
+     "fs": 10.5
+    },
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 2.85,
+     "w": 4.5,
+     "h": 1.33,
+     "rows": [
+      [
+       "import csv",
+       ""
+      ],
+      [
+       "line = 'Alice,30,\"San Francisco, CA\"'",
+       ""
+      ],
+      [
+       "line.split(',')",
+       "['Alice', '30', '\"San Francisco', ' CA\"']"
+      ],
+      [
+       "next(csv.reader([line]))",
+       "['Alice', '30', 'San Francisco, CA']"
+      ]
+     ],
+     "fs": 8.5,
+     "cap": "run under Python 3.14.6, xmltodict 1.0.4, defusedxml 0.7.1"
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "1972: IBM Fortran reads comma-separated input",
+      "1978: FORTRAN 77 defines list-directed input",
+      "1983: the name CSV is in use",
+      "Oct 2005: RFC 4180 writes the format down"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "The IBM Fortran (level H extended) compiler and the people who wrote spreadsheets for it",
+     "where": "IBM OS/360, list-directed input and output with commas between the values",
+     "when": "1972, and by 1983 under the name CSV",
+     "link": "https://en.wikipedia.org/wiki/Comma-separated_values",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on comma-separated values says the format predates personal computers by more than a decade: the IBM Fortran (level H extended) compiler under OS/360 supported list-directed free-form input and output, with commas between values, in 1972. List-directed input was defined in FORTRAN 77, approved in 1978, and it used commas or spaces as delimiters, so an unquoted string could not contain either. The term comma-separated value and the abbreviation CSV were in use by 1983. The quoting rule that lets a field hold a comma is the answer to that old limit: in this study the line with 'Hello, world!' in quotes split into five pieces with split(','), and into four fields with csv.reader. The account rests on these sources. Wikipedia, 'Comma-separated values' (History: IBM Fortran 1972, FORTRAN 77 in 1978, the term in use by 1983), read 2026-10-12; this study's leaves FieldsAndRecords and QuotedCommaField. The console on the slide uses a shorter line than the study's: the line with a comma inside quotes split into four pieces with split(',') and was read as three fields by csv.reader. The October 2005 date is the story of RFC 4180, which says each record ends in CRLF, the last record may or may not end in a line break and a header line is optional; the Python module follows these habits, and the console of the next slides shows the CRLF in the bytes the writer produced.",
+   "take": "Never split a CSV line on commas yourself; let csv.reader read it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Reading rows: a reader and a for loop",
+   "sub": "list() or a for loop; every value is a string; line_num counts lines",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.3,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.459,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Open the file with open()",
+       "x": 0.57,
+       "y": 1.551,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.916,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Pass the file object to csv.reader()",
+       "x": 0.57,
+       "y": 2.008,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.373,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Loop over the reader in a for loop",
+       "x": 0.57,
+       "y": 2.466,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.83,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read a row as a list of strings",
+       "x": 0.57,
+       "y": 2.923,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.5,
+       "y": 3.237,
+       "w": 3.3,
+       "h": 0.44,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is another row left?",
+       "x": 0.67,
+       "y": 3.38,
+       "w": 2.96,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.744,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call open() and csv.reader() again to read the file again",
+       "x": 0.57,
+       "y": 3.77,
+       "w": 3.16,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 4.4,
+       "y": 1.529,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.01,
+       "y": 4.231,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.07,
+       "y": 4.291,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 4.4,
+       "y1": 1.629,
+       "x2": 3.8,
+       "y2": 1.629,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 1.799,
+       "x2": 2.15,
+       "y2": 1.916,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 2.256,
+       "x2": 2.15,
+       "y2": 2.373,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 2.713,
+       "x2": 2.15,
+       "y2": 2.83,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 3.17,
+       "x2": 2.15,
+       "y2": 3.237,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.8,
+       "y1": 3.457,
+       "x2": 4.02,
+       "y2": 3.457,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.02,
+       "y1": 3.457,
+       "x2": 4.02,
+       "y2": 3.0,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.02,
+       "y1": 3.0,
+       "x2": 3.8,
+       "y2": 3.0,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 3.84,
+       "y": 3.487,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 3.677,
+       "x2": 2.15,
+       "y2": 3.744,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.21,
+       "y": 3.621,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 4.084,
+       "x2": 2.15,
+       "y2": 4.231,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "ReadingACsvFile"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.3,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ReadingACsvFile - Workflow pattern, 25 of 27 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 5.0,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 3.07,
+     "lines": [
+      "save('example.csv', EXAMPLE)   # 4 records, one with a line break",
+      "with open('example.csv', encoding='utf-8', newline='') as f:",
+      "    reader = csv.reader(f)",
+      "    rows = list(reader)",
+      "    print(rows[3])",
+      "    print('a second list():', list(reader))",
+      "with open('example.csv', encoding='utf-8', newline='') as f:",
+      "    reader = csv.reader(f)",
+      "    for row in reader:",
+      "        print('Row #' + str(reader.line_num) + ' ' + str(row))",
+      "print({type(v).__name__ for r in rows for v in r})",
+      "print(hasattr(reader, '__len__'), hasattr(reader, '__getitem__'))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "['Carol', '41', 'two\\r\\nlines']\na second list(): []\nRow #1 ['Name', 'Age', 'City']\nRow #2 ['Alice', '30', 'San Francisco, CA']\nRow #3 ['Bob', '25', 'He said \"hi\"']\nRow #5 ['Carol', '41', 'two\\r\\nlines']\n{'str'}\nFalse False",
+     "outLabel": "prints",
+     "label": "program readerCut_v1_0_0.py, lines 7 to 18 of 18"
+    }
+   ],
+   "notes": "This is the chapter's own sequence for reading a file: open the file, pass the file object to csv.reader(), loop over the reader and read each row as a list of strings, and ask whether another row is left. The program runs it on a file of four records. list(reader) gives four lists, and every value in them is a string, which is why a number read from a CSV file needs int() or float(). A reader can be looped over once: the second list() on the same reader returned an empty list, so reading the file again means calling open() and csv.reader() again. A reader has no len() and no index, and the program prints False for both. The loop prints reader.line_num with each row, and the numbers are 1, 2, 3 and 5: Carol's city holds a line break inside quotes, so her record spans two lines and the reader has read five lines when it hands the record over. line_num is the number of lines read from the file and not the number of records, which is what the Python documentation says, and Project 13 comes back to it. The file the chapter opens, example3.csv, is not in the online materials: the zip holds exampleWithHeader3.csv with CRLF line ends and the year 2025 in its timestamps where the chapter prints 2035. This deck's file is the sample EXAMPLE of the corpus, written by the program, with a quoted comma, a doubled quote and the line break.",
+   "take": "A reader gives lists of strings, once; line_num is not the record number.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A for loop against list(): memory",
+   "sub": "The chapter says a loop saves memory with a big file; the research measured it",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.33,
+     "h": 2.1,
+     "lines": [
+      "import tracemalloc",
+      "def peak(use_list):",
+      "    rows = ''.join('%d,n%d,%s\\r\\n' % (i, i, 'x' * 40) for i in range(60000))",
+      "    save('big.csv', rows)",
+      "    with open('big.csv', encoding='utf-8', newline='') as f:",
+      "        tracemalloc.start(); r = csv.reader(f)",
+      "        if use_list: n = len(list(r))",
+      "        else: n = sum(1 for _ in r)",
+      "        p = tracemalloc.get_traced_memory()[1]; tracemalloc.stop()",
+      "    return n, p",
+      "a, b = peak(True), peak(False)",
+      "print('rows', a[0], b[0], '| list() peaks over 10x the loop:', a[1] > 10 * b[1])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "rows 60000 60000 | list() peaks over 10x the loop: True",
+     "outLabel": "prints",
+     "label": "program memoryCut_v1_0_0.py, lines 7 to 18 of 18"
+    },
+    {
+     "t": "stat",
+     "x": 6.08,
+     "y": 1.5,
+     "w": 3.42,
+     "h": 1.95,
+     "vert": true,
+     "items": [
+      {
+       "n": "69.0 MiB",
+       "label": "peak of list(reader), 300,000 rows"
+      },
+      {
+       "n": "0.166 MiB",
+       "label": "peak of a for loop over the same file"
+      }
+     ]
+    },
+    {
+     "t": "card",
+     "head": "Single run, research",
+     "body": "A generated file of 300,000 rows (7.5 MB), measured once with tracemalloc: a ratio of 416. This deck's program uses 60,000 rows and prints only whether list() peaks above ten times the loop.",
+     "x": 6.08,
+     "y": 3.55,
+     "w": 3.42,
+     "h": 1.4,
+     "fs": 9,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.73,
+     "w": 5.33,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 6 (imports, a temporary folder, EXAMPLE, save() and a comment) are not shown."
+    }
+   ],
+   "notes": "The chapter says that looping over the reader object, instead of calling list() on it, is how to save memory with a big file. The claim holds. The program writes a file of 60,000 rows and reads it both ways under tracemalloc, which records the peak memory Python allocated: it prints that both readings found 60,000 rows and that the peak of list() is more than ten times the peak of the loop. The numbers on the slide are the research's, from one run on a generated file of 300,000 rows of 7.5 MB: the peak was 69.0 MiB for list(reader) and 0.166 MiB for a for loop, a ratio of 416, and the loop was also faster in that run, 0.40 s against 0.90 s; a DictReader loop took 1.22 s. Those are single runs on one machine, they vary with the machine, and no check of the deck repeats them; the program of the deck prints only the comparison, which it checks every time it is built. A reader object holds the position in the file and a loop keeps one row at a time, which is also why the reader can be read once. The Python documentation page on tracemalloc describes the tool.",
+   "take": "Loop over the reader when the file is big; list() holds every row.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Appendix B and the chapter disagree",
+   "sub": "Question 3 says binary mode; the chapter's code and Python say text mode",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 9.0,
+     "h": 1.74,
+     "rows": [
+      [
+       "import csv, io",
+       ""
+      ],
+      [
+       "list(csv.reader(io.BytesIO(b'a,b\\r\\n')))",
+       "Error: iterator should return strings, not bytes (the file should be opened in text mode)"
+      ],
+      [
+       "csv.writer(io.BytesIO()).writerow(['a'])",
+       "TypeError: a bytes-like object is required, not 'str'"
+      ],
+      [
+       "list(csv.reader(io.StringIO('a,b\\r\\n')))",
+       "[['a', 'b']]"
+      ]
+     ],
+     "fs": 10.5,
+     "cap": "run under Python 3.14.6, xmltodict 1.0.4, defusedxml 0.7.1"
+    },
+    {
+     "t": "card",
+     "head": "What Appendix B says",
+     "body": "To question 3, the modes of the File objects for Reader and Writer objects, it answers read-binary (rb) and write-binary (wb).",
+     "x": 0.5,
+     "y": 3.57,
+     "w": 4.4,
+     "h": 1.38,
+     "fs": 10.5,
+     "accent": "orange"
+    },
+    {
+     "t": "card",
+     "head": "What the chapter and Python do",
+     "body": "The chapter writes open('output.csv', 'w', newline='') and open('example3.csv'), both text mode. The console shows what rb and wb give.",
+     "x": 5.1,
+     "y": 3.57,
+     "w": 4.4,
+     "h": 1.38,
+     "fs": 10.5,
+     "accent": "slate"
+    }
+   ],
+   "notes": "The console uses a bytes buffer, which stands for a file opened in binary mode, and a string buffer, which stands for one opened in text mode. csv.reader on bytes raised Error: iterator should return strings, not bytes, with the advice that the file should be opened in text mode, and csv.writer on a bytes buffer raised TypeError: a bytes-like object is required, not 'str'. The same rows from a string buffer gave the list a and b. So the answer printed in Appendix B for question 3 is contradicted by the chapter's own listings and by Python 3.14.6. The research found three more places where the book disagrees with itself or with its files. The answer to question 1 is right: in Excel, spreadsheets can have values of data types other than strings. The chapter says that XML syntax is similar to HTML, which we covered in Chapter 18, but Chapter 18 is this chapter, and HTML is the subject of Chapter 13 on web scraping. And the Practice Program tells the reader to unzip excelSpreadsheets.zip and test an Excel-to-CSV converter on it, but that zip holds 26 files that are already CSV, spreadsheet-A.csv to spreadsheet-Z.csv, and no .xlsx file. The lesson for a reader is to run the code and to trust the module's error messages over a one-line answer in an appendix.",
+   "take": "Open CSV files in text mode with newline=''; Appendix B's rb and wb are wrong.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Writing rows: the writer and its types",
+   "sub": "writerow() returns the length written; None becomes an empty field",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 4.4,
+     "h": 3.15,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.45,
+       "w": 1.15,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The program",
+       "x": 0.61,
+       "y": 1.566,
+       "w": 1.03,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.125,
+       "y1": 1.87,
+       "x2": 1.125,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.125,
+       "y": 1.45,
+       "w": 1.15,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The file object",
+       "x": 2.185,
+       "y": 1.482,
+       "w": 1.03,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 1.87,
+       "x2": 2.7,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.7,
+       "y": 1.45,
+       "w": 1.15,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The writer object",
+       "x": 3.76,
+       "y": 1.482,
+       "w": 1.03,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.275,
+       "y1": 1.87,
+       "x2": 4.275,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.125,
+       "y1": 2.241,
+       "x2": 2.7,
+       "y2": 2.241,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls open() with newline=''",
+       "x": 1.225,
+       "y": 1.902,
+       "w": 1.375,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 2.616,
+       "x2": 1.125,
+       "y2": 2.616,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns the file object",
+       "x": 1.225,
+       "y": 2.412,
+       "w": 1.375,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.125,
+       "y1": 2.992,
+       "x2": 4.275,
+       "y2": 2.992,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls csv.writer() with the file object",
+       "x": 1.225,
+       "y": 2.787,
+       "w": 2.95,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.275,
+       "y1": 3.368,
+       "x2": 1.125,
+       "y2": 3.368,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns the writer object",
+       "x": 1.225,
+       "y": 3.163,
+       "w": 2.95,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.125,
+       "y1": 3.743,
+       "x2": 4.275,
+       "y2": 3.743,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls writerow() with a list",
+       "x": 1.225,
+       "y": 3.539,
+       "w": 2.95,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.275,
+       "y1": 4.119,
+       "x2": 2.7,
+       "y2": 4.119,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Writes the row to the file",
+       "x": 2.8,
+       "y": 3.78,
+       "w": 1.375,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.275,
+       "y1": 4.495,
+       "x2": 1.125,
+       "y2": 4.495,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns the length",
+       "x": 1.225,
+       "y": 4.29,
+       "w": 2.95,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "WritingACsvFileOnWindows"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.4,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WritingACsvFileOnWindows - Interaction pattern, 26 of 27 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 5.1,
+     "y": 1.55,
+     "w": 4.34,
+     "h": 2.79,
+     "lines": [
+      "with open('o.csv', 'w', encoding='utf-8', newline='') as f:",
+      "    w = csv.writer(f)",
+      "    print(w.writerow(['spam', 'eggs', 'bacon', 'ham']))",
+      "    print(w.writerow(['Hello, world!', 'eggs', 'bacon', 'ham']))",
+      "    print(w.writerow([1, 3.141592, None, '', True]))",
+      "for line in open('o.csv', 'rb'): print(line)",
+      "with open('t.tsv', 'w', encoding='utf-8', newline='') as f:",
+      "    w = csv.writer(f, delimiter='\\t', lineterminator='\\n')",
+      "    w.writerow(['a', 'b c', 'd'])",
+      "    w.writerows([['x', 'y', 'z']])",
+      "print(open('t.tsv', 'rb').read())"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "21\n32\n19\nb'spam,eggs,bacon,ham\\r\\n'\nb'\"Hello, world!\",eggs,bacon,ham\\r\\n'\nb'1,3.141592,,,True\\r\\n'\nb'a\\tb c\\td\\nx\\ty\\tz\\n'",
+     "outLabel": "prints",
+     "label": "program writerCut_v1_0_0.py, lines 7 to 17 of 17"
+    },
+    {
+     "t": "foot",
+     "x": 5.1,
+     "y": 4.42,
+     "w": 4.4,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 6 (imports, a temporary folder, EXAMPLE, save() and a comment) are not shown."
+    }
+   ],
+   "notes": "The sequence diagram is the chapter's way of writing rows: the program calls open() with newline='' and gets the file object, calls csv.writer() with the file object and gets the writer, and calls writerow() with a list, which writes the row to the file and returns the length. The transcript runs it. writerow() returned 21, 32 and 19, the number of characters written including the line end. The first row wrote spam,eggs,bacon,ham; the second wrote the quoted field \"Hello, world!\" because it holds a comma; the third turned the number 3.141592 into its text, None into an empty field and True into the word True. The writer converts everything with str() and the reader gives back strings, so a number, a None and a bool do not come back as what they were. Every line ends in \\r\\n, the line end that RFC 4180 names, which the next slide explains. The second part writes a tab-separated file with delimiter='\\t' and lineterminator='\\n' and writerows(), which takes a list of rows; the chapter's tab example changes the delimiter and the line terminator in the same way.",
+   "take": "writerow() returns the length; the reader gives back only strings.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "newline='' and the double-spaced file",
+   "sub": "Why a file written without newline='' shows a blank row between rows on Windows",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.53,
+     "h": 1.55,
+     "lines": [
+      "for label, nl in ((\"newline=''\", ''), ('Windows default', '\\r\\n')):",
+      "    buf = io.BytesIO()",
+      "    t = io.TextIOWrapper(buf, encoding='utf-8', newline=nl)",
+      "    csv.writer(t).writerow(['a', 'b']); t.flush()",
+      "    data = buf.getvalue()",
+      "    back = io.StringIO(data.decode(), newline='')",
+      "    print(label, data, list(csv.reader(back)))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "newline='' b'a,b\\r\\n' [['a', 'b']]\nWindows default b'a,b\\r\\r\\n' [['a', 'b'], []]",
+     "outLabel": "prints",
+     "label": "program newlineCut_v1_0_0.py, lines 8 to 14 of 14"
+    },
+    {
+     "t": "card",
+     "head": "EMULATED, not a Windows computer",
+     "body": "csv.writer ends a record with \\r\\n; Windows turns each \\n into \\r\\n, giving \\r\\r\\n. A TextIOWrapper asked for that translation stands in for it.",
+     "x": 5.28,
+     "y": 1.5,
+     "w": 4.22,
+     "h": 1.55,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "Microsoft Excel and a real Windows machine were not run. LibreOffice 24.2 opened a file of that kind with the layout of Figure 18-1: rows 1, 3 and 5 filled, 2 and 4 empty.",
+     "x": 5.28,
+     "y": 3.15,
+     "w": 4.22,
+     "h": 1.6,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.18,
+     "w": 4.53,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 7 (imports, a temporary folder, EXAMPLE, save() and a comment) are not shown. The two comment lines above the loop are not shown either."
+    }
+   ],
+   "notes": "The chapter says that on Windows a file for a reader or writer must be opened with newline='' or the rows of output.csv will be double-spaced, shows Figure 18-1, and says the reason is beyond the book. The reason is short. csv.writer ends every record with the two characters CR and LF. A file opened in text mode without the newline argument translates every line feed it is given to the line end of the platform, and on Windows that is CR LF, so the CR LF of the writer becomes CR CR LF. The program reproduces the translation by asking io.TextIOWrapper for it, which is why the slide says EMULATED: it is not a Windows computer. With newline='' the bytes were a,b CR LF and csv.reader returned one row; with the translation they were a,b CR CR LF and csv.reader returned the row followed by an empty row. The research opened such a file in LibreOffice 24.2, the program that stood in for Excel, and saw the layout of Figure 18-1; Microsoft Excel and a real Windows machine were NOT EXECUTED, and nothing on this slide is claimed about how Excel shows the file. The Python documentation says a file given to csv.reader or csv.writer should be opened with newline='' and that it should always be safe to specify it, because the csv module does its own universal newline handling. The alt text of the figure in the chapter, a screenshot of a Windows desktop with six overlapping calculators, does not describe it: the picture is a spreadsheet.",
+   "take": "Always pass newline='' to open() for csv; the module handles line ends itself.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "DictReader and DictWriter",
+   "sub": "The first row gives the keys; short rows get None, long rows go under the key None",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.27,
+     "h": 3.35,
+     "lines": [
+      "save('example.csv', 'Name,Age\\r\\nAlice,30\\r\\nBob\\r\\nCarol,41,extra,more\\r\\n')",
+      "with open('example.csv', encoding='utf-8', newline='') as f:",
+      "    for row in csv.DictReader(f): print(dict(row))",
+      "with open('example.csv', encoding='utf-8', newline='') as f:",
+      "    for row in csv.DictReader(f, restkey='rest', restval='?'): print(dict(row))",
+      "with open('out.csv', 'w', encoding='utf-8', newline='') as f:",
+      "    w = csv.DictWriter(f, ['Name', 'Age'])",
+      "    print(w.writeheader(), w.writerow({'Name': 'Dave', 'Age': 5}))",
+      "    print(w.writerow({'Name': 'Eve'}))",
+      "    try: w.writerow({'Name': 'Frank', 'Age': 9, 'City': 'Rome'})",
+      "    except ValueError as e: print('ValueError:', e)",
+      "print(open('out.csv', 'rb').read())"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "{'Name': 'Alice', 'Age': '30'}\n{'Name': 'Bob', 'Age': None}\n{'Name': 'Carol', 'Age': '41', None: ['extra', 'more']}\n{'Name': 'Alice', 'Age': '30'}\n{'Name': 'Bob', 'Age': '?'}\n{'Name': 'Carol', 'Age': '41', 'rest': ['extra', 'more']}\n10 8\n6\nValueError: dict contains fields not in fieldnames: 'City'\nb'Name,Age\\r\\nDave,5\\r\\nEve,\\r\\n'",
+     "outLabel": "prints",
+     "label": "program dictsCut_v1_0_0.py, lines 7 to 18 of 18"
+    },
+    {
+     "t": "card",
+     "head": "What a row can do",
+     "body": "A short row has None for the missing key, a long row keeps its extras under the key None. restkey and restval rename them.",
+     "x": 6.02,
+     "y": 1.5,
+     "w": 3.48,
+     "h": 1.45,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "The writer refuses keys",
+     "body": "A key that is not in fieldnames raises ValueError. writeheader() and writerow() return the length.",
+     "x": 6.02,
+     "y": 3.05,
+     "w": 3.48,
+     "h": 1.3,
+     "fs": 9.5,
+     "accent": "orange"
+    }
+   ],
+   "notes": "DictReader uses the first row of the file as the keys of every following row, so a program reads row['Name'] and not row[0]. The program writes a file whose rows do not all have the same length. The second row, Bob, has no age, and DictReader gave None for the key Age; the third row has two values more than the header, and DictReader put them in a list under the key None. Naming them with restkey='rest' and filling the missing value with restval='?' gave a tidy dictionary for every row. The chapter mentions neither argument. DictWriter takes the file and the list of field names; writeheader() returned 10, the length of Name,Age and its line end, and writerow() returned 8 for Dave and 6 for Eve, whose missing Age was written as an empty field. A row with a key that is not in fieldnames, City, raised ValueError: dict contains fields not in fieldnames: 'City', which the chapter also never shows. In the shipped exampleWithHeader3.csv the first list printed in the chapter has six dictionaries where the file has seven data rows.",
+   "take": "Name the extras with restkey and restval; the writer refuses unknown keys.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Quoting, dialects and the field limit",
+   "sub": "Six quoting constants write one row six ways; the limit is 131,072 characters",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.6,
+     "colW": [
+      1.55,
+      3.05
+     ],
+     "fs": 9.5,
+     "rowH": 0.33,
+     "rows": [
+      [
+       "quoting=",
+       "the line written"
+      ],
+      [
+       "QUOTE_MINIMAL",
+       "'a b,\"c,d\",7,,\\r\\n'"
+      ],
+      [
+       "QUOTE_ALL",
+       "'\"a b\",\"c,d\",\"7\",\"\",\"\"\\r\\n'"
+      ],
+      [
+       "QUOTE_NONNUMERIC",
+       "'\"a b\",\"c,d\",7,\"\",\"\"\\r\\n'"
+      ],
+      [
+       "QUOTE_NONE",
+       "'a b,c\\\\,d,7,,\\r\\n'"
+      ],
+      [
+       "QUOTE_STRINGS",
+       "'\"a b\",\"c,d\",7,,\"\"\\r\\n'"
+      ],
+      [
+       "QUOTE_NOTNULL",
+       "'\"a b\",\"c,d\",\"7\",,\"\"\\r\\n'"
+      ]
+     ]
+    },
+    {
+     "t": "code",
+     "x": 5.25,
+     "y": 1.5,
+     "w": 4.25,
+     "h": 1.86,
+     "rows": [
+      [
+       "import csv, io",
+       ""
+      ],
+      [
+       "csv.field_size_limit()",
+       "131072"
+      ],
+      [
+       "next(csv.reader(['x' * 131073]))",
+       "Error: field larger than field limit (131072)"
+      ],
+      [
+       "q = csv.QUOTE_NOTNULL",
+       ""
+      ],
+      [
+       "list(csv.reader(io.StringIO('a,,\"\"\\r\\n'), quoting=q))",
+       "[['a', None, '']]"
+      ],
+      [
+       "list(csv.reader(['a\\tb'], dialect='excel-tab'))",
+       "[['a', 'b']]"
+      ]
+     ],
+     "fs": 7.7,
+     "cap": "run under Python 3.14.6, xmltodict 1.0.4, defusedxml 0.7.1"
+    },
+    {
+     "t": "card",
+     "head": "The row written",
+     "body": "One row per constant; QUOTE_NONE needs an escapechar.",
+     "x": 0.5,
+     "y": 3.95,
+     "w": 4.6,
+     "h": 1.0,
+     "fs": 9.5,
+     "accent": "slate"
+    }
+   ],
+   "notes": "The chapter does not mention the quoting constants, and the table shows what they do. The same row, a b, c,d, the number 7, None and an empty string, was written six times. QUOTE_MINIMAL, the default, quotes only the field with the comma and writes None and the empty string alike as an empty field. QUOTE_ALL quotes every field, so 7 becomes \"7\". QUOTE_NONNUMERIC quotes every field that is not a number. QUOTE_NONE never quotes, so the comma needs an escape character and the writer put a backslash before it. QUOTE_STRINGS and QUOTE_NOTNULL were added in Python 3.12 and do not exist in 3.11, the research found by running eleven interpreters: QUOTE_STRINGS quotes strings and writes None as an empty field and the empty string as \"\", which is the difference that lets a reader tell them apart. The console shows the read side: with QUOTE_NOTNULL an unquoted empty field is read as None and a quoted one as an empty string. A field larger than csv.field_size_limit(), 131,072 characters, raises csv.Error: a field of 131,073 characters did. The dialect excel-tab reads a tab-separated row as the two fields a and b. The module also has a Sniffer, skipinitialspace, strict and escapechar, which the chapter does not name either.",
+   "take": "Pick the quoting constant for the data; QUOTE_NOTNULL tells None from ''.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The encoding the chapter never names",
+   "sub": "Excel's UTF-8 CSV starts with a BOM; open() needs encoding= to read it right",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.09,
+     "h": 2.95,
+     "lines": [
+      "text = 'Name,City\\r\\nZoe,\u0130stanbul\\r\\n'",
+      "save('u.csv', text, 'utf-8-sig')",
+      "raw = open('u.csv', 'rb').read()",
+      "print(raw[:3], raw[3:12])",
+      "print(repr(open('u.csv', encoding='utf-8', newline='').readline()))",
+      "print(repr(open('u.csv', encoding='utf-8-sig', newline='').readline()))",
+      "with open('u.csv', encoding='utf-8', newline='') as f:",
+      "    print(list(next(csv.DictReader(f))))",
+      "print(raw.decode('cp1252', errors='replace')[:12])",
+      "save('c.csv', 'Ad,Sehir\\r\\nZoe,\u015ei\u015fli\\r\\n', 'cp1254')",
+      "try: open('c.csv', encoding='utf-8').read()",
+      "except UnicodeDecodeError as e: print('UnicodeDecodeError:', e.reason)"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "b'\\xef\\xbb\\xbf' b'Name,City'\n'\\ufeffName,City\\r\\n'\n'Name,City\\r\\n'\n['\\ufeffName', 'City']\n\u00ef\u00bb\u00bfName,City\nUnicodeDecodeError: invalid continuation byte",
+     "outLabel": "prints",
+     "label": "program encodingCut_v1_0_0.py, lines 7 to 18 of 18"
+    },
+    {
+     "t": "card",
+     "head": "Default encoding",
+     "body": "Without encoding=, open() uses the locale: UTF-8 on this machine, cp1252 for most Windows users in the United States.",
+     "x": 5.84,
+     "y": 1.5,
+     "w": 3.66,
+     "h": 1.5,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "Python 3.15.0 final and Python 3.14.7 or later were not run. Only 3.15.0b4 was: UTF-8 mode on by default (PEP 686), where 3.14.6 gave 0.",
+     "x": 5.84,
+     "y": 3.1,
+     "w": 3.66,
+     "h": 1.7,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 5.09,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 6 (imports, a temporary folder, EXAMPLE, save() and a comment) are not shown."
+    }
+   ],
+   "notes": "Every listing of the chapter calls open() without an encoding, and the chapter does not mention encodings. In text mode the encoding is then the locale encoding, which is UTF-8 here and is cp1252 for most Windows users in the United States. The program writes a file the way Excel saves CSV UTF-8, with the three bytes EF BB BF in front, the byte order mark, and reads it back three ways. Opened with encoding='utf-8' the first line begins with the invisible character \\ufeff, and DictReader makes it part of the first key, which the program prints as \\ufeffName and not Name; encoding='utf-8-sig' removes it. The same bytes decoded as cp1252 give the mojibake that starts with the characters \u00ef\u00bb\u00bf. A file saved in cp1254, the Turkish Windows encoding, and read as UTF-8 raises UnicodeDecodeError: invalid continuation byte. The answer is to name the encoding of the file when you open it. Python 3.15 changes the default: the research ran 3.15.0b4, installed with uv, and sys.flags.utf8_mode was 1 where Python 3.11 to 3.14.6 gave 0, because PEP 686 makes UTF-8 mode the default. python.org lists 3.15.0 as released on 9 October 2026 and 3.14.7 and 3.14.8 as released, but uv offered only 3.15.0b4 and 3.14.6 on the day, so the final release and the later 3.14 releases were NOT EXECUTED, and nothing on this slide is claimed about them.",
+   "take": "Name the encoding when you open a CSV file; utf-8-sig removes Excel's BOM.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Project 13: remove the header row",
+   "sub": "next(reader, None) skips the header record; line_num != 1 skips a line",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.2,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.497,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Loop through the files that end in .csv",
+       "x": 0.57,
+       "y": 1.589,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.03,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the file with csv.reader()",
+       "x": 0.57,
+       "y": 2.123,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.563,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Skip the first row",
+       "x": 0.57,
+       "y": 2.656,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.097,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Write the other rows to a new file",
+       "x": 0.57,
+       "y": 3.189,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.5,
+       "y": 3.58,
+       "w": 3.3,
+       "h": 0.44,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is another file left?",
+       "x": 0.67,
+       "y": 3.723,
+       "w": 2.96,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 4.35,
+       "y": 1.567,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.01,
+       "y": 4.193,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.07,
+       "y": 4.253,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 4.35,
+       "y1": 1.667,
+       "x2": 3.8,
+       "y2": 1.667,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 1.837,
+       "x2": 2.15,
+       "y2": 2.03,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 2.37,
+       "x2": 2.15,
+       "y2": 2.563,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 2.903,
+       "x2": 2.15,
+       "y2": 3.097,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 3.437,
+       "x2": 2.15,
+       "y2": 3.58,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.8,
+       "y1": 3.8,
+       "x2": 4.02,
+       "y2": 3.8,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.02,
+       "y1": 3.8,
+       "x2": 4.02,
+       "y2": 2.2,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.02,
+       "y1": 2.2,
+       "x2": 3.8,
+       "y2": 2.2,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 3.84,
+       "y": 3.83,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 4.02,
+       "x2": 2.15,
+       "y2": 4.193,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.21,
+       "y": 4.017,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      }
+     ],
+     "did": "RemovingCsvHeaders"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.2,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram RemovingCsvHeaders - Workflow pattern, 18 of 20 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.85,
+     "y": 1.55,
+     "w": 4.53,
+     "h": 3.21,
+     "lines": [
+      "from pathlib import Path",
+      "Path('headerRemoved').mkdir(exist_ok=True)",
+      "save('f0.csv', 'h1,h2\\r\\n1,1\\r\\n1,2\\r\\n'); save('empty.csv', '')",
+      "for csv_filename in sorted(Path('.').glob('*.csv')):",
+      "    print('Removing header from ' + csv_filename.name + '...')",
+      "    with open(csv_filename, encoding='utf-8', newline='') as f_in:",
+      "        reader = csv.reader(f_in); next(reader, None)",
+      "        out = Path('headerRemoved') / csv_filename.name",
+      "        with open(out, 'w', encoding='utf-8', newline='') as f_out:",
+      "            csv.writer(f_out).writerows(reader)",
+      "for n in ('f0', 'empty'):",
+      "    print(open('headerRemoved/%s.csv' % n, 'rb').read())",
+      "save('multi.csv', '\"Name\\r\\n(first)\",Age\\r\\nAlice,30\\r\\n')",
+      "with open('multi.csv', encoding='utf-8', newline='') as f:",
+      "    reader = csv.reader(f)",
+      "    print([row for row in reader if reader.line_num != 1])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "Removing header from empty.csv...\nRemoving header from f0.csv...\nb'1,1\\r\\n1,2\\r\\n'\nb''\n[['Name\\r\\n(first)', 'Age'], ['Alice', '30']]",
+     "outLabel": "prints",
+     "label": "program project13Cut_v1_0_0.py, lines 7 to 22 of 22"
+    }
+   ],
+   "notes": "Project 13 is the chapter's second program built from steps: loop through the files whose names end in .csv, read each with csv.reader() and skip the first row, and write the other rows to a new file in a folder called headerRemoved. The activity diagram has one choice, whether another file is left, and the program follows it. The program here runs the steps on generated files and adds a file the chapter does not test, an empty one. next(reader, None) skips the header record whatever its length and does not fail on the empty file: the file with a header and two rows gave the two rows, and the empty file gave an empty output file; the corpus program also tests a file with only a header, which gave an empty output file too. The chapter skips the header with a test of reader.line_num, keeping a row only when line_num is not 1. The last lines of the program show the trap: a header cell that holds a line break, written with quotes, ends at line_num 2, so the test kept both records and the header was still there. On the 100 shipped files in removeCsvHeader.zip, which have one-line headers and no embedded line breaks, the program as written is right: every output equals the input without its first record, 19,631 records in and 19,531 out. The practice program at the end of the chapter, the Excel-to-CSV converter, was written to its skeleton and run in the research with openpyxl 3.1.5, not by this deck. The skeleton is not a program, since its loop has no indented body and it uses names it never defines. The converter wrote the dates of the workbooks as 2035-04-05 13:34:02, not 4/5/2035 13:34, because openpyxl returns datetime objects and csv.writer writes their text. The skeleton also evaluates sheet.max_column inside the row loop, and each evaluation visits every cell of the sheet: on produceSales3.xlsx, with 23,758 rows and 4 columns, the first 2,000 rows took 5.94 s that way and 0.006 s with the limit hoisted; those are single runs of the research, they vary with the machine, and the slowdown grows with rows times cells. The converter wrote 5 CSV files from 3 workbooks.",
+   "take": "Skip the header with next(reader, None), not with line_num.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "JSON: a message sent in April 2001",
+   "sub": "April 2001",
+   "items": [
+    {
+     "t": "card",
+     "head": "A message from a start-up",
+     "body": "Douglas Crockford sent the first JSON message with Chip Morningstar at State Software, a company cofounded in March 2001.",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 4.7,
+     "h": 1.3,
+     "fs": 10.5
+    },
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 2.85,
+     "w": 9.0,
+     "h": 1.29,
+     "rows": [
+      [
+       "import json",
+       ""
+      ],
+      [
+       "json.loads('[\"spam\", \"eggs\"]')",
+       "['spam', 'eggs']"
+      ],
+      [
+       "json.loads('[\"spam\", \"eggs\",]')",
+       "JSONDecodeError: Illegal trailing comma before end of array: line 1 column 16 (char 15)"
+      ]
+     ],
+     "fs": 10,
+     "cap": "run under Python 3.14.6, xmltodict 1.0.4, defusedxml 0.7.1"
+    },
+    {
+     "t": "beats",
+     "x": 5.4,
+     "y": 1.5,
+     "w": 4.1,
+     "h": 1.2,
+     "fs": 11,
+     "items": [
+      "Apr 2001: the first JSON message",
+      "2006: RFC 4627 describes it",
+      "2013: ECMA-404 standardizes it",
+      "2017: RFC 8259, the current standard"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Douglas Crockford and Chip Morningstar, at State Software",
+     "where": "State Software, a company cofounded in March 2001 to build stateful web applications in the browser",
+     "when": "April 2001",
+     "link": "https://en.wikipedia.org/wiki/JSON",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on JSON says Douglas Crockford originally specified the format in the early 2000s and sent the first JSON message in April 2001 with Chip Morningstar. The acronym came from State Software, a company he cofounded with others in March 2001. RFC 4627 was its informational specification from 2006, ECMA-404 standardized it in 2013, and RFC 8259, published in 2017, is the current Internet standard. The format is small enough to fit on one page, and a parser is strict about it: in this study json.loads refused the chapter's own example, a list with a comma before the closing bracket, in Python 3.14.6. The account rests on these sources. Wikipedia, 'JSON' (first message April 2001, State Software March 2001, RFC 4627 in 2006, ECMA-404 in 2013, RFC 8259 in 2017), read 2026-10-12; RFC 8259; this study's leaves SixValueTypes and TrailingCommaRefused. The console shows the strictness in the chapter's own example: json.loads() of a list of two words gave the list, and the same list with a comma before the closing bracket raised JSONDecodeError: Illegal trailing comma before end of array: line 1 column 16. The message depends on the release: Python 3.11 and 3.12 said Expecting value, and the trailing-comma message is from 3.13, as the research found by running eleven interpreters. Single quotes failed too, with Expecting property name enclosed in double quotes. The Python documentation still names RFC 7159 as the specification, which RFC 8259 obsoleted in December 2017.",
+   "take": "JSON is tiny and strict; one extra comma is an error.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "JSON syntax: strict by design",
+   "sub": "Six value types; json.loads refuses a trailing comma, single quotes and comments",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 2.38,
+     "lines": [
+      "js = '{\"name\": \"Alice\", \"age\": 30, \"car\": null, \"ok\": true}'",
+      "data = json.loads(js)",
+      "print(data, type(data).__name__)",
+      "print(data['car'] is None, data['ok'] is True)",
+      "print(json.dumps(data) == js)",
+      "print(json.dumps(data, indent=2))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "{'name': 'Alice', 'age': 30, 'car': None, 'ok': True} dict\nTrue True\nTrue\n{\n  \"name\": \"Alice\",\n  \"age\": 30,\n  \"car\": null,\n  \"ok\": true\n}",
+     "outLabel": "prints",
+     "label": "program jsonBasicsCut_v1_0_0.py, lines 7 to 12 of 12"
+    },
+    {
+     "t": "table",
+     "x": 5.15,
+     "y": 1.5,
+     "w": 4.35,
+     "colW": [
+      1.65,
+      2.7
+     ],
+     "fs": 9,
+     "rowH": 0.34,
+     "rows": [
+      [
+       "text",
+       "json.loads says"
+      ],
+      [
+       "'[\"spam\", \"eggs\",]'",
+       "Illegal trailing comma before end of array (column 16)"
+      ],
+      [
+       "\"{'a': 1}\"",
+       "Expecting property name enclosed in double quotes (column 2)"
+      ],
+      [
+       "'{\"a\": 1} // c'",
+       "Extra data (column 10)"
+      ],
+      [
+       "'[None]'",
+       "Expecting value (column 2)"
+      ],
+      [
+       "'[NaN]'",
+       "accepted"
+      ],
+      [
+       "''",
+       "Expecting value (column 1)"
+      ]
+     ]
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.01,
+     "w": 4.4,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 6 (imports, a temporary folder, EXAMPLE, save() and a comment) are not shown."
+    },
+    {
+     "t": "card",
+     "head": "Python accepts NaN",
+     "body": "[NaN] was accepted; RFC 8259 does not allow NaN, Infinity or -Infinity.",
+     "x": 5.15,
+     "y": 3.95,
+     "w": 4.35,
+     "h": 1.0,
+     "fs": 9,
+     "accent": "orange"
+    }
+   ],
+   "notes": "JSON has six kinds of value: an object, an array, a string, a number, true or false, and null. The program parses the chapter's kind of text: null became None, true became True, and the result is a dict. json.dumps() of that dict equals the original text when the keys are in the same order and the default separators are used, and indent=2 puts one item on each line. The table is computed, not typed: for each text it calls json.loads() and prints what the module says. The chapter tells the reader that trailing commas, single quotes and comments are not allowed, and all of it holds under Python 3.14.6: the list with a trailing comma fails at column 16, the single-quoted key at column 2, and the comment after the object as Extra data at column 10. None, the Python word, is not JSON and fails at column 2; an empty text fails at column 1. One thing the chapter does not say is in the last line of the table: Python accepts NaN, and also Infinity and -Infinity, which RFC 8259 does not allow, so a file with them is valid for Python and invalid for other parsers. The messages differ by release: Expecting value in 3.11 and 3.12 where 3.13 and later say what is wrong with the comma. The format is small enough to describe on one page, json.org does it.",
+   "take": "Python's json accepts NaN; the standard does not.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A Python value through JSON",
+   "sub": "A tuple comes back as a list, int and None keys as strings; a set or bytes raises",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.6,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.95,
+       "y": 1.68,
+       "w": 1.4,
+       "h": 0.38,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A Python value",
+       "x": 2.01,
+       "y": 1.784,
+       "w": 1.28,
+       "h": 0.171,
+       "fs": 9,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.95,
+       "y": 2.527,
+       "w": 1.4,
+       "h": 0.38,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "JSON text",
+       "x": 2.01,
+       "y": 2.631,
+       "w": 1.28,
+       "h": 0.171,
+       "fs": 9,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.95,
+       "y": 3.373,
+       "w": 1.4,
+       "h": 0.38,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A file of JSON",
+       "x": 2.01,
+       "y": 3.478,
+       "w": 1.28,
+       "h": 0.171,
+       "fs": 9,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.95,
+       "y": 4.22,
+       "w": 1.4,
+       "h": 0.38,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A Python value again",
+       "x": 2.01,
+       "y": 4.249,
+       "w": 1.28,
+       "h": 0.323,
+       "fs": 9,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.56,
+       "y": 1.42,
+       "w": 0.18,
+       "h": 0.18,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 2.65,
+       "y1": 1.6,
+       "x2": 2.65,
+       "y2": 1.68,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.65,
+       "y1": 2.06,
+       "x2": 2.65,
+       "y2": 2.527,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.67,
+       "y1": 2.293,
+       "x2": 3.61,
+       "y2": 2.293,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "json.dumps() turns the value into text",
+       "x": 3.65,
+       "y": 2.149,
+       "w": 1.5,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.65,
+       "y1": 2.907,
+       "x2": 2.65,
+       "y2": 3.373,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.67,
+       "y1": 3.14,
+       "x2": 3.61,
+       "y2": 3.14,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "The program writes the text to a file",
+       "x": 3.65,
+       "y": 2.996,
+       "w": 1.5,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.65,
+       "y1": 3.753,
+       "x2": 2.65,
+       "y2": 4.22,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.67,
+       "y1": 3.987,
+       "x2": 3.61,
+       "y2": 3.987,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "json.loads() turns the text into a value",
+       "x": 3.65,
+       "y": 3.842,
+       "w": 1.5,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.35,
+       "y1": 1.78,
+       "x2": 3.61,
+       "y2": 1.78,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.61,
+       "y1": 1.78,
+       "x2": 3.61,
+       "y2": 1.96,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.61,
+       "y1": 1.96,
+       "x2": 3.35,
+       "y2": 1.96,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "dumps() raises an error for a type it does not support",
+       "x": 3.65,
+       "y": 1.658,
+       "w": 1.5,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.95,
+       "y1": 2.717,
+       "x2": 1.83,
+       "y2": 2.717,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.83,
+       "y1": 2.717,
+       "x2": 1.83,
+       "y2": 4.41,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.83,
+       "y1": 4.41,
+       "x2": 1.95,
+       "y2": 4.41,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "json.loads() turns the text into a value",
+       "x": 0.5,
+       "y": 3.419,
+       "w": 1.23,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "right",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.35,
+       "y1": 4.41,
+       "x2": 3.75,
+       "y2": 4.41,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.75,
+       "y": 4.27,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.81,
+       "y": 4.33,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      }
+     ],
+     "did": "AValueThroughJson"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.6,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram AValueThroughJson - LifeCycle pattern, 36 of 37 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 5.2,
+     "y": 1.55,
+     "w": 4.28,
+     "h": 2.52,
+     "lines": [
+      "d = {'t': (1, 2), 1: 'a', None: 'c'}",
+      "s = json.dumps(d); print(s)",
+      "print(json.loads(s))",
+      "print(json.dumps({'city': '\u0130stanbul'}))",
+      "print(json.dumps({'city': '\u0130stanbul'}, ensure_ascii=False))",
+      "for v in ({1, 2}, b'x', 1j, {(1, 2): 3}):",
+      "    try: json.dumps(v)",
+      "    except TypeError as e: print(type(e).__name__, e)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "{\"t\": [1, 2], \"1\": \"a\", \"null\": \"c\"}\n{'t': [1, 2], '1': 'a', 'null': 'c'}\n{\"city\": \"\\u0130stanbul\"}\n{\"city\": \"\u0130stanbul\"}\nTypeError Object of type set is not JSON serializable\nTypeError Object of type bytes is not JSON serializable\nTypeError Object of type complex is not JSON serializable\nTypeError keys must be str, int, float, bool or None, not tuple",
+     "outLabel": "prints",
+     "label": "program jsonTypesCut_v1_0_0.py, lines 7 to 14 of 14"
+    },
+    {
+     "t": "foot",
+     "x": 5.2,
+     "y": 4.15,
+     "w": 4.3,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 6 (imports, a temporary folder, EXAMPLE, save() and a comment) are not shown."
+    }
+   ],
+   "notes": "The state diagram follows one Python value. json.dumps() turns the value into JSON text; for a type it does not support, such as a set, it raises an error and the value stays what it was. The text can be written to a file, and json.loads() turns the text, or the text read back from the file, into a Python value again, with the changes the format makes. The transcript runs them. A dict with the tuple (1, 2), the integer key 1 and the key None was written as {\"t\": [1, 2], \"1\": \"a\", \"null\": \"c\"} and read back as {'t': [1, 2], '1': 'a', 'null': 'c'}: the tuple became a list and did not come back, and the keys 1 and None became the strings 1 and null. The chapter does not say any of this. By default json.dumps() writes non-ASCII characters as escapes, so the capital I with a dot became \\u0130, and ensure_ascii=False keeps the character. A set, bytes and a complex number raise TypeError: Object of type set is not JSON serializable, and so on, and a dict key that is a tuple raises TypeError: keys must be str, int, float, bool or None, not tuple. The same list of changes explains why a round trip through JSON is not a copy: what comes back is built only from the six JSON kinds.",
+   "take": "A round trip through JSON returns only the six kinds of JSON value.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "JSON gaps: NaN, BOM and 4,300 digits",
+   "sub": "Files, a BOM in bytes and in text, an integer limit, and the notes of Python 3.14",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 2.24,
+     "lines": [
+      "print(json.dumps(float('nan')), json.loads('[Infinity]'))",
+      "with open('p.json', 'w', encoding='utf-8') as f:",
+      "    json.dump({'city': '\u0130stanbul', 'n': [1, None, True]}, f,",
+      "              ensure_ascii=False)",
+      "print(open('p.json', 'rb').read())",
+      "print(json.load(open('p.json', encoding='utf-8')))",
+      "print(json.loads(b'\\xef\\xbb\\xbf[1]'))",
+      "try: json.loads('\\ufeff[1]')",
+      "except json.JSONDecodeError as e: print('str with a BOM:', e.msg)",
+      "try: json.loads('1' * 5000)",
+      "except ValueError as e: print('long integer:', str(e)[:31])",
+      "try: json.dumps([0, {'a': {1}}])",
+      "except TypeError as e:",
+      "    for note in e.__notes__: print('note:', note)"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program jsonGapsCut_v1_0_0.py, lines 7 to 20 of 20"
+    },
+    {
+     "t": "prog",
+     "x": 5.1,
+     "y": 1.55,
+     "w": 4.16,
+     "h": 1.41,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "NaN [inf]\nb'{\"city\": \"\\xc4\\xb0stanbul\", \"n\": [1, null, true]}'\n{'city': '\u0130stanbul', 'n': [1, None, True]}\n[1]\nstr with a BOM: Unexpected UTF-8 BOM (decode using utf-8-sig)\nlong integer: Exceeds the limit (4300 digits)\nnote: when serializing dict item 'a'\nnote: when serializing list item 1",
+     "outLabel": "prints",
+     "label": "transcript of program jsonGapsCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.85,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 6 (imports, a temporary folder, EXAMPLE, save() and a comment) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.19,
+     "w": 9.0,
+     "h": 0.38,
+     "fs": 10,
+     "body": "The chapter has no json.load() or json.dump(): it reads and writes strings only, and the file forms are not on its page. Python 3.14 names the path to a value that cannot be written."
+    }
+   ],
+   "notes": "The program shows five things the chapter leaves out. First, Python writes NaN for float('nan') and reads Infinity as inf, which is not JSON. Second, json.dump() and json.load() write and read a file directly; neither name is on the chapter page, which uses only the string functions. The file holds the bytes of UTF-8, with the capital I with a dot as the two bytes c4 b0 because ensure_ascii=False was passed, and reading it back gave the same dict with None and True. Third, json.loads() accepts bytes that begin with the UTF-8 byte order mark and decodes them, while a str that begins with the mark raises JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig). Fourth, a string of 5,000 digits exceeds the limit of 4,300 digits for converting a string to int, and json.loads() raised ValueError, because Python limits the conversion to protect against slow attacks. Fifth, Python 3.14 adds notes to the TypeError of a serialization error that name the path to the value that failed: for a set inside a list inside a dict the notes were when serializing dict item 'a' and when serializing list item 1. Under Python 3.11 to 3.13 the notes are absent, and python -m json, which pretty-prints JSON from the command line, is allowed from 3.14. Python 3.15 adds an array_hook parameter to load() and loads(); the research ran only 3.15.0b4, so that is not shown here.",
+   "take": "Use json.load() and dump() for files; a BOM breaks str, not bytes.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What a program can do with XML",
+   "sub": "Seven things through ElementTree; the text of an element is a string or None",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 3.9,
+     "h": 3.15,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 1.3,
+       "y": 1.73,
+       "w": 3.1,
+       "h": 2.87,
+       "fill": "FBF8F2",
+       "line": "6E655C",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "AN XML DOCUMENT IN PYTHON",
+       "x": 1.38,
+       "y": 1.47,
+       "w": 2.95,
+       "h": 0.24,
+       "fs": 8.5,
+       "color": "6E655C",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 1.84,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the root and its children",
+       "x": 1.73,
+       "y": 1.932,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.239,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the text of an element",
+       "x": 1.73,
+       "y": 2.331,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.637,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Iterate over the elements in document order",
+       "x": 1.73,
+       "y": 2.662,
+       "w": 2.24,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.036,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Find elements with find() and findall()",
+       "x": 1.73,
+       "y": 3.128,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.434,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Add a SubElement and set an attribute",
+       "x": 1.73,
+       "y": 3.526,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.833,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Indent the tree to print it",
+       "x": 1.73,
+       "y": 3.925,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 4.231,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Clear elements while iterparse reads a large file",
+       "x": 1.73,
+       "y": 4.256,
+       "w": 2.24,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 0.74,
+       "y": 2.325,
+       "w": 0.22,
+       "h": 0.22,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 1.5
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.545,
+       "x2": 0.85,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.65,
+       "y1": 2.645,
+       "x2": 1.05,
+       "y2": 2.645,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.925,
+       "x2": 0.69,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.925,
+       "x2": 1.01,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A program",
+       "x": 0.5,
+       "y": 3.225,
+       "w": 0.8,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.009,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.408,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.806,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 3.205,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 3.604,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 4.002,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 4.401,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      }
+     ],
+     "did": "WhatAProgramCanDoWithElementTree"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 3.9,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WhatAProgramCanDoWithElementTree - SetOfUses pattern, 31 of 33 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.5,
+     "y": 1.55,
+     "w": 4.95,
+     "h": 3.39,
+     "lines": [
+      "import xml.etree.ElementTree as ET",
+      "doc = ('<person><name>Alice Doe</name><age>30</age><car/>'",
+      "       '<address><city>San Francisco</city></address>'",
+      "       '<phone type=\"mobile\">415</phone>'",
+      "       '<phone type=\"work\">123</phone></person>')",
+      "root = ET.fromstring(doc)",
+      "print(root.tag, [c.tag for c in root])",
+      "print(root[0].text, repr(root[2].text), repr(root.text))",
+      "print([e.tag for e in root.iter()])",
+      "print(root.find('address/city').text)",
+      "print([p.get('type') for p in root.findall('phone')])",
+      "print(root.find('phone[@type=\"work\"]').text, root.find('nothing'))",
+      "age = root.find('age').text",
+      "print('age is a', type(age).__name__, '| converted:', int(age) + 1)"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "person ['name', 'age', 'car', 'address', 'phone', 'phone']\nAlice Doe None None\n['person', 'name', 'age', 'car', 'address', 'city', 'phone', 'phone']\nSan Francisco\n['mobile', 'work']\n123 None\nage is a str | converted: 31",
+     "outLabel": "prints",
+     "label": "program etReadCut_v1_0_0.py, lines 7 to 20 of 20"
+    }
+   ],
+   "notes": "The use-case diagram lists what the chapter does with XML through xml.etree.ElementTree: read the root and its children, read the text of an element, iterate over the elements in document order, find elements with find() and findall(), add a SubElement and set an attribute, indent the tree to print it, and, beyond the chapter, clear elements while iterparse reads a large file. The program reads a compact document. fromstring() returns the root, whose tag is person; iterating over it gives its six children; root[0].text is the string Alice Doe; the text of the self-closing car element is None, as the chapter says. iter() returns the root first and then every descendant in document order, so the list has eight tags. find() takes a path such as address/city and a small subset of XPath such as phone[@type=\"work\"], returns None when nothing matches, and findall() returns a list; ElementTree has no xpath() method, which lxml has. Every text is a str: age is the string 30 and needs int(). The chapter's listings print None for address and phone, which holds for the compact string and not for the pretty-printed file, as the next slide shows. ElementTree entered the standard library with Python 2.5 on 19 September 2006, from Fredrik Lundh's library, and json with Python 2.6 on 1 October 2008, from Bob Ippolito's simplejson; the old calls getchildren() and getiterator() of older tutorials are gone in Python 3.14.6.",
+   "take": "ElementTree gives strings and None; find() returns None when nothing matches.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "ElementTree: whitespace, truth, errors",
+   "sub": "Pretty-printed XML has text between tags; bool(element) warns; iterparse frees memory",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.22,
+     "h": 1.96,
+     "lines": [
+      "import warnings, xml.etree.ElementTree as ET",
+      "a = ET.fromstring('<a>\\n  <b>x</b>\\n  <c><d/></c>\\n</a>')",
+      "print(repr(a.text), repr(a[0].tail), repr(a[1].text))",
+      "with warnings.catch_warnings(record=True) as w:",
+      "    warnings.simplefilter('always'); print(bool(a[0]))",
+      "print([x.category.__name__ for x in w], a.find('zzz') is None)",
+      "for bad in ('<a><b></a>', '<a/><b/>', '<A></a>', '<a b=1/>'):",
+      "    try: ET.fromstring(bad)",
+      "    except ET.ParseError as e: print(bad, '->', e)",
+      "data = io.BytesIO(b'<r><i>x</i><i>y</i><i>z</i></r>')",
+      "for event, el in ET.iterparse(data, events=('end',)):",
+      "    print(event, el.tag, el.text); el.clear()"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program etTrapsCut_v1_0_0.py, lines 7 to 18 of 18"
+    },
+    {
+     "t": "prog",
+     "x": 4.92,
+     "y": 1.55,
+     "w": 4.16,
+     "h": 1.82,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "'\\n  ' '\\n  ' None\nFalse\n['DeprecationWarning'] True\n<a><b></a> -> mismatched tag: line 1, column 8\n<a/><b/> -> junk after document element: line 1, column 4\n<A></a> -> mismatched tag: line 1, column 5\n<a b=1/> -> not well-formed (invalid token): line 1, column 5\nend i x\nend i y\nend i z\nend r None",
+     "outLabel": "prints",
+     "label": "transcript of program etTrapsCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.57,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 6 (imports, a temporary folder, EXAMPLE, save() and a comment) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.91,
+     "w": 9.0,
+     "h": 0.38,
+     "fs": 10,
+     "body": "Well-formed is not valid: the chapter calls a document with several roots not valid, the W3C word is not well-formed, and ElementTree never checks validity against a DTD."
+    }
+   ],
+   "notes": "The program runs four statements of the chapter that Python answers differently. The chapter says whitespace outside the tags is insignificant, but ElementTree reports it: in a pretty-printed document the text of an element that holds only elements is the whitespace between the tags, and the tail of an element is the whitespace after it, which is why the chapter's loop printed None for address and phone for a compact string and a line of whitespace for the pretty-printed file. Second, an element is false when it has no children, and since Python 3.12 testing it emits a DeprecationWarning, so a result of find() must be tested with is None. The transcript shows False and the warning. Third, the errors: <a><b></a> is a mismatched tag, two roots are junk after the document element, <A></a> is a mismatched tag because tag names are case sensitive, and an attribute value with no quotes is not well-formed. The chapter says tag and attribute names can be written in any case, which holds only when the end tag matches the start tag. The chapter also calls a document with several roots not valid; the W3C word for a document that obeys the syntax is well-formed, and valid means compliance with a document type declaration, which ElementTree never checks. Fourth, iterparse reads a file as it goes and clearing each element after use keeps the memory small; here it printed an end event for each i and then for the root r, whose text is None. The research found that the parser returned by iterparse gained a close() method in Python 3.13.",
+   "take": "Test find() with is None; ElementTree keeps whitespace and checks no schema.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Writing XML, namespaces and xsi:nil",
+   "sub": "tostring() writes a space before the slash; ElementTree never reads xsi:nil",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.1,
+     "h": 2.52,
+     "lines": [
+      "import xml.etree.ElementTree as ET",
+      "p = ET.Element('p')",
+      "c = ET.SubElement(p, 'car'); c.set('xsi:nil', 'true')",
+      "ET.SubElement(p, 'note').text = 'a < b & \"c\"'",
+      "print(ET.tostring(p)[:16])",
+      "print(ET.tostring(p, encoding='unicode'))",
+      "ET.indent(p); print(ET.tostring(p, encoding='unicode'))",
+      "try: ET.fromstring(ET.tostring(p, encoding='unicode'))",
+      "except ET.ParseError as e: print('ParseError:', e)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "b'<p><car xsi:nil='\n<p><car xsi:nil=\"true\" /><note>a &lt; b &amp; \"c\"</note></p>\n<p>\n  <car xsi:nil=\"true\" />\n  <note>a &lt; b &amp; \"c\"</note>\n</p>\nParseError: unbound prefix: line 2, column 2",
+     "outLabel": "prints",
+     "label": "program etWriteCut_v1_0_0.py, lines 7 to 15 of 15"
+    },
+    {
+     "t": "prog",
+     "x": 4.8,
+     "y": 1.55,
+     "w": 4.7,
+     "h": 2.66,
+     "lines": [
+      "import xml.etree.ElementTree as ET",
+      "XSI = 'http://www.w3.org/2001/XMLSchema-instance'",
+      "X = ('<person xmlns:xsi=\"%s\"><car xsi:nil=\"true\"/>'",
+      "     '<boat xsi:nil=\"true\">full</boat></person>' % XSI)",
+      "r = ET.fromstring(X)",
+      "print(repr(r[0].text), repr(r[1].text))",
+      "print(r[0].attrib)",
+      "A = 'http://example.org/a'",
+      "n = ET.fromstring('<a:r xmlns:a=\"%s\"><a:i>1</a:i><i>2</i></a:r>' % A)",
+      "print(n.tag, [c.tag for c in n])",
+      "print(n.find('{%s}i' % A).text, n.find('i').text)",
+      "print(n.find('a:i', {'a': A}).text)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "None 'full'\n{'{http://www.w3.org/2001/XMLSchema-instance}nil': 'true'}\n{http://example.org/a}r ['{http://example.org/a}i', 'i']\n1 2\n1",
+     "outLabel": "prints",
+     "label": "program etNamespaceCut_v1_0_0.py, lines 7 to 18 of 18"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.29,
+     "w": 9.0,
+     "h": 0.34,
+     "fs": 9,
+     "body": "Lines 1 to 6 (imports, a temporary folder, EXAMPLE, save() and a comment) are not shown. Both programs are cut the same way. The element boat is marked xsi:nil and still holds the text full."
+    }
+   ],
+   "notes": "On the left the program builds a tree with Element, SubElement and set(), as the chapter does. ET.tostring() writes an empty element with a space before the slash, <car xsi:nil=\"true\" />, where the chapter prints it without; with the default encoding it returns bytes, and encoding='unicode' returns a str; the characters < and & in the text of the note were escaped as &lt; and &amp;. ET.indent(), added in Python 3.9, pretty-prints the tree in place. The last line shows the trap of the chapter's own example: tostring() writes an attribute named xsi:nil with no check that the prefix xsi is declared, and parsing the result again fails with ParseError: unbound prefix. On the right the program reads a document that declares the prefix. ElementTree stores a namespaced attribute under its full name, {http://www.w3.org/2001/XMLSchema-instance}nil, drops xmlns:xsi from the attributes, and never turns nil into None: the element car, marked nil and empty, has text None because it is empty, and the element boat, marked nil, kept its text full, although the XML Schema specification says such an element must be empty for the document to be valid. A namespaced name is part of the tag, {http://example.org/a}i, and find('i') finds only the element with no namespace; find() with a prefix needs the namespaces dictionary. xmltodict, on the slide after, keeps @xsi:nil as a key of a dict, so car is a dict and not None.",
+   "take": "A namespace is part of the name; declare the prefix before you write it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "xmltodict: XML as a dict of strings",
+   "sub": "One entry is a value, several a list; attributes get @; and the size of two formats",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.22,
+     "h": 3.35,
+     "lines": [
+      "import xmltodict",
+      "X = ('<person><name>Alice Doe</name><age>30</age>'",
+      "     '<phone type=\"mobile\">415</phone></person>')",
+      "d = xmltodict.parse(X)",
+      "print(type(d['person']['age']).__name__, d['person']['phone'])",
+      "print(xmltodict.parse('<a><b>1</b></a>'))",
+      "print(xmltodict.parse('<a><b>1</b><b>2</b></a>'))",
+      "print(xmltodict.parse('<a><b>1</b></a>', force_list=('b',)))",
+      "print(xmltodict.unparse(d, pretty=True))",
+      "back = xmltodict.parse(xmltodict.unparse(d))",
+      "print(back == d, xmltodict.parse('<a><b/></a>'))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "str {'@type': 'mobile', '#text': '415'}\n{'a': {'b': '1'}}\n{'a': {'b': ['1', '2']}}\n{'a': {'b': ['1']}}\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<person>\n\t<name>Alice Doe</name>\n\t<age>30</age>\n\t<phone type=\"mobile\">415</phone>\n</person>\nTrue {'a': {'b': None}}",
+     "outLabel": "prints",
+     "label": "program xmltodictCut_v1_0_0.py, lines 7 to 17 of 17"
+    },
+    {
+     "t": "chart",
+     "ctype": "bar",
+     "x": 4.97,
+     "y": 1.45,
+     "w": 4.53,
+     "h": 2.45,
+     "labels": [
+      "JSON, compact",
+      "JSON, indent=2",
+      "XML, compact",
+      "XML, ET.indent()"
+     ],
+     "title": "characters for the same person",
+     "series": [
+      {
+       "name": "characters",
+       "data": [
+        248.0,
+        326.0,
+        407.0,
+        496.0
+       ]
+      }
+     ],
+     "dataLabels": true,
+     "dlFs": 9
+    },
+    {
+     "t": "foot",
+     "x": 4.97,
+     "y": 3.95,
+     "w": 4.53,
+     "h": 0.44,
+     "fs": 8,
+     "body": "The chart is computed: the chapter's person as JSON and as XML (the XML with its xmlns:xsi declaration, 407 characters compact). Lines 1 to 6 (imports, a temporary folder, EXAMPLE, save() and a comment) are not shown."
+    }
+   ],
+   "notes": "xmltodict is a third-party package that turns XML into a dict, and the chapter uses it. The program parses a person: every value is a string, age is '30'; the element phone has an attribute, so it becomes a dict with the key @type and the text under #text. One b under a gives the value '1', two b elements give a list, which is the trap of the package: a program that reads d['a']['b'] gets a string or a list depending on the data. force_list=('b',) makes it a list every time. unparse() turns the dict back into XML, with pretty=True it indents with tabs, and the round trip parse(unparse(d)) equals d; an empty element <b/> becomes None. The chart is computed from the research's person: compact JSON is 248 characters, indent=2 makes it 326, the XML without whitespace is 407, 1.64 times the JSON, and after ET.indent() it is 496. JSON keeps int, bool and null across a round trip; XML through ElementTree or xmltodict and CSV give strings only. The version matters: xmltodict 1.0.4, installed here, was released on 22 February 2026, and Appendix A pins 0.13.0 of 8 May 2022.",
+   "take": "xmltodict gives strings, a value or a list, and @ for attributes.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "XML from someone else",
+   "sub": "ElementTree refuses a billion laughs; defusedxml refuses entities; xmltodict varies",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.3,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.497,
+       "w": 2.0,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Receive XML text",
+       "x": 0.57,
+       "y": 1.589,
+       "w": 1.86,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.5,
+       "y": 1.95,
+       "w": 2.0,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Did a source you trust write the text?",
+       "x": 0.67,
+       "y": 2.056,
+       "w": 1.66,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.563,
+       "w": 2.0,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Parse the text with ET.fromstring()",
+       "x": 0.57,
+       "y": 2.589,
+       "w": 1.86,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.75,
+       "y": 2.563,
+       "w": 2.05,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Parse the text with defusedxml",
+       "x": 2.82,
+       "y": 2.656,
+       "w": 1.91,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 2.75,
+       "y": 3.017,
+       "w": 2.05,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Does the document have an entity?",
+       "x": 2.92,
+       "y": 3.122,
+       "w": 1.71,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.75,
+       "y": 3.63,
+       "w": 2.05,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Catch the exception that forbids the entity",
+       "x": 2.82,
+       "y": 3.656,
+       "w": 1.91,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.63,
+       "w": 2.0,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Use the elements",
+       "x": 0.57,
+       "y": 3.723,
+       "w": 1.86,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.675,
+       "y": 1.567,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.36,
+       "y": 4.193,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.42,
+       "y": 4.253,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.675,
+       "y1": 1.667,
+       "x2": 2.5,
+       "y2": 1.667,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.5,
+       "y1": 1.837,
+       "x2": 1.5,
+       "y2": 1.95,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.5,
+       "y1": 2.45,
+       "x2": 1.5,
+       "y2": 2.563,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 1.56,
+       "y": 2.417,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.5,
+       "y1": 2.2,
+       "x2": 3.775,
+       "y2": 2.2,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.775,
+       "y1": 2.2,
+       "x2": 3.775,
+       "y2": 2.563,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.55,
+       "y": 2.0,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 3.775,
+       "y1": 2.903,
+       "x2": 3.775,
+       "y2": 3.017,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.775,
+       "y1": 3.517,
+       "x2": 3.775,
+       "y2": 3.63,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 3.835,
+       "y": 3.483,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.75,
+       "y1": 3.267,
+       "x2": 1.5,
+       "y2": 3.267,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.5,
+       "y1": 3.267,
+       "x2": 1.5,
+       "y2": 3.63,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 1.55,
+       "y": 3.067,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.5,
+       "y1": 2.903,
+       "x2": 1.5,
+       "y2": 3.63,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.775,
+       "y1": 3.97,
+       "x2": 3.775,
+       "y2": 4.333,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.775,
+       "y1": 4.333,
+       "x2": 1.64,
+       "y2": 4.333,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.5,
+       "y1": 3.97,
+       "x2": 1.5,
+       "y2": 4.193,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "ParsingUntrustedXml"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.3,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ParsingUntrustedXml - Workflow pattern, 22 of 26 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.95,
+     "y": 1.55,
+     "w": 4.59,
+     "h": 2.66,
+     "lines": [
+      "import xml.etree.ElementTree as ET",
+      "import defusedxml, defusedxml.ElementTree as DET",
+      "def ent(i):",
+      "    return '<!ENTITY l%d \"%s\">' % (i, ('&l%d;' % (i - 1)) * 10)",
+      "ents = ''.join(ent(i) for i in range(1, 10))",
+      "laughs = '<!DOCTYPE d [<!ENTITY l0 \"lol\">' + ents + ']><d>&l9;</d>'",
+      "try: ET.fromstring(laughs)",
+      "except ET.ParseError as e: print(len(laughs), 'bytes:', str(e)[:44])",
+      "try: DET.fromstring(laughs)",
+      "except defusedxml.EntitiesForbidden as e: print(type(e).__name__)",
+      "ext = ('<!DOCTYPE d [<!ENTITY x SYSTEM \"file:///etc/hostname\">]>'",
+      "       '<d>&x;</d>')",
+      "try: ET.fromstring(ext)",
+      "except ET.ParseError as e: print('external entity:', e)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "539 bytes: limit on input amplification factor (from DT\nEntitiesForbidden\nexternal entity: undefined entity &x;: line 1, column 59",
+     "outLabel": "prints",
+     "label": "program securityCut_v1_0_0.py, lines 7 to 20 of 20"
+    },
+    {
+     "t": "foot",
+     "x": 4.95,
+     "y": 4.31,
+     "w": 4.55,
+     "h": 0.49,
+     "fs": 9,
+     "body": "xmltodict by version: 1.0.4 raises ValueError: entities are disabled; 0.13.0, the version Appendix A pins, parsed both documents (a pins-environment run)."
+    }
+   ],
+   "notes": "The chapter parses XML with ET.fromstring() and xmltodict.parse() and never says that XML from a source you do not trust can be an attack. The flow chart has the choices: if the text came from a source you trust, parse it with ET.fromstring(); if not, parse it with defusedxml, ask whether the document has an entity, and catch the exception that forbids it. The program runs the cases. A small document with entities that expand ten times each, three levels deep, is expanded by ElementTree into a text of 300 characters; defusedxml raised EntitiesForbidden for the same document. A billion laughs document of ten levels, 539 bytes here and 760 bytes in the research, would expand to three billion characters; ElementTree under Python 3.14.6, which bundles Expat 2.8.1, refused it with limit on input amplification factor breached; the Python documentation says Expat versions lower than 2.7.2 may be vulnerable, and Python 3.14.0 to 3.14.5 carry 2.6.3 and 3.11 to 3.13 carry 2.6.1. An external entity that names a file was not read; ElementTree reported an undefined entity. The attack is catalogued as CWE-776 and external entities as CWE-611. xmltodict 1.0.4 refuses every entity with ValueError: entities are disabled, while xmltodict 0.13.0, the version Appendix A pins, parsed both documents of the program in the pins environment and returned a dict without the entity text. Wikipedia dates the billion laughs attack to as early as 2002, widely addressed from 2008: the story is in the notes, not on a slide.",
+   "take": "Parse untrusted XML with defusedxml, and keep the parser up to date.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in one map",
+   "sub": "Six branches; the slides of each branch hold the examples",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.0,
+       "y": 2.425,
+       "w": 2.0,
+       "h": 1.15,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "CSV, JSON, and XML are plaintext formats; a module reads and writes them",
+       "x": 4.08,
+       "y": 2.62,
+       "w": 1.84,
+       "h": 0.759,
+       "fs": 11,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 1.91,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The CSV format",
+       "x": 0.6,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "A field in quotes holds a comma\nA doubled quote is an escape\nThe encoding is not named",
+       "x": 0.6,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 3.0,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The csv module",
+       "x": 0.6,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "A reader gives rows of strings\nA reader can be looped over once\nA writer needs newline=''",
+       "x": 0.6,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 4.09,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "JSON",
+       "x": 0.6,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "A trailing comma is refused\nA tuple becomes a list\nKeys become strings",
+       "x": 0.6,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 1.91,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "XML",
+       "x": 6.5,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "Tags are case sensitive\nA namespace is part of a name\nxsi:nil is not understood",
+       "x": 6.5,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 3.0,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "XML libraries",
+       "x": 6.5,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The text of an element is None or a string\nxmltodict gives strings\niterparse clears elements",
+       "x": 6.5,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 4.09,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The book and practice",
+       "x": 6.5,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "Project 13 removes headers\nnext() skips the header\nThe chapter has a curly quote",
+       "x": 6.5,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      }
+     ],
+     "did": "CsvJsonAndXmlAtAGlance"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram CsvJsonAndXmlAtAGlance - TopicAndParts pattern, 68 of 79 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "These six branches are the route of the deck. The CSV format comes first: a field in quotes can hold a comma, a doubled quote is an escape, and the encoding is not named. The csv module follows: a reader gives rows of strings and can be looped over once, and a writer needs newline=''. JSON: a trailing comma is refused, a tuple becomes a list and keys become strings. XML: tags are case sensitive, a namespace is part of a name, and xsi:nil is not understood. The XML libraries branch: the text of an element is None or a string, xmltodict gives strings, and iterparse clears elements. The last branch is the book and its practice: Project 13 removes headers, next() skips the header, and the chapter has a curly quote. Together they answer the first question of the chapter, what each format imposes and loses, and the slides that say where a printed line differs answer the second. The map is drawn from the same specification as the interactive page.",
+   "take": "If a branch feels unproven, its slides hold the example.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Every link was opened on the day this deck was made",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.55,
+     "fs": 9.5,
+     "groups": [
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, chapter 18 - free online",
+         "https://automatetheboringstuff.com/3e/chapter18.html"
+        ],
+        [
+         "csv module documentation",
+         "https://docs.python.org/3.14/library/csv.html"
+        ],
+        [
+         "json module documentation",
+         "https://docs.python.org/3.14/library/json.html"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "xml.etree.ElementTree documentation",
+         "https://docs.python.org/3.14/library/xml.etree.elementtree.html"
+        ],
+        [
+         "XML security in Python (documentation)",
+         "https://docs.python.org/3.14/library/xml.html"
+        ],
+        [
+         "RFC 4180: the CSV format",
+         "https://www.rfc-editor.org/rfc/rfc4180"
+        ],
+        [
+         "RFC 8259: the JSON standard",
+         "https://www.rfc-editor.org/rfc/rfc8259"
+        ]
+       ]
+      },
+      {
+       "head": "History and standards",
+       "rows": [
+        [
+         "CSV and IBM Fortran (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Comma-separated_values"
+        ],
+        [
+         "JSON and Douglas Crockford (Wikipedia)",
+         "https://en.wikipedia.org/wiki/JSON"
+        ],
+        [
+         "XML 1.0 and the W3C (Wikipedia)",
+         "https://en.wikipedia.org/wiki/XML"
+        ],
+        [
+         "ElementTree enters Python 2.5 (What's New)",
+         "https://docs.python.org/3/whatsnew/2.5.html"
+        ],
+        [
+         "The billion laughs attack (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Billion_laughs_attack"
+        ]
+       ]
+      },
+      {
+       "head": "The two packages",
+       "rows": [
+        [
+         "defusedxml on PyPI",
+         "https://pypi.org/pypi/defusedxml/json"
+        ],
+        [
+         "xmltodict on PyPI",
+         "https://pypi.org/pypi/xmltodict/json"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every listing of the chapter; the documentation of the three modules describes them. The reference links are the pages for the topics where the deck corrected or extended the chapter: the XML security page of the Python documentation, the RFCs that write down CSV and JSON, and the two third-party packages. The history links are the sources behind the six stories of the chapter. Two of them are slides, the IBM Fortran compiler of 1972 and the first JSON message of April 2001; the other four are told in the notes: RFC 4180 of October 2005 on the slide of the quoting constants, XML 1.0 of 10 February 1998 on the slide that reads XML, ElementTree and json entering the standard library in 2006 and 2008 on the same slide, and the billion laughs attack on the slide of XML from someone else. The rest of the sixty-odd sources of the research, among them the W3C recommendations, the PEPs and the CWE entries, are in the research package.",
+   "take": "Textbook, module documentation and history, opened the day this deck was built.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What you should now be able to say",
+   "sub": "Four claims, each carried by a result you saw printed",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 1.5,
+     "w": 8.8,
+     "h": 2.4,
+     "fs": 15,
+     "items": [
+      "Open CSV files in text mode with newline='' and an encoding, and loop over the reader.",
+      "A reader gives strings and line_num counts lines, so use next() to skip a header.",
+      "JSON refuses a trailing comma, turns a tuple into a list and keeps only six kinds of value.",
+      "ElementTree gives strings and keeps whitespace; parse untrusted XML with defusedxml."
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.6,
+     "y": 4.1,
+     "w": 8.8,
+     "h": 0.6,
+     "fs": 13,
+     "big": true,
+     "items": [
+      "25 rows run",
+      "28 programs run",
+      "8 diagrams"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The console rows use only text and io objects made in memory, so they can be typed into any Python; csv, json and ElementTree are the standard library, and the programs build their own files in a temporary folder. The rows were run again under Python 3.14.6 with xmltodict 1.0.4 and defusedxml 0.7.1 each time the deck was built, and the programs were run again by the check that compares the slides with the recording. What was not run is marked on its slide: Microsoft Excel and a real Windows computer, and the final release of Python 3.15 with Python 3.14.7 and later. The next chapter of the book keeps time, schedules tasks and launches programs, and what this chapter taught about formats, encodings and the difference between a file made to be parsed and text that only looks parseable carries over.",
+   "take": "Questions are welcome; bring a CSV, a JSON or an XML file to open.",
+   "bg": "light"
+  }
+ ]
+}

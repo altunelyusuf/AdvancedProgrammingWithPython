@@ -1,0 +1,533 @@
+{
+ "_version": "1.0.0",
+ "_python": "3.14.6",
+ "_packages": "xmltodict 1.0.4 | defusedxml 0.7.1 | openpyxl 3.1.5 | lxml 6.1.3",
+ "title": [
+  [
+   "import platform, importlib.metadata as m",
+   ""
+  ],
+  [
+   "platform.python_version()",
+   "'3.14.6'"
+  ],
+  [
+   "m.version('xmltodict')",
+   "'1.0.4'"
+  ],
+  [
+   "m.version('defusedxml')",
+   "'0.7.1'"
+  ]
+ ],
+ "csvnames": [
+  [
+   "import csv",
+   ""
+  ],
+  [
+   "sorted(csv.list_dialects())",
+   "['excel', 'excel-tab', 'unix']"
+  ],
+  [
+   "len([n for n in dir(csv) if n.startswith('QUOTE_')])",
+   "6"
+  ],
+  [
+   "csv.field_size_limit()",
+   "131072"
+  ]
+ ],
+ "split": [
+  [
+   "import csv",
+   ""
+  ],
+  [
+   "line = 'Alice,30,\"San Francisco, CA\"'",
+   ""
+  ],
+  [
+   "line.split(',')",
+   "['Alice', '30', '\"San Francisco', ' CA\"']"
+  ],
+  [
+   "next(csv.reader([line]))",
+   "['Alice', '30', 'San Francisco, CA']"
+  ]
+ ],
+ "appb": [
+  [
+   "import csv, io",
+   ""
+  ],
+  [
+   "list(csv.reader(io.BytesIO(b'a,b\\r\\n')))",
+   "Error: iterator should return strings, not bytes (the file should be opened in text mode)"
+  ],
+  [
+   "csv.writer(io.BytesIO()).writerow(['a'])",
+   "TypeError: a bytes-like object is required, not 'str'"
+  ],
+  [
+   "list(csv.reader(io.StringIO('a,b\\r\\n')))",
+   "[['a', 'b']]"
+  ]
+ ],
+ "limits": [
+  [
+   "import csv, io",
+   ""
+  ],
+  [
+   "csv.field_size_limit()",
+   "131072"
+  ],
+  [
+   "next(csv.reader(['x' * 131073]))",
+   "Error: field larger than field limit (131072)"
+  ],
+  [
+   "q = csv.QUOTE_NOTNULL",
+   ""
+  ],
+  [
+   "list(csv.reader(io.StringIO('a,,\"\"\\r\\n'), quoting=q))",
+   "[['a', None, '']]"
+  ],
+  [
+   "list(csv.reader(['a\\tb'], dialect='excel-tab'))",
+   "[['a', 'b']]"
+  ]
+ ],
+ "jsonstrict": [
+  [
+   "import json",
+   ""
+  ],
+  [
+   "json.loads('[\"spam\", \"eggs\"]')",
+   "['spam', 'eggs']"
+  ],
+  [
+   "json.loads('[\"spam\", \"eggs\",]')",
+   "JSONDecodeError: Illegal trailing comma before end of array: line 1 column 16 (char 15)"
+  ]
+ ],
+ "_programs": {
+  "csvReader_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# The reader of the chapter: list(), a for loop with line_num, and a reader that can be looped over once.\nsave('example.csv', EXAMPLE)\nwith open('example.csv', encoding='utf-8', newline='') as f:\n    reader = csv.reader(f)\n    rows = list(reader)\n    print(rows)\n    print('a second list():', list(reader), '| every value is a string:', {type(v).__name__ for r in rows for v in r})\nwith open('example.csv', encoding='utf-8', newline='') as f:\n    reader = csv.reader(f)\n    for row in reader:\n        print('Row #' + str(reader.line_num) + ' ' + str(row))\nprint('hasattr __len__, __getitem__:', hasattr(reader, '__len__'), hasattr(reader, '__getitem__'))\nimport tracemalloc\ndef peak(use_list):\n    save('big.csv', ''.join('%d,name%d,%s\\r\\n' % (i, i, 'x' * 40) for i in range(60000)))\n    with open('big.csv', encoding='utf-8', newline='') as f:\n        tracemalloc.start(); r = csv.reader(f)\n        if use_list: n = len(list(r))\n        else: n = sum(1 for _ in r)\n        p = tracemalloc.get_traced_memory()[1]; tracemalloc.stop(); return n, p\na, b = peak(True), peak(False)\nprint('rows', a[0], b[0], '| list() peak is more than 10 times the loop peak:', a[1] > 10 * b[1])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "[['Name', 'Age', 'City'], ['Alice', '30', 'San Francisco, CA'], ['Bob', '25', 'He said \"hi\"'], ['Carol', '41', 'two\\r\\nlines']]\na second list(): [] | every value is a string: {'str'}\nRow #1 ['Name', 'Age', 'City']\nRow #2 ['Alice', '30', 'San Francisco, CA']\nRow #3 ['Bob', '25', 'He said \"hi\"']\nRow #5 ['Carol', '41', 'two\\r\\nlines']\nhasattr __len__, __getitem__: False False\nrows 60000 60000 | list() peak is more than 10 times the loop peak: True",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "csvWriter_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# The writer of the chapter: writerow() returns the length written, the types it converts, and newline='' against the double spacing.\nwith open('output.csv', 'w', encoding='utf-8', newline='') as f:\n    w = csv.writer(f)\n    print(w.writerow(['spam', 'eggs', 'bacon', 'ham']), w.writerow(['Hello, world!', 'eggs', 'bacon', 'ham']), w.writerow([1, 3.141592, None, '', True]))\nprint(open('output.csv', 'rb').read())\nwith open('tabs.tsv', 'w', encoding='utf-8', newline='') as f:\n    w = csv.writer(f, delimiter='\\t', lineterminator='\\n'); w.writerow(['a', 'b c', 'd']); w.writerows([['x', 'y', 'z']])\nprint(open('tabs.tsv', 'rb').read())\n# Windows translates \\n to \\r\\n on write: emulated with a TextIOWrapper that is asked for that newline.\nfor label, nl in (('newline=\"\"', ''), ('no newline argument on Windows', '\\r\\n')):\n    buf = io.BytesIO(); t = io.TextIOWrapper(buf, encoding='utf-8', newline=nl)\n    csv.writer(t).writerow(['a', 'b']); t.flush()\n    print(label, buf.getvalue(), '| rows read back:', list(csv.reader(io.StringIO(buf.getvalue().decode(), newline=''))))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "21 32 19\nb'spam,eggs,bacon,ham\\r\\n\"Hello, world!\",eggs,bacon,ham\\r\\n1,3.141592,,,True\\r\\n'\nb'a\\tb c\\td\\nx\\ty\\tz\\n'\nnewline=\"\" b'a,b\\r\\n' | rows read back: [['a', 'b']]\nno newline argument on Windows b'a,b\\r\\r\\n' | rows read back: [['a', 'b'], []]",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "dictReaderWriter_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# DictReader and DictWriter: the first row as keys, restkey and restval, and the error for an extra key.\nsave('example.csv', 'Name,Age\\r\\nAlice,30\\r\\nBob\\r\\nCarol,41,extra,more\\r\\n')\nwith open('example.csv', encoding='utf-8', newline='') as f:\n    for row in csv.DictReader(f): print(dict(row))\nwith open('example.csv', encoding='utf-8', newline='') as f:\n    print([dict(r) for r in csv.DictReader(f, restkey='rest', restval='?')])\nwith open('example.csv', encoding='utf-8', newline='') as f:\n    print([dict(r) for r in csv.DictReader(f, fieldnames=['a', 'b', 'c'])][0])\nwith open('out.csv', 'w', encoding='utf-8', newline='') as f:\n    w = csv.DictWriter(f, ['Name', 'Age'])\n    print(w.writeheader(), w.writerow({'Name': 'Dave', 'Age': 5}), w.writerow({'Name': 'Eve'}))\n    try: w.writerow({'Name': 'Frank', 'Age': 9, 'City': 'Rome'})\n    except ValueError as e: print('ValueError:', e)\nprint(open('out.csv', 'rb').read())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "{'Name': 'Alice', 'Age': '30'}\n{'Name': 'Bob', 'Age': None}\n{'Name': 'Carol', 'Age': '41', None: ['extra', 'more']}\n[{'Name': 'Alice', 'Age': '30'}, {'Name': 'Bob', 'Age': '?'}, {'Name': 'Carol', 'Age': '41', 'rest': ['extra', 'more']}]\n{'a': 'Name', 'b': 'Age', 'c': None}\n10 8 6\nValueError: dict contains fields not in fieldnames: 'City'\nb'Name,Age\\r\\nDave,5\\r\\nEve,\\r\\n'",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "dialectsAndEncoding_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# Dialects, quoting constants, embedded line breaks and the encoding the chapter does not name.\nprint(sorted(csv.list_dialects()), [n for n in dir(csv) if n.startswith('QUOTE_')])\ndef line(row, **k):\n    s = io.StringIO(newline=''); csv.writer(s, **k).writerow(row); return s.getvalue()\nfor q in ('QUOTE_MINIMAL', 'QUOTE_ALL', 'QUOTE_NONNUMERIC', 'QUOTE_NONE', 'QUOTE_STRINGS', 'QUOTE_NOTNULL'):\n    try: print('%-17s' % q, repr(line(['a b', 'c,d', 7, None, ''], quoting=getattr(csv, q), **({'escapechar': '\\\\'} if q == 'QUOTE_NONE' else {}))))\n    except Exception as e: print('%-17s' % q, type(e).__name__, e)\nprint(repr(line(['a', 'b\\tc'], dialect='excel-tab')), list(csv.reader(['a\\t\"b c\"\\td'], dialect='excel-tab')))\nprint('embedded line break round trip:', list(csv.reader(io.StringIO(EXAMPLE, newline='')))[3])\ntext = 'Name,City\\r\\nZoe,\u0130stanbul\\r\\n'\nsave('u.csv', text, 'utf-8-sig'); print('BOM first bytes', open('u.csv', 'rb').read()[:3], '| read as utf-8:', repr(open('u.csv', encoding='utf-8', newline='').readline()), '| as utf-8-sig:', repr(open('u.csv', encoding='utf-8-sig', newline='').readline()))\nsave('c.csv', 'Name,City\\r\\nZoe,Z\u00fcrich\\r\\n', 'cp1252')\ntry: open('c.csv', encoding='utf-8').read()\nexcept UnicodeDecodeError as e: print('UnicodeDecodeError:', e.reason)\nprint('read cp1252 bytes as latin-1 gives mojibake for utf-8 text:', open('u.csv', 'rb').read().decode('cp1252', errors='replace')[:12])\nprint('field_size_limit', csv.field_size_limit())\ntry: list(csv.reader(['x' * (csv.field_size_limit() + 1)]))\nexcept csv.Error as e: print('csv.Error:', e)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "['excel', 'excel-tab', 'unix'] ['QUOTE_ALL', 'QUOTE_MINIMAL', 'QUOTE_NONE', 'QUOTE_NONNUMERIC', 'QUOTE_NOTNULL', 'QUOTE_STRINGS']\nQUOTE_MINIMAL     'a b,\"c,d\",7,,\\r\\n'\nQUOTE_ALL         '\"a b\",\"c,d\",\"7\",\"\",\"\"\\r\\n'\nQUOTE_NONNUMERIC  '\"a b\",\"c,d\",7,\"\",\"\"\\r\\n'\nQUOTE_NONE        'a b,c\\\\,d,7,,\\r\\n'\nQUOTE_STRINGS     '\"a b\",\"c,d\",7,,\"\"\\r\\n'\nQUOTE_NOTNULL     '\"a b\",\"c,d\",\"7\",,\"\"\\r\\n'\n'a\\t\"b\\tc\"\\r\\n' [['a', 'b c', 'd']]\nembedded line break round trip: ['Carol', '41', 'two\\r\\nlines']\nBOM first bytes b'\\xef\\xbb\\xbf' | read as utf-8: '\\ufeffName,City\\r\\n' | as utf-8-sig: 'Name,City\\r\\n'\nUnicodeDecodeError: invalid start byte\nread cp1252 bytes as latin-1 gives mojibake for utf-8 text: \u00ef\u00bb\u00bfName,City\nfield_size_limit 131072\ncsv.Error: field larger than field limit (131072)",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "jsonBasics_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# JSON as the chapter teaches it, and the syntax it refuses.\njs = '{\"name\": \"Alice Doe\", \"age\": 30, \"car\": null, \"programmer\": true, \"phone\": [{\"type\": \"mobile\", \"number\": \"415-555-7890\"}]}'\ndata = json.loads(js)\nprint(data, type(data).__name__, data['car'] is None, data['programmer'] is True)\nprint(json.dumps(data) == js)\nprint(json.dumps(data, indent=2))\nfor label, t in (('trailing comma', '[\"spam\", \"eggs\",]'), ('single quotes', \"{'a': 1}\"), ('comment', '{\"a\": 1} // c'), ('raw newline', '\"a\\nb\"'), ('None', '[None]'), ('NaN', '[NaN]'), ('empty', '')):\n    try: print('%-15s' % label, 'accepted', json.loads(t))\n    except json.JSONDecodeError as e: print('%-15s' % label, e.msg, '| line', e.lineno, 'column', e.colno)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "{'name': 'Alice Doe', 'age': 30, 'car': None, 'programmer': True, 'phone': [{'type': 'mobile', 'number': '415-555-7890'}]} dict True True\nTrue\n{\n  \"name\": \"Alice Doe\",\n  \"age\": 30,\n  \"car\": null,\n  \"programmer\": true,\n  \"phone\": [\n    {\n      \"type\": \"mobile\",\n      \"number\": \"415-555-7890\"\n    }\n  ]\n}\ntrailing comma  Illegal trailing comma before end of array | line 1 column 16\nsingle quotes   Expecting property name enclosed in double quotes | line 1 column 2\ncomment         Extra data | line 1 column 10\nraw newline     Invalid control character at | line 1 column 3\nNone            Expecting value | line 1 column 2\nNaN             accepted [nan]\nempty           Expecting value | line 1 column 1",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "jsonTypesAndFiles_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# What JSON does to Python values, and a round trip through a file.\nd = {'t': (1, 2), 1: 'a', 2.5: 'b', None: 'c', 'city': '\u0130stanbul', 'f': 1.0, 'big': 10**20}\ns = json.dumps(d); print(s, '| back:', json.loads(s))\nprint(json.dumps(d, ensure_ascii=False))\nfor v in ({1, 2}, b'x', 1j, object(), {(1, 2): 3}):\n    try: json.dumps(v)\n    except TypeError as e: print(type(e).__name__, e)\nprint(json.dumps(float('nan')), json.loads('[Infinity]'))\nwith open('p.json', 'w', encoding='utf-8') as f: json.dump({'city': '\u0130stanbul', 'n': [1, None, True]}, f, indent=2, ensure_ascii=False)\nprint(open('p.json', 'rb').read())\nprint(json.load(open('p.json', encoding='utf-8')), json.load(open('p.json', 'rb')))\nprint(json.loads(b'\\xef\\xbb\\xbf[1]'))\ntry: json.loads('\ufeff[1]')\nexcept json.JSONDecodeError as e: print('str with a BOM:', e.msg)\ntry: json.loads('1' * 5000)\nexcept ValueError as e: print('long integer:', str(e)[:60])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "{\"t\": [1, 2], \"1\": \"a\", \"2.5\": \"b\", \"null\": \"c\", \"city\": \"\\u0130stanbul\", \"f\": 1.0, \"big\": 100000000000000000000} | back: {'t': [1, 2], '1': 'a', '2.5': 'b', 'null': 'c', 'city': '\u0130stanbul', 'f': 1.0, 'big': 100000000000000000000}\n{\"t\": [1, 2], \"1\": \"a\", \"2.5\": \"b\", \"null\": \"c\", \"city\": \"\u0130stanbul\", \"f\": 1.0, \"big\": 100000000000000000000}\nTypeError Object of type set is not JSON serializable\nTypeError Object of type bytes is not JSON serializable\nTypeError Object of type complex is not JSON serializable\nTypeError Object of type object is not JSON serializable\nTypeError keys must be str, int, float, bool or None, not tuple\nNaN [inf]\nb'{\\n  \"city\": \"\\xc4\\xb0stanbul\",\\n  \"n\": [\\n    1,\\n    null,\\n    true\\n  ]\\n}'\n{'city': '\u0130stanbul', 'n': [1, None, True]} {'city': '\u0130stanbul', 'n': [1, None, True]}\n[1]\nstr with a BOM: Unexpected UTF-8 BOM (decode using utf-8-sig)\nlong integer: Exceeds the limit (4300 digits) for integer string conversio",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "elementTreeReading_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# ElementTree reading: the root, children, text, iteration order, find and a subset of XPath.\nimport xml.etree.ElementTree as ET\nXML = '<person>\\n  <name>Alice Doe</name>\\n  <age>30</age>\\n  <car/>\\n  <address><street>100 Larkin St.</street><city>San Francisco</city></address>\\n  <phone type=\"mobile\">415-555-7890</phone>\\n  <phone type=\"work\">415-555-1234</phone>\\n</person>'\nroot = ET.fromstring(XML)\nprint(root.tag, [c.tag for c in root], root[0].text, repr(root[2].text), repr(root.text))\nprint([e.tag for e in root.iter()])\nprint(root.find('name').text, root.find('address/city').text, [p.attrib['type'] for p in root.findall('phone')], root.find('phone[@type=\"work\"]').text, root.find('nothing'))\nprint([e.text for e in root.findall('.//street')], root.get('x'), root.find('phone').get('type'))\nprint('age is a', type(root.find('age').text).__name__, '| converted:', int(root.find('age').text) + 1)\nimport warnings\nwith warnings.catch_warnings(record=True) as w:\n    warnings.simplefilter('always'); bool(root); print('truth value of an element:', [x.category.__name__ for x in w])\ntree = ET.ElementTree(root); print(tree.getroot() is root)\ntry: ET.fromstring('<a><b></a>')\nexcept ET.ParseError as e: print('ParseError:', e)\ntry: ET.fromstring('<a/><b/>')\nexcept ET.ParseError as e: print('two roots:', e)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "person ['name', 'age', 'car', 'address', 'phone', 'phone'] Alice Doe None '\\n  '\n['person', 'name', 'age', 'car', 'address', 'street', 'city', 'phone', 'phone']\nAlice Doe San Francisco ['mobile', 'work'] 415-555-1234 None\n['100 Larkin St.'] None mobile\nage is a str | converted: 31\ntruth value of an element: ['DeprecationWarning']\nTrue\nParseError: mismatched tag: line 1, column 8\ntwo roots: junk after document element: line 1, column 4",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "elementTreeWriting_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# ElementTree writing: SubElement, set, tostring and its space before the slash, indent and writing a file.\nimport xml.etree.ElementTree as ET\np = ET.Element('person'); ET.SubElement(p, 'name').text = 'Alice Doe'\nc = ET.SubElement(p, 'car'); c.set('xsi:nil', 'true')\nET.SubElement(p, 'note').text = 'a < b & \"c\"'\nprint(ET.tostring(p, encoding='unicode'))\nprint(ET.tostring(p), ET.tostring(p, encoding='utf-8'))\nET.indent(p); print(ET.tostring(p, encoding='unicode'))\nET.ElementTree(p).write('p.xml', encoding='utf-8', xml_declaration=True)\nprint(open('p.xml', 'rb').read())\ntry: ET.fromstring(ET.tostring(p, encoding='unicode'))\nexcept ET.ParseError as e: print('the output uses xsi: without declaring it, so parsing it again fails:', e)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "<person><name>Alice Doe</name><car xsi:nil=\"true\" /><note>a &lt; b &amp; \"c\"</note></person>\nb'<person><name>Alice Doe</name><car xsi:nil=\"true\" /><note>a &lt; b &amp; \"c\"</note></person>' b'<person><name>Alice Doe</name><car xsi:nil=\"true\" /><note>a &lt; b &amp; \"c\"</note></person>'\n<person>\n  <name>Alice Doe</name>\n  <car xsi:nil=\"true\" />\n  <note>a &lt; b &amp; \"c\"</note>\n</person>\nb'<?xml version=\\'1.0\\' encoding=\\'utf-8\\'?>\\n<person>\\n  <name>Alice Doe</name>\\n  <car xsi:nil=\"true\" />\\n  <note>a &lt; b &amp; \"c\"</note>\\n</person>'\nthe output uses xsi: without declaring it, so parsing it again fails: unbound prefix: line 3, column 2",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "namespacesAndNil_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# Namespaces and xsi:nil: ElementTree does not interpret the attribute.\nimport xml.etree.ElementTree as ET\nX = '<person xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><car xsi:nil=\"true\"/><boat xsi:nil=\"true\">full</boat></person>'\nr = ET.fromstring(X)\nprint(r[0].attrib, repr(r[0].text), r[1].attrib, repr(r[1].text))\nN = '<a:root xmlns:a=\"http://example.org/a\"><a:item>1</a:item><item>2</item></a:root>'\nn = ET.fromstring(N); print(n.tag, [c.tag for c in n], n.find('{http://example.org/a}item').text, n.find('item').text, n.find('a:item', {'a': 'http://example.org/a'}).text)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "{'{http://www.w3.org/2001/XMLSchema-instance}nil': 'true'} None {'{http://www.w3.org/2001/XMLSchema-instance}nil': 'true'} 'full'\n{http://example.org/a}root ['{http://example.org/a}item', 'item'] 1 2 1",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "xmlSecurity_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# XML from someone else: entity expansion, external entities, and defusedxml. The bomb is small (a few thousand expansions).\nimport xml.etree.ElementTree as ET, defusedxml.ElementTree as DET, defusedxml\nsmall = '<?xml version=\"1.0\"?><!DOCTYPE d [<!ENTITY a \"lol\"><!ENTITY b \"&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;\"><!ENTITY c \"&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;\">]><d>&c;</d>'\nprint('ElementTree expands the entities:', len(ET.fromstring(small).text), 'characters')\ntry: DET.fromstring(small)\nexcept defusedxml.EntitiesForbidden as e: print('defusedxml:', type(e).__name__, isinstance(e, ValueError))\nprint(DET.fromstring('<a>ok</a>').text)\next = '<?xml version=\"1.0\"?><!DOCTYPE d [<!ENTITY x SYSTEM \"file:///etc/hostname\">]><d>&x;</d>'\ntry: print('external entity with ElementTree:', repr(ET.fromstring(ext).text))\nexcept ET.ParseError as e: print('external entity with ElementTree: not fetched,', e)\ntry: DET.fromstring('<!DOCTYPE d []><d/>', forbid_dtd=True)\nexcept defusedxml.DTDForbidden as e: print('DTDForbidden')\nimport xmltodict\ntry: print(xmltodict.parse(small))\nexcept Exception as e: print('xmltodict:', type(e).__name__, str(e)[:70])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "ElementTree expands the entities: 300 characters\ndefusedxml: EntitiesForbidden True\nok\nexternal entity with ElementTree: not fetched, undefined entity &x;: line 1, column 80\nDTDForbidden\nxmltodict: ValueError entities are disabled",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "xmltodictRoundTrip_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# xmltodict: strings, one entry against many, attributes with @, and unparse.\nimport xmltodict\nX = '<person><name>Alice Doe</name><age>30</age><phone type=\"mobile\">415</phone></person>'\nd = xmltodict.parse(X); print(d, type(d['person']['age']).__name__)\nprint(xmltodict.parse('<a><b>1</b></a>'), xmltodict.parse('<a><b>1</b><b>2</b></a>'), xmltodict.parse('<a><b>1</b></a>', force_list=('b',)))\nprint(xmltodict.unparse(d, pretty=True))\nprint(xmltodict.parse(xmltodict.unparse(d)) == d, xmltodict.parse('<a><b/></a>'))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "{'person': {'name': 'Alice Doe', 'age': '30', 'phone': {'@type': 'mobile', '#text': '415'}}} str\n{'a': {'b': '1'}} {'a': {'b': ['1', '2']}} {'a': {'b': ['1']}}\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<person>\n\t<name>Alice Doe</name>\n\t<age>30</age>\n\t<phone type=\"mobile\">415</phone>\n</person>\nTrue {'a': {'b': None}}",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "practiceRemoveCsvHeader_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# Project 13 as the chapter describes it, on generated files: remove the header row of every CSV file in the working directory.\nfrom pathlib import Path\nPath('headerRemoved').mkdir(exist_ok=True)\nfor i in range(3): save('f%d.csv' % i, 'h1,h2\\r\\n' + ''.join('%d,%d\\r\\n' % (i, j) for j in range(3)))\nsave('empty.csv', ''); save('headeronly.csv', 'h1,h2\\r\\n')\nfor csv_filename in sorted(Path('.').glob('*.csv')):\n    print('Removing header from ' + csv_filename.name + '...')\n    with open(csv_filename, encoding='utf-8', newline='') as f_in:\n        reader = csv.reader(f_in); next(reader, None)\n        with open(Path('headerRemoved') / csv_filename.name, 'w', encoding='utf-8', newline='') as f_out:\n            csv.writer(f_out).writerows(reader)\nprint(sorted(p.name for p in Path('headerRemoved').iterdir()))\nprint(open('headerRemoved/f1.csv', 'rb').read(), open('headerRemoved/empty.csv', 'rb').read(), open('headerRemoved/headeronly.csv', 'rb').read())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Removing header from empty.csv...\nRemoving header from f0.csv...\nRemoving header from f1.csv...\nRemoving header from f2.csv...\nRemoving header from headeronly.csv...\n['empty.csv', 'f0.csv', 'f1.csv', 'f2.csv', 'headeronly.csv']\nb'1,0\\r\\n1,1\\r\\n1,2\\r\\n' b'' b''",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "readerCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# Reading: list(), a for loop with line_num, and a reader used once.\nsave('example.csv', EXAMPLE)   # 4 records, one with a line break\nwith open('example.csv', encoding='utf-8', newline='') as f:\n    reader = csv.reader(f)\n    rows = list(reader)\n    print(rows[3])\n    print('a second list():', list(reader))\nwith open('example.csv', encoding='utf-8', newline='') as f:\n    reader = csv.reader(f)\n    for row in reader:\n        print('Row #' + str(reader.line_num) + ' ' + str(row))\nprint({type(v).__name__ for r in rows for v in r})\nprint(hasattr(reader, '__len__'), hasattr(reader, '__getitem__'))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "['Carol', '41', 'two\\r\\nlines']\na second list(): []\nRow #1 ['Name', 'Age', 'City']\nRow #2 ['Alice', '30', 'San Francisco, CA']\nRow #3 ['Bob', '25', 'He said \"hi\"']\nRow #5 ['Carol', '41', 'two\\r\\nlines']\n{'str'}\nFalse False",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "memoryCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# A for loop over the reader keeps one row in memory; list() keeps them all.\nimport tracemalloc\ndef peak(use_list):\n    rows = ''.join('%d,n%d,%s\\r\\n' % (i, i, 'x' * 40) for i in range(60000))\n    save('big.csv', rows)\n    with open('big.csv', encoding='utf-8', newline='') as f:\n        tracemalloc.start(); r = csv.reader(f)\n        if use_list: n = len(list(r))\n        else: n = sum(1 for _ in r)\n        p = tracemalloc.get_traced_memory()[1]; tracemalloc.stop()\n    return n, p\na, b = peak(True), peak(False)\nprint('rows', a[0], b[0], '| list() peaks over 10x the loop:', a[1] > 10 * b[1])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "rows 60000 60000 | list() peaks over 10x the loop: True",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "writerCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# The writer: writerow() returns the length written; types are converted.\nwith open('o.csv', 'w', encoding='utf-8', newline='') as f:\n    w = csv.writer(f)\n    print(w.writerow(['spam', 'eggs', 'bacon', 'ham']))\n    print(w.writerow(['Hello, world!', 'eggs', 'bacon', 'ham']))\n    print(w.writerow([1, 3.141592, None, '', True]))\nfor line in open('o.csv', 'rb'): print(line)\nwith open('t.tsv', 'w', encoding='utf-8', newline='') as f:\n    w = csv.writer(f, delimiter='\\t', lineterminator='\\n')\n    w.writerow(['a', 'b c', 'd'])\n    w.writerows([['x', 'y', 'z']])\nprint(open('t.tsv', 'rb').read())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "21\n32\n19\nb'spam,eggs,bacon,ham\\r\\n'\nb'\"Hello, world!\",eggs,bacon,ham\\r\\n'\nb'1,3.141592,,,True\\r\\n'\nb'a\\tb c\\td\\nx\\ty\\tz\\n'",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "newlineCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# Windows turns \\n into \\r\\n when a file is opened without newline=''.\n# EMULATED: a TextIOWrapper asked for that translation stands in for Windows.\nfor label, nl in ((\"newline=''\", ''), ('Windows default', '\\r\\n')):\n    buf = io.BytesIO()\n    t = io.TextIOWrapper(buf, encoding='utf-8', newline=nl)\n    csv.writer(t).writerow(['a', 'b']); t.flush()\n    data = buf.getvalue()\n    back = io.StringIO(data.decode(), newline='')\n    print(label, data, list(csv.reader(back)))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "newline='' b'a,b\\r\\n' [['a', 'b']]\nWindows default b'a,b\\r\\r\\n' [['a', 'b'], []]",
+   "live": false,
+   "kind": "emulated",
+   "exit": 0,
+   "livekey": [],
+   "emukey": [
+    "EMULATED"
+   ]
+  },
+  "dictsCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# DictReader: the first row gives the keys; restkey and restval for short and long rows.\nsave('example.csv', 'Name,Age\\r\\nAlice,30\\r\\nBob\\r\\nCarol,41,extra,more\\r\\n')\nwith open('example.csv', encoding='utf-8', newline='') as f:\n    for row in csv.DictReader(f): print(dict(row))\nwith open('example.csv', encoding='utf-8', newline='') as f:\n    for row in csv.DictReader(f, restkey='rest', restval='?'): print(dict(row))\nwith open('out.csv', 'w', encoding='utf-8', newline='') as f:\n    w = csv.DictWriter(f, ['Name', 'Age'])\n    print(w.writeheader(), w.writerow({'Name': 'Dave', 'Age': 5}))\n    print(w.writerow({'Name': 'Eve'}))\n    try: w.writerow({'Name': 'Frank', 'Age': 9, 'City': 'Rome'})\n    except ValueError as e: print('ValueError:', e)\nprint(open('out.csv', 'rb').read())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "{'Name': 'Alice', 'Age': '30'}\n{'Name': 'Bob', 'Age': None}\n{'Name': 'Carol', 'Age': '41', None: ['extra', 'more']}\n{'Name': 'Alice', 'Age': '30'}\n{'Name': 'Bob', 'Age': '?'}\n{'Name': 'Carol', 'Age': '41', 'rest': ['extra', 'more']}\n10 8\n6\nValueError: dict contains fields not in fieldnames: 'City'\nb'Name,Age\\r\\nDave,5\\r\\nEve,\\r\\n'",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "encodingCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# Excel's \"CSV UTF-8\" starts with a byte order mark; open() needs an encoding.\ntext = 'Name,City\\r\\nZoe,\u0130stanbul\\r\\n'\nsave('u.csv', text, 'utf-8-sig')\nraw = open('u.csv', 'rb').read()\nprint(raw[:3], raw[3:12])\nprint(repr(open('u.csv', encoding='utf-8', newline='').readline()))\nprint(repr(open('u.csv', encoding='utf-8-sig', newline='').readline()))\nwith open('u.csv', encoding='utf-8', newline='') as f:\n    print(list(next(csv.DictReader(f))))\nprint(raw.decode('cp1252', errors='replace')[:12])\nsave('c.csv', 'Ad,Sehir\\r\\nZoe,\u015ei\u015fli\\r\\n', 'cp1254')\ntry: open('c.csv', encoding='utf-8').read()\nexcept UnicodeDecodeError as e: print('UnicodeDecodeError:', e.reason)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "b'\\xef\\xbb\\xbf' b'Name,City'\n'\\ufeffName,City\\r\\n'\n'Name,City\\r\\n'\n['\\ufeffName', 'City']\n\u00ef\u00bb\u00bfName,City\nUnicodeDecodeError: invalid continuation byte",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "project13Cut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# Project 13 on generated files; the last four lines use a header with a line break.\nfrom pathlib import Path\nPath('headerRemoved').mkdir(exist_ok=True)\nsave('f0.csv', 'h1,h2\\r\\n1,1\\r\\n1,2\\r\\n'); save('empty.csv', '')\nfor csv_filename in sorted(Path('.').glob('*.csv')):\n    print('Removing header from ' + csv_filename.name + '...')\n    with open(csv_filename, encoding='utf-8', newline='') as f_in:\n        reader = csv.reader(f_in); next(reader, None)\n        out = Path('headerRemoved') / csv_filename.name\n        with open(out, 'w', encoding='utf-8', newline='') as f_out:\n            csv.writer(f_out).writerows(reader)\nfor n in ('f0', 'empty'):\n    print(open('headerRemoved/%s.csv' % n, 'rb').read())\nsave('multi.csv', '\"Name\\r\\n(first)\",Age\\r\\nAlice,30\\r\\n')\nwith open('multi.csv', encoding='utf-8', newline='') as f:\n    reader = csv.reader(f)\n    print([row for row in reader if reader.line_num != 1])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Removing header from empty.csv...\nRemoving header from f0.csv...\nb'1,1\\r\\n1,2\\r\\n'\nb''\n[['Name\\r\\n(first)', 'Age'], ['Alice', '30']]",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "jsonBasicsCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# json.loads() and json.dumps(): the chapter's six types, indent, and a round trip.\njs = '{\"name\": \"Alice\", \"age\": 30, \"car\": null, \"ok\": true}'\ndata = json.loads(js)\nprint(data, type(data).__name__)\nprint(data['car'] is None, data['ok'] is True)\nprint(json.dumps(data) == js)\nprint(json.dumps(data, indent=2))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "{'name': 'Alice', 'age': 30, 'car': None, 'ok': True} dict\nTrue True\nTrue\n{\n  \"name\": \"Alice\",\n  \"age\": 30,\n  \"car\": null,\n  \"ok\": true\n}",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "jsonTypesCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# What JSON does to Python values on the way out and back.\nd = {'t': (1, 2), 1: 'a', None: 'c'}\ns = json.dumps(d); print(s)\nprint(json.loads(s))\nprint(json.dumps({'city': '\u0130stanbul'}))\nprint(json.dumps({'city': '\u0130stanbul'}, ensure_ascii=False))\nfor v in ({1, 2}, b'x', 1j, {(1, 2): 3}):\n    try: json.dumps(v)\n    except TypeError as e: print(type(e).__name__, e)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "{\"t\": [1, 2], \"1\": \"a\", \"null\": \"c\"}\n{'t': [1, 2], '1': 'a', 'null': 'c'}\n{\"city\": \"\\u0130stanbul\"}\n{\"city\": \"\u0130stanbul\"}\nTypeError Object of type set is not JSON serializable\nTypeError Object of type bytes is not JSON serializable\nTypeError Object of type complex is not JSON serializable\nTypeError keys must be str, int, float, bool or None, not tuple",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "jsonGapsCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# NaN, a file, a byte order mark, a long integer and the notes of Python 3.14.\nprint(json.dumps(float('nan')), json.loads('[Infinity]'))\nwith open('p.json', 'w', encoding='utf-8') as f:\n    json.dump({'city': '\u0130stanbul', 'n': [1, None, True]}, f,\n              ensure_ascii=False)\nprint(open('p.json', 'rb').read())\nprint(json.load(open('p.json', encoding='utf-8')))\nprint(json.loads(b'\\xef\\xbb\\xbf[1]'))\ntry: json.loads('\\ufeff[1]')\nexcept json.JSONDecodeError as e: print('str with a BOM:', e.msg)\ntry: json.loads('1' * 5000)\nexcept ValueError as e: print('long integer:', str(e)[:31])\ntry: json.dumps([0, {'a': {1}}])\nexcept TypeError as e:\n    for note in e.__notes__: print('note:', note)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "NaN [inf]\nb'{\"city\": \"\\xc4\\xb0stanbul\", \"n\": [1, null, true]}'\n{'city': '\u0130stanbul', 'n': [1, None, True]}\n[1]\nstr with a BOM: Unexpected UTF-8 BOM (decode using utf-8-sig)\nlong integer: Exceeds the limit (4300 digits)\nnote: when serializing dict item 'a'\nnote: when serializing list item 1",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "etReadCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# ElementTree reading: the root, its children, text, document order and find().\nimport xml.etree.ElementTree as ET\ndoc = ('<person><name>Alice Doe</name><age>30</age><car/>'\n       '<address><city>San Francisco</city></address>'\n       '<phone type=\"mobile\">415</phone>'\n       '<phone type=\"work\">123</phone></person>')\nroot = ET.fromstring(doc)\nprint(root.tag, [c.tag for c in root])\nprint(root[0].text, repr(root[2].text), repr(root.text))\nprint([e.tag for e in root.iter()])\nprint(root.find('address/city').text)\nprint([p.get('type') for p in root.findall('phone')])\nprint(root.find('phone[@type=\"work\"]').text, root.find('nothing'))\nage = root.find('age').text\nprint('age is a', type(age).__name__, '| converted:', int(age) + 1)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "person ['name', 'age', 'car', 'address', 'phone', 'phone']\nAlice Doe None None\n['person', 'name', 'age', 'car', 'address', 'city', 'phone', 'phone']\nSan Francisco\n['mobile', 'work']\n123 None\nage is a str | converted: 31",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "etTrapsCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# What the chapter's statements leave out: whitespace, the truth value, errors and iterparse.\nimport warnings, xml.etree.ElementTree as ET\na = ET.fromstring('<a>\\n  <b>x</b>\\n  <c><d/></c>\\n</a>')\nprint(repr(a.text), repr(a[0].tail), repr(a[1].text))\nwith warnings.catch_warnings(record=True) as w:\n    warnings.simplefilter('always'); print(bool(a[0]))\nprint([x.category.__name__ for x in w], a.find('zzz') is None)\nfor bad in ('<a><b></a>', '<a/><b/>', '<A></a>', '<a b=1/>'):\n    try: ET.fromstring(bad)\n    except ET.ParseError as e: print(bad, '->', e)\ndata = io.BytesIO(b'<r><i>x</i><i>y</i><i>z</i></r>')\nfor event, el in ET.iterparse(data, events=('end',)):\n    print(event, el.tag, el.text); el.clear()\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "'\\n  ' '\\n  ' None\nFalse\n['DeprecationWarning'] True\n<a><b></a> -> mismatched tag: line 1, column 8\n<a/><b/> -> junk after document element: line 1, column 4\n<A></a> -> mismatched tag: line 1, column 5\n<a b=1/> -> not well-formed (invalid token): line 1, column 5\nend i x\nend i y\nend i z\nend r None",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "etWriteCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# Writing: SubElement, set, tostring and its space, indent, and a prefix nobody declared.\nimport xml.etree.ElementTree as ET\np = ET.Element('p')\nc = ET.SubElement(p, 'car'); c.set('xsi:nil', 'true')\nET.SubElement(p, 'note').text = 'a < b & \"c\"'\nprint(ET.tostring(p)[:16])\nprint(ET.tostring(p, encoding='unicode'))\nET.indent(p); print(ET.tostring(p, encoding='unicode'))\ntry: ET.fromstring(ET.tostring(p, encoding='unicode'))\nexcept ET.ParseError as e: print('ParseError:', e)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "b'<p><car xsi:nil='\n<p><car xsi:nil=\"true\" /><note>a &lt; b &amp; \"c\"</note></p>\n<p>\n  <car xsi:nil=\"true\" />\n  <note>a &lt; b &amp; \"c\"</note>\n</p>\nParseError: unbound prefix: line 2, column 2",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "etNamespaceCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# Reading a namespaced attribute and a namespaced name.\nimport xml.etree.ElementTree as ET\nXSI = 'http://www.w3.org/2001/XMLSchema-instance'\nX = ('<person xmlns:xsi=\"%s\"><car xsi:nil=\"true\"/>'\n     '<boat xsi:nil=\"true\">full</boat></person>' % XSI)\nr = ET.fromstring(X)\nprint(repr(r[0].text), repr(r[1].text))\nprint(r[0].attrib)\nA = 'http://example.org/a'\nn = ET.fromstring('<a:r xmlns:a=\"%s\"><a:i>1</a:i><i>2</i></a:r>' % A)\nprint(n.tag, [c.tag for c in n])\nprint(n.find('{%s}i' % A).text, n.find('i').text)\nprint(n.find('a:i', {'a': A}).text)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "None 'full'\n{'{http://www.w3.org/2001/XMLSchema-instance}nil': 'true'}\n{http://example.org/a}r ['{http://example.org/a}i', 'i']\n1 2\n1",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "xmltodictCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# xmltodict: strings, one entry against many, attributes with @, and unparse.\nimport xmltodict\nX = ('<person><name>Alice Doe</name><age>30</age>'\n     '<phone type=\"mobile\">415</phone></person>')\nd = xmltodict.parse(X)\nprint(type(d['person']['age']).__name__, d['person']['phone'])\nprint(xmltodict.parse('<a><b>1</b></a>'))\nprint(xmltodict.parse('<a><b>1</b><b>2</b></a>'))\nprint(xmltodict.parse('<a><b>1</b></a>', force_list=('b',)))\nprint(xmltodict.unparse(d, pretty=True))\nback = xmltodict.parse(xmltodict.unparse(d))\nprint(back == d, xmltodict.parse('<a><b/></a>'))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "str {'@type': 'mobile', '#text': '415'}\n{'a': {'b': '1'}}\n{'a': {'b': ['1', '2']}}\n{'a': {'b': ['1']}}\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<person>\n\t<name>Alice Doe</name>\n\t<age>30</age>\n\t<phone type=\"mobile\">415</phone>\n</person>\nTrue {'a': {'b': None}}",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "securityCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, csv, json\nos.chdir(tempfile.mkdtemp())\nEXAMPLE = 'Name,Age,City\\r\\nAlice,30,\"San Francisco, CA\"\\r\\nBob,25,\"He said \"\"hi\"\"\"\\r\\nCarol,41,\"two\\r\\nlines\"\\r\\n'\ndef save(name, text, enc='utf-8'):\n    with open(name, 'w', encoding=enc, newline='') as f: f.write(text)\n# A billion laughs, an external entity, and defusedxml.\nimport xml.etree.ElementTree as ET\nimport defusedxml, defusedxml.ElementTree as DET\ndef ent(i):\n    return '<!ENTITY l%d \"%s\">' % (i, ('&l%d;' % (i - 1)) * 10)\nents = ''.join(ent(i) for i in range(1, 10))\nlaughs = '<!DOCTYPE d [<!ENTITY l0 \"lol\">' + ents + ']><d>&l9;</d>'\ntry: ET.fromstring(laughs)\nexcept ET.ParseError as e: print(len(laughs), 'bytes:', str(e)[:44])\ntry: DET.fromstring(laughs)\nexcept defusedxml.EntitiesForbidden as e: print(type(e).__name__)\next = ('<!DOCTYPE d [<!ENTITY x SYSTEM \"file:///etc/hostname\">]>'\n       '<d>&x;</d>')\ntry: ET.fromstring(ext)\nexcept ET.ParseError as e: print('external entity:', e)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "539 bytes: limit on input amplification factor (from DT\nEntitiesForbidden\nexternal entity: undefined entity &x;: line 1, column 59",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  }
+ },
+ "_charts": {
+  "formatSizes": {
+   "setup": "import json, xml.etree.ElementTree as ET\nA = {'name': 'Alice Doe', 'age': 30, 'car': None, 'programmer': True, 'address': {'street': '100 Larkin St.', 'city': 'San Francisco', 'zip': '94102'}, 'phone': [{'type': 'mobile', 'number': '415-555-7890'}, {'type': 'work', 'number': '415-555-1234'}]}\nNS = 'xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"'\nXS = '<person><name>Alice Doe</name><age>30</age><programmer>true</programmer><car xsi:nil=\"true\" ' + NS + '/><address><street>100 Larkin St.</street><city>San Francisco</city><zip>94102</zip></address><phone><phoneEntry><type>mobile</type><number>415-555-7890</number></phoneEntry><phoneEntry><type>work</type><number>415-555-1234</number></phoneEntry></phone></person>'\ndef sizes():\n    t = ET.fromstring(XS); ET.indent(t)\n    return [['JSON, compact', len(json.dumps(A))], ['JSON, indent=2', len(json.dumps(A, indent=2))],\n            ['XML, compact', len(XS)], ['XML, ET.indent()', len(ET.tostring(t, encoding='unicode'))]]\n",
+   "expr": "sizes()",
+   "labels": [
+    "JSON, compact",
+    "JSON, indent=2",
+    "XML, compact",
+    "XML, ET.indent()"
+   ],
+   "values": [
+    248.0,
+    326.0,
+    407.0,
+    496.0
+   ]
+  }
+ },
+ "_tables": {
+  "quotingConstants": {
+   "setup": "import csv, io\ndef line(q):\n    s = io.StringIO(newline=''); kw = {'escapechar': '\\\\'} if q == 'QUOTE_NONE' else {}\n    csv.writer(s, quoting=getattr(csv, q), **kw).writerow(['a b', 'c,d', 7, None, '']); return s.getvalue()\n",
+   "expr": "[['quoting=', 'the line written']] + [[q, repr(line(q))] for q in ('QUOTE_MINIMAL', 'QUOTE_ALL', 'QUOTE_NONNUMERIC', 'QUOTE_NONE', 'QUOTE_STRINGS', 'QUOTE_NOTNULL')]",
+   "rows": [
+    [
+     "quoting=",
+     "the line written"
+    ],
+    [
+     "QUOTE_MINIMAL",
+     "'a b,\"c,d\",7,,\\r\\n'"
+    ],
+    [
+     "QUOTE_ALL",
+     "'\"a b\",\"c,d\",\"7\",\"\",\"\"\\r\\n'"
+    ],
+    [
+     "QUOTE_NONNUMERIC",
+     "'\"a b\",\"c,d\",7,\"\",\"\"\\r\\n'"
+    ],
+    [
+     "QUOTE_NONE",
+     "'a b,c\\\\,d,7,,\\r\\n'"
+    ],
+    [
+     "QUOTE_STRINGS",
+     "'\"a b\",\"c,d\",7,,\"\"\\r\\n'"
+    ],
+    [
+     "QUOTE_NOTNULL",
+     "'\"a b\",\"c,d\",\"7\",,\"\"\\r\\n'"
+    ]
+   ]
+  },
+  "jsonRefusals": {
+   "setup": "import json\ndef msg(t):\n    try: json.loads(t); return 'accepted'\n    except json.JSONDecodeError as e: return '%s (column %d)' % (e.msg, e.colno)\n",
+   "expr": "[['text', 'json.loads says']] + [[repr(t), msg(t)] for t in ('[\"spam\", \"eggs\",]', \"{'a': 1}\", '{\"a\": 1} // c', '[None]', '[NaN]', '')]",
+   "rows": [
+    [
+     "text",
+     "json.loads says"
+    ],
+    [
+     "'[\"spam\", \"eggs\",]'",
+     "Illegal trailing comma before end of array (column 16)"
+    ],
+    [
+     "\"{'a': 1}\"",
+     "Expecting property name enclosed in double quotes (column 2)"
+    ],
+    [
+     "'{\"a\": 1} // c'",
+     "Extra data (column 10)"
+    ],
+    [
+     "'[None]'",
+     "Expecting value (column 2)"
+    ],
+    [
+     "'[NaN]'",
+     "accepted"
+    ],
+    [
+     "''",
+     "Expecting value (column 1)"
+    ]
+   ]
+  }
+ },
+ "_bare": {
+  "python": "3.14.6",
+  "packages": [],
+  "code": "for name in ('xmltodict', 'defusedxml', 'csv'):\n    try:\n        __import__(name); print(name, 'imported')\n    except ImportError as e:\n        print(type(e).__name__, '-', e)\n",
+  "transcript": "ModuleNotFoundError - No module named 'xmltodict'\nModuleNotFoundError - No module named 'defusedxml'\ncsv imported"
+ },
+ "_pins": {
+  "python": "3.14.6",
+  "packages": [
+   "et-xmlfile==2.0.0",
+   "openpyxl==3.1.5",
+   "xmltodict==0.13.0"
+  ],
+  "code": "import importlib.metadata as m, xmltodict\nsmall = ('<?xml version=\"1.0\"?><!DOCTYPE d [<!ENTITY a \"lol\"><!ENTITY b \"&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;\">]><d>&b;</d>')\nents = ''.join('<!ENTITY l%d \"%s\">' % (i, ('&l%d;' % (i - 1)) * 10) for i in range(1, 10))\nlaughs = '<!DOCTYPE d [<!ENTITY l0 \"lol\">' + ents + ']><d>&l9;</d>'\nprint('xmltodict', m.version('xmltodict'))\nfor name, doc in (('small entity', small), ('billion laughs', laughs)):\n    try:\n        print(name, 'parsed', xmltodict.parse(doc))\n    except Exception as e:\n        print(name, type(e).__name__, e)\n",
+  "transcript": "xmltodict 0.13.0\nsmall entity parsed {'d': None}\nbillion laughs parsed {'d': None}"
+ }
+}
