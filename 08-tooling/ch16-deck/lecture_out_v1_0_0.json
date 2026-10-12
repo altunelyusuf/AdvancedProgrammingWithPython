@@ -1,0 +1,189 @@
+{
+ "_version": "1.0.0",
+ "_deck": "1.0.0",
+ "_python": "3.14.6",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 16: SQLite Databases",
+   "say": "Chapters 14 and 15 worked on spreadsheets: a file that a program opens from its own disk, and a sheet that lives on Google's servers. Chapter 16 turns to the tool that replaces both when the data has to be searched, changed by several statements at once and kept consistent, a database, and to the one database that needs no server at all, SQLite. This deck follows the chapter in its own order: what a database table is and how it differs from a spreadsheet; how a program connects to a file and creates a table with types; the four operations of create, read, update and delete, with placeholders instead of pasted text; transactions that keep or undo a group of changes; the structure of tables, with foreign keys and joins; and copies, tools and the two practice programs. It adds what the chapter leaves out and what the research found when every printed output was run again: the foreign key of the chapter's second table cannot be enforced, the dump of the book's own database fails from Python 3.13, the number of data types is miscounted, a rowid can be handed out twice, and a database in memory is not the fast one. Everything printed on these slides was produced by Python 3.14.6, installed with uv, whose sqlite3 module links SQLite 3.53.1, and nothing needed a network except the two programs that fetch the book's database and check its hash.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "Today's route",
+   "say": "The route has seven parts. It starts with the idea of a database, what a program can do with SQLite, the beginning of SQLite and the way a table is a list of tuples with a hidden rowid, then the connection, the types, the schema and the values that go in, then the four operations with placeholders, the traps of a WHERE clause and the index, then transactions and the two writers of one file, then the rowid, the foreign key that works and the one in the book that cannot be enforced, then copies, the first practice program and the tools, ending with a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. Two of the slides are true stories and four more are told in the notes; the eight narrative diagrams of the chapter are drawn from the same specifications as the interactive page. Every output was printed by Python 3.14.6 with SQLite 3.53.1, the programs that read the book's database say so, and what could not be run is marked on its slide.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "The questions this chapter answers",
+   "say": "The first question is the chapter's spine, and it is a question about words. INSERT, UPDATE and DELETE change a database; SELECT only reads it; CREATE TABLE, ALTER TABLE and DROP TABLE change its structure. What decides whether a change is kept, undone or refused is the transaction: a statement that breaks a rule, such as a NOT NULL column or a STRICT type, is refused and leaves nothing behind, a group of statements is kept by commit() and undone by rollback(), and the module itself has two ways of deciding when a transaction begins. The second question is the watch-out of the deck. The chapter is sound in outline, but when its 131 interactive statements were replayed on the book's own database, 103 printed what the page prints, 27 differed and one was a placeholder; and several claims do not hold for the module or the library of today: the foreign key of the second table cannot be enforced, the dump of the shipped file fails from Python 3.13, the count of six data types lists five, and the index does not serve the chapter's own LIKE queries. Each slide says where a printed line differs and on what evidence. The chips give the size of the chapter as this deck covers it: six branches, the topics beneath them, the console rows and the programs that were run, the eight diagrams, and the Python and SQLite releases that printed every result.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "SQLite and what a program can do with it",
+   "say": "SQLite is not a server that a program talks to; it is a library that the program loads, and the database is one ordinary file. Because there is no server there are also no accounts to manage, and the console shows it: GRANT and CREATE USER are syntax errors. The same console shows how large such a file may grow. The default page is 4096 bytes and the default maximum is 4,294,967,294 pages, which is 17,592,186,036,224 bytes at that page size; at the largest page of 65,536 bytes the limit is 281,474,976,579,584 bytes, the 281 terabytes that SQLite's page on limits gives. The module is part of the Python standard library since release 2.5 of 19 September 2006, when the pysqlite wrapper was added under the name sqlite3. The library inside it belongs to the build, not to the language: the ten interpreters of the study, Python 3.11, 3.12, 3.13 and the seven releases 3.14.0 to 3.14.6, link SQLite 3.45.1, 3.50.4 or 3.53.1, and sqlite.org offered release 3.54.0 on 12 October 2026. SQLite is in the public domain, its authors describe it as the most widely deployed database engine, and it is tested with simulated power loss. The use-case diagram lists what a program can do with one database through the module: insert rows, read them with a query, update and delete them, alter and drop tables, join tables through a foreign key, and back a database up or dump it as text. The rest of the deck takes these in the order of the chapter.",
+   "concept": "SqliteVersusServers",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "SQLite began in 2000 on a Navy program",
+   "say": "Wikipedia's history of SQLite says D. Richard Hipp designed it in the spring of 2000 while he worked for General Dynamics on a contract with the United States Navy. He was writing software for the damage-control system aboard guided-missile destroyers, a system that first used HP-UX with an Informix database as its back end. The article dates the first release of SQLite to 17 August 2000 and calls the software public domain. A database that is one file with no server to start, and no user accounts to grant, is the SQLite that chapter 16 opens with Python. The account rests on these sources. Wikipedia, 'SQLite' (History: designed in the spring of 2000 by D. Richard Hipp at General Dynamics for the US Navy; initial release 2000-08-17; public domain), read 2026-10-12; sqlite.org/about.html and sqlite.org/serverless.html. Two of the facts on the slide were also read on SQLite's own pages: that the code is in the public domain, and that a database is a single file read and written through a library.",
+   "concept": "SingleFileServerless",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "Rows are tuples, and every row has a rowid",
+   "say": "The chapter sets a table against a spreadsheet: a row is a record, a column has a name and a type, and SQLite adds a column of its own, the rowid, a whole number that identifies the row. The console builds the chapter's cats table with the keyword STRICT, which the next slides explain, stores two cats and reads them back. What comes back is a list, and each item of the list is a tuple, the first being ('Zophie', '2021-01-24', 'black', 5.6); that is the chapter's picture of a table as a list of tuples, and it holds. The rowid is hidden: SELECT * lists the four columns, SELECT rowid, * puts the rowid first, and rowid, oid and _rowid_ are three names for the same value. The helper do() runs a statement that returns no rows and prints nothing, and run() returns the rows of a statement, so the console prints only what matters; run it in any Python, because it uses a database in memory and the standard library alone. The chapter claims the rowid does not change when other rows are deleted, which is true of the rows that stay but not of the number itself; slide 19 shows when it is handed out again. The chapter's opening question, the cats between 3 and 5 kilograms born before October 2023, was also run on the book's database: the query and a Python loop over all 100 rows returned the same six cats.",
+   "concept": "TableIsTupleList",
+   "visual": ""
+  },
+  {
+   "n": 7,
+   "title": "From connect() to rows, and a closed file",
+   "say": "This is the chapter's own sequence of steps, drawn as a workflow: connect to a database file, create the table if it does not exist, insert the rows, commit if the statement changed the data, read the rows with fetchall, and close the connection. The console runs the ends of it on a database in memory. A connection starts outside a transaction, SELECT sqlite_version() returns the library's release, 3.53.1 here, and after close() any statement raises ProgrammingError: Cannot operate on a closed database. A few more facts come from the study. connect() creates the file at once but writes nothing: a new example.db was 0 bytes after connect and after a SELECT, and 8,192 bytes after the first CREATE TABLE. A text file connects without an error and fails at the first statement with file is not a database. A with block commits or rolls back but does not close the connection; closing() from contextlib does, and a connection that is simply dropped raises a ResourceWarning. The chapter says a database in memory is much faster than one in a file, and the card gives the measurement behind the correction. The numbers are one run on one machine on 12 October 2026 and vary with the machine, and what they show is that speed is decided by the commit, not by the place. Each connect(':memory:') is a separate database, so two connections to memory do not see each other's tables. The story of the module is short: Python 2.5, released on 19 September 2006, added the pysqlite wrapper to the standard library as sqlite3, which is why a program can open a database with no installation.",
+   "concept": "ConnectCreatesFile",
+   "visual": ""
+  },
+  {
+   "n": 8,
+   "title": "STRICT, affinity and the six that are five",
+   "say": "The program makes two tables with an INTEGER column, one STRICT and one ordinary, and tries to insert five values into each: the text 'Hello', the real 3.5, the text '42', the real 42.0 and NULL. In the STRICT table 'Hello' and 3.5 are refused with IntegrityError, cannot store TEXT value in INTEGER column s.i, and cannot store REAL value in INTEGER column; '42' is converted to the integer 42, 42.0 is stored as 42, and NULL is stored. In the ordinary table all five go in, because the declared type is only an affinity, a preference: '42' became the integer 42, 42.0 became 42, but 'Hello' stayed text and 3.5 stayed real, which typeof() shows. The last statement tries a column of type BOOLEAN in a STRICT table and gets OperationalError, unknown datatype for bad.a. The chapter's own count is off by one: it says that SQLite has six data types and lists five, and the five it lists are the storage classes NULL, INTEGER, REAL, TEXT and BLOB. A STRICT table accepts the six type words INT, INTEGER, REAL, TEXT, BLOB and ANY, and the names the chapter's lists use, such as BOOLEAN, DATE, VARCHAR, NUMERIC and FLOAT, are refused in a STRICT table and only have an affinity in an ordinary one. The chapter's claim that STRICT came with a SQLite version used by Python 3.11 and later is right: the release log of SQLite 3.37.0 is dated 27 November 2021, and Python 3.11 was run with SQLite 3.45.1. The release log opens with STRICT tables as a prescriptive style of data type management for developers who prefer that kind of thing.",
+   "concept": "StrictMode",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "Reading the schema",
+   "say": "The first listing of the chapter runs from top to bottom without a surprise, and the transcript is what it printed. connect() with isolation_level=None opens the file example.db, which the chapter treats as autocommit; CREATE TABLE IF NOT EXISTS makes the STRICT table of cats; the query on sqlite_schema, where the type is a table, lists [('cats',)]; PRAGMA table_info(cats) returns one tuple for each column with the fields cid, name, type, notnull, dflt_value and pk, so the name column shows notnull 1; and the second CREATE TABLE IF NOT EXISTS, with a different column list, does nothing, because the table exists, so the stored SQL is still the first one. Without the words IF NOT EXISTS the same statement raises OperationalError, table cats already exists, for cats and for CATS alike, because table names are not case-sensitive. sqlite_schema lists tables, indexes and views in the order they were created, and sqlite_master returned the same rows under the name that older programs use. The default value of a text column comes back as SQL text with its quotes, so a default of x is shown as 'x'. Finally the program asks whether the file has a size above zero, which is True because the CREATE TABLE has written the first pages; the study measured 8,192 bytes, two pages of 4,096 bytes, and the file was the only file left in the directory after the connection closed.",
+   "concept": "SchemaTable",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "Python values and the five storage classes",
+   "say": "The table is computed, not typed: for each Python value the program stores it in a column with no type, asks typeof() for the storage class SQLite chose and reads the value back to see which Python type returns. None becomes null and comes back as None, an int becomes integer, a float real, a str text and bytes a blob; True is stored as the integer 1 and comes back as an int, because SQLite has no boolean. The module binds exactly these five Python types and the boolean; a value of any other type is refused. The console shows two of the refusals: an int of 2 to the power 63 is too large for the 64 bits of an INTEGER and raises OverflowError, Python int too large to convert to SQLite INTEGER, and a list raises ProgrammingError, because the module cannot bind it. Dates have no type either. They are stored as text, as a real number or as an integer and read by the date functions, and the functions are forgiving in odd ways: date('31/10/2035') returns None, but date('2035-02-30') returns the invented date 2035-03-02. Python's default adapter for datetime.date objects is deprecated since Python 3.12 and warns under every interpreter from 3.12, so a program should write the text of the date itself. TRUE and FALSE are accepted in SQL and are 1 and 0.",
+   "concept": "PythonValueMapping",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "Create, read, update and delete",
+   "say": "Before this excerpt the program builds the cats table in memory and inserts four cats with executemany, one call for four rows. The excerpt then shows each operation with its answer. SELECT with ORDER BY and LIMIT 2 returns the two heaviest cats as (rowid, name); UPDATE with a question mark placeholder adds 0.1 to every black cat, and cur.rowcount is 2; DELETE ... WHERE name = ? RETURNING rowid, name deletes Jacob and hands back [(3, 'Jacob')] in one call; an INSERT of a name alone stores NULL in the other columns and lastrowid is 5; a SELECT with LIKE and ORDER BY lists the names with an o; and the last line aggregates: 4 rows, 3 with a fur, an average weight of 6.27. Look at the long number in the transcript: Toby's weight is shown as 6.8999999999999995 and Zophie's as 5.699999999999999, because 0.1 cannot be written exactly in binary floating point and SQLite's REAL is a double, so a program should round what it shows. The study also found how rowcount behaves: an UPDATE by rowid changed one row, the same UPDATE by name changed two cats named Zophie, UPDATE with a true condition changed all rows, DELETE with no condition removed every row and left the empty table in place. executemany is not all or nothing: when the second row of a second batch broke NOT NULL, the row before it stayed.",
+   "concept": "UpdateDeleteWhere",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "A placeholder keeps a value as data",
+   "say": "A query with a question mark is an exchange in a fixed order. The program calls execute() with the statement and, as a separate tuple, the value; the module sends the statement and binds the value as data; SQLite returns the rows that match the whole value, and the module hands back a cursor. The console runs the attack. The text x' OR '1'='1 pasted into the query with an f-string closes the quote early and adds a condition that is always true, so every row comes back (both rows here, all four in the program of the next slide); the same text bound as a parameter is compared as one name and matches none. The third statement is the comic's attack: execute() refuses a second statement after a semicolon with ProgrammingError, You can only execute one statement at a time, so the table survives; executescript() runs several statements and would not refuse. OWASP and MITRE name the weakness, CWE-89, and recommend parameterised queries. The chapter's example is sound and, if anything, understated: the strangers whose text reaches a query include a file, a form or a spreadsheet read by an earlier chapter. A placeholder can stand for a value only, never for a table or column name. Named placeholders use a colon and a dictionary, and the errors are specific: a list given for :fur raises ProgrammingError, because a named parameter needs a mapping, and a dictionary without the key says You did not supply a value for binding parameter. A bare string such as 'black' is read as a sequence of five values.",
+   "concept": "SqlInjection",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "Little Bobby Tables, 2007",
+   "say": "xkcd number 327, 'Exploits of a Mom', was published on 10 October 2007. In it a school phones a mother about her son, whose name was written as text that closes a statement and drops the table of student records. The mother ends by hoping the school has learned to sanitize its database inputs. Chapter 16 answers the comic with the ? placeholder, and this study ran the attack: pasted into an f-string the text changed the query, bound as a parameter it matched nothing. The account rests on these sources. xkcd.com/327/ and xkcd.com/327/info.0.json (number 327, 2007-10-10, 'Exploits of a Mom', read 2026-10-12); this study's leaf SqlInjection. The transcript is the whole run of the chapter's injection program: four rows with the f-string, none with the placeholder, the refusal of the second statement, the table intact, and the three binding errors.",
+   "concept": "QmarkPlaceholders",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "NULL, double quotes, LIKE and GLOB",
+   "say": "The chapter filters with WHERE, and four details decide whether the filter does what the author means. NULL is not equal to anything, including NULL: fur = NULL matches no row, fur != 'black' skips the cat with no fur, because comparing NULL with anything gives NULL, which is not true, and IS NULL finds it; count(*) counts four rows where count(fur) counts three. The chapter writes its text in double quotes, as in WHERE name LIKE \"Ja%\", and that works only because SQLite accepts a double-quoted word that matches no column as a string. The study showed the other face of it: fur = \"fur\" compared the column with itself and matched every row with a fur, and the compile options of the build list no setting for it, so the legacy behaviour is on; SQLite's page on quirks lists double-quoted string literals among its gotchas, and the compile-time options call it a misfeature that SQLITE_DQS=0 disables. Use single quotes for text. Finally LIKE is case-insensitive for ASCII characters only by default, so 'a' LIKE 'A' is 1 but '\u00c9' LIKE '\u00e9' is 0, while GLOB is case-sensitive and uses * and ?. SQLite also accepts both = and == and both <> and !=, and BETWEEN is inclusive.",
+   "concept": "NullComparison",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "An index serves some searches, not all",
+   "say": "The program builds a table of 1,000 cats, creates an index on the name and asks EXPLAIN QUERY PLAN for six searches. The plan says SEARCH ... USING INDEX idx_name for name = 'Cat0042', for name GLOB 'Cat00*' and for the range name >= 'Cat00' AND name < 'Cat01', and SCAN cats, a read of every row, for name LIKE 'Cat00%', for name LIKE '%42' and for fur = 'black', which has no index. LIKE does not use the index because the default index uses the BINARY collation and LIKE is case-insensitive, so the chapter's own LIKE queries would not use the index it builds; a leading wildcard could not use any ordinary index anyway. The last line counts the 100 names LIKE finds. An index is not free, and the chart shows the first price: the same 10,000 rows take 216 KiB in 54 pages of 4,096 bytes, 380 KiB with an index on the name and 512 KiB with a second index, each number computed again when the deck is checked. The card gives the other prices, in time, from the research record: a search by indexed name on 300,000 rows took 0.0033 ms against 10.27 ms for a scan, and 300,000 inserts took 4.7 times as long with two indexes. These are single runs on one machine and are not repeated by any check of the deck; the query plans and the sizes are.",
+   "concept": "LikeAndIndex",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "Begin, then commit or roll back",
+   "say": "The workflow is the chapter's section on rolling back transactions. BEGIN starts a transaction, the statements change the data, and one choice ends it: if every statement succeeded, commit() keeps the changes, and otherwise rollback() undoes them. The console runs it with isolation_level=None, the chapter's switch for autocommit, so nothing is inside a transaction until BEGIN. After BEGIN and one INSERT, in_transaction is True; rollback() leaves count(*) at 0; a second BEGIN with an INSERT and commit() keeps one row; and one INSERT of three rows, the last with NULL in a NOT NULL column, is refused as a whole, with IntegrityError, and the count is still 1, because a single statement is atomic. The study also found that DDL is part of a transaction: a CREATE TABLE and a DROP TABLE inside BEGIN were undone by rollback(), and a rollback() after a lone INSERT in this mode undid nothing, because the INSERT had already been committed. The ACID properties, atomicity, consistency, isolation and durability, were named by Theo Haerder and Andreas Reuter in their 1983 paper, Principles of Transaction-Oriented Database Recovery, in ACM Computing Surveys, building on earlier work of researchers including Jim Gray. SQLite's own pages describe it as transactional and test it with simulated power loss. In the study an open transaction was invisible to a second connection until commit(), and a committed row survived closing and reopening while an uncommitted one did not. Another feature is that executescript() commits any pending transaction first.",
+   "concept": "BeginCommitRollback",
+   "visual": ""
+  },
+  {
+   "n": 17,
+   "title": "Three ways to begin a transaction",
+   "say": "The module has two models of transaction control, and the transcript shows both. The first three lines come from a loop that opens a connection three times, with the default mode, with autocommit=False and with autocommit=True, creates a table, commits, inserts a row and calls rollback(). In the default mode, the legacy one, in_transaction is True after the INSERT but would stay False after a CREATE TABLE, and rollback() removes the row; with autocommit=False the module opens a transaction itself, rollback() removes the row and a new transaction opens at once; with autocommit=True the INSERT is committed immediately, in_transaction is False and rollback() leaves the row. The autocommit attribute exists from Python 3.12 on, it was absent on 3.11.17 and the 3.14 documentation calls autocommit=False the recommended value, so the chapter's isolation_level=None is the older switch. The excerpt then shows the context manager: a with block commits when it ends and rolls back when it raises, so the block that inserted 1 and then NULL left no rows, the transcript says NOT NULL constraint failed: t.a and rows after the failed block: 0. Finally one statement that inserts three rows, the last with NULL, is atomic and leaves none. In autocommit=False mode, execute('BEGIN') fails with cannot start a transaction within a transaction, because the module has opened one.",
+   "concept": "AutocommitAttribute",
+   "visual": ""
+  },
+  {
+   "n": 18,
+   "title": "Two writers, one file",
+   "say": "The chapter warns that SQLite is not the right choice for hundreds or thousands of simultaneous write operations, and the program tries the smallest case of it. Two connections open the same file with timeout 0. The first runs BEGIN IMMEDIATE and an INSERT and holds the write lock; the second asks to write at the same time and is answered with OperationalError, database is locked; in the default journal mode, delete, a reader sees 0 rows; the first commits and releases the lock. Then PRAGMA journal_mode = WAL switches the database to write-ahead logging, the first connection opens a write again and the second reads the committed count, 1, without being blocked; after the commit it reads 2. The directory then holds shared.db, shared.db-shm and shared.db-wal, and after both connections close only shared.db remains. The module's default busy timeout is 5 seconds, so a writer waits for the lock rather than failing at once, and only a writer that waits longer gets the error. The research tried the chapter's warning with 100 and then 1,000 operating-system processes that each inserted 5 rows into one file: nothing was lost, and the cost showed in time, so the limit is throughput and not correctness. Both numbers on the slide are one run on one machine on 12 October 2026 and vary with the machine.",
+   "concept": "WriterLocked",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "The rowid is not a promise",
+   "say": "The chapter says that the rowid does not change when other rows are deleted, and the state diagram follows one rowid to show where the sentence is too strong. A row is inserted and receives the next rowid. If the row is deleted and it was the one with the largest rowid, the next insert receives that same number again, 4 and then 5 on the table with AUTOINCREMENT in the transcript, where a plain table gave 4 twice. A table with no INTEGER PRIMARY KEY can have its rowids renumbered by VACUUM: after deleting rows 1 and 2 of four, the rows (3, 'c') and (4, 'e') became (1, 'c') and (2, 'e'). A column declared INTEGER PRIMARY KEY is an alias for the rowid and keeps its values through VACUUM, and with AUTOINCREMENT a deleted number is never handed out again, which costs the table sqlite_sequence, the only name beginning with sqlite_ in the last line of the transcript. Why this matters comes two slides on: the chapter's foreign key points at the rowid, the very number VACUUM may change. The first row and the transitions all come from the chapter's paragraph on the rowid and from SQLite's pages on rowid tables, VACUUM and AUTOINCREMENT, which the research read and ran.",
+   "concept": "RowidReuse",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "A foreign key that works, and a join",
+   "say": "This is the second practice program of the chapter, the meal ingredients database, made so that it works. The book specifies a table of meals with a name and a foreign key REFERENCES meals (rowid); as printed, the first INSERT into ingredients fails with foreign key mismatch, so the program here gives the parent table an id INTEGER PRIMARY KEY and references meals (id), and switches enforcement on with PRAGMA foreign_keys = ON, which is off by default and per connection. The first excerpt is the two CREATE TABLE statements, the second the checks: the join returns ('Pancakes', 'flour, milk, egg', 600.0) and ('Omelette', 'egg, butter', 170.0); an ingredient for meal 99 is refused with FOREIGN KEY constraint failed; PRAGMA foreign_key_check lists no orphans; and the meals that have no butter are [('Pancakes',)]. The program shown is the deck's copy of the corpus program with its SQL cut into pieces that fit a slide, and a check of the build requires that it print exactly what the corpus original prints. The idea behind the two tables is old. In June 1970 Edgar F. Codd, a mathematician at IBM's San Jose Research Lab, published A Relational Model of Data for Large Shared Data Banks in Communications of the ACM, volume 13, number 6; IBM's history page tells how, before it, getting data out of the large information systems of the 1960s took specialists who often wrote whole programs to reach one fact. A table for each kind of fact, linked by a number and read back with a join, is the relational model in a few lines.",
+   "concept": "ForeignKeyEnforcement",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "The book's foreign key cannot be enforced",
+   "say": "The shipped database holds the cats table without a primary key and the vaccinations table with FOREIGN KEY(cat_id) REFERENCES cats(rowid), and that declaration cannot be enforced. SQLite's page on foreign keys requires the parent key to be the primary key or a column with a UNIQUE index, and rowid is neither unless it is an alias, so with PRAGMA foreign_keys = ON every INSERT into vaccinations fails with OperationalError, foreign key mismatch - 'vaccinations' referencing 'cats', exactly as the transcript shows; it is off by default, which is why the book's examples seem to work. The identical result came from Python 3.14.0 to 3.14.6, 3.13 and 3.12, and from SQLite 3.45.1, 3.50.4 and 3.53.1. A table rebuilt with id INTEGER PRIMARY KEY and REFERENCES cats(id) enforced the constraint and reported the orphan with PRAGMA foreign_key_check. The chapter's join works because a join does not need the constraint. The second finding follows from the first: Connection.iterdump() runs PRAGMA foreign_key_check first from Python 3.13, so on this file it raises the same OperationalError, while Python 3.12 and 3.11 return 395 lines of the same file. The file is the one the program fetches from the online materials of the third edition, 24,576 bytes with 4,096-byte pages, passing integrity_check, with 100 cats and 291 vaccinations; the zip also ships it a second time as sweigartcats-original.db, byte for byte equal. The deck's program is the corpus program with its long printed line cut in two.",
+   "concept": "ForeignKeyMismatch",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "Copy a database: backup() or iterdump()",
+   "say": "The workflow has one real choice: is the copy to be a database or a text of SQL statements? A database copy is made with backup(), which copies the pages of one connection into another, and the program saves a database held in memory to the file copy.db, which then holds both rows in 8,192 bytes; backing up a connection onto itself raises ValueError, target cannot be the same connection instance. A text copy is made with iterdump(), which yields the statements of a database one at a time, and the transcript lists them: BEGIN TRANSACTION, the CREATE TABLE, one INSERT for each row, with the table name in double quotes, and COMMIT. Running them with executescript in an empty database rebuilt identical rows, and filter='cats' leaves out the index line. In the study backup() with pages=1 called its progress function several times and ended with status 101, SQLITE_DONE. The decision on the second branch is the finding of the research: on the book's own file iterdump() raises OperationalError, foreign key mismatch, from Python 3.13, because it runs PRAGMA foreign_key_check first, so the repair is to give the cats table a real key and dump again. The sqlite3 shell of release 3.54.0 has its own .dump command; the study ran it on a script and its dump began with PRAGMA foreign_keys=OFF.",
+   "concept": "DumpShippedFails",
+   "visual": ""
+  },
+  {
+   "n": 23,
+   "title": "The first practice program, and the tools",
+   "say": "The first practice program of the chapter walks the book's own database and looks for the planted errors. The query joins vaccinations to cats and finds three vaccinations dated before the cat was born: Ruby, Java and Rocket, each with FVRCP and a date from 2001 to 2004 against a birth in 2013 to 2023. A second query, with a LEFT JOIN and a count of distinct vaccines, finds seven cats that lack at least one of the three vaccines, rabies, FeLV and FVRCP: Molly, Sage, Hugh, Chester, Snowflake, Luke and Muffin, none lacking all three. There are 97 vaccinations of each vaccine, no orphan rows, and two cats named Tiger, so the name cannot identify a cat. The program is the deck's copy of the corpus program, with the long queries cut and one result printed per line. The tools were checked in part. The sqlite3 shell of release 3.54.0 was downloaded from sqlite.org, its SHA3-256 checked against the download page, and run on a script and in a terminal, where it prints a boxed table and the prompt SQLite-3.54 example.db-> where the book shows the list mode. python -m sqlite3 is a second shell inside Python. The page of SQLiteStudio now answers with a redirect to a page titled Letos, and DB Browser for SQLite and DBeaver Community answered 200. The three applications were not installed, and the installers and sudo apt install sqlite3 were not run, so nothing on this slide is claimed about how they behave.",
+   "concept": "VaccinationChecker",
+   "visual": ""
+  },
+  {
+   "n": 24,
+   "title": "The chapter in one map",
+   "say": "These six branches are the route of the deck. The idea of a database comes first: a table is like a spreadsheet with a rowid, SQLite is one file with no server, and a query replaces a loop over a list. Connection and schema follow: connect() opens or creates the file, a STRICT table checks the types and the schema is read from sqlite_schema. CRUD operations are the largest branch: insert, update and delete change the rows, a placeholder keeps a value as data and an index speeds up a search. Transactions keep or undo changes, and a failed statement changes nothing; write-ahead logging helps several writers. Table structure covers alter and drop, the foreign key that links two tables and the join that reads them together. The last branch is copies, tools and practice: backup() and iterdump() copy a database, the sqlite3 shell and three graphical applications, and two practice programs use the shipped file. Together they answer the first question of the chapter, which statements change the database and what keeps the change, and the slides that say where a printed line differs answer the second.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 25,
+   "title": "Where to go from here",
+   "say": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every listing of the chapter, the Python documentation describes the sqlite3 module of release 3.14, and Practical SQL by Anthony DeBarros is the book the chapter points to for further SQL. The reference links are SQLite's own pages for the topics where the deck corrected the chapter: STRICT tables, foreign keys, transactions and write-ahead logging; the rest of the sixty-odd sources of the research, among them the pages on rowid tables, on VACUUM, on the query optimizer and on locking, are in the research package. The history links are the sources behind the six stories of the chapter. Two of them are slides, the beginning of SQLite and Little Bobby Tables; the other four were told in the notes: Codd's paper of 1970 on the slide of the meal ingredients, the arrival of sqlite3 in Python 2.5 on the slide of the connection, the strict mode of SQLite 3.37.0 on the slide of the types, and the name ACID of 1983 on the slide of the transaction.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 26,
+   "title": "What you should now be able to say",
+   "say": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The console rows use only the standard library and a database in memory, so they can be typed into any Python, including one in a browser; the programs that build their own database need nothing else, and the two that read the book's file fetch it and check its hash first. The rows were run again under Python 3.14.6 with SQLite 3.53.1 each time the deck was built, and the programs were run again by the check that compares the slides with the recording. The next chapter of the book works with PDF and Word documents, where a program reads and writes files that other people made, and what this chapter taught about rows, types, keys and the cost of every commit carries over to any data that has to be kept in one place and kept correct.",
+   "concept": "",
+   "visual": ""
+  }
+ ]
+}

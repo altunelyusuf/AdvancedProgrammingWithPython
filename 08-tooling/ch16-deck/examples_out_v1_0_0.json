@@ -1,0 +1,496 @@
+{
+ "_version": "1.0.0",
+ "_python": "3.14.6",
+ "title": [
+  [
+   "import platform, sqlite3",
+   ""
+  ],
+  [
+   "platform.python_version()",
+   "'3.14.6'"
+  ],
+  [
+   "sqlite3.sqlite_version",
+   "'3.53.1'"
+  ]
+ ],
+ "table": [
+  [
+   "import sqlite3",
+   ""
+  ],
+  [
+   "conn = sqlite3.connect(':memory:', isolation_level=None)",
+   ""
+  ],
+  [
+   "do = lambda sql: conn.execute(sql).close()",
+   ""
+  ],
+  [
+   "run = lambda sql: conn.execute(sql).fetchall()",
+   ""
+  ],
+  [
+   "do('CREATE TABLE cats (name TEXT NOT NULL, birthdate TEXT, fur TEXT, weight_kg REAL) STRICT')",
+   ""
+  ],
+  [
+   "do(\"INSERT INTO cats VALUES ('Zophie', '2021-01-24', 'black', 5.6)\")",
+   ""
+  ],
+  [
+   "do(\"INSERT INTO cats VALUES ('Miguel', '2016-12-24', 'siamese', 6.2)\")",
+   ""
+  ],
+  [
+   "run('SELECT * FROM cats')",
+   "[('Zophie', '2021-01-24', 'black', 5.6), ('Miguel', '2016-12-24', 'siamese', 6.2)]"
+  ],
+  [
+   "run('SELECT rowid, * FROM cats')",
+   "[(1, 'Zophie', '2021-01-24', 'black', 5.6), (2, 'Miguel', '2016-12-24', 'siamese', 6.2)]"
+  ],
+  [
+   "run('SELECT rowid, oid, _rowid_ FROM cats LIMIT 1')",
+   "[(1, 1, 1)]"
+  ]
+ ],
+ "noserver": [
+  [
+   "import sqlite3",
+   ""
+  ],
+  [
+   "conn = sqlite3.connect(':memory:')",
+   ""
+  ],
+  [
+   "conn.execute('GRANT SELECT ON cats TO bob')",
+   "OperationalError: near \"GRANT\": syntax error"
+  ],
+  [
+   "conn.execute('CREATE USER bob')",
+   "OperationalError: near \"USER\": syntax error"
+  ],
+  [
+   "conn.execute('PRAGMA max_page_count').fetchone()",
+   "(4294967294,)"
+  ],
+  [
+   "4096 * 4294967294",
+   "17592186036224"
+  ]
+ ],
+ "connect": [
+  [
+   "import sqlite3",
+   ""
+  ],
+  [
+   "conn = sqlite3.connect(':memory:')",
+   ""
+  ],
+  [
+   "conn.in_transaction",
+   "False"
+  ],
+  [
+   "conn.execute('SELECT sqlite_version()').fetchone()",
+   "('3.53.1',)"
+  ],
+  [
+   "conn.close()",
+   ""
+  ],
+  [
+   "conn.execute('SELECT 1')",
+   "ProgrammingError: Cannot operate on a closed database."
+  ]
+ ],
+ "values": [
+  [
+   "import sqlite3",
+   ""
+  ],
+  [
+   "conn = sqlite3.connect(':memory:')",
+   ""
+  ],
+  [
+   "run = lambda sql, *args: conn.execute(sql, args).fetchall()",
+   ""
+  ],
+  [
+   "run(\"SELECT date('2035-02-30'), date('31/10/2035')\")",
+   "[('2035-03-02', None)]"
+  ],
+  [
+   "run('SELECT TRUE, FALSE')",
+   "[(1, 0)]"
+  ],
+  [
+   "run('SELECT ?', 2 ** 63)",
+   "OverflowError: Python int too large to convert to SQLite INTEGER"
+  ],
+  [
+   "run('SELECT ?', [1])",
+   "ProgrammingError: Error binding parameter 1: type 'list' is not supported"
+  ]
+ ],
+ "inject": [
+  [
+   "import sqlite3",
+   ""
+  ],
+  [
+   "conn = sqlite3.connect(':memory:')",
+   ""
+  ],
+  [
+   "run = lambda sql, *args: conn.execute(sql, args).fetchall()",
+   ""
+  ],
+  [
+   "run('CREATE TABLE cats (name TEXT)')",
+   "[]"
+  ],
+  [
+   "run(\"INSERT INTO cats VALUES ('Zophie'), ('Toby')\")",
+   "[]"
+  ],
+  [
+   "attack = \"x' OR '1'='1\"",
+   ""
+  ],
+  [
+   "len(run(f\"SELECT * FROM cats WHERE name = '{attack}'\"))",
+   "2"
+  ],
+  [
+   "len(run('SELECT * FROM cats WHERE name = ?', attack))",
+   "0"
+  ],
+  [
+   "run('SELECT 1; DROP TABLE cats')",
+   "ProgrammingError: You can only execute one statement at a time."
+  ]
+ ],
+ "nulls": [
+  [
+   "import sqlite3",
+   ""
+  ],
+  [
+   "conn = sqlite3.connect(':memory:')",
+   ""
+  ],
+  [
+   "do = lambda sql: conn.execute(sql).close()",
+   ""
+  ],
+  [
+   "run = lambda sql: conn.execute(sql).fetchall()",
+   ""
+  ],
+  [
+   "do('CREATE TABLE c (name TEXT, fur TEXT)')",
+   ""
+  ],
+  [
+   "do(\"INSERT INTO c VALUES ('Zophie', 'black'), ('Toby', 'black')\")",
+   ""
+  ],
+  [
+   "do(\"INSERT INTO c VALUES ('Jacob', 'orange'), ('Mandy', NULL)\")",
+   ""
+  ],
+  [
+   "run('SELECT name FROM c WHERE fur = NULL')",
+   "[]"
+  ],
+  [
+   "run(\"SELECT name FROM c WHERE fur != 'black'\")",
+   "[('Jacob',)]"
+  ],
+  [
+   "run('SELECT name FROM c WHERE fur IS NULL')",
+   "[('Mandy',)]"
+  ],
+  [
+   "run('SELECT count(*), count(fur) FROM c')",
+   "[(4, 3)]"
+  ],
+  [
+   "run('SELECT name FROM c WHERE fur = \"fur\"')",
+   "[('Zophie',), ('Toby',), ('Jacob',)]"
+  ],
+  [
+   "run(\"SELECT 'a' LIKE 'A', 'a' GLOB 'A', '\u00c9' LIKE '\u00e9'\")",
+   "[(1, 0, 0)]"
+  ]
+ ],
+ "txn": [
+  [
+   "import sqlite3",
+   ""
+  ],
+  [
+   "conn = sqlite3.connect(':memory:', isolation_level=None)",
+   ""
+  ],
+  [
+   "do = lambda sql: conn.execute(sql).close()",
+   ""
+  ],
+  [
+   "run = lambda sql: conn.execute(sql).fetchall()",
+   ""
+  ],
+  [
+   "do('CREATE TABLE t (a INTEGER NOT NULL)')",
+   ""
+  ],
+  [
+   "do('BEGIN')",
+   ""
+  ],
+  [
+   "do('INSERT INTO t VALUES (1)')",
+   ""
+  ],
+  [
+   "conn.in_transaction",
+   "True"
+  ],
+  [
+   "conn.rollback()",
+   ""
+  ],
+  [
+   "run('SELECT count(*) FROM t')",
+   "[(0,)]"
+  ],
+  [
+   "do('BEGIN')",
+   ""
+  ],
+  [
+   "do('INSERT INTO t VALUES (2)')",
+   ""
+  ],
+  [
+   "conn.commit()",
+   ""
+  ],
+  [
+   "run('SELECT count(*) FROM t')",
+   "[(1,)]"
+  ],
+  [
+   "do('INSERT INTO t VALUES (3), (4), (NULL)')",
+   "IntegrityError: NOT NULL constraint failed: t.a"
+  ],
+  [
+   "run('SELECT count(*) FROM t')",
+   "[(1,)]"
+  ]
+ ],
+ "_programs": {
+  "firstSession_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\n# The chapter's first session: connect, create a STRICT table, list the tables and the columns.\nconn = sqlite3.connect('example.db', isolation_level=None)\nconn.execute('CREATE TABLE IF NOT EXISTS cats (name TEXT NOT NULL, birthdate TEXT, fur TEXT, weight_kg REAL) STRICT')\nprint(conn.execute(\"SELECT name FROM sqlite_schema WHERE type = 'table'\").fetchall())\nfor row in conn.execute('PRAGMA table_info(cats)'):\n    print(row)\nconn.execute('CREATE TABLE IF NOT EXISTS cats (name TEXT)')   # the second statement does nothing: the table exists\nprint(conn.execute('SELECT sql FROM sqlite_schema').fetchone()[0])\nconn.close()\nprint(os.path.getsize('example.db') > 0)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "[('cats',)]\n(0, 'name', 'TEXT', 1, None, 0)\n(1, 'birthdate', 'TEXT', 0, None, 0)\n(2, 'fur', 'TEXT', 0, None, 0)\n(3, 'weight_kg', 'REAL', 0, None, 0)\nCREATE TABLE cats (name TEXT NOT NULL, birthdate TEXT, fur TEXT, weight_kg REAL) STRICT\nTrue",
+   "live": false,
+   "kind": "none",
+   "exit": 0
+  },
+  "strictTypes_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\n# A STRICT table refuses a wrong type and converts a convertible one; an ordinary table only has an affinity.\nconn = sqlite3.connect(':memory:', isolation_level=None)\nconn.execute('CREATE TABLE s (i INTEGER) STRICT')\nconn.execute('CREATE TABLE plain (i INTEGER)')\nfor value in ('Hello', 3.5, '42', 42.0, None):\n    for table in ('s', 'plain'):\n        try:\n            conn.execute('INSERT INTO %s VALUES (?)' % table, (value,))\n        except sqlite3.IntegrityError as e:\n            print(table, repr(value), 'refused:', e)\nprint(conn.execute('SELECT i, typeof(i) FROM s').fetchall())\nprint(conn.execute('SELECT i, typeof(i) FROM plain').fetchall())\ntry:\n    conn.execute('CREATE TABLE bad (a BOOLEAN) STRICT')\nexcept sqlite3.Error as e:\n    print(type(e).__name__, e)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "s 'Hello' refused: cannot store TEXT value in INTEGER column s.i\ns 3.5 refused: cannot store REAL value in INTEGER column s.i\n[(42, 'integer'), (42, 'integer'), (None, 'null')]\n[('Hello', 'text'), (3.5, 'real'), (42, 'integer'), (42, 'integer'), (None, 'null')]\nOperationalError unknown datatype for bad.a: \"BOOLEAN\"",
+   "live": false,
+   "kind": "none",
+   "exit": 0
+  },
+  "crudCats_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\n# Create, read, update and delete with placeholders; RETURNING and lastrowid; the row counts.\nconn = sqlite3.connect(':memory:', isolation_level=None)\nconn.execute('CREATE TABLE cats (name TEXT NOT NULL, birthdate TEXT, fur TEXT, weight_kg REAL) STRICT')\nconn.executemany('INSERT INTO cats VALUES (?, ?, ?, ?)', [('Zophie', '2021-01-24', 'black', 5.6), ('Miguel', '2016-12-24', 'siamese', 6.2),\n                                                         ('Jacob', '2022-02-20', 'orange and white', 5.5), ('Toby', '2021-05-17', 'black', 6.8)])\nprint(conn.execute('SELECT rowid, name FROM cats ORDER BY weight_kg DESC LIMIT 2').fetchall())\ncur = conn.execute('UPDATE cats SET weight_kg = weight_kg + 0.1 WHERE fur = ?', ('black',))\nprint('updated', cur.rowcount)\nprint(conn.execute('DELETE FROM cats WHERE name = ? RETURNING rowid, name', ('Jacob',)).fetchall())\nprint(conn.execute('INSERT INTO cats (name) VALUES (?)', ('Mango',)).lastrowid)\nprint(conn.execute('SELECT * FROM cats WHERE name LIKE ? ORDER BY name', ('%o%',)).fetchall())\nprint(conn.execute('SELECT count(*), count(fur), round(avg(weight_kg), 2) FROM cats').fetchone())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "[(4, 'Toby'), (2, 'Miguel')]\nupdated 2\n[(3, 'Jacob')]\n5\n[('Mango', None, None, None), ('Toby', '2021-05-17', 'black', 6.8999999999999995), ('Zophie', '2021-01-24', 'black', 5.699999999999999)]\n(4, 3, 6.27)",
+   "live": false,
+   "kind": "none",
+   "exit": 0
+  },
+  "placeholdersAndInjection_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\n# SQL injection: pasted text changes the query, a bound value does not; execute() refuses a second statement.\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE cats (name TEXT)')\nconn.executemany('INSERT INTO cats VALUES (?)', [('Zophie',), ('Toby',), ('Jacob',), ('Miguel',)])\nattack = \"x' OR '1'='1\"\nprint(len(conn.execute(f\"SELECT * FROM cats WHERE name = '{attack}'\").fetchall()), 'rows with the f-string')\nprint(len(conn.execute('SELECT * FROM cats WHERE name = ?', (attack,)).fetchall()), 'rows with the placeholder')\ntry:\n    conn.execute(\"SELECT 1; DROP TABLE cats\")\nexcept sqlite3.Error as e:\n    print(type(e).__name__, e)\nprint(conn.execute('SELECT count(*) FROM cats').fetchone())\nfor statement, args in (('SELECT ?, ?', (1,)), ('SELECT :a', [1]), ('SELECT :a', {'b': 1})):\n    try:\n        conn.execute(statement, args)\n    except sqlite3.Error as e:\n        print(type(e).__name__, str(e)[:70])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "4 rows with the f-string\n0 rows with the placeholder\nProgrammingError You can only execute one statement at a time.\n(4,)\nProgrammingError Incorrect number of bindings supplied. The current statement uses 2, a\nProgrammingError Binding 1 (':a') is a named parameter, but you supplied a sequence whi\nProgrammingError You did not supply a value for binding parameter :a.",
+   "live": false,
+   "kind": "none",
+   "exit": 0
+  },
+  "transactions_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\n# commit() and rollback() under the default mode, with autocommit=False and with autocommit=True; the context manager.\nfor label, kw in (('default', {}), ('autocommit=False', {'autocommit': False}), ('autocommit=True', {'autocommit': True})):\n    conn = sqlite3.connect(':memory:', **kw)\n    conn.execute('CREATE TABLE t (a)')\n    conn.commit()\n    conn.execute('INSERT INTO t VALUES (1)')\n    inside = conn.in_transaction\n    conn.rollback()\n    print(label, '| in a transaction before rollback:', inside, '| rows after rollback:', conn.execute('SELECT count(*) FROM t').fetchone()[0])\n    conn.close()\nconn = sqlite3.connect(':memory:', isolation_level=None)\nconn.execute('CREATE TABLE t (a INTEGER NOT NULL)')\ntry:\n    with conn:\n        conn.execute('BEGIN'); conn.execute('INSERT INTO t VALUES (1)'); conn.execute('INSERT INTO t VALUES (NULL)')\nexcept sqlite3.IntegrityError as e:\n    print(e)\nprint('rows after the failed block:', conn.execute('SELECT count(*) FROM t').fetchone()[0])\ntry:\n    conn.execute('INSERT INTO t VALUES (1), (2), (NULL)')\nexcept sqlite3.IntegrityError:\n    print('one statement is atomic, rows:', conn.execute('SELECT count(*) FROM t').fetchone()[0])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "default | in a transaction before rollback: True | rows after rollback: 0\nautocommit=False | in a transaction before rollback: True | rows after rollback: 0\nautocommit=True | in a transaction before rollback: False | rows after rollback: 1\nNOT NULL constraint failed: t.a\nrows after the failed block: 0\none statement is atomic, rows: 0",
+   "live": false,
+   "kind": "none",
+   "exit": 0
+  },
+  "rowids_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\n# The rowid is not a promise: the largest one is handed out again and VACUUM renumbers a table without a primary key.\nconn = sqlite3.connect(':memory:', isolation_level=None)\nconn.execute('CREATE TABLE t (v)'); conn.execute('CREATE TABLE k (id INTEGER PRIMARY KEY AUTOINCREMENT, v)')\nfor table in ('t', 'k'):\n    for v in 'abcd':\n        conn.execute('INSERT INTO %s (v) VALUES (?)' % table, (v,))\n    conn.execute('DELETE FROM %s WHERE rowid = 4' % table)\n    print(table, 'next rowid after deleting 4:', conn.execute('INSERT INTO %s (v) VALUES (?)' % table, ('e',)).lastrowid)\nconn.execute('DELETE FROM t WHERE rowid IN (1, 2)')\nprint('before VACUUM', conn.execute('SELECT rowid, v FROM t').fetchall())\nconn.execute('VACUUM')\nprint('after VACUUM ', conn.execute('SELECT rowid, v FROM t').fetchall())\nprint(sorted(r[0] for r in conn.execute('SELECT name FROM sqlite_schema WHERE name LIKE ?', ('sqlite_%',))))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "t next rowid after deleting 4: 4\nk next rowid after deleting 4: 5\nbefore VACUUM [(3, 'c'), (4, 'e')]\nafter VACUUM  [(1, 'c'), (2, 'e')]\n['sqlite_sequence']",
+   "live": false,
+   "kind": "none",
+   "exit": 0
+  },
+  "indexPlans_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\n# The query plan of a search on an indexed column: equality and GLOB use the index, LIKE does not.\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE cats (name TEXT, fur TEXT)')\nconn.executemany('INSERT INTO cats VALUES (?, ?)', [('Cat%04d' % i, 'black') for i in range(1000)])\nconn.execute('CREATE INDEX idx_name ON cats (name)')\nfor where in (\"name = 'Cat0042'\", \"name GLOB 'Cat00*'\", \"name >= 'Cat00' AND name < 'Cat01'\", \"name LIKE 'Cat00%'\", \"name LIKE '%42'\", \"fur = 'black'\"):\n    print('%-38s %s' % (where, conn.execute('EXPLAIN QUERY PLAN SELECT * FROM cats WHERE ' + where).fetchall()[0][3]))\nprint(conn.execute('SELECT count(*) FROM cats WHERE name LIKE ?', ('Cat00%',)).fetchone())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "name = 'Cat0042'                       SEARCH cats USING INDEX idx_name (name=?)\nname GLOB 'Cat00*'                     SEARCH cats USING INDEX idx_name (name>? AND name<?)\nname >= 'Cat00' AND name < 'Cat01'     SEARCH cats USING INDEX idx_name (name>? AND name<?)\nname LIKE 'Cat00%'                     SCAN cats\nname LIKE '%42'                        SCAN cats\nfur = 'black'                          SCAN cats\n(100,)",
+   "live": false,
+   "kind": "none",
+   "exit": 0
+  },
+  "backupAndDump_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\n# backup() copies into another connection, iterdump() gives the SQL text, a memory database can be saved to a file.\nmem = sqlite3.connect(':memory:')\nmem.execute('CREATE TABLE cats (name TEXT NOT NULL, fur TEXT) STRICT')\nmem.executemany('INSERT INTO cats VALUES (?, ?)', [('Zophie', 'black'), ('Toby', 'black')]); mem.commit()\ndisk = sqlite3.connect('copy.db'); mem.backup(disk); disk.close()\nprint(sqlite3.connect('copy.db').execute('SELECT * FROM cats').fetchall(), os.path.getsize('copy.db'))\nfor line in mem.iterdump():\n    print(line)\ntry:\n    mem.backup(mem)\nexcept ValueError as e:\n    print(e)\ncopy = sqlite3.connect(':memory:'); copy.executescript('\\n'.join(mem.iterdump()))\nprint(copy.execute('SELECT count(*) FROM cats').fetchone())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "[('Zophie', 'black'), ('Toby', 'black')] 8192\nBEGIN TRANSACTION;\nCREATE TABLE cats (name TEXT NOT NULL, fur TEXT) STRICT;\nINSERT INTO \"cats\" VALUES('Zophie','black');\nINSERT INTO \"cats\" VALUES('Toby','black');\nCOMMIT;\ntarget cannot be the same connection instance\n(2,)",
+   "live": false,
+   "kind": "none",
+   "exit": 0
+  },
+  "twoWriters_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\n# Two connections to one file: the second writer meets 'database is locked'; in WAL mode a reader is not blocked.\na = sqlite3.connect('shared.db', timeout=0, isolation_level=None); b = sqlite3.connect('shared.db', timeout=0, isolation_level=None)\na.execute('CREATE TABLE t (n)')\nprint('journal mode', a.execute('PRAGMA journal_mode').fetchone()[0])\na.execute('BEGIN IMMEDIATE'); a.execute('INSERT INTO t VALUES (1)')\ntry:\n    b.execute('INSERT INTO t VALUES (2)')\nexcept sqlite3.OperationalError as e:\n    print('second writer:', e)\ntry:\n    print('reader in delete mode:', b.execute('SELECT count(*) FROM t').fetchone())\nexcept sqlite3.OperationalError as e:\n    print('reader in delete mode:', e)\na.execute('COMMIT')\nprint('journal mode', a.execute('PRAGMA journal_mode = WAL').fetchone()[0])\na.execute('BEGIN IMMEDIATE'); a.execute('INSERT INTO t VALUES (3)')\nprint('reader in WAL mode:', b.execute('SELECT count(*) FROM t').fetchone())\na.execute('COMMIT'); print('after commit:', b.execute('SELECT count(*) FROM t').fetchone())\nprint(sorted(os.listdir('.')))\na.close(); b.close()\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "journal mode delete\nsecond writer: database is locked\nreader in delete mode: (0,)\njournal mode wal\nreader in WAL mode: (1,)\nafter commit: (2,)\n['shared.db', 'shared.db-shm', 'shared.db-wal']",
+   "live": false,
+   "kind": "none",
+   "exit": 0
+  },
+  "practiceMealIngredients_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\n# The second practice program, built here: meals and their ingredients linked by a real foreign key, read back with a join.\nconn = sqlite3.connect('meals.db', isolation_level=None)\nconn.execute('PRAGMA foreign_keys = ON')\nconn.execute('CREATE TABLE meals (id INTEGER PRIMARY KEY, name TEXT NOT NULL) STRICT')\nconn.execute('CREATE TABLE ingredients (id INTEGER PRIMARY KEY, meal_id INTEGER NOT NULL, ingredient TEXT NOT NULL, grams REAL, FOREIGN KEY (meal_id) REFERENCES meals (id)) STRICT')\nconn.execute(\"INSERT INTO meals (name) VALUES ('Pancakes'), ('Omelette')\")\nconn.executemany('INSERT INTO ingredients (meal_id, ingredient, grams) VALUES (?, ?, ?)',\n                 [(1, 'flour', 200.0), (1, 'milk', 300.0), (1, 'egg', 100.0), (2, 'egg', 150.0), (2, 'butter', 20.0)])\nfor row in conn.execute('SELECT meals.name, group_concat(ingredient, \", \"), sum(grams) FROM meals JOIN ingredients ON meal_id = meals.id GROUP BY meals.id'):\n    print(row)\ntry:\n    conn.execute(\"INSERT INTO ingredients (meal_id, ingredient) VALUES (99, 'salt')\")\nexcept sqlite3.IntegrityError as e:\n    print(e)\nprint(conn.execute('PRAGMA foreign_key_check').fetchall())\nprint(conn.execute(\"SELECT name FROM meals WHERE id NOT IN (SELECT meal_id FROM ingredients WHERE ingredient = 'butter')\").fetchall())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "('Pancakes', 'flour, milk, egg', 600.0)\n('Omelette', 'egg, butter', 170.0)\nFOREIGN KEY constraint failed\n[]\n[('Pancakes',)]",
+   "live": false,
+   "kind": "none",
+   "exit": 0
+  },
+  "practiceCatVaccinationChecker_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\nimport io, zipfile, hashlib, shutil, urllib.request\ndef real_db():\n    p = os.environ.get('CH16_DB') or os.path.join(tempfile.gettempdir(), 'ch16_sweigartcats_41f0d0b5.db')\n    if not os.path.exists(p):\n        rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n        z = zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(rq, timeout=120).read()))\n        open(p + '.part', 'wb').write(z.read('Automate_the_Boring_Stuff_3e_onlinematerials/sweigartcats.db')); os.replace(p + '.part', p)\n    assert hashlib.sha256(open(p, 'rb').read()).hexdigest().startswith('41f0d0b5bc2e')\n    d = tempfile.mkdtemp(); shutil.copy(p, os.path.join(d, 'sweigartcats.db')); os.chdir(d); return 'sweigartcats.db'\n# The first practice program on the book's own database: vaccinations dated before the birth, and cats missing a vaccine.\ndb = real_db()\nconn = sqlite3.connect(db)\nprint(conn.execute('SELECT count(*) FROM cats').fetchone(), conn.execute('SELECT count(*) FROM vaccinations').fetchone())\nearly = conn.execute('SELECT v.rowid, c.name, c.birthdate, v.vaccine, v.date_administered FROM vaccinations v JOIN cats c ON v.cat_id = c.rowid WHERE v.date_administered < c.birthdate ORDER BY v.rowid').fetchall()\nprint('given before birth:', early)\nmissing = conn.execute(\"SELECT c.rowid, c.name, group_concat(DISTINCT v.vaccine) FROM cats c LEFT JOIN vaccinations v ON v.cat_id = c.rowid GROUP BY c.rowid HAVING count(DISTINCT v.vaccine) < 3 ORDER BY c.rowid\").fetchall()\nprint('missing a vaccine:', [(r[0], r[1]) for r in missing])\nprint(conn.execute('SELECT vaccine, count(*) FROM vaccinations GROUP BY vaccine ORDER BY vaccine').fetchall())\nprint(conn.execute('SELECT name, count(*) FROM cats GROUP BY name HAVING count(*) > 1').fetchall())\nconn.close()\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "(100,) (291,)\ngiven before birth: [(151, 'Ruby', '2023-12-22', 'FVRCP', '2004-12-24'), (160, 'Java', '2019-12-19', 'FVRCP', '2001-03-13'), (277, 'Rocket', '2013-03-28', 'FVRCP', '2003-12-25')]\nmissing a vaccine: [(17, 'Molly'), (19, 'Sage'), (42, 'Hugh'), (43, 'Chester'), (88, 'Snowflake'), (93, 'Luke'), (96, 'Muffin')]\n[('FVRCP', 97), ('FeLV', 97), ('rabies', 97)]\n[('Tiger', 2)]",
+   "live": true,
+   "kind": "live",
+   "exit": 0
+  },
+  "shippedDatabase_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\nimport io, zipfile, hashlib, shutil, urllib.request\ndef real_db():\n    p = os.environ.get('CH16_DB') or os.path.join(tempfile.gettempdir(), 'ch16_sweigartcats_41f0d0b5.db')\n    if not os.path.exists(p):\n        rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n        z = zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(rq, timeout=120).read()))\n        open(p + '.part', 'wb').write(z.read('Automate_the_Boring_Stuff_3e_onlinematerials/sweigartcats.db')); os.replace(p + '.part', p)\n    assert hashlib.sha256(open(p, 'rb').read()).hexdigest().startswith('41f0d0b5bc2e')\n    d = tempfile.mkdtemp(); shutil.copy(p, os.path.join(d, 'sweigartcats.db')); os.chdir(d); return 'sweigartcats.db'\n# The shipped database: its foreign key to cats(rowid) cannot be enforced, and iterdump() fails on it from Python 3.13.\ndb = real_db()\nconn = sqlite3.connect(db, isolation_level=None)\nprint(conn.execute(\"SELECT sql FROM sqlite_schema WHERE name = 'vaccinations'\").fetchone()[0])\nprint('foreign_keys is', conn.execute('PRAGMA foreign_keys').fetchone()[0], '| journal mode', conn.execute('PRAGMA journal_mode').fetchone()[0])\nconn.execute('PRAGMA foreign_keys = ON')\ntry:\n    conn.execute(\"INSERT INTO vaccinations VALUES ('rabies', '2023-06-06', 'Dr. Echo', 1)\")\nexcept sqlite3.Error as e:\n    print(type(e).__name__, e)\nconn.execute('PRAGMA foreign_keys = OFF')\ntry:\n    print(len(list(conn.iterdump())))\nexcept sqlite3.Error as e:\n    print('iterdump:', type(e).__name__, e)\nprint(conn.execute('PRAGMA integrity_check').fetchall(), conn.execute('SELECT count(*) FROM sqlite_schema').fetchone())\nconn.close()\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "CREATE TABLE vaccinations (vaccine TEXT,date_administered TEXT, administered_by TEXT, cat_id INTEGER,FOREIGN KEY(cat_id) REFERENCES cats(rowid)) STRICT\nforeign_keys is 0 | journal mode delete\nOperationalError foreign key mismatch - \"vaccinations\" referencing \"cats\"\niterdump: OperationalError foreign key mismatch - \"vaccinations\" referencing \"cats\"\n[('ok',)] (2,)",
+   "live": true,
+   "kind": "live",
+   "exit": 0
+  },
+  "matchingMealIngredients_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\n# The meal program of the corpus with its SQL cut into pieces that fit a slide; same statements, same output.\nconn = sqlite3.connect('meals.db', isolation_level=None)\nconn.execute('PRAGMA foreign_keys = ON')\nconn.execute('CREATE TABLE meals (id INTEGER PRIMARY KEY,'\n             ' name TEXT NOT NULL) STRICT')\nconn.execute('CREATE TABLE ingredients (id INTEGER PRIMARY KEY,'\n             ' meal_id INTEGER NOT NULL, ingredient TEXT NOT NULL,'\n             ' grams REAL, FOREIGN KEY (meal_id) REFERENCES meals (id))'\n             ' STRICT')\nconn.execute(\"INSERT INTO meals (name) VALUES ('Pancakes'), ('Omelette')\")\nconn.executemany('INSERT INTO ingredients (meal_id, ingredient, grams)'\n                 ' VALUES (?, ?, ?)',\n                 [(1, 'flour', 200.0), (1, 'milk', 300.0), (1, 'egg', 100.0),\n                  (2, 'egg', 150.0), (2, 'butter', 20.0)])\nfor row in conn.execute('SELECT meals.name, group_concat(ingredient, \", \"),'\n                        ' sum(grams) FROM meals JOIN ingredients'\n                        ' ON meal_id = meals.id GROUP BY meals.id'):\n    print(row)\ntry:\n    conn.execute(\"INSERT INTO ingredients (meal_id, ingredient)\"\n                 \" VALUES (99, 'salt')\")\nexcept sqlite3.IntegrityError as e:\n    print(e)\nprint(conn.execute('PRAGMA foreign_key_check').fetchall())\nprint(conn.execute(\"SELECT name FROM meals WHERE id NOT IN\"\n                   \" (SELECT meal_id FROM ingredients\"\n                   \" WHERE ingredient = 'butter')\").fetchall())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "('Pancakes', 'flour, milk, egg', 600.0)\n('Omelette', 'egg, butter', 170.0)\nFOREIGN KEY constraint failed\n[]\n[('Pancakes',)]",
+   "live": false,
+   "kind": "none",
+   "exit": 0
+  },
+  "shippedDatabaseCut_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\nimport io, zipfile, hashlib, shutil, urllib.request\ndef real_db():\n    p = os.environ.get('CH16_DB') or os.path.join(tempfile.gettempdir(), 'ch16_sweigartcats_41f0d0b5.db')\n    if not os.path.exists(p):\n        rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n        z = zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(rq, timeout=120).read()))\n        open(p + '.part', 'wb').write(z.read('Automate_the_Boring_Stuff_3e_onlinematerials/sweigartcats.db')); os.replace(p + '.part', p)\n    assert hashlib.sha256(open(p, 'rb').read()).hexdigest().startswith('41f0d0b5bc2e')\n    d = tempfile.mkdtemp(); shutil.copy(p, os.path.join(d, 'sweigartcats.db')); os.chdir(d); return 'sweigartcats.db'\n# The shipped-database program of the corpus with one long printed line cut in two; every other statement is the same.\ndb = real_db()\nconn = sqlite3.connect(db, isolation_level=None)\nsql = conn.execute(\"SELECT sql FROM sqlite_schema\"\n                   \" WHERE name = 'vaccinations'\").fetchone()[0]\nprint(sql[:sql.index('FOREIGN')])\nprint(sql[sql.index('FOREIGN'):])\nprint('foreign_keys is', conn.execute('PRAGMA foreign_keys').fetchone()[0])\nconn.execute('PRAGMA foreign_keys = ON')\ntry:\n    conn.execute(\"INSERT INTO vaccinations VALUES\"\n                 \" ('rabies', '2023-06-06', 'Dr. Echo', 1)\")\nexcept sqlite3.Error as e:\n    print(type(e).__name__, e)\nconn.execute('PRAGMA foreign_keys = OFF')\ntry:\n    print(len(list(conn.iterdump())))\nexcept sqlite3.Error as e:\n    print('iterdump:', type(e).__name__, e)\nprint(conn.execute('PRAGMA integrity_check').fetchall())\nconn.close()\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "CREATE TABLE vaccinations (vaccine TEXT,date_administered TEXT, administered_by TEXT, cat_id INTEGER,\nFOREIGN KEY(cat_id) REFERENCES cats(rowid)) STRICT\nforeign_keys is 0\nOperationalError foreign key mismatch - \"vaccinations\" referencing \"cats\"\niterdump: OperationalError foreign key mismatch - \"vaccinations\" referencing \"cats\"\n[('ok',)]",
+   "live": true,
+   "kind": "live",
+   "exit": 0
+  },
+  "catCheckerCut_v1_0_0.py": {
+   "code": "import os, tempfile, sqlite3\nos.chdir(tempfile.mkdtemp())\nimport io, zipfile, hashlib, shutil, urllib.request\ndef real_db():\n    p = os.environ.get('CH16_DB') or os.path.join(tempfile.gettempdir(), 'ch16_sweigartcats_41f0d0b5.db')\n    if not os.path.exists(p):\n        rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n        z = zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(rq, timeout=120).read()))\n        open(p + '.part', 'wb').write(z.read('Automate_the_Boring_Stuff_3e_onlinematerials/sweigartcats.db')); os.replace(p + '.part', p)\n    assert hashlib.sha256(open(p, 'rb').read()).hexdigest().startswith('41f0d0b5bc2e')\n    d = tempfile.mkdtemp(); shutil.copy(p, os.path.join(d, 'sweigartcats.db')); os.chdir(d); return 'sweigartcats.db'\n# The cat vaccination checker of the corpus with its long queries cut and one result printed per line.\ndb = real_db()\nconn = sqlite3.connect(db)\nq = lambda sql: conn.execute(sql).fetchall()\nprint(q('SELECT count(*) FROM cats')[0][0], 'cats,',\n      q('SELECT count(*) FROM vaccinations')[0][0], 'vaccinations')\nearly = q('SELECT c.name, c.birthdate, v.vaccine, v.date_administered'\n          ' FROM vaccinations v JOIN cats c ON v.cat_id = c.rowid'\n          ' WHERE v.date_administered < c.birthdate ORDER BY v.rowid')\nfor row in early:\n    print('given before birth:', row)\nmissing = q('SELECT c.rowid, c.name FROM cats c'\n            ' LEFT JOIN vaccinations v ON v.cat_id = c.rowid'\n            ' GROUP BY c.rowid HAVING count(DISTINCT v.vaccine) < 3'\n            ' ORDER BY c.rowid')\nprint('missing a vaccine:', ', '.join(name for _, name in missing))\nprint(q('SELECT vaccine, count(*) FROM vaccinations GROUP BY vaccine'))\nprint(q('SELECT name, count(*) FROM cats GROUP BY name HAVING count(*) > 1'))\nconn.close()\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "100 cats, 291 vaccinations\ngiven before birth: ('Ruby', '2023-12-22', 'FVRCP', '2004-12-24')\ngiven before birth: ('Java', '2019-12-19', 'FVRCP', '2001-03-13')\ngiven before birth: ('Rocket', '2013-03-28', 'FVRCP', '2003-12-25')\nmissing a vaccine: Molly, Sage, Hugh, Chester, Snowflake, Luke, Muffin\n[('FVRCP', 97), ('FeLV', 97), ('rabies', 97)]\n[('Tiger', 2)]",
+   "live": true,
+   "kind": "live",
+   "exit": 0
+  }
+ },
+ "_charts": {
+  "indexSize": {
+   "setup": "import sqlite3\ndef kib(indexes):\n    c = sqlite3.connect(':memory:'); c.execute('CREATE TABLE cats (name TEXT, fur TEXT)')\n    c.executemany('INSERT INTO cats VALUES (?, ?)', [('Cat%05d' % i, 'black') for i in range(10000)])\n    for k in range(indexes): c.execute('CREATE INDEX i%d ON cats (%s)' % (k, 'name' if k == 0 else 'fur'))\n    return c.execute('PRAGMA page_count').fetchone()[0] * c.execute('PRAGMA page_size').fetchone()[0] / 1024\n",
+   "expr": "[['no index', kib(0)], ['index on name', kib(1)], ['two indexes', kib(2)]]",
+   "labels": [
+    "no index",
+    "index on name",
+    "two indexes"
+   ],
+   "values": [
+    216.0,
+    380.0,
+    512.0
+   ]
+  }
+ },
+ "_tables": {
+  "storageClasses": {
+   "setup": "import sqlite3\nc = sqlite3.connect(':memory:')\nc.execute('CREATE TABLE v (x)')\ndef row(value):\n    c.execute('DELETE FROM v'); c.execute('INSERT INTO v VALUES (?)', (value,))\n    stored, back = c.execute('SELECT typeof(x), x FROM v').fetchone()\n    return [repr(value), stored, type(back).__name__]\n",
+   "expr": "[['Python value', 'Stored as', 'Read back as']] + [row(v) for v in (None, 1, 1.5, 'a', b'\\x00', True)]",
+   "rows": [
+    [
+     "Python value",
+     "Stored as",
+     "Read back as"
+    ],
+    [
+     "None",
+     "null",
+     "NoneType"
+    ],
+    [
+     "1",
+     "integer",
+     "int"
+    ],
+    [
+     "1.5",
+     "real",
+     "float"
+    ],
+    [
+     "'a'",
+     "text",
+     "str"
+    ],
+    [
+     "b'\\x00'",
+     "blob",
+     "bytes"
+    ],
+    [
+     "True",
+     "integer",
+     "int"
+    ]
+   ]
+  }
+ }
+}
