@@ -1,0 +1,162 @@
+{
+ "_version": "1.0.0",
+ "program_after_the_helper_code": "import sys, sqlite3, warnings, gc, datetime\nd = work()\nres = {}\ndef w(f):\n    with warnings.catch_warnings(record=True) as seen:\n        warnings.simplefilter('always')\n        try: v = f()\n        except Exception as e: v = type(e).__name__ + ': ' + str(e)[:60]\n        gc.collect()\n    return [v, sorted({x.category.__name__ for x in seen})]\nres['series'] = sys.version.split()[0].rsplit('.', 1)[0] + '.x'\nres['sqlite'] = sqlite3.sqlite_version\nres['version attribute'] = hasattr(sqlite3, 'version')\n_x = sqlite3.connect(':memory:'); res['autocommit attribute'] = hasattr(_x, 'autocommit'); _x.close()\n_x = sqlite3.connect(':memory:'); res['isolation_level default'] = repr(_x.isolation_level); _x.close()\ndef one(f, *a, **k):\n    m = sqlite3.connect(':memory:', *a, **k)\n    try: return f(m)\n    finally: m.close()\nres['positional timeout'] = w(lambda: (sqlite3.connect(':memory:', 5.0).close(), 'ok')[1])\nres['named placeholder with a sequence'] = w(lambda: one(lambda m: m.execute('SELECT :a', [1]).fetchone()))\nres['date adapter'] = w(lambda: one(lambda m: m.execute('SELECT ?', (datetime.date(2035, 10, 31),)).fetchone()))\nres['unclosed connection'] = w(lambda: (sqlite3.connect(':memory:'), 'made')[1])\n_x = sqlite3.connect(':memory:'); res['autocommit attribute'] = hasattr(_x, 'autocommit'); _x.close()\nc = sqlite3.connect(':memory:', isolation_level=None)\nc.execute('CREATE TABLE cats (name TEXT NOT NULL, birthdate TEXT, fur TEXT, weight_kg REAL) STRICT')\nc.executemany('INSERT INTO cats VALUES (?, ?, ?, ?)', [('Zophie', '2021-01-24', 'black', 5.6), ('Miguel', '2016-12-24', 'siamese', 6.2)])\nres['strict: a row with only a name is stored'] = c.execute(\"INSERT INTO cats (name) VALUES ('x')\").rowcount\ndef bad():\n    try: c.execute(\"INSERT INTO cats VALUES ('y', 1, 2, 'heavy')\")\n    except sqlite3.IntegrityError as e: return str(e)\nres['strict refusal'] = bad()\nres['rowid and star'] = [[x[0] for x in c.execute('SELECT * FROM cats').description], c.execute('SELECT rowid, name FROM cats LIMIT 1').fetchone()]\nres['iterdump of a small database'] = w(lambda: len(list(c.iterdump())))\ndef shipped_dump():\n    s = sqlite3.connect('sweigartcats.db')\n    try: return len(list(s.iterdump()))\n    finally: s.close()\nres['iterdump of the shipped database'] = w(shipped_dump)\ndef fk():\n    s = sqlite3.connect('sweigartcats.db', isolation_level=None)\n    try:\n        s.execute('PRAGMA foreign_keys = ON'); s.execute('INSERT INTO vaccinations VALUES (?, ?, ?, ?)', ('rabies', '2023-06-06', 'Dr. Echo', 1)); return 'inserted'\n    finally: s.close()\nres['foreign key on rowid'] = w(fk)\nk = sqlite3.connect('sweigartcats.db', isolation_level=None)\nres['shipped counts'] = [k.execute('SELECT count(*) FROM cats').fetchone()[0], k.execute('SELECT count(*) FROM vaccinations').fetchone()[0]]\nres['like y'] = len(k.execute(\"SELECT rowid, name FROM cats WHERE name LIKE '%y'\").fetchall())\nres['index and plan'] = [r[3] for r in c.execute(\"EXPLAIN QUERY PLAN SELECT * FROM cats WHERE name = 'Zophie'\")]\nif res['autocommit attribute']:\n    a = sqlite3.connect('sweigartcats.db', autocommit=True)\n    a.execute('BEGIN'); a.execute(\"INSERT INTO cats VALUES ('Temp', '2024-01-01', 'x', 1)\"); a.rollback()\n    res['autocommit=True rollback leaves the row'] = a.execute(\"SELECT count(*) FROM cats WHERE name = 'Temp'\").fetchone()[0]; a.close()\nelse:\n    res['autocommit=True rollback leaves the row'] = 'no attribute'\nfor key in sorted(res): print(key, '=', json.dumps(res[key], ensure_ascii=False))",
+ "interpreters": [
+  "3.11.17",
+  "3.12.3",
+  "3.13.16",
+  "3.14.0",
+  "3.14.1",
+  "3.14.2",
+  "3.14.3",
+  "3.14.4",
+  "3.14.5",
+  "3.14.6"
+ ],
+ "sqlite_library_by_interpreter": {
+  "3.14.0": "3.50.4",
+  "3.14.1": "3.50.4",
+  "3.14.2": "3.50.4",
+  "3.14.3": "3.50.4",
+  "3.14.4": "3.50.4",
+  "3.14.5": "3.53.1",
+  "3.14.6": "3.53.1",
+  "3.13.16": "3.45.1",
+  "3.12.3": "3.45.1",
+  "3.11.17": "3.45.1"
+ },
+ "items_that_differ_between_interpreters": {
+  "autocommit attribute": {
+   "3.14.0": "true",
+   "3.14.1": "true",
+   "3.14.2": "true",
+   "3.14.3": "true",
+   "3.14.4": "true",
+   "3.14.5": "true",
+   "3.14.6": "true",
+   "3.13.16": "true",
+   "3.12.3": "true",
+   "3.11.17": "false"
+  },
+  "autocommit=True rollback leaves the row": {
+   "3.14.0": "1",
+   "3.14.1": "1",
+   "3.14.2": "1",
+   "3.14.3": "1",
+   "3.14.4": "1",
+   "3.14.5": "1",
+   "3.14.6": "1",
+   "3.13.16": "1",
+   "3.12.3": "1",
+   "3.11.17": "\"no attribute\""
+  },
+  "date adapter": {
+   "3.14.0": "[[\"2035-10-31\"], [\"DeprecationWarning\"]]",
+   "3.14.1": "[[\"2035-10-31\"], [\"DeprecationWarning\"]]",
+   "3.14.2": "[[\"2035-10-31\"], [\"DeprecationWarning\"]]",
+   "3.14.3": "[[\"2035-10-31\"], [\"DeprecationWarning\"]]",
+   "3.14.4": "[[\"2035-10-31\"], [\"DeprecationWarning\"]]",
+   "3.14.5": "[[\"2035-10-31\"], [\"DeprecationWarning\"]]",
+   "3.14.6": "[[\"2035-10-31\"], [\"DeprecationWarning\"]]",
+   "3.13.16": "[[\"2035-10-31\"], [\"DeprecationWarning\"]]",
+   "3.12.3": "[[\"2035-10-31\"], [\"DeprecationWarning\"]]",
+   "3.11.17": "[[\"2035-10-31\"], []]"
+  },
+  "iterdump of the shipped database": {
+   "3.14.0": "[\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []]",
+   "3.14.1": "[\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []]",
+   "3.14.2": "[\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []]",
+   "3.14.3": "[\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []]",
+   "3.14.4": "[\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []]",
+   "3.14.5": "[\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []]",
+   "3.14.6": "[\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []]",
+   "3.13.16": "[\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []]",
+   "3.12.3": "[395, []]",
+   "3.11.17": "[395, []]"
+  },
+  "named placeholder with a sequence": {
+   "3.14.0": "[\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []]",
+   "3.14.1": "[\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []]",
+   "3.14.2": "[\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []]",
+   "3.14.3": "[\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []]",
+   "3.14.4": "[\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []]",
+   "3.14.5": "[\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []]",
+   "3.14.6": "[\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []]",
+   "3.13.16": "[[1], [\"DeprecationWarning\"]]",
+   "3.12.3": "[[1], [\"DeprecationWarning\"]]",
+   "3.11.17": "[[1], []]"
+  },
+  "positional timeout": {
+   "3.14.0": "[\"ok\", [\"DeprecationWarning\"]]",
+   "3.14.1": "[\"ok\", [\"DeprecationWarning\"]]",
+   "3.14.2": "[\"ok\", [\"DeprecationWarning\"]]",
+   "3.14.3": "[\"ok\", [\"DeprecationWarning\"]]",
+   "3.14.4": "[\"ok\", [\"DeprecationWarning\"]]",
+   "3.14.5": "[\"ok\", [\"DeprecationWarning\"]]",
+   "3.14.6": "[\"ok\", [\"DeprecationWarning\"]]",
+   "3.13.16": "[\"ok\", [\"DeprecationWarning\"]]",
+   "3.12.3": "[\"ok\", []]",
+   "3.11.17": "[\"ok\", []]"
+  },
+  "sqlite": {
+   "3.14.0": "\"3.50.4\"",
+   "3.14.1": "\"3.50.4\"",
+   "3.14.2": "\"3.50.4\"",
+   "3.14.3": "\"3.50.4\"",
+   "3.14.4": "\"3.50.4\"",
+   "3.14.5": "\"3.53.1\"",
+   "3.14.6": "\"3.53.1\"",
+   "3.13.16": "\"3.45.1\"",
+   "3.12.3": "\"3.45.1\"",
+   "3.11.17": "\"3.45.1\""
+  },
+  "unclosed connection": {
+   "3.14.0": "[\"made\", [\"ResourceWarning\"]]",
+   "3.14.1": "[\"made\", [\"ResourceWarning\"]]",
+   "3.14.2": "[\"made\", [\"ResourceWarning\"]]",
+   "3.14.3": "[\"made\", [\"ResourceWarning\"]]",
+   "3.14.4": "[\"made\", [\"ResourceWarning\"]]",
+   "3.14.5": "[\"made\", [\"ResourceWarning\"]]",
+   "3.14.6": "[\"made\", [\"ResourceWarning\"]]",
+   "3.13.16": "[\"made\", [\"ResourceWarning\"]]",
+   "3.12.3": "[\"made\", []]",
+   "3.11.17": "[\"made\", []]"
+  },
+  "version attribute": {
+   "3.14.0": "false",
+   "3.14.1": "false",
+   "3.14.2": "false",
+   "3.14.3": "false",
+   "3.14.4": "false",
+   "3.14.5": "false",
+   "3.14.6": "false",
+   "3.13.16": "true",
+   "3.12.3": "true",
+   "3.11.17": "true"
+  }
+ },
+ "items_equal_in_all": [
+  "foreign key on rowid",
+  "index and plan",
+  "isolation_level default",
+  "iterdump of a small database",
+  "like y",
+  "rowid and star",
+  "shipped counts",
+  "strict refusal",
+  "strict: a row with only a name is stored"
+ ],
+ "rows": [
+  "3.14.0 | autocommit attribute = true / autocommit=True rollback leaves the row = 1 / date adapter = [[\"2035-10-31\"], [\"DeprecationWarning\"]] / foreign key on rowid = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / index and plan = [\"SCAN cats\"] / isolation_level default = \"''\" / iterdump of a small database = [6, []] / iterdump of the shipped database = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / like y = 19 / named placeholder with a sequence = [\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []] / positional timeout = [\"ok\", [\"DeprecationWarning\"]] / rowid and star = [[\"name\", \"birthdate\", \"fur\", \"weight_kg\"], [1, \"Zophie\"]] / series = \"3.14.x\" / shipped counts = [100, 291] / sqlite = \"3.50.4\" / strict refusal = \"cannot store TEXT value in REAL column cats.weight_kg\" / strict: a row with only a name is stored = 1 / unclosed connection = [\"made\", [\"ResourceWarning\"]] / version attribute = false",
+  "3.14.1 | autocommit attribute = true / autocommit=True rollback leaves the row = 1 / date adapter = [[\"2035-10-31\"], [\"DeprecationWarning\"]] / foreign key on rowid = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / index and plan = [\"SCAN cats\"] / isolation_level default = \"''\" / iterdump of a small database = [6, []] / iterdump of the shipped database = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / like y = 19 / named placeholder with a sequence = [\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []] / positional timeout = [\"ok\", [\"DeprecationWarning\"]] / rowid and star = [[\"name\", \"birthdate\", \"fur\", \"weight_kg\"], [1, \"Zophie\"]] / series = \"3.14.x\" / shipped counts = [100, 291] / sqlite = \"3.50.4\" / strict refusal = \"cannot store TEXT value in REAL column cats.weight_kg\" / strict: a row with only a name is stored = 1 / unclosed connection = [\"made\", [\"ResourceWarning\"]] / version attribute = false",
+  "3.14.2 | autocommit attribute = true / autocommit=True rollback leaves the row = 1 / date adapter = [[\"2035-10-31\"], [\"DeprecationWarning\"]] / foreign key on rowid = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / index and plan = [\"SCAN cats\"] / isolation_level default = \"''\" / iterdump of a small database = [6, []] / iterdump of the shipped database = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / like y = 19 / named placeholder with a sequence = [\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []] / positional timeout = [\"ok\", [\"DeprecationWarning\"]] / rowid and star = [[\"name\", \"birthdate\", \"fur\", \"weight_kg\"], [1, \"Zophie\"]] / series = \"3.14.x\" / shipped counts = [100, 291] / sqlite = \"3.50.4\" / strict refusal = \"cannot store TEXT value in REAL column cats.weight_kg\" / strict: a row with only a name is stored = 1 / unclosed connection = [\"made\", [\"ResourceWarning\"]] / version attribute = false",
+  "3.14.3 | autocommit attribute = true / autocommit=True rollback leaves the row = 1 / date adapter = [[\"2035-10-31\"], [\"DeprecationWarning\"]] / foreign key on rowid = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / index and plan = [\"SCAN cats\"] / isolation_level default = \"''\" / iterdump of a small database = [6, []] / iterdump of the shipped database = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / like y = 19 / named placeholder with a sequence = [\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []] / positional timeout = [\"ok\", [\"DeprecationWarning\"]] / rowid and star = [[\"name\", \"birthdate\", \"fur\", \"weight_kg\"], [1, \"Zophie\"]] / series = \"3.14.x\" / shipped counts = [100, 291] / sqlite = \"3.50.4\" / strict refusal = \"cannot store TEXT value in REAL column cats.weight_kg\" / strict: a row with only a name is stored = 1 / unclosed connection = [\"made\", [\"ResourceWarning\"]] / version attribute = false",
+  "3.14.4 | autocommit attribute = true / autocommit=True rollback leaves the row = 1 / date adapter = [[\"2035-10-31\"], [\"DeprecationWarning\"]] / foreign key on rowid = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / index and plan = [\"SCAN cats\"] / isolation_level default = \"''\" / iterdump of a small database = [6, []] / iterdump of the shipped database = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / like y = 19 / named placeholder with a sequence = [\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []] / positional timeout = [\"ok\", [\"DeprecationWarning\"]] / rowid and star = [[\"name\", \"birthdate\", \"fur\", \"weight_kg\"], [1, \"Zophie\"]] / series = \"3.14.x\" / shipped counts = [100, 291] / sqlite = \"3.50.4\" / strict refusal = \"cannot store TEXT value in REAL column cats.weight_kg\" / strict: a row with only a name is stored = 1 / unclosed connection = [\"made\", [\"ResourceWarning\"]] / version attribute = false",
+  "3.14.5 | autocommit attribute = true / autocommit=True rollback leaves the row = 1 / date adapter = [[\"2035-10-31\"], [\"DeprecationWarning\"]] / foreign key on rowid = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / index and plan = [\"SCAN cats\"] / isolation_level default = \"''\" / iterdump of a small database = [6, []] / iterdump of the shipped database = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / like y = 19 / named placeholder with a sequence = [\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []] / positional timeout = [\"ok\", [\"DeprecationWarning\"]] / rowid and star = [[\"name\", \"birthdate\", \"fur\", \"weight_kg\"], [1, \"Zophie\"]] / series = \"3.14.x\" / shipped counts = [100, 291] / sqlite = \"3.53.1\" / strict refusal = \"cannot store TEXT value in REAL column cats.weight_kg\" / strict: a row with only a name is stored = 1 / unclosed connection = [\"made\", [\"ResourceWarning\"]] / version attribute = false",
+  "3.14.6 | autocommit attribute = true / autocommit=True rollback leaves the row = 1 / date adapter = [[\"2035-10-31\"], [\"DeprecationWarning\"]] / foreign key on rowid = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / index and plan = [\"SCAN cats\"] / isolation_level default = \"''\" / iterdump of a small database = [6, []] / iterdump of the shipped database = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / like y = 19 / named placeholder with a sequence = [\"ProgrammingError: Binding 1 (':a') is a named parameter, but you supplied a se\", []] / positional timeout = [\"ok\", [\"DeprecationWarning\"]] / rowid and star = [[\"name\", \"birthdate\", \"fur\", \"weight_kg\"], [1, \"Zophie\"]] / series = \"3.14.x\" / shipped counts = [100, 291] / sqlite = \"3.53.1\" / strict refusal = \"cannot store TEXT value in REAL column cats.weight_kg\" / strict: a row with only a name is stored = 1 / unclosed connection = [\"made\", [\"ResourceWarning\"]] / version attribute = false",
+  "3.13.16 | autocommit attribute = true / autocommit=True rollback leaves the row = 1 / date adapter = [[\"2035-10-31\"], [\"DeprecationWarning\"]] / foreign key on rowid = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / index and plan = [\"SCAN cats\"] / isolation_level default = \"''\" / iterdump of a small database = [6, []] / iterdump of the shipped database = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / like y = 19 / named placeholder with a sequence = [[1], [\"DeprecationWarning\"]] / positional timeout = [\"ok\", [\"DeprecationWarning\"]] / rowid and star = [[\"name\", \"birthdate\", \"fur\", \"weight_kg\"], [1, \"Zophie\"]] / series = \"3.13.x\" / shipped counts = [100, 291] / sqlite = \"3.45.1\" / strict refusal = \"cannot store TEXT value in REAL column cats.weight_kg\" / strict: a row with only a name is stored = 1 / unclosed connection = [\"made\", [\"ResourceWarning\"]] / version attribute = true",
+  "3.12.3 | autocommit attribute = true / autocommit=True rollback leaves the row = 1 / date adapter = [[\"2035-10-31\"], [\"DeprecationWarning\"]] / foreign key on rowid = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / index and plan = [\"SCAN cats\"] / isolation_level default = \"''\" / iterdump of a small database = [6, []] / iterdump of the shipped database = [395, []] / like y = 19 / named placeholder with a sequence = [[1], [\"DeprecationWarning\"]] / positional timeout = [\"ok\", []] / rowid and star = [[\"name\", \"birthdate\", \"fur\", \"weight_kg\"], [1, \"Zophie\"]] / series = \"3.12.x\" / shipped counts = [100, 291] / sqlite = \"3.45.1\" / strict refusal = \"cannot store TEXT value in REAL column cats.weight_kg\" / strict: a row with only a name is stored = 1 / unclosed connection = [\"made\", []] / version attribute = true",
+  "3.11.17 | autocommit attribute = false / autocommit=True rollback leaves the row = \"no attribute\" / date adapter = [[\"2035-10-31\"], []] / foreign key on rowid = [\"OperationalError: foreign key mismatch - \\\"vaccinations\\\" referencing \\\"cats\\\"\", []] / index and plan = [\"SCAN cats\"] / isolation_level default = \"''\" / iterdump of a small database = [6, []] / iterdump of the shipped database = [395, []] / like y = 19 / named placeholder with a sequence = [[1], []] / positional timeout = [\"ok\", []] / rowid and star = [[\"name\", \"birthdate\", \"fur\", \"weight_kg\"], [1, \"Zophie\"]] / series = \"3.11.x\" / shipped counts = [100, 291] / sqlite = \"3.45.1\" / strict refusal = \"cannot store TEXT value in REAL column cats.weight_kg\" / strict: a row with only a name is stored = 1 / unclosed connection = [\"made\", []] / version attribute = true"
+ ],
+ "_note": "Run on 2026-10-12 with each interpreter installed by uv; python runs in isolated mode. The SQLite library an interpreter links is the one of its build (see sqlite_library_by_interpreter), not a choice of this script. Each warning is recorded, not turned into an error. Python 3.11 is included because the chapter says STRICT's SQLite version is 'used by Python 3.11 and later'."
+}
