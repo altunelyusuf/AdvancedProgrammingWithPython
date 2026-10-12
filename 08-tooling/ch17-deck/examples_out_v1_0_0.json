@@ -1,0 +1,494 @@
+{
+ "_version": "1.0.0",
+ "_python": "3.14.6",
+ "_packages": "pypdf 6.20.1 | python-docx 1.2.0 | pdfminer.six 20260107 | Pillow 12.3.0 | cryptography 50.0.2",
+ "title": [
+  [
+   "import platform, pypdf, docx",
+   ""
+  ],
+  [
+   "platform.python_version()",
+   "'3.14.6'"
+  ],
+  [
+   "pypdf.__version__",
+   "'6.20.1'"
+  ],
+  [
+   "docx.__version__",
+   "'1.2.0'"
+  ]
+ ],
+ "names": [
+  [
+   "import pypdf",
+   ""
+  ],
+  [
+   "hasattr(pypdf, 'PdfReader')",
+   "True"
+  ],
+  [
+   "hasattr(pypdf, 'PdfWriter')",
+   "True"
+  ],
+  [
+   "hasattr(pypdf, 'PdfFileReader')",
+   "False"
+  ],
+  [
+   "hasattr(pypdf, 'PdfMerger')",
+   "False"
+  ]
+ ],
+ "hyphen": [
+  [
+   "import re",
+   ""
+  ],
+  [
+   "t = 'follow-\\ning the execution'",
+   ""
+  ],
+  [
+   "t",
+   "'follow-\\ning the execution'"
+  ],
+  [
+   "re.sub(r'-\\n', '', t)",
+   "'following the execution'"
+  ],
+  [
+   "re.sub(r'-\\n', '', 'well-\\nknown')",
+   "'wellknown'"
+  ]
+ ],
+ "scan": [
+  [
+   "import io, pypdf",
+   ""
+  ],
+  [
+   "from PIL import Image",
+   ""
+  ],
+  [
+   "buf = io.BytesIO()",
+   ""
+  ],
+  [
+   "Image.new('RGB', (40, 40), 'white').save(buf, 'PDF')",
+   ""
+  ],
+  [
+   "page = pypdf.PdfReader(buf).pages[0]",
+   ""
+  ],
+  [
+   "page.extract_text()",
+   "''"
+  ],
+  [
+   "[(i.name, i.data[:2]) for i in page.images]",
+   "[('image.jpg', b'\\xff\\xd8')]"
+  ],
+  [
+   "pypdf.PdfReader(io.BytesIO(b''))",
+   "EmptyFileError: Cannot read an empty file"
+  ]
+ ],
+ "zip": [
+  [
+   "import io, zipfile, docx",
+   ""
+  ],
+  [
+   "d = docx.Document()",
+   ""
+  ],
+  [
+   "_ = d.add_paragraph('Hello, world!')",
+   ""
+  ],
+  [
+   "buf = io.BytesIO()",
+   ""
+  ],
+  [
+   "d.save(buf)",
+   ""
+  ],
+  [
+   "buf.getvalue()[:2]",
+   "b'PK'"
+  ],
+  [
+   "z = zipfile.ZipFile(buf)",
+   ""
+  ],
+  [
+   "len(z.namelist())",
+   "17"
+  ],
+  [
+   "'word/document.xml' in z.namelist()",
+   "True"
+  ],
+  [
+   "z.read('word/document.xml').decode().split('<w:body>')[1][:46]",
+   "'<w:p><w:r><w:t>Hello, world!</w:t></w:r></w:p>'"
+  ]
+ ],
+ "_programs": {
+  "pdfStructure_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# What a PDF file is made of: header, numbered objects, a cross-reference table at the end, text as drawing commands.\ndata = make_pdf('Page one', 'Page two')\nprint(data[:8], data.rstrip().endswith(b'%%EOF'))\nstart = int(re.search(rb'startxref\\n(\\d+)', data).group(1))\nprint('startxref points at', data[start:start + 4])\nrows = re.findall(rb'(\\d{10}) (\\d{5}) ([nf]) \\n', data[start:])\nprint(len(rows), 'table entries; object 0 is', 'free' if rows[0][2] == b'f' else 'in use')\nprint([data[int(o):int(o) + 7] for o, g, t in rows[1:4]])\nreader = pypdf.PdfReader(io.BytesIO(data))\nprint('content stream:', reader.pages[0].get_contents().get_data())\n# Text drawn in the order of the stream, not of the page; and a black box over text hides nothing from a program.\nc = 'BT /F1 12 Tf 200 700 Td (world) Tj ET BT /F1 12 Tf 72 700 Td (Hello) Tj ET'\npage = pypdf.PdfReader(io.BytesIO(make_pdf(c))).pages[0]\nprint(repr(page.extract_text()), repr(page.extract_text(extraction_mode='layout').strip()))\nsecret = pypdf.PdfReader(io.BytesIO(make_pdf('BT /F1 18 Tf 72 720 Td (Salary: 120000 USD) Tj ET 0 0 0 rg 60 710 300 30 re f'))).pages[0]\nprint('text under the black box:', secret.extract_text())\nw = pypdf.PdfWriter(); w.append(io.BytesIO(data)); out = io.BytesIO(); w.write(out)\nprint('after pypdf wrote it:', dict(pypdf.PdfReader(out).metadata))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "b'%PDF-1.4' True\nstartxref points at b'xref'\n8 table entries; object 0 is free\n[b'1 0 obj', b'2 0 obj', b'3 0 obj']\ncontent stream: b'BT /F1 18 Tf 72 720 Td (Page one) Tj ET'\n'worldHello' 'Hello                       world'\ntext under the black box: Salary: 120000 USD\nafter pypdf wrote it: {'/Producer': 'pypdf'}",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "pageSelection_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Copying pages into a new file: a tuple is a range, a list is exact, merge() inserts at a position.\nsix = make_pdf(*['Page %d' % i for i in range(1, 7)])\ndef texts(writer):\n    buf = io.BytesIO(); writer.write(buf); return [p.extract_text() for p in pypdf.PdfReader(buf).pages]\nfor label, pages in (('(0, 5)', (0, 5)), ('(0, 5, 2)', (0, 5, 2)), ('[0, 5]', [0, 5])):\n    w = pypdf.PdfWriter(); w.append(io.BytesIO(six), pages)\n    print('append', label, '->', texts(w))\nw = pypdf.PdfWriter(); w.append(io.BytesIO(make_pdf('A1', 'A2', 'A3')))\nw.merge(1, io.BytesIO(six), pages=(0, 2))\nprint('merge(1, file, pages=(0, 2)) ->', texts(w))\nw = pypdf.PdfWriter(); w.append(io.BytesIO(make_pdf('A1', 'A2', 'A3')))\nw.merge(1, io.BytesIO(six), (0, 2))   # the chapter's way of writing it\nprint('merge(1, file, (0, 2)) ->', len(w.pages), 'pages; bookmark titles', [o['/Title'] for o in w.outline])\nfor pages in ((0, 99), [0, 99]):\n    try:\n        pypdf.PdfWriter().append(io.BytesIO(six), pages)\n    except IndexError as e:\n        print(pages, 'raises IndexError:', e)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "append (0, 5) -> ['Page 1', 'Page 2', 'Page 3', 'Page 4', 'Page 5']\nappend (0, 5, 2) -> ['Page 1', 'Page 3', 'Page 5']\nappend [0, 5] -> ['Page 1', 'Page 6']\nmerge(1, file, pages=(0, 2)) -> ['A1', 'Page 1', 'Page 2', 'A2', 'A3']\nmerge(1, file, (0, 2)) -> 9 pages; bookmark titles ['(0, 2)']\n(0, 99) raises IndexError: Sequence index out of range\n[0, 99] raises IndexError: Sequence index out of range",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "rotateBlankWatermark_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Rotating, inserting blank pages and laying one page over another.\nw = pypdf.PdfWriter(); w.append(io.BytesIO(make_pdf('x')))\npage = w.pages[0]\nseen = []\nfor angle in (90, 270, -90, 180):\n    page.rotate(angle); seen.append(page.rotation)\nprint('rotation after 90, 270, -90, 180:', seen)\ntry:\n    page.rotate(45)\nexcept ValueError as e:\n    print('ValueError:', e)\nw = pypdf.PdfWriter()\nfor size in ((300, 400), (100, 100), (200, 200)): w.add_blank_page(width=size[0], height=size[1])\nw.add_blank_page(); w.insert_blank_page(index=1)\nprint('sizes:', [(float(p.mediabox.width), float(p.mediabox.height)) for p in w.pages])\nprint('insert_blank_page(2) makes a page', float(w.insert_blank_page(2).mediabox.width), 'points wide; index=2 makes one', float(w.insert_blank_page(index=2).mediabox.width))\nfor over in (False, True):\n    base = pypdf.PdfReader(io.BytesIO(make_pdf('BASE'))).pages[0]; mark = pypdf.PdfReader(io.BytesIO(make_pdf('MARK'))).pages[0]\n    print('merge_page(over=%s) draws' % over, re.findall(rb'\\((\\w+)\\) Tj', (base.merge_page(mark, over=over), base.get_contents().get_data())[1]))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "rotation after 90, 270, -90, 180: [90, 360, 270, 450]\nValueError: Rotation angle must be a multiple of 90\nsizes: [(300.0, 400.0), (100.0, 100.0), (100.0, 100.0), (200.0, 200.0), (200.0, 200.0)]\ninsert_blank_page(2) makes a page 2.0 points wide; index=2 makes one 100.0\nmerge_page(over=False) draws [b'MARK', b'BASE']\nmerge_page(over=True) draws [b'BASE', b'MARK']",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "encryptDecrypt_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Encrypting with RC4 (the default) and AES-256, and what a reader does before and after decrypt().\ndef encrypted(**kw):\n    w = pypdf.PdfWriter(); w.append(io.BytesIO(make_pdf('Secret page'))); w.encrypt('swordfish', **kw)\n    b = io.BytesIO(); w.write(b); return b.getvalue()\nfor label, kw in (('default', {}), ('AES-128', {'algorithm': 'AES-128'}), ('AES-256', {'algorithm': 'AES-256'})):\n    e = pypdf.PdfReader(io.BytesIO(encrypted(**kw))).trailer['/Encrypt']\n    print('%-8s V %s R %s Length %s' % (label, e['/V'], e['/R'], e['/Length']))\ndata = encrypted(algorithm='AES-256')\nreader = pypdf.PdfReader(io.BytesIO(data))\nprint('is_encrypted', reader.is_encrypted)\ntry:\n    reader.pages[0]\nexcept Exception as e:\n    print(type(e).__name__, '-', e)\nfor pw in ('an incorrect password', '', 'Swordfish', 'swordfish'):\n    print(repr(pw), '->', pypdf.PdfReader(io.BytesIO(data)).decrypt(pw).name)\nprint(reader.decrypt('swordfish').name, repr(reader.pages[0].extract_text()))\nw = pypdf.PdfWriter(); w.append(io.BytesIO(make_pdf('Two passwords'))); w.encrypt('userpw', owner_password='ownerpw')\nb = io.BytesIO(); w.write(b)\nprint([(p, pypdf.PdfReader(io.BytesIO(b.getvalue())).decrypt(p).name) for p in ('userpw', 'ownerpw', 'swordfish')])\nw = pypdf.PdfWriter(); w.append(io.BytesIO(make_pdf('Open'))); w.encrypt('', owner_password='owner')\nb = io.BytesIO(); w.write(b); r = pypdf.PdfReader(b)\nprint('empty user password:', r.is_encrypted, repr(r.pages[0].extract_text()))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "default  V 2 R 3 Length 128\nAES-128  V 4 R 4 Length 128\nAES-256  V 5 R 6 Length 256\nis_encrypted True\nFileNotDecryptedError - File has not been decrypted\n'an incorrect password' -> NOT_DECRYPTED\n'' -> NOT_DECRYPTED\n'Swordfish' -> NOT_DECRYPTED\n'swordfish' -> OWNER_PASSWORD\nOWNER_PASSWORD 'Secret page'\n[('userpw', 'USER_PASSWORD'), ('ownerpw', 'OWNER_PASSWORD'), ('swordfish', 'NOT_DECRYPTED')]\nempty user password: True 'Open'",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "textAndImages_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Text extraction in three ways, an image, a scanned page, and damaged files.\nfrom pdfminer.high_level import extract_text\nfrom PIL import Image\nsix = make_pdf(*['Page %d' % i for i in range(1, 7)])\nreader = pypdf.PdfReader(io.BytesIO(six))\ntext = ''\nfor page in reader.pages: text += page.extract_text()\nprint('pypdf, pages added one after another:', repr(text))\nprint('pdfminer.six:', repr(extract_text(io.BytesIO(six))[:24]), 'form feeds', extract_text(io.BytesIO(six)).count('\\x0c'))\nc = 'BT /F1 12 Tf 72 700 Td (Name) Tj 200 0 Td (Price) Tj ET BT /F1 12 Tf 72 686 Td (Tea) Tj 200 0 Td (3) Tj ET'\npage = pypdf.PdfReader(io.BytesIO(make_pdf(c))).pages[0]\nprint(repr(page.extract_text())); print(page.extract_text(extraction_mode='layout').strip())\nt = pypdf.PdfReader(io.BytesIO(make_pdf('BT /F1 12 Tf 72 700 Td (follow-) Tj ET BT /F1 12 Tf 72 686 Td (ing the execution) Tj ET'))).pages[0].extract_text()\nprint(repr(t), '->', repr(re.sub(r'-\\n', '', t)))\nbuf = io.BytesIO(); Image.new('RGB', (40, 40), 'white').save(buf, 'PDF')\nscan = pypdf.PdfReader(io.BytesIO(buf.getvalue())).pages[0]\nprint('a scanned page: text', repr(scan.extract_text()), 'images', [(i.name, i.data[:2]) for i in scan.images])\ncut = six[:six.index(b'xref')]\nfor label, f in (('pypdf, cut before xref', lambda: pypdf.PdfReader(io.BytesIO(cut))), ('pdfminer, cut before xref', lambda: extract_text(io.BytesIO(cut))), ('pypdf, empty file', lambda: pypdf.PdfReader(io.BytesIO(b'')))):\n    try:\n        f()\n    except Exception as e:\n        print(label, '->', type(e).__name__)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "pypdf, pages added one after another: 'Page 1Page 2Page 3Page 4Page 5Page 6'\npdfminer.six: 'Page 1\\n\\n\\x0cPage 2\\n\\n\\x0cPage 3' form feeds 6\n'Name Price\\nTea 3'\nName                                                  Price\nTea                                                      3\n'follow-\\ning the execution' -> 'following the execution'\na scanned page: text '' images [('image.jpg', b'\\xff\\xd8')]\npypdf, cut before xref -> PdfStreamError\npdfminer, cut before xref -> PDFSyntaxError\npypdf, empty file -> EmptyFileError",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "docxReadStyles_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Reading a Word document: paragraphs, runs, what paragraphs leave out, and the styles of the template.\nimport docx\nfrom collections import Counter\nfrom docx.enum.style import WD_STYLE_TYPE\nfrom docx.oxml import parse_xml\ndoc = docx.Document()\np = doc.add_paragraph('A plain paragraph with some ')\np.add_run('bold').bold = True\np.add_run(' text and some ')\np.add_run('italic').italic = True\ndoc.add_paragraph('')\nt = doc.add_table(rows=1, cols=1); t.cell(0, 0).text = 'in a table'\ndoc.sections[0].header.paragraphs[0].text = 'IN THE HEADER'\nq = doc.add_paragraph('before '); q._p.append(parse_xml('<w:hyperlink xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:r><w:t>linked</w:t></w:r></w:hyperlink>'))\ndoc.save('read.docx')\ndoc = docx.Document('read.docx')\nprint([x.text for x in doc.paragraphs])\nprint([(r.text, r.bold, r.italic) for r in doc.paragraphs[0].runs])\nprint('table text:', doc.tables[0].cell(0, 0).text, '| header text:', doc.sections[0].header.paragraphs[0].text)\nprint('hyperlink paragraph: text', repr(doc.paragraphs[-1].text), 'runs', [r.text for r in doc.paragraphs[-1].runs])\nstyles = docx.Document().styles\nprint(sorted(Counter(s.type.name for s in styles).items()), len(list(styles)))\nfor obj, name in ((doc.paragraphs[0], 'Quote Char'), (doc.paragraphs[0].runs[0], 'Quote'), (doc.paragraphs[0], 'Quote'), (doc.paragraphs[0].runs[0], 'Quote Char')):\n    try:\n        obj.style = name; print(name, 'accepted')\n    except ValueError as e:\n        print(name, '->', e)\nfor n in ('List Number ', 'List Number'):\n    try:\n        doc.add_paragraph('x', n); print(repr(n), 'ok')\n    except KeyError as e:\n        print(repr(n), 'KeyError', e)\ns = doc.styles.add_style('Invitation Name', WD_STYLE_TYPE.PARAGRAPH); s.base_style = doc.styles['Normal']; s.font.bold = True\nprint(s.name, s.type.name, doc.add_paragraph('Prof. Plum', 'Invitation Name').style.name)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "['A plain paragraph with some bold text and some italic', '', 'before linked']\n[('A plain paragraph with some ', None, None), ('bold', True, None), (' text and some ', None, None), ('italic', None, True)]\ntable text: in a table | header text: IN THE HEADER\nhyperlink paragraph: text 'before linked' runs ['before ']\n[('CHARACTER', 27), ('LIST', 1), ('PARAGRAPH', 36), ('TABLE', 100)] 164\nQuote Char -> assigned style is type CHARACTER (2), need type PARAGRAPH (1)\nQuote -> assigned style is type PARAGRAPH (1), need type CHARACTER (2)\nQuote accepted\nQuote Char accepted\n'List Number ' KeyError \"no style with name 'List Number '\"\n'List Number' ok\nInvitation Name PARAGRAPH Invitation Name",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "docxWriting_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Writing a Word document: paragraphs, headings, run formatting, breaks and pictures.\nimport docx\nfrom docx.shared import Inches, Cm\nfrom docx.enum.text import WD_BREAK, WD_UNDERLINE\ndef png(w, h):\n    raw = b''.join(b'\\x00' + b'\\xff\\x00\\x00' * w for _ in range(h))\n    ch = lambda t, d: struct.pack('>I', len(d)) + t + d + struct.pack('>I', zlib.crc32(t + d))\n    return b'\\x89PNG\\r\\n\\x1a\\n' + ch(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 2, 0, 0, 0)) + ch(b'IDAT', zlib.compress(raw)) + ch(b'IEND', b'')\ndoc = docx.Document()\nfor level in (0, 1, 4, 9, 10):\n    try:\n        print(level, doc.add_heading('Header %d' % level, level).style.name)\n    except ValueError as e:\n        print(level, 'ValueError:', e)\np = doc.add_paragraph('Hello world!'); r = p.add_run(' This text is being added to the second paragraph.')\nprint(type(p).__name__, type(r).__name__, len(p.runs))\nr.bold = True; print('bold', r.bold, re.findall(r'<w:b[ /][^>]*>', r._r.xml)); r.bold = False; print('bold', r.bold, re.findall(r'<w:b[ /][^>]*>', r._r.xml)); r.bold = None; print('bold', r.bold)\nr.underline = WD_UNDERLINE.DOUBLE; print(re.findall(r'<w:u [^>]*>', r._r.xml))\nr.strike = True; print('run.strike = True:', r.font.strike); r.font.strike = True; print('run.font.strike = True:', r.font.strike)\np.add_run().add_break(WD_BREAK.PAGE); doc.add_paragraph('This is on the second page!')\nprint(re.findall(r'<w:br[^>]*>', doc.element.xml))\ndata = png(60, 80)\nfor kw in ({}, {'width': Inches(1)}, {'width': Inches(1), 'height': Cm(4)}):\n    shape = doc.add_picture(io.BytesIO(data), **kw); print(kw and {k: int(v) for k, v in kw.items()}, '->', int(shape.width), int(shape.height))\ndoc.save('written.docx'); z = zipfile.ZipFile('written.docx')\nprint(len(doc.paragraphs), 'paragraphs;', len(doc.inline_shapes), 'pictures; media parts', [n for n in z.namelist() if n.startswith('word/media')])\nprint(z.namelist()[:4], len(z.namelist()), 'parts; first bytes', open('written.docx', 'rb').read(4))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "0 Title\n1 Heading 1\n4 Heading 4\n9 Heading 9\n10 ValueError: level must be in range 0-9, got 10\nParagraph Run 2\nbold True ['<w:b/>']\nbold False ['<w:b w:val=\"0\"/>']\nbold None\n['<w:u w:val=\"double\"/>']\nrun.strike = True: None\nrun.font.strike = True: True\n['<w:br w:type=\"page\"/>']\n{} -> 762000 1016000\n{'width': 914400} -> 914400 1219200\n{'width': 914400, 'height': 1440000} -> 914400 1440000\n9 paragraphs; 3 pictures; media parts ['word/media/image1.png']\n['[Content_Types].xml', '_rels/.rels', 'docProps/core.xml', 'docProps/app.xml'] 18 parts; first bytes b'PK\\x03\\x04'",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "practicePdfParanoia_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Practice program 1, PDF Paranoia: encrypt every PDF in a folder tree, check the copy, delete the original; then decrypt.\nimport pypdf\nroot = 'tree'\nfor rel in ('a.pdf', 'sub/b.pdf', 'sub/deeper/C.PDF', 'notes.txt'):\n    os.makedirs(os.path.dirname(os.path.join(root, rel)) or root, exist_ok=True)\n    save(os.path.join(root, rel), make_pdf(rel.upper()) if rel.lower().endswith('.pdf') else b'plain text')\ndef encrypt_tree(folder, password):\n    for dirpath, dirnames, filenames in os.walk(folder):\n        for filename in sorted(filenames):\n            if not filename.lower().endswith('.pdf') or '_encrypted' in filename: continue\n            path = os.path.join(dirpath, filename)\n            reader = pypdf.PdfReader(path)\n            if reader.is_encrypted: print('Skipping (already encrypted):', path); continue\n            writer = pypdf.PdfWriter(); writer.append(reader); writer.encrypt(password, algorithm='AES-256')\n            new = os.path.join(dirpath, filename[:-4] + '_encrypted' + filename[-4:])\n            with open(new, 'wb') as f: writer.write(f)\n            check = pypdf.PdfReader(new)\n            if check.decrypt(password).name != 'NOT_DECRYPTED' and len(check.pages) == len(reader.pages):\n                os.remove(path); print('Encrypted and removed the original:', path)\ndef decrypt_tree(folder, password):\n    for dirpath, dirnames, filenames in os.walk(folder):\n        for filename in sorted(filenames):\n            if not filename.lower().endswith('_encrypted.pdf'): continue\n            path = os.path.join(dirpath, filename); reader = pypdf.PdfReader(path)\n            if reader.decrypt(password).name == 'NOT_DECRYPTED': print('Wrong password for', path, '- continuing'); continue\n            writer = pypdf.PdfWriter(); writer.append(reader)\n            with open(path.replace('_encrypted', '_decrypted'), 'wb') as f: writer.write(f)\n            print('Decrypted copy:', path.replace('_encrypted', '_decrypted'))\nencrypt_tree(root, 'swordfish')\nprint(sorted(os.path.relpath(os.path.join(d, f), root) for d, _, fs in os.walk(root) for f in fs))\ndecrypt_tree(root, 'wrong'); decrypt_tree(root, 'swordfish')\nprint(sorted(os.path.relpath(os.path.join(d, f), root) for d, _, fs in os.walk(root) for f in fs))\nprint({os.path.basename(os.path.join(d, f)): pypdf.PdfReader(os.path.join(d, f)).pages[0].extract_text() for d, _, fs in os.walk(root) for f in fs if f.lower().endswith('_decrypted.pdf')})\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Encrypted and removed the original: tree/a.pdf\nEncrypted and removed the original: tree/sub/b.pdf\nEncrypted and removed the original: tree/sub/deeper/C.PDF\n['a_encrypted.pdf', 'notes.txt', 'sub/b_encrypted.pdf', 'sub/deeper/C_encrypted.PDF']\nWrong password for tree/a_encrypted.pdf - continuing\nWrong password for tree/sub/b_encrypted.pdf - continuing\nWrong password for tree/sub/deeper/C_encrypted.PDF - continuing\nDecrypted copy: tree/a_decrypted.pdf\nDecrypted copy: tree/sub/b_decrypted.pdf\nDecrypted copy: tree/sub/deeper/C_decrypted.PDF\n['a_decrypted.pdf', 'a_encrypted.pdf', 'notes.txt', 'sub/b_decrypted.pdf', 'sub/b_encrypted.pdf', 'sub/deeper/C_decrypted.PDF', 'sub/deeper/C_encrypted.PDF']\n{'a_decrypted.pdf': 'A.PDF', 'b_decrypted.pdf': 'SUB/B.PDF', 'C_decrypted.PDF': 'SUB/DEEPER/C.PDF'}",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "practiceCustomInvitations_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Practice program 2, Custom Invitations: one invitation per page, with styles made in the program.\nimport docx\nfrom docx.shared import Pt\nfrom docx.enum.style import WD_STYLE_TYPE\nguests = ['Prof. Plum', 'Miss Scarlet', 'Col. Mustard', 'Al Sweigart', 'Robocop']\ndoc = docx.Document()\nfor name, size, bold in (('Invite Lead', 20, False), ('Invite Name', 32, True), ('Invite Detail', 14, False)):\n    s = doc.styles.add_style(name, WD_STYLE_TYPE.PARAGRAPH); s.base_style = doc.styles['Normal']; s.font.size = Pt(size); s.font.bold = bold\nfor i, guest in enumerate(guests):\n    doc.add_paragraph('It would be a pleasure to have the company of', 'Invite Lead')\n    doc.add_paragraph(guest, 'Invite Name')\n    doc.add_paragraph('at 11010 Memory Lane on the Evening of', 'Invite Lead')\n    doc.add_paragraph('April 1st', 'Invite Detail')\n    doc.add_paragraph(\"at 7 o'clock\", 'Invite Detail')\n    if i < len(guests) - 1: doc.add_page_break()\ndoc.save('invitations.docx')\nd = docx.Document('invitations.docx')\nprint(len(d.paragraphs), 'paragraphs;', d.element.xml.count('w:type=\"page\"'), 'page breaks for', len(guests), 'guests')\nprint([p.text for p in d.paragraphs if p.style.name == 'Invite Name'])\nprint(sorted({p.style.name for p in d.paragraphs if p.style.name.startswith('Invite')}))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "29 paragraphs; 4 page breaks for 5 guests\n['Prof. Plum', 'Miss Scarlet', 'Col. Mustard', 'Al Sweigart', 'Robocop']\n['Invite Detail', 'Invite Lead', 'Invite Name']",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "practicePasswordBreaker_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Practice program 3, PDF Password Breaker, on a small dictionary: both cases of every word, until decrypt() succeeds.\nimport pypdf, time\nwords = ['apple', 'banana', 'cherry', 'dragonfruit']\nw = pypdf.PdfWriter(); w.append(io.BytesIO(make_pdf('Locked'))); w.encrypt('CHERRY', algorithm='AES-256')\nb = io.BytesIO(); w.write(b); data = b.getvalue()\nreader = pypdf.PdfReader(io.BytesIO(data))\nattempts = 0; found = None\nfor word in words:\n    for guess in (word, word.upper()):\n        attempts += 1\n        if reader.decrypt(guess).name != 'NOT_DECRYPTED': found = guess; break\n    if found: break\nprint('found', found, 'after', attempts, 'attempts;', 'a dictionary of n words costs up to', 2 * len(words), 'attempts')\nprint(repr(reader.pages[0].extract_text()))\nstart = time.perf_counter(); pypdf.PdfReader(io.BytesIO(data)).decrypt('nope'); print('one failed AES-256 attempt takes under one second:', time.perf_counter() - start < 1)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "found CHERRY after 6 attempts; a dictionary of n words costs up to 8 attempts\n'Locked'\none failed AES-256 attempt takes under one second: True",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "shippedChapterPdf_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\nimport hashlib, urllib.request\nSHA = {'Recursion_Chapter1.pdf': 'd943896e0bd2241d5d8d819b43c197225c5e87c23a4b852c4819e74261bbad29', 'demo.docx': 'b43b21137d7d69b16e9e1ec7ebb75e0e2f053d8947cd2ddcf79d60a0dfe5f121'}\ndef real_file(name):\n    cache = os.environ.get('CH17_CACHE') or tempfile.gettempdir(); p = os.path.join(cache, 'ch17_' + SHA[name][:8] + '_' + name)\n    if not os.path.exists(p):\n        rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n        z = zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(rq, timeout=120).read()))\n        open(p + '.part', 'wb').write(z.read('Automate_the_Boring_Stuff_3e_onlinematerials/' + name)); os.replace(p + '.part', p)\n    assert hashlib.sha256(open(p, 'rb').read()).hexdigest() == SHA[name], 'the shipped file is not the one the study read'\n    import shutil; shutil.copy(p, name); return name\n# The sample chapter the book ships: pages, images, the text of the first page, and the chapter's own loops on it.\nname = real_file('Recursion_Chapter1.pdf')\nreader = pypdf.PdfReader(name)\nprint(len(reader.pages), 'pages; encrypted', reader.is_encrypted, '; page size', [float(x) for x in reader.pages[0].mediabox])\nprint(repr(reader.pages[0].extract_text()[:60]))\ntext = ''\nfor page in reader.pages: text += page.extract_text()\nprint(len(text) > 30000, 'characters of text; the pages are joined with no separator:', repr(reader.pages[0].extract_text()[-12:] + reader.pages[1].extract_text()[:12]))\nprint('images per page:', [len(p.images) for p in reader.pages])\nn = 0\nfor number, page in enumerate(reader.pages, 1):\n    for image in page.images:\n        n += 1\n        with open('%d_page%d_%s' % (n, number, image.name), 'wb') as f: f.write(image.data)\nprint(n, 'image files written')\nwriter = pypdf.PdfWriter(); writer.append(name, (0, 5))\nwith open('first_five_pages.pdf', 'wb') as f: writer.write(f)\nprint(len(pypdf.PdfReader('first_five_pages.pdf').pages), 'pages in first_five_pages.pdf')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "18 pages; encrypted False ; page size [0.0, 0.0, 546.0, 708.0]\n'1\\nWHAT IS RECURSION?\\nRecursion has an intimidating reputatio'\nTrue characters of text; the pages are joined with no separator: ' Al Sweigart2\\xa0\\xa0\\xa0Chapter '\nimages per page: [7, 2, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\n11 image files written\n5 pages in first_five_pages.pdf",
+   "live": true,
+   "kind": "live",
+   "exit": 0,
+   "livekey": [
+    "Recursion_Chapter1.pdf",
+    "sha256 d943896e0bd2"
+   ]
+  },
+  "shippedDemoDocx_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\nimport hashlib, urllib.request\nSHA = {'Recursion_Chapter1.pdf': 'd943896e0bd2241d5d8d819b43c197225c5e87c23a4b852c4819e74261bbad29', 'demo.docx': 'b43b21137d7d69b16e9e1ec7ebb75e0e2f053d8947cd2ddcf79d60a0dfe5f121'}\ndef real_file(name):\n    cache = os.environ.get('CH17_CACHE') or tempfile.gettempdir(); p = os.path.join(cache, 'ch17_' + SHA[name][:8] + '_' + name)\n    if not os.path.exists(p):\n        rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n        z = zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(rq, timeout=120).read()))\n        open(p + '.part', 'wb').write(z.read('Automate_the_Boring_Stuff_3e_onlinematerials/' + name)); os.replace(p + '.part', p)\n    assert hashlib.sha256(open(p, 'rb').read()).hexdigest() == SHA[name], 'the shipped file is not the one the study read'\n    import shutil; shutil.copy(p, name); return name\n# The Word file the book ships: its paragraphs, its runs, and the restyling of the chapter.\nimport docx\nname = real_file('demo.docx')\ndoc = docx.Document(name)\nprint([(p.style.name, p.text) for p in doc.paragraphs])\nprint([(r.text, r.bold, r.italic) for r in doc.paragraphs[1].runs])\nprint('table count', len(doc.tables), '; author of the file', repr(doc.core_properties.author), '; last modified by', repr(doc.core_properties.last_modified_by))\ndoc.paragraphs[0].style = 'Normal'\ndoc.paragraphs[1].runs[0].style = 'Quote Char'\ndoc.paragraphs[1].runs[1].underline = True\ndoc.paragraphs[1].runs[3].underline = True\ndoc.save('restyled.docx')\nd = docx.Document('restyled.docx')\nprint(d.paragraphs[0].style.name, [(r.text, r.style.name, r.underline) for r in d.paragraphs[1].runs])\nprint(zipfile.ZipFile('restyled.docx').namelist()[:5])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "[('Title', 'Document Title'), ('Normal', 'A plain paragraph with some bold text and some italic'), ('Heading 1', 'Heading, level 1'), ('Intense Quote', 'Intense quote'), ('List Bullet', 'first item in unordered list'), ('List Number', 'first item in ordered list'), ('Normal', '')]\n[('A plain paragraph with some ', None, None), ('bold', True, None), (' text and some ', None, None), ('italic', None, True)]\ntable count 0 ; author of the file 'Cisco Employee' ; last modified by 'Al Sweigart'\nNormal [('A plain paragraph with some ', 'Quote Char', None), ('bold', 'Default Paragraph Font', True), (' text and some ', 'Default Paragraph Font', None), ('italic', 'Default Paragraph Font', True)]\n['[Content_Types].xml', '_rels/.rels', 'docProps/app.xml', 'docProps/core.xml', 'word/document.xml']",
+   "live": true,
+   "kind": "live",
+   "exit": 0,
+   "livekey": [
+    "demo.docx",
+    "sha256 b43b21137d7d"
+   ]
+  },
+  "structureCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# The slide shows this program from line 16: make_pdf() above builds a small valid PDF of text pages.\ndata = make_pdf('Page one', 'Page two')  # two pages\nprint(data[:8], data.rstrip().endswith(b'%%EOF'))  # header, last line\nstart = int(re.search(rb'startxref\\n(\\d+)', data).group(1))\nprint('startxref points at', data[start:start + 4])  # the table\nrows = re.findall(rb'(\\d{10}) (\\d{5}) ([nf]) \\n', data[start:])\nprint(len(rows), 'table entries; object 0 is',\n      'free' if rows[0][2] == b'f' else 'in use')\nprint([data[int(o):int(o) + 7] for o, g, t in rows[1:4]])\nreader = pypdf.PdfReader(io.BytesIO(data))\nprint('content stream:', reader.pages[0].get_contents().get_data())\nc = ('BT /F1 12 Tf 200 700 Td (world) Tj ET '\n     'BT /F1 12 Tf 72 700 Td (Hello) Tj ET')  # world first\npage = pypdf.PdfReader(io.BytesIO(make_pdf(c))).pages[0]\nprint(repr(page.extract_text()),\n      repr(page.extract_text(extraction_mode='layout').strip()))\ns = ('BT /F1 18 Tf 72 720 Td (Salary: 120000 USD) Tj ET '\n     '0 0 0 rg 60 710 300 30 re f')  # then a black box\nsecret = pypdf.PdfReader(io.BytesIO(make_pdf(s))).pages[0]\nprint('text under the black box:', secret.extract_text())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "b'%PDF-1.4' True\nstartxref points at b'xref'\n8 table entries; object 0 is free\n[b'1 0 obj', b'2 0 obj', b'3 0 obj']\ncontent stream: b'BT /F1 18 Tf 72 720 Td (Page one) Tj ET'\n'worldHello' 'Hello                       world'\ntext under the black box: Salary: 120000 USD",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "extractTextCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Text extraction with pypdf and with pdfminer.six: pages, layout and a table-like page.\nfrom pdfminer.high_level import extract_text\nsix = make_pdf(*['Page %d' % i for i in range(1, 7)])\nreader = pypdf.PdfReader(io.BytesIO(six))\ntext = ''\nfor page in reader.pages:\n    text += page.extract_text()\nprint('pypdf:', repr(text))\nminer = extract_text(io.BytesIO(six))\nprint('pdfminer.six:', repr(miner[:16]), miner.count('\\x0c'))\nc = ('BT /F1 12 Tf 72 700 Td (Name) Tj 200 0 Td (Price) Tj ET '\n     'BT /F1 12 Tf 72 686 Td (Tea) Tj 200 0 Td (3) Tj ET')\npage = pypdf.PdfReader(io.BytesIO(make_pdf(c))).pages[0]\nprint(repr(page.extract_text()))\nprint(page.extract_text(extraction_mode='layout').strip())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "pypdf: 'Page 1Page 2Page 3Page 4Page 5Page 6'\npdfminer.six: 'Page 1\\n\\n\\x0cPage 2\\n' 6\n'Name Price\\nTea 3'\nName                                                  Price\nTea                                                      3",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "shippedChapterPdfCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\nimport hashlib, urllib.request\nSHA = {'Recursion_Chapter1.pdf': 'd943896e0bd2241d5d8d819b43c197225c5e87c23a4b852c4819e74261bbad29', 'demo.docx': 'b43b21137d7d69b16e9e1ec7ebb75e0e2f053d8947cd2ddcf79d60a0dfe5f121'}\ndef real_file(name):\n    cache = os.environ.get('CH17_CACHE') or tempfile.gettempdir(); p = os.path.join(cache, 'ch17_' + SHA[name][:8] + '_' + name)\n    if not os.path.exists(p):\n        rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n        z = zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(rq, timeout=120).read()))\n        open(p + '.part', 'wb').write(z.read('Automate_the_Boring_Stuff_3e_onlinematerials/' + name)); os.replace(p + '.part', p)\n    assert hashlib.sha256(open(p, 'rb').read()).hexdigest() == SHA[name], 'the shipped file is not the one the study read'\n    import shutil; shutil.copy(p, name); return name\n# The sample chapter the book ships: the pages, the text of the first page and every image the chapter's loop writes.\nname = real_file('Recursion_Chapter1.pdf')  # sha256 checked\nreader = pypdf.PdfReader(name)\nprint(len(reader.pages), 'pages; encrypted', reader.is_encrypted)\nprint(repr(reader.pages[0].extract_text()[:36]))\nprint('images per page:', *[len(p.images) for p in reader.pages])\nn = 0\nfor number, page in enumerate(reader.pages, 1):\n    for image in page.images:\n        n += 1\n        with open('%d_%d_%s' % (n, number, image.name), 'wb') as f:\n            f.write(image.data)\nprint(n, 'image files written')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "18 pages; encrypted False\n'1\\nWHAT IS RECURSION?\\nRecursion has a'\nimages per page: 7 2 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0\n11 image files written",
+   "live": true,
+   "kind": "live",
+   "exit": 0,
+   "livekey": [
+    "Recursion_Chapter1.pdf",
+    "sha256 d943896e0bd2"
+   ]
+  },
+  "pageSelectionCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Copying pages into a new file: a tuple is a range, a list is exact, merge() inserts at a position.\nsix = make_pdf(*['Page %d' % i for i in range(1, 7)])\ndef texts(writer):                                   # the page texts of a writer\n    buf = io.BytesIO(); writer.write(buf)\n    return [p.extract_text() for p in pypdf.PdfReader(buf).pages]\nfor label, pages in (('(0, 5)', (0, 5)), ('(0, 5, 2)', (0, 5, 2)),\n                     ('[0, 5]', [0, 5])):\n    w = pypdf.PdfWriter(); w.append(io.BytesIO(six), pages)\n    print('append', label, '->', texts(w))\nthree = make_pdf('A1', 'A2', 'A3')\nw = pypdf.PdfWriter(); w.append(io.BytesIO(three))\nw.merge(1, io.BytesIO(six), pages=(0, 2))\nprint('merge(1, file, pages=(0, 2)) ->', texts(w))\nw = pypdf.PdfWriter(); w.append(io.BytesIO(three))\nw.merge(1, io.BytesIO(six), (0, 2))                  # as the chapter writes it\nprint('merge(1, file, (0, 2)) ->', len(w.pages), 'pages; bookmark titles',\n      [o['/Title'] for o in w.outline])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "append (0, 5) -> ['Page 1', 'Page 2', 'Page 3', 'Page 4', 'Page 5']\nappend (0, 5, 2) -> ['Page 1', 'Page 3', 'Page 5']\nappend [0, 5] -> ['Page 1', 'Page 6']\nmerge(1, file, pages=(0, 2)) -> ['A1', 'Page 1', 'Page 2', 'A2', 'A3']\nmerge(1, file, (0, 2)) -> 9 pages; bookmark titles ['(0, 2)']",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "rotateBlankWatermarkCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Rotating, inserting blank pages and laying one page over another.\ndef one(text): return pypdf.PdfReader(io.BytesIO(make_pdf(text))).pages[0]\nw = pypdf.PdfWriter(); w.append(io.BytesIO(make_pdf('x')))\npage, seen = w.pages[0], []\nfor angle in (90, 270, -90, 180):\n    page.rotate(angle); seen.append(page.rotation)\nprint('rotation after 90, 270, -90, 180:', seen)\nw = pypdf.PdfWriter()\nfor size in ((300, 400), (100, 100)): w.add_blank_page(*size)\nw.insert_blank_page(index=1)\nprint([(float(p.mediabox.width), float(p.mediabox.height))\n       for p in w.pages])\nprint('insert_blank_page(2) is', float(w.insert_blank_page(2).mediabox.width),\n      'points wide')\ndef drawn(over):                       # in stream order\n    base = one('BASE'); base.merge_page(one('MARK'), over=over)\n    return re.findall(rb'\\((\\w+)\\) Tj', base.get_contents().get_data())\nprint('merge_page(over=False) draws', drawn(False))\nprint('merge_page(over=True) draws', drawn(True))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "rotation after 90, 270, -90, 180: [90, 360, 270, 450]\n[(300.0, 400.0), (100.0, 100.0), (100.0, 100.0)]\ninsert_blank_page(2) is 2.0 points wide\nmerge_page(over=False) draws [b'MARK', b'BASE']\nmerge_page(over=True) draws [b'BASE', b'MARK']",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "decryptCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# AES-256 encryption, a reader that refuses until decrypt() matches, and what decrypt() returns.\nw = pypdf.PdfWriter(); w.add_blank_page(100, 100)\nw.encrypt('userpw', 'ownerpw', algorithm='AES-256')\nb = io.BytesIO(); w.write(b)\ndef reader():\n    return pypdf.PdfReader(io.BytesIO(b.getvalue()))\ntry:\n    reader().pages[0]\nexcept Exception as e:\n    print(type(e).__name__, '-', e)\nfor pw in ('wrong', 'Userpw', 'userpw', 'ownerpw'):\n    print(repr(pw), '->', reader().decrypt(pw).name)\nr = reader(); r.decrypt('userpw')\nprint(len(r.pages), 'page after decrypt')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "FileNotDecryptedError - File has not been decrypted\n'wrong' -> NOT_DECRYPTED\n'Userpw' -> NOT_DECRYPTED\n'userpw' -> USER_PASSWORD\n'ownerpw' -> OWNER_PASSWORD\n1 page after decrypt",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "combinePdfsCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Project 12: combine every page after the first of all the PDFs of a folder (the chapter's steps, pdf_files corrected).\nfor name in ('b.pdf', 'A.pdf', 'c.PDF'):\n    save(name, make_pdf(name + ' p1', name + ' p2'))\ndef find_pdfs():                  # step 1\n    pdf_filenames = []\n    for filename in os.listdir('.'):\n        if filename.lower().endswith('.pdf'):  # c.PDF\n            pdf_filenames.append(filename)\n    pdf_filenames.sort(key=str.lower)\n    return pdf_filenames\ndef combine():                    # steps 2 and 3\n    writer = pypdf.PdfWriter()\n    for pdf_filename in find_pdfs():\n        reader = pypdf.PdfReader(pdf_filename)\n        writer.append(pdf_filename, (1, len(reader.pages)))\n    with open('combined.pdf', 'wb') as file:\n        writer.write(file)\n    return len(pypdf.PdfReader('combined.pdf').pages)\nprint(find_pdfs(), combine(), 'pages')\nprint(find_pdfs(), combine(), 'pages')  # again\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "['A.pdf', 'b.pdf', 'c.PDF'] 3 pages\n['A.pdf', 'b.pdf', 'c.PDF', 'combined.pdf'] 5 pages",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "pdfParanoiaCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# PDF Paranoia: encrypt every PDF of a folder tree, test the copy, delete the original; then decrypt.\nfor rel in ('a.pdf', 'sub/b.pdf', 'sub/deeper/C.PDF', 'notes.txt'):\n    path = os.path.join('tree', rel); os.makedirs(os.path.dirname(path), exist_ok=True)\n    save(path, make_pdf(rel) if rel.lower().endswith('.pdf') else b'plain text')\ndef pdfs(folder, suffix):\n    for dirpath, dirnames, filenames in os.walk(folder):\n        for filename in sorted(filenames):\n            if filename.lower().endswith(suffix):\n                yield os.path.join(dirpath, filename)\ndef encrypt_tree(folder, password):\n    for path in list(pdfs(folder, '.pdf')):\n        if '_encrypted' in path: continue\n        reader = pypdf.PdfReader(path)\n        writer = pypdf.PdfWriter(); writer.append(reader)\n        writer.encrypt(password, algorithm='AES-256')\n        new = path[:-4] + '_encrypted' + path[-4:]\n        with open(new, 'wb') as f: writer.write(f)\n        check = pypdf.PdfReader(new)    # test first\n        if (check.decrypt(password).name != 'NOT_DECRYPTED'\n                and len(check.pages) == len(reader.pages)):\n            os.remove(path); print('Removed', path)\ndef decrypt_tree(folder, password):\n    for path in pdfs(folder, '_encrypted.pdf'):\n        reader = pypdf.PdfReader(path)\n        if reader.decrypt(password).name == 'NOT_DECRYPTED':\n            print('Wrong password for', path); continue\n        writer = pypdf.PdfWriter(); writer.append(reader)\n        out = path.replace('_encrypted', '_decrypted')\n        with open(out, 'wb') as f: writer.write(f)\n        print('Decrypted copy:', out)\nencrypt_tree('tree', 'swordfish')\ndecrypt_tree('tree', 'wrong'); decrypt_tree('tree', 'swordfish')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Removed tree/a.pdf\nRemoved tree/sub/b.pdf\nRemoved tree/sub/deeper/C.PDF\nWrong password for tree/a_encrypted.pdf\nWrong password for tree/sub/b_encrypted.pdf\nWrong password for tree/sub/deeper/C_encrypted.PDF\nDecrypted copy: tree/a_decrypted.pdf\nDecrypted copy: tree/sub/b_decrypted.pdf\nDecrypted copy: tree/sub/deeper/C_decrypted.PDF",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "passwordBreakerCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# PDF Password Breaker on a small dictionary: both cases of every word, until decrypt() succeeds.\nimport time\nwords = ['apple', 'banana', 'cherry', 'dragonfruit']\nw = pypdf.PdfWriter(); w.append(io.BytesIO(make_pdf('Locked')))\nw.encrypt('CHERRY', algorithm='AES-256')\nb = io.BytesIO(); w.write(b); data = b.getvalue()\nreader = pypdf.PdfReader(io.BytesIO(data))\nattempts, found = 0, None\nfor word in words:\n    for guess in (word, word.upper()):\n        attempts += 1\n        if reader.decrypt(guess).name != 'NOT_DECRYPTED':\n            found = guess; break\n    if found: break\nprint('found', found, 'after', attempts, 'attempts')\nprint('a dictionary of n words costs up to', 2 * len(words), 'attempts')\nprint(repr(reader.pages[0].extract_text()))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "found CHERRY after 6 attempts\na dictionary of n words costs up to 8 attempts\n'Locked'",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "docxReadCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Reading a Word document: paragraphs, runs and what paragraphs leave out.\nimport docx\nfrom docx.oxml import parse_xml\nW = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'\nLINK = ('<w:hyperlink xmlns:w=\"%s\"><w:r><w:t>linked</w:t></w:r>'\n        '</w:hyperlink>' % W)\ndoc = docx.Document(); p = doc.add_paragraph('Some ')\np.add_run('bold').bold = True\np.add_run(' text')\nt = doc.add_table(rows=1, cols=1); t.cell(0, 0).text = 'in a table'\ndoc.sections[0].header.paragraphs[0].text = 'IN THE HEADER'\nq = doc.add_paragraph('before '); q._p.append(parse_xml(LINK))\nprint([x.text for x in doc.paragraphs])\nprint([(r.text, r.bold) for r in p.runs])\nprint('table:', doc.tables[0].cell(0, 0).text)\nprint('header:', doc.sections[0].header.paragraphs[0].text)\nprint('hyperlink paragraph: text', repr(q.text),\n      'runs', [r.text for r in q.runs])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "['Some bold text', 'before linked']\n[('Some ', None), ('bold', True), (' text', None)]\ntable: in a table\nheader: IN THE HEADER\nhyperlink paragraph: text 'before linked' runs ['before ']",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "shippedDemoDocxCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\nimport hashlib, urllib.request\nSHA = {'Recursion_Chapter1.pdf': 'd943896e0bd2241d5d8d819b43c197225c5e87c23a4b852c4819e74261bbad29', 'demo.docx': 'b43b21137d7d69b16e9e1ec7ebb75e0e2f053d8947cd2ddcf79d60a0dfe5f121'}\ndef real_file(name):\n    cache = os.environ.get('CH17_CACHE') or tempfile.gettempdir(); p = os.path.join(cache, 'ch17_' + SHA[name][:8] + '_' + name)\n    if not os.path.exists(p):\n        rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n        z = zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(rq, timeout=120).read()))\n        open(p + '.part', 'wb').write(z.read('Automate_the_Boring_Stuff_3e_onlinematerials/' + name)); os.replace(p + '.part', p)\n    assert hashlib.sha256(open(p, 'rb').read()).hexdigest() == SHA[name], 'the shipped file is not the one the study read'\n    import shutil; shutil.copy(p, name); return name\n# The Word file the book ships: its paragraphs, its runs and the restyling of the chapter.\nimport docx\nname = real_file('demo.docx')  # sha256 checked\ndoc = docx.Document(name)\nfor p in doc.paragraphs:\n    print(p.style.name, '|', p.text)\nfor r in doc.paragraphs[1].runs:\n    print('   ', repr(r.text), r.bold, r.italic)\ndoc.paragraphs[0].style = 'Normal'\ndoc.paragraphs[1].runs[0].style = 'Quote Char'\ndoc.paragraphs[1].runs[1].underline = True\ndoc.save('restyled.docx')\nd = docx.Document('restyled.docx')\nprint(d.paragraphs[0].style.name)\nfor r in d.paragraphs[1].runs:\n    print('   ', repr(r.text), r.style.name, r.underline)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Title | Document Title\nNormal | A plain paragraph with some bold text and some italic\nHeading 1 | Heading, level 1\nIntense Quote | Intense quote\nList Bullet | first item in unordered list\nList Number | first item in ordered list\nNormal | \n    'A plain paragraph with some ' None None\n    'bold' True None\n    ' text and some ' None None\n    'italic' None True\nNormal\n    'A plain paragraph with some ' Quote Char None\n    'bold' Default Paragraph Font True\n    ' text and some ' Default Paragraph Font None\n    'italic' Default Paragraph Font None",
+   "live": true,
+   "kind": "live",
+   "exit": 0,
+   "livekey": [
+    "demo.docx",
+    "sha256 b43b21137d7d"
+   ]
+  },
+  "stylesCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Styles: a paragraph takes a paragraph style, a run a character style, and a name must match exactly.\nimport docx\ndoc = docx.Document()\np = doc.add_paragraph('A plain paragraph')\nr = p.add_run(' with a run')\nfor obj, name in ((p, 'Quote Char'), (r, 'Quote')):\n    try:\n        obj.style = name\n    except ValueError as e:\n        print(name, '->'); print('   ', e)\nfor n in ('List Number ', 'List Number'):\n    try:\n        doc.add_paragraph('x', n); print(repr(n), 'ok')\n    except KeyError as e:\n        print(repr(n), 'KeyError', e)\nprint(len(doc.styles), 'styles in a new document')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Quote Char ->\n    assigned style is type CHARACTER (2), need type PARAGRAPH (1)\nQuote ->\n    assigned style is type PARAGRAPH (1), need type CHARACTER (2)\n'List Number ' KeyError \"no style with name 'List Number '\"\n'List Number' ok\n164 styles in a new document",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "writeRunsCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Writing: add_paragraph() returns a Paragraph, add_run() a Run, and bold has three states.\nimport docx\ndoc = docx.Document()\np = doc.add_paragraph('Hello world!')\nr = p.add_run(' A second run.')\nprint(type(p).__name__, type(r).__name__, len(p.runs))\ntag = lambda: re.findall(r'<w:b[ /][^>]*>', r._r.xml)\nfor value in (True, False, None):   # three states\n    r.bold = value; print(value, '->', r.bold, tag())\nr.strike = True; print('run.strike =', r.font.strike)\nr.font.strike = True; print('font.strike =', r.font.strike)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Paragraph Run 2\nTrue -> True ['<w:b/>']\nFalse -> False ['<w:b w:val=\"0\"/>']\nNone -> None []\nrun.strike = None\nfont.strike = True",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "breaksCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Headings of levels 0 to 9, a page break and two pictures.\nimport docx\nfrom PIL import Image\nfrom docx.shared import Inches\nfrom docx.enum.text import WD_BREAK\ndoc = docx.Document()\nfor level in (0, 1, 9, 10):\n    try:\n        print(level, doc.add_heading('Header %d' % level, level).style.name)\n    except ValueError as e:\n        print(level, 'ValueError:', e)\ndoc.add_paragraph('Hello').add_run().add_break(WD_BREAK.PAGE)\nprint(re.findall(r'<w:br[^>]*>', doc.element.xml))\nimg = io.BytesIO(); Image.new('RGB', (60, 80), 'red').save(img, 'PNG')\nfor label, kw in (('no width', {}), ('width=1 inch', {'width': Inches(1)})):\n    shape = doc.add_picture(io.BytesIO(img.getvalue()), **kw)\n    print(label, '->', int(shape.width), int(shape.height))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "0 Title\n1 Heading 1\n9 Heading 9\n10 ValueError: level must be in range 0-9, got 10\n['<w:br w:type=\"page\"/>']\nno width -> 762000 1016000\nwidth=1 inch -> 914400 1219200",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  },
+  "customInvitationsCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, tempfile, zipfile, struct, zlib\nos.chdir(tempfile.mkdtemp())\nimport pypdf\ndef make_pdf(*pages):\n    \"\"\"a small valid PDF 1.4 of text pages (Helvetica, 612 x 792); a page that starts with BT is used as a content stream\"\"\"\n    o = ['<</Type/Catalog/Pages 2 0 R>>', None, '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>']; kids = []\n    for s in pages:\n        n = len(o) + 1; kids.append(n); c = s if s.startswith('BT') else 'BT /F1 18 Tf 72 720 Td (%s) Tj ET' % s\n        o.append('<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</Font<</F1 3 0 R>>>>/Contents %d 0 R>>' % (n + 1))\n        o.append('<</Length %d>>\\nstream\\n%s\\nendstream' % (len(c), c))\n    o[1] = '<</Type/Pages/Kids[%s]/Count %d>>' % (' '.join('%d 0 R' % k for k in kids), len(kids))\n    b = b'%PDF-1.4\\n'; offs = []\n    for i, s in enumerate(o, 1): offs.append(len(b)); b += ('%d 0 obj\\n%s\\nendobj\\n' % (i, s)).encode()\n    x = len(b); b += ('xref\\n0 %d\\n0000000000 65535 f \\n' % (len(o) + 1)).encode() + ''.join('%010d 00000 n \\n' % i for i in offs).encode()\n    return b + ('trailer\\n<</Size %d/Root 1 0 R>>\\nstartxref\\n%d\\n%%%%EOF\\n' % (len(o) + 1, x)).encode()\ndef save(name, data):\n    with open(name, 'wb') as f: f.write(data)\n# Custom Invitations: styles made in the program, one invitation per page.\nimport docx\nfrom docx.shared import Pt\nfrom docx.enum.style import WD_STYLE_TYPE\nguests = ['Prof. Plum', 'Miss Scarlet', 'Col. Mustard', 'Al Sweigart', 'Robocop']\ndoc = docx.Document()\nfor name, size, bold in (('Invite Lead', 20, False), ('Invite Name', 32, True),\n                         ('Invite Detail', 14, False)):\n    s = doc.styles.add_style(name, WD_STYLE_TYPE.PARAGRAPH)\n    s.base_style = doc.styles['Normal']; s.font.size = Pt(size); s.font.bold = bold\ncard = [('It would be a pleasure to have the company of', 'Invite Lead'),\n        (None, 'Invite Name'),\n        ('at 11010 Memory Lane on the Evening of', 'Invite Lead'),\n        ('April 1st', 'Invite Detail'), (\"at 7 o'clock\", 'Invite Detail')]\nfor i, guest in enumerate(guests):\n    for text, style in card:\n        doc.add_paragraph(text or guest, style)\n    if i < len(guests) - 1: doc.add_page_break()\ndoc.save('invitations.docx')\nd = docx.Document('invitations.docx')\npages = d.element.xml.count('w:type=\"page\"')\nprint(len(d.paragraphs), 'paragraphs;', pages, 'page breaks for', len(guests))\nprint([p.text for p in d.paragraphs if p.style.name == 'Invite Name'])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "29 paragraphs; 4 page breaks for 5\n['Prof. Plum', 'Miss Scarlet', 'Col. Mustard', 'Al Sweigart', 'Robocop']",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": []
+  }
+ },
+ "_charts": {
+  "rotationSum": {
+   "setup": "import io, pypdf\ndef rotations():\n    w = pypdf.PdfWriter(); w.add_blank_page(100, 100); page = w.pages[0]; out = []\n    for a in (90, 270, -90, 180):\n        page.rotate(a); out.append(['rotate(%d)' % a, page.rotation])\n    return out\n",
+   "expr": "rotations()",
+   "labels": [
+    "rotate(90)",
+    "rotate(270)",
+    "rotate(-90)",
+    "rotate(180)"
+   ],
+   "values": [
+    90.0,
+    360.0,
+    270.0,
+    450.0
+   ]
+  }
+ },
+ "_tables": {
+  "encryptAlgorithms": {
+   "setup": "import io, pypdf\ndef row(label, **kw):\n    w = pypdf.PdfWriter(); w.add_blank_page(100, 100); w.encrypt('swordfish', **kw)\n    b = io.BytesIO(); w.write(b); e = pypdf.PdfReader(b).trailer['/Encrypt']\n    return [label, str(e['/V']), str(e['/R']), str(e['/Length'])]\n",
+   "expr": "[['encrypt() call', 'V', 'R', 'Length']] + [row(\"encrypt('swordfish')\"), row(\"algorithm='AES-128'\", algorithm='AES-128'), row(\"algorithm='AES-256'\", algorithm='AES-256')]",
+   "rows": [
+    [
+     "encrypt() call",
+     "V",
+     "R",
+     "Length"
+    ],
+    [
+     "encrypt('swordfish')",
+     "2",
+     "3",
+     "128"
+    ],
+    [
+     "algorithm='AES-128'",
+     "4",
+     "4",
+     "128"
+    ],
+    [
+     "algorithm='AES-256'",
+     "5",
+     "6",
+     "256"
+    ]
+   ]
+  }
+ },
+ "_bare": {
+  "python": "3.14.6",
+  "packages": [
+   "pypdf==6.20.1"
+  ],
+  "code": "import io, sys, pypdf\npage = pypdf.PdfReader(sys.argv[1]).pages[0]\ntry:\n    print(page.images[0].name)\nexcept Exception as e:\n    print(type(e).__name__, '-', str(e).split('.')[0])\nw = pypdf.PdfWriter(); w.add_blank_page(100, 100)\ntry:\n    w.encrypt('swordfish', algorithm='AES-256'); print('AES-256 written')\nexcept Exception as e:\n    print(type(e).__name__, '-', e)\nw2 = pypdf.PdfWriter(); w2.add_blank_page(100, 100); w2.encrypt('swordfish'); print('RC4 written')\n",
+  "transcript": "ImportError - pillow is required to do image extraction\nDependencyError - cryptography>=3.1 is required for AES algorithm\nRC4 written"
+ },
+ "_docx02": {
+  "python": "3.14.6",
+  "last_line": "ModuleNotFoundError: No module named 'exceptions'",
+  "package": [
+   "docx==0.2.4",
+   "lxml==6.1.3",
+   "pillow==12.3.0"
+  ]
+ }
+}

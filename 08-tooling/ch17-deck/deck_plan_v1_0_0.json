@@ -1,0 +1,4594 @@
+{
+ "meta": {
+  "title": "Ch. 17: PDF and Word Documents",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "1.0.0",
+  "python": "3.14.6",
+  "total": 26,
+  "diagrams": {
+   "WhatAProgramCanDoWithPdfs": 4,
+   "ReadingAPdfToText": 7,
+   "AnEncryptedPdfThroughItsLife": 13,
+   "CombiningManyPdfs": 14,
+   "WhatAProgramCanDoWithWord": 18,
+   "ChoosingAStyle": 20,
+   "BuildingAWordDocument": 21,
+   "PdfAndWordAtAGlance": 24
+  },
+  "notExecuted": [
+   8,
+   23
+  ],
+  "measured": [
+   16
+  ]
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Ch. 17: PDF and Word Documents",
+   "sub": "Documents made for people to read: pypdf for PDF files, python-docx for Word files, and what neither can do",
+   "items": [
+    {
+     "t": "code",
+     "x": 5.0,
+     "y": 0.4,
+     "w": 4.5,
+     "h": 1.68,
+     "rows": [
+      [
+       "import platform, pypdf, docx",
+       ""
+      ],
+      [
+       "platform.python_version()",
+       "'3.14.6'"
+      ],
+      [
+       "pypdf.__version__",
+       "'6.20.1'"
+      ],
+      [
+       "docx.__version__",
+       "'1.2.0'"
+      ]
+     ],
+     "fs": 10
+    },
+    {
+     "t": "foot",
+     "x": 0.6,
+     "y": 3.85,
+     "w": 8.8,
+     "h": 0.41,
+     "fs": 11,
+     "body": "Every output on these slides was printed by the Python above when the deck was made. The two files the book ships were fetched and hash-checked; what could not be run is marked on its slide."
+    }
+   ],
+   "notes": "Chapter 16 kept data in one database file that a program owns. Chapter 17 turns to the opposite case: files that other people made for other people to read, a PDF that looks the same on every screen and a Word document that opens in an editor, and asks what a program can do with them. This deck follows the chapter in its own order: the PDF package pypdf, which reads text and images, copies pages into a new file, rotates and inserts pages, lays one page over another and encrypts a file; Project 12 that combines the pages of many PDFs; the Word package python-docx, which reads paragraphs and runs, styles them, and writes paragraphs, headings, breaks and pictures; and the three practice programs, PDF Paranoia, Custom Invitations and PDF Password Breaker. It adds what the chapter leaves out and what the research found when every printed output was run again: the default encryption of pypdf is RC4 and not AES-256, the merge() line of the chapter inserts the whole file, rotations add up, insert_blank_page(2) means a width of two points, most of the attributes of Table 17-1 belong to the font and not to the run, the text of a hyperlink is in no run, a style name with a trailing space raises KeyError, the package docx cannot be imported, and the dictionary of the Password Breaker is eight times the size the page names. Everything printed on these slides was produced by Python 3.14.6, installed with uv, with pypdf 6.20.1 and python-docx 1.2.0; the programs build their own documents, and the only network use is the fetch of the two files the book ships, whose hashes are checked.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Seven parts; every range is a run of slides you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 6.3,
+     "h": 3.55,
+     "fs": 11.5,
+     "items": [
+      "A PDF and what a program can do (slides 4-6)",
+      "Reading text and images (slides 7-9)",
+      "Writing PDFs: pages, rotation, locks (slides 10-13)",
+      "Projects with PDFs (slides 14-16)",
+      "Word documents: package, paragraphs, runs (slides 17-19)",
+      "Styles and writing Word documents (slides 20-23)",
+      "Summary and resources (slides 24-25)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "26",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "2 + 4",
+       "label": "true stories: 2 on slides, 4 in the notes"
+      },
+      {
+       "n": "24",
+       "label": "consoles and programs, all run before they were shown"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has seven parts. It starts with the PDF: what a program can do with it, the memo that began the format, and the header, the table and the drawing commands that a file holds. Then reading: text page by page, the language-model clean-up that was not run, and the images of the book's own PDF. Then writing PDFs: copying pages, rotating and stamping them, and the encryption that is RC4 unless you ask for AES-256, with the life of an encrypted file. Then three projects with PDFs: combining many files, PDF Paranoia and the Password Breaker with its worst case. Then Word: a .docx file is a ZIP of XML, paragraphs and runs, and the book's demo file. The sixth part is styles and writing Word documents, ending with the invitations and with what was not run. The last part is a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. Two of the slides are true stories and four more are told in the notes; the eight narrative diagrams of the chapter are drawn from the same specifications as the interactive page. Every output was printed by Python 3.14.6 with pypdf 6.20.1 and python-docx 1.2.0, the programs that read the book's files say so, and what could not be run is marked on its slide.",
+   "take": "Seven parts, from a PDF's bytes to a Word invitation.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "The chapter's own competency questions; the summary comes back to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 2.2,
+     "fs": 13,
+     "items": [
+      "Which operations read a document, which build a new one from parts of others, and which cannot be done at all, given that PDF and Word files are made for people to read and not for programs to parse?",
+      "Which printed outputs, programs, numbers and statements of the chapter differ in current releases of the packages, in the files the book ships or in the pages it points to, and on what source?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 3.8,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 10,
+     "items": [
+      "6 branches",
+      "95 topics",
+      "32 console rows",
+      "27 programs run",
+      "8 diagrams",
+      "Python 3.14.6",
+      "pypdf 6.20.1",
+      "python-docx 1.2.0"
+     ]
+    }
+   ],
+   "notes": "The first question is the chapter's spine, and it is a question about limits. A PDF stores drawing commands that put words on a page, and a .docx file is a ZIP archive of XML parts, so a program can read the paragraphs and runs of a Word file, write a new one, copy, reorder, rotate, stamp and encrypt the pages of a PDF, and extract its text and images, but it cannot recover structure that was never stored: there are no paragraphs in a PDF, text comes out in the order it was drawn, a scanned page has no text at all and a black box drawn over words does not remove them. The second question is the watch-out of the deck. The chapter's 91 interactive statements were replayed one by one on the files the book ships under Python 3.14.6 with pypdf 6.20.1 and python-docx 1.2.0: 89 printed what the page prints and 2 differed, both in the third run of the demo paragraph. Under the versions Appendix A pins, pypdf 5.0.1 and python-docx 1.1.2, 88 matched and 3 differed. The agreement is smaller than it looks, because a statement that prints nothing cannot differ from the page, and the merge() example of the chapter is such a statement: it prints nothing and does not do what the chapter says. Each slide says where a printed line differs and on what evidence. The chips give the size of the chapter as this deck covers it: six branches, the topics beneath them, the console rows and the programs that were run, the eight diagrams, and the Python and package releases that printed every result.",
+   "take": "Know what a program can do with these files, and where the book's lines differ.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What a program can do with a PDF",
+   "sub": "Eight things through pypdf; the names older tutorials use are gone",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 5.0,
+     "y": 1.45,
+     "w": 4.5,
+     "h": 3.15,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 5.8,
+       "y": 1.73,
+       "w": 3.7,
+       "h": 2.87,
+       "fill": "FBF8F2",
+       "line": "6E655C",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "A PDF FILE IN PYTHON",
+       "x": 5.88,
+       "y": 1.47,
+       "w": 3.55,
+       "h": 0.24,
+       "fs": 8.5,
+       "color": "6E655C",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 1.84,
+       "w": 3.4,
+       "h": 0.289,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Extract the text of the pages",
+       "x": 6.23,
+       "y": 1.907,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 2.189,
+       "w": 3.4,
+       "h": 0.289,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Extract the images of a page",
+       "x": 6.23,
+       "y": 2.256,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 2.538,
+       "w": 3.4,
+       "h": 0.289,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Copy pages into a new file",
+       "x": 6.23,
+       "y": 2.605,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 2.886,
+       "w": 3.4,
+       "h": 0.289,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Insert pages at a position",
+       "x": 6.23,
+       "y": 2.953,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 3.235,
+       "w": 3.4,
+       "h": 0.289,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Rotate pages",
+       "x": 6.23,
+       "y": 3.302,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 3.584,
+       "w": 3.4,
+       "h": 0.289,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Merge a watermark under a page",
+       "x": 6.23,
+       "y": 3.651,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 3.933,
+       "w": 3.4,
+       "h": 0.289,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Encrypt a file with AES-256",
+       "x": 6.23,
+       "y": 4.0,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.95,
+       "y": 4.281,
+       "w": 3.4,
+       "h": 0.289,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Decrypt a file with a password",
+       "x": 6.23,
+       "y": 4.348,
+       "w": 2.84,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.24,
+       "y": 2.325,
+       "w": 0.22,
+       "h": 0.22,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 1.5
+      },
+      {
+       "k": "line",
+       "x1": 5.35,
+       "y1": 2.545,
+       "x2": 5.35,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.15,
+       "y1": 2.645,
+       "x2": 5.55,
+       "y2": 2.645,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.35,
+       "y1": 2.925,
+       "x2": 5.19,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.35,
+       "y1": 2.925,
+       "x2": 5.51,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A program",
+       "x": 5.0,
+       "y": 3.225,
+       "w": 0.8,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 1.984,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 2.333,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 2.682,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 3.031,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 3.379,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 3.728,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 4.077,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.55,
+       "y1": 2.725,
+       "x2": 5.95,
+       "y2": 4.426,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      }
+     ],
+     "did": "WhatAProgramCanDoWithPdfs"
+    },
+    {
+     "t": "foot",
+     "x": 5.0,
+     "y": 4.63,
+     "w": 4.5,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WhatAProgramCanDoWithPdfs - SetOfUses pattern, 28 of 30 words grounded in the chapter's text"
+    },
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.3,
+     "h": 1.9,
+     "rows": [
+      [
+       "import pypdf",
+       ""
+      ],
+      [
+       "hasattr(pypdf, 'PdfReader')",
+       "True"
+      ],
+      [
+       "hasattr(pypdf, 'PdfWriter')",
+       "True"
+      ],
+      [
+       "hasattr(pypdf, 'PdfFileReader')",
+       "False"
+      ],
+      [
+       "hasattr(pypdf, 'PdfMerger')",
+       "False"
+      ]
+     ],
+     "fs": 9,
+     "cap": "run under Python 3.14.6, pypdf 6.20.1, python-docx 1.2.0"
+    },
+    {
+     "t": "card",
+     "head": "One library, three names",
+     "body": "pyPdf (2005), PyPDF2 (2011) and pypdf are one library; a tutorial that names PdfFileReader or PdfMerger fails.",
+     "x": 0.5,
+     "y": 3.81,
+     "w": 4.3,
+     "h": 1.14,
+     "fs": 9.5,
+     "accent": "slate"
+    }
+   ],
+   "notes": "The use-case diagram lists what the chapter does with a PDF through one package: extract the text of the pages, extract the images of a page, copy pages into a new file, insert pages at a position, rotate pages, merge a watermark under a page, and encrypt and decrypt a file with a password. They are independent uses of the same module and not a sequence, which is why the picture is a set of uses. The console beside it shows the first trap of the chapter, which is about names. The package the chapter uses is pypdf, written in lower case, and its two classes are PdfReader and PdfWriter; PdfFileReader and PdfFileWriter, which many older tutorials use, and PdfMerger are not attributes of pypdf 6.20.1, so a program copied from such a tutorial raises AttributeError. The story is in the documentation of pypdf. Mathieu Fenniak launched pyPdf in 2005, whose last release was 1.13 in 2010; at the end of 2011 Phaseit sponsored PyPDF2 as a fork; Martin Thoma took over its maintenance in April 2022; and PyPDF2 was merged back into pypdf, all lower case and without a number. PdfMerger was removed in pypdf 5.0.0. The study found the same on ten interpreters, Python 3.11, 3.12, 3.13 and the seven releases 3.14.0 to 3.14.6, so the behaviour of these packages does not depend on the 3.x release. Two optional packages, Pillow for images and cryptography for AES, are not named by the chapter and appear on later slides.",
+   "take": "Use pypdf and PdfReader; the names older tutorials teach no longer exist.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A 1991 memo called Camelot",
+   "sub": "Spring 1991",
+   "items": [
+    {
+     "t": "card",
+     "head": "A page that looks the same",
+     "body": "John Warnock, co-founder of Adobe, outlined a system called Camelot in the spring of 1991. Its goal was to capture documents from any application, send them anywhere, and view and print them on any machine.",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.5,
+     "h": 2.8,
+     "fs": 12
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "Spring 1991: Warnock outlines Camelot",
+      "15 Jun 1993: the first Acrobat is released",
+      "A file ends with an offset and %%EOF",
+      "Its text is drawing commands, not paragraphs"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "John Warnock, co-founder of Adobe",
+     "where": "Adobe Systems, in a document that outlined a system called Camelot",
+     "when": "Spring 1991",
+     "link": "https://en.wikipedia.org/wiki/John_Warnock",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on John Warnock says that in the spring of 1991 he outlined a system called Camelot, inventing the Portable Document Format. The goal of Camelot, the article quotes, was to capture documents from any application, send electronic versions of them anywhere, and view and print them on any machine. Adobe released the first Acrobat on 15 June 1993. A PDF file made today still opens with a header line and ends with an offset and %%EOF, and its text is drawing commands that place words on a page; chapter 17 reads and rewrites exactly these files with pypdf. The account rests on these sources. Wikipedia, 'John Warnock' (spring 1991, Camelot, the quoted goal), read 2026-10-12; Wikipedia, 'Adobe Acrobat' (release 15 June 1993); this study's leaves HeaderAndTrailer and ContentStreamText. Two of the facts on the slide were read in the study itself: a small PDF written for it began with %PDF-1.4 and ended with %%EOF, and the words of its page were the drawing command BT /F1 18 Tf 72 720 Td (Page one) Tj ET. The next slide runs both.",
+   "take": "A PDF is a page description made to look the same on every machine.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Header, table and drawing commands",
+   "sub": "What a PDF file holds, and why text comes out in stream order",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.71,
+     "h": 2.93,
+     "lines": [
+      "data = make_pdf('Page one', 'Page two')  # two pages",
+      "print(data[:8], data.rstrip().endswith(b'%%EOF'))  # header, last line",
+      "start = int(re.search(rb'startxref\\n(\\d+)', data).group(1))",
+      "print('startxref points at', data[start:start + 4])  # the table",
+      "rows = re.findall(rb'(\\d{10}) (\\d{5}) ([nf]) \\n', data[start:])",
+      "print(len(rows), 'table entries; object 0 is',",
+      "      'free' if rows[0][2] == b'f' else 'in use')",
+      "print([data[int(o):int(o) + 7] for o, g, t in rows[1:4]])",
+      "reader = pypdf.PdfReader(io.BytesIO(data))",
+      "print('content stream:', reader.pages[0].get_contents().get_data())",
+      "c = ('BT /F1 12 Tf 200 700 Td (world) Tj ET '",
+      "     'BT /F1 12 Tf 72 700 Td (Hello) Tj ET')  # world first",
+      "page = pypdf.PdfReader(io.BytesIO(make_pdf(c))).pages[0]",
+      "print(repr(page.extract_text()),",
+      "      repr(page.extract_text(extraction_mode='layout').strip()))",
+      "s = ('BT /F1 18 Tf 72 720 Td (Salary: 120000 USD) Tj ET '",
+      "     '0 0 0 rg 60 710 300 30 re f')  # then a black box",
+      "secret = pypdf.PdfReader(io.BytesIO(make_pdf(s))).pages[0]",
+      "print('text under the black box:', secret.extract_text())"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program structureCut_v1_0_0.py, lines 19 to 37 of 37"
+    },
+    {
+     "t": "prog",
+     "x": 5.41,
+     "y": 1.55,
+     "w": 3.97,
+     "h": 1.27,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "b'%PDF-1.4' True\nstartxref points at b'xref'\n8 table entries; object 0 is free\n[b'1 0 obj', b'2 0 obj', b'3 0 obj']\ncontent stream: b'BT /F1 18 Tf 72 720 Td (Page one) Tj ET'\n'worldHello' 'Hello                       world'\ntext under the black box: Salary: 120000 USD",
+     "outLabel": "prints",
+     "label": "transcript of program structureCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.56,
+     "w": 9.0,
+     "h": 0.34,
+     "fs": 9,
+     "body": "Lines 1 to 18 of the program (the helper make_pdf(), which writes a small valid PDF 1.4 of text pages byte by byte, and the imports) are not shown. The black box is a filled rectangle drawn after the line of text."
+    }
+   ],
+   "notes": "The program writes a two-page PDF by hand and takes it apart with the standard library. The file starts with the header %PDF-1.4 and ends with %%EOF. The word startxref near the end gives a byte offset, and at that offset the bytes xref begin the cross-reference table, which lists the offset of every numbered object: the table of this file has 8 entries, object 0 is the free one, and the first three offsets point at the text 1 0 obj, 2 0 obj and 3 0 obj. A reader finds the table by reading the last lines, so pypdf can open a file by jumping to the end first. The words of a page are not stored as paragraphs. They are drawing commands in a content stream, BT /F1 18 Tf 72 720 Td (Page one) Tj ET, and get_contents().get_data() returns those same bytes. Two consequences follow, and both were run. Text comes out in the order of the commands and not in the order of the page: with (world) drawn first at x 200 and (Hello) drawn second at x 72, extract_text() returned worldHello, while extraction_mode='layout' returned Hello and world apart. And a black rectangle drawn over a line hides it from the eye and not from a program: extract_text() still returned Salary: 120000 USD, and the Wikipedia article on redaction says the same of PDF files. PDF 1.7 became an international standard as ISO 32000-1 in July 2008, as the Library of Congress describes it; the file the book calls Recursion_Chapter1.pdf is PDF version 1.6 made by Adobe InDesign.",
+   "take": "A PDF holds drawing commands, read in the order they were drawn.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Reading text, page by page",
+   "sub": "pypdf adds the pages with nothing between them; pdfminer.six and layout mode differ",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.3,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.459,
+       "w": 2.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Open the PDF file with a PdfReader",
+       "x": 0.57,
+       "y": 1.551,
+       "w": 2.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.5,
+       "y": 1.866,
+       "w": 2.3,
+       "h": 0.44,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Did the reader raise an error?",
+       "x": 0.67,
+       "y": 2.008,
+       "w": 1.96,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.373,
+       "w": 2.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Loop over the pages of the reader",
+       "x": 0.57,
+       "y": 2.466,
+       "w": 2.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.83,
+       "w": 2.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Extract the text of each page",
+       "x": 0.57,
+       "y": 2.923,
+       "w": 2.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.287,
+       "w": 2.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Join the texts of the pages",
+       "x": 0.57,
+       "y": 3.38,
+       "w": 2.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.744,
+       "w": 2.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Write the text to a file",
+       "x": 0.57,
+       "y": 3.837,
+       "w": 2.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.14,
+       "y": 1.916,
+       "w": 1.66,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the file with the pdfminer.six alternative",
+       "x": 3.21,
+       "y": 1.941,
+       "w": 1.52,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.87,
+       "y": 1.529,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.51,
+       "y": 4.231,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.57,
+       "y": 4.291,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.87,
+       "y1": 1.629,
+       "x2": 2.8,
+       "y2": 1.629,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 1.799,
+       "x2": 1.65,
+       "y2": 1.866,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.8,
+       "y1": 2.086,
+       "x2": 3.14,
+       "y2": 2.086,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.85,
+       "y": 1.886,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 2.306,
+       "x2": 1.65,
+       "y2": 2.373,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 1.71,
+       "y": 2.249,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 2.713,
+       "x2": 1.65,
+       "y2": 2.83,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 3.17,
+       "x2": 1.65,
+       "y2": 3.287,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 3.627,
+       "x2": 1.65,
+       "y2": 3.744,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.97,
+       "y1": 2.256,
+       "x2": 3.97,
+       "y2": 3.914,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.97,
+       "y1": 3.914,
+       "x2": 2.8,
+       "y2": 3.914,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 4.084,
+       "x2": 1.65,
+       "y2": 4.231,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "ReadingAPdfToText"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.3,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ReadingAPdfToText - Workflow pattern, 26 of 27 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 5.0,
+     "y": 1.55,
+     "w": 4.28,
+     "h": 2.93,
+     "lines": [
+      "from pdfminer.high_level import extract_text",
+      "six = make_pdf(*['Page %d' % i for i in range(1, 7)])",
+      "reader = pypdf.PdfReader(io.BytesIO(six))",
+      "text = ''",
+      "for page in reader.pages:",
+      "    text += page.extract_text()",
+      "print('pypdf:', repr(text))",
+      "miner = extract_text(io.BytesIO(six))",
+      "print('pdfminer.six:', repr(miner[:16]), miner.count('\\x0c'))",
+      "c = ('BT /F1 12 Tf 72 700 Td (Name) Tj 200 0 Td (Price) Tj ET '",
+      "     'BT /F1 12 Tf 72 686 Td (Tea) Tj 200 0 Td (3) Tj ET')",
+      "page = pypdf.PdfReader(io.BytesIO(make_pdf(c))).pages[0]",
+      "print(repr(page.extract_text()))",
+      "print(page.extract_text(extraction_mode='layout').strip())"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "pypdf: 'Page 1Page 2Page 3Page 4Page 5Page 6'\npdfminer.six: 'Page 1\\n\\n\\x0cPage 2\\n' 6\n'Name Price\\nTea 3'\nName                                                  Price\nTea                                                      3",
+     "outLabel": "prints",
+     "label": "program extractTextCut_v1_0_0.py, lines 19 to 32 of 32"
+    }
+   ],
+   "notes": "This is the chapter's own sequence for extracting text: open the file in binary read mode, build a PdfReader, loop over reader.pages, call extract_text() on each page and add the strings, and write the text to a file; the chapter's listing falls back on pdfminer.six when pypdf cannot understand the file. The program runs the middle of it on a six-page file. Adding the strings with += gives Page 1Page 2Page 3Page 4Page 5Page 6, with nothing between the pages, which is also what happens on the shipped chapter: the last words of page 1, Al Sweigart, run into the 2 of page 2 as Al Sweigart2; joining with a newline keeps them apart. pdfminer.six returns the same text with a form feed after every page, 6 in all, and on the shipped chapter it returned 33,200 characters against pypdf's 32,981 and spaced out the chapter heading as W H A T. Layout mode keeps the horizontal gap between the columns of a table-like page, so Name and Price stay in their columns, where the default joins the words of a row with single spaces. The fallback was not needed: of eleven damaged files given to both libraries, none was read by pdfminer.six and refused by pypdf, four were refused by both. The text script the book ships, run on the sample chapter, wrote 32,981 characters in 688 lines, and printed 11 warnings that name the optional package fontTools.",
+   "take": "Join pages yourself, and choose the extraction mode that matches the page.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Post-processing with AI",
+   "sub": "A hyphen repair by a regular expression was run; the language-model clean-up was not",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.6,
+     "h": 1.87,
+     "rows": [
+      [
+       "import re",
+       ""
+      ],
+      [
+       "t = 'follow-\\ning the execution'",
+       ""
+      ],
+      [
+       "t",
+       "'follow-\\ning the execution'"
+      ],
+      [
+       "re.sub(r'-\\n', '', t)",
+       "'following the execution'"
+      ],
+      [
+       "re.sub(r'-\\n', '', 'well-\\nknown')",
+       "'wellknown'"
+      ]
+     ],
+     "fs": 10,
+     "cap": "run under Python 3.14.6, pypdf 6.20.1, python-docx 1.2.0"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "The chapter's section Post-Processing with AI sends extracted text to a language model to clean it. No model was called for this deck, so nothing is claimed about what one returns.",
+     "x": 5.4,
+     "y": 1.45,
+     "w": 4.1,
+     "h": 1.75,
+     "fs": 10,
+     "accent": "orange"
+    },
+    {
+     "t": "card",
+     "head": "A repair that is deterministic",
+     "body": "re.sub of a hyphen followed by a newline joins follow- and ing the execution, and it also glues well-known into wellknown. pypdf's documentation calls post-processing outside its scope.",
+     "x": 5.4,
+     "y": 3.3,
+     "w": 4.1,
+     "h": 1.65,
+     "fs": 10,
+     "accent": "slate"
+    },
+    {
+     "t": "text",
+     "x": 0.5,
+     "y": 3.68,
+     "w": 4.6,
+     "h": 1.29,
+     "fs": 11,
+     "color": "ink",
+     "body": "Extracted text keeps the hyphens and row breaks of the printed page; repairing it is a separate step."
+    }
+   ],
+   "notes": "Extracted text keeps the hyphens and the row breaks of the printed page. A page with follow- at the end of one row and ing the execution on the next came out of pypdf with a newline between them, and re.sub of a hyphen and a newline gave following the execution. That repair is deterministic, and the console runs it, but it is not harmless: the same expression turns well-known, written over two rows, into wellknown, because a regular expression cannot tell a hyphen the typesetter added from one that belongs to the word. The chapter's own answer is a section called Post-Processing with AI, which sends the text to a language model and asks it to clean the text. That section was NOT EXECUTED in this study and is not run for this deck: no model was called, and the slide therefore claims nothing about what a model returns. The documentation of pypdf, in its page on post-processing of text extraction, says the matter is outside the scope of the library and lists dehyphenation among the steps a program takes after extraction. A scanned page raises the same question in a harder form, and the next slide runs it: it has no text to clean at all.",
+   "take": "Repairing extracted text is your step; the language-model way was not run.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Images, scans and the book's PDF",
+   "sub": "The chapter's image loop on the sample chapter; a scanned page has images and no text",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.53,
+     "h": 2.52,
+     "lines": [
+      "name = real_file('Recursion_Chapter1.pdf')  # sha256 checked",
+      "reader = pypdf.PdfReader(name)",
+      "print(len(reader.pages), 'pages; encrypted', reader.is_encrypted)",
+      "print(repr(reader.pages[0].extract_text()[:36]))",
+      "print('images per page:', *[len(p.images) for p in reader.pages])",
+      "n = 0",
+      "for number, page in enumerate(reader.pages, 1):",
+      "    for image in page.images:",
+      "        n += 1",
+      "        with open('%d_%d_%s' % (n, number, image.name), 'wb') as f:",
+      "            f.write(image.data)",
+      "print(n, 'image files written')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "18 pages; encrypted False\n'1\\nWHAT IS RECURSION?\\nRecursion has a'\nimages per page: 7 2 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0\n11 image files written",
+     "outLabel": "prints",
+     "label": "program shippedChapterPdfCut_v1_0_0.py, lines 29 to 40 of 40"
+    },
+    {
+     "t": "code",
+     "x": 5.28,
+     "y": 1.55,
+     "w": 4.22,
+     "h": 2.03,
+     "rows": [
+      [
+       "import io, pypdf",
+       ""
+      ],
+      [
+       "from PIL import Image",
+       ""
+      ],
+      [
+       "buf = io.BytesIO()",
+       ""
+      ],
+      [
+       "Image.new('RGB', (40, 40), 'white').save(buf, 'PDF')",
+       ""
+      ],
+      [
+       "page = pypdf.PdfReader(buf).pages[0]",
+       ""
+      ],
+      [
+       "page.extract_text()",
+       "''"
+      ],
+      [
+       "[(i.name, i.data[:2]) for i in page.images]",
+       "[('image.jpg', b'\\xff\\xd8')]"
+      ],
+      [
+       "pypdf.PdfReader(io.BytesIO(b''))",
+       "EmptyFileError: Cannot read an empty file"
+      ]
+     ],
+     "fs": 7.8,
+     "cap": "run under Python 3.14.6, pypdf 6.20.1, python-docx 1.2.0"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.19,
+     "w": 9.0,
+     "h": 0.34,
+     "fs": 9,
+     "body": "Shipped file: Recursion_Chapter1.pdf of the book's online materials, fetched from nostarch.com at run time, sha256 d943896e0bd2... checked. Page images need the Pillow package, which the chapter does not name."
+    }
+   ],
+   "notes": "The program is the chapter's loop on the file the book ships. Recursion_Chapter1.pdf has 18 pages, is not encrypted, and its first page begins 1, WHAT IS RECURSION?; the images per page, printed as separate numbers, are 7 2 1 0 0 0 1 and then zeros, and the loop writes 11 files. The file is the one the program fetches from the online materials of the third edition and checks against its sha256 before it opens a copy. The study found two differences from the page. The sample output the chapter prints says that page 7 is skipped with not enough image data, and neither the newest releases nor the versions Appendix A pins skipped it: both wrote 10_page7_Im0.tif. And the loop needs the Pillow package, which the chapter never names: without it reading an image raises ImportError, pillow is required to do image extraction, as the bare environment of the study printed. The console builds a page that is only a picture: a 40 by 40 pixel image saved as PDF has one page, extract_text() returns the empty string and the page holds one image named image.jpg whose data begins with the JPEG marker FF D8, which is what a scanned document looks like to the library. There is no text to repair and nothing to extract without optical character recognition, which pypdf does not do. An empty file raises EmptyFileError and a file cut off before its xref table raises PdfStreamError. The zip of the online materials holds the PDF and the Word file the chapter reads but not encrypted.pdf, helloworld.docx or restyled.docx, which the chapter names as files the reader makes.",
+   "take": "Images need Pillow, and a scan gives you images and an empty string.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Copying pages: a tuple is a range",
+   "sub": "append() reads a tuple as a range and a list as pages; merge() reads it as a title",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.75,
+     "h": 3.39,
+     "lines": [
+      "six = make_pdf(*['Page %d' % i for i in range(1, 7)])",
+      "def texts(writer):                                   # the page texts of a writer",
+      "    buf = io.BytesIO(); writer.write(buf)",
+      "    return [p.extract_text() for p in pypdf.PdfReader(buf).pages]",
+      "for label, pages in (('(0, 5)', (0, 5)), ('(0, 5, 2)', (0, 5, 2)),",
+      "                     ('[0, 5]', [0, 5])):",
+      "    w = pypdf.PdfWriter(); w.append(io.BytesIO(six), pages)",
+      "    print('append', label, '->', texts(w))",
+      "three = make_pdf('A1', 'A2', 'A3')",
+      "w = pypdf.PdfWriter(); w.append(io.BytesIO(three))",
+      "w.merge(1, io.BytesIO(six), pages=(0, 2))",
+      "print('merge(1, file, pages=(0, 2)) ->', texts(w))",
+      "w = pypdf.PdfWriter(); w.append(io.BytesIO(three))",
+      "w.merge(1, io.BytesIO(six), (0, 2))                  # as the chapter writes it",
+      "print('merge(1, file, (0, 2)) ->', len(w.pages), 'pages; bookmark titles',",
+      "      [o['/Title'] for o in w.outline])"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "append (0, 5) -> ['Page 1', 'Page 2', 'Page 3', 'Page 4', 'Page 5']\nappend (0, 5, 2) -> ['Page 1', 'Page 3', 'Page 5']\nappend [0, 5] -> ['Page 1', 'Page 6']\nmerge(1, file, pages=(0, 2)) -> ['A1', 'Page 1', 'Page 2', 'A2', 'A3']\nmerge(1, file, (0, 2)) -> 9 pages; bookmark titles ['(0, 2)']",
+     "outLabel": "prints",
+     "label": "program pageSelectionCut_v1_0_0.py, lines 19 to 34 of 34"
+    },
+    {
+     "t": "card",
+     "head": "A tuple is a range",
+     "body": "(0, 5) copies five pages, (0, 5, 2) every second one, [0, 5] exactly two. A page past the end raises IndexError.",
+     "x": 6.5,
+     "y": 1.5,
+     "w": 3.0,
+     "h": 1.3,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "The merge() trap",
+     "body": "The chapter's line inserts the whole file: the tuple became a bookmark title. Write pages=(0, 2).",
+     "x": 6.5,
+     "y": 2.9,
+     "w": 3.0,
+     "h": 1.4,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 6.5,
+     "y": 4.38,
+     "w": 3.0,
+     "h": 0.61,
+     "fs": 8.5,
+     "body": "Lines 1 to 18 of the program (the helper make_pdf(), which writes a small valid PDF 1.4 of text pages byte by byte, and the imports) are not shown."
+    }
+   ],
+   "notes": "The program copies pages of a six-page file into a new writer. A tuple of two numbers selects pages the way range() does, so append(file, (0, 5)) copies Page 1 to Page 5 and not the sixth, which is why the chapter's first-five-pages example works; a tuple of three adds a step, so (0, 5, 2) copies Page 1, Page 3 and Page 5; and a list names pages exactly, so [0, 5] copies Page 1 and Page 6. A page number past the end raises IndexError, Sequence index out of range, for the tuple and the list alike. merge() takes the position first and puts the copied pages there: merging the pages (0, 2) of the six-page file at position 1 of a three-page writer gave A1, Page 1, Page 2, A2, A3. Written as the chapter writes it, merge(1, file, (0, 2)), the tuple lands in the parameter outline_item, which the signature types as a title only, so pypdf made a bookmark titled (0, 2) and inserted the whole six-page file: the writer ended with 9 pages and not 5. On the shipped chapter the same line took a writer of 5 pages to 23, identically on the ten interpreters, because the file has 18; append() accepts the tuple in its second place because there the parameter may be a title or a page range. The line prints nothing, so the replay of the chapter's statements counted it as a match. Under the pinned pypdf 5.0.1 the same line raises AttributeError, tuple object has no attribute startswith. The pypdf documentation has a page on merging.",
+   "take": "Write pages=(0, 2) for merge(); a bare tuple becomes a bookmark title.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Rotate, blank pages and a watermark",
+   "sub": "Rotations add up, a blank page copies a neighbour's size, over=False lays under",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.2,
+     "h": 3.35,
+     "lines": [
+      "w = pypdf.PdfWriter(); w.append(io.BytesIO(make_pdf('x')))",
+      "page, seen = w.pages[0], []",
+      "for angle in (90, 270, -90, 180):",
+      "    page.rotate(angle); seen.append(page.rotation)",
+      "print('rotation after 90, 270, -90, 180:', seen)",
+      "w = pypdf.PdfWriter()",
+      "for size in ((300, 400), (100, 100)): w.add_blank_page(*size)",
+      "w.insert_blank_page(index=1)",
+      "print([(float(p.mediabox.width), float(p.mediabox.height))",
+      "       for p in w.pages])",
+      "print('insert_blank_page(2) is', float(w.insert_blank_page(2).mediabox.width),",
+      "      'points wide')",
+      "def drawn(over):                       # in stream order",
+      "    base = one('BASE'); base.merge_page(one('MARK'), over=over)",
+      "    return re.findall(rb'\\((\\w+)\\) Tj', base.get_contents().get_data())",
+      "print('merge_page(over=False) draws', drawn(False))",
+      "print('merge_page(over=True) draws', drawn(True))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "rotation after 90, 270, -90, 180: [90, 360, 270, 450]\n[(300.0, 400.0), (100.0, 100.0), (100.0, 100.0)]\ninsert_blank_page(2) is 2.0 points wide\nmerge_page(over=False) draws [b'MARK', b'BASE']\nmerge_page(over=True) draws [b'BASE', b'MARK']",
+     "outLabel": "prints",
+     "label": "program rotateBlankWatermarkCut_v1_0_0.py, lines 20 to 36 of 36"
+    },
+    {
+     "t": "chart",
+     "ctype": "bar",
+     "x": 5.95,
+     "y": 1.45,
+     "w": 3.55,
+     "h": 2.45,
+     "labels": [
+      "rotate(90)",
+      "rotate(270)",
+      "rotate(-90)",
+      "rotate(180)"
+     ],
+     "title": "page.rotation after each call",
+     "series": [
+      {
+       "name": "degrees",
+       "data": [
+        90.0,
+        360.0,
+        270.0,
+        450.0
+       ]
+      }
+     ],
+     "dataLabels": true,
+     "dlFs": 9
+    },
+    {
+     "t": "foot",
+     "x": 5.95,
+     "y": 3.95,
+     "w": 3.55,
+     "h": 0.75,
+     "fs": 8.5,
+     "body": "The chart is computed: the stored rotation after rotate(90), rotate(270), rotate(-90) and rotate(180). Lines 1 to 19 of the program (the helper make_pdf(), which writes a small valid PDF 1.4 of text pages byte by byte, and the imports) are not shown."
+    }
+   ],
+   "notes": "rotate() takes a multiple of 90, changes the page in place and returns it; rotate(45) raises ValueError, Rotation angle must be a multiple of 90. The angles add up and the sum is never reduced to a turn: after rotate(90), rotate(270), rotate(-90) and rotate(180) the stored rotations were 90, 360, 270 and 450, and a negative angle is stored as it was given. The chart draws these four numbers, computed again when the deck is checked. A new blank page takes its size from a page already in the writer: after pages of 300 by 400 and 100 by 100 points, insert_blank_page(index=1) made a page of 100 by 100, and add_blank_page() after a 200 by 200 page made another 200 by 200. The signature of insert_blank_page is width, height, index, so a single positional number is the width: insert_blank_page(2) made a page 2 points wide, while index=2 made a page of the normal 612 points. The chapter writes insert_blank_page(2). A watermark is a page laid over or under another with merge_page(): with over=False the watermark's drawing commands come before the page's own, MARK then BASE, so the mark lies under the text, and the default over=True puts them after, BASE then MARK. merge_page() changes the page it is called on and returns None.",
+   "take": "Rotation keeps adding up, and insert_blank_page(2) sets a width.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Encrypt: RC4 is the default",
+   "sub": "encrypt() without an algorithm writes RC4; the chapter shows only AES-256",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 5.0,
+     "colW": [
+      2.3,
+      0.8,
+      0.8,
+      1.1
+     ],
+     "fs": 10.5,
+     "rowH": 0.34,
+     "rows": [
+      [
+       "encrypt() call",
+       "V",
+       "R",
+       "Length"
+      ],
+      [
+       "encrypt('swordfish')",
+       "2",
+       "3",
+       "128"
+      ],
+      [
+       "algorithm='AES-128'",
+       "4",
+       "4",
+       "128"
+      ],
+      [
+       "algorithm='AES-256'",
+       "5",
+       "6",
+       "256"
+      ]
+     ]
+    },
+    {
+     "t": "card",
+     "head": "The chapter shows one form",
+     "body": "encrypt('swordfish', algorithm='AES-256') wrote V 5, R 6 and a 256-bit key. Without the algorithm the file is RC4 with a 128-bit key.",
+     "x": 0.5,
+     "y": 3.1,
+     "w": 5.0,
+     "h": 1.8,
+     "fs": 11,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "AES needs a package",
+     "body": "In an environment with pypdf alone (Python 3.14.6): DependencyError: cryptography>=3.1 is required for AES algorithm; RC4 written.",
+     "x": 5.8,
+     "y": 1.5,
+     "w": 3.7,
+     "h": 1.75,
+     "fs": 10,
+     "accent": "orange"
+    },
+    {
+     "t": "card",
+     "head": "Words the chapter never uses",
+     "body": "Pillow, cryptography and DependencyError are absent from the page; Appendix A pins pypdf 5.0.1 and python-docx 1.1.2.",
+     "x": 5.8,
+     "y": 3.35,
+     "w": 3.7,
+     "h": 1.55,
+     "fs": 10,
+     "accent": "slate"
+    }
+   ],
+   "notes": "The table is computed, not typed: for each call the program writes a one-page file, reads the document's /Encrypt dictionary back with pypdf and prints its encryption version V, its revision R and its key length. encrypt('swordfish') with no algorithm wrote RC4 with a 128-bit key, V 2 and R 3, and no crypt filter dictionary; algorithm='AES-128' wrote V 4, R 4; algorithm='AES-256' wrote V 5, R 6 and a key length of 256, which is what the chapter recommends and the only form it shows. The research also asked the command line tool qpdf, which reported AESv3 for the AES-256 file. Two optional dependencies matter in practice. AES needs the cryptography package: in the environment with pypdf alone, algorithm='AES-256' failed at encrypt() with DependencyError, cryptography>=3.1 is required for AES algorithm, while the default RC4 was written; AES-128 fails later, at write(). The images of the previous slide need Pillow. The chapter's text names neither package, and the versions the book pins are given only in Appendix A, pypdf 5.0.1 and python-docx 1.1.2, while PyPI offered pypdf 6.20.1 and python-docx 1.2.0 on the day of the study. An attempt to install the pinned Pillow 10.4.0 for Python 3.14 found no wheel and the build failed for lack of the libjpeg headers, so that environment used the newest Pillow. The pypdf documentation has a page on encryption and decryption.",
+   "take": "Ask for AES-256 by name, and install cryptography to get it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Decrypt: the life of an encrypted PDF",
+   "sub": "A reader refuses its pages until decrypt() matches a password",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.6,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 1.7,
+       "w": 1.7,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A plain PDF",
+       "x": 0.66,
+       "y": 1.824,
+       "w": 1.58,
+       "h": 0.171,
+       "fs": 9,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 2.32,
+       "w": 1.7,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "An encrypted PDF file",
+       "x": 0.66,
+       "y": 2.444,
+       "w": 1.58,
+       "h": 0.171,
+       "fs": 9,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 2.94,
+       "w": 1.7,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A reader that is not decrypted",
+       "x": 0.66,
+       "y": 2.989,
+       "w": 1.58,
+       "h": 0.323,
+       "fs": 9,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 3.56,
+       "w": 1.7,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A reader that is decrypted",
+       "x": 0.66,
+       "y": 3.609,
+       "w": 1.58,
+       "h": 0.323,
+       "fs": 9,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 4.18,
+       "w": 1.7,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A decrypted copy",
+       "x": 0.66,
+       "y": 4.304,
+       "w": 1.58,
+       "h": 0.171,
+       "fs": 9,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.36,
+       "y": 1.42,
+       "w": 0.18,
+       "h": 0.18,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 1.45,
+       "y1": 1.6,
+       "x2": 1.45,
+       "y2": 1.7,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.45,
+       "y1": 2.12,
+       "x2": 1.45,
+       "y2": 2.32,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.47,
+       "y1": 2.22,
+       "x2": 2.56,
+       "y2": 2.22,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "The writer encrypts it with a password and writes the file",
+       "x": 2.6,
+       "y": 2.076,
+       "w": 2.4,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.45,
+       "y1": 2.74,
+       "x2": 1.45,
+       "y2": 2.94,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.47,
+       "y1": 2.84,
+       "x2": 2.56,
+       "y2": 2.84,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "A reader opens the encrypted file",
+       "x": 2.6,
+       "y": 2.763,
+       "w": 2.4,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.45,
+       "y1": 3.36,
+       "x2": 1.45,
+       "y2": 3.56,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.47,
+       "y1": 3.46,
+       "x2": 2.56,
+       "y2": 3.46,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "decrypt() matches the user or owner password",
+       "x": 2.6,
+       "y": 3.316,
+       "w": 2.4,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.45,
+       "y1": 3.98,
+       "x2": 1.45,
+       "y2": 4.18,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.47,
+       "y1": 4.08,
+       "x2": 2.56,
+       "y2": 4.08,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "A writer appends the pages and writes a new file",
+       "x": 2.6,
+       "y": 3.936,
+       "w": 2.4,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.3,
+       "y1": 3.06,
+       "x2": 2.56,
+       "y2": 3.06,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.56,
+       "y1": 3.06,
+       "x2": 2.56,
+       "y2": 3.24,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.56,
+       "y1": 3.24,
+       "x2": 2.3,
+       "y2": 3.24,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "decrypt() returns NOT_DECRYPTED for a wrong password",
+       "x": 2.6,
+       "y": 3.006,
+       "w": 2.4,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.3,
+       "y1": 4.39,
+       "x2": 2.7,
+       "y2": 4.39,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.7,
+       "y": 4.25,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.76,
+       "y": 4.31,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      }
+     ],
+     "did": "AnEncryptedPdfThroughItsLife"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.6,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram AnEncryptedPdfThroughItsLife - LifeCycle pattern, 36 of 36 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 5.3,
+     "y": 1.55,
+     "w": 3.97,
+     "h": 2.93,
+     "lines": [
+      "w = pypdf.PdfWriter(); w.add_blank_page(100, 100)",
+      "w.encrypt('userpw', 'ownerpw', algorithm='AES-256')",
+      "b = io.BytesIO(); w.write(b)",
+      "def reader():",
+      "    return pypdf.PdfReader(io.BytesIO(b.getvalue()))",
+      "try:",
+      "    reader().pages[0]",
+      "except Exception as e:",
+      "    print(type(e).__name__, '-', e)",
+      "for pw in ('wrong', 'Userpw', 'userpw', 'ownerpw'):",
+      "    print(repr(pw), '->', reader().decrypt(pw).name)",
+      "r = reader(); r.decrypt('userpw')",
+      "print(len(r.pages), 'page after decrypt')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "FileNotDecryptedError - File has not been decrypted\n'wrong' -> NOT_DECRYPTED\n'Userpw' -> NOT_DECRYPTED\n'userpw' -> USER_PASSWORD\n'ownerpw' -> OWNER_PASSWORD\n1 page after decrypt",
+     "outLabel": "prints",
+     "label": "program decryptCut_v1_0_0.py, lines 19 to 31 of 31"
+    }
+   ],
+   "notes": "The state diagram follows one PDF. A plain PDF becomes an encrypted file when a writer encrypts it with a password and writes the file. A reader that opens the file is not decrypted: is_encrypted is True, and asking for pages[0] raises FileNotDecryptedError, File has not been decrypted. decrypt() returns a value that says which password matched: USER_PASSWORD for the user password, OWNER_PASSWORD for the owner password and NOT_DECRYPTED for a wrong password, an empty one or one with different capitals, and it raises nothing for a wrong password, so a program must read the returned name; the transcript runs these cases. Once decrypt() matches, the reader gives its pages, and a writer that appends them and writes a new file makes a decrypted copy. encrypt('pw') with one password sets it for both roles, so decrypt('pw') returned OWNER_PASSWORD. A file encrypted with an empty user password and another owner password opens without a decrypt() call, and the owner password still returns OWNER_PASSWORD. The program uses a blank page because the point is the password and not the text; it builds its file in memory. The study also ran pdftotext without the password, which refused the encrypted file, and with it, which read it; that is the research's observation of a second program and is not repeated here.",
+   "take": "decrypt() returns which password matched; read it, because it never raises.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Project 12: combine many PDFs",
+   "sub": "Every page after the first of each file, in the order of the names, case ignored",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.3,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.459,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Find all the PDF files of the folder",
+       "x": 0.57,
+       "y": 1.551,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.916,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Sort the filenames without regard to case",
+       "x": 0.57,
+       "y": 2.008,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.373,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Create a PdfWriter that starts with no pages",
+       "x": 0.57,
+       "y": 2.466,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.83,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Open the next PDF with a PdfReader",
+       "x": 0.57,
+       "y": 2.923,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.287,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Append every page after the first page",
+       "x": 0.57,
+       "y": 3.38,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.5,
+       "y": 3.694,
+       "w": 3.3,
+       "h": 0.44,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is another file left?",
+       "x": 0.67,
+       "y": 3.837,
+       "w": 2.96,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 4.201,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Write the combined PDF to a file",
+       "x": 0.57,
+       "y": 4.294,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 4.4,
+       "y": 1.529,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 4.36,
+       "y": 4.231,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 4.42,
+       "y": 4.291,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 4.4,
+       "y1": 1.629,
+       "x2": 3.8,
+       "y2": 1.629,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 1.799,
+       "x2": 2.15,
+       "y2": 1.916,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 2.256,
+       "x2": 2.15,
+       "y2": 2.373,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 2.713,
+       "x2": 2.15,
+       "y2": 2.83,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 3.17,
+       "x2": 2.15,
+       "y2": 3.287,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 3.627,
+       "x2": 2.15,
+       "y2": 3.694,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.8,
+       "y1": 3.914,
+       "x2": 4.02,
+       "y2": 3.914,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.02,
+       "y1": 3.914,
+       "x2": 4.02,
+       "y2": 3.0,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.02,
+       "y1": 3.0,
+       "x2": 3.8,
+       "y2": 3.0,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 3.84,
+       "y": 3.944,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 4.134,
+       "x2": 2.15,
+       "y2": 4.201,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.21,
+       "y": 4.078,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 3.8,
+       "y1": 4.371,
+       "x2": 4.36,
+       "y2": 4.371,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "CombiningManyPdfs"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.3,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram CombiningManyPdfs - Workflow pattern, 26 of 30 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 5.0,
+     "y": 1.55,
+     "w": 4.29,
+     "h": 3.39,
+     "lines": [
+      "for name in ('b.pdf', 'A.pdf', 'c.PDF'):",
+      "    save(name, make_pdf(name + ' p1', name + ' p2'))",
+      "def find_pdfs():                  # step 1",
+      "    pdf_filenames = []",
+      "    for filename in os.listdir('.'):",
+      "        if filename.lower().endswith('.pdf'):  # c.PDF",
+      "            pdf_filenames.append(filename)",
+      "    pdf_filenames.sort(key=str.lower)",
+      "    return pdf_filenames",
+      "def combine():                    # steps 2 and 3",
+      "    writer = pypdf.PdfWriter()",
+      "    for pdf_filename in find_pdfs():",
+      "        reader = pypdf.PdfReader(pdf_filename)",
+      "        writer.append(pdf_filename, (1, len(reader.pages)))",
+      "    with open('combined.pdf', 'wb') as file:",
+      "        writer.write(file)",
+      "    return len(pypdf.PdfReader('combined.pdf').pages)",
+      "print(find_pdfs(), combine(), 'pages')",
+      "print(find_pdfs(), combine(), 'pages')  # again"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "['A.pdf', 'b.pdf', 'c.PDF'] 3 pages\n['A.pdf', 'b.pdf', 'c.PDF', 'combined.pdf'] 5 pages",
+     "outLabel": "prints",
+     "label": "program combinePdfsCut_v1_0_0.py, lines 19 to 37 of 37"
+    }
+   ],
+   "notes": "Project 12 is the chapter's first program built from steps: find all the PDF files of the working directory, sort their names without regard to case, open each one, copy every page after the first into one writer and save the result. The activity diagram has one choice, whether another file is left, and the program follows it. Three corrections come from the study. As printed, the loop appends to pdf_files, a name never defined, and Python 3.14.6 answers NameError: name 'pdf_files' is not defined, suggesting pdf_filenames; the shipped combine_pdfs.py is not the finished program either, because it writes PdfWriter without the pypdf prefix and stops at NameError. The test filename.endswith('.pdf') misses a file named with capitals, which is why the program here lower-cases the name, and the file c.PDF is found. And the program does not guard against reading its own output: a second run found combined.pdf in the folder and read it as one of its inputs, so the 3 pages of the first run became 5 here (the research's own run went from 5 pages to 9). Sorting with key=str.lower puts A.pdf before b.pdf, as the diagram says. With the name corrected the program combined three small files into combined.pdf with every page but the first of each.",
+   "take": "Guard Project 12 against its own output, and test file names in lower case.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "PDF Paranoia",
+   "sub": "Encrypt a tree of PDFs, test each copy, delete the original; then decrypt them",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.29,
+     "h": 2.06,
+     "lines": [
+      "def encrypt_tree(folder, password):",
+      "    for path in list(pdfs(folder, '.pdf')):",
+      "        if '_encrypted' in path: continue",
+      "        reader = pypdf.PdfReader(path)",
+      "        writer = pypdf.PdfWriter(); writer.append(reader)",
+      "        writer.encrypt(password, algorithm='AES-256')",
+      "        new = path[:-4] + '_encrypted' + path[-4:]",
+      "        with open(new, 'wb') as f: writer.write(f)",
+      "        check = pypdf.PdfReader(new)    # test first",
+      "        if (check.decrypt(password).name != 'NOT_DECRYPTED'",
+      "                and len(check.pages) == len(reader.pages)):",
+      "            os.remove(path); print('Removed', path)"
+     ],
+     "fs": 7.5,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program pdfParanoiaCut_v1_0_0.py, lines 27 to 38 of 49"
+    },
+    {
+     "t": "prog",
+     "x": 4.99,
+     "y": 1.55,
+     "w": 4.51,
+     "h": 3.07,
+     "lines": [
+      "def decrypt_tree(folder, password):",
+      "    for path in pdfs(folder, '_encrypted.pdf'):",
+      "        reader = pypdf.PdfReader(path)",
+      "        if reader.decrypt(password).name == 'NOT_DECRYPTED':",
+      "            print('Wrong password for', path); continue",
+      "        writer = pypdf.PdfWriter(); writer.append(reader)",
+      "        out = path.replace('_encrypted', '_decrypted')",
+      "        with open(out, 'wb') as f: writer.write(f)",
+      "        print('Decrypted copy:', out)",
+      "encrypt_tree('tree', 'swordfish')",
+      "decrypt_tree('tree', 'wrong'); decrypt_tree('tree', 'swordfish')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "Removed tree/a.pdf\nRemoved tree/sub/b.pdf\nRemoved tree/sub/deeper/C.PDF\nWrong password for tree/a_encrypted.pdf\nWrong password for tree/sub/b_encrypted.pdf\nWrong password for tree/sub/deeper/C_encrypted.PDF\nDecrypted copy: tree/a_decrypted.pdf\nDecrypted copy: tree/sub/b_decrypted.pdf\nDecrypted copy: tree/sub/deeper/C_decrypted.PDF",
+     "outLabel": "prints",
+     "label": "program pdfParanoiaCut_v1_0_0.py, lines 39 to 49 of 49"
+    },
+    {
+     "t": "card",
+     "head": "Not on the command line",
+     "body": "Any process list shows a command line (CWE-214), so the chapter's password is visible there.",
+     "x": 0.5,
+     "y": 3.69,
+     "w": 4.29,
+     "h": 1.03,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.75,
+     "w": 4.29,
+     "h": 0.17,
+     "fs": 8,
+     "body": "Lines 1 to 26: make_pdf(), imports, tree, pdfs()."
+    }
+   ],
+   "notes": "The first practice program walks a folder tree with os.walk(), encrypts every PDF with AES-256, saves it with the suffix _encrypted.pdf, opens the new file, decrypts it and compares the page counts, and only then deletes the original. The second walks the tree again, finds the encrypted files and writes a decrypted copy for the password given, and for a wrong password prints a message and continues. The transcript is the whole run: three files encrypted and their originals removed, a wrong password that skips all three and does not stop the program, and three decrypted copies. The folder holds a.pdf, sub/b.pdf, sub/deeper/C.PDF and notes.txt, and the program finds C.PDF because it tests the lower-cased name: a filter on the lower-case extension .pdf alone misses it. The deck's copy prints shorter lines than the corpus program, and adds one small generator, pdfs(), for the walk. The chapter asks for the password on the command line. The study notes that any program that lists processes can read a command line, which is the weakness MITRE names CWE-214, Invocation of Process Using Visible Sensitive Information, so the research's advice is to keep the password of PDF Paranoia out of the command line. The program deletes an original only after the test; that is why the test comes first.",
+   "take": "Test the encrypted copy before deleting; keep passwords off the command line.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "PDF Password Breaker, and its worst case",
+   "sub": "Both cases of every word until decrypt() succeeds; the file is 8 times the page",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.84,
+     "h": 2.93,
+     "lines": [
+      "import time",
+      "words = ['apple', 'banana', 'cherry', 'dragonfruit']",
+      "w = pypdf.PdfWriter(); w.append(io.BytesIO(make_pdf('Locked')))",
+      "w.encrypt('CHERRY', algorithm='AES-256')",
+      "b = io.BytesIO(); w.write(b); data = b.getvalue()",
+      "reader = pypdf.PdfReader(io.BytesIO(data))",
+      "attempts, found = 0, None",
+      "for word in words:",
+      "    for guess in (word, word.upper()):",
+      "        attempts += 1",
+      "        if reader.decrypt(guess).name != 'NOT_DECRYPTED':",
+      "            found = guess; break",
+      "    if found: break",
+      "print('found', found, 'after', attempts, 'attempts')",
+      "print('a dictionary of n words costs up to', 2 * len(words), 'attempts')",
+      "print(repr(reader.pages[0].extract_text()))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "found CHERRY after 6 attempts\na dictionary of n words costs up to 8 attempts\n'Locked'",
+     "outLabel": "prints",
+     "label": "program passwordBreakerCut_v1_0_0.py, lines 19 to 34 of 34"
+    },
+    {
+     "t": "stat",
+     "x": 5.59,
+     "y": 1.5,
+     "w": 3.91,
+     "h": 1.95,
+     "vert": true,
+     "items": [
+      {
+       "n": "349,900",
+       "label": "words in the book's dictionary.txt"
+      },
+      {
+       "n": "699,800",
+       "label": "attempts, both cases of each word"
+      }
+     ]
+    },
+    {
+     "t": "card",
+     "head": "Worst case, no match",
+     "body": "RC4 (the default): 241.7 s. AES-256: 1,467.5 s. Two single runs started together on a two-core machine, 12 Oct 2026; the page names over 44,000 words and 88,000 attempts.",
+     "x": 5.59,
+     "y": 3.55,
+     "w": 3.91,
+     "h": 1.4,
+     "fs": 9,
+     "accent": "orange"
+    }
+   ],
+   "notes": "The third practice program decrypts a PDF by trying every word of a dictionary, in lower case and in upper case, until decrypt() stops returning NOT_DECRYPTED. The program here uses a four-word dictionary so that it can run in a blink: the password is CHERRY, found on the sixth attempt, after apple, APPLE, banana, BANANA, cherry; a dictionary of n words costs up to 2n attempts, 8 for four words. The chapter's file is another size. The dictionary.txt of the online materials has 349,900 lines, all lower-case letters, between 4 and 12 letters long, which is 8.0 times the 44,000 words the page names, so trying both forms of every line is 699,800 attempts and not the 88,000 of the page. The worst case, a password that is not in the list, was run to the end on a file written by pypdf 6.20.1: it found nothing and took 241.7 seconds for RC4, the default of encrypt(), and 1,467.5 seconds for AES-256, the two runs started together on a machine with two cores. A stronger algorithm costs about six times as much per guess, so the chapter's remark that a long random password defeats the program is shown by the timing and not only stated. The password swordfish, which the chapter uses for its examples, is not in the dictionary. Both numbers are single runs on one machine on 12 October 2026, they vary with the machine, and they are not repeated by any check of the deck.",
+   "take": "A long, random password beats a dictionary; AES-256 makes each guess dearer.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A .docx file is a ZIP of XML",
+   "sub": "14 February 1989",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 5.0,
+     "h": 2.51,
+     "rows": [
+      [
+       "import io, zipfile, docx",
+       ""
+      ],
+      [
+       "d = docx.Document()",
+       ""
+      ],
+      [
+       "_ = d.add_paragraph('Hello, world!')",
+       ""
+      ],
+      [
+       "buf = io.BytesIO()",
+       ""
+      ],
+      [
+       "d.save(buf)",
+       ""
+      ],
+      [
+       "buf.getvalue()[:2]",
+       "b'PK'"
+      ],
+      [
+       "z = zipfile.ZipFile(buf)",
+       ""
+      ],
+      [
+       "len(z.namelist())",
+       "17"
+      ],
+      [
+       "'word/document.xml' in z.namelist()",
+       "True"
+      ],
+      [
+       "z.read('word/document.xml').decode().split('<w:body>')[1][:46]",
+       "'<w:p><w:r><w:t>Hello, world!</w:t></w:r></w:p>'"
+      ]
+     ],
+     "fs": 7.9,
+     "cap": "run under Python 3.14.6, pypdf 6.20.1, python-docx 1.2.0"
+    },
+    {
+     "t": "card",
+     "head": "PK, for Phil Katz",
+     "body": "Phil Katz of PKWARE and Gary Conway designed the ZIP format; its first release is dated 14 February 1989. Office Open XML is extended from it.",
+     "x": 5.7,
+     "y": 1.4,
+     "w": 3.8,
+     "h": 1.5,
+     "fs": 10,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "python-docx, imported as docx",
+     "body": "The package docx (0.2.4, 6 Feb 2014) fails on import in Python 3.14.6: ModuleNotFoundError: No module named 'exceptions'.",
+     "x": 5.7,
+     "y": 3.0,
+     "w": 3.8,
+     "h": 1.35,
+     "fs": 10,
+     "accent": "orange"
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Phil Katz of PKWARE and Gary Conway of Infinity Design Concepts",
+     "where": "PKWARE, Inc., in the dispute with Systems Enhancement Associates over the ARC format",
+     "when": "14 February 1989",
+     "link": "https://en.wikipedia.org/wiki/Zip_(file_format)",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on the ZIP file format gives 14 February 1989 as the initial release and says the format was designed by Phil Katz of PKWARE and Gary Conway of Infinity Design Concepts, after Systems Enhancement Associates sued PKWARE over its archiving products. The first two bytes of a ZIP file are usually PK, the initials of Phil Katz. Office Open XML is one of the formats listed as extended from ZIP. In this study a new python-docx document began with the bytes PK and held 17 parts, among them word/document.xml, which is why a .docx file can be opened with the zipfile module. The account rests on these sources. Wikipedia, 'ZIP (file format)' (history, the initials PK, initial release 14 February 1989, Office Open XML among the formats extended from it), read 2026-10-12; this study's leaves DocxIsZipOfXml and DocumentXmlBody. The console shows it: a new python-docx document saved to memory begins with the bytes PK, holds 17 parts, and one of them is word/document.xml, whose body for one paragraph is <w:p><w:r><w:t>Hello, world!</w:t></w:r></w:p>, a paragraph (w:p) that holds runs (w:r), each holding text (w:t). That is why a .docx file can be opened with the zipfile module, and why paragraphs and runs are the two words of the Word half of the chapter. The format is a published standard: Wikipedia gives 7 December 2006 as the first release of Office Open XML, as Ecma standard ECMA-376, and November 2008 for the four-part International Standard ISO/IEC 29500, after a fast-track process that ended in April 2008. In the study the template that docx.Document() starts from still named python-docx as its author and the year 2013, had no paragraphs, one section and 164 styles. The chapter says to install Python-Docx, not Docx, and to write import docx. The page of the docx project on PyPI shows version 0.2.4 as its latest release, dated 6 February 2014, still offering pip install docx; the study installed it in Python 3.14.6 and the import failed with ModuleNotFoundError: No module named 'exceptions', a module of Python 2, and this build ran that import again and got the same line. The working package, python-docx, was at version 1.2.0, released on 16 June 2025.",
+   "take": "A .docx file is a ZIP of XML; install python-docx, then import docx.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Reading paragraphs and runs",
+   "sub": "A paragraph holds runs; tables, headers and hyperlink text are not in the runs",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 3.9,
+     "h": 3.15,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 1.3,
+       "y": 1.73,
+       "w": 3.1,
+       "h": 2.87,
+       "fill": "FBF8F2",
+       "line": "6E655C",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "A WORD DOCUMENT IN PYTHON",
+       "x": 1.38,
+       "y": 1.47,
+       "w": 2.95,
+       "h": 0.24,
+       "fs": 8.5,
+       "color": "6E655C",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 1.84,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the paragraphs and runs",
+       "x": 1.73,
+       "y": 1.932,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.239,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Set the style of a paragraph",
+       "x": 1.73,
+       "y": 2.331,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.637,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Make a paragraph style",
+       "x": 1.73,
+       "y": 2.729,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.036,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Add headings of levels 0 to 9",
+       "x": 1.73,
+       "y": 3.128,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.434,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Set the bold attribute of a run",
+       "x": 1.73,
+       "y": 3.526,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.833,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Add a page break",
+       "x": 1.73,
+       "y": 3.925,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 4.231,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Add a picture with a width",
+       "x": 1.73,
+       "y": 4.323,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 0.74,
+       "y": 2.325,
+       "w": 0.22,
+       "h": 0.22,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 1.5
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.545,
+       "x2": 0.85,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.65,
+       "y1": 2.645,
+       "x2": 1.05,
+       "y2": 2.645,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.925,
+       "x2": 0.69,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.925,
+       "x2": 1.01,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A program",
+       "x": 0.5,
+       "y": 3.225,
+       "w": 0.8,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.009,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.408,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.806,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 3.205,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 3.604,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 4.002,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 4.401,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      }
+     ],
+     "did": "WhatAProgramCanDoWithWord"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 3.9,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WhatAProgramCanDoWithWord - SetOfUses pattern, 26 of 26 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.6,
+     "y": 1.55,
+     "w": 4.53,
+     "h": 3.35,
+     "lines": [
+      "import docx",
+      "from docx.oxml import parse_xml",
+      "W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'",
+      "LINK = ('<w:hyperlink xmlns:w=\"%s\"><w:r><w:t>linked</w:t></w:r>'",
+      "        '</w:hyperlink>' % W)",
+      "doc = docx.Document(); p = doc.add_paragraph('Some ')",
+      "p.add_run('bold').bold = True",
+      "p.add_run(' text')",
+      "t = doc.add_table(rows=1, cols=1); t.cell(0, 0).text = 'in a table'",
+      "doc.sections[0].header.paragraphs[0].text = 'IN THE HEADER'",
+      "q = doc.add_paragraph('before '); q._p.append(parse_xml(LINK))",
+      "print([x.text for x in doc.paragraphs])",
+      "print([(r.text, r.bold) for r in p.runs])",
+      "print('table:', doc.tables[0].cell(0, 0).text)",
+      "print('header:', doc.sections[0].header.paragraphs[0].text)",
+      "print('hyperlink paragraph: text', repr(q.text),",
+      "      'runs', [r.text for r in q.runs])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "['Some bold text', 'before linked']\n[('Some ', None), ('bold', True), (' text', None)]\ntable: in a table\nheader: IN THE HEADER\nhyperlink paragraph: text 'before linked' runs ['before ']",
+     "outLabel": "prints",
+     "label": "program docxReadCut_v1_0_0.py, lines 19 to 35 of 35"
+    }
+   ],
+   "notes": "The use-case diagram lists what the chapter does with a Word document: read the paragraphs and runs, set the style of a paragraph, make a paragraph style, add headings, set the bold attribute of a run, add a page break and add a picture. The program reads back what it wrote. doc.paragraphs is a list of Paragraph objects in body order, and an empty paragraph counts. A paragraph is split into runs wherever the formatting changes: the three runs are Some , bold and text, with bold None, True, None. The chapter prints the third run of its demo paragraph as and some , where the shipped demo.docx has text and some , which is the one place the replay of the chapter's statements differed. doc.paragraphs holds only the body's own paragraphs, so the text of a table cell and of a section header has to be read from the cell and from the header. And for a paragraph that contains a hyperlink, text includes the linked words, before linked, in python-docx 1.2.0, but runs lists only the run before it: the linked text is in no Run, so a program that joins run texts loses it. The hyperlink here is built from a few lines of XML because python-docx 1.2.0 offers no call that writes one. A Run has a bold attribute with three states, which the writing slides come to.",
+   "take": "Read paragraphs for the body; tables, headers and link text need their own door.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The book's demo.docx, restyled",
+   "sub": "The chapter's restyling of its demo file: Quote Char on one run, underline on another",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.33,
+     "h": 2.38,
+     "lines": [
+      "import docx",
+      "name = real_file('demo.docx')  # sha256 checked",
+      "doc = docx.Document(name)",
+      "for p in doc.paragraphs:",
+      "    print(p.style.name, '|', p.text)",
+      "for r in doc.paragraphs[1].runs:",
+      "    print('   ', repr(r.text), r.bold, r.italic)",
+      "doc.paragraphs[0].style = 'Normal'",
+      "doc.paragraphs[1].runs[0].style = 'Quote Char'",
+      "doc.paragraphs[1].runs[1].underline = True",
+      "doc.save('restyled.docx')",
+      "d = docx.Document('restyled.docx')",
+      "print(d.paragraphs[0].style.name)",
+      "for r in d.paragraphs[1].runs:",
+      "    print('   ', repr(r.text), r.style.name, r.underline)"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program shippedDemoDocxCut_v1_0_0.py, lines 29 to 43 of 43"
+    },
+    {
+     "t": "prog",
+     "x": 5.03,
+     "y": 1.55,
+     "w": 4.22,
+     "h": 2.52,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "Title | Document Title\nNormal | A plain paragraph with some bold text and some italic\nHeading 1 | Heading, level 1\nIntense Quote | Intense quote\nList Bullet | first item in unordered list\nList Number | first item in ordered list\nNormal | \n    'A plain paragraph with some ' None None\n    'bold' True None\n    ' text and some ' None None\n    'italic' None True\nNormal\n    'A plain paragraph with some ' Quote Char None\n    'bold' Default Paragraph Font True\n    ' text and some ' Default Paragraph Font None\n    'italic' Default Paragraph Font None",
+     "outLabel": "prints",
+     "label": "transcript of program shippedDemoDocxCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.17,
+     "w": 9.0,
+     "h": 0.65,
+     "fs": 9,
+     "body": "The title paragraph became Normal; the first run took the character style Quote Char; underline was set on the run bold. A run with no style of its own shows Default Paragraph Font. Shipped file: demo.docx of the book's online materials, fetched from nostarch.com at run time, sha256 b43b21137d7d... checked. Lines 1 to 28 of the program (the helper make_pdf(), which writes a small valid PDF 1.4 of text pages byte by byte, and the imports) are not shown."
+    }
+   ],
+   "notes": "The program opens the Word file the book ships, demo.docx, which it fetches from the online materials and checks against its sha256 before use, and lists its seven paragraphs with the name of their style: Title, Normal, Heading 1, Intense Quote, List Bullet, List Number and an empty Normal. The second paragraph holds four runs, A plain paragraph with some , bold, text and some and italic, with bold True only on the second and italic True only on the last. Then it does what the chapter does: the first paragraph takes the style Normal, the first run of the second takes the character style Quote Char, and the second run is underlined; the file is saved as restyled.docx and read back. The file itself says that its author is Cisco Employee and that it was last modified by Al Sweigart. The chapter's printout says the third run is and some ; the shipped file has text and some , and that is the only difference the replay found. Restyled.docx is a file the reader makes: the zip of the online materials does not hold it, nor helloworld.docx or encrypted.pdf. Microsoft Word itself was not available, so the statement that the style names in the Word Styles pane match the list the chapter prints is checked only against the template of python-docx.",
+   "take": "Give a run a character style and a paragraph a paragraph style.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Styles: an exact name and the right kind",
+   "sub": "A paragraph takes a paragraph style, a run a character style, and the name must match",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.4,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.95,
+       "y": 1.437,
+       "w": 1.8,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Choose the name of a style",
+       "x": 2.02,
+       "y": 1.589,
+       "w": 1.66,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 1.95,
+       "y": 1.95,
+       "w": 1.8,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Does the template have a style with that exact name?",
+       "x": 2.12,
+       "y": 1.988,
+       "w": 1.46,
+       "h": 0.423,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.97,
+       "w": 1.2,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Make a paragraph style with add_style()",
+       "x": 0.57,
+       "y": 1.988,
+       "w": 1.06,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 1.95,
+       "y": 2.483,
+       "w": 1.8,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the style for a whole paragraph?",
+       "x": 2.12,
+       "y": 2.589,
+       "w": 1.46,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.95,
+       "y": 3.037,
+       "w": 1.8,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Assign it to the style of the paragraph",
+       "x": 2.02,
+       "y": 3.122,
+       "w": 1.66,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.02,
+       "y": 2.503,
+       "w": 0.88,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Assign it to the style of the run",
+       "x": 4.09,
+       "y": 2.522,
+       "w": 0.74,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.95,
+       "y": 3.57,
+       "w": 1.8,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Save the document",
+       "x": 2.02,
+       "y": 3.723,
+       "w": 1.66,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 4.36,
+       "y": 1.567,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.71,
+       "y": 4.193,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.77,
+       "y": 4.253,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 4.36,
+       "y1": 1.667,
+       "x2": 3.75,
+       "y2": 1.667,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.85,
+       "y1": 1.897,
+       "x2": 2.85,
+       "y2": 1.95,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.85,
+       "y1": 2.45,
+       "x2": 2.85,
+       "y2": 2.483,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.91,
+       "y": 2.377,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.95,
+       "y1": 2.2,
+       "x2": 1.7,
+       "y2": 2.2,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 1.75,
+       "y": 2.0,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 2.43,
+       "x2": 1.1,
+       "y2": 3.267,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 3.267,
+       "x2": 1.95,
+       "y2": 3.267,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.85,
+       "y1": 2.983,
+       "x2": 2.85,
+       "y2": 3.037,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.91,
+       "y": 2.92,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 3.75,
+       "y1": 2.733,
+       "x2": 4.02,
+       "y2": 2.733,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 3.8,
+       "y": 2.533,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.85,
+       "y1": 3.497,
+       "x2": 2.85,
+       "y2": 3.57,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.46,
+       "y1": 2.963,
+       "x2": 4.46,
+       "y2": 3.8,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.46,
+       "y1": 3.8,
+       "x2": 3.75,
+       "y2": 3.8,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.85,
+       "y1": 4.03,
+       "x2": 2.85,
+       "y2": 4.193,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "ChoosingAStyle"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.4,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ChoosingAStyle - Workflow pattern, 21 of 25 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 5.0,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 3.21,
+     "lines": [
+      "doc = docx.Document()",
+      "p = doc.add_paragraph('A plain paragraph')",
+      "r = p.add_run(' with a run')",
+      "for obj, name in ((p, 'Quote Char'), (r, 'Quote')):",
+      "    try:",
+      "        obj.style = name",
+      "    except ValueError as e:",
+      "        print(name, '->'); print('   ', e)",
+      "for n in ('List Number ', 'List Number'):",
+      "    try:",
+      "        doc.add_paragraph('x', n); print(repr(n), 'ok')",
+      "    except KeyError as e:",
+      "        print(repr(n), 'KeyError', e)",
+      "print(len(doc.styles), 'styles in a new document')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "Quote Char ->\n    assigned style is type CHARACTER (2), need type PARAGRAPH (1)\nQuote ->\n    assigned style is type PARAGRAPH (1), need type CHARACTER (2)\n'List Number ' KeyError \"no style with name 'List Number '\"\n'List Number' ok\n164 styles in a new document",
+     "outLabel": "prints",
+     "label": "program stylesCut_v1_0_0.py, lines 20 to 33 of 33"
+    }
+   ],
+   "notes": "The workflow is the chapter's section on styling paragraph and run objects: choose the name of a style; if the template has no style with that exact name, make one with add_style(); then decide whether the style is for a whole paragraph, and assign it to the style of the paragraph or of the run; save the document. The transcript runs the two refusals. A paragraph accepts only paragraph styles and a run only character styles: paragraph.style = 'Quote Char' raises ValueError, assigned style is type CHARACTER (2), need type PARAGRAPH (1), and run.style = 'Quote' raises the reverse. A style name must match exactly: 'List Number ' with the trailing space the chapter prints raises KeyError, no style with name 'List Number ', while 'List Number' works. The chapter prints a list of 34 default style names. A new document has 164 styles of four kinds, 27 character, 1 list, 36 paragraph and 100 table, and the chapter's MacroText is the id of a style named macro, which python-docx 1.2.0 finds only through a lookup by id that is deprecated and warns. A custom paragraph style is made with styles.add_style('Invitation Name', WD_STYLE_TYPE.PARAGRAPH), whose base can be Normal and whose font can be set; the invitations program of slide 23 does it three times.",
+   "take": "Match the style name exactly, and give a paragraph a paragraph style.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Writing: paragraphs, runs and bold",
+   "sub": "Each call returns the next object; bold has three states and strike is a font's",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 4.8,
+     "h": 3.15,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.45,
+       "w": 1.15,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The program",
+       "x": 0.61,
+       "y": 1.566,
+       "w": 1.03,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.125,
+       "y1": 1.87,
+       "x2": 1.125,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.733,
+       "y": 1.45,
+       "w": 1.15,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The Document object",
+       "x": 1.793,
+       "y": 1.482,
+       "w": 1.03,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.308,
+       "y1": 1.87,
+       "x2": 2.308,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.917,
+       "y": 1.45,
+       "w": 1.15,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The Paragraph object",
+       "x": 2.977,
+       "y": 1.482,
+       "w": 1.03,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.492,
+       "y1": 1.87,
+       "x2": 3.492,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.1,
+       "y": 1.45,
+       "w": 1.15,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The Run object",
+       "x": 4.16,
+       "y": 1.566,
+       "w": 1.03,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.675,
+       "y1": 1.87,
+       "x2": 4.675,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.125,
+       "y1": 2.286,
+       "x2": 2.308,
+       "y2": 2.286,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls add_paragraph with the text",
+       "x": 1.225,
+       "y": 1.812,
+       "w": 0.983,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.308,
+       "y1": 2.724,
+       "x2": 1.125,
+       "y2": 2.724,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns the new Paragraph",
+       "x": 1.225,
+       "y": 2.385,
+       "w": 0.983,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.125,
+       "y1": 3.162,
+       "x2": 3.492,
+       "y2": 3.162,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls add_run with more text",
+       "x": 1.225,
+       "y": 2.958,
+       "w": 2.167,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.492,
+       "y1": 3.601,
+       "x2": 1.125,
+       "y2": 3.601,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns the new Run",
+       "x": 1.225,
+       "y": 3.396,
+       "w": 2.167,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.125,
+       "y1": 4.039,
+       "x2": 4.675,
+       "y2": 4.039,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Sets bold to True",
+       "x": 1.225,
+       "y": 3.834,
+       "w": 3.35,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.125,
+       "y1": 4.477,
+       "x2": 2.308,
+       "y2": 4.477,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Saves the document to a file",
+       "x": 1.225,
+       "y": 4.004,
+       "w": 0.983,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "BuildingAWordDocument"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.8,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram BuildingAWordDocument - Interaction pattern, 27 of 28 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 5.4,
+     "y": 1.55,
+     "w": 4.03,
+     "h": 2.38,
+     "lines": [
+      "doc = docx.Document()",
+      "p = doc.add_paragraph('Hello world!')",
+      "r = p.add_run(' A second run.')",
+      "print(type(p).__name__, type(r).__name__, len(p.runs))",
+      "tag = lambda: re.findall(r'<w:b[ /][^>]*>', r._r.xml)",
+      "for value in (True, False, None):   # three states",
+      "    r.bold = value; print(value, '->', r.bold, tag())",
+      "r.strike = True; print('run.strike =', r.font.strike)",
+      "r.font.strike = True; print('font.strike =', r.font.strike)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "Paragraph Run 2\nTrue -> True ['<w:b/>']\nFalse -> False ['<w:b w:val=\"0\"/>']\nNone -> None []\nrun.strike = None\nfont.strike = True",
+     "outLabel": "prints",
+     "label": "program writeRunsCut_v1_0_0.py, lines 20 to 28 of 28"
+    },
+    {
+     "t": "card",
+     "head": "Table 17-1 is mostly wrong",
+     "body": "Only 3 of 12 are on Run; the rest: run.font.",
+     "x": 5.4,
+     "y": 4.08,
+     "w": 4.1,
+     "h": 0.87,
+     "fs": 9.5,
+     "accent": "orange"
+    }
+   ],
+   "notes": "The sequence diagram is the chapter's way of building a paragraph: the program calls add_paragraph with the text and gets back the new Paragraph, calls add_run on it and gets back the new Run, sets the bold attribute of the run, and saves the document. The transcript runs it. The type names are Paragraph and Run and the paragraph then holds 2 runs. Bold is tri-state, as the chapter says: True writes <w:b/>, False writes <w:b w:val=0/>, and None writes nothing and removes the choice. Table 17-1 lists twelve text attributes as attributes of a Run, and only three are: bold, italic and underline. The others, strike, double_strike, all_caps, small_caps, shadow, outline, rtl, imprint and emboss, exist on run.font. The transcript shows the consequence: run.strike = True raises nothing and changes nothing, font.strike stays None and the XML has no element, while run.font.strike = True works. The chapter's table therefore sends a reader to a silent failure. Underline takes the values of WD_UNDERLINE, and WD_UNDERLINE.DOUBLE wrote <w:u w:val=double/>.",
+   "take": "Set strike, caps and shadow through run.font, not on the run.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Headings, breaks and pictures",
+   "sub": "Levels 0 to 9, a page break is a run, and a picture takes its height from its width",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.08,
+     "h": 2.52,
+     "lines": [
+      "import docx",
+      "from PIL import Image",
+      "from docx.shared import Inches",
+      "from docx.enum.text import WD_BREAK",
+      "doc = docx.Document()",
+      "for level in (0, 1, 9, 10):",
+      "    try:",
+      "        print(level, doc.add_heading('Header %d' % level, level).style.name)",
+      "    except ValueError as e:",
+      "        print(level, 'ValueError:', e)",
+      "doc.add_paragraph('Hello').add_run().add_break(WD_BREAK.PAGE)",
+      "print(re.findall(r'<w:br[^>]*>', doc.element.xml))",
+      "img = io.BytesIO(); Image.new('RGB', (60, 80), 'red').save(img, 'PNG')",
+      "for label, kw in (('no width', {}), ('width=1 inch', {'width': Inches(1)})):",
+      "    shape = doc.add_picture(io.BytesIO(img.getvalue()), **kw)",
+      "    print(label, '->', int(shape.width), int(shape.height))"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program breaksCut_v1_0_0.py, lines 19 to 34 of 34"
+    },
+    {
+     "t": "prog",
+     "x": 5.78,
+     "y": 1.55,
+     "w": 3.42,
+     "h": 1.27,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "0 Title\n1 Heading 1\n9 Heading 9\n10 ValueError: level must be in range 0-9, got 10\n['<w:br w:type=\"page\"/>']\nno width -> 762000 1016000\nwidth=1 inch -> 914400 1219200",
+     "outLabel": "prints",
+     "label": "transcript of program breaksCut_v1_0_0.py"
+    },
+    {
+     "t": "card",
+     "head": "Three counts in one chapter",
+     "body": "The chapter says heading levels run 0 to 4, then 1 to 9; add_heading accepts 0 to 9 and refuses 10. Level 0 is the Title style.",
+     "x": 5.78,
+     "y": 2.97,
+     "w": 3.72,
+     "h": 1.98,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.15,
+     "w": 5.0,
+     "h": 0.34,
+     "fs": 9,
+     "body": "Lines 1 to 18 of the program (the helper make_pdf(), which writes a small valid PDF 1.4 of text pages byte by byte, and the imports) are not shown."
+    }
+   ],
+   "notes": "Headings come from add_heading(text, level). The chapter gives the levels as 0 to 4 in one sentence and 1 to 9 in the next. The call accepts 0 to 9 and raises ValueError outside it, level must be in range 0-9, got 10, which is also the answer to practice question 12; level 0 is the Title style, level 1 is Heading 1 and level 9 is Heading 9. A page break is a run: add_run().add_break(WD_BREAK.PAGE) wrote <w:br w:type=page/>, and a newline in the text of add_run becomes a line break. A picture is added with add_picture(), which returns an inline shape whose size is in English Metric Units, 914,400 to the inch. A picture of 60 by 80 pixels with no width came out at 762,000 by 1,016,000, which is the pixels at 72 per inch, and with width=Inches(1) it came out 914,400 by 1,219,200, so the height follows from the width and keeps the picture's shape; giving both width and height can distort it. The same picture added twice was stored once in the file's word/media folder, and the file is a ZIP that begins with the bytes PK. The pictures here are made with Pillow, a small red PNG, because the chapter's zophie.png is not needed to show the sizes.",
+   "take": "A page break is a run, and a picture needs only a width.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Custom Invitations, and what was not run",
+   "sub": "Styles made in code, one invitation per page, and a page count seen in LibreOffice",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.51,
+     "h": 3.21,
+     "lines": [
+      "guests = ['Prof. Plum', 'Miss Scarlet', 'Col. Mustard', 'Al Sweigart', 'Robocop']",
+      "doc = docx.Document()",
+      "for name, size, bold in (('Invite Lead', 20, False), ('Invite Name', 32, True),",
+      "                         ('Invite Detail', 14, False)):",
+      "    s = doc.styles.add_style(name, WD_STYLE_TYPE.PARAGRAPH)",
+      "    s.base_style = doc.styles['Normal']; s.font.size = Pt(size); s.font.bold = bold",
+      "card = [('It would be a pleasure to have the company of', 'Invite Lead'),",
+      "        (None, 'Invite Name'),",
+      "        ('at 11010 Memory Lane on the Evening of', 'Invite Lead'),",
+      "        ('April 1st', 'Invite Detail'), (\"at 7 o'clock\", 'Invite Detail')]",
+      "for i, guest in enumerate(guests):",
+      "    for text, style in card:",
+      "        doc.add_paragraph(text or guest, style)",
+      "    if i < len(guests) - 1: doc.add_page_break()",
+      "doc.save('invitations.docx')",
+      "d = docx.Document('invitations.docx')",
+      "pages = d.element.xml.count('w:type=\"page\"')",
+      "print(len(d.paragraphs), 'paragraphs;', pages, 'page breaks for', len(guests))",
+      "print([p.text for p in d.paragraphs if p.style.name == 'Invite Name'])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "29 paragraphs; 4 page breaks for 5\n['Prof. Plum', 'Miss Scarlet', 'Col. Mustard', 'Al Sweigart', 'Robocop']",
+     "outLabel": "prints",
+     "label": "program customInvitationsCut_v1_0_0.py, lines 22 to 40 of 40"
+    },
+    {
+     "t": "card",
+     "head": "Styles made in code",
+     "body": "python-docx uses only styles that exist, so add_style() makes the three the invitation needs; the page break after each guest but the last leaves no blank page.",
+     "x": 6.26,
+     "y": 1.5,
+     "w": 3.24,
+     "h": 1.5,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "Microsoft Word and a PDF viewer were not run. LibreOffice 24.2 opened the Word files the research wrote and counted 5 pages for the 5 invitations.",
+     "x": 6.26,
+     "y": 3.1,
+     "w": 3.24,
+     "h": 1.36,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 6.26,
+     "y": 4.5,
+     "w": 3.24,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Lines 1 to 21 of the program (the helper make_pdf(), which writes a small valid PDF 1.4 of text pages byte by byte, and the imports) are not shown."
+    }
+   ],
+   "notes": "The second practice program reads a list of guest names and writes a Word document with one invitation per page. Because python-docx can only use styles that exist, the chapter tells the reader to prepare them in a blank Word file; the study made them in code, with styles.add_style, so the program here makes Invite Lead, Invite Name and Invite Detail from Normal and sets their size and bold. Each guest gets five paragraphs and, except after the last guest, a page break: the transcript says 29 paragraphs, 4 page breaks for 5 guests and lists the five names with the style Invite Name. The page break after each invitation but the last means that a viewer should show 5 pages, not 6. The research converted the Word files it wrote to PDF with LibreOffice 24.2 and counted 5 pages for the 5 guests, 2 pages for the file with a page break and 1 for the others, and saw the text; that is one observation in one program. Microsoft Word itself and a PDF viewer were NOT EXECUTED, and nothing on this slide is claimed about how they show the files. The same holds for the chapter's figures of the Styles pane, which are screenshots of Word.",
+   "take": "Make the styles in code, break after every guest but the last.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in one map",
+   "sub": "Six branches; the slides of each branch hold the examples",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.2,
+       "y": 2.425,
+       "w": 1.6,
+       "h": 1.15,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "PDF and Word files are made for people; a program reads and writes them",
+       "x": 4.28,
+       "y": 2.528,
+       "w": 1.44,
+       "h": 0.944,
+       "fs": 11,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.4,
+       "w": 3.3,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.8,
+       "y1": 1.91,
+       "x2": 4.2,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The PDF format",
+       "x": 0.6,
+       "y": 1.45,
+       "w": 3.1,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "A header, objects, a table and a trailer\nText is drawing commands in stream order\nText is not removed by a box",
+       "x": 0.6,
+       "y": 1.648,
+       "w": 3.1,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.49,
+       "w": 3.3,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.8,
+       "y1": 3.0,
+       "x2": 4.2,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Reading PDFs",
+       "x": 0.6,
+       "y": 2.54,
+       "w": 3.1,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The pages of a PdfReader start at index 0\nLayout mode reads the page\nImages are read from a page",
+       "x": 0.6,
+       "y": 2.738,
+       "w": 3.1,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.58,
+       "w": 3.3,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.8,
+       "y1": 4.09,
+       "x2": 4.2,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Writing PDFs",
+       "x": 0.6,
+       "y": 3.63,
+       "w": 3.1,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "A tuple is a page range\nRotation adds up\nAES-256 needs a package",
+       "x": 0.6,
+       "y": 3.828,
+       "w": 3.1,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.2,
+       "y": 1.4,
+       "w": 3.3,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.2,
+       "y1": 1.91,
+       "x2": 5.8,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Word documents",
+       "x": 6.3,
+       "y": 1.45,
+       "w": 3.1,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "A docx file is a ZIP archive of XML\nA paragraph holds runs\nA style has an exact name",
+       "x": 6.3,
+       "y": 1.648,
+       "w": 3.1,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.2,
+       "y": 2.49,
+       "w": 3.3,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.2,
+       "y1": 3.0,
+       "x2": 5.8,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Writing Word documents",
+       "x": 6.3,
+       "y": 2.54,
+       "w": 3.1,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "Headings have levels 0 to 9\nBold has three states\nA picture is added from a width",
+       "x": 6.3,
+       "y": 2.738,
+       "w": 3.1,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.2,
+       "y": 3.58,
+       "w": 3.3,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.2,
+       "y1": 4.09,
+       "x2": 5.8,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Tools and practice",
+       "x": 6.3,
+       "y": 3.63,
+       "w": 3.1,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "Install python-docx and import docx\nProject 12 joins the pages\nA dictionary is tried in both cases",
+       "x": 6.3,
+       "y": 3.828,
+       "w": 3.1,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      }
+     ],
+     "did": "PdfAndWordAtAGlance"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram PdfAndWordAtAGlance - TopicAndParts pattern, 80 of 88 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "These six branches are the route of the deck. The PDF format comes first: a header, objects, a table and a trailer; text that is drawing commands in stream order; and text that a box does not remove. Reading PDFs follows: the pages of a PdfReader start at index 0, layout mode reads the page by its columns, and images are read from a page. Writing PDFs: a tuple is a page range, rotation adds up, and AES-256 needs a package. Word documents: a docx file is a ZIP archive of XML, a paragraph holds runs, and a style has an exact name. Writing Word documents: headings have levels 0 to 9, bold has three states, and a picture is added from a width. The last branch is tools and practice: install python-docx and import docx, Project 12 joins the pages, and a dictionary is tried in both cases. Together they answer the first question of the chapter, what a program can do with documents made for people, and the slides that say where a printed line differs answer the second. The map is drawn from the same specification as the interactive page.",
+   "take": "If a branch feels unproven, its slides hold the example.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Every link was opened on the day this deck was made",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.55,
+     "fs": 9.5,
+     "groups": [
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, chapter 17 - free online",
+         "https://automatetheboringstuff.com/3e/chapter17.html"
+        ],
+        [
+         "pypdf documentation",
+         "https://pypdf.readthedocs.io/en/stable/"
+        ],
+        [
+         "python-docx documentation",
+         "https://python-docx.readthedocs.io/en/latest/"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "pypdf: encryption and decryption",
+         "https://pypdf.readthedocs.io/en/stable/user/encryption-decryption.html"
+        ],
+        [
+         "pypdf: merging PDF files",
+         "https://pypdf.readthedocs.io/en/stable/user/merging-pdfs.html"
+        ],
+        [
+         "pypdf: post-processing of extracted text",
+         "https://pypdf.readthedocs.io/en/latest/user/post-processing-in-text-extraction.html"
+        ],
+        [
+         "python-docx: working with styles",
+         "https://python-docx.readthedocs.io/en/latest/user/styles-using.html"
+        ]
+       ]
+      },
+      {
+       "head": "History and standards",
+       "rows": [
+        [
+         "John Warnock and Camelot (Wikipedia)",
+         "https://en.wikipedia.org/wiki/John_Warnock"
+        ],
+        [
+         "ZIP, the file format (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Zip_(file_format)"
+        ],
+        [
+         "Office Open XML (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Office_Open_XML"
+        ],
+        [
+         "PDF 1.7, ISO 32000-1 (Library of Congress)",
+         "https://www.loc.gov/preservation/digital/formats/fdd/fdd000277.shtml"
+        ],
+        [
+         "History of pypdf: four names",
+         "https://pypdf.readthedocs.io/en/stable/meta/history.html"
+        ],
+        [
+         "The docx package on PyPI (do not install)",
+         "https://pypi.org/project/docx/"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every listing of the chapter; the documentation of pypdf and of python-docx describe the two packages. The reference links are the pages for the topics where the deck corrected the chapter: encryption, merging, the post-processing of extracted text and styles; the rest of the fifty-odd sources of the research, among them the PDF standard itself, the pages on images and watermarks, pdfminer.six and qpdf, are in the research package. The history links are the sources behind the six stories of the chapter. Two of them are slides, the Camelot memo of 1991 and the ZIP format of 1989; the other four were told in the notes: the Office Open XML standard, Ecma in 2006 and ISO in 2008, on the slide of the ZIP archive; the PDF standard ISO 32000-1 of July 2008 on the slide of the file structure; the four names of the library on the slide of what a program can do; and the package docx that cannot be imported on the slide of the ZIP archive.",
+   "take": "Textbook, package documentation and history, opened the day this deck was built.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What you should now be able to say",
+   "sub": "Four claims, each carried by a result you saw printed",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 1.5,
+     "w": 8.8,
+     "h": 2.4,
+     "fs": 15,
+     "items": [
+      "A PDF stores drawing commands: text comes out in stream order, and a black box hides nothing.",
+      "Pass pages= to merge(), ask for AES-256 by name, and read what decrypt() returns.",
+      "A .docx file is a ZIP of XML: paragraphs hold runs, and bold has three states.",
+      "A style needs its exact name and the right kind; strike belongs to run.font."
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.6,
+     "y": 4.1,
+     "w": 8.8,
+     "h": 0.6,
+     "fs": 13,
+     "big": true,
+     "items": [
+      "32 rows run",
+      "27 programs run",
+      "8 diagrams"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The console rows use only documents made in memory, so they can be typed into any Python that has pypdf, python-docx and Pillow; the programs build their own documents, and the two that read the book's files fetch them and check their hash first. The rows were run again under Python 3.14.6 with pypdf 6.20.1 and python-docx 1.2.0 each time the deck was built, and the programs were run again by the check that compares the slides with the recording. What was not run is marked on its slide: the language-model clean-up, Microsoft Word and a PDF viewer. The next chapter of the book works with CSV, JSON and XML files, where a program reads data that people and other programs wrote in plain text, and what this chapter taught about formats, optional packages and the difference between a file made to be read and a file made to be parsed carries over.",
+   "take": "Questions are welcome; bring a PDF or a Word file to open.",
+   "bg": "light"
+  }
+ ]
+}
