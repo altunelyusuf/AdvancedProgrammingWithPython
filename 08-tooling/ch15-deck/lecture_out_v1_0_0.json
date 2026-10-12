@@ -1,0 +1,189 @@
+{
+ "_version": "1.0.0",
+ "_deck": "1.0.0",
+ "_python": "3.14.6",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 15: Google Sheets",
+   "say": "Chapter 14 worked on files that a program opens from its own disk. Chapter 15 reaches a spreadsheet that lives on Google's servers, so every read and every write becomes a request sent over the web, and before the first request the program must be allowed in by an account. This deck follows the chapter in its own order: the access to a Google account by a cloud project, a credentials file and token files; spreadsheet objects and sheet objects; rows, columns and cells; the quotas; and Project 11, a spreadsheet that pretends to be a blockchain. It adds what the chapter leaves out and what the research found when each printed output was run again: the token files are Python pickles and so can run code, a token of an app in Testing status stops working after seven days, Spreadsheet.Sheet() returns nothing, and two writers can lose a row. One thing must be said first. Google itself was never reached, because no Google account, no consent in a browser and no cloud project were available. Every spreadsheet output on these slides was made by the real EZSheets library, release 2026.4.28, together with the real Google client library, under Python 3.14.6, talking to a stand-in for Google's answers that was written for the study; or the rows are the CSV export of a real public sheet, read through that same stand-in. Each such slide says so, and what needs a Google account is marked as not executed.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "Today's route",
+   "say": "The route has eight parts. It starts with Google and the library, the use cases of EZSheets and the beginning of Google Sheets, then the access to an account, the credentials and token files, the token's life and the danger of a token file that is a pickle, then spreadsheet objects, the addresses and ids and the names of downloads, then sheets, rows, columns and cells and the way a write and a read differ, then requests and quotas, then Project 11, the fake blockchain that is audited and extended, then the lost update of two writers and the three practice programs, ending with a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. Two of the slides are true stories and four more are told in the notes; the eight narrative diagrams of the chapter are drawn from the same specifications as the interactive page. Wherever an output comes from a stand-in for Google or a recorded fixture, the slide says so, and what needs a Google account is marked as not executed.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "The questions this chapter answers",
+   "say": "The first question is the chapter's spine. A Google account, a spreadsheet, a sheet, a row or column and a cell are five different things, and EZSheets gives each its own object or its own call: a credentials file and two token files for the account, a Spreadsheet for a file in Google Sheets, a Sheet for one tab, lists for a row or a column, and a bracket for a cell. What the question adds is that every one of these calls is a request to Google, and the deck shows which request each one sends, read from the requests the library built. The second question is the watch-out of the deck. The chapter's examples are sound in outline, but several printed results do not hold for the library or the services of today: Sheet() returns nothing, the quota figures and the cell limit differ from Google's pages, the one-time setup is weekly for an app in Testing status, and the token files run code when they are loaded. Each slide says where a printed line differs and on what evidence. The chips give the size of the chapter as this deck covers it: six branches, the topics beneath them, the console rows and the programs that were run, the eight diagrams, the Python release, and the reminder that Google itself was never reached.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "EZSheets and what a program can do with it",
+   "say": "EZSheets is the work of one author, Al Sweigart. It was first uploaded to the Python Package Index on 8 February 2019, there are 18 releases, the newest is 2026.4.28, and the licence is GPLv3 or later. Its documentation on Read the Docs is dated November 2019 and names ten of the 35 public names of the installed library; it does not name getRow, the download methods, listSpreadsheets or delete, and the last release differs from the one before it only in its version string, so the research read the library's source and ran it. EZSheets does not speak to Google itself. It depends on google-api-python-client, which builds each request from Google's discovery document, and on google-auth-oauthlib, which runs the consent; the two base addresses it uses were read from the clients it builds, sheets.googleapis.com for version 4 of the Sheets API and www.googleapis.com/drive/v3 for the Drive API, without a network. The use-case diagram lists what a program can do with one Google account: create or upload spreadsheets, list and delete them, download them in six formats, read and write cells, rows and columns, create, move and delete sheets, and copy a sheet into another spreadsheet. A second library, gspread, does the same work and has its own documentation; it was not run. The library's story is short: it reached PyPI in February 2019, and the third edition of the book, published in April 2025 with 672 pages, puts it in chapter 15. Its code is the same under every release of Python 3.14, from 3.14.0 to 3.14.6, and under 3.13 and 3.12, apart from the pickle protocol number of the token files, which is 5 from Python 3.14 and 4 before.",
+   "concept": "LibraryContext",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "Google Sheets began as XL2Web, in 2006",
+   "say": "Google Sheets originated from XL2Web, a web-based spreadsheet application made by 2Web Technologies, a company founded by Jonathan Rochelle and Farzad Khosrowshahi. Google acquired XL2Web in 2006 and turned it into Google Labs Spreadsheets. It was opened as a test for a limited number of users, first come, first served, on June 6, 2006. A beta for all Google Account holders replaced the limited test later. Every spreadsheet the chapter's programs create or read is a descendant of that 2006 test. The account rests on these sources. Wikipedia, 'Google Sheets', History section (XL2Web, 2Web Technologies, acquisition in 2006, launch on June 6, 2006), which cites Jonathan Rochelle, 'It's nice to share', Official Google Blog, June 6, 2006.",
+   "concept": "NewSpreadsheet",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "Credentials, tokens and the first sign-in",
+   "say": "This is the chapter's own sequence of steps, drawn as a workflow. The reader creates a Google Cloud project, which has a name that can be changed and a project ID that cannot; switches on the Sheets API and the Drive API, because EZSheets uses both; sets up the consent screen and its scopes; and downloads the credentials file into the folder of the script. At the first call the library looks for valid token files, and when there are none it opens the browser on Google's consent page, waits for the redirect, and writes the token files. None of the console steps was executed for this deck, because the console needs a Google account, and that is said here rather than hidden. What could be run without an account was run: the two API clients and their addresses, the scopes the library asks for, which are the whole spreadsheets scope and the whole drive scope, and the authorization address the library builds, which has response_type=code, a PKCE code challenge with the method S256, access_type=offline and the redirect http://localhost:8080/. The console on the right computes the S256 challenge with the standard library from the example verifier of RFC 7636 and gives the challenge the RFC prints, which is what the library's PKCE step does with a random verifier. The console has also changed since the book: the consent-screen wizard of the chapter is now three pages of the Google Auth platform, Branding, Audience and Data Access, so a student has to map each step to the new page, and that mapping was not executed either. A story sits behind the sign-in. OAuth began around November 2006, when Blaine Cook, who was working on the Twitter OpenID implementation, met Chris Messina, David Recordon and Larry Halff at a CitizenSpace OpenID meeting and they concluded that there was no open standard for API access delegation; a Google group followed in April 2007, and the IETF published RFC 6749 in October 2012. Its authorization code and refresh token are what the token files hold, and the idea is that a script never learns your password. This account rests on oauth.net and on the RFC. Sheets API version 3 was turned down on 2 August 2021, so the library can only be using version 4.",
+   "concept": "CloudProject",
+   "visual": ""
+  },
+  {
+   "n": 7,
+   "title": "A token file: from sign-in to a refused refresh",
+   "say": "The chapter calls the token files a one-time setup that will not happen again. Google's identity page says otherwise for an app whose publishing status is Testing and whose user type is External: the refresh token expires in seven days, and the help on the app audience adds a limit of 100 test users and the same seven days. So the diagram follows one token file through four states: no file, a valid file written by the sign-in in the browser, an expired access token that a refresh token renews, and a stale file when Google refuses the refresh after seven days. The research could not make Google refuse a refresh, so that event was not executed against Google. It was played instead against a local server that answered invalid_grant, which is the error RFC 6749 names for a refresh token that is invalid, expired or revoked. The library then raised google.auth.exceptions.RefreshError with the text Token has been expired or revoked, which the import swallows with a bare except and the first Spreadsheet() raises again, and the stale token-sheets.pickle stayed in place. The remedy, deleting the token files and signing in again, follows from the library's code and was not run. Where there is no browser, as on a server, the library raises webbrowser.Error, swallows it at import and raises it again at the first Spreadsheet() without printing an address; with the environment variable BROWSER set to true it printed the authorization address and listened on port 8080. Google's own Python quickstart stores a token.json file and not a pickle.",
+   "concept": "TokenLifetime",
+   "visual": ""
+  },
+  {
+   "n": 8,
+   "title": "The token files are pickles, and a pickle runs code",
+   "say": "The library writes two token files, token-drive.pickle and token-sheets.pickle, beside the credentials file, and loads them with pickle.load when ezsheets is imported. The chapter's own page has a stray space in one of the names and speaks of two token JSON files although both are pickles. A pickle runs code when it is loaded, because it may name any callable to be called. The program on the left makes a token file whose pickle calls exec on a statement that writes a file called PWNED.txt, then imports ezsheets and looks for the marker: it is there, written during the import, before any call of the library. The marker is harmless on purpose and stands for hostile code. The console on the lower left shows the same idea with the standard library alone: a class whose __reduce__ names eval makes pickle.loads evaluate the expression 6 * 7 and return 42. Python's documentation says the pickle module is not secure and that only data one trusts should be unpickled, and OWASP and MITRE list deserialization of untrusted data as a weakness, CWE-502. The default protocol of the files is the interpreter's, which is 5 from Python 3.14 and 4 before. The practical rule is that a token file from someone else is a program and not data, which is a reason to keep one account for the scripts, as the chapter advises, and never to share the folder. This program does not use Google or the stand-in.",
+   "concept": "TokenPickle",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "Spreadsheet objects: title, sheets, and Sheet()",
+   "say": "A Spreadsheet object stands for one file in Google Sheets. The chapter opens it from a URL, an id or a title, makes a new one with ezsheets.Spreadsheet(), reads its title, id, url, sheetTitles and sheets, and says some of them are read-only. Run against a stand-in for Google, the library's own code did what the chapter says in most places and differed in the places named here. Assigning to the title sent one request, a POST of a batchUpdate. The three names id, url and sheetTitles are properties with no setter, so assigning raises AttributeError with the text property 'id' of 'Spreadsheet' object has no setter in Python 3.14, while sheets is a plain attribute and assigning to it silently replaces the tuple, as the last lines of the transcript show. The sheets are a tuple, so item assignment raises TypeError. The surprise is on the line that prints None. In the library's source Spreadsheet.Sheet() was added in release 2024.8.8 as a wrapper that calls createSheet and returns nothing, so the printed Sheet objects of the chapter cannot come from it in this release; only createSheet() returns the Sheet. The program has 87 lines: the first 72 are the lines every program of this chapter begins with, which define the stand-in for Google, lines 73 to 79 load a one-sheet example spreadsheet into it, copy its sheet into a new spreadsheet, rename that and print the first results, and the last lines try the three setters; the transcript shows every expression that the program printed beside its answer. A story sits near this slide. Google Forms, introduced in 2008 as part of the Google Docs suite, saves its answers into a spreadsheet when the owner chooses a destination for the responses, and that spreadsheet is what the first practice program of the chapter opens with EZSheets; the account rests on Wikipedia and on Google's help page on where form responses are saved.",
+   "concept": "SpreadsheetAttributes",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "Addresses and column letters",
+   "say": "Google writes a range in A1 notation, a column letter and a row number, and EZSheets converts between that and the numbers its own calls take. The chapter converts getColumnLetterOf(999) to ALK and getColumnNumberOf('ZZZ') to 18278, and a string address to a tuple and back. The transcript on the right is the library's own pure functions with no spreadsheet and no stand-in: they printed the chapter's answers, a lower-case address worked, convertAddress took a tuple, and a column of 0 or a letter where a number was wanted raised ValueError or TypeError. The console on the left does the same job with the standard library alone, so it can be typed into any Python: the letters of a column are counted in base 26, but with no zero, which is why the lambda subtracts one before it divides and why AA follows Z. The three-letter columns end at ZZZ, which is 26 plus 676 plus 17,576, that is 18,278, the number the library prints. The research checked that the library's two conversions and this arithmetic agree for every number from 1 to 200,000. One more fact belongs with ranges: the library builds each range for a request, Sheet1!B2:B2 for a cell and Sheet1!A3:Z3 for a row, and leaves a sheet title unquoted even when it holds a space, while Google's page says single quotes are required for such a title. Whether Google accepts the unquoted form was not executed.",
+   "concept": "AddressConversion",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "Opening by URL, and the name of a download",
+   "say": "The chapter opens the same spreadsheet by a short link, by its long URL and by its bare id, and shows that the three give objects that compare equal. The library adds a fourth way, a title, which it looks up among all the spreadsheets of the account and which raises an error when two share the title or none does. The id is the part of the address after /spreadsheets/d/ up to the next slash, and getIdFromUrl cuts it by position. The program on the top left calls that function, which needs no account and no stand-in, on the public Sweigart Books sheet's address: the /edit#gid=0 form and the form with a closing slash give the whole id, a URL that ends after the id gives it without its last character, and the /spreadsheets/u/3/d/ form raises ValueError with the text url argument must be an alphanumeric id or a full URL. The short links of the chapter, autbor.com/boringcoin and autbor.com/examplegs, depend on something else: for any address that does not start with https://docs.google.com the library follows redirects itself with http.client over port 80 and sends no User-Agent, and on 12 October 2026 the short-link server answered such requests 302 or 403 by turns, which left the address None and stopped the library with an AttributeError before any Google call. The program below it downloads a spreadsheet titled Sweigart Books (DO NOT DELETE) as an Excel file against the stand-in and prints the name the library chose; the chapter prints Sweigart_Books.xlsx. The six download methods ask Drive for the MIME types of xlsx, ods, csv, tsv, pdf and zip, and none of them closes the file it opens. What Google sends back, so whether a CSV holds only the first sheet, was not observed.",
+   "concept": "IdFromUrl",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "Rows and columns as lists",
+   "say": "The chapter reads a row or a column as a list, changes the list and writes it back, and does the same for all rows at once with getRows and updateRows. The transcript on the left is the whole run on a ten-row stand-in of produceSales3.xlsx that has the same columns as the book's file: getRow(1) and getRow(2) are the header and the first record, getColumn('A') equals getColumn(1), updateRow(3, vals) replaces a record, and the loop that upper-cases a column and writes it back with updateColumn is the excerpt on the right. The number printed before the word COLUMNS is the number of requests that write made, one, and COLUMNS is the majorDimension of that request. Two behaviours are not in the chapter. The update calls pad the list they are given with empty strings in place, and updateRows also extends the caller's list of rows to the size of the sheet, so the caller's list is changed. And the lists are as wide and as tall as the grid of the sheet, which for the real produce sheet is 23,758 rows by 6 columns, 142,548 cells; clear() on such a sheet sent 617,746 bytes. The real produceSales3.xlsx has four columns, where the chapter prints rows of six after the upload to Google, and that upload was not executed, so the six cannot be checked. Indexes start at 1, and a row or column of 0 raises IndexError.",
+   "concept": "RowsColumns",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "Sheets: create, move and delete",
+   "say": "The chapter makes sheets, prints a Sheet object for each, moves them with index, deletes them and clears one, then copies a sheet into another spreadsheet and sees the copy named Copy of the title. On the stand-in the tab order after each change was the chapter's: a sheet made at index 0 comes first, moving index 0 to index 2 puts it third, and moving it back restores the order. The excerpt on the right is the part the chapter does not show: an index of 9 or -9 raises IndexError with the allowed range in the message, a string raises TypeError, and index = -1 moves the sheet to the end. The research also ran the deletions: deleting by index or by title works, a spreadsheet's last sheet cannot be deleted and the library raises ValueError with the text Cannot delete all sheets, spreadsheets must have at least one sheet, clear() keeps the sheet and writes an empty string to every cell, and copyTo names the copy Copy of the title and returns nothing. These were run in the research study against the same kind of stand-in and are told here from its record. Two sheets compare equal when their sheetId is equal, which is 0 for the first sheet of every new spreadsheet, so two different spreadsheets' first sheets are equal; and the in operator searches the text of the coordinates, so 'Alice' in sheet is False.",
+   "concept": "SheetIndex",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "A cell written, and a cell read back",
+   "say": "The sequence diagram is the chapter's account of one cell. Assigning to sheet['B2'] makes the Sheet object send one write request to Google; reading the cell afterwards returns what the library holds locally, with no request; and refresh() reads the spreadsheet again. Two things differ from the chapter and one cannot be checked. The chapter prints the string '30' after the write. The library's local copy has changed between releases: under 2024.8.9 the same session printed '30', and under 2025.11.11 and 2026.4.28 it printed the integer 30 until the sheet was refreshed, when it became the string '30'; that comparison is the research's own record of one cell session under three releases of ezsheets on Python 3.14.6, and the next slide shows the newest release again. The request itself carries valueInputOption USER_ENTERED, which Google documents as parsing the value as if a person had typed it into the cell, while RAW would store it as given, and a read returns the formatted value unless told otherwise. So text written by a program may become a number, a date or a formula in Google. The stand-in keeps text and does not parse a value, so that effect was not executed; what was executed is the request the library sends and the request that RAW would send through the library's client. The chapter's own Figure 15-2 has the cell A1 as AI in its alt text, a typo of the book and not of the library.",
+   "concept": "ValuesAsText",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "What a call sends, and what it costs",
+   "say": "Because every call goes over the web, the number of requests is the cost of a program. The program on top writes the integer 30 to B2 of the stand-in's produce sheet and prints what the library holds, which is the integer 30; then it prints the request the library sent, a PUT to the range Sheet1!B2:B2 with valueInputOption=USER_ENTERED and a body whose majorDimension is ROWS and whose values are [[30]]; then it refreshes the sheet and prints the string '30'. The transcript below it is the library counting its own requests: a hundred cell writes were a hundred PUT requests, a hundred reads of a cell and a hundred of a row made none, because they are served from the local copy, changing rowCount made three requests, a read of the properties, a read of the values and a batchUpdate, a title change made one, a refresh of a one-sheet spreadsheet made two reads, and updateColumn for a hundred cells made one PUT. The consequence is Project 11, Step 2: one new row costs six requests, three for the size change and three for the three cells, where Google's values guide describes an append call that the library does not use. Google counts every request, a batch as one, and recommends batching and a payload of at most 2 MB, so updateRows or updateColumn is the way to write many cells, and writing them one at a time is the way to meet the quota of the next slides.",
+   "concept": "RequestCost",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "A request that meets the quota",
+   "say": "The chapter ends on quotas. It says the library catches the quota exception and retries, so calls may take several seconds, and that the flag ezsheets.IGNORE_QUOTA exists. The workflow is what the library's code does with one request: it sleeps while too many writes are in a burst, sends the request, and if Google answers RESOURCE_EXHAUSTED asks whether its tries are used up; if they are not it pauses and sends again, and if they are it raises the exception to the program. The program on the right makes the stand-in answer 429 RESOURCE_EXHAUSTED twenty times, with the clock faked so that nothing really waits, and prints, for each of the flag set to False and True, the kind of exception, the number of requests made and the pauses: HttpError, nine requests and pauses of 10, 15, 20, 25, 30, 35, 40 and 45 seconds, the same with the flag on. That is 220 seconds in all and not the minute or two of the chapter. The third line shows another error, a 403 PERMISSION_DENIED, raised at once after one request with no pause. The flag IGNORE_QUOTA switches off only the library's own throttle of 90 writes or reads in 101 seconds, and the comment in the library that speaks of 50 requests per 100 seconds is out of date. Google's own answer to an exceeded quota was not observed.",
+   "concept": "RetryOnQuota",
+   "visual": ""
+  },
+  {
+   "n": 17,
+   "title": "Quota numbers: the library's and Google's",
+   "say": "The chapter says a user may create 250 new spreadsheets a day, that free accounts can make a few hundred requests a minute, and that a spreadsheet can have up to 10 million cells. Google's pages, read on 12 October 2026, say something different. The Sheets usage-limits page, updated on 3 September 2026, gives 300 read and 300 write requests a minute per project and 60 of each per user per project, has no daily limit beside the per-minute quotas and no figure for new spreadsheets, answers excess with 429, advises truncated exponential backoff, recommends a payload of at most 2 MB, and says that exceeding the quotas is planned to incur charges later in 2026. The Drive limits changed on 1 May 2026 to a system of quota units. Google's Drive Help gives the limit of a Google Sheets spreadsheet as up to 20 million cells or 100 MB, where the chapter says 10 million. These figures were read from the pages and none of them was executed: Google's answer to an exceeded quota was never observed, and filling a sheet to the limit was not tried. What was executed is the library's side, drawn as the chart: the library pauses 10 seconds after the first failed try and 5 seconds longer after each one up to 45, which the console sums to 220 seconds over nine tries. The chart's values are the pauses the stand-in run printed on the previous slide, and the deck check computes the same list again.",
+   "concept": "QuotaRules",
+   "visual": ""
+  },
+  {
+   "n": 18,
+   "title": "Boringcoin: a spreadsheet as a blockchain",
+   "say": "On Friday, October 31, 2008, at 14:10 Eastern time, a message from Satoshi Nakamoto reached the cryptography mailing list. It said he had been working on a new electronic cash system that was fully peer-to-peer, with no trusted third party, and gave the address of the paper, bitcoin.pdf. The message listed the main properties: double-spending is prevented with a peer-to-peer network, there is no mint, and new coins are made from Hashcash style proof-of-work. The chapter's Boringcoin is a spreadsheet pretending to be such a ledger, and its audit adds up the balances that the message says a network must keep honest. The account rests on these sources. Satoshi Nakamoto, 'Bitcoin P2P e-cash paper', cryptography mailing list, Fri Oct 31 14:10:00 EDT 2008, metzdowd.com/pipermail/cryptography/2008-October/014810.html; the paper itself, bitcoin.org/bitcoin.pdf. The public Boringcoin sheet that Project 11 reads is the author's; its CSV export of 12 October 2026 had 1,001 rows and was byte-identical to the export committed on 1 October 2026 in the course repository, which is the recorded fixture of the next slides.",
+   "concept": "BlockchainLedger",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "Project 11, Step 1: audit the ledger",
+   "say": "Project 11 uses a public Google Sheet as a fake blockchain of a made-up currency, Boringcoin. Step 1 audits the ledger: the program opens the sheet and gets all its rows, then loops, reading the sender, the recipient and the amount of each row. When the sender is PRE-MINE the amount is added to the recipient from nothing, and otherwise it is taken from the sender and added to the recipient. When no rows are left the program prints the dictionary of balances and adds up their total, which must equal the pre-mined billion. The diagram is the workflow with its two choices, the sender and the loop. One weakness is not in the chapter. The loop runs over every row that getRows returns, and getRows returns every row of the grid, so on a sheet with a trailing blank row int('') raises ValueError at the first empty row; the research ran that case on a copy of the export with a blank row appended. Run on the real sheet's export, the audit printed the chapter's twenty balances and the total 1,000,000,000, and the shipped auditBoringcoin.py ran unchanged and printed the same.",
+   "concept": "AuditProgram",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "Step 1 run on the real ledger's export",
+   "say": "The program on the left is the chapter's Step 1 loop and total, run on the CSV export of the real Boringcoin sheet, 1,001 rows, committed on 1 October 2026 and read through the stand-in for Google; Google itself was not reached. The chapter's program prints the whole dictionary of 20 balances on one line of more than 400 characters, which cannot be shown unwrapped on a slide, so this copy of the program prints the number of accounts and the first three instead; the corpus original was run too and printed the chapter's twenty balances, beginning Al Sweigart with 999,058,553, and the same total. The table is computed from the same CSV by the same loop: the first six accounts, the sum of the other fourteen, and the total of 1,000,000,000, so that the balances add up to the pre-mined billion, which is what an audit is for. The transcript's last line gives the size of the ledger: 1,001 rows, 20 accounts and one pre-mine row. The same data can be audited in a loop of a few lines and forged in one, which is the lesson of the previous slide's story.",
+   "concept": "AuditProgram",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "Project 11, Step 2: add a transaction",
+   "say": "Step 2 adds one transaction to the ledger from the command line. The program gets the sender, the recipient and the amount from sys.argv, ends with a line of usage when there are fewer than three arguments, opens the sheet, adds one to rowCount and writes the three values into the new row. The chapter's arguments are set in the program's second line instead of on a command line. Run on the export of the real sheet, the row count went from 1,001 to 1,002 and the new row held Al Sweigart, Eve and 2000. This copy of the program clears the request log before the size change and prints how many requests the change and the three writes made: six, two reads and a POST for rowCount and three PUTs for the cells, so the cost of one transaction is six requests; the corpus original prints the same requests as a list of method and range, a line too long for a slide. The amount is written as the string '2000', and whether Google turns it into a number depends on USER_ENTERED, which was not executed. An unquoted name makes sys.argv[1:] four items and raises ValueError with the text too many values to unpack, expected 3, got 4. The new row number is computed from a local rowCount, which is what makes the next slide possible.",
+   "concept": "TransactionProgram",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "Two writers, one row",
+   "say": "The transaction program of the last slide computes the new row number from rowCount, which is a number the Sheet object keeps locally. Two programs that append at the same time therefore both read 1001, both make it 1002 and both write row 1002, and the second overwrites the first with no error. The program on the left runs that deterministically with two Spreadsheet objects on the stand-in's copy of the Boringcoin export: the first writes to row 1002, the second writes to row 1002, and after a refresh the sheet has 1,002 rows and row 1002 holds second. The stand-in is not Google, so what this shows is the library's logic, which is the whole cause: the row number is computed locally and the write names its cell. The remedy the research names is to guard the append, for example by an append call of Google's API, which the values guide describes and the library does not use, or by reading the sheet again before the write. The same lost update can happen with any program that reads a number, adds one and writes it back, which is the lesson of this slide for any shared sheet.",
+   "concept": "AppendRace",
+   "visual": ""
+  },
+  {
+   "n": 23,
+   "title": "Practice programs: bean counts, converter, forms",
+   "say": "The chapter closes with three practice programs. The bean count check reads a public sheet of bean counts, 15,001 rows read from its CSV export through the stand-in, and compares the third column with the product of the first two; it found one wrong total, at row 14,399, where 804 times 623 is 500,892 and the sheet says 500,891. The loop made no request, because the rows were already loaded. The format converter uploads a file and downloads it in another format: against the stand-in the library sent a multipart/related request carrying the file's base name with its extension and then asked Drive for the xlsx MIME type, and only xlsx, ods, csv and tsv are accepted for upload; the title that Google gives the new spreadsheet, and whether the converted file keeps formulas and formats, were not executed. The forms program reads the email column of a response sheet; it was run on synthetic rows, laid out with a Timestamp column first as the form tool is usually seen to do, which Google's help page does not state, so it shows the library and not Google Forms. Google Forms was first introduced in 2008 as part of the Google Docs suite and lets the owner choose a new or an existing spreadsheet as the destination of the responses; that account rests on Wikipedia and Google's help page.",
+   "concept": "PracticePrograms",
+   "visual": ""
+  },
+  {
+   "n": 24,
+   "title": "The chapter in one map",
+   "say": "These six branches are the route of the deck. Access to a Google account comes first: a Cloud project, the two APIs and a consent screen, a credentials file and two token files, and a first sign-in that opens a browser. Spreadsheet objects follow: a spreadsheet is opened by URL, id or title, uploaded and downloaded in six formats, and deleting sends it to the Trash. Sheet objects are the largest branch: a cell is got by address or by column and row, rows and columns are read and written as lists, and sheets are created, moved, deleted and copied. Requests and quotas follow: every write is one request, Google limits the requests per minute, and the library throttles and retries. The Boringcoin project puts the pieces together, an audit that adds up balances, a program that adds a row, and practice programs that read forms and check totals. The last branch is the library and Google's clients: EZSheets is built on the Google client libraries, its documentation is dated November 2019, and the same program runs under every 3.14 release. Together they answer the first question of the chapter, which object stands for which part of the account and which request each call sends, and the slides that say where a printed line differs answer the second.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 25,
+   "title": "Where to go from here",
+   "say": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every listing of the chapter, the EZSheets documentation is the page the chapter points to and is dated November 2019, and the PyPI page lists the releases. The reference links are Google's own pages for the limits, the values calls and the value input options that the deck cited as read and not executed, Python's warning about pickle, and the RFC whose example the PKCE console used. The history links are the sources behind the six stories of the chapter. Two of them are slides, the beginning of Google Sheets as XL2Web and Nakamoto's message; the other four were told in the notes: OAuth on the set-up slide, the turn-down of the Sheets API version 3 on the slide of spreadsheet objects, Google Forms on the slide of the practice programs, and the release of EZSheets on the first slide of the library.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 26,
+   "title": "What you should now be able to say",
+   "say": "Four claims, each carried by a result you saw printed or by a statement marked as not executed. If you can say them in your own words and run the examples yourself, you have the chapter; the console rows that use only the standard library can be typed into any Python, including one in a browser, and the programs need ezsheets and Google's client library installed. Nothing on these slides was answered by Google, and a deck about a web service should say so. The next chapter of the book works with SQLite databases, where a program reaches data through a file instead of a web service, and what this chapter taught about requests, rows and the cost of writing one cell at a time carries over to it.",
+   "concept": "",
+   "visual": ""
+  }
+ ]
+}
