@@ -1,0 +1,328 @@
+"""Draws the chapter 13 narrative diagrams (sen0414_ch13_diagrams_v1_0_0.py, grounding >= 0.84) as native PowerPoint shapes.
+Each builder takes a diagram's data exactly as the diagrams module holds it and a box on the slide (inches) and returns a
+'shapes' item for the deck plan: a list of primitives (box, line, text) that the renderer draws one for one. Every label of the
+diagram is placed as the text of one text frame, unaltered, so that diagram_check_v1_0_0.py can find it on the finished slide.
+Text frames are sized with the same wrap rule as deck_fit_check_v1_0_0.py (average advance 0.50 em, line 1.21 em) so that a
+frame is never smaller than its text needs. Colours are the course palette of the shared renderer. Orange hexagons are
+decisions; dark dots and bars are the start and the end of an activity.
+Usage: imported by deck_build_v1_0_0.py."""
+__version__ = "1.0.0"
+import math
+
+EM, LH = 0.50, 1.21
+INK, MUTE, SLATE, ORANGE, CARD, RULE, DARK, WHITE = "2B2622", "6E655C", "2F6D62", "D97A14", "F2ECE1", "DFD6C7", "2B2622", "FFFFFF"
+
+
+def wrap_lines(text, w_in, fs):
+    per = max(1, int(max(0.2, w_in - 0.04) / (EM * fs / 72.0)))
+    n = 0
+    for para in text.split("\n"):
+        words = para.split()
+        if not words:
+            n += 1
+            continue
+        cur, k = 0, 1
+        for word in words:
+            add = len(word) + 1 if cur else len(word)
+            if cur + add > per and cur > 0:
+                k += 1
+                cur = len(word)
+            else:
+                cur += add
+        n += k
+    return n
+
+
+def need_h(text, w_in, fs):
+    return wrap_lines(text, w_in, fs) * fs * LH / 72.0
+
+
+class Canvas:
+    def __init__(self):
+        self.prims = []
+        self.warn = []
+
+    def box(self, shape, x, y, w, h, fill=CARD, line=SLATE, lw=1.25):
+        self.prims.append({"k": "box", "shape": shape, "x": round(x, 3), "y": round(y, 3), "w": round(w, 3), "h": round(h, 3),
+                           "fill": fill, "line": line, "lw": lw})
+
+    def line(self, x1, y1, x2, y2, color=MUTE, w=1.25, arrow=False, dash=False):
+        self.prims.append({"k": "line", "x1": round(x1, 3), "y1": round(y1, 3), "x2": round(x2, 3), "y2": round(y2, 3),
+                           "color": color, "w": w, "arrow": arrow, "dash": dash})
+
+    def path(self, pts, color=MUTE, w=1.25, arrow=True, dash=False):
+        for i in range(len(pts) - 1):
+            self.line(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], color, w, arrow and i == len(pts) - 2, dash)
+
+    def text(self, t, x, y, w, h, fs=9, color=INK, bold=False, italic=False, align="center", valign="middle", min_fs=8, fill=None):
+        if fs < min_fs:
+            raise SystemExit("REFUSED: diagram text %r below %s pt" % (t, min_fs))
+        if need_h(t, w, fs) > h + 0.05:
+            raise SystemExit("REFUSED: diagram text %r needs %.2f in but its frame is %.2f in (w %.2f, %s pt)" % (t, need_h(t, w, fs), h, w, fs))
+        self.prims.append({"k": "text", "t": t, "x": round(x, 3), "y": round(y, 3), "w": round(w, 3), "h": round(h, 3), "fs": fs,
+                           "color": color, "bold": bold, "italic": italic, "align": align, "valign": valign, "fill": fill})
+
+    def label_in(self, t, x, y, w, h, fs, color=INK, bold=False, inset=(0.06, 0.03), min_fs=8):
+        """text in a frame inset from a shape; the inset frame is grown in height to what the text needs, centred."""
+        fw, fh = w - 2 * inset[0], h - 2 * inset[1]
+        nh = need_h(t, fw, fs) + 0.02
+        if nh > fh + 0.05:
+            raise SystemExit("REFUSED: label %r needs %.2f in, shape gives %.2f in (w %.2f, %s pt)" % (t, nh, fh, fw, fs))
+        self.text(t, x + inset[0], y + (h - max(nh, 0.05)) / 2, fw, max(nh, 0.05), fs, color, bold, False, "center", "middle", min_fs)
+
+
+def _geom(x, y, w, h):
+    return {"x": x, "y": y, "w": w, "h": h, "l": x, "r": x + w, "t": y, "b": y + h, "cx": x + w / 2, "cy": y + h / 2}
+
+
+def _insets(shape):
+    return {"round": (0.07, 0.03), "rect": (0.07, 0.03), "hex": (0.17, 0.03), "oval": (0.16, 0.05)}[shape]
+
+
+# ---------------------------------------------------------------------------------------------------------------------------
+# activity diagrams (the Workflow pattern): nodes on a grid, edges routed at right angles
+# ---------------------------------------------------------------------------------------------------------------------------
+def activity(data, box, grid, cols, rows_n, fs=8.5, nh=0.46, dh=0.56, routes=None, ends=None, starts=None, row_top=None):
+    """grid: id -> (col, row); cols: list of (x offset, width) inside the box; routes: (src, dst) -> mode;
+    ends: {'type': 'dot'|'bar', 'col':, 'row':, 'row2':}; starts: (col,row) of the start dot. Returns a shapes item."""
+    bx, by, bw, bh = box
+    cv = Canvas()
+    pitch = bh / rows_n
+    G = {}
+    labels = {n["id"]: n for n in data["nodes"]}
+    for nid, (c, r) in grid.items():
+        n = labels[nid]
+        dec = n.get("kind") == "decision"
+        w = cols[c][1]
+        h = dh if dec else nh
+        x = bx + cols[c][0]
+        y = by + r * pitch + (pitch - h) / 2
+        G[nid] = _geom(x, y, w, h)
+        G[nid]["dec"] = dec
+        shape = "hex" if dec else "round"
+        cv.box(shape, x, y, w, h, fill=ORANGE if dec else CARD, line=ORANGE if dec else SLATE)
+        ins = _insets(shape)
+        cv.label_in(n["label"], x, y, w, h, fs, WHITE if dec else INK, bold=dec, inset=ins)
+    sc, sr = starts
+    d = 0.2
+    sx = bx + cols[sc][0] + cols[sc][1] / 2 - d / 2 if sc >= 0 else bx
+    G["start"] = _geom(sx, by + sr * pitch + (pitch - d) / 2, d, d)
+    cv.box("oval", G["start"]["x"], G["start"]["y"], d, d, fill=DARK, line=DARK)
+    et = ends
+    if et["type"] == "dot":
+        ex = bx + cols[et["col"]][0] + cols[et["col"]][1] / 2 - 0.14
+        G["end"] = _geom(ex, by + et["row"] * pitch + (pitch - 0.28) / 2, 0.28, 0.28)
+        cv.box("oval", G["end"]["x"], G["end"]["y"], 0.28, 0.28, fill=WHITE, line=DARK, lw=2)
+        cv.box("oval", G["end"]["x"] + 0.06, G["end"]["y"] + 0.06, 0.16, 0.16, fill=DARK, line=DARK)
+    else:
+        top = by + et["row"] * pitch + (pitch - nh) / 2
+        bot = by + et["row2"] * pitch + (pitch + nh) / 2
+        G["end"] = _geom(bx + et["x"], top, 0.1, bot - top)
+        cv.box("rect", G["end"]["x"], top, 0.1, bot - top, fill=DARK, line=DARK)
+    routes = routes or {}
+    nodes_geo = [g for k, g in G.items() if k not in ("start", "end")]
+    for fl in data["flows"]:
+        a, b = fl[0], fl[1]
+        lab = fl[2] if len(fl) > 2 else None
+        ga, gb = G[a], G[b]
+        mode = routes.get((a, b), "auto")
+        if mode == "auto":
+            if b == "end" and et["type"] == "bar":
+                mode = "h"
+            elif abs(ga["cx"] - gb["cx"]) < 0.02:
+                mode = "v"
+            elif abs(ga["cy"] - gb["cy"]) < 0.02:
+                mode = "h"
+            else:
+                mode = "vh"
+        lx = ly = None
+        if mode == "v":
+            down = gb["cy"] > ga["cy"]
+            y1, y2 = (ga["b"], gb["t"]) if down else (ga["t"], gb["b"])
+            cv.path([(ga["cx"], y1), (ga["cx"], y2)])
+            lx, ly = ga["cx"] + 0.06, (y1 + y2) / 2 - 0.09
+        elif mode == "h":
+            right = gb["cx"] > ga["cx"]
+            x1, x2 = (ga["r"], gb["l"]) if right else (ga["l"], gb["r"])
+            if b == "end" and et["type"] == "bar":
+                x2 = gb["l"]
+            cv.path([(x1, ga["cy"]), (x2, gb["cy"] if b != "end" else ga["cy"])])
+            lx, ly = min(x1, x2) + 0.05, ga["cy"] - 0.2
+        elif mode == "vh":  # down (or up) from a, then across into the near side of b
+            down = gb["cy"] > ga["cy"]
+            y1 = ga["b"] if down else ga["t"]
+            right = gb["cx"] > ga["cx"]
+            x2 = gb["l"] if right else gb["r"]
+            cv.path([(ga["cx"], y1), (ga["cx"], gb["cy"]), (x2, gb["cy"])])
+            lx, ly = ga["cx"] + 0.07, y1 + (0.0 if down else -0.2)
+        elif mode.startswith("loop"):  # out of the side of a, along a margin, back into the same side of b
+            side = mode[4:]  # 'R' or 'L'
+            if side == "R":
+                xa, xb = ga["r"], gb["r"]
+                xm = max(ga["r"], gb["r"]) + 0.22
+            else:
+                xa, xb = ga["l"], gb["l"]
+                xm = min(ga["l"], gb["l"]) - 0.22
+            cv.path([(xa, ga["cy"]), (xm, ga["cy"]), (xm, gb["cy"]), (xb, gb["cy"])])
+            lx, ly = (xa + 0.04, ga["cy"] - 0.2) if side == "R" else (xm + 0.0, ga["cy"] - 0.2)
+        if lab:
+            lw = min(1.9, max(0.34, len(lab) * EM * 8 / 72.0 + 0.1))
+            cv.text(lab, lx, ly, lw, 0.18, 8, MUTE, False, True, "left", "middle", fill="FAF6EF")
+    return {"t": "shapes", "x": bx, "y": by, "w": bw, "h": bh, "shapes": cv.prims}
+
+
+# ---------------------------------------------------------------------------------------------------------------------------
+# sequence diagram (the Interaction pattern)
+# ---------------------------------------------------------------------------------------------------------------------------
+def sequence(data, box, fs=9, head_w=1.7):
+    bx, by, bw, bh = box
+    cv = Canvas()
+    parts = data["participants"]
+    n = len(parts)
+    xs = {}
+    margin = head_w / 2 + 0.05
+    for i, p in enumerate(parts):
+        xs[p["id"]] = bx + margin + i * (bw - 2 * margin) / (n - 1)
+    hh = 0.42
+    for p in parts:
+        x = xs[p["id"]]
+        cv.box("round", x - head_w / 2, by, head_w, hh, fill=SLATE, line=SLATE)
+        cv.label_in(p["label"], x - head_w / 2, by, head_w, hh, 10, WHITE, bold=True, inset=(0.06, 0.03))
+        cv.line(x, by + hh, x, by + bh, RULE, 1.5, False, True)
+    msgs = data["messages"]
+    top = by + hh + 0.1
+    pitch = (bh - hh - 0.1) / len(msgs)
+    for i, m in enumerate(msgs):
+        src, dst, label = m[0], m[1], m[2]
+        reply = len(m) > 3 and m[3] == "reply"
+        y = top + i * pitch
+        if src == dst:  # a step the participant takes by itself: a note on its lifeline, beside the lifeline
+            x = xs[src]
+            right = x < bx + bw / 2
+            nw = min(bw / 2 - 0.4, 3.6)
+            nx = x + 0.12 if right else x - 0.12 - nw
+            nhh = need_h(label, nw - 0.14, fs) + 0.08
+            cv.box("rect", nx, y + 0.05, nw, nhh, fill="FFF4E0", line=ORANGE, lw=1)
+            cv.text(label, nx + 0.07, y + 0.05 + 0.04, nw - 0.14, nhh - 0.06, fs, INK, False, False, "left", "middle")
+        else:
+            x1, x2 = xs[src], xs[dst]
+            ya = y + pitch * 0.72
+            cv.line(x1, ya, x2, ya, ORANGE if not reply else MUTE, 1.75, True, reply)
+            lx = min(x1, x2) + 0.1
+            lw = abs(x2 - x1) - 0.2
+            cv.text(label, lx, ya - 0.05 - need_h(label, lw, fs) - 0.02, lw, need_h(label, lw, fs) + 0.02, fs, INK, False, reply, "center", "bottom")
+    return {"t": "shapes", "x": bx, "y": by, "w": bw, "h": bh, "shapes": cv.prims}
+
+
+# ---------------------------------------------------------------------------------------------------------------------------
+# state diagram (the LifeCycle pattern): two states, six transitions
+# ---------------------------------------------------------------------------------------------------------------------------
+def states(data, box, fs=8.5):
+    bx, by, bw, bh = box
+    cv = Canvas()
+    sts = {s["id"]: s["label"] for s in data["states"]}
+    a, b = [s["id"] for s in data["states"]]
+    sw, sh = 1.0, 0.62
+    ya = by + 0.55
+    xa, xb = bx + 0.1, bx + bw - 0.1 - sw
+    G = {a: _geom(xa, ya, sw, sh), b: _geom(xb, ya, sw, sh)}
+    for sid in (a, b):
+        g = G[sid]
+        cv.box("round", g["x"], g["y"], g["w"], g["h"], fill=SLATE, line=SLATE)
+        cv.label_in(sts[sid], g["x"], g["y"], g["w"], g["h"], 11, WHITE, bold=True)
+    ini = G[data["initial"]]
+    cv.box("oval", ini["cx"] - 0.1, by + 0.05, 0.2, 0.2, fill=DARK, line=DARK)
+    cv.path([(ini["cx"], by + 0.25), (ini["cx"], ini["t"])])
+    gap_l, gap_r = G[a]["r"], G[b]["l"]
+    tw = gap_r - gap_l - 0.1
+    fwd = [t for t in data["transitions"] if t[0] == a and t[1] == b]
+    back = [t for t in data["transitions"] if t[0] == b and t[1] == a]
+    selfs = [t for t in data["transitions"] if t[0] == t[1]]
+    y0 = ya - 0.12
+    stepy = 0.62
+    for i, t in enumerate(fwd):          # to the right, two arrows with their labels above them
+        y = y0 + 0.12 + i * stepy
+        cv.line(gap_l, y + 0.2, gap_r, y + 0.2, ORANGE, 1.75, True)
+        cv.text(t[2], gap_l + 0.05, y + 0.2 - 0.03 - need_h(t[2], tw, fs) - 0.02, tw, need_h(t[2], tw, fs) + 0.02, fs, INK, False, False, "center", "bottom")
+    for i, t in enumerate(back):         # back to the left, two arrows below the first pair
+        y = y0 + 0.12 + (len(fwd) + i) * stepy
+        cv.line(gap_r, y + 0.2, gap_l, y + 0.2, SLATE, 1.75, True)
+        cv.text(t[2], gap_l + 0.05, y + 0.2 - 0.03 - need_h(t[2], tw, fs) - 0.02, tw, need_h(t[2], tw, fs) + 0.02, fs, INK, False, False, "center", "bottom")
+    ybot = ya + sh
+    for t in selfs:                      # a transition from a state to itself: a loop under the state
+        g = G[t[0]]
+        d = 0.38
+        cv.path([(g["cx"] - 0.25, ybot), (g["cx"] - 0.25, ybot + d), (g["cx"] + 0.25, ybot + d), (g["cx"] + 0.25, ybot)], ORANGE if t[0] == a else SLATE, 1.5, True)
+        lw = sw + 0.06
+        cv.text(t[2], g["cx"] - lw / 2, ybot + d + 0.04, lw, need_h(t[2], lw, fs) + 0.02, fs, INK, False, False, "center", "top")
+        ybot += 0.0
+    return {"t": "shapes", "x": bx, "y": by, "w": bw, "h": bh, "shapes": cv.prims}
+
+
+# ---------------------------------------------------------------------------------------------------------------------------
+# use-case diagram (the SetOfUses pattern)
+# ---------------------------------------------------------------------------------------------------------------------------
+def usecases(data, box, fs=8.5):
+    bx, by, bw, bh = box
+    cv = Canvas()
+    act = data["actors"][0]
+    aw = 0.7
+    sysx = bx + aw + 0.1
+    cv.box("rect", sysx, by + 0.28, bw - aw - 0.1, bh - 0.28, fill="FBF8F2", line=MUTE, lw=1)
+    cv.text(data["system"], sysx + 0.08, by + 0.02, bw - aw - 0.25, 0.24, 8.5, MUTE, True, False, "left", "middle")
+    n = len(data["usecases"])
+    pitch = (bh - 0.36) / n
+    uw = bw - aw - 0.1 - 0.3
+    pos = {}
+    for i, u in enumerate(data["usecases"]):
+        y = by + 0.36 + i * pitch + 0.03
+        h = pitch - 0.06
+        x = sysx + 0.15
+        cv.box("oval", x, y, uw, h, fill=CARD, line=SLATE)
+        cv.label_in(u["label"], x, y, uw, h, fs, INK, inset=(0.28, 0.04))
+        pos[u["id"]] = (x, y + h / 2)
+    ax = bx + aw / 2
+    ay = by + bh / 2 - 0.2
+    cv.box("oval", ax - 0.11, ay - 0.5, 0.22, 0.22, fill=WHITE, line=DARK, lw=1.5)
+    cv.line(ax, ay - 0.28, ax, ay + 0.1, DARK, 1.5)
+    cv.line(ax - 0.2, ay - 0.18, ax + 0.2, ay - 0.18, DARK, 1.5)
+    cv.line(ax, ay + 0.1, ax - 0.16, ay + 0.35, DARK, 1.5)
+    cv.line(ax, ay + 0.1, ax + 0.16, ay + 0.35, DARK, 1.5)
+    cv.text(act["label"], bx, ay + 0.4, aw + 0.1, need_h(act["label"], aw + 0.1, 8.5) + 0.02, 8.5, INK, True, False, "center", "top")
+    for a, u in data["links"]:
+        ux, uy = pos[u]
+        cv.line(ax + 0.2, ay - 0.1, ux, uy, MUTE, 1.0)
+    return {"t": "shapes", "x": bx, "y": by, "w": bw, "h": bh, "shapes": cv.prims}
+
+
+# ---------------------------------------------------------------------------------------------------------------------------
+# mind map (the TopicAndParts pattern)
+# ---------------------------------------------------------------------------------------------------------------------------
+def mindmap(data, box, fs=9, root_w=1.55):
+    bx, by, bw, bh = box
+    cv = Canvas()
+    br = data["branches"]
+    per = (len(br) + 1) // 2
+    cw = (bw - root_w - 0.8) / 2
+    gap = 0.07
+    ch = (bh - (per - 1) * gap) / per
+    rx = bx + (bw - root_w) / 2
+    rh = 1.15
+    ry = by + (bh - rh) / 2
+    cv.box("round", rx, ry, root_w, rh, fill=ORANGE, line=ORANGE)
+    cv.label_in(data["root"], rx, ry, root_w, rh, 11, WHITE, bold=True, inset=(0.08, 0.05))
+    for i, b in enumerate(br):
+        left = i < per
+        r = i if left else i - per
+        x = bx if left else bx + bw - cw
+        y = by + r * (ch + gap)
+        cv.box("round", x, y, cw, ch, fill=CARD, line=SLATE)
+        cv.line(x + cw if left else x, y + ch / 2, rx if left else rx + root_w, ry + rh / 2, "C9BFAE", 1.25)
+        hh = need_h(b["label"], cw - 0.2, fs + 1) + 0.02
+        cv.text(b["label"], x + 0.1, y + 0.05, cw - 0.2, hh, fs + 1, SLATE, True, False, "left", "top")
+        body = "\n".join(b["children"])
+        bh_ = need_h(body, cw - 0.2, fs - 0.5) + 0.06
+        cv.text(body, x + 0.1, y + 0.05 + hh + 0.01, cw - 0.2, bh_, fs - 0.5, INK, False, False, "left", "top")
+        if 0.05 + hh + 0.01 + bh_ > ch + 0.03:
+            raise SystemExit("REFUSED: mind map branch %r does not fit its card (%.2f > %.2f)" % (b["label"], 0.05 + hh + 0.01 + bh_, ch))
+    return {"t": "shapes", "x": bx, "y": by, "w": bw, "h": bh, "shapes": cv.prims}

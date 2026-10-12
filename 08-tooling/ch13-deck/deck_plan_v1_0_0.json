@@ -1,0 +1,3843 @@
+{
+ "meta": {
+  "title": "Chapter 13: Web Scraping",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "1.0.0",
+  "python": "3.14.6",
+  "total": 26,
+  "diagrams": {
+   "ACheckedDownload": 9,
+   "AWeatherCall": 12,
+   "ThePoliteCrawl": 17,
+   "WhatASeleniumProgramDoes": 20,
+   "ACheckboxInPlaywright": 21,
+   "AMistypedSelector": 22,
+   "ChoosingTheTool": 23,
+   "WebScrapingAtAGlance": 24
+  }
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Chapter 13: Web Scraping",
+   "sub": "How a program reaches the web: webbrowser, requests, a web API, Beautiful Soup, Selenium and Playwright",
+   "items": [
+    {
+     "t": "code",
+     "x": 5.0,
+     "y": 0.85,
+     "w": 4.5,
+     "h": 0.95,
+     "fs": 10.5,
+     "cap": "run under Python 3.14.6",
+     "rows": [
+      [
+       "' '.join(['showmap.py', '870', 'Valencia', 'St,', 'Mission'][1:])",
+       "'870 Valencia St, Mission'"
+      ]
+     ]
+    }
+   ],
+   "notes": "Until this chapter every program worked on files and text that were already on the computer. Chapter 13 reaches out: a program can open a page in the user's own browser, download a page or a file, ask a web service for data in JSON, read the HTML it received, and, when a page is built by a script or needs a login, drive a real browser. This deck follows the chapter in that order and adds what the chapter leaves out, which is timeouts, the robots.txt file and the change to its parser in Python 3.14.5, the flags a driven browser reveals, and what the public sites actually answered on 12 October 2026. Every example was run under Python 3.14.6 on Ubuntu with requests 2.34.2, Beautiful Soup 4.15.0, Selenium 4.51.0 and Playwright 1.63.0, and the result printed beside it is the result that run gave. The programs that need a web site start a small one of their own on this machine, and the two marked live reached the real sites.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Six parts and a summary; every range is a run of slides you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 6.3,
+     "h": 3.55,
+     "fs": 11,
+     "items": [
+      "The address and the manners (slides 4-6)",
+      "Fetching a page (slides 7-10)",
+      "A web service and its API (slides 11-12)",
+      "Parsing HTML with Beautiful Soup (slides 13-14)",
+      "The chapter's programs (slides 15-17)",
+      "Driving a browser: Selenium and Playwright (slides 18-23)",
+      "Summary and resources (slides 24-25)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "26",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "4",
+       "label": "true stories, each with who, where, when and a link"
+      },
+      {
+       "n": "16",
+       "label": "consoles and programs, all run before they were shown"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has six parts and a summary. It starts with the address and the manners of the web, the URL, the status code, the user agent and the robots.txt file, then fetching a page with webbrowser and requests, then a web service answered in JSON, then parsing HTML with Beautiful Soup, then the chapter's own programs and a crawler that reads robots.txt first, and then driving a real browser with Selenium and Playwright, ending with a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. Four of the slides are true stories that explain where a tool of this chapter came from, and eight of the slides carry the chapter's narrative diagrams, drawn from the same specifications as the interactive page.",
+   "take": "Six parts, from an address to a driven browser.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "The chapter's own competency questions; the summary comes back to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 2.2,
+     "fs": 13,
+     "items": [
+      "Which tool reaches which kind of page - a browser launcher, a downloader, an HTML parser or a browser driver - and what decides the choice?",
+      "Which printed outputs, programs and concepts of the chapter differ in current Python, libraries or web sites, and on what source?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 3.8,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 11.5,
+     "items": [
+      "6 branches",
+      "94 topics",
+      "27 console rows",
+      "12 programs run",
+      "8 diagrams",
+      "Python 3.14.6"
+     ]
+    }
+   ],
+   "notes": "The first question is the chapter's spine. A program that needs something from the web can show the page to the user, download it as text or a file, ask a service that answers in JSON, read the HTML it already has, or drive a real browser, and what decides between these is the page in front of the program: whether the user should see it, whether the service offers an API, whether the data is in the HTML that is downloaded or is built later by a script. The second question is the watch-out of the deck. Ten things the chapter prints cannot be run as printed, one of its three projects meets a challenge page on today's web, and a robots.txt rule changed its meaning inside the Python 3.14 series, so each slide says where a printed line differs and on what evidence. The chips give the size of the chapter as this deck covers it: six branches, the topics beneath them, the console rows and programs that were run, and the eight diagrams.",
+   "take": "Choose the tool by the page in front of the program.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Addresses, status codes and the user agent",
+   "sub": "A URL is cut into parts; every answer has a status code; every request names its client",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 6.3,
+     "h": 2.85,
+     "rows": [
+      [
+       "from urllib.parse import urlsplit, parse_qs, quote",
+       ""
+      ],
+      [
+       "urlsplit('https://api.openweathermap.org/geo/1.0/direct?q=San,CA,US&appid=KEY')[:4]",
+       "('https', 'api.openweathermap.org', '/geo/1.0/direct', 'q=San,CA,US&appid=KEY')"
+      ],
+      [
+       "parse_qs('q=San+Francisco%2CCA&appid=KEY')",
+       "{'q': ['San Francisco,CA'], 'appid': ['KEY']}"
+      ],
+      [
+       "quote('777 Valencia St, San Francisco, CA 94110')",
+       "'777%20Valencia%20St%2C%20San%20Francisco%2C%20CA%2094110'"
+      ],
+      [
+       "urlsplit('https://www.openstreetmap.org/search?query=x#map=19/37.75897/-122.42142').fragment",
+       "'map=19/37.75897/-122.42142'"
+      ],
+      [
+       "import http, urllib.request, requests",
+       ""
+      ],
+      [
+       "http.HTTPStatus(404).phrase",
+       "'Not Found'"
+      ],
+      [
+       "[int(http.HTTPStatus.OK), http.HTTPStatus(429).phrase, http.HTTPStatus(500).phrase]",
+       "[200, 'Too Many Requests', 'Internal Server Error']"
+      ],
+      [
+       "urllib.request.build_opener().addheaders[0]",
+       "('User-agent', 'Python-urllib/3.14')"
+      ],
+      [
+       "requests.utils.default_user_agent()",
+       "'python-requests/2.34.2'"
+      ]
+     ],
+     "fs": 7.0,
+     "cap": "run under Python 3.14.6",
+     "label": "cut a URL, name a status code, show the user agent"
+    },
+    {
+     "t": "boxes",
+     "x": 7.0,
+     "y": 1.5,
+     "w": 2.5,
+     "h": 3.2,
+     "cols": 1,
+     "fs": 11.5,
+     "subfs": 9.5,
+     "accent": [],
+     "items": [
+      {
+       "label": "HTTPS hides the content, not the site's name",
+       "sub": "an encrypted connection; a network still sees which site you visit"
+      },
+      {
+       "label": "A status code's first digit is its class",
+       "sub": "2 success, 3 redirection, 4 client error, 5 server error"
+      }
+     ]
+    }
+   ],
+   "notes": "A URL is written as a scheme, a host, a path, an optional query after a question mark and an optional fragment after a number sign, and urllib.parse cuts it up: urlsplit returns the parts, parse_qs turns the query string back into a dictionary of lists and quote percent-encodes the characters an address may not carry, a space becoming %20 and a comma %2C. The fragment names a place inside the page and is handled by the browser, so it is never sent to the server, which is why showmap.py can drop it from an OpenStreetMap address. HTTPS is HTTP over an encrypted connection: what is fetched and what is submitted are hidden from the network, but the name of the site visited can still be seen. Every HTTP response begins with a three-digit status code whose first digit gives its class, and http.HTTPStatus names the codes, 404 Not Found and 429 Too Many Requests among them. Every request also names the program that makes it in a user-agent header: urllib sends Python-urllib and the version, and requests 2.34.2 sends python-requests and its version, so a server can tell a script from a browser.",
+   "take": "A URL has five parts, a status code has a class, a user agent names the client.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "robots.txt: a request, not a lock",
+   "sub": "A site's courtesy file, read by a polite crawler with the standard library",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 5.6,
+     "h": 1.8,
+     "rows": [
+      [
+       "import urllib.robotparser as rp",
+       ""
+      ],
+      [
+       "r = rp.RobotFileParser()",
+       ""
+      ],
+      [
+       "r.parse(['User-agent: *', 'Disallow: /search*', 'Crawl-delay: 10'])",
+       ""
+      ],
+      [
+       "r.can_fetch('*', 'https://pypi.org/project/pyautogui/')",
+       "True"
+      ],
+      [
+       "r.can_fetch('*', 'https://pypi.org/search/?q=boring+stuff')",
+       "False"
+      ],
+      [
+       "r.crawl_delay('*')",
+       "10"
+      ]
+     ],
+     "fs": 8.3,
+     "cap": "run under Python 3.14.6",
+     "label": "robotparser reads a robots.txt and answers can_fetch"
+    },
+    {
+     "t": "boxes",
+     "x": 0.5,
+     "y": 3.62,
+     "w": 5.6,
+     "h": 1.33,
+     "cols": 2,
+     "fs": 10.5,
+     "subfs": 9,
+     "accent": [
+      1
+     ],
+     "items": [
+      {
+       "label": "3.14.0 to 3.14.4: True",
+       "sub": "can_fetch for pypi.org's search page"
+      },
+      {
+       "label": "3.14.5 and 3.14.6: False",
+       "sub": "the same call, after RFC 9309 support"
+      }
+     ]
+    },
+    {
+     "t": "card",
+     "head": "A request, not a lock",
+     "body": "RFC 9309 says the rules in a robots.txt are not a form of access authorization. A polite crawler honours the file, skips what it disallows and waits the Crawl-delay.",
+     "x": 6.35,
+     "y": 1.5,
+     "w": 3.15,
+     "h": 1.75,
+     "fs": 10.5
+    },
+    {
+     "t": "card",
+     "head": "New in Python 3.14.5",
+     "body": "Up to 3.14.4 the rule Disallow: /search* was read as a literal prefix. From 3.14.5, released 10 May 2026 (gh-138907), the wildcard follows RFC 9309.",
+     "x": 6.35,
+     "y": 3.35,
+     "w": 3.15,
+     "h": 1.6,
+     "fs": 10.5,
+     "accent": "slate"
+    }
+   ],
+   "notes": "A robots.txt file at the root of a site lists the paths that crawlers are asked not to fetch. It is a request and not an access control: RFC 9309, which standardised the method in September 2022, says its rules are not a form of access authorization, so a crawler that honours it is being polite and one that ignores it is not stopped. The standard library reads the file: can_fetch answers for one agent and one address, crawl_delay returns the number of seconds a site asks a crawler to wait, and request_rate returns the pair of requests and seconds. The console shows the parser of Python 3.14.6 refusing the search page, because Disallow: /search* uses the wildcard star that RFC 9309 defines. That is a change inside the 3.14 series. The same program, run under each of the seven releases from 3.14.0 to 3.14.6 with uv, answered True for the search page up to 3.14.4 and False from 3.14.5, whose changelog lists gh-138907, support for RFC 9309 in urllib.robotparser; the rule matters because the chapter's searchpypi.py fetches exactly that page of pypi.org, whose robots.txt on 12 October 2026 contained Disallow: /search*.",
+   "take": "Honour robots.txt; Python 3.14.5 reads its wildcards as RFC 9309 says.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Robots.txt, agreed on 30 June 1994",
+   "sub": "1994-06-30",
+   "items": [
+    {
+     "t": "card",
+     "head": "Martijn Koster and others",
+     "body": "Koster wrote down A Standard for Robot Exclusion, a consensus of 30 June 1994 on the robots mailing list. It says plainly that it is not an official standard and not enforced by anybody.",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.5,
+     "h": 2.8,
+     "fs": 12.5
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "1993-94: robots swamp servers with rapid-fire requests",
+      "30 Jun 1994: consensus on the robots mailing list",
+      "One file, /robots.txt, which a robot reads first",
+      "Sep 2022: RFC 9309; Python reads it fully from 3.14.5"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Martijn Koster and the robot authors of the robots mailing list",
+     "where": "The robots mailing list at Nexor, and the Web",
+     "when": "1994-06-30",
+     "link": "https://www.robotstxt.org/orig.html",
+     "linkText": "robotstxt.org"
+    }
+   ],
+   "notes": "Martijn Koster wrote down A Standard for Robot Exclusion, a text that records a consensus reached on 30 June 1994 on the robots mailing list at nexor.co.uk between the majority of robot authors. It answered what the text itself reports: in 1993 and 1994 some robots had swamped servers with rapid-fire requests or retrieved the same files repeatedly, and others had wandered into deep virtual trees and cgi scripts with side effects such as voting. The remedy was one file at the URL /robots.txt, which a robot reads first. The document says plainly that it is not an official standard, is not enforced by anybody, and that nothing guarantees that every robot will use it. The method became RFC 9309 in September 2022, with Koster, Illyes, Zeller and Sassman as authors, and Python's urllib.robotparser read its wildcard rules only from release 3.14.5 on 10 May 2026. The account rests on these sources. 'A Standard for Robot Exclusion', Martijn Koster, www.robotstxt.org/orig.html (consensus of 30 June 1994 on the robots mailing list, robots-request@nexor.co.uk; not an official standard; not enforced by anybody); RFC 9309, Robots Exclusion Protocol, Koster, Illyes, Zeller and Sassman, IETF, September 2022 (a method originally defined by Martijn Koster in 1994; rules are not a form of access authorization); Python 3.14 changelog, 3.14.5 final, released 2026-05-10, gh-138907, docs.python.org/3.14/whatsnew/changelog.html.",
+   "take": "Robots.txt is a 1994 courtesy, not a lock: honour it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "webbrowser: show the page to the user",
+   "sub": "showmap.py opens a map for an address typed after the command or copied to the clipboard",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.99,
+     "lines": [
+      "SHOWMAP = '''#! python3",
+      "# showmap.py - Launches a map in the browser using an address from the",
+      "# command line or clipboard",
+      "",
+      "import webbrowser, sys, pyperclip",
+      "if len(sys.argv) > 1:",
+      "    # Get address from command line.",
+      "    address = ' '.join(sys.argv[1:])",
+      "else:",
+      "    # Get address from clipboard.",
+      "    address = pyperclip.paste()",
+      "",
+      "# Open the web browser.",
+      "webbrowser.open('https://www.openstreetmap.org/search?query=' + address)",
+      "'''"
+     ],
+     "fs": 7.9,
+     "compact": true,
+     "out": "870 Valencia St, Mission District  -> https://www.openstreetmap.org/search?query=870 Valencia St, Mission District\n(clipboard)                        -> https://www.openstreetmap.org/search?query=777 Valencia St, San Francisco, CA",
+     "outLabel": "prints",
+     "label": "program showmap_v1_0_0.py, lines 4 to 18 of 28 - Python 3.14.6"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.55,
+     "w": 9.0,
+     "h": 0.4,
+     "fs": 10,
+     "body": "Run here with stand-ins for webbrowser and pyperclip that record the address each would receive, because this machine has no browser window and no clipboard. urllib.parse.quote(address) would percent-encode it."
+    }
+   ],
+   "notes": "showmap.py is the chapter's first project. It takes the address from the command line, joining the words in sys.argv after the script's name, or from the clipboard when none was typed, puts it into an OpenStreetMap search address and hands that to webbrowser.open, which asks the user's default browser to show the page and returns True if a browser was launched and False if not. It cannot read the page it opens. This program writes the chapter's script to a file and runs it twice, once with the arguments of the chapter's example and once with none, but it replaces webbrowser and pyperclip with stand-ins that record the address, because a window cannot open here and the clipboard raised PyperclipException; the two printed lines show the address each run would have opened. The address is used as typed, with spaces, which the browser then encodes; a program that builds an address itself should percent-encode it with urllib.parse.quote, as the previous slide showed. In Python 3.14 the BROWSER variable can also name an already registered browser.",
+   "take": "webbrowser.open shows a page to the user and cannot read it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "requests: download, check and save",
+   "sub": "get() returns a Response; raise_for_status() turns a bad status into an exception",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.17,
+     "lines": [
+      "res = requests.get(BASE + '/rj.txt')",
+      "res.raise_for_status()",
+      "print(res.status_code, len(res.text), res.headers['Content-Type'])",
+      "with tempfile.TemporaryDirectory() as d:",
+      "    path = os.path.join(d, 'RomeoAndJuliet.txt')",
+      "    play_file = open(path, 'wb')",
+      "    sizes = []",
+      "    for chunk in res.iter_content(8000):",
+      "        sizes.append(play_file.write(chunk))",
+      "    play_file.close()",
+      "    print(sizes, os.path.getsize(path))",
+      "response = requests.get(BASE + '/page_that_does_not_exist')",
+      "try:",
+      "    response.raise_for_status()",
+      "except Exception as exc:",
+      "    print(f'There was a problem: {exc}'.replace(BASE, 'SITE'))"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "200 19000 text/plain; charset=utf-8\n[8000, 8000, 3000] 19000\nThere was a problem: 404 Client Error: Not Found for url: SITE/page_that_does_not_exist",
+     "outLabel": "prints",
+     "label": "program downloadChecked_v1_0_0.py, lines 34 to 49 of 49 - Python 3.14.6"
+    }
+   ],
+   "notes": "The requests module is installed separately; requests.get downloads the page or file at an address and returns a Response object. The Response holds the body twice, as bytes in content and as text decoded with the response's encoding, and the download is only the HTML or the file itself, because images and other media on a page are fetched by requests of their own. This program, run against a stand-in site on this machine, downloads a text file, calls raise_for_status() after the get, which does nothing for a good status and raises HTTPError for a 4xx or 5xx, and saves the body in binary mode with iter_content(8000), so the three write() calls return 8000, 8000 and 3000 and the file on disk is 19000 bytes. A request for a page that does not exist is answered with 404, and raise_for_status() turns that into the exception whose message is printed. The chapter prints the same message with an address that ends in .html although the address it requested does not, and the Romeo and Juliet file it downloads is 174126 characters today, not the 178978 the chapter prints; both are in the research record of this chapter.",
+   "take": "get, raise_for_status, then write the body in binary chunks.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A checked download, step by step",
+   "sub": "The chapter's list of steps for one download, with the one place the program stops",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 5.1,
+     "h": 3.1,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.53,
+       "w": 2.7,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "requests.get() the URL, with a timeout",
+       "x": 0.57,
+       "y": 1.679,
+       "w": 2.56,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.5,
+       "y": 2.1,
+       "w": 2.7,
+       "h": 0.56,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Did raise_for_status() raise an exception?",
+       "x": 0.67,
+       "y": 2.227,
+       "w": 2.36,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.77,
+       "w": 2.7,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Open the file in write binary mode with 'wb'",
+       "x": 0.57,
+       "y": 2.847,
+       "w": 2.56,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.39,
+       "w": 2.7,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Loop over iter_content() and write each chunk",
+       "x": 0.57,
+       "y": 3.467,
+       "w": 2.56,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 4.01,
+       "w": 2.7,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The file holds the bytes; write() returned their number",
+       "x": 0.57,
+       "y": 4.087,
+       "w": 2.56,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.5,
+       "y": 2.15,
+       "w": 2.1,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The program stops, or the exception is caught and printed",
+       "x": 3.57,
+       "y": 2.227,
+       "w": 1.96,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 4.45,
+       "y": 1.66,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 4.41,
+       "y": 4.1,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 4.47,
+       "y": 4.16,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 4.45,
+       "y1": 1.76,
+       "x2": 3.2,
+       "y2": 1.76,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.85,
+       "y1": 1.99,
+       "x2": 1.85,
+       "y2": 2.1,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.2,
+       "y1": 2.38,
+       "x2": 3.5,
+       "y2": 2.38,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 3.25,
+       "y": 2.18,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.85,
+       "y1": 2.66,
+       "x2": 1.85,
+       "y2": 2.77,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 1.91,
+       "y": 2.625,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.85,
+       "y1": 3.23,
+       "x2": 1.85,
+       "y2": 3.39,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.85,
+       "y1": 3.85,
+       "x2": 1.85,
+       "y2": 4.01,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.55,
+       "y1": 2.61,
+       "x2": 4.55,
+       "y2": 4.1,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.2,
+       "y1": 4.24,
+       "x2": 4.41,
+       "y2": 4.24,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "ACheckedDownload"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 5.1,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ACheckedDownload - Workflow pattern, 31 of 34 words grounded in the chapter's text"
+    },
+    {
+     "t": "card",
+     "head": "Always pass a timeout",
+     "body": "Without one a call can hang indefinitely. In the research run a call with timeout=0.2 raised ReadTimeout; the same call without it returned the slow server's late answer.",
+     "x": 5.85,
+     "y": 1.5,
+     "w": 3.65,
+     "h": 1.6,
+     "fs": 10.5
+    },
+    {
+     "t": "card",
+     "head": "Stream a download to a file",
+     "body": "With stream=True get() returns before the body has arrived. Without it the whole body is read first, so iter_content only cuts a body that is already loaded.",
+     "x": 5.85,
+     "y": 3.25,
+     "w": 3.65,
+     "h": 1.65,
+     "fs": 10.5,
+     "accent": "slate"
+    }
+   ],
+   "notes": "This is the chapter's own list of steps for one download, drawn as an activity: call requests.get, call raise_for_status, and only if no exception was raised open the file in write binary mode, loop over iter_content and write each chunk. The decision is the orange hexagon; one answer ends the program, or lets the exception be caught and printed, and the other goes on to the file. The requests documentation adds two things the chapter leaves out, and both were tried for this chapter. Nearly all production code should pass a timeout, because a call without one can hang indefinitely; a call with timeout=0.2 against a slow local server raised ReadTimeout, while the same call without a timeout returned the server's late answer. And a download to a file should pass stream=True, because without it the whole body is read before get() returns; with stream=True the first five bytes were read while the server still held the rest. So iter_content(100000) on a response fetched without stream=True only cuts an already loaded body into chunks, which is correct for a small file and wrong for a large one.",
+   "take": "Check the status, save in chunks, and add a timeout.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Requests, conceived 13 February 2011",
+   "sub": "2011-02-13",
+   "items": [
+    {
+     "t": "card",
+     "head": "Kenneth Reitz",
+     "body": "The release history of Requests begins with version 0.0.1 on 13 February 2011, listing 'Frustration' and 'Conception', and 0.2.0 the next day, listing 'Birth!'.",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 3.6,
+     "h": 2.8,
+     "fs": 12
+    },
+    {
+     "t": "beats",
+     "x": 4.3,
+     "y": 1.5,
+     "w": 2.75,
+     "h": 2.8,
+     "fs": 11.5,
+     "items": [
+      "13 Feb 2011: 0.0.1, 'Frustration, Conception'",
+      "14 Feb 2011: 0.2.0, 'Birth!'",
+      "PyPI's first upload: 14 Feb 2011",
+      "Slogan: HTTP for Humans"
+     ]
+    },
+    {
+     "t": "img",
+     "path": "../../03-materials/ch13/assets/photo_kenneth_reitz.jpg",
+     "x": 7.2,
+     "y": 1.5,
+     "w": 2.3,
+     "h": 1.54
+    },
+    {
+     "t": "text",
+     "x": 7.2,
+     "y": 3.1,
+     "w": 2.3,
+     "h": 1.15,
+     "fs": 8.5,
+     "italic": true,
+     "color": "mute",
+     "body": "Kenneth Reitz at a talk, 17 November 2012. Photo: Nils Pascal Illenseer, CC BY 3.0 (creativecommons.org/licenses/by/3.0), via Wikimedia Commons; resized."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Kenneth Reitz",
+     "where": "GitHub and the Python Package Index",
+     "when": "2011-02-13",
+     "link": "https://raw.githubusercontent.com/psf/requests/main/HISTORY.md",
+     "linkText": "raw.githubusercontent.com"
+    }
+   ],
+   "notes": "The release history of Requests, which its repository still carries, begins with two entries: version 0.0.1, dated 13 February 2011, lists 'Frustration' and 'Conception', and version 0.2.0, dated the next day, lists 'Birth!'. The Python Package Index agrees on the birthday: its first upload of requests is dated 14 February 2011. The documentation says Requests was lovingly created by Kenneth Reitz, and its slogan, HTTP for Humans, is the promise the chapter repeats when it says the module lets you download files without worrying about network errors, connection routing and data compression. Version 2.34.2, installed for this chapter on 12 October 2026, descends from that 0.2.0. The account rests on these sources. HISTORY.md of the psf/requests repository, raw.githubusercontent.com/psf/requests/main/HISTORY.md (0.0.1 2011-02-13 Frustration, Conception; 0.2.0 2011-02-14 Birth!); PyPI requests, pypi.org/pypi/requests/json (earliest upload 2011-02-14T08:49:42, version 0.2.0); 'Authors', Requests 2.34.2 documentation (created by Kenneth Reitz). The photograph is Kenneth Reitz at a talk in 2012, by Nils Pascal Illenseer, licensed CC BY 3.0, from Wikimedia Commons, file Rupy Talk Kenneth Reitz; the 960-pixel rendition of the 2048-pixel original is shown, and the speaker is identified by the Commons file title and description, since the picture carries no caption.",
+   "take": "Requests: conceived in frustration on 13 February 2011, born the next day.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A weather API: one call, one JSON answer",
+   "sub": "A stand-in service answers with a key; the real one answers 401 to the chapter's fake key",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 1.52,
+     "lines": [
+      "res = requests.get(BASE + '/data/2.5/weather', params={'q': 'San Francisco,CA,US', 'appid': 'KEY'})",
+      "res.raise_for_status()",
+      "data = res.json()",
+      "kelvin = data['main']['temp']",
+      "print(res.url.replace(BASE, 'SITE'))",
+      "print(data['weather'][0]['description'], '|', kelvin, 'K =', round(kelvin - 273.15, 1), 'C |', data['main']['humidity'], '% humidity')"
+     ],
+     "fs": 7.3,
+     "compact": true,
+     "out": "SITE/data/2.5/weather?q=San+Francisco%2CCA%2CUS&appid=KEY\nbroken clouds | 285.44 K = 12.3 C | 78 % humidity",
+     "outLabel": "prints",
+     "label": "program weatherStandIn_v1_0_0.py, lines 33 to 38 of 38 - Python 3.14.6"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 3.52,
+     "w": 9.0,
+     "h": 0.64,
+     "lines": [],
+     "fs": 7.5,
+     "compact": true,
+     "out": "401 application/json; charset=utf-8\n{'cod': 401, 'message': 'Invalid API key. Please see https://openweathermap.org/faq#error401 for more info.'} | cod is a int",
+     "outLabel": "prints",
+     "label": "transcript of program weatherLive_v1_0_0.py: the chapter's fake key sent to the real service (LIVE)"
+    },
+    {
+     "t": "text",
+     "x": 0.5,
+     "y": 4.26,
+     "w": 9.0,
+     "h": 0.55,
+     "fs": 11,
+     "color": "ink",
+     "body": "An API key identifies the account and stays out of the source. The answer is JSON, which json.loads or res.json() decodes; the temperature arrives in Kelvin."
+    }
+   ],
+   "notes": "A web API lets one program ask another for data, and an endpoint is the address at which one request is answered; services put a version into it, such as /geo/1.0/ and /data/2.5/ in the OpenWeather addresses, so that an old version can be retired. The request carries its parameters in the query string, and requests builds and percent-encodes that from the params dictionary, as the first printed line shows. The answer is JSON, which res.json() turns into lists and dictionaries; the temperature arrives in Kelvin, and subtracting 273.15 gives the 12.3 degrees Celsius printed, since 285.44 minus 273.15 rounds to 12.3. The first program ran against a stand-in service on this machine because the real one needs a key. The second transcript is a live run: the chapter's placeholder key, sent to the real endpoint on 12 October 2026, was answered with status 401, a JSON body saying the key is invalid, and a cod field that is an integer in this answer, while the same field is a string in the 400 answer of the stand-in. An API key identifies the account that makes the requests, belongs in a file and not in the source, and the free plan allows 60 calls a minute. The National Weather Service answers without a key but requires a User-Agent header that names the application.",
+   "take": "A key identifies the account; the answer is JSON; convert the units.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Two calls, one answer feeding the next",
+   "sub": "It asks the geocoder first, then the weather service",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 9.0,
+     "h": 3.1,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.45,
+       "w": 1.9,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The program",
+       "x": 0.61,
+       "y": 1.566,
+       "w": 1.78,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.5,
+       "y1": 1.87,
+       "x2": 1.5,
+       "y2": 4.55,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 7.55,
+       "y": 1.45,
+       "w": 1.9,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The OpenWeather service",
+       "x": 7.61,
+       "y": 1.566,
+       "w": 1.78,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.5,
+       "y1": 1.87,
+       "x2": 8.5,
+       "y2": 4.55,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.5,
+       "y1": 2.28,
+       "x2": 8.5,
+       "y2": 2.28,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "GET /geo/1.0/direct?q=San Francisco,CA,US&appid=API key",
+       "x": 1.6,
+       "y": 2.058,
+       "w": 6.8,
+       "h": 0.171,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.5,
+       "y1": 2.71,
+       "x2": 1.5,
+       "y2": 2.71,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "a JSON list; item 0 has lat and lon",
+       "x": 1.6,
+       "y": 2.488,
+       "w": 6.8,
+       "h": 0.171,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 1.62,
+       "y": 2.88,
+       "w": 3.6,
+       "h": 0.383,
+       "fill": "FFF4E0",
+       "line": "D97A14",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "json.loads() decodes the text into lists and dictionaries",
+       "x": 1.69,
+       "y": 2.92,
+       "w": 3.46,
+       "h": 0.323,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.5,
+       "y1": 3.57,
+       "x2": 8.5,
+       "y2": 3.57,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "GET /data/2.5/weather?lat=...&lon=...&appid=API key",
+       "x": 1.6,
+       "y": 3.348,
+       "w": 6.8,
+       "h": 0.171,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.5,
+       "y1": 4.0,
+       "x2": 1.5,
+       "y2": 4.0,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "a JSON dictionary; main temp is in Kelvin",
+       "x": 1.6,
+       "y": 3.778,
+       "w": 6.8,
+       "h": 0.171,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 1.62,
+       "y": 4.17,
+       "w": 3.6,
+       "h": 0.231,
+       "fill": "FFF4E0",
+       "line": "D97A14",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "round(285.44 - 273.15, 1) converts to Celsius",
+       "x": 1.69,
+       "y": 4.21,
+       "w": 3.46,
+       "h": 0.171,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      }
+     ],
+     "did": "AWeatherCall"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram AWeatherCall - Interaction pattern, 40 of 46 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "The chapter's weather example is an exchange in an order that matters, so it is drawn as a sequence. The program asks the geocoding endpoint for the latitude and longitude of San Francisco, the service answers with a JSON list whose first item has lat and lon, json.loads turns that text into lists and dictionaries, and only then can the program ask the weather endpoint, passing the latitude and longitude it just learned. The second answer is a JSON dictionary whose temperature is in Kelvin, which the program converts to Celsius. Three details come from running it. A call that finds nothing is still answered, with an empty list for an unknown city and a dictionary holding a cod and a message for a wrong latitude, so a program checks the shape of the decoded data before indexing it. The forecast's dt field is a Unix timestamp, and datetime.fromtimestamp answers in the time zone of the machine unless one is given. And there is often a better choice than a key: the National Weather Service API returned fourteen forecast periods for the chapter's latitude and longitude on 12 October 2026 with no key at all.",
+   "take": "Decode each answer and check its shape before it feeds the next request.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Beautiful Soup: select, then read",
+   "sub": "Parse the text that requests downloaded, then ask for elements by CSS selector",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 3.03,
+     "rows": [
+      [
+       "import bs4, re",
+       ""
+      ],
+      [
+       "soup = bs4.BeautifulSoup('<p id=\"a\">Hello, <b>world</b>!</p><p class=\"s\"><a href=\"/x\">a link</a></p>', 'html.parser')",
+       ""
+      ],
+      [
+       "soup.select('#a')",
+       "[<p id=\"a\">Hello, <b>world</b>!</p>]"
+      ],
+      [
+       "soup.select('#a')[0].get_text()",
+       "'Hello, world!'"
+      ],
+      [
+       "soup.select('p.s > a')[0].get('href')",
+       "'/x'"
+      ],
+      [
+       "soup.select('p.s a')[0].attrs",
+       "{'href': '/x'}"
+      ],
+      [
+       "soup.select('.nope')",
+       "[]"
+      ],
+      [
+       "html = '<a href=\"/x\">x</a> <a class=\"k\" href=\"/y\">y</a>'",
+       ""
+      ],
+      [
+       "re.findall('<a href=\"(.*?)\">', html)",
+       "['/x']"
+      ],
+      [
+       "[a.get('href') for a in bs4.BeautifulSoup(html, 'html.parser').select('a')]",
+       "['/x', '/y']"
+      ]
+     ],
+     "fs": 8.1,
+     "cap": "run under Python 3.14.6",
+     "label": "select returns a list of Tags; a regular expression misses links a parser finds"
+    }
+   ],
+   "notes": "Beautiful Soup takes the HTML as a string or an open file and the name of a parser, html.parser being the one in Python's standard library, and returns an object holding the parsed page. Its select method takes a CSS selector, which names elements by tag, by # and id, by . and class, by a space for a descendant, by > for a direct child and by [attribute] in square brackets, and returns a list of Tag objects: an empty list when nothing matches, and never None. get_text returns the text between a tag's opening and closing tags with the nested tags removed, while str of the tag returns its HTML; get returns one attribute, and attrs is the dictionary of all of them. The last three rows show why the chapter advises a parser rather than a regular expression: a pattern that needs href right after the a misses the link whose tag has a class first, and the parser finds both. On the page the chapter tells the reader to download, example3.html of 957 bytes, select('p') finds seven paragraphs where the chapter says three, because three more sit inside the form, and the Developer Tools opened with F12 will copy a selector for any element.",
+   "take": "select returns Tags; parse HTML with a parser, not a regex.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Beautiful Soup, for awful pages, since 2004",
+   "sub": "2004",
+   "items": [
+    {
+     "t": "card",
+     "head": "Leonard Richardson",
+     "body": "His page greets the reader: 'You didn't write that awful page. You're just trying to get some data out of it.' Since 2004 the library has saved programmers hours or days of screen-scraping work.",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.5,
+     "h": 2.8,
+     "fs": 12
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "2004: the library begins, on crummy.com",
+      "Named after a poem in Alice's Adventures",
+      "Beautiful Soup 3 was official 2006 to 2012",
+      "The chapter installs the fourth: beautifulsoup4"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Leonard Richardson",
+     "where": "His site, crummy.com",
+     "when": "2004",
+     "link": "https://www.crummy.com/software/BeautifulSoup/",
+     "linkText": "crummy.com"
+    }
+   ],
+   "notes": "Leonard Richardson's page for Beautiful Soup greets the reader with the line 'You didn't write that awful page. You're just trying to get some data out of it', and says that since 2004 the library has been saving programmers hours or days of work on quick-turnaround screen scraping projects. Wikipedia adds, marking the point as needing a citation, that the name comes from the poem Beautiful Soup in Alice's Adventures in Wonderland and plays on tag soup, the term for poorly structured HTML. Beautiful Soup 3 was the official release line from May 2006 to March 2012, and the line the chapter installs as beautifulsoup4 is the fourth. On 12 October 2026 the author's page named 4.14.3 of 30 November 2025 as the current release, while pip installed 4.15.0 for this chapter: a library's own page can lag its releases. The account rests on these sources. 'Beautiful Soup', Leonard Richardson, www.crummy.com/software/BeautifulSoup/ (read 2026-10-12: 'Since 2004'; current release 4.14.3, November 30, 2025); 'Beautiful Soup (HTML parser)', Wikipedia (original author Leonard Richardson; 2004; name from the poem in Alice's Adventures in Wonderland, marked [citation needed]; Beautiful Soup 3 official from May 2006 to March 2012); PyPI beautifulsoup4 4.15.0 installed 2026-10-12.",
+   "take": "Richardson's 2004 library exists so you do not parse HTML by regex.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "searchpypi.py: where today's web differs",
+   "sub": "Project 7 opens the first five search results; against pypi.org itself it opens nothing",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.7,
+     "h": 2.31,
+     "lines": [
+      "res = requests.get(SEARCH + ' '.join(sys.argv[1:]))",
+      "res.raise_for_status()",
+      "",
+      "# Retrieve top search result links.",
+      "soup = bs4.BeautifulSoup(res.text, 'html.parser')",
+      "# Open a browser tab for each result.",
+      "link_elems = soup.select('.package-snippet')",
+      "num_open = min(5, len(link_elems))",
+      "for i in range(num_open):",
+      "    url_to_open = 'https://pypi.org' + link_elems[i].get('href')",
+      "    print('Opening', url_to_open)",
+      "    webbrowser.open(url_to_open)",
+      "print(len(link_elems), 'links found;', num_open, 'opened')"
+     ],
+     "fs": 7.6,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program searchpypiLocal_v1_0_0.py, lines 42 to 54 of 54"
+    },
+    {
+     "t": "prog",
+     "x": 5.4,
+     "y": 1.65,
+     "w": 4.1,
+     "h": 1.5,
+     "lines": [],
+     "fs": 8.5,
+     "compact": true,
+     "out": "Searching...\nOpening https://pypi.org/project/p0/\nOpening https://pypi.org/project/p1/\nOpening https://pypi.org/project/p2/\nOpening https://pypi.org/project/p3/\nOpening https://pypi.org/project/p4/\n8 links found; 5 opened",
+     "outLabel": "prints",
+     "label": "prints against a stand-in results page"
+    },
+    {
+     "t": "prog",
+     "x": 5.4,
+     "y": 3.55,
+     "w": 4.1,
+     "h": 0.67,
+     "lines": [],
+     "fs": 8.5,
+     "compact": true,
+     "out": "Searching...\n0 links found; 0 opened",
+     "outLabel": "prints",
+     "label": "transcript of program searchpypiLive_v1_0_0.py"
+    },
+    {
+     "t": "text",
+     "x": 5.4,
+     "y": 4.3,
+     "w": 4.1,
+     "h": 0.55,
+     "fs": 9.5,
+     "body": "The second transcript is LIVE: on 12 October 2026 pypi.org answered 200 with a page titled Client Challenge, and its robots.txt disallows /search*."
+    }
+   ],
+   "notes": "searchpypi.py is the chapter's second project: it downloads a search results page, selects the links of the results with the class selector .package-snippet, and opens the first five in browser tabs, the count being the smaller of five and the number of links found. The left transcript is the chapter's program, unchanged but for the address and with a stand-in for webbrowser, run against a stand-in results page that carries eight such links, so five open. The right transcript is the same program run unchanged against pypi.org on 12 October 2026. The site answered with status 200 and a page titled Client Challenge, a page that asks for proof of a browser, which holds no element of that class, so the program found zero links and opened none. Two lessons follow. A program should say so, rather than open zero tabs in silence, when its selector finds nothing; and the robots.txt of pypi.org disallows /search*, a rule that Python 3.14.5 and later apply to this very address, so a polite program of today would not fetch it at all. Both observations are of one day and a site can change.",
+   "take": "A challenge page or a robots rule can empty a scraper; check what came back.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "downloadXkcdComics.py: follow the Prev link",
+   "sub": "Project 8 saves a comic, follows the link whose rel is prev and sleeps between pages",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.79,
+     "lines": [
+      "    # Get the Prev button's URL.",
+      "    prev_link = soup.select('a[rel=\"prev\"]')[0]",
+      "    url = HOME + prev_link.get('href')",
+      "    num_downloads += 1",
+      "    time.sleep(SLEEP)  # Pause so we don't hammer the web server.",
+      "",
+      "print('Done.', sorted(os.listdir('xkcd')) if SCHEME == 'http' else len(os.listdir('xkcd')), 'file(s) saved')"
+     ],
+     "fs": 9,
+     "compact": true,
+     "out": "Downloading page SITE...\nDownloading image SITE/comics/c3.png...\nDownloading page SITE/2/...\nDownloading image SITE/comics/c2.png...\nDownloading page SITE/1/...\nDownloading image SITE/comics/c1.png...\nDone. ['c1.png', 'c2.png', 'c3.png'] file(s) saved",
+     "outLabel": "prints",
+     "label": "program xkcdLocal_v1_0_0.py, lines 66 to 72 of 72 - Python 3.14.6"
+    }
+   ],
+   "notes": "The chapter's third project downloads a web comic by crawling it. In the lines not shown, the loop downloads a page, parses it with Beautiful Soup, finds the comic's image with the selector #comic img, saves it with os.path.basename naming the file and iter_content writing it in binary. The lines shown take the address from the link selected by a[rel=\"prev\"], count the download and sleep, so that the server is not hammered. The loop ends when the Prev link ends in #, which is the first comic's, or after the limit of downloads. This run is against a stand-in comic site of three pages on this machine and saved three files. The Step 4 listing as printed in the chapter is indented with 8, 12, 15, 12 and then 6 spaces and Python rejects it with an IndentationError, so this run uses the listing with the indentation repaired. On the real xkcd.com on 12 October 2026 the structure the chapter relies on still held: the comic image sits inside the element with id comic at an address beginning with two slashes, the page has a rel prev link, and the prev link of the first comic is #.",
+   "take": "Select the image, save it in chunks, follow Prev, and sleep between pages.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A crawler that reads robots.txt first",
+   "sub": "The comic downloader sleeps; a polite crawler also asks first",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 5.15,
+     "h": 3.17,
+     "lines": [
+      "rp = RobotFileParser(BASE + '/robots.txt')",
+      "rp.read()",
+      "agent = 'ch13-class-bot'",
+      "delay = rp.crawl_delay(agent)",
+      "print('crawl delay:', delay)",
+      "started = time.monotonic()",
+      "for path in ('/a', '/private/c', '/b'):",
+      "    if not rp.can_fetch(agent, BASE + path):",
+      "        print('skip ', path, '(robots.txt disallows it)')",
+      "        continue",
+      "    with urllib.request.urlopen(BASE + path) as f:",
+      "        print('get  ', path, '->', f.status, f.read().decode())",
+      "    time.sleep(delay)",
+      "print('waited at least', int(time.monotonic() - started), 'seconds')"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "crawl delay: 1\nget   /a -> 200 page /a\nskip  /private/c (robots.txt disallows it)\nget   /b -> 200 page /b\nwaited at least 2 seconds",
+     "outLabel": "prints",
+     "label": "program politeCrawler_v1_0_0.py, lines 34 to 47 of 47"
+    },
+    {
+     "t": "shapes",
+     "x": 5.75,
+     "y": 1.45,
+     "w": 3.8,
+     "h": 3.1,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 5.75,
+       "y": 1.478,
+       "w": 1.5,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the robots.txt of the site first",
+       "x": 5.82,
+       "y": 1.564,
+       "w": 1.36,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 5.75,
+       "y": 1.995,
+       "w": 1.5,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Pick a path of the crawl",
+       "x": 5.82,
+       "y": 2.081,
+       "w": 1.36,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 5.75,
+       "y": 2.452,
+       "w": 1.5,
+       "h": 0.58,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Does can_fetch allow the path?",
+       "x": 5.92,
+       "y": 2.597,
+       "w": 1.16,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 5.75,
+       "y": 3.028,
+       "w": 1.5,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Download the page and follow its links",
+       "x": 5.82,
+       "y": 3.114,
+       "w": 1.36,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 5.75,
+       "y": 3.545,
+       "w": 1.5,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Wait the Crawl-delay between pages",
+       "x": 5.82,
+       "y": 3.631,
+       "w": 1.36,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 7.6,
+       "y": 2.512,
+       "w": 1.7,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Skip the path the file disallows",
+       "x": 7.67,
+       "y": 2.597,
+       "w": 1.56,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 7.6,
+       "y": 3.485,
+       "w": 1.7,
+       "h": 0.58,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is a path left, and is the limit of downloads unmet?",
+       "x": 7.77,
+       "y": 3.563,
+       "w": 1.36,
+       "h": 0.423,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 8.35,
+       "y": 1.608,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 8.31,
+       "y": 4.152,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 8.37,
+       "y": 4.212,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 8.35,
+       "y1": 1.708,
+       "x2": 7.25,
+       "y2": 1.708,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.5,
+       "y1": 1.938,
+       "x2": 6.5,
+       "y2": 1.995,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.5,
+       "y1": 2.455,
+       "x2": 6.5,
+       "y2": 2.452,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.5,
+       "y1": 3.032,
+       "x2": 6.5,
+       "y2": 3.028,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 6.56,
+       "y": 2.94,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 7.25,
+       "y1": 2.742,
+       "x2": 7.6,
+       "y2": 2.742,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 7.3,
+       "y": 2.542,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 6.5,
+       "y1": 3.488,
+       "x2": 6.5,
+       "y2": 3.545,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 7.25,
+       "y1": 3.775,
+       "x2": 7.6,
+       "y2": 3.775,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 8.45,
+       "y1": 2.972,
+       "x2": 8.45,
+       "y2": 3.485,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 9.3,
+       "y1": 3.775,
+       "x2": 9.52,
+       "y2": 3.775,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 9.52,
+       "y1": 3.775,
+       "x2": 9.52,
+       "y2": 2.225,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 9.52,
+       "y1": 2.225,
+       "x2": 7.25,
+       "y2": 2.225,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 9.34,
+       "y": 3.575,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 8.45,
+       "y1": 4.065,
+       "x2": 8.45,
+       "y2": 4.152,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 8.51,
+       "y": 4.018,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      }
+     ],
+     "did": "ThePoliteCrawl"
+    },
+    {
+     "t": "foot",
+     "x": 5.75,
+     "y": 4.58,
+     "w": 3.8,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ThePoliteCrawl - Workflow pattern, 27 of 30 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "A crawler is a program that follows links, and the first one, Matthew Gray's World Wide Web Wanderer at MIT in the spring of 1993, counted 130 Web sites in June 1993 by his own report. A polite crawler does what the diagram shows: read the robots.txt of the site first, pick a path, ask can_fetch whether the file allows it, skip the path if it does not, otherwise download the page and wait the Crawl-delay, and repeat while paths and the limit of downloads remain. The program is a practice program of the chapter's project, written for this deck with the standard library only, and run against a stand-in site whose robots.txt disallows /private/ and states Crawl-delay: 1. It read the delay, fetched /a, skipped /private/c without requesting it, fetched /b and waited at least two seconds in all. The agent name ch13-class-bot is invented for the example; a real crawler names itself and the site it belongs to, because the user-agent header is how a server tells one program from another.",
+   "take": "Read robots.txt, ask can_fetch, skip what is disallowed, wait the Crawl-delay.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "When the page is built by a script",
+   "sub": "requests and Beautiful Soup see the script; a browser runs it",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 9.0,
+     "h": 2.71,
+     "lines": [
+      "import bs4, requests",
+      "from playwright.sync_api import sync_playwright",
+      "",
+      "html = requests.get(BASE + '/dynamic.html').text",
+      "print('requests sees the script:', '<script>' in html)",
+      "print('Beautiful Soup reads #app:', repr(bs4.BeautifulSoup(html, 'html.parser').select('#app')[0].get_text()))",
+      "with sync_playwright() as p:",
+      "    browser = p.firefox.launch()",
+      "    page = browser.new_page()",
+      "    page.goto(BASE + '/dynamic.html')",
+      "    print('Playwright reads #app:', repr(page.locator('#app').inner_text()))",
+      "    browser.close()"
+     ],
+     "fs": 8,
+     "compact": true,
+     "out": "requests sees the script: True\nBeautiful Soup reads #app: ''\nPlaywright reads #app: 'Built by a script, not in the source'",
+     "outLabel": "prints",
+     "label": "program dynamicPage_v1_0_0.py, lines 11 to 22 of 22 - Python 3.14.6"
+    },
+    {
+     "t": "boxes",
+     "x": 0.5,
+     "y": 4.33,
+     "w": 9.0,
+     "h": 0.62,
+     "cols": 3,
+     "fs": 11,
+     "subfs": 9,
+     "accent": [
+      2
+     ],
+     "items": [
+      {
+       "label": "requests",
+       "sub": "downloads the text, script included; it does not run it"
+      },
+      {
+       "label": "Beautiful Soup",
+       "sub": "reads the text it is given: the element is empty"
+      },
+      {
+       "label": "Playwright",
+       "sub": "runs the script in Firefox and reads the written text"
+      }
+     ]
+    }
+   ],
+   "notes": "This is the reason the chapter keeps a second family of tools. A page whose content is built by scripts, or that needs a login, cannot be read from the text that requests downloads. The program starts a small local site whose only content is an empty element with the id app and a script that writes a sentence into it. requests downloads the page and the text still holds the script tag; Beautiful Soup, given that text, finds the element and its text is the empty string, because nothing has run the script; Playwright loads the page in a real Firefox, the script runs, and the locator returns the written sentence. A browser driver is slower and heavier than a download, so it is the tool of last resort: the chapter's advice is to prefer a site's API whenever one is offered, and the API of the National Weather Service still returned fourteen forecast periods in JSON on the day this deck was built while its forecast page also still carried fourteen elements of the class forecast-text.",
+   "take": "If the text lacks the data, a script builds it: use a browser driver.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Selenium began in 2004 as a timesheet test tool",
+   "sub": "2004",
+   "items": [
+    {
+     "t": "card",
+     "head": "Jason Huggins, ThoughtWorks",
+     "body": "Huggins built JavaScriptTestRunner in Chicago to test an internal Time and Expenses application. Colleagues liked the immediate visual feedback, and the project was opened up as Selenium.",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.5,
+     "h": 2.8,
+     "fs": 12
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "2004: Core mode, for a Python and Plone application",
+      "Talks about open sourcing it begin",
+      "Simon Stewart builds WebDriver separately",
+      "The two projects merge; webdriver.Firefox() descends"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Jason Huggins, with Paul Gross and Jie Tina Wang",
+     "where": "ThoughtWorks, Chicago",
+     "when": "2004",
+     "link": "https://www.selenium.dev/history/",
+     "linkText": "selenium.dev"
+    }
+   ],
+   "notes": "The Selenium project's own history says the story starts in 2004 at ThoughtWorks in Chicago, where Jason Huggins, helped by Paul Gross and Jie Tina Wang, built the Core mode as JavaScriptTestRunner to test an internal Time and Expenses application written in Python and Plone. Colleagues liked its immediate visual feedback, and soon afterwards Paul Hammant saw the demo and began the talks about open sourcing it and about a driven mode that could be used over the wire from a language of one's choice. Separately, Simon Stewart at ThoughtWorks built WebDriver, which did not rely on JavaScript but had a client for each browser coded from scratch, and the two projects were merged. The webdriver.Firefox() call of the chapter descends from that merge. The account rests on these sources. 'Selenium History', selenium.dev/history/ (2004, ThoughtWorks in Chicago, Jason Huggins, JavaScriptTestRunner, Paul Gross and Jie Tina Wang, Paul Hammant; Simon Stewart's WebDriver and the merge); Selenium WebDriver documentation, selenium.dev/documentation/.",
+   "take": "Selenium began in 2004 as a test tool for one internal timesheet application.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Selenium: start Firefox and fill the form",
+   "sub": "webdriver.Firefox() starts a real browser; find_element() returns the page's elements",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 5.4,
+     "h": 2.48,
+     "lines": [
+      "browser = webdriver.Firefox(options=opts)",
+      "browser.get(BASE + '/login.html')",
+      "print(browser.title)",
+      "user_elem = browser.find_element(By.ID, 'login_user')",
+      "user_elem.send_keys('your_real_username_here')",
+      "password_elem = browser.find_element(By.ID, 'login_pass')",
+      "password_elem.send_keys('your_real_password_here')",
+      "print(user_elem.get_property('value'), '|', password_elem.get_attribute('type'))",
+      "password_elem.submit()",
+      "WebDriverWait(browser, 10).until(lambda b: b.title == 'Welcome')",
+      "print(browser.current_url.replace(BASE, 'SITE'), '|', browser.title)",
+      "browser.quit()"
+     ],
+     "fs": 7.1,
+     "compact": true,
+     "out": "Login\nyour_real_username_here | password\nSITE/welcome.html? | Welcome",
+     "outLabel": "prints",
+     "label": "program seleniumForm_v1_0_0.py, lines 37 to 48 of 48"
+    },
+    {
+     "t": "shapes",
+     "x": 6.05,
+     "y": 1.45,
+     "w": 3.5,
+     "h": 3.15,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 6.85,
+       "y": 1.73,
+       "w": 2.7,
+       "h": 2.87,
+       "fill": "FBF8F2",
+       "line": "6E655C",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "A BROWSER STARTED BY SELENIUM",
+       "x": 6.93,
+       "y": 1.47,
+       "w": 2.55,
+       "h": 0.24,
+       "fs": 8.5,
+       "color": "6E655C",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 7.0,
+       "y": 1.84,
+       "w": 2.4,
+       "h": 0.498,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Find elements with find_element() and a By constant",
+       "x": 7.28,
+       "y": 1.865,
+       "w": 1.84,
+       "h": 0.449,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 7.0,
+       "y": 2.398,
+       "w": 2.4,
+       "h": 0.498,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read an element's text, attributes and properties",
+       "x": 7.28,
+       "y": 2.494,
+       "w": 1.84,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 7.0,
+       "y": 2.956,
+       "w": 2.4,
+       "h": 0.498,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Click a link or a button with click()",
+       "x": 7.28,
+       "y": 3.052,
+       "w": 1.84,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 7.0,
+       "y": 3.514,
+       "w": 2.4,
+       "h": 0.498,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Type into a field with send_keys(); submit() the form",
+       "x": 7.28,
+       "y": 3.61,
+       "w": 1.84,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 7.0,
+       "y": 4.072,
+       "w": 2.4,
+       "h": 0.498,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Scroll with the Keys constants, such as Keys.END",
+       "x": 7.28,
+       "y": 4.168,
+       "w": 1.84,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 6.29,
+       "y": 2.325,
+       "w": 0.22,
+       "h": 0.22,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 1.5
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 2.545,
+       "x2": 6.4,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.2,
+       "y1": 2.645,
+       "x2": 6.6,
+       "y2": 2.645,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 2.925,
+       "x2": 6.24,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 2.925,
+       "x2": 6.56,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A Selenium program",
+       "x": 6.05,
+       "y": 3.225,
+       "w": 0.8,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 6.6,
+       "y1": 2.725,
+       "x2": 7.0,
+       "y2": 2.089,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.6,
+       "y1": 2.725,
+       "x2": 7.0,
+       "y2": 2.647,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.6,
+       "y1": 2.725,
+       "x2": 7.0,
+       "y2": 3.205,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.6,
+       "y1": 2.725,
+       "x2": 7.0,
+       "y2": 3.763,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.6,
+       "y1": 2.725,
+       "x2": 7.0,
+       "y2": 4.321,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      }
+     ],
+     "did": "WhatASeleniumProgramDoes"
+    },
+    {
+     "t": "foot",
+     "x": 6.05,
+     "y": 4.63,
+     "w": 3.5,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WhatASeleniumProgramDoes - SetOfUses pattern, 30 of 32 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "Selenium starts a real browser that the program controls. The program shown is the chapter's login example, run headless because this machine has no display, against a local login page: it opens the page, finds the two fields by id with find_element and the By constants, types into them with send_keys, reads back the typed value and the type attribute of the password field, submits the form from the password field, waits until the title changes with WebDriverWait and quits. The diagram lists what a Selenium program can do with the elements of a page: find, read, click, type and submit, and scroll with the Keys constants. Run in Firefox 157 with Selenium 4.51.0, the part of the chapter on the library is one step behind it. Selenium Manager downloads and finds the driver and the browser by itself, so the manual geckodriver download the chapter mentions was not needed; the exception the chapter calls NoSuchElement is NoSuchElementException; and the text of an element hidden with display none is an empty string. The driven browser also reported navigator.webdriver as True, a flag any page can read. The login values are made up, and a real password belongs in a file, not in the source.",
+   "take": "Selenium drives a real browser: find elements, type, click, submit.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Playwright: a locator, a checkbox, headless",
+   "sub": "sync_playwright() runs Firefox without a window; click toggles, check sets",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.5,
+     "w": 4.95,
+     "h": 2.81,
+     "lines": [
+      "with sync_playwright() as p:",
+      "    browser = p.firefox.launch()             # headless by default",
+      "    page = browser.new_page()",
+      "    page.goto(BASE + '/login.html')",
+      "    print(page.title())",
+      "    box = page.locator('input[type=checkbox]')",
+      "    print(box.is_checked())",
+      "    box.check()",
+      "    print(box.is_checked())",
+      "    page.locator('#login_user').fill('your_real_username_here')",
+      "    print(page.locator('#login_user').input_value())",
+      "    browser.close()"
+     ],
+     "fs": 7.8,
+     "compact": true,
+     "out": "Login\nFalse\nTrue\nyour_real_username_here",
+     "outLabel": "prints",
+     "label": "program playwrightCheckbox_v1_0_0.py, lines 33 to 44 of 44"
+    },
+    {
+     "t": "shapes",
+     "x": 5.65,
+     "y": 1.45,
+     "w": 3.85,
+     "h": 3.1,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 5.75,
+       "y": 2.0,
+       "w": 1.0,
+       "h": 0.62,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Unchecked",
+       "x": 5.81,
+       "y": 2.208,
+       "w": 0.88,
+       "h": 0.205,
+       "fs": 11,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 8.4,
+       "y": 2.0,
+       "w": 1.0,
+       "h": 0.62,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Checked",
+       "x": 8.46,
+       "y": 2.208,
+       "w": 0.88,
+       "h": 0.205,
+       "fs": 11,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 6.15,
+       "y": 1.5,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.25,
+       "y1": 1.7,
+       "x2": 6.25,
+       "y2": 2.0,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.75,
+       "y1": 2.2,
+       "x2": 8.4,
+       "y2": 2.2,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "click() toggles it to the opposite state",
+       "x": 6.8,
+       "y": 1.881,
+       "w": 1.55,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 6.75,
+       "y1": 2.82,
+       "x2": 8.4,
+       "y2": 2.82,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "check() or set_checked(True)",
+       "x": 6.8,
+       "y": 2.501,
+       "w": 1.55,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.4,
+       "y1": 3.44,
+       "x2": 6.75,
+       "y2": 3.44,
+       "color": "2F6D62",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "click() toggles it to the opposite state",
+       "x": 6.8,
+       "y": 3.121,
+       "w": 1.55,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.4,
+       "y1": 4.06,
+       "x2": 6.75,
+       "y2": 4.06,
+       "color": "2F6D62",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "uncheck() or set_checked(False)",
+       "x": 6.8,
+       "y": 3.741,
+       "w": 1.55,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.65,
+       "y1": 2.62,
+       "x2": 8.65,
+       "y2": 3.0,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 8.65,
+       "y1": 3.0,
+       "x2": 9.15,
+       "y2": 3.0,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 9.15,
+       "y1": 3.0,
+       "x2": 9.15,
+       "y2": 2.62,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "check() leaves it checked",
+       "x": 8.37,
+       "y": 3.04,
+       "w": 1.06,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 6.0,
+       "y1": 2.62,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "D97A14",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.0,
+       "y1": 3.0,
+       "x2": 6.5,
+       "y2": 3.0,
+       "color": "D97A14",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.5,
+       "y1": 3.0,
+       "x2": 6.5,
+       "y2": 2.62,
+       "color": "D97A14",
+       "w": 1.5,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "uncheck() leaves it unchecked",
+       "x": 5.72,
+       "y": 3.04,
+       "w": 1.06,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      }
+     ],
+     "did": "ACheckboxInPlaywright"
+    },
+    {
+     "t": "foot",
+     "x": 5.65,
+     "y": 4.58,
+     "w": 3.85,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ACheckboxInPlaywright - LifeCycle pattern, 24 of 24 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "Playwright is used in its synchronous form inside a with block, which starts and stops it. The block launches Firefox, headless by default, makes a page, loads a local login page, finds the checkbox with a locator and shows that check() sets it. A locator stands for the elements that may match and is strict: an action on a locator that matches several elements raises an error, which is why the chapter picks one with nth(0). The state diagram follows one checkbox. click() toggles it to the opposite state, whichever it was, while check(), uncheck() and set_checked() leave it checked or unchecked whatever it was before, which is why the chapter calls them more reliable. Run in Firefox 155 with Playwright 1.63.0 the part of the chapter on Playwright proved accurate: the six locators of its table each found their element, a Locator has no submit method, and a headed launch without a display failed with a message about the missing XServer. The browsers are installed by a second step, playwright install. Playwright was announced for Python in preview by Arjun Attam on 30 September 2020 on the Microsoft for Python Developers blog, with automatic waiting as its first claim.",
+   "take": "click toggles a checkbox; check, uncheck and set_checked set it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Playwright waits 30 seconds for a mistyped selector",
+   "sub": "A locator waits for an element that may appear; two calls answer at once",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 9.0,
+     "h": 2.7,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.45,
+       "w": 1.9,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The program",
+       "x": 0.61,
+       "y": 1.566,
+       "w": 1.78,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.5,
+       "y1": 1.87,
+       "x2": 1.5,
+       "y2": 4.15,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 7.55,
+       "y": 1.45,
+       "w": 1.9,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Playwright and the page",
+       "x": 7.61,
+       "y": 1.566,
+       "w": 1.78,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.5,
+       "y1": 1.87,
+       "x2": 8.5,
+       "y2": 4.15,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.5,
+       "y1": 2.284,
+       "x2": 8.5,
+       "y2": 2.284,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "page.locator() with a selector for an element, then click()",
+       "x": 1.6,
+       "y": 2.063,
+       "w": 6.8,
+       "h": 0.171,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 4.78,
+       "y": 2.456,
+       "w": 3.6,
+       "h": 0.383,
+       "fill": "FFF4E0",
+       "line": "D97A14",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "waits for the element, up to a default timeout of 30 seconds",
+       "x": 4.85,
+       "y": 2.496,
+       "w": 3.46,
+       "h": 0.323,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.5,
+       "y1": 3.156,
+       "x2": 1.5,
+       "y2": 3.156,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "A timeout after 30 seconds",
+       "x": 1.6,
+       "y": 2.935,
+       "w": 6.8,
+       "h": 0.171,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.5,
+       "y1": 3.592,
+       "x2": 8.5,
+       "y2": 3.592,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "is_visible() or query_selector() with the selector",
+       "x": 1.6,
+       "y": 3.371,
+       "w": 6.8,
+       "h": 0.171,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.5,
+       "y1": 4.028,
+       "x2": 1.5,
+       "y2": 4.028,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "An answer at once: not visible, or no element",
+       "x": 1.6,
+       "y": 3.807,
+       "w": 6.8,
+       "h": 0.171,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "AMistypedSelector"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.18,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram AMistypedSelector - Interaction pattern, 26 of 27 words grounded in the chapter's text"
+    },
+    {
+     "t": "boxes",
+     "x": 0.5,
+     "y": 4.5,
+     "w": 9.0,
+     "h": 0.5,
+     "cols": 3,
+     "fs": 10.5,
+     "subfs": 8.5,
+     "accent": [
+      0
+     ],
+     "items": [
+      {
+       "label": "30 s",
+       "sub": "the default wait, then TimeoutError"
+      },
+      {
+       "label": "at once",
+       "sub": "is_visible False, query None"
+      },
+      {
+       "label": "timeout=500",
+       "sub": "the wait ended after 0.6 s"
+      }
+     ]
+    }
+   ],
+   "notes": "Playwright's locators wait. A locator stands for elements that may exist later, so click() waits for the element to exist and be ready, up to a default timeout of 30 seconds, and a mistyped selector therefore makes the program pause that long and then raise TimeoutError. The sequence shows the exchange: the request, the wait, the failure, and the quick check that answers immediately. In the recorded run in Firefox 155 the mistyped click waited 30 seconds and raised TimeoutError; is_visible() returned False and query_selector() returned None in under a second; and the same click with timeout=500 raised after 0.6 seconds. The documentation of the library adds that is_visible() does not wait for the element to become visible. This waiting is Playwright's central design, announced with the Python preview of 30 September 2020 as reliable, timeout-free automation, and it is the difference a student meets first when moving from Selenium, where find_element answers at once and raises NoSuchElementException.",
+   "take": "Locators wait 30 seconds; is_visible() answers at once.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Which tool for which page",
+   "sub": "The conclusion of the chapter, as questions asked of the page in front of the program",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.95,
+       "y": 1.49,
+       "w": 3.9,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A page or a service the program needs",
+       "x": 1.02,
+       "y": 1.634,
+       "w": 3.76,
+       "h": 0.171,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.95,
+       "y": 2.11,
+       "w": 3.9,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Should the user see the page in a browser?",
+       "x": 1.12,
+       "y": 2.274,
+       "w": 3.56,
+       "h": 0.171,
+       "fs": 9,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.95,
+       "y": 2.75,
+       "w": 3.9,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Does the service offer an API?",
+       "x": 1.12,
+       "y": 2.914,
+       "w": 3.56,
+       "h": 0.171,
+       "fs": 9,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.95,
+       "y": 3.39,
+       "w": 3.9,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the data in the HTML that requests downloads?",
+       "x": 1.12,
+       "y": 3.554,
+       "w": 3.56,
+       "h": 0.171,
+       "fs": 9,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.95,
+       "y": 4.05,
+       "w": 3.9,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Selenium or Playwright drives a real browser",
+       "x": 1.02,
+       "y": 4.194,
+       "w": 3.76,
+       "h": 0.171,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 5.4,
+       "y": 2.13,
+       "w": 3.6,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "webbrowser.open() launches the user's browser",
+       "x": 5.47,
+       "y": 2.274,
+       "w": 3.46,
+       "h": 0.171,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 5.4,
+       "y": 2.77,
+       "w": 3.6,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "requests.get() on the endpoint, then json.loads()",
+       "x": 5.47,
+       "y": 2.914,
+       "w": 3.46,
+       "h": 0.171,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 5.4,
+       "y": 3.41,
+       "w": 3.6,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "BeautifulSoup parses the text; select() finds the elements",
+       "x": 5.47,
+       "y": 3.479,
+       "w": 3.46,
+       "h": 0.323,
+       "fs": 9,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 0.5,
+       "y": 1.62,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 9.4,
+       "y": 2.13,
+       "w": 0.1,
+       "h": 2.38,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 0.7,
+       "y1": 1.72,
+       "x2": 0.95,
+       "y2": 1.72,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.9,
+       "y1": 1.95,
+       "x2": 2.9,
+       "y2": 2.11,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.85,
+       "y1": 2.36,
+       "x2": 5.4,
+       "y2": 2.36,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 4.9,
+       "y": 2.16,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.9,
+       "y1": 2.61,
+       "x2": 2.9,
+       "y2": 2.75,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.96,
+       "y": 2.59,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 4.85,
+       "y1": 3.0,
+       "x2": 5.4,
+       "y2": 3.0,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 4.9,
+       "y": 2.8,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.9,
+       "y1": 3.25,
+       "x2": 2.9,
+       "y2": 3.39,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.96,
+       "y": 3.23,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 4.85,
+       "y1": 3.64,
+       "x2": 5.4,
+       "y2": 3.64,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 4.9,
+       "y": 3.44,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.9,
+       "y1": 3.89,
+       "x2": 2.9,
+       "y2": 4.05,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no, a script builds it",
+       "x": 2.96,
+       "y": 3.88,
+       "w": 1.322,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 9.0,
+       "y1": 2.36,
+       "x2": 9.4,
+       "y2": 2.36,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 9.0,
+       "y1": 3.0,
+       "x2": 9.4,
+       "y2": 3.0,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 9.0,
+       "y1": 3.64,
+       "x2": 9.4,
+       "y2": 3.64,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.85,
+       "y1": 4.28,
+       "x2": 9.4,
+       "y2": 4.28,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "ChoosingTheTool"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram ChoosingTheTool - Workflow pattern, 38 of 40 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "The chapter is best taught as a choice of tool by the page in front of the program, and this is that choice as an activity. If the user should see the page in a browser, webbrowser.open launches it. Otherwise, if the service offers an API, requests.get on the endpoint followed by json.loads gets exactly the data, which is the better choice whenever one exists. Otherwise, if the data is in the HTML that requests downloads, Beautiful Soup parses the text and select finds the elements. Only when a script builds the page, or a login is needed, does the program need Selenium or Playwright to drive a real browser. Whatever the tool, a program should send raise_for_status, a timeout and a pause between requests, read robots.txt before crawling, and remember that a driven browser still reveals itself through the user-agent string and flags such as navigator.webdriver, so a ticketing or shopping site may still refuse it.",
+   "take": "Show it, ask its API, parse its HTML; drive a browser last.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in one map",
+   "sub": "Six branches; the slides of each branch hold the examples",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.35,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.25,
+       "y": 2.5,
+       "w": 1.5,
+       "h": 1.15,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Web scraping: a program uses the web",
+       "x": 4.33,
+       "y": 2.788,
+       "w": 1.34,
+       "h": 0.575,
+       "fs": 11,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.4,
+       "w": 3.35,
+       "h": 1.07,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.85,
+       "y1": 1.935,
+       "x2": 4.25,
+       "y2": 3.075,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Protocol: the address and the manners",
+       "x": 0.6,
+       "y": 1.45,
+       "w": 3.15,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "A URL has a scheme, a host, a path, a query and a fragment\nA status code begins every answer\nA robots.txt file asks crawlers to keep away",
+       "x": 0.6,
+       "y": 1.648,
+       "w": 3.15,
+       "h": 0.631,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.54,
+       "w": 3.35,
+       "h": 1.07,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.85,
+       "y1": 3.075,
+       "x2": 4.25,
+       "y2": 3.075,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Fetching a page",
+       "x": 0.6,
+       "y": 2.59,
+       "w": 3.15,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "webbrowser.open() shows a URL in the user's browser\nrequests.get() downloads a page into the program\nraise_for_status() stops the program on a bad download",
+       "x": 0.6,
+       "y": 2.788,
+       "w": 3.15,
+       "h": 0.631,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.68,
+       "w": 3.35,
+       "h": 1.07,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.85,
+       "y1": 4.215,
+       "x2": 4.25,
+       "y2": 3.075,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Web services and their APIs",
+       "x": 0.6,
+       "y": 3.73,
+       "w": 3.15,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "An endpoint is the URL of one request\nAn API key identifies the account\njson.loads() decodes the answer",
+       "x": 0.6,
+       "y": 3.928,
+       "w": 3.15,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.15,
+       "y": 1.4,
+       "w": 3.35,
+       "h": 1.07,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.15,
+       "y1": 1.935,
+       "x2": 5.75,
+       "y2": 3.075,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Parsing HTML",
+       "x": 6.25,
+       "y": 1.45,
+       "w": 3.15,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "An element is a tag, its content and a closing tag\nThe Developer Tools show the HTML of a page\nselect() takes a CSS selector and returns Tag objects",
+       "x": 6.25,
+       "y": 1.648,
+       "w": 3.15,
+       "h": 0.631,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.15,
+       "y": 2.54,
+       "w": 3.35,
+       "h": 1.07,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.15,
+       "y1": 3.075,
+       "x2": 5.75,
+       "y2": 3.075,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Programs of the chapter",
+       "x": 6.25,
+       "y": 2.59,
+       "w": 3.15,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "searchpypi.py opens the first search results\ndownloadXkcdComics.py follows the Prev link\nLink verification tests every link for 404",
+       "x": 6.25,
+       "y": 2.788,
+       "w": 3.15,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.15,
+       "y": 3.68,
+       "w": 3.35,
+       "h": 1.07,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.15,
+       "y1": 4.215,
+       "x2": 5.75,
+       "y2": 3.075,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Driving a browser",
+       "x": 6.25,
+       "y": 3.73,
+       "w": 3.15,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "Selenium starts Firefox with webdriver.Firefox()\nPlaywright runs headless by default\nA driven browser is needed when a script builds the page",
+       "x": 6.25,
+       "y": 3.928,
+       "w": 3.15,
+       "h": 0.631,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      }
+     ],
+     "did": "WebScrapingAtAGlance"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.78,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram WebScrapingAtAGlance - TopicAndParts pattern, 98 of 116 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "These six branches are the route of the deck. The address and the manners of the web come first: a URL has a scheme, a host, a path, a query and a fragment, every answer begins with a status code, and a robots.txt file asks crawlers to keep away. Fetching a page is webbrowser.open to show it to the user, requests.get to download it into the program and raise_for_status to stop on a bad download. A web service has an endpoint, an API key and a JSON answer. Parsing HTML means elements, the Developer Tools and select with a CSS selector. The three projects and the practice programs put these together: searchpypi.py, downloadXkcdComics.py and link verification. And driving a browser is Selenium with webdriver.Firefox() and Playwright, headless by default, for the pages a script builds. Together they answer the first question of the chapter, which tool reaches which page, and the slides that say where a printed line differs answer the second.",
+   "take": "If a branch feels unproven, its slides hold the example.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Every link was opened on the day this deck was made",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.55,
+     "fs": 9.5,
+     "groups": [
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, chapter 13 - free online",
+         "https://automatetheboringstuff.com/3e/chapter13.html"
+        ],
+        [
+         "Requests: Quickstart",
+         "https://requests.readthedocs.io/en/latest/user/quickstart/"
+        ],
+        [
+         "Beautiful Soup documentation",
+         "https://www.crummy.com/software/BeautifulSoup/bs4/doc/"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "urllib.robotparser, Python 3.14",
+         "https://docs.python.org/3.14/library/urllib.robotparser.html"
+        ],
+        [
+         "RFC 9309: Robots Exclusion Protocol",
+         "https://www.rfc-editor.org/rfc/rfc9309"
+        ],
+        [
+         "Selenium: locator strategies",
+         "https://www.selenium.dev/documentation/webdriver/elements/locators/"
+        ],
+        [
+         "Playwright for Python: locators",
+         "https://playwright.dev/python/docs/locators"
+        ]
+       ]
+      },
+      {
+       "head": "History",
+       "rows": [
+        [
+         "A Standard for Robot Exclusion (Koster, 1994)",
+         "https://www.robotstxt.org/orig.html"
+        ],
+        [
+         "Beautiful Soup, by Leonard Richardson",
+         "https://www.crummy.com/software/BeautifulSoup/"
+        ],
+        [
+         "Selenium history",
+         "https://www.selenium.dev/history/"
+        ],
+        [
+         "Requests release history (HISTORY.md)",
+         "https://raw.githubusercontent.com/psf/requests/main/HISTORY.md"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every program of the chapter, the documents of requests and Beautiful Soup cover what this deck added to the chapter, and the reference links are the official pages for the standard library's robots.txt parser, the RFC that defines the exclusion protocol, and the locator rules of Selenium and Playwright. The history links are the sources behind the stories: Koster's note of 1994, Richardson's page for Beautiful Soup, the history of Selenium and the release history of Requests. Two more stories of this chapter, Matthew Gray's Wanderer of 1993 and the Playwright announcement of 2020, are told in the notes of the crawler and Playwright slides.",
+   "take": "Textbook, documentation and history, opened the day this deck was built.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What you should now be able to say",
+   "sub": "Four claims, each carried by a result you saw printed",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 1.5,
+     "w": 8.8,
+     "h": 2.4,
+     "fs": 15,
+     "items": [
+      "I choose the tool by the page: show it, ask its API, parse its HTML, or drive a browser.",
+      "I check every download: raise_for_status, a timeout, and chunks to a file.",
+      "I read robots.txt first and pause between requests; it is a request, not a lock.",
+      "I select elements with a CSS selector, never a regular expression."
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.6,
+     "y": 4.1,
+     "w": 8.8,
+     "h": 0.6,
+     "fs": 13,
+     "big": true,
+     "items": [
+      "27 rows run",
+      "12 programs run",
+      "8 diagrams"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The next chapters of the book work with spreadsheets, documents and email, and every one of them can start from a page this chapter taught a program to fetch.",
+   "take": "Questions are welcome; bring one page your program could not read and say why.",
+   "bg": "light"
+  }
+ ]
+}

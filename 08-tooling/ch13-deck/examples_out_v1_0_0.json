@@ -1,0 +1,210 @@
+{
+ "_version": "1.0.0",
+ "_python": "3.14.6",
+ "title": [
+  [
+   "' '.join(['showmap.py', '870', 'Valencia', 'St,', 'Mission'][1:])",
+   "'870 Valencia St, Mission'"
+  ]
+ ],
+ "url": [
+  [
+   "from urllib.parse import urlsplit, parse_qs, quote",
+   ""
+  ],
+  [
+   "urlsplit('https://api.openweathermap.org/geo/1.0/direct?q=San,CA,US&appid=KEY')[:4]",
+   "('https', 'api.openweathermap.org', '/geo/1.0/direct', 'q=San,CA,US&appid=KEY')"
+  ],
+  [
+   "parse_qs('q=San+Francisco%2CCA&appid=KEY')",
+   "{'q': ['San Francisco,CA'], 'appid': ['KEY']}"
+  ],
+  [
+   "quote('777 Valencia St, San Francisco, CA 94110')",
+   "'777%20Valencia%20St%2C%20San%20Francisco%2C%20CA%2094110'"
+  ],
+  [
+   "urlsplit('https://www.openstreetmap.org/search?query=x#map=19/37.75897/-122.42142').fragment",
+   "'map=19/37.75897/-122.42142'"
+  ]
+ ],
+ "status": [
+  [
+   "import http, urllib.request, requests",
+   ""
+  ],
+  [
+   "http.HTTPStatus(404).phrase",
+   "'Not Found'"
+  ],
+  [
+   "[int(http.HTTPStatus.OK), http.HTTPStatus(429).phrase, http.HTTPStatus(500).phrase]",
+   "[200, 'Too Many Requests', 'Internal Server Error']"
+  ],
+  [
+   "urllib.request.build_opener().addheaders[0]",
+   "('User-agent', 'Python-urllib/3.14')"
+  ],
+  [
+   "requests.utils.default_user_agent()",
+   "'python-requests/2.34.2'"
+  ]
+ ],
+ "robots": [
+  [
+   "import urllib.robotparser as rp",
+   ""
+  ],
+  [
+   "r = rp.RobotFileParser()",
+   ""
+  ],
+  [
+   "r.parse(['User-agent: *', 'Disallow: /search*', 'Crawl-delay: 10'])",
+   ""
+  ],
+  [
+   "r.can_fetch('*', 'https://pypi.org/project/pyautogui/')",
+   "True"
+  ],
+  [
+   "r.can_fetch('*', 'https://pypi.org/search/?q=boring+stuff')",
+   "False"
+  ],
+  [
+   "r.crawl_delay('*')",
+   "10"
+  ]
+ ],
+ "soup": [
+  [
+   "import bs4, re",
+   ""
+  ],
+  [
+   "soup = bs4.BeautifulSoup('<p id=\"a\">Hello, <b>world</b>!</p><p class=\"s\"><a href=\"/x\">a link</a></p>', 'html.parser')",
+   ""
+  ],
+  [
+   "soup.select('#a')",
+   "[<p id=\"a\">Hello, <b>world</b>!</p>]"
+  ],
+  [
+   "soup.select('#a')[0].get_text()",
+   "'Hello, world!'"
+  ],
+  [
+   "soup.select('p.s > a')[0].get('href')",
+   "'/x'"
+  ],
+  [
+   "soup.select('p.s a')[0].attrs",
+   "{'href': '/x'}"
+  ],
+  [
+   "soup.select('.nope')",
+   "[]"
+  ],
+  [
+   "html = '<a href=\"/x\">x</a> <a class=\"k\" href=\"/y\">y</a>'",
+   ""
+  ],
+  [
+   "re.findall('<a href=\"(.*?)\">', html)",
+   "['/x']"
+  ],
+  [
+   "[a.get('href') for a in bs4.BeautifulSoup(html, 'html.parser').select('a')]",
+   "['/x', '/y']"
+  ]
+ ],
+ "_programs": {
+  "showmap_v1_0_0.py": {
+   "code": "import runpy, sys, tempfile, types\nfrom pathlib import Path\n\nSHOWMAP = '''#! python3\n# showmap.py - Launches a map in the browser using an address from the\n# command line or clipboard\n\nimport webbrowser, sys, pyperclip\nif len(sys.argv) > 1:\n    # Get address from command line.\n    address = ' '.join(sys.argv[1:])\nelse:\n    # Get address from clipboard.\n    address = pyperclip.paste()\n\n# Open the web browser.\nwebbrowser.open('https://www.openstreetmap.org/search?query=' + address)\n'''\nopened = []\nwebbrowser = types.ModuleType('webbrowser'); webbrowser.open = lambda url: opened.append(url) or True\npyperclip = types.ModuleType('pyperclip'); pyperclip.paste = lambda: '777 Valencia St, San Francisco, CA'\nsys.modules['webbrowser'] = webbrowser; sys.modules['pyperclip'] = pyperclip\nwith tempfile.TemporaryDirectory() as d:\n    script = Path(d, 'showmap.py'); script.write_text(SHOWMAP)\n    for argv in (['showmap.py', '870', 'Valencia', 'St,', 'Mission', 'District'], ['showmap.py']):\n        sys.argv = argv\n        runpy.run_path(str(script))\n        print((' '.join(argv[1:]) or '(clipboard)').ljust(34), '->', opened[-1])\n",
+   "inputs": [],
+   "transcript": "870 Valencia St, Mission District  -> https://www.openstreetmap.org/search?query=870 Valencia St, Mission District\n(clipboard)                        -> https://www.openstreetmap.org/search?query=777 Valencia St, San Francisco, CA",
+   "live": false,
+   "exit": 0
+  },
+  "downloadChecked_v1_0_0.py": {
+   "code": "import http.server, json, threading\nPNG = bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360f8ffff3f0005fe02fea7d6054c0000000049454e44ae426082')\ndef comic(n):\n    prev = '#' if n == 1 else '/%d/' % (n - 1)\n    return ('<html><body><div id=\"comic\"><img src=\"//%%s/comics/c%d.png\"/></div><a rel=\"prev\" href=\"%s\">Prev</a></body></html>' % (n, prev)).encode()\nclass H(http.server.BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def send(self, code, body, ctype='text/html'):\n        self.send_response(code); self.send_header('Content-Type', ctype); self.send_header('Content-Length', str(len(body))); self.end_headers()\n        if self.command != 'HEAD': self.wfile.write(body)\n    def do_HEAD(self): self.do_GET()\n    def do_GET(self):\n        p, host = self.path.split('?')[0], self.headers['Host']\n        if p == '/': self.send(200, comic(3).replace(b'%s', host.encode()))\n        elif p in ('/2/', '/1/'): self.send(200, comic(int(p[1])).replace(b'%s', host.encode()))\n        elif p.startswith('/comics/'): self.send(200, PNG, 'image/png')\n        elif p == '/search/': self.send(200, ''.join('<a class=\"package-snippet\" href=\"/project/p%d/\">p%d</a>' % (i, i) for i in range(8)).encode())\n        elif p == '/data/2.5/weather': self.send(200, json.dumps({'weather': [{'main': 'Clouds', 'description': 'broken clouds'}], 'main': {'temp': 285.44, 'humidity': 78}, 'cod': 200}).encode(), 'application/json')\n        elif p == '/links.html': self.send(200, b'<a href=\"/ok\">ok</a> <a href=\"/gone\">gone</a> <a href=\"/ok\">ok again</a>')\n        elif p == '/ok': self.send(200, b'ok')\n        elif p == '/robots.txt': self.send(200, b'User-agent: *\\nDisallow: /private/\\nCrawl-delay: 1\\n', 'text/plain')\n        elif p in ('/a', '/b', '/private/c'): self.send(200, b'page ' + p.encode())\n        elif p == '/rj.txt': self.send(200, ''.join('Line %03d of a play\\n' % i for i in range(1000)).encode(), 'text/plain; charset=utf-8')\n        elif p == '/login.html': self.send(200, b'<html><head><title>Login</title></head><body><form action=\"/welcome.html\"><input id=\"login_user\" placeholder=\"admin\"/><input id=\"login_pass\" type=\"password\"/><label>Agree <input type=\"checkbox\"/></label></form></body></html>')\n        elif p == '/welcome.html': self.send(200, b'<html><head><title>Welcome</title></head><body>welcome</body></html>')\n        else: self.send(404, b'nope', 'text/plain')\nsrv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H)\nHOST = '127.0.0.1:%d' % srv.server_address[1]; BASE = 'http://' + HOST\nthreading.Thread(target=srv.serve_forever, daemon=True).start()\nimport os; os.environ['NO_PROXY'] = '127.0.0.1'\nimport tempfile\nimport requests\n\nres = requests.get(BASE + '/rj.txt')\nres.raise_for_status()\nprint(res.status_code, len(res.text), res.headers['Content-Type'])\nwith tempfile.TemporaryDirectory() as d:\n    path = os.path.join(d, 'RomeoAndJuliet.txt')\n    play_file = open(path, 'wb')\n    sizes = []\n    for chunk in res.iter_content(8000):\n        sizes.append(play_file.write(chunk))\n    play_file.close()\n    print(sizes, os.path.getsize(path))\nresponse = requests.get(BASE + '/page_that_does_not_exist')\ntry:\n    response.raise_for_status()\nexcept Exception as exc:\n    print(f'There was a problem: {exc}'.replace(BASE, 'SITE'))\n",
+   "inputs": [],
+   "transcript": "200 19000 text/plain; charset=utf-8\n[8000, 8000, 3000] 19000\nThere was a problem: 404 Client Error: Not Found for url: SITE/page_that_does_not_exist",
+   "live": false,
+   "exit": 0
+  },
+  "searchpypiLocal_v1_0_0.py": {
+   "code": "import http.server, json, threading\nPNG = bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360f8ffff3f0005fe02fea7d6054c0000000049454e44ae426082')\ndef comic(n):\n    prev = '#' if n == 1 else '/%d/' % (n - 1)\n    return ('<html><body><div id=\"comic\"><img src=\"//%%s/comics/c%d.png\"/></div><a rel=\"prev\" href=\"%s\">Prev</a></body></html>' % (n, prev)).encode()\nclass H(http.server.BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def send(self, code, body, ctype='text/html'):\n        self.send_response(code); self.send_header('Content-Type', ctype); self.send_header('Content-Length', str(len(body))); self.end_headers()\n        if self.command != 'HEAD': self.wfile.write(body)\n    def do_HEAD(self): self.do_GET()\n    def do_GET(self):\n        p, host = self.path.split('?')[0], self.headers['Host']\n        if p == '/': self.send(200, comic(3).replace(b'%s', host.encode()))\n        elif p in ('/2/', '/1/'): self.send(200, comic(int(p[1])).replace(b'%s', host.encode()))\n        elif p.startswith('/comics/'): self.send(200, PNG, 'image/png')\n        elif p == '/search/': self.send(200, ''.join('<a class=\"package-snippet\" href=\"/project/p%d/\">p%d</a>' % (i, i) for i in range(8)).encode())\n        elif p == '/data/2.5/weather': self.send(200, json.dumps({'weather': [{'main': 'Clouds', 'description': 'broken clouds'}], 'main': {'temp': 285.44, 'humidity': 78}, 'cod': 200}).encode(), 'application/json')\n        elif p == '/links.html': self.send(200, b'<a href=\"/ok\">ok</a> <a href=\"/gone\">gone</a> <a href=\"/ok\">ok again</a>')\n        elif p == '/ok': self.send(200, b'ok')\n        elif p == '/robots.txt': self.send(200, b'User-agent: *\\nDisallow: /private/\\nCrawl-delay: 1\\n', 'text/plain')\n        elif p in ('/a', '/b', '/private/c'): self.send(200, b'page ' + p.encode())\n        elif p == '/rj.txt': self.send(200, ''.join('Line %03d of a play\\n' % i for i in range(1000)).encode(), 'text/plain; charset=utf-8')\n        elif p == '/login.html': self.send(200, b'<html><head><title>Login</title></head><body><form action=\"/welcome.html\"><input id=\"login_user\" placeholder=\"admin\"/><input id=\"login_pass\" type=\"password\"/><label>Agree <input type=\"checkbox\"/></label></form></body></html>')\n        elif p == '/welcome.html': self.send(200, b'<html><head><title>Welcome</title></head><body>welcome</body></html>')\n        else: self.send(404, b'nope', 'text/plain')\nsrv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H)\nHOST = '127.0.0.1:%d' % srv.server_address[1]; BASE = 'http://' + HOST\nthreading.Thread(target=srv.serve_forever, daemon=True).start()\nimport os; os.environ['NO_PROXY'] = '127.0.0.1'\nimport sys, types\nopened = []\nwebbrowser = types.ModuleType('webbrowser'); webbrowser.open = lambda url: opened.append(url) or True\npyperclip = types.ModuleType('pyperclip'); pyperclip.paste = lambda: '777 Valencia St, San Francisco, CA'\nsys.modules['webbrowser'] = webbrowser; sys.modules['pyperclip'] = pyperclip\nSEARCH = BASE + '/search/?q='\nsys.argv = ['searchpypi.py', 'boring', 'stuff']\n# searchpypi.py - Opens several search results on pypi.org\nimport requests, sys, webbrowser, bs4\n\nprint('Searching...')  # Display text while downloading the search results page.\nres = requests.get(SEARCH + ' '.join(sys.argv[1:]))\nres.raise_for_status()\n\n# Retrieve top search result links.\nsoup = bs4.BeautifulSoup(res.text, 'html.parser')\n# Open a browser tab for each result.\nlink_elems = soup.select('.package-snippet')\nnum_open = min(5, len(link_elems))\nfor i in range(num_open):\n    url_to_open = 'https://pypi.org' + link_elems[i].get('href')\n    print('Opening', url_to_open)\n    webbrowser.open(url_to_open)\nprint(len(link_elems), 'links found;', num_open, 'opened')\n",
+   "inputs": [],
+   "transcript": "Searching...\nOpening https://pypi.org/project/p0/\nOpening https://pypi.org/project/p1/\nOpening https://pypi.org/project/p2/\nOpening https://pypi.org/project/p3/\nOpening https://pypi.org/project/p4/\n8 links found; 5 opened",
+   "live": false,
+   "exit": 0
+  },
+  "searchpypiLive_v1_0_0.py": {
+   "code": "import sys, types\nopened = []\nwebbrowser = types.ModuleType('webbrowser'); webbrowser.open = lambda url: opened.append(url) or True\npyperclip = types.ModuleType('pyperclip'); pyperclip.paste = lambda: '777 Valencia St, San Francisco, CA'\nsys.modules['webbrowser'] = webbrowser; sys.modules['pyperclip'] = pyperclip\nSEARCH = 'https://pypi.org/search/?q='\nsys.argv = ['searchpypi.py', 'boring', 'stuff']\n# searchpypi.py - Opens several search results on pypi.org\nimport requests, sys, webbrowser, bs4\n\nprint('Searching...')  # Display text while downloading the search results page.\nres = requests.get(SEARCH + ' '.join(sys.argv[1:]))\nres.raise_for_status()\n\n# Retrieve top search result links.\nsoup = bs4.BeautifulSoup(res.text, 'html.parser')\n# Open a browser tab for each result.\nlink_elems = soup.select('.package-snippet')\nnum_open = min(5, len(link_elems))\nfor i in range(num_open):\n    url_to_open = 'https://pypi.org' + link_elems[i].get('href')\n    print('Opening', url_to_open)\n    webbrowser.open(url_to_open)\nprint(len(link_elems), 'links found;', num_open, 'opened')\n",
+   "inputs": [],
+   "transcript": "Searching...\n0 links found; 0 opened",
+   "live": true,
+   "exit": 0
+  },
+  "xkcdLocal_v1_0_0.py": {
+   "code": "import http.server, json, threading\nPNG = bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360f8ffff3f0005fe02fea7d6054c0000000049454e44ae426082')\ndef comic(n):\n    prev = '#' if n == 1 else '/%d/' % (n - 1)\n    return ('<html><body><div id=\"comic\"><img src=\"//%%s/comics/c%d.png\"/></div><a rel=\"prev\" href=\"%s\">Prev</a></body></html>' % (n, prev)).encode()\nclass H(http.server.BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def send(self, code, body, ctype='text/html'):\n        self.send_response(code); self.send_header('Content-Type', ctype); self.send_header('Content-Length', str(len(body))); self.end_headers()\n        if self.command != 'HEAD': self.wfile.write(body)\n    def do_HEAD(self): self.do_GET()\n    def do_GET(self):\n        p, host = self.path.split('?')[0], self.headers['Host']\n        if p == '/': self.send(200, comic(3).replace(b'%s', host.encode()))\n        elif p in ('/2/', '/1/'): self.send(200, comic(int(p[1])).replace(b'%s', host.encode()))\n        elif p.startswith('/comics/'): self.send(200, PNG, 'image/png')\n        elif p == '/search/': self.send(200, ''.join('<a class=\"package-snippet\" href=\"/project/p%d/\">p%d</a>' % (i, i) for i in range(8)).encode())\n        elif p == '/data/2.5/weather': self.send(200, json.dumps({'weather': [{'main': 'Clouds', 'description': 'broken clouds'}], 'main': {'temp': 285.44, 'humidity': 78}, 'cod': 200}).encode(), 'application/json')\n        elif p == '/links.html': self.send(200, b'<a href=\"/ok\">ok</a> <a href=\"/gone\">gone</a> <a href=\"/ok\">ok again</a>')\n        elif p == '/ok': self.send(200, b'ok')\n        elif p == '/robots.txt': self.send(200, b'User-agent: *\\nDisallow: /private/\\nCrawl-delay: 1\\n', 'text/plain')\n        elif p in ('/a', '/b', '/private/c'): self.send(200, b'page ' + p.encode())\n        elif p == '/rj.txt': self.send(200, ''.join('Line %03d of a play\\n' % i for i in range(1000)).encode(), 'text/plain; charset=utf-8')\n        elif p == '/login.html': self.send(200, b'<html><head><title>Login</title></head><body><form action=\"/welcome.html\"><input id=\"login_user\" placeholder=\"admin\"/><input id=\"login_pass\" type=\"password\"/><label>Agree <input type=\"checkbox\"/></label></form></body></html>')\n        elif p == '/welcome.html': self.send(200, b'<html><head><title>Welcome</title></head><body>welcome</body></html>')\n        else: self.send(404, b'nope', 'text/plain')\nsrv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H)\nHOST = '127.0.0.1:%d' % srv.server_address[1]; BASE = 'http://' + HOST\nthreading.Thread(target=srv.serve_forever, daemon=True).start()\nimport os; os.environ['NO_PROXY'] = '127.0.0.1'\nSTART, HOME, SCHEME, MAX_DOWNLOADS, SLEEP = BASE, BASE, 'http', 10, 0.05\n# downloadXkcdComics.py - Downloads XKCD comics\n\nimport requests, os, bs4, time, tempfile\n\nos.chdir(tempfile.mkdtemp())\nshow = lambda text: text.replace(HOME, 'SITE') if SCHEME == 'http' else text   # the stand-in's port changes on every run\nurl = START  # Starting URL\nos.makedirs('xkcd', exist_ok=True)  # Store comics in ./xkcd\nnum_downloads = 0\nwhile not url.endswith('#') and num_downloads < MAX_DOWNLOADS:\n    # Download the page.\n    print(show(f'Downloading page {url}...'))\n    res = requests.get(url)\n    res.raise_for_status()\n\n    soup = bs4.BeautifulSoup(res.text, 'html.parser')\n\n    # Find the URL of the comic image.\n    comic_elem = soup.select('#comic img')\n    if comic_elem == []:\n        print('Could not find comic image.')\n    else:\n        comic_URL = 'https:' + comic_elem[0].get('src') if SCHEME == 'https' else 'http:' + comic_elem[0].get('src')\n        # Download the image.\n        print(show(f'Downloading image {comic_URL}...'))\n        res = requests.get(comic_URL)\n        res.raise_for_status()\n\n        # Save the image to ./xkcd.\n        image_file = open(os.path.join('xkcd', os.path.basename(comic_URL)), 'wb')\n        for chunk in res.iter_content(100000):\n            image_file.write(chunk)\n        image_file.close()\n\n    # Get the Prev button's URL.\n    prev_link = soup.select('a[rel=\"prev\"]')[0]\n    url = HOME + prev_link.get('href')\n    num_downloads += 1\n    time.sleep(SLEEP)  # Pause so we don't hammer the web server.\n\nprint('Done.', sorted(os.listdir('xkcd')) if SCHEME == 'http' else len(os.listdir('xkcd')), 'file(s) saved')\n",
+   "inputs": [],
+   "transcript": "Downloading page SITE...\nDownloading image SITE/comics/c3.png...\nDownloading page SITE/2/...\nDownloading image SITE/comics/c2.png...\nDownloading page SITE/1/...\nDownloading image SITE/comics/c1.png...\nDone. ['c1.png', 'c2.png', 'c3.png'] file(s) saved",
+   "live": false,
+   "exit": 0
+  },
+  "weatherStandIn_v1_0_0.py": {
+   "code": "import http.server, json, threading\nPNG = bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360f8ffff3f0005fe02fea7d6054c0000000049454e44ae426082')\ndef comic(n):\n    prev = '#' if n == 1 else '/%d/' % (n - 1)\n    return ('<html><body><div id=\"comic\"><img src=\"//%%s/comics/c%d.png\"/></div><a rel=\"prev\" href=\"%s\">Prev</a></body></html>' % (n, prev)).encode()\nclass H(http.server.BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def send(self, code, body, ctype='text/html'):\n        self.send_response(code); self.send_header('Content-Type', ctype); self.send_header('Content-Length', str(len(body))); self.end_headers()\n        if self.command != 'HEAD': self.wfile.write(body)\n    def do_HEAD(self): self.do_GET()\n    def do_GET(self):\n        p, host = self.path.split('?')[0], self.headers['Host']\n        if p == '/': self.send(200, comic(3).replace(b'%s', host.encode()))\n        elif p in ('/2/', '/1/'): self.send(200, comic(int(p[1])).replace(b'%s', host.encode()))\n        elif p.startswith('/comics/'): self.send(200, PNG, 'image/png')\n        elif p == '/search/': self.send(200, ''.join('<a class=\"package-snippet\" href=\"/project/p%d/\">p%d</a>' % (i, i) for i in range(8)).encode())\n        elif p == '/data/2.5/weather': self.send(200, json.dumps({'weather': [{'main': 'Clouds', 'description': 'broken clouds'}], 'main': {'temp': 285.44, 'humidity': 78}, 'cod': 200}).encode(), 'application/json')\n        elif p == '/links.html': self.send(200, b'<a href=\"/ok\">ok</a> <a href=\"/gone\">gone</a> <a href=\"/ok\">ok again</a>')\n        elif p == '/ok': self.send(200, b'ok')\n        elif p == '/robots.txt': self.send(200, b'User-agent: *\\nDisallow: /private/\\nCrawl-delay: 1\\n', 'text/plain')\n        elif p in ('/a', '/b', '/private/c'): self.send(200, b'page ' + p.encode())\n        elif p == '/rj.txt': self.send(200, ''.join('Line %03d of a play\\n' % i for i in range(1000)).encode(), 'text/plain; charset=utf-8')\n        elif p == '/login.html': self.send(200, b'<html><head><title>Login</title></head><body><form action=\"/welcome.html\"><input id=\"login_user\" placeholder=\"admin\"/><input id=\"login_pass\" type=\"password\"/><label>Agree <input type=\"checkbox\"/></label></form></body></html>')\n        elif p == '/welcome.html': self.send(200, b'<html><head><title>Welcome</title></head><body>welcome</body></html>')\n        else: self.send(404, b'nope', 'text/plain')\nsrv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H)\nHOST = '127.0.0.1:%d' % srv.server_address[1]; BASE = 'http://' + HOST\nthreading.Thread(target=srv.serve_forever, daemon=True).start()\nimport os; os.environ['NO_PROXY'] = '127.0.0.1'\nimport requests\n\nres = requests.get(BASE + '/data/2.5/weather', params={'q': 'San Francisco,CA,US', 'appid': 'KEY'})\nres.raise_for_status()\ndata = res.json()\nkelvin = data['main']['temp']\nprint(res.url.replace(BASE, 'SITE'))\nprint(data['weather'][0]['description'], '|', kelvin, 'K =', round(kelvin - 273.15, 1), 'C |', data['main']['humidity'], '% humidity')\n",
+   "inputs": [],
+   "transcript": "SITE/data/2.5/weather?q=San+Francisco%2CCA%2CUS&appid=KEY\nbroken clouds | 285.44 K = 12.3 C | 78 % humidity",
+   "live": false,
+   "exit": 0
+  },
+  "weatherLive_v1_0_0.py": {
+   "code": "import requests\n\nres = requests.get('https://api.openweathermap.org/data/2.5/weather', params={'q': 'San Francisco,CA,US', 'appid': 'YOUR_API_KEY_HERE'}, timeout=20)\nprint(res.status_code, res.headers.get('Content-Type'))\ntry:\n    body = res.json()\n    print(body, '| cod is a', type(body['cod']).__name__)\nexcept ValueError:\n    print('not JSON:', res.text[:80])\n",
+   "inputs": [],
+   "transcript": "401 application/json; charset=utf-8\n{'cod': 401, 'message': 'Invalid API key. Please see https://openweathermap.org/faq#error401 for more info.'} | cod is a int",
+   "live": true,
+   "exit": 0
+  },
+  "linkCheck_v1_0_0.py": {
+   "code": "import http.server, json, threading\nPNG = bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360f8ffff3f0005fe02fea7d6054c0000000049454e44ae426082')\ndef comic(n):\n    prev = '#' if n == 1 else '/%d/' % (n - 1)\n    return ('<html><body><div id=\"comic\"><img src=\"//%%s/comics/c%d.png\"/></div><a rel=\"prev\" href=\"%s\">Prev</a></body></html>' % (n, prev)).encode()\nclass H(http.server.BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def send(self, code, body, ctype='text/html'):\n        self.send_response(code); self.send_header('Content-Type', ctype); self.send_header('Content-Length', str(len(body))); self.end_headers()\n        if self.command != 'HEAD': self.wfile.write(body)\n    def do_HEAD(self): self.do_GET()\n    def do_GET(self):\n        p, host = self.path.split('?')[0], self.headers['Host']\n        if p == '/': self.send(200, comic(3).replace(b'%s', host.encode()))\n        elif p in ('/2/', '/1/'): self.send(200, comic(int(p[1])).replace(b'%s', host.encode()))\n        elif p.startswith('/comics/'): self.send(200, PNG, 'image/png')\n        elif p == '/search/': self.send(200, ''.join('<a class=\"package-snippet\" href=\"/project/p%d/\">p%d</a>' % (i, i) for i in range(8)).encode())\n        elif p == '/data/2.5/weather': self.send(200, json.dumps({'weather': [{'main': 'Clouds', 'description': 'broken clouds'}], 'main': {'temp': 285.44, 'humidity': 78}, 'cod': 200}).encode(), 'application/json')\n        elif p == '/links.html': self.send(200, b'<a href=\"/ok\">ok</a> <a href=\"/gone\">gone</a> <a href=\"/ok\">ok again</a>')\n        elif p == '/ok': self.send(200, b'ok')\n        elif p == '/robots.txt': self.send(200, b'User-agent: *\\nDisallow: /private/\\nCrawl-delay: 1\\n', 'text/plain')\n        elif p in ('/a', '/b', '/private/c'): self.send(200, b'page ' + p.encode())\n        elif p == '/rj.txt': self.send(200, ''.join('Line %03d of a play\\n' % i for i in range(1000)).encode(), 'text/plain; charset=utf-8')\n        elif p == '/login.html': self.send(200, b'<html><head><title>Login</title></head><body><form action=\"/welcome.html\"><input id=\"login_user\" placeholder=\"admin\"/><input id=\"login_pass\" type=\"password\"/><label>Agree <input type=\"checkbox\"/></label></form></body></html>')\n        elif p == '/welcome.html': self.send(200, b'<html><head><title>Welcome</title></head><body>welcome</body></html>')\n        else: self.send(404, b'nope', 'text/plain')\nsrv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H)\nHOST = '127.0.0.1:%d' % srv.server_address[1]; BASE = 'http://' + HOST\nthreading.Thread(target=srv.serve_forever, daemon=True).start()\nimport os; os.environ['NO_PROXY'] = '127.0.0.1'\nimport bs4, requests\n\npage = requests.get(BASE + '/links.html')\nsoup = bs4.BeautifulSoup(page.text, 'html.parser')\nseen = set()\nfor a in soup.select('a[href]'):\n    href = a.get('href')\n    if href in seen:\n        continue\n    seen.add(href)\n    status = requests.head(BASE + href, timeout=5).status_code\n    print(href.ljust(6), status, 'ok' if status < 400 else 'BROKEN')\n",
+   "inputs": [],
+   "transcript": "/ok    200 ok\n/gone  404 BROKEN",
+   "live": false,
+   "exit": 0
+  },
+  "politeCrawler_v1_0_0.py": {
+   "code": "import http.server, json, threading\nPNG = bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360f8ffff3f0005fe02fea7d6054c0000000049454e44ae426082')\ndef comic(n):\n    prev = '#' if n == 1 else '/%d/' % (n - 1)\n    return ('<html><body><div id=\"comic\"><img src=\"//%%s/comics/c%d.png\"/></div><a rel=\"prev\" href=\"%s\">Prev</a></body></html>' % (n, prev)).encode()\nclass H(http.server.BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def send(self, code, body, ctype='text/html'):\n        self.send_response(code); self.send_header('Content-Type', ctype); self.send_header('Content-Length', str(len(body))); self.end_headers()\n        if self.command != 'HEAD': self.wfile.write(body)\n    def do_HEAD(self): self.do_GET()\n    def do_GET(self):\n        p, host = self.path.split('?')[0], self.headers['Host']\n        if p == '/': self.send(200, comic(3).replace(b'%s', host.encode()))\n        elif p in ('/2/', '/1/'): self.send(200, comic(int(p[1])).replace(b'%s', host.encode()))\n        elif p.startswith('/comics/'): self.send(200, PNG, 'image/png')\n        elif p == '/search/': self.send(200, ''.join('<a class=\"package-snippet\" href=\"/project/p%d/\">p%d</a>' % (i, i) for i in range(8)).encode())\n        elif p == '/data/2.5/weather': self.send(200, json.dumps({'weather': [{'main': 'Clouds', 'description': 'broken clouds'}], 'main': {'temp': 285.44, 'humidity': 78}, 'cod': 200}).encode(), 'application/json')\n        elif p == '/links.html': self.send(200, b'<a href=\"/ok\">ok</a> <a href=\"/gone\">gone</a> <a href=\"/ok\">ok again</a>')\n        elif p == '/ok': self.send(200, b'ok')\n        elif p == '/robots.txt': self.send(200, b'User-agent: *\\nDisallow: /private/\\nCrawl-delay: 1\\n', 'text/plain')\n        elif p in ('/a', '/b', '/private/c'): self.send(200, b'page ' + p.encode())\n        elif p == '/rj.txt': self.send(200, ''.join('Line %03d of a play\\n' % i for i in range(1000)).encode(), 'text/plain; charset=utf-8')\n        elif p == '/login.html': self.send(200, b'<html><head><title>Login</title></head><body><form action=\"/welcome.html\"><input id=\"login_user\" placeholder=\"admin\"/><input id=\"login_pass\" type=\"password\"/><label>Agree <input type=\"checkbox\"/></label></form></body></html>')\n        elif p == '/welcome.html': self.send(200, b'<html><head><title>Welcome</title></head><body>welcome</body></html>')\n        else: self.send(404, b'nope', 'text/plain')\nsrv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H)\nHOST = '127.0.0.1:%d' % srv.server_address[1]; BASE = 'http://' + HOST\nthreading.Thread(target=srv.serve_forever, daemon=True).start()\nimport os; os.environ['NO_PROXY'] = '127.0.0.1'\nimport time, urllib.request\nfrom urllib.robotparser import RobotFileParser\n\nrp = RobotFileParser(BASE + '/robots.txt')\nrp.read()\nagent = 'ch13-class-bot'\ndelay = rp.crawl_delay(agent)\nprint('crawl delay:', delay)\nstarted = time.monotonic()\nfor path in ('/a', '/private/c', '/b'):\n    if not rp.can_fetch(agent, BASE + path):\n        print('skip ', path, '(robots.txt disallows it)')\n        continue\n    with urllib.request.urlopen(BASE + path) as f:\n        print('get  ', path, '->', f.status, f.read().decode())\n    time.sleep(delay)\nprint('waited at least', int(time.monotonic() - started), 'seconds')\n",
+   "inputs": [],
+   "transcript": "crawl delay: 1\nget   /a -> 200 page /a\nskip  /private/c (robots.txt disallows it)\nget   /b -> 200 page /b\nwaited at least 2 seconds",
+   "live": false,
+   "exit": 0
+  },
+  "seleniumForm_v1_0_0.py": {
+   "code": "import http.server, json, threading\nPNG = bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360f8ffff3f0005fe02fea7d6054c0000000049454e44ae426082')\ndef comic(n):\n    prev = '#' if n == 1 else '/%d/' % (n - 1)\n    return ('<html><body><div id=\"comic\"><img src=\"//%%s/comics/c%d.png\"/></div><a rel=\"prev\" href=\"%s\">Prev</a></body></html>' % (n, prev)).encode()\nclass H(http.server.BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def send(self, code, body, ctype='text/html'):\n        self.send_response(code); self.send_header('Content-Type', ctype); self.send_header('Content-Length', str(len(body))); self.end_headers()\n        if self.command != 'HEAD': self.wfile.write(body)\n    def do_HEAD(self): self.do_GET()\n    def do_GET(self):\n        p, host = self.path.split('?')[0], self.headers['Host']\n        if p == '/': self.send(200, comic(3).replace(b'%s', host.encode()))\n        elif p in ('/2/', '/1/'): self.send(200, comic(int(p[1])).replace(b'%s', host.encode()))\n        elif p.startswith('/comics/'): self.send(200, PNG, 'image/png')\n        elif p == '/search/': self.send(200, ''.join('<a class=\"package-snippet\" href=\"/project/p%d/\">p%d</a>' % (i, i) for i in range(8)).encode())\n        elif p == '/data/2.5/weather': self.send(200, json.dumps({'weather': [{'main': 'Clouds', 'description': 'broken clouds'}], 'main': {'temp': 285.44, 'humidity': 78}, 'cod': 200}).encode(), 'application/json')\n        elif p == '/links.html': self.send(200, b'<a href=\"/ok\">ok</a> <a href=\"/gone\">gone</a> <a href=\"/ok\">ok again</a>')\n        elif p == '/ok': self.send(200, b'ok')\n        elif p == '/robots.txt': self.send(200, b'User-agent: *\\nDisallow: /private/\\nCrawl-delay: 1\\n', 'text/plain')\n        elif p in ('/a', '/b', '/private/c'): self.send(200, b'page ' + p.encode())\n        elif p == '/rj.txt': self.send(200, ''.join('Line %03d of a play\\n' % i for i in range(1000)).encode(), 'text/plain; charset=utf-8')\n        elif p == '/login.html': self.send(200, b'<html><head><title>Login</title></head><body><form action=\"/welcome.html\"><input id=\"login_user\" placeholder=\"admin\"/><input id=\"login_pass\" type=\"password\"/><label>Agree <input type=\"checkbox\"/></label></form></body></html>')\n        elif p == '/welcome.html': self.send(200, b'<html><head><title>Welcome</title></head><body>welcome</body></html>')\n        else: self.send(404, b'nope', 'text/plain')\nsrv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H)\nHOST = '127.0.0.1:%d' % srv.server_address[1]; BASE = 'http://' + HOST\nthreading.Thread(target=srv.serve_forever, daemon=True).start()\nimport os; os.environ['NO_PROXY'] = '127.0.0.1'\nfrom selenium import webdriver\nfrom selenium.webdriver.common.by import By\nfrom selenium.webdriver.support.ui import WebDriverWait\n\nopts = webdriver.FirefoxOptions()\nopts.add_argument('-headless')           # no display on this machine; the chapter shows a window\nbrowser = webdriver.Firefox(options=opts)\nbrowser.get(BASE + '/login.html')\nprint(browser.title)\nuser_elem = browser.find_element(By.ID, 'login_user')\nuser_elem.send_keys('your_real_username_here')\npassword_elem = browser.find_element(By.ID, 'login_pass')\npassword_elem.send_keys('your_real_password_here')\nprint(user_elem.get_property('value'), '|', password_elem.get_attribute('type'))\npassword_elem.submit()\nWebDriverWait(browser, 10).until(lambda b: b.title == 'Welcome')\nprint(browser.current_url.replace(BASE, 'SITE'), '|', browser.title)\nbrowser.quit()\n",
+   "inputs": [],
+   "transcript": "Login\nyour_real_username_here | password\nSITE/welcome.html? | Welcome",
+   "live": false,
+   "exit": 0
+  },
+  "playwrightCheckbox_v1_0_0.py": {
+   "code": "import http.server, json, threading\nPNG = bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360f8ffff3f0005fe02fea7d6054c0000000049454e44ae426082')\ndef comic(n):\n    prev = '#' if n == 1 else '/%d/' % (n - 1)\n    return ('<html><body><div id=\"comic\"><img src=\"//%%s/comics/c%d.png\"/></div><a rel=\"prev\" href=\"%s\">Prev</a></body></html>' % (n, prev)).encode()\nclass H(http.server.BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def send(self, code, body, ctype='text/html'):\n        self.send_response(code); self.send_header('Content-Type', ctype); self.send_header('Content-Length', str(len(body))); self.end_headers()\n        if self.command != 'HEAD': self.wfile.write(body)\n    def do_HEAD(self): self.do_GET()\n    def do_GET(self):\n        p, host = self.path.split('?')[0], self.headers['Host']\n        if p == '/': self.send(200, comic(3).replace(b'%s', host.encode()))\n        elif p in ('/2/', '/1/'): self.send(200, comic(int(p[1])).replace(b'%s', host.encode()))\n        elif p.startswith('/comics/'): self.send(200, PNG, 'image/png')\n        elif p == '/search/': self.send(200, ''.join('<a class=\"package-snippet\" href=\"/project/p%d/\">p%d</a>' % (i, i) for i in range(8)).encode())\n        elif p == '/data/2.5/weather': self.send(200, json.dumps({'weather': [{'main': 'Clouds', 'description': 'broken clouds'}], 'main': {'temp': 285.44, 'humidity': 78}, 'cod': 200}).encode(), 'application/json')\n        elif p == '/links.html': self.send(200, b'<a href=\"/ok\">ok</a> <a href=\"/gone\">gone</a> <a href=\"/ok\">ok again</a>')\n        elif p == '/ok': self.send(200, b'ok')\n        elif p == '/robots.txt': self.send(200, b'User-agent: *\\nDisallow: /private/\\nCrawl-delay: 1\\n', 'text/plain')\n        elif p in ('/a', '/b', '/private/c'): self.send(200, b'page ' + p.encode())\n        elif p == '/rj.txt': self.send(200, ''.join('Line %03d of a play\\n' % i for i in range(1000)).encode(), 'text/plain; charset=utf-8')\n        elif p == '/login.html': self.send(200, b'<html><head><title>Login</title></head><body><form action=\"/welcome.html\"><input id=\"login_user\" placeholder=\"admin\"/><input id=\"login_pass\" type=\"password\"/><label>Agree <input type=\"checkbox\"/></label></form></body></html>')\n        elif p == '/welcome.html': self.send(200, b'<html><head><title>Welcome</title></head><body>welcome</body></html>')\n        else: self.send(404, b'nope', 'text/plain')\nsrv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H)\nHOST = '127.0.0.1:%d' % srv.server_address[1]; BASE = 'http://' + HOST\nthreading.Thread(target=srv.serve_forever, daemon=True).start()\nimport os; os.environ['NO_PROXY'] = '127.0.0.1'\nfrom playwright.sync_api import sync_playwright\n\nwith sync_playwright() as p:\n    browser = p.firefox.launch()             # headless by default\n    page = browser.new_page()\n    page.goto(BASE + '/login.html')\n    print(page.title())\n    box = page.locator('input[type=checkbox]')\n    print(box.is_checked())\n    box.check()\n    print(box.is_checked())\n    page.locator('#login_user').fill('your_real_username_here')\n    print(page.locator('#login_user').input_value())\n    browser.close()\n",
+   "inputs": [],
+   "transcript": "Login\nFalse\nTrue\nyour_real_username_here",
+   "live": false,
+   "exit": 0
+  },
+  "dynamicPage_v1_0_0.py": {
+   "code": "import http.server, threading, os\nPAGE = b'<html><body><div id=\"app\"></div><script>document.getElementById(\"app\").textContent = \"Built by a script, not in the source\";</script></body></html>'\nclass H(http.server.BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def do_GET(self):\n        self.send_response(200); self.send_header('Content-Type', 'text/html'); self.end_headers(); self.wfile.write(PAGE)\nsrv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H)\nBASE = 'http://127.0.0.1:%d' % srv.server_address[1]\nthreading.Thread(target=srv.serve_forever, daemon=True).start()\nos.environ['NO_PROXY'] = '127.0.0.1'\nimport bs4, requests\nfrom playwright.sync_api import sync_playwright\n\nhtml = requests.get(BASE + '/dynamic.html').text\nprint('requests sees the script:', '<script>' in html)\nprint('Beautiful Soup reads #app:', repr(bs4.BeautifulSoup(html, 'html.parser').select('#app')[0].get_text()))\nwith sync_playwright() as p:\n    browser = p.firefox.launch()\n    page = browser.new_page()\n    page.goto(BASE + '/dynamic.html')\n    print('Playwright reads #app:', repr(page.locator('#app').inner_text()))\n    browser.close()\n",
+   "inputs": [],
+   "transcript": "requests sees the script: True\nBeautiful Soup reads #app: ''\nPlaywright reads #app: 'Built by a script, not in the source'",
+   "live": false,
+   "exit": 0
+  }
+ },
+ "_charts": {},
+ "_tables": {}
+}
