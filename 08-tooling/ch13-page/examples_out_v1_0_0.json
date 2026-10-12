@@ -1,0 +1,318 @@
+{
+ "_version": "1.0.0",
+ "_python": "3.14.6",
+ "urlparts": [
+  [
+   "from urllib.parse import urlsplit, parse_qs, quote",
+   ""
+  ],
+  [
+   "u = urlsplit('https://api.openweathermap.org/geo/1.0/direct?q=San+Francisco,CA&appid=KEY')",
+   ""
+  ],
+  [
+   "u.scheme",
+   "'https'"
+  ],
+  [
+   "u.netloc",
+   "'api.openweathermap.org'"
+  ],
+  [
+   "u.path",
+   "'/geo/1.0/direct'"
+  ],
+  [
+   "parse_qs(u.query)",
+   "{'q': ['San Francisco,CA'], 'appid': ['KEY']}"
+  ],
+  [
+   "quote('777 Valencia St, San Francisco, CA')",
+   "'777%20Valencia%20St%2C%20San%20Francisco%2C%20CA'"
+  ],
+  [
+   "urlsplit('https://www.openstreetmap.org/search?query=x#map=19/37.75897/-122.42142').fragment",
+   "'map=19/37.75897/-122.42142'"
+  ]
+ ],
+ "urlbuild": [
+  [
+   "from urllib.parse import urlencode, urljoin, urldefrag",
+   ""
+  ],
+  [
+   "urlencode({'q': 'San Francisco,CA', 'appid': 'KEY'})",
+   "'q=San+Francisco%2CCA&appid=KEY'"
+  ],
+  [
+   "'https://api.openweathermap.org/geo/1.0/direct?' + urlencode({'q': 'San Francisco,CA', 'limit': 1})",
+   "'https://api.openweathermap.org/geo/1.0/direct?q=San+Francisco%2CCA&limit=1'"
+  ],
+  [
+   "urljoin('https://site.example/books/index.html', '../about.html')",
+   "'https://site.example/about.html'"
+  ],
+  [
+   "urljoin('https://site.example/books/index.html', '/ok.html')",
+   "'https://site.example/ok.html'"
+  ],
+  [
+   "urldefrag('https://site.example/ok.html#top')",
+   "DefragResult(url='https://site.example/ok.html', fragment='top')"
+  ]
+ ],
+ "status": [
+  [
+   "from http import HTTPStatus",
+   ""
+  ],
+  [
+   "HTTPStatus(404).phrase",
+   "'Not Found'"
+  ],
+  [
+   "HTTPStatus.OK.value",
+   "200"
+  ],
+  [
+   "HTTPStatus(429).phrase",
+   "'Too Many Requests'"
+  ],
+  [
+   "[(s, s < 400) for s in (200, 301, 404, 500)]",
+   "[(200, True), (301, True), (404, False), (500, False)]"
+  ],
+  [
+   "[HTTPStatus(s).is_success for s in (200, 204, 301, 404)]",
+   "[True, True, False, False]"
+  ]
+ ],
+ "robots": [
+  [
+   "import urllib.robotparser as rp",
+   ""
+  ],
+  [
+   "r = rp.RobotFileParser()",
+   ""
+  ],
+  [
+   "r.parse(['User-agent: *', 'Disallow: /private/', 'Crawl-delay: 10'])",
+   ""
+  ],
+  [
+   "r.can_fetch('*', 'https://site.example/a')",
+   "True"
+  ],
+  [
+   "r.can_fetch('*', 'https://site.example/private/c')",
+   "False"
+  ],
+  [
+   "r.crawl_delay('*')",
+   "10"
+  ]
+ ],
+ "htmlevents": [
+  [
+   "from html.parser import HTMLParser",
+   ""
+  ],
+  [
+   "class Events(HTMLParser):\n    def __init__(self):\n        super().__init__()\n        self.log = []\n    def handle_starttag(self, tag, attrs):\n        self.log.append(('start', tag, attrs))\n    def handle_data(self, data):\n        self.log.append(('text', data))\n    def handle_endtag(self, tag):\n        self.log.append(('end', tag))",
+   ""
+  ],
+  [
+   "p = Events()",
+   ""
+  ],
+  [
+   "p.feed('<p>Hello, <a href=\"/x\">link</a></p>')",
+   ""
+  ],
+  [
+   "p.log",
+   "[('start', 'p', []), ('text', 'Hello, '), ('start', 'a', [('href', '/x')]), ('text', 'link'), ('end', 'a'), ('end', 'p')]"
+  ],
+  [
+   "import html",
+   ""
+  ],
+  [
+   "html.unescape('&lt;p&gt; &amp; &copy;')",
+   "'<p> & \u00a9'"
+  ],
+  [
+   "html.escape('<p> & \"q\"')",
+   "'&lt;p&gt; &amp; &quot;q&quot;'"
+  ]
+ ],
+ "regexpitfall": [
+  [
+   "import re",
+   ""
+  ],
+  [
+   "pages = ['<a href=\"https://a.example/x\">', \"<a href='https://a.example/y'>\", '<a class=\"n\" href=\"https://a.example/z\">']",
+   ""
+  ],
+  [
+   "[re.findall(r'<a href=\"([^\"]*)\">', t) for t in pages]",
+   "[['https://a.example/x'], [], []]"
+  ],
+  [
+   "from html.parser import HTMLParser",
+   ""
+  ],
+  [
+   "class Hrefs(HTMLParser):\n    def __init__(self):\n        super().__init__()\n        self.found = []\n    def handle_starttag(self, tag, attrs):\n        if tag == 'a':\n            self.found.append(dict(attrs).get('href'))",
+   ""
+  ],
+  [
+   "found = []\nfor t in pages:\n    h = Hrefs()\n    h.feed(t)\n    found.append(h.found)",
+   ""
+  ],
+  [
+   "found",
+   "[['https://a.example/x'], ['https://a.example/y'], ['https://a.example/z']]"
+  ]
+ ],
+ "json": [
+  [
+   "import json",
+   ""
+  ],
+  [
+   "text = '[{\"name\": \"San Francisco\", \"lat\": 37.7790262, \"lon\": -122.419906}]'",
+   ""
+  ],
+  [
+   "data = json.loads(text)",
+   ""
+  ],
+  [
+   "type(data).__name__",
+   "'list'"
+  ],
+  [
+   "data[0]['lat']",
+   "37.7790262"
+  ],
+  [
+   "json.loads('[]')",
+   "[]"
+  ],
+  [
+   "json.loads('{\"cod\": \"400\", \"message\": \"wrong latitude\"}')['message']",
+   "'wrong latitude'"
+  ],
+  [
+   "round(285.44 - 273.15, 1)",
+   "12.3"
+  ],
+  [
+   "round(285.44 * (9 / 5) - 459.67, 1)",
+   "54.1"
+  ]
+ ],
+ "bytes": [
+  [
+   "import io",
+   ""
+  ],
+  [
+   "f = io.BytesIO()",
+   ""
+  ],
+  [
+   "f.write('caf\\u00e9'.encode('utf-8'))",
+   "5"
+  ],
+  [
+   "(len('caf\\u00e9'), len('caf\\u00e9'.encode('utf-8')))",
+   "(4, 5)"
+  ],
+  [
+   "data = bytes(178978)",
+   ""
+  ],
+  [
+   "[len(data[i:i + 100000]) for i in range(0, len(data), 100000)]",
+   "[100000, 78978]"
+  ]
+ ],
+ "linkcheck": [
+  [
+   "from html.parser import HTMLParser\nfrom urllib.parse import urljoin, urldefrag, urlsplit",
+   ""
+  ],
+  [
+   "class Links(HTMLParser):\n    def __init__(self):\n        super().__init__()\n        self.hrefs = []\n    def handle_starttag(self, tag, attrs):\n        if tag == 'a':\n            self.hrefs.append(dict(attrs).get('href'))",
+   ""
+  ],
+  [
+   "BASE = 'https://site.example/index.html'",
+   ""
+  ],
+  [
+   "p = Links()",
+   ""
+  ],
+  [
+   "p.feed('<a href=\"/ok.html\">a</a> <a href=\"/gone.html\">b</a> <a href=\"/ok.html#top\">c</a> <a href=\"mailto:al@example.com\">d</a> <a>e</a>')",
+   ""
+  ],
+  [
+   "p.hrefs",
+   "['/ok.html', '/gone.html', '/ok.html#top', 'mailto:al@example.com', None]"
+  ],
+  [
+   "sorted({urldefrag(urljoin(BASE, h))[0] for h in p.hrefs if h and urlsplit(urljoin(BASE, h)).scheme in ('http', 'https')})",
+   "['https://site.example/gone.html', 'https://site.example/ok.html']"
+  ]
+ ],
+ "showmap": [
+  [
+   "import sys",
+   ""
+  ],
+  [
+   "sys.argv = ['showmap.py', '777', 'Valencia', 'St,', 'San', 'Francisco,', 'CA', '94110']",
+   ""
+  ],
+  [
+   "' '.join(sys.argv[1:])",
+   "'777 Valencia St, San Francisco, CA 94110'"
+  ],
+  [
+   "from urllib.parse import quote",
+   ""
+  ],
+  [
+   "'https://www.openstreetmap.org/search?query=' + quote(' '.join(sys.argv[1:]))",
+   "'https://www.openstreetmap.org/search?query=777%20Valencia%20St%2C%20San%20Francisco%2C%20CA%2094110'"
+  ],
+  [
+   "len(sys.argv) > 1",
+   "True"
+  ]
+ ],
+ "packages": [
+  [
+   "import importlib.util",
+   ""
+  ],
+  [
+   "importlib.util.find_spec('json') is None",
+   "False"
+  ],
+  [
+   "importlib.util.find_spec('selenium') is None",
+   "True"
+  ],
+  [
+   "from selenium import webdriver",
+   "ModuleNotFoundError: No module named 'selenium'"
+  ]
+ ]
+}

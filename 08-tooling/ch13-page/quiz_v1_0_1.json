@@ -1,0 +1,197 @@
+{
+ "_version": "1.0.1",
+ "items": [
+  {
+   "q": "What does urlsplit('https://site.example/books/find?title=py&page=2#top').query give?",
+   "options": [
+    "'title=py&page=2'",
+    "'title=py&page=2#top'",
+    "'/books/find?title=py&page=2'"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO1",
+   "rationales": [
+    "",
+    "The part after the number sign is the fragment, a separate part of the address.",
+    "That is the path followed by the query; the query starts after the question mark."
+   ]
+  },
+  {
+   "q": "urllib.robotparser reads ['User-agent: *', 'Disallow: /private/']. What does can_fetch('*', 'https://site.example/private/c') return, and what does it mean for the server?",
+   "options": [
+    "False - a request to crawlers to stay out, not an access control",
+    "False - the server will refuse the request with status 403",
+    "True - can_fetch only reports whether the site is online"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO1",
+   "rationales": [
+    "",
+    "RFC 9309 says the rules are not a form of access authorization; the server may still answer.",
+    "can_fetch answers whether the rules allow that agent to fetch that address, and these rules do not."
+   ]
+  },
+  {
+   "q": "The chapter downloads a file of 178,978 bytes with iter_content(100000) and writes each chunk. Which sizes are written?",
+   "options": [
+    "100000 and 78978",
+    "100000, 100000 and 78978",
+    "178978 in one piece"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO2",
+   "rationales": [
+    "",
+    "Two chunks hold 178,978 bytes: one full chunk and the remainder.",
+    "iter_content hands the body over in pieces of the size given, so the file is not written in one piece."
+   ]
+  },
+  {
+   "q": "Why does the chapter call raise_for_status() right after requests.get()?",
+   "options": [
+    "A failed download such as 404 is still a Response with text; the call turns it into an exception",
+    "get() already raises an exception for every status code except 200",
+    "It saves the response body to a file"
+   ],
+   "answer": 0,
+   "level": "Understand",
+   "objective": "CO2",
+   "rationales": [
+    "",
+    "get() returns a Response for a 404 as well; only a connection failure or a timeout raises on its own.",
+    "Saving is done by write() on a file opened in 'wb' mode."
+   ]
+  },
+  {
+   "q": "A page is saved with open(name, 'wb') and f.write('café'.encode('utf-8')). What does write() return?",
+   "options": [
+    "5, the number of bytes written",
+    "4, the number of characters",
+    "'café'"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO2",
+   "rationales": [
+    "",
+    "The é takes two bytes in UTF-8, so four characters are five bytes.",
+    "write() returns a count, not the text."
+   ]
+  },
+  {
+   "q": "On the chapter's example page, soup.select('#author') is called. What comes back?",
+   "options": [
+    "A list with one Tag, whose get_text() is 'Al Sweigart'",
+    "One Tag, not a list",
+    "The text 'Al Sweigart' as a string"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO3",
+   "rationales": [
+    "",
+    "select() always returns a list of the matching elements, even when there is one.",
+    "get_text() on a Tag gives the text; select() itself returns the Tags."
+   ]
+  },
+  {
+   "q": "A regular expression written for <a href=\"...\"> finds no link in <a href='https://a.example/y'> and none in <a class=\"n\" href=\"https://a.example/z\">. What does this show?",
+   "options": [
+    "HTML can be written in many valid ways, which a parser handles and a pattern does not",
+    "The regular expression has a typing mistake and a corrected pattern will do",
+    "Beautiful Soup cannot read single quotes either"
+   ],
+   "answer": 0,
+   "level": "Understand",
+   "objective": "CO3",
+   "rationales": [
+    "",
+    "Each fix handles one more variant and leaves others; the chapter advises a parser for that reason.",
+    "A parser reads both quoting styles and the extra attribute, and returns all three addresses."
+   ]
+  },
+  {
+   "q": "285.44 Kelvin comes back from OpenWeather. Which expression gives Celsius?",
+   "options": [
+    "round(285.44 - 273.15, 1), which is 12.3",
+    "round(285.44 * (9 / 5) - 459.67, 1), which is 54.1",
+    "round(285.44 + 273.15, 1)"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO4",
+   "rationales": [
+    "",
+    "That expression converts to Fahrenheit.",
+    "Adding moves away from Celsius; zero Celsius is 273.15 Kelvin."
+   ]
+  },
+  {
+   "q": "A call with a wrong latitude is answered with {'cod': '400', 'message': 'wrong latitude'}. What does response_data[0] do on it?",
+   "options": [
+    "Raises KeyError, because the answer is a dictionary and not a list",
+    "Gives 'wrong latitude'",
+    "Gives an empty list"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO4",
+   "rationales": [
+    "",
+    "Index 0 is looked up as a key; the message is under the key 'message'.",
+    "An empty list is the answer for an unknown city, a different shape."
+   ]
+  },
+  {
+   "q": "A page's only paragraph is written by JavaScript after the page loads. What do requests and Beautiful Soup find, and what finds the text?",
+   "options": [
+    "An empty element; a driven browser such as Selenium or Playwright",
+    "The text, because requests runs the script",
+    "An error, because requests refuses such pages"
+   ],
+   "answer": 0,
+   "level": "Analyze",
+   "objective": "CO5",
+   "rationales": [
+    "",
+    "requests downloads the HTML as the server sent it and runs no script.",
+    "requests downloads the script text without complaint; the element is simply empty."
+   ]
+  },
+  {
+   "q": "On 2026-10-12 the chapter's searchpypi.py was run unchanged against pypi.org. requests got status 200, a page titled Client Challenge and no .package-snippet element. What did the program do?",
+   "options": [
+    "Opened no tab: min(5, 0) is 0",
+    "Raised HTTPError, because the status was not 200",
+    "Opened five tabs of the challenge page"
+   ],
+   "answer": 0,
+   "level": "Analyze",
+   "objective": "CO5",
+   "rationales": [
+    "",
+    "The status was 200, so raise_for_status() has nothing to raise; the page is simply not the results page.",
+    "The tabs are opened from the links found, and there were none."
+   ]
+  },
+  {
+   "q": "The rules ['User-agent: *', 'Disallow: /search*'] are read by urllib.robotparser. Can '*' fetch https://pypi.org/search/?q=boring+stuff?",
+   "options": [
+    "Yes under Python 3.14.0 to 3.14.4, no from 3.14.5",
+    "No under every Python 3.14",
+    "Yes under every Python 3.14"
+   ],
+   "answer": 0,
+   "level": "Analyze",
+   "objective": "CO5",
+   "rationales": [
+    "",
+    "Before 3.14.5 the star in a path was taken literally, so the search page was allowed.",
+    "From 3.14.5 the module follows RFC 9309 and reads the star as a wildcard."
+   ]
+  }
+ ]
+}
