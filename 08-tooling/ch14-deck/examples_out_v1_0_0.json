@@ -1,0 +1,344 @@
+{
+ "_version": "1.0.0",
+ "_python": "3.14.6",
+ "title": [
+  [
+   "import openpyxl",
+   ""
+  ],
+  [
+   "openpyxl.__version__",
+   "'3.1.5'"
+  ]
+ ],
+ "library": [
+  [
+   "import openpyxl, io, zipfile, importlib.metadata as m",
+   ""
+  ],
+  [
+   "openpyxl.__version__",
+   "'3.1.5'"
+  ],
+  [
+   "[r.split()[0] for r in m.requires('openpyxl')]",
+   "['et-xmlfile']"
+  ],
+  [
+   "b = io.BytesIO(); openpyxl.Workbook().save(b)",
+   ""
+  ],
+  [
+   "len(zipfile.ZipFile(b).namelist())",
+   "9"
+  ],
+  [
+   "[n for n in zipfile.ZipFile(b).namelist() if n.startswith('xl/w')]",
+   "['xl/worksheets/sheet1.xml', 'xl/workbook.xml']"
+  ]
+ ],
+ "sheets": [
+  [
+   "import openpyxl, io",
+   ""
+  ],
+  [
+   "wb = openpyxl.Workbook()",
+   ""
+  ],
+  [
+   "wb.create_sheet('Sheet2')",
+   "<Worksheet \"Sheet2\">"
+  ],
+  [
+   "b = io.BytesIO(); wb.save(b)",
+   ""
+  ],
+  [
+   "wb = openpyxl.load_workbook(b)",
+   ""
+  ],
+  [
+   "wb.sheetnames",
+   "['Sheet', 'Sheet2']"
+  ],
+  [
+   "wb.active",
+   "<Worksheet \"Sheet\">"
+  ],
+  [
+   "wb['Sheet2'].title",
+   "'Sheet2'"
+  ],
+  [
+   "wb['Nope']",
+   "KeyError: 'Worksheet Nope does not exist.'"
+  ]
+ ],
+ "cells": [
+  [
+   "import openpyxl, datetime",
+   ""
+  ],
+  [
+   "ws = openpyxl.Workbook().active",
+   ""
+  ],
+  [
+   "data = [('Apples', 73), ('Cherries', 85), ('Pears', 14)]",
+   ""
+  ],
+  [
+   "for row in data: ws.append(row)",
+   ""
+  ],
+  [
+   "ws['A1'].value",
+   "'Apples'"
+  ],
+  [
+   "ws.cell(row=2, column=2).value",
+   "85"
+  ],
+  [
+   "ws['B3'].coordinate, ws.max_row, ws.max_column",
+   "('B3', 3, 2)"
+  ],
+  [
+   "[[c.value for c in r] for r in ws['A1':'B2']]",
+   "[['Apples', 73], ['Cherries', 85]]"
+  ],
+  [
+   "openpyxl.utils.get_column_letter(27)",
+   "'AA'"
+  ],
+  [
+   "ws['D1'] = datetime.datetime(2035, 4, 5, 13, 34, 2)",
+   ""
+  ],
+  [
+   "ws['D1'].value, ws['D1'].data_type",
+   "(datetime.datetime(2035, 4, 5, 13, 34, 2), 'd')"
+  ]
+ ],
+ "touch": [
+  [
+   "import openpyxl",
+   ""
+  ],
+  [
+   "ws = openpyxl.Workbook().active",
+   ""
+  ],
+  [
+   "ws.max_row",
+   "1"
+  ],
+  [
+   "ws.cell(row=40, column=1).value is None",
+   "True"
+  ],
+  [
+   "ws.max_row, ws.dimensions",
+   "(40, 'A40:A40')"
+  ],
+  [
+   "abs(ws['A2'].value)",
+   "TypeError: bad operand type for abs(): 'NoneType'"
+  ]
+ ],
+ "_programs": {
+  "project9CensusTally_v1_0_0.py": {
+   "code": "import os, tempfile, datetime, openpyxl\nos.chdir(tempfile.mkdtemp())            # stand-ins for the chapter's files live in a temporary folder\ndef make_stand_ins():\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet1'\n    for r in [(datetime.datetime(2035, 4, 5, 13, 34, 2), 'Apples', 73), (datetime.datetime(2035, 4, 5, 3, 41, 23), 'Cherries', 85), (datetime.datetime(2035, 4, 6, 12, 46, 51), 'Pears', 14), (datetime.datetime(2035, 4, 8, 8, 59, 43), 'Oranges', 52), (datetime.datetime(2035, 4, 10, 2, 7, 0), 'Apples', 152), (datetime.datetime(2035, 4, 10, 18, 10, 37), 'Bananas', 23), (datetime.datetime(2035, 4, 10, 2, 40, 46), 'Strawberries', 98)]: ws.append(r)\n    wb.create_sheet('Sheet2'); wb.create_sheet('Sheet3'); wb.save('example3.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Population by Census Tract'; ws.append(['CensusTract', 'State', 'County', 'POP2010'])\n    for t in [('02020000100', 'AK', 'Anchorage', 4115), ('02020000200', 'AK', 'Anchorage', 3040), ('02020000300', 'AK', 'Anchorage', 5360), ('02013000100', 'AK', 'Aleutians East', 3141), ('01001020100', 'AL', 'Autauga', 1912), ('01001020200', 'AL', 'Autauga', 2170), ('01003010100', 'AL', 'Baldwin', 3000), ('01003010200', 'AL', 'Baldwin', 4100), ('06075010100', 'CA', 'San Francisco', 4000)]: ws.append(list(t))\n    wb.save('censuspopdata.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet'; ws.append(['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL'])\n    for i, (p, c, q) in enumerate([('Potatoes', 0.86, 21.6), ('Garlic', 1.19, 10.0), ('Celery', 3.07, 4.5), ('Lemon', 1.29, 7.0), ('Okra', 2.26, 38.6), ('Garlic', 1.19, 2.5), ('Celery', 3.07, 0.5), ('Parsnips', 2.27, 14.5), ('Lemon', 1.29, 3.0), ('Garlic', 1.19, 6.0)], 2): ws.append([p, c, q, '=ROUND(B%d*C%d,2)' % (i, i)])\n    wb.save('produceSales3.xlsx')\nmake_stand_ins()\n# readCensusExcel.py - Project 9, Steps 1 to 3 assembled\nimport openpyxl, pprint\nprint('Opening workbook...')\nwb = openpyxl.load_workbook('censuspopdata.xlsx')\nsheet = wb['Population by Census Tract']\ncounty_data = {}\nprint('Reading rows...')\nfor row in range(2, sheet.max_row + 1):\n    state  = sheet['B' + str(row)].value\n    county = sheet['C' + str(row)].value\n    pop    = sheet['D' + str(row)].value\n    county_data.setdefault(state, {})\n    county_data[state].setdefault(county, {'tracts': 0, 'pop': 0})\n    county_data[state][county]['tracts'] += 1\n    county_data[state][county]['pop'] += int(pop)\nprint('Writing results...')\nresult_file = open('census2010.py', 'w')\nresult_file.write('allData = ' + pprint.pformat(county_data))\nresult_file.close()\nprint('Done.')\n# the shell session of the chapter: the current folder is the script's folder, so the import finds the file\nimport census2010\nprint(census2010.allData['AK']['Anchorage'])\nanchorage_pop = census2010.allData['AK']['Anchorage']['pop']\nprint('The 2010 population of Anchorage was ' + str(anchorage_pop))\nprint(open('census2010.py').read())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Opening workbook...\nReading rows...\nWriting results...\nDone.\n{'pop': 12515, 'tracts': 3}\nThe 2010 population of Anchorage was 12515\nallData = {'AK': {'Aleutians East': {'pop': 3141, 'tracts': 1},\n        'Anchorage': {'pop': 12515, 'tracts': 3}},\n 'AL': {'Autauga': {'pop': 4082, 'tracts': 2},\n        'Baldwin': {'pop': 7100, 'tracts': 2}},\n 'CA': {'San Francisco': {'pop': 4000, 'tracts': 1}}}",
+   "live": false,
+   "exit": 0
+  },
+  "project10UpdateProduce_v1_0_0.py": {
+   "code": "import os, tempfile, datetime, openpyxl\nos.chdir(tempfile.mkdtemp())            # stand-ins for the chapter's files live in a temporary folder\ndef make_stand_ins():\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet1'\n    for r in [(datetime.datetime(2035, 4, 5, 13, 34, 2), 'Apples', 73), (datetime.datetime(2035, 4, 5, 3, 41, 23), 'Cherries', 85), (datetime.datetime(2035, 4, 6, 12, 46, 51), 'Pears', 14), (datetime.datetime(2035, 4, 8, 8, 59, 43), 'Oranges', 52), (datetime.datetime(2035, 4, 10, 2, 7, 0), 'Apples', 152), (datetime.datetime(2035, 4, 10, 18, 10, 37), 'Bananas', 23), (datetime.datetime(2035, 4, 10, 2, 40, 46), 'Strawberries', 98)]: ws.append(r)\n    wb.create_sheet('Sheet2'); wb.create_sheet('Sheet3'); wb.save('example3.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Population by Census Tract'; ws.append(['CensusTract', 'State', 'County', 'POP2010'])\n    for t in [('02020000100', 'AK', 'Anchorage', 4115), ('02020000200', 'AK', 'Anchorage', 3040), ('02020000300', 'AK', 'Anchorage', 5360), ('02013000100', 'AK', 'Aleutians East', 3141), ('01001020100', 'AL', 'Autauga', 1912), ('01001020200', 'AL', 'Autauga', 2170), ('01003010100', 'AL', 'Baldwin', 3000), ('01003010200', 'AL', 'Baldwin', 4100), ('06075010100', 'CA', 'San Francisco', 4000)]: ws.append(list(t))\n    wb.save('censuspopdata.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet'; ws.append(['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL'])\n    for i, (p, c, q) in enumerate([('Potatoes', 0.86, 21.6), ('Garlic', 1.19, 10.0), ('Celery', 3.07, 4.5), ('Lemon', 1.29, 7.0), ('Okra', 2.26, 38.6), ('Garlic', 1.19, 2.5), ('Celery', 3.07, 0.5), ('Parsnips', 2.27, 14.5), ('Lemon', 1.29, 3.0), ('Garlic', 1.19, 6.0)], 2): ws.append([p, c, q, '=ROUND(B%d*C%d,2)' % (i, i)])\n    wb.save('produceSales3.xlsx')\nmake_stand_ins()\n# updateProduce.py - Project 10, Steps 1 and 2 assembled\nimport openpyxl\nwb = openpyxl.load_workbook('produceSales3.xlsx')\nsheet = wb['Sheet']\n# The produce types and their updated prices:\nPRICE_UPDATES = {'Garlic': 3.07,\n                 'Celery': 1.19,\n                 'Lemon': 1.27}\n# Loop through the rows and update the prices.\nfor row_num in range(2, sheet.max_row + 1):  # Skip the first row.\n    produce_name = sheet.cell(row=row_num, column=1).value\n    if produce_name in PRICE_UPDATES:\n        sheet.cell(row=row_num, column=2).value = PRICE_UPDATES[produce_name]\nwb.save('updatedProduceSales3.xlsx')\nold = openpyxl.load_workbook('produceSales3.xlsx')['Sheet']\nnew = openpyxl.load_workbook('updatedProduceSales3.xlsx')['Sheet']\nfor r in range(1, old.max_row + 1):\n    print(old.cell(row=r, column=1).value, old.cell(row=r, column=2).value, '->', new.cell(row=r, column=2).value, new.cell(row=r, column=4).value)\n# openpyxl saved the formulas without the results Excel had stored for them:\nprint(openpyxl.load_workbook('updatedProduceSales3.xlsx', data_only=True)['Sheet']['D2'].value)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "PRODUCE COST PER POUND -> COST PER POUND TOTAL\nPotatoes 0.86 -> 0.86 =ROUND(B2*C2,2)\nGarlic 1.19 -> 3.07 =ROUND(B3*C3,2)\nCelery 3.07 -> 1.19 =ROUND(B4*C4,2)\nLemon 1.29 -> 1.27 =ROUND(B5*C5,2)\nOkra 2.26 -> 2.26 =ROUND(B6*C6,2)\nGarlic 1.19 -> 3.07 =ROUND(B7*C7,2)\nCelery 3.07 -> 1.19 =ROUND(B8*C8,2)\nParsnips 2.27 -> 2.27 =ROUND(B9*C9,2)\nLemon 1.29 -> 1.27 =ROUND(B10*C10,2)\nGarlic 1.19 -> 3.07 =ROUND(B11*C11,2)\nNone",
+   "live": false,
+   "exit": 0
+  },
+  "multiplicationTable_v1_0_0.py": {
+   "code": "import os, tempfile, datetime, openpyxl\nos.chdir(tempfile.mkdtemp())            # stand-ins for the chapter's files live in a temporary folder\ndef make_stand_ins():\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet1'\n    for r in [(datetime.datetime(2035, 4, 5, 13, 34, 2), 'Apples', 73), (datetime.datetime(2035, 4, 5, 3, 41, 23), 'Cherries', 85), (datetime.datetime(2035, 4, 6, 12, 46, 51), 'Pears', 14), (datetime.datetime(2035, 4, 8, 8, 59, 43), 'Oranges', 52), (datetime.datetime(2035, 4, 10, 2, 7, 0), 'Apples', 152), (datetime.datetime(2035, 4, 10, 18, 10, 37), 'Bananas', 23), (datetime.datetime(2035, 4, 10, 2, 40, 46), 'Strawberries', 98)]: ws.append(r)\n    wb.create_sheet('Sheet2'); wb.create_sheet('Sheet3'); wb.save('example3.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Population by Census Tract'; ws.append(['CensusTract', 'State', 'County', 'POP2010'])\n    for t in [('02020000100', 'AK', 'Anchorage', 4115), ('02020000200', 'AK', 'Anchorage', 3040), ('02020000300', 'AK', 'Anchorage', 5360), ('02013000100', 'AK', 'Aleutians East', 3141), ('01001020100', 'AL', 'Autauga', 1912), ('01001020200', 'AL', 'Autauga', 2170), ('01003010100', 'AL', 'Baldwin', 3000), ('01003010200', 'AL', 'Baldwin', 4100), ('06075010100', 'CA', 'San Francisco', 4000)]: ws.append(list(t))\n    wb.save('censuspopdata.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet'; ws.append(['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL'])\n    for i, (p, c, q) in enumerate([('Potatoes', 0.86, 21.6), ('Garlic', 1.19, 10.0), ('Celery', 3.07, 4.5), ('Lemon', 1.29, 7.0), ('Okra', 2.26, 38.6), ('Garlic', 1.19, 2.5), ('Celery', 3.07, 0.5), ('Parsnips', 2.27, 14.5), ('Lemon', 1.29, 3.0), ('Garlic', 1.19, 6.0)], 2): ws.append([p, c, q, '=ROUND(B%d*C%d,2)' % (i, i)])\n    wb.save('produceSales3.xlsx')\nmake_stand_ins()\n# multiplicationTable.py - Practice Program: Multiplication Table Maker\nimport sys, openpyxl\nfrom openpyxl.styles import Font\nsys.argv = ['multiplicationTable.py', '6']     # stands for: python multiplicationTable.py 6\nn = int(sys.argv[1])\nwb = openpyxl.Workbook()\nsheet = wb.active\nbold = Font(bold=True)\nfor i in range(1, n + 1):\n    sheet.cell(row=1, column=i + 1, value=i).font = bold      # labels along row 1, from B1\n    sheet.cell(row=i + 1, column=1, value=i).font = bold      # labels down column A, from A2\n    for j in range(1, n + 1):\n        sheet.cell(row=i + 1, column=j + 1, value=i * j)\nwb.save('multiplicationTable.xlsx')\ncheck = openpyxl.load_workbook('multiplicationTable.xlsx').active\nprint(check.dimensions, check['D5'].value, check['G7'].value, check['A1'].value)\nfor row in check.iter_rows(min_row=1, max_row=3, values_only=True): print(row)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "A1:G7 12 36 None\n(None, 1, 2, 3, 4, 5, 6)\n(1, 1, 2, 3, 4, 5, 6)\n(2, 2, 4, 6, 8, 10, 12)",
+   "live": false,
+   "exit": 0
+  },
+  "blankRowInserter_v1_0_0.py": {
+   "code": "import os, tempfile, datetime, openpyxl\nos.chdir(tempfile.mkdtemp())            # stand-ins for the chapter's files live in a temporary folder\ndef make_stand_ins():\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet1'\n    for r in [(datetime.datetime(2035, 4, 5, 13, 34, 2), 'Apples', 73), (datetime.datetime(2035, 4, 5, 3, 41, 23), 'Cherries', 85), (datetime.datetime(2035, 4, 6, 12, 46, 51), 'Pears', 14), (datetime.datetime(2035, 4, 8, 8, 59, 43), 'Oranges', 52), (datetime.datetime(2035, 4, 10, 2, 7, 0), 'Apples', 152), (datetime.datetime(2035, 4, 10, 18, 10, 37), 'Bananas', 23), (datetime.datetime(2035, 4, 10, 2, 40, 46), 'Strawberries', 98)]: ws.append(r)\n    wb.create_sheet('Sheet2'); wb.create_sheet('Sheet3'); wb.save('example3.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Population by Census Tract'; ws.append(['CensusTract', 'State', 'County', 'POP2010'])\n    for t in [('02020000100', 'AK', 'Anchorage', 4115), ('02020000200', 'AK', 'Anchorage', 3040), ('02020000300', 'AK', 'Anchorage', 5360), ('02013000100', 'AK', 'Aleutians East', 3141), ('01001020100', 'AL', 'Autauga', 1912), ('01001020200', 'AL', 'Autauga', 2170), ('01003010100', 'AL', 'Baldwin', 3000), ('01003010200', 'AL', 'Baldwin', 4100), ('06075010100', 'CA', 'San Francisco', 4000)]: ws.append(list(t))\n    wb.save('censuspopdata.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet'; ws.append(['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL'])\n    for i, (p, c, q) in enumerate([('Potatoes', 0.86, 21.6), ('Garlic', 1.19, 10.0), ('Celery', 3.07, 4.5), ('Lemon', 1.29, 7.0), ('Okra', 2.26, 38.6), ('Garlic', 1.19, 2.5), ('Celery', 3.07, 0.5), ('Parsnips', 2.27, 14.5), ('Lemon', 1.29, 3.0), ('Garlic', 1.19, 6.0)], 2): ws.append([p, c, q, '=ROUND(B%d*C%d,2)' % (i, i)])\n    wb.save('produceSales3.xlsx')\nmake_stand_ins()\n# blankRowInserter.py - Practice Program: Blank Row Inserter\nimport sys, openpyxl\nsys.argv = ['blankRowInserter.py', '3', '2', 'myProduce.xlsx']   # stands for: python blankRowInserter.py 3 2 myProduce.xlsx\nn, m, filename = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3]\nwb = openpyxl.Workbook(); sh = wb.active\nfor r, v in enumerate(['Potatoes', 'Okra', 'Fava beans', 'Watermelon', 'Garlic', 'Parsnips'], 1): sh.cell(row=r, column=1, value=v)\nsh['C6'] = '=SUM(B1:B5)'\nwb.save(filename)\nwb = openpyxl.load_workbook(filename)\nsheet = wb.active\nsheet.insert_rows(n, m)                         # m blank rows before row n\nwb.save('blankRowsInserted.xlsx')\nout = openpyxl.load_workbook('blankRowsInserted.xlsx').active\nprint([out.cell(row=r, column=1).value for r in range(1, 9)])\nprint(out['C8'].value, out['C6'].value)         # the formula moved, and its text did not change\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "['Potatoes', 'Okra', None, None, 'Fava beans', 'Watermelon', 'Garlic', 'Parsnips']\n=SUM(B1:B5) None",
+   "live": false,
+   "exit": 0
+  },
+  "readingCells_v1_0_0.py": {
+   "code": "import os, tempfile, datetime, openpyxl\nos.chdir(tempfile.mkdtemp())            # stand-ins for the chapter's files live in a temporary folder\ndef make_stand_ins():\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet1'\n    for r in [(datetime.datetime(2035, 4, 5, 13, 34, 2), 'Apples', 73), (datetime.datetime(2035, 4, 5, 3, 41, 23), 'Cherries', 85), (datetime.datetime(2035, 4, 6, 12, 46, 51), 'Pears', 14), (datetime.datetime(2035, 4, 8, 8, 59, 43), 'Oranges', 52), (datetime.datetime(2035, 4, 10, 2, 7, 0), 'Apples', 152), (datetime.datetime(2035, 4, 10, 18, 10, 37), 'Bananas', 23), (datetime.datetime(2035, 4, 10, 2, 40, 46), 'Strawberries', 98)]: ws.append(r)\n    wb.create_sheet('Sheet2'); wb.create_sheet('Sheet3'); wb.save('example3.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Population by Census Tract'; ws.append(['CensusTract', 'State', 'County', 'POP2010'])\n    for t in [('02020000100', 'AK', 'Anchorage', 4115), ('02020000200', 'AK', 'Anchorage', 3040), ('02020000300', 'AK', 'Anchorage', 5360), ('02013000100', 'AK', 'Aleutians East', 3141), ('01001020100', 'AL', 'Autauga', 1912), ('01001020200', 'AL', 'Autauga', 2170), ('01003010100', 'AL', 'Baldwin', 3000), ('01003010200', 'AL', 'Baldwin', 4100), ('06075010100', 'CA', 'San Francisco', 4000)]: ws.append(list(t))\n    wb.save('censuspopdata.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet'; ws.append(['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL'])\n    for i, (p, c, q) in enumerate([('Potatoes', 0.86, 21.6), ('Garlic', 1.19, 10.0), ('Celery', 3.07, 4.5), ('Lemon', 1.29, 7.0), ('Okra', 2.26, 38.6), ('Garlic', 1.19, 2.5), ('Celery', 3.07, 0.5), ('Parsnips', 2.27, 14.5), ('Lemon', 1.29, 3.0), ('Garlic', 1.19, 6.0)], 2): ws.append([p, c, q, '=ROUND(B%d*C%d,2)' % (i, i)])\n    wb.save('produceSales3.xlsx')\nmake_stand_ins()\nimport openpyxl\nfrom openpyxl.utils import get_column_letter, column_index_from_string\nwb = openpyxl.load_workbook('example3.xlsx')\nprint(type(wb))\nprint(wb.sheetnames)\nsheet = wb['Sheet3']\nprint(sheet, type(sheet), sheet.title)\nprint(wb.active)\nsheet = wb['Sheet1']\nprint(sheet['A1'], sheet['A1'].value)\nc = sheet['B1']\nprint(c.value, 'Row %s, Column %s is %s' % (c.row, c.column, c.value), 'Cell %s is %s' % (c.coordinate, c.value))\nprint(sheet.cell(row=1, column=2))\nfor i in range(1, 8, 2): print(i, sheet.cell(row=i, column=2).value)\nprint(sheet.max_row, sheet.max_column)\nprint(get_column_letter(1), get_column_letter(27), get_column_letter(900), column_index_from_string('AA'))\nfor row_of_cell_objects in sheet['A1':'C3']:\n    for cell_obj in row_of_cell_objects: print(cell_obj.coordinate, cell_obj.value)\n    print('--- END OF ROW ---')\nprint(list(sheet.columns)[1][0].value, len(list(sheet.rows)), len(list(sheet.columns)))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "<class 'openpyxl.workbook.workbook.Workbook'>\n['Sheet1', 'Sheet2', 'Sheet3']\n<Worksheet \"Sheet3\"> <class 'openpyxl.worksheet.worksheet.Worksheet'> Sheet3\n<Worksheet \"Sheet1\">\n<Cell 'Sheet1'.A1> 2035-04-05 13:34:02\nApples Row 1, Column 2 is Apples Cell B1 is Apples\n<Cell 'Sheet1'.B1>\n1 Apples\n3 Pears\n5 Apples\n7 Strawberries\n7 3\nA AA AHP 27\nA1 2035-04-05 13:34:02\nB1 Apples\nC1 73\n--- END OF ROW ---\nA2 2035-04-05 03:41:23\nB2 Cherries\nC2 85\n--- END OF ROW ---\nA3 2035-04-06 12:46:51\nB3 Pears\nC3 14\n--- END OF ROW ---\nApples 7 3",
+   "live": false,
+   "exit": 0
+  },
+  "writingWorkbooks_v1_0_0.py": {
+   "code": "import os, tempfile, datetime, openpyxl\nos.chdir(tempfile.mkdtemp())            # stand-ins for the chapter's files live in a temporary folder\ndef make_stand_ins():\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet1'\n    for r in [(datetime.datetime(2035, 4, 5, 13, 34, 2), 'Apples', 73), (datetime.datetime(2035, 4, 5, 3, 41, 23), 'Cherries', 85), (datetime.datetime(2035, 4, 6, 12, 46, 51), 'Pears', 14), (datetime.datetime(2035, 4, 8, 8, 59, 43), 'Oranges', 52), (datetime.datetime(2035, 4, 10, 2, 7, 0), 'Apples', 152), (datetime.datetime(2035, 4, 10, 18, 10, 37), 'Bananas', 23), (datetime.datetime(2035, 4, 10, 2, 40, 46), 'Strawberries', 98)]: ws.append(r)\n    wb.create_sheet('Sheet2'); wb.create_sheet('Sheet3'); wb.save('example3.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Population by Census Tract'; ws.append(['CensusTract', 'State', 'County', 'POP2010'])\n    for t in [('02020000100', 'AK', 'Anchorage', 4115), ('02020000200', 'AK', 'Anchorage', 3040), ('02020000300', 'AK', 'Anchorage', 5360), ('02013000100', 'AK', 'Aleutians East', 3141), ('01001020100', 'AL', 'Autauga', 1912), ('01001020200', 'AL', 'Autauga', 2170), ('01003010100', 'AL', 'Baldwin', 3000), ('01003010200', 'AL', 'Baldwin', 4100), ('06075010100', 'CA', 'San Francisco', 4000)]: ws.append(list(t))\n    wb.save('censuspopdata.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet'; ws.append(['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL'])\n    for i, (p, c, q) in enumerate([('Potatoes', 0.86, 21.6), ('Garlic', 1.19, 10.0), ('Celery', 3.07, 4.5), ('Lemon', 1.29, 7.0), ('Okra', 2.26, 38.6), ('Garlic', 1.19, 2.5), ('Celery', 3.07, 0.5), ('Parsnips', 2.27, 14.5), ('Lemon', 1.29, 3.0), ('Garlic', 1.19, 6.0)], 2): ws.append([p, c, q, '=ROUND(B%d*C%d,2)' % (i, i)])\n    wb.save('produceSales3.xlsx')\nmake_stand_ins()\nimport openpyxl\nwb = openpyxl.Workbook()\nprint(wb.sheetnames)\nsheet = wb.active\nsheet.title = 'Spam Bacon Eggs Sheet'\nprint(wb.sheetnames)\nwb.save('example3_copy.xlsx')\nprint(openpyxl.load_workbook('example3_copy.xlsx').sheetnames)\nwb = openpyxl.Workbook()\nprint(wb.create_sheet())\nprint(wb.sheetnames)\nwb.create_sheet(index=0, title='First Sheet')\nwb.create_sheet(index=2, title='Middle Sheet')\nprint(wb.sheetnames)\ndel wb['Middle Sheet']\ndel wb['Sheet1']\nprint(wb.sheetnames)\nsheet = wb['Sheet']\nsheet['A1'] = 'Hello, world!'\nprint(sheet['A1'].value)\na = wb.create_sheet('Dup'); b = wb.create_sheet('Dup'); c = wb.create_sheet('dup')\nprint(a.title, b.title, c.title)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "['Sheet']\n['Spam Bacon Eggs Sheet']\n['Spam Bacon Eggs Sheet']\n<Worksheet \"Sheet1\">\n['Sheet', 'Sheet1']\n['First Sheet', 'Sheet', 'Middle Sheet', 'Sheet1']\n['First Sheet', 'Sheet']\nHello, world!\nDup Dup1 dup2",
+   "live": false,
+   "exit": 0
+  },
+  "formulasAndResults_v1_0_0.py": {
+   "code": "import os, tempfile, datetime, openpyxl\nos.chdir(tempfile.mkdtemp())            # stand-ins for the chapter's files live in a temporary folder\ndef make_stand_ins():\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet1'\n    for r in [(datetime.datetime(2035, 4, 5, 13, 34, 2), 'Apples', 73), (datetime.datetime(2035, 4, 5, 3, 41, 23), 'Cherries', 85), (datetime.datetime(2035, 4, 6, 12, 46, 51), 'Pears', 14), (datetime.datetime(2035, 4, 8, 8, 59, 43), 'Oranges', 52), (datetime.datetime(2035, 4, 10, 2, 7, 0), 'Apples', 152), (datetime.datetime(2035, 4, 10, 18, 10, 37), 'Bananas', 23), (datetime.datetime(2035, 4, 10, 2, 40, 46), 'Strawberries', 98)]: ws.append(r)\n    wb.create_sheet('Sheet2'); wb.create_sheet('Sheet3'); wb.save('example3.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Population by Census Tract'; ws.append(['CensusTract', 'State', 'County', 'POP2010'])\n    for t in [('02020000100', 'AK', 'Anchorage', 4115), ('02020000200', 'AK', 'Anchorage', 3040), ('02020000300', 'AK', 'Anchorage', 5360), ('02013000100', 'AK', 'Aleutians East', 3141), ('01001020100', 'AL', 'Autauga', 1912), ('01001020200', 'AL', 'Autauga', 2170), ('01003010100', 'AL', 'Baldwin', 3000), ('01003010200', 'AL', 'Baldwin', 4100), ('06075010100', 'CA', 'San Francisco', 4000)]: ws.append(list(t))\n    wb.save('censuspopdata.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet'; ws.append(['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL'])\n    for i, (p, c, q) in enumerate([('Potatoes', 0.86, 21.6), ('Garlic', 1.19, 10.0), ('Celery', 3.07, 4.5), ('Lemon', 1.29, 7.0), ('Okra', 2.26, 38.6), ('Garlic', 1.19, 2.5), ('Celery', 3.07, 0.5), ('Parsnips', 2.27, 14.5), ('Lemon', 1.29, 3.0), ('Garlic', 1.19, 6.0)], 2): ws.append([p, c, q, '=ROUND(B%d*C%d,2)' % (i, i)])\n    wb.save('produceSales3.xlsx')\nmake_stand_ins()\nimport openpyxl, io, zipfile\nwb = openpyxl.Workbook()\nsheet = wb.active\nsheet['A1'] = 200\nsheet['A2'] = 300\nsheet['A3'] = '=SUM(A1:A2)'\nwb.save('writeFormula3.xlsx')\nprint(sheet['A3'].data_type, sheet['A3'].value)\nwb = openpyxl.load_workbook('writeFormula3.xlsx')\nprint(wb.active['A3'].value)\nwb_data_only = openpyxl.load_workbook('writeFormula3.xlsx', data_only=True)\nprint(wb_data_only.active['A3'].value)          # None: nobody has calculated the formula\n# What Excel would have stored: put the result into the file as the spreadsheet application does\nz = zipfile.ZipFile('writeFormula3.xlsx'); out = io.BytesIO(); zo = zipfile.ZipFile(out, 'w')\nfor n in z.namelist():\n    t = z.read(n)\n    zo.writestr(n, t.replace(b'<f>SUM(A1:A2)</f><v />', b'<f>SUM(A1:A2)</f><v>500</v>') if n.startswith('xl/worksheets/') else t)\nzo.close(); open('stored500.xlsx', 'wb').write(out.getvalue())\nprint(openpyxl.load_workbook('stored500.xlsx', data_only=True).active['A3'].value)\n# openpyxl loads and saves it again: the formula stays, the stored result is gone\nopenpyxl.load_workbook('stored500.xlsx').save('resaved.xlsx')\nprint(openpyxl.load_workbook('resaved.xlsx').active['A3'].value, openpyxl.load_workbook('resaved.xlsx', data_only=True).active['A3'].value)\nsheet['A4'] = '=NOSUCHFUNC(1'                   # openpyxl does not check a formula\nprint(sheet['A4'].data_type, sheet['A4'].value)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "f =SUM(A1:A2)\n=SUM(A1:A2)\nNone\n500\n=SUM(A1:A2) None\nf =NOSUCHFUNC(1",
+   "live": false,
+   "exit": 0
+  },
+  "layoutFontMergeFreeze_v1_0_0.py": {
+   "code": "import os, tempfile, datetime, openpyxl\nos.chdir(tempfile.mkdtemp())            # stand-ins for the chapter's files live in a temporary folder\ndef make_stand_ins():\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet1'\n    for r in [(datetime.datetime(2035, 4, 5, 13, 34, 2), 'Apples', 73), (datetime.datetime(2035, 4, 5, 3, 41, 23), 'Cherries', 85), (datetime.datetime(2035, 4, 6, 12, 46, 51), 'Pears', 14), (datetime.datetime(2035, 4, 8, 8, 59, 43), 'Oranges', 52), (datetime.datetime(2035, 4, 10, 2, 7, 0), 'Apples', 152), (datetime.datetime(2035, 4, 10, 18, 10, 37), 'Bananas', 23), (datetime.datetime(2035, 4, 10, 2, 40, 46), 'Strawberries', 98)]: ws.append(r)\n    wb.create_sheet('Sheet2'); wb.create_sheet('Sheet3'); wb.save('example3.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Population by Census Tract'; ws.append(['CensusTract', 'State', 'County', 'POP2010'])\n    for t in [('02020000100', 'AK', 'Anchorage', 4115), ('02020000200', 'AK', 'Anchorage', 3040), ('02020000300', 'AK', 'Anchorage', 5360), ('02013000100', 'AK', 'Aleutians East', 3141), ('01001020100', 'AL', 'Autauga', 1912), ('01001020200', 'AL', 'Autauga', 2170), ('01003010100', 'AL', 'Baldwin', 3000), ('01003010200', 'AL', 'Baldwin', 4100), ('06075010100', 'CA', 'San Francisco', 4000)]: ws.append(list(t))\n    wb.save('censuspopdata.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet'; ws.append(['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL'])\n    for i, (p, c, q) in enumerate([('Potatoes', 0.86, 21.6), ('Garlic', 1.19, 10.0), ('Celery', 3.07, 4.5), ('Lemon', 1.29, 7.0), ('Okra', 2.26, 38.6), ('Garlic', 1.19, 2.5), ('Celery', 3.07, 0.5), ('Parsnips', 2.27, 14.5), ('Lemon', 1.29, 3.0), ('Garlic', 1.19, 6.0)], 2): ws.append([p, c, q, '=ROUND(B%d*C%d,2)' % (i, i)])\n    wb.save('produceSales3.xlsx')\nmake_stand_ins()\nimport openpyxl, io, zipfile, re\nfrom openpyxl.styles import Font\nwb = openpyxl.Workbook()\nsheet = wb.active\nitalic_24_font = Font(size=24, italic=True)\nsheet['A1'].font = italic_24_font\nsheet['A1'] = 'Hello, world!'\nbold_font = Font(name='Times New Roman', bold=True)\nsheet['B3'].font = bold_font\nsheet['B3'] = 'Bold Times New Roman'\nprint(sheet['A1'].font.name, sheet['A1'].font.sz, sheet['B3'].font.name, sheet['B3'].font.sz, sheet['C5'].font.name, sheet['C5'].font.sz)\ntry: sheet['A1'].font.bold = False\nexcept AttributeError as e: print('AttributeError', str(e)[:36])\nsheet['A5'] = 'Tall row'; sheet['B5'] = 'Wide column'\nsheet.row_dimensions[5].height = 70\nsheet.column_dimensions['B'].width = 20\nsheet.column_dimensions['D'].hidden = True\nsheet.merge_cells('F1:I3'); sheet['F1'] = 'Twelve cells merged together.'\nsheet.merge_cells('F5:G5'); sheet['F5'] = 'Two merged cells.'\nprint(sorted(map(str, sheet.merged_cells.ranges)), type(sheet['G2']).__name__)\ntry: sheet['G2'] = 'x'\nexcept AttributeError as e: print('AttributeError', e)\nsheet.freeze_panes = 'A2'\nwb.save('layout.xlsx')\nxml = zipfile.ZipFile('layout.xlsx').read('xl/worksheets/sheet1.xml').decode()\nprint(re.findall(r'<pane[^>]*>', xml)); print(re.findall(r'<col [^>]*>', xml)); print(re.findall(r'<row r=\"5\"[^>]*>', xml))\nsheet.unmerge_cells('F1:I3')\nprint(sorted(map(str, sheet.merged_cells.ranges)), type(sheet['G2']).__name__)\nfor setting in ('A2', 'B1', 'C1', 'C2'):\n    ws = openpyxl.Workbook().active; ws.freeze_panes = setting; p = ws.sheet_view.pane; print(setting, p.xSplit, p.ySplit)\nws = openpyxl.Workbook().active\nbefore = (len(ws.row_dimensions), len(ws.column_dimensions))\nws.row_dimensions[3].height; ws.column_dimensions['A'].width       # only reading\nprint(before, (len(ws.row_dimensions), len(ws.column_dimensions)))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "None 24.0 Times New Roman None Calibri 11.0\nAttributeError Style objects are immutable and cann\n['F1:I3', 'F5:G5'] MergedCell\nAttributeError 'MergedCell' object attribute 'value' is read-only\n['<pane ySplit=\"1\" topLeftCell=\"A2\" activePane=\"bottomLeft\" state=\"frozen\" />']\n['<col width=\"20\" customWidth=\"1\" min=\"2\" max=\"2\" />', '<col hidden=\"1\" width=\"13\" customWidth=\"1\" min=\"4\" max=\"4\" />']\n['<row r=\"5\" ht=\"70\" customHeight=\"1\">']\n['F5:G5'] Cell\nA2 None 1.0\nB1 1.0 None\nC1 2.0 None\nC2 2.0 1.0\n(0, 0) (1, 1)",
+   "live": false,
+   "exit": 0
+  },
+  "barChart_v1_0_0.py": {
+   "code": "import os, tempfile, datetime, openpyxl\nos.chdir(tempfile.mkdtemp())            # stand-ins for the chapter's files live in a temporary folder\ndef make_stand_ins():\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet1'\n    for r in [(datetime.datetime(2035, 4, 5, 13, 34, 2), 'Apples', 73), (datetime.datetime(2035, 4, 5, 3, 41, 23), 'Cherries', 85), (datetime.datetime(2035, 4, 6, 12, 46, 51), 'Pears', 14), (datetime.datetime(2035, 4, 8, 8, 59, 43), 'Oranges', 52), (datetime.datetime(2035, 4, 10, 2, 7, 0), 'Apples', 152), (datetime.datetime(2035, 4, 10, 18, 10, 37), 'Bananas', 23), (datetime.datetime(2035, 4, 10, 2, 40, 46), 'Strawberries', 98)]: ws.append(r)\n    wb.create_sheet('Sheet2'); wb.create_sheet('Sheet3'); wb.save('example3.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Population by Census Tract'; ws.append(['CensusTract', 'State', 'County', 'POP2010'])\n    for t in [('02020000100', 'AK', 'Anchorage', 4115), ('02020000200', 'AK', 'Anchorage', 3040), ('02020000300', 'AK', 'Anchorage', 5360), ('02013000100', 'AK', 'Aleutians East', 3141), ('01001020100', 'AL', 'Autauga', 1912), ('01001020200', 'AL', 'Autauga', 2170), ('01003010100', 'AL', 'Baldwin', 3000), ('01003010200', 'AL', 'Baldwin', 4100), ('06075010100', 'CA', 'San Francisco', 4000)]: ws.append(list(t))\n    wb.save('censuspopdata.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet'; ws.append(['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL'])\n    for i, (p, c, q) in enumerate([('Potatoes', 0.86, 21.6), ('Garlic', 1.19, 10.0), ('Celery', 3.07, 4.5), ('Lemon', 1.29, 7.0), ('Okra', 2.26, 38.6), ('Garlic', 1.19, 2.5), ('Celery', 3.07, 0.5), ('Parsnips', 2.27, 14.5), ('Lemon', 1.29, 3.0), ('Garlic', 1.19, 6.0)], 2): ws.append([p, c, q, '=ROUND(B%d*C%d,2)' % (i, i)])\n    wb.save('produceSales3.xlsx')\nmake_stand_ins()\nimport openpyxl, io, zipfile\nwb = openpyxl.Workbook()\nsheet = wb.active\nfor i in range(1, 11):  # Create some data in column A.\n    sheet['A' + str(i)] = i * i\nref_obj = openpyxl.chart.Reference(sheet, 1, 1, 1, 10)       # min_col, min_row, max_col, max_row\nprint(ref_obj)\nseries_obj = openpyxl.chart.Series(ref_obj, title='First series')\nchart_obj = openpyxl.chart.BarChart()\nchart_obj.title = 'My Chart'\nchart_obj.append(series_obj)\nsheet.add_chart(chart_obj, 'C5')\nwb.save('sampleChart3.xlsx')\nprint([n for n in zipfile.ZipFile('sampleChart3.xlsx').namelist() if 'chart' in n or 'drawing' in n])\nagain = openpyxl.load_workbook('sampleChart3.xlsx')\nprint(len(again.active._charts))\nagain.save('sampleChart3_again.xlsx')\nprint(len(openpyxl.load_workbook('sampleChart3_again.xlsx').active._charts))\nprint(openpyxl.chart.Reference(sheet, 2, 1, 2, 10), openpyxl.chart.Reference(sheet, 1, 1, 1))   # column first; a missing max_row gives one cell\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "'Sheet'!$A$1:$A$10\n['xl/drawings/drawing1.xml', 'xl/drawings/_rels/drawing1.xml.rels', 'xl/charts/chart1.xml']\n1\n1\n'Sheet'!$B$1:$B$10 'Sheet'!$A$1",
+   "live": false,
+   "exit": 0
+  },
+  "liveExample3_v1_0_0.py": {
+   "code": "import io, requests, openpyxl\nres = requests.get('https://automatetheboringstuff.com/files/example3.xlsx', timeout=60)\nprint(res.status_code, len(res.content))\nwb = openpyxl.load_workbook(io.BytesIO(res.content))\nprint(wb.sheetnames, wb.active.title, wb.active.max_row, wb.active.max_column)\nsheet = wb['Sheet1']\nfor row in sheet.iter_rows(min_row=1, max_row=3, values_only=True): print(row)\n",
+   "inputs": [],
+   "needs": [
+    "requests"
+   ],
+   "transcript": "200 9904\n['Sheet1', 'Sheet2', 'Sheet3'] Sheet1 7 3\n(datetime.datetime(2035, 4, 5, 13, 34, 2), 'Apples', 73)\n(datetime.datetime(2035, 4, 5, 3, 41, 23), 'Cherries', 85)\n(datetime.datetime(2035, 4, 6, 12, 46, 51), 'Pears', 14)",
+   "live": true,
+   "exit": 0
+  },
+  "safeLoadEntityBomb_v1_0_0.py": {
+   "code": "import io, sys, zipfile, openpyxl, openpyxl.xml, pyexpat\ndef bomb(depth):\n    ents = ''.join('<!ENTITY e%d \"%s\">' % (i, ('&e%d;' % (i - 1)) * 10) for i in range(1, depth + 1))\n    b = io.BytesIO(); src = openpyxl.Workbook(); src.active['A1'] = 'seed'; src.save(b)\n    zin = zipfile.ZipFile(io.BytesIO(b.getvalue())); out = io.BytesIO(); zout = zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED)\n    for n in zin.namelist():\n        data = zin.read(n)\n        if n == 'xl/worksheets/sheet1.xml':\n            t = data.decode(); i = t.index('<worksheet')\n            t = '<?xml version=\"1.0\"?><!DOCTYPE worksheet [<!ENTITY e0 \"aaaaaaaaaa\">%s]>' % ents + t[i:]\n            data = t.replace('>seed<', '>&e%d;<' % depth).encode()\n        zout.writestr(n, data)\n    zout.close(); return out.getvalue()\nprint('expat', pyexpat.EXPAT_VERSION, '| defusedxml in use:', openpyxl.xml.DEFUSEDXML)\nfor depth in (4, 6):\n    data = bomb(depth)\n    try: print(depth, 'file under 6000 bytes:', len(data) < 6000, '->', len(openpyxl.load_workbook(io.BytesIO(data)).active['A1'].value), 'characters in A1')\n    except Exception as e: print(depth, 'file under 6000 bytes:', len(data) < 6000, '->', type(e).__name__, str(e)[:60])\n",
+   "inputs": [],
+   "needs": [
+    "defusedxml"
+   ],
+   "transcript": "expat expat_2.8.1 | defusedxml in use: True\n4 file under 6000 bytes: True -> ValueError Unable to read workbook: could not read worksheets from None\n6 file under 6000 bytes: True -> ValueError Unable to read workbook: could not read worksheets from None",
+   "live": false,
+   "exit": 0
+  },
+  "recalcWithLibreOffice_v1_0_0.py": {
+   "code": "import os, tempfile, datetime, openpyxl\nos.chdir(tempfile.mkdtemp())            # stand-ins for the chapter's files live in a temporary folder\ndef make_stand_ins():\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet1'\n    for r in [(datetime.datetime(2035, 4, 5, 13, 34, 2), 'Apples', 73), (datetime.datetime(2035, 4, 5, 3, 41, 23), 'Cherries', 85), (datetime.datetime(2035, 4, 6, 12, 46, 51), 'Pears', 14), (datetime.datetime(2035, 4, 8, 8, 59, 43), 'Oranges', 52), (datetime.datetime(2035, 4, 10, 2, 7, 0), 'Apples', 152), (datetime.datetime(2035, 4, 10, 18, 10, 37), 'Bananas', 23), (datetime.datetime(2035, 4, 10, 2, 40, 46), 'Strawberries', 98)]: ws.append(r)\n    wb.create_sheet('Sheet2'); wb.create_sheet('Sheet3'); wb.save('example3.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Population by Census Tract'; ws.append(['CensusTract', 'State', 'County', 'POP2010'])\n    for t in [('02020000100', 'AK', 'Anchorage', 4115), ('02020000200', 'AK', 'Anchorage', 3040), ('02020000300', 'AK', 'Anchorage', 5360), ('02013000100', 'AK', 'Aleutians East', 3141), ('01001020100', 'AL', 'Autauga', 1912), ('01001020200', 'AL', 'Autauga', 2170), ('01003010100', 'AL', 'Baldwin', 3000), ('01003010200', 'AL', 'Baldwin', 4100), ('06075010100', 'CA', 'San Francisco', 4000)]: ws.append(list(t))\n    wb.save('censuspopdata.xlsx')\n    wb = openpyxl.Workbook(); ws = wb.active; ws.title = 'Sheet'; ws.append(['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL'])\n    for i, (p, c, q) in enumerate([('Potatoes', 0.86, 21.6), ('Garlic', 1.19, 10.0), ('Celery', 3.07, 4.5), ('Lemon', 1.29, 7.0), ('Okra', 2.26, 38.6), ('Garlic', 1.19, 2.5), ('Celery', 3.07, 0.5), ('Parsnips', 2.27, 14.5), ('Lemon', 1.29, 3.0), ('Garlic', 1.19, 6.0)], 2): ws.append([p, c, q, '=ROUND(B%d*C%d,2)' % (i, i)])\n    wb.save('produceSales3.xlsx')\nmake_stand_ins()\nimport subprocess, shutil, openpyxl\nsoffice = shutil.which('soffice')\nprint('LibreOffice found:', soffice is not None)\nif soffice:\n    import os\n    os.mkdir('out')\n    r = subprocess.run([soffice, '--headless', '--convert-to', 'xlsx', '--outdir', 'out', 'produceSales3.xlsx'], capture_output=True, text=True, timeout=180)\n    print('exit', r.returncode)\n    src = openpyxl.load_workbook('produceSales3.xlsx')['Sheet']\n    lo = openpyxl.load_workbook('out/produceSales3.xlsx', data_only=True)['Sheet']\n    differ = 0\n    for row in range(2, src.max_row + 1):\n        b, c, d = src.cell(row, 2).value, src.cell(row, 3).value, lo.cell(row, 4).value\n        if round(b * c, 2) != d: differ += 1\n    print('rows', src.max_row - 1, 'LibreOffice total differs from round(b * c, 2):', differ)\n    print(lo['D3'].value, openpyxl.load_workbook('out/produceSales3.xlsx')['Sheet']['D3'].value)\n",
+   "inputs": [],
+   "needs": [
+    "soffice"
+   ],
+   "transcript": "LibreOffice found: True\nexit 0\nrows 10 LibreOffice total differs from round(b * c, 2): 4\n11.9 =ROUND(B3*C3,2)",
+   "live": false,
+   "exit": 0
+  },
+  "fontsAndSizes_v1_0_0.py": {
+   "code": "import openpyxl, io, zipfile, re\nfrom openpyxl.styles import Font\nsheet = openpyxl.Workbook().active\nsheet['A1'] = 'Hello, world!'\nsheet['A1'].font = Font(size=24, italic=True)\nsheet['B3'] = 'Bold Times New Roman'\nsheet['B3'].font = Font(name='Times New Roman', bold=True)\nfor cell in (sheet['A1'], sheet['B3'], sheet['C5']):\n    print(cell.coordinate, cell.font.name, cell.font.sz)\ntry: sheet['A1'].font.bold = False\nexcept AttributeError as e: print('AttributeError', str(e)[:36])\nsheet['A5'] = 'Tall row'; sheet['B5'] = 'Wide column'\nsheet.row_dimensions[5].height = 70\nsheet.column_dimensions['B'].width = 20\nsheet.column_dimensions['D'].hidden = True\nb = io.BytesIO(); sheet.parent.save(b)\nxml = zipfile.ZipFile(b).read('xl/worksheets/sheet1.xml').decode()\nprint(*re.findall(r'<col [^>]*>', xml), sep='\\n')\nprint(*re.findall(r'<row r=\"5\"[^>]*>', xml))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "A1 None 24.0\nB3 Times New Roman None\nC5 Calibri 11.0\nAttributeError Style objects are immutable and cann\n<col width=\"20\" customWidth=\"1\" min=\"2\" max=\"2\" />\n<col hidden=\"1\" width=\"13\" customWidth=\"1\" min=\"4\" max=\"4\" />\n<row r=\"5\" ht=\"70\" customHeight=\"1\">",
+   "live": false,
+   "exit": 0
+  },
+  "mergeAndFreeze_v1_0_0.py": {
+   "code": "import openpyxl\nsheet = openpyxl.Workbook().active\nsheet.merge_cells('F1:I3')\nsheet['F1'] = 'Twelve cells merged together.'\nprint(*sheet.merged_cells.ranges, type(sheet['G2']).__name__)\ntry: sheet['G2'] = 'x'\nexcept AttributeError as e: print(e)\nsheet.unmerge_cells('F1:I3')\nprint(len(sheet.merged_cells.ranges), type(sheet['G2']).__name__)\nfor setting in ('A2', 'B1', 'C1', 'C2'):\n    ws = openpyxl.Workbook().active\n    ws.freeze_panes = setting\n    pane = ws.sheet_view.pane\n    print(setting, pane.xSplit, pane.ySplit)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "F1:I3 MergedCell\n'MergedCell' object attribute 'value' is read-only\n0 Cell\nA2 None 1.0\nB1 1.0 None\nC1 2.0 None\nC2 2.0 1.0",
+   "live": false,
+   "exit": 0
+  }
+ },
+ "_charts": {
+  "squares": {
+   "setup": "import openpyxl, io\nwb = openpyxl.Workbook(); sheet = wb.active\nfor i in range(1, 11): sheet['A' + str(i)] = i * i\nref_obj = openpyxl.chart.Reference(sheet, 1, 1, 1, 10)\nchart_obj = openpyxl.chart.BarChart()\nchart_obj.append(openpyxl.chart.Series(ref_obj, title='First series'))\nsheet.add_chart(chart_obj, 'C5')\nb = io.BytesIO(); wb.save(b); again = openpyxl.load_workbook(b).active\nassert again._charts[0].series[0].val.numRef.f == \"'Sheet'!$A$1:$A$10\"\n",
+   "expr": "[[str(r), again.cell(row=r, column=1).value] for r in range(1, 11)]",
+   "labels": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10"
+   ],
+   "values": [
+    1.0,
+    4.0,
+    9.0,
+    16.0,
+    25.0,
+    36.0,
+    49.0,
+    64.0,
+    81.0,
+    100.0
+   ]
+  }
+ },
+ "_tables": {
+  "countyTally": {
+   "setup": "import openpyxl\nwb = openpyxl.Workbook(); sheet = wb.active\nsheet.append(['CensusTract', 'State', 'County', 'POP2010'])\nfor t in [('02020000100', 'AK', 'Anchorage', 4115), ('02020000200', 'AK', 'Anchorage', 3040), ('02020000300', 'AK', 'Anchorage', 5360), ('02013000100', 'AK', 'Aleutians East', 3141), ('01001020100', 'AL', 'Autauga', 1912), ('01001020200', 'AL', 'Autauga', 2170), ('01003010100', 'AL', 'Baldwin', 3000), ('01003010200', 'AL', 'Baldwin', 4100), ('06075010100', 'CA', 'San Francisco', 4000)]: sheet.append(list(t))\ncounty_data = {}\nfor row in range(2, sheet.max_row + 1):\n    state, county, pop = sheet['B' + str(row)].value, sheet['C' + str(row)].value, sheet['D' + str(row)].value\n    county_data.setdefault(state, {})\n    county_data[state].setdefault(county, {'tracts': 0, 'pop': 0})\n    county_data[state][county]['tracts'] += 1\n    county_data[state][county]['pop'] += int(pop)\n",
+   "expr": "[['State', 'County', 'Tracts', 'Population']] + [[s, c, str(d['tracts']), '{:,}'.format(d['pop'])] for s in sorted(county_data) for c, d in sorted(county_data[s].items())]",
+   "rows": [
+    [
+     "State",
+     "County",
+     "Tracts",
+     "Population"
+    ],
+    [
+     "AK",
+     "Aleutians East",
+     "1",
+     "3,141"
+    ],
+    [
+     "AK",
+     "Anchorage",
+     "3",
+     "12,515"
+    ],
+    [
+     "AL",
+     "Autauga",
+     "2",
+     "4,082"
+    ],
+    [
+     "AL",
+     "Baldwin",
+     "2",
+     "7,100"
+    ],
+    [
+     "CA",
+     "San Francisco",
+     "1",
+     "4,000"
+    ]
+   ]
+  }
+ }
+}
