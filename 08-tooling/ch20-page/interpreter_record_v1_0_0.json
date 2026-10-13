@@ -1,0 +1,3930 @@
+{
+ "_version": "1.0.0",
+ "observed": "2026-10-13",
+ "_note": "Recorded by sen0414_ch20_interpreters_v1_0_0.py: one program (the standard-library side of e-mail: email, smtplib, imaplib, ssl, email.utils, mimetypes, against a small SMTP server written with sockets inside the program, a local stand-in on 127.0.0.1) under each installed interpreter, in the zone Europe/Istanbul. Python 3.15.0b4 is a beta. The chapter itself uses none of these modules.",
+ "program": "\nimport sys, os, io, ssl, json, socket, socketserver, threading, warnings, inspect, smtplib, imaplib, email, importlib, datetime\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nres = {}\ndef w(f):\n    with warnings.catch_warnings(record=True) as seen:\n        warnings.simplefilter('always')\n        try: v = f()\n        except BaseException as e: v = type(e).__name__ + ': ' + str(e)[:110]\n    return [v, sorted({x.category.__name__ for x in seen})]\nres['series'] = sys.version.split()[0].rsplit('.', 1)[0] + '.x'\nres['platform'] = [sys.platform, os.name]\n# removed modules\nfor m in ('smtpd', 'asyncore', 'asynchat', 'imghdr', 'sndhdr', 'cgi', 'telnetlib', 'nntplib'):\n    res['import ' + m] = w(lambda m=m: (importlib.import_module(m), 'imported')[1])\n# signatures\nres['smtplib.SMTP.starttls parameters'] = list(inspect.signature(smtplib.SMTP.starttls).parameters)\nres['smtplib.SMTP_SSL parameters'] = list(inspect.signature(smtplib.SMTP_SSL.__init__).parameters)\nres['imaplib.IMAP4_SSL parameters'] = list(inspect.signature(imaplib.IMAP4_SSL.__init__).parameters)\nres['imaplib.IMAP4.starttls parameters'] = list(inspect.signature(imaplib.IMAP4.starttls).parameters)\nres['imaplib.IMAP4 has idle and IDLE in Commands'] = [hasattr(imaplib.IMAP4, 'idle'), 'IDLE' in imaplib.Commands]\nres['smtplib.SMTP_SSL(keyfile=) draws'] = w(lambda: smtplib.SMTP_SSL(keyfile='k.pem'))\nres['imaplib.IMAP4_SSL(keyfile=) draws'] = w(lambda: imaplib.IMAP4_SSL('127.0.0.1', 1, keyfile='k.pem'))\nres['ports'] = [smtplib.SMTP_PORT, smtplib.SMTP_SSL_PORT, imaplib.IMAP4_PORT, imaplib.IMAP4_SSL_PORT]\n# ssl defaults\ndef sslinfo():\n    c = ssl.create_default_context(); return [c.check_hostname, c.verify_mode.name, c.minimum_version.name, sorted(f.name for f in ssl.VerifyFlags if f in c.verify_flags and f.value)]\nres['ssl.create_default_context(): check_hostname, verify_mode, minimum_version, verify_flags'] = w(sslinfo)\nres['ssl.PROTOCOL_TLS_CLIENT context verify_mode'] = w(lambda: ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT).verify_mode.name)\n# address parsing (a security fix of 3.12.6 / 3.13)\nbad = 'real@example.com, evil@example.net'\nres['email.utils.parseaddr of two addresses'] = w(lambda: eu.parseaddr(bad))\nres['email.utils.parseaddr(strict=False)'] = w(lambda: eu.parseaddr(bad, strict=False))\nres['email.utils.getaddresses of two addresses'] = w(lambda: eu.getaddresses([bad]))\nres['email.utils.supports_strict_parsing'] = getattr(eu, 'supports_strict_parsing', None)\nres['email.utils.parseaddr of a quoted name with a comma'] = w(lambda: eu.parseaddr('\"Doe, Jon\" <jon@example.org>'))\nres['email.utils.localtime(isdst=0)'] = w(lambda: str(eu.localtime(datetime.datetime(2026, 1, 1), isdst=0)))\n# header injection (a fix of 3.12.5 / 3.13)\ndef modern():\n    m = EmailMessage(); m['Subject'] = 'hello\\r\\nBcc: evil@example.net'; return 'accepted'\ndef legacy():\n    m = MIMEText('body'); m['To'] = 'a@example.com'; m['Subject'] = 'hello\\r\\nBcc: evil@example.net'; return [l for l in m.as_string().splitlines() if l.lower().startswith(('subject', 'bcc', ' '))]\ndef legacy_bytes():\n    m = MIMEText('body'); m['Subject'] = 'hello\\nBcc: evil@example.net'; return m.as_bytes().decode().splitlines()[:6]\nres['EmailMessage header with a line break'] = w(modern)\nres['MIMEText (the legacy compat32 policy, which EZGmail uses) header with a line break, as_string'] = w(legacy)\nres['MIMEText header with a bare linefeed, as_bytes'] = w(legacy_bytes)\ndef policy_default_set():\n    m = EmailMessage(policy=policy.default); m['To'] = 'a@example.com'; m['Subject'] = 'x'; m['X-Evil'] = 'a\\nBcc: b@example.net'; return 'accepted'\nres['EmailMessage X- header with a bare linefeed'] = w(policy_default_set)\n# non-ascii text and addresses\ndef body():\n    m = EmailMessage(); m['Subject'] = 'Yedekleme bitti'; m.set_content('tamamlandı'); return [m['Content-Transfer-Encoding'], m.get_content_charset(), m.as_bytes().decode().splitlines()[-1]]\nres['EmailMessage with Turkish text: transfer encoding, charset, last line'] = w(body)\ndef mimetext():\n    m = MIMEText('tamamlandı'); return [m['Content-Type'], m['Content-Transfer-Encoding']]\nres['MIMEText with Turkish text'] = w(mimetext)\ndef nonascii_addr():\n    m = EmailMessage(); m['To'] = 'ayşe@example.org'; m['From'] = 'a@example.com'; m.set_content('x'); return m.as_bytes(policy=policy.SMTP).decode().splitlines()[:2]\nres['EmailMessage with a non-ASCII address, policy.SMTP, as_bytes'] = w(nonascii_addr)\ndef nonascii_addr_utf8():\n    m = EmailMessage(); m['To'] = 'ayşe@example.org'; m['From'] = 'a@example.com'; m.set_content('x'); return m.as_bytes(policy=policy.SMTPUTF8).decode('utf-8').splitlines()[:2]\nres['EmailMessage with a non-ASCII address, policy.SMTPUTF8, as_bytes'] = w(nonascii_addr_utf8)\ndef long_header():\n    m = EmailMessage(); m['Subject'] = 'x' * 1200; return max(len(l) for l in m.as_bytes().splitlines())\nres['longest line of a header with 1200 characters and no space'] = w(long_header)\ndef make_id():\n    mid = eu.make_msgid(idstring='job1', domain='example.com'); return [mid.startswith('<'), mid.endswith('job1@example.com>')]\nres['email.utils.make_msgid shape'] = w(make_id)\nres['email.utils.formatdate(1797000528, usegmt=True)'] = w(lambda: eu.formatdate(1797000528, usegmt=True))\nres['imaplib.Time2Internaldate of an aware datetime'] = w(lambda: imaplib.Time2Internaldate(datetime.datetime(2026, 12, 9, 13, 28, 48, tzinfo=datetime.timezone.utc)))\nres['imaplib.Internaldate2tuple'] = w(lambda: imaplib.Internaldate2tuple(b'1 (INTERNALDATE \"17-Jul-1996 02:44:25 -0700\")')[:6])\nres['imaplib.ParseFlags'] = w(lambda: imaplib.ParseFlags(b'1 (FLAGS (\\\\Seen \\\\Flagged))'))\n# a small SMTP server on sockets: what smtplib sends, as the server sees it\nlog = []\nclass H(socketserver.StreamRequestHandler):\n    def handle(self):\n        w_ = lambda s: (self.wfile.write(s.encode() + b'\\r\\n'), self.wfile.flush())\n        w_('220 local stand-in'); rec = {'cmds': [], 'data': b''}\n        while True:\n            line = self.rfile.readline()\n            if not line: break\n            c = line.decode('utf-8', 'replace').strip(); rec['cmds'].append(c); u = c.upper()\n            if u.startswith('EHLO'): self.wfile.write(b'250-local stand-in\\r\\n250-8BITMIME\\r\\n250 SMTPUTF8\\r\\n'); self.wfile.flush()\n            elif u.startswith('MAIL'): w_('250 OK')\n            elif u.startswith('RCPT'): w_('550 no mailbox' if 'refused' in c else '250 OK')\n            elif u == 'DATA':\n                w_('354 go'); d = b''\n                while True:\n                    l = self.rfile.readline(); \n                    if l == b'.\\r\\n' or not l: break\n                    d += l\n                rec['data'] = d; w_('250 queued')\n            elif u == 'QUIT': w_('221 bye'); break\n            else: w_('250 OK')\n        log.append(rec)\nsrv = socketserver.ThreadingTCPServer(('127.0.0.1', 0), H); srv.daemon_threads = True; port = srv.server_address[1]; threading.Thread(target=srv.serve_forever, daemon=True).start()\ndef send(msg, **kw):\n    n = len(log); s = smtplib.SMTP('127.0.0.1', port, timeout=10); s.ehlo()\n    try: r = s.send_message(msg, **kw)\n    finally:\n        try: s.quit()\n        except Exception: pass\n    import time\n    for _ in range(50):\n        if len(log) > n: break\n        time.sleep(0.02)\n    return r, log[-1] if len(log) > n else None\ndef bcc():\n    m = EmailMessage(); m['From'] = 'al@example.com'; m['To'] = 'jon@example.org'; m['Cc'] = 'friend@example.com'; m['Bcc'] = 'secret@example.com'; m['Subject'] = 's'; m.set_content('b')\n    r, rec = send(m); hdr = email.message_from_bytes(rec['data']); return [r, [c for c in rec['cmds'] if c.upper().startswith(('MAIL', 'RCPT'))], hdr['Bcc'], hdr['Cc']]\nres['smtplib.send_message: envelope and the Bcc header the server sees'] = w(bcc)\ndef refused():\n    m = EmailMessage(); m['From'] = 'al@example.com'; m['To'] = 'ok@example.org, gone@refused.example'; m['Subject'] = 's'; m.set_content('b'); r, rec = send(m); return [r]\nres['smtplib.send_message with one refused recipient'] = w(refused)\ndef allrefused():\n    m = EmailMessage(); m['From'] = 'al@example.com'; m['To'] = 'gone@refused.example'; m['Subject'] = 's'; m.set_content('b'); return send(m)[0]\nres['smtplib.send_message with all recipients refused'] = w(allrefused)\ndef utf8_send():\n    m = EmailMessage(); m['From'] = 'al@example.com'; m['To'] = 'ayşe@example.org'; m['Subject'] = 's'; m.set_content('b'); r, rec = send(m); return [r, [c for c in rec['cmds'] if c.upper().startswith(('MAIL', 'RCPT'))]]\nres['smtplib.send_message to a non-ASCII address (SMTPUTF8 offered by the server)'] = w(utf8_send)\ndef nostarttls():\n    s = smtplib.SMTP('127.0.0.1', port, timeout=10); s.ehlo()\n    try: s.starttls(context=ssl.create_default_context())\n    finally: s.close()\nres['starttls() on a server that does not offer STARTTLS'] = w(nostarttls)\ndef noauth():\n    s = smtplib.SMTP('127.0.0.1', port, timeout=10); s.ehlo()\n    try: s.login('user', 'secret')\n    finally: s.close()\nres['login() on a server that does not offer AUTH'] = w(noauth)\ndef badport():\n    return smtplib.SMTP('127.0.0.1', 1, timeout=3)\nres['connecting to a closed port'] = w(badport)\ndef mixed_msg():\n    m = EmailMessage(); m['From'] = 'a@example.com'; m['To'] = 'b@example.org'; m.set_content('plain'); m.add_alternative('<b>html</b>', subtype='html'); m.add_attachment(b'1234', maintype='application', subtype='octet-stream', filename='x.bin')\n    return [p.get_content_type() for p in m.walk()]\nres['EmailMessage walk of text + html + attachment'] = w(mixed_msg)\ndef mime_guess():\n    import mimetypes\n    return [mimetypes.guess_type(n)[0] for n in ('a.jpg', 'a.mp3', 'a.exe', 'a.zip', 'a.pdf', 'a.docx', 'a.unknownext')]\nres['mimetypes.guess_type of seven names'] = w(mime_guess)\nprint(json.dumps(res, sort_keys=True, default=repr))\n",
+ "interpreters": [
+  "3.11.17",
+  "3.12.3",
+  "3.13.16",
+  "3.14.0",
+  "3.14.1",
+  "3.14.2",
+  "3.14.3",
+  "3.14.4",
+  "3.14.5",
+  "3.14.6",
+  "3.15.0b4"
+ ],
+ "results": {
+  "3.11.17": {
+   "EmailMessage X- header with a bare linefeed": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage header with a line break": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage walk of text + html + attachment": [
+    [
+     "multipart/mixed",
+     "multipart/alternative",
+     "text/plain",
+     "text/html",
+     "application/octet-stream"
+    ],
+    []
+   ],
+   "EmailMessage with Turkish text: transfer encoding, charset, last line": [
+    [
+     "8bit",
+     "utf-8",
+     "tamamlandı"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTP, as_bytes": [
+    [
+     "To: =?utf-8?q?ay=C5=9Fe?=@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTPUTF8, as_bytes": [
+    [
+     "To: ayşe@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "MIMEText (the legacy compat32 policy, which EZGmail uses) header with a line break, as_string": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText header with a bare linefeed, as_bytes": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText with Turkish text": [
+    [
+     "text/plain; charset=\"utf-8\"",
+     "base64"
+    ],
+    []
+   ],
+   "connecting to a closed port": [
+    "ConnectionRefusedError: [Errno 111] Connection refused",
+    []
+   ],
+   "email.utils.formatdate(1797000528, usegmt=True)": [
+    "Fri, 11 Dec 2026 14:48:48 GMT",
+    []
+   ],
+   "email.utils.getaddresses of two addresses": [
+    [
+     [
+      "",
+      "real@example.com"
+     ],
+     [
+      "",
+      "evil@example.net"
+     ]
+    ],
+    []
+   ],
+   "email.utils.localtime(isdst=0)": [
+    "2026-01-01 00:00:00+03:00",
+    []
+   ],
+   "email.utils.make_msgid shape": [
+    [
+     true,
+     true
+    ],
+    []
+   ],
+   "email.utils.parseaddr of a quoted name with a comma": [
+    [
+     "Doe, Jon",
+     "jon@example.org"
+    ],
+    []
+   ],
+   "email.utils.parseaddr of two addresses": [
+    [
+     "",
+     ""
+    ],
+    []
+   ],
+   "email.utils.parseaddr(strict=False)": [
+    [
+     "",
+     "real@example.com"
+    ],
+    []
+   ],
+   "email.utils.supports_strict_parsing": true,
+   "imaplib.IMAP4 has idle and IDLE in Commands": [
+    false,
+    false
+   ],
+   "imaplib.IMAP4.starttls parameters": [
+    "self",
+    "ssl_context"
+   ],
+   "imaplib.IMAP4_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "keyfile",
+    "certfile",
+    "ssl_context",
+    "timeout"
+   ],
+   "imaplib.IMAP4_SSL(keyfile=) draws": [
+    "ValueError: certfile must be specified",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "imaplib.Internaldate2tuple": [
+    [
+     1996,
+     7,
+     17,
+     12,
+     44,
+     25
+    ],
+    []
+   ],
+   "imaplib.ParseFlags": [
+    [
+     "b'\\\\Seen'",
+     "b'\\\\Flagged'"
+    ],
+    []
+   ],
+   "imaplib.Time2Internaldate of an aware datetime": [
+    "\"09-Dec-2026 13:28:48 +0000\"",
+    []
+   ],
+   "import asynchat": [
+    "imported",
+    []
+   ],
+   "import asyncore": [
+    "imported",
+    []
+   ],
+   "import cgi": [
+    "imported",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "import imghdr": [
+    "imported",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "import nntplib": [
+    "imported",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "import smtpd": [
+    "imported",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "import sndhdr": [
+    "imported",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "import telnetlib": [
+    "imported",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "login() on a server that does not offer AUTH": [
+    "SMTPNotSupportedError: SMTP AUTH extension not supported by server.",
+    []
+   ],
+   "longest line of a header with 1200 characters and no space": [
+    78,
+    []
+   ],
+   "mimetypes.guess_type of seven names": [
+    [
+     "image/jpeg",
+     "audio/mpeg",
+     "application/x-msdos-program",
+     "application/zip",
+     "application/pdf",
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     null
+    ],
+    []
+   ],
+   "platform": [
+    "linux",
+    "posix"
+   ],
+   "ports": [
+    25,
+    465,
+    143,
+    993
+   ],
+   "series": "3.11.x",
+   "smtplib.SMTP.starttls parameters": [
+    "self",
+    "keyfile",
+    "certfile",
+    "context"
+   ],
+   "smtplib.SMTP_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "local_hostname",
+    "keyfile",
+    "certfile",
+    "timeout",
+    "source_address",
+    "context"
+   ],
+   "smtplib.SMTP_SSL(keyfile=) draws": [
+    "ValueError: certfile must be specified",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "smtplib.send_message to a non-ASCII address (SMTPUTF8 offered by the server)": [
+    [
+     {},
+     [
+      "mail FROM:<al@example.com> SMTPUTF8 BODY=8BITMIME",
+      "rcpt TO:<ayşe@example.org>"
+     ]
+    ],
+    []
+   ],
+   "smtplib.send_message with all recipients refused": [
+    "SMTPRecipientsRefused: {'gone@refused.example': (550, b'no mailbox')}",
+    []
+   ],
+   "smtplib.send_message with one refused recipient": [
+    [
+     {
+      "gone@refused.example": [
+       550,
+       "b'no mailbox'"
+      ]
+     }
+    ],
+    []
+   ],
+   "smtplib.send_message: envelope and the Bcc header the server sees": [
+    [
+     {},
+     [
+      "mail FROM:<al@example.com>",
+      "rcpt TO:<jon@example.org>",
+      "rcpt TO:<secret@example.com>",
+      "rcpt TO:<friend@example.com>"
+     ],
+     null,
+     "friend@example.com"
+    ],
+    []
+   ],
+   "ssl.PROTOCOL_TLS_CLIENT context verify_mode": [
+    "CERT_REQUIRED",
+    []
+   ],
+   "ssl.create_default_context(): check_hostname, verify_mode, minimum_version, verify_flags": [
+    [
+     true,
+     "CERT_REQUIRED",
+     "TLSv1_2",
+     [
+      "VERIFY_X509_TRUSTED_FIRST"
+     ]
+    ],
+    []
+   ],
+   "starttls() on a server that does not offer STARTTLS": [
+    "SMTPNotSupportedError: STARTTLS extension not supported by server.",
+    []
+   ]
+  },
+  "3.12.3": {
+   "EmailMessage X- header with a bare linefeed": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage header with a line break": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage walk of text + html + attachment": [
+    [
+     "multipart/mixed",
+     "multipart/alternative",
+     "text/plain",
+     "text/html",
+     "application/octet-stream"
+    ],
+    []
+   ],
+   "EmailMessage with Turkish text: transfer encoding, charset, last line": [
+    [
+     "8bit",
+     "utf-8",
+     "tamamlandı"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTP, as_bytes": [
+    [
+     "To: =?utf-8?q?ay=C5=9Fe?=@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTPUTF8, as_bytes": [
+    [
+     "To: ayşe@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "MIMEText (the legacy compat32 policy, which EZGmail uses) header with a line break, as_string": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText header with a bare linefeed, as_bytes": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText with Turkish text": [
+    [
+     "text/plain; charset=\"utf-8\"",
+     "base64"
+    ],
+    []
+   ],
+   "connecting to a closed port": [
+    "ConnectionRefusedError: [Errno 111] Connection refused",
+    []
+   ],
+   "email.utils.formatdate(1797000528, usegmt=True)": [
+    "Fri, 11 Dec 2026 14:48:48 GMT",
+    []
+   ],
+   "email.utils.getaddresses of two addresses": [
+    [
+     [
+      "",
+      "real@example.com"
+     ],
+     [
+      "",
+      "evil@example.net"
+     ]
+    ],
+    []
+   ],
+   "email.utils.localtime(isdst=0)": [
+    "2026-01-01 00:00:00+03:00",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "email.utils.make_msgid shape": [
+    [
+     true,
+     true
+    ],
+    []
+   ],
+   "email.utils.parseaddr of a quoted name with a comma": [
+    [
+     "Doe, Jon",
+     "jon@example.org"
+    ],
+    []
+   ],
+   "email.utils.parseaddr of two addresses": [
+    [
+     "",
+     ""
+    ],
+    []
+   ],
+   "email.utils.parseaddr(strict=False)": [
+    [
+     "",
+     "real@example.com"
+    ],
+    []
+   ],
+   "email.utils.supports_strict_parsing": true,
+   "imaplib.IMAP4 has idle and IDLE in Commands": [
+    false,
+    false
+   ],
+   "imaplib.IMAP4.starttls parameters": [
+    "self",
+    "ssl_context"
+   ],
+   "imaplib.IMAP4_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "ssl_context",
+    "timeout"
+   ],
+   "imaplib.IMAP4_SSL(keyfile=) draws": [
+    "TypeError: IMAP4_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "imaplib.Internaldate2tuple": [
+    [
+     1996,
+     7,
+     17,
+     12,
+     44,
+     25
+    ],
+    []
+   ],
+   "imaplib.ParseFlags": [
+    [
+     "b'\\\\Seen'",
+     "b'\\\\Flagged'"
+    ],
+    []
+   ],
+   "imaplib.Time2Internaldate of an aware datetime": [
+    "\"09-Dec-2026 13:28:48 +0000\"",
+    []
+   ],
+   "import asynchat": [
+    "ModuleNotFoundError: No module named 'asynchat'",
+    []
+   ],
+   "import asyncore": [
+    "ModuleNotFoundError: No module named 'asyncore'",
+    []
+   ],
+   "import cgi": [
+    "imported",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "import imghdr": [
+    "imported",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "import nntplib": [
+    "imported",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "import smtpd": [
+    "ModuleNotFoundError: No module named 'smtpd'",
+    []
+   ],
+   "import sndhdr": [
+    "imported",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "import telnetlib": [
+    "imported",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "login() on a server that does not offer AUTH": [
+    "SMTPNotSupportedError: SMTP AUTH extension not supported by server.",
+    []
+   ],
+   "longest line of a header with 1200 characters and no space": [
+    78,
+    []
+   ],
+   "mimetypes.guess_type of seven names": [
+    [
+     "image/jpeg",
+     "audio/mpeg",
+     "application/x-msdos-program",
+     "application/zip",
+     "application/pdf",
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     null
+    ],
+    []
+   ],
+   "platform": [
+    "linux",
+    "posix"
+   ],
+   "ports": [
+    25,
+    465,
+    143,
+    993
+   ],
+   "series": "3.12.x",
+   "smtplib.SMTP.starttls parameters": [
+    "self",
+    "context"
+   ],
+   "smtplib.SMTP_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "local_hostname",
+    "timeout",
+    "source_address",
+    "context"
+   ],
+   "smtplib.SMTP_SSL(keyfile=) draws": [
+    "TypeError: SMTP_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "smtplib.send_message to a non-ASCII address (SMTPUTF8 offered by the server)": [
+    [
+     {},
+     [
+      "mail FROM:<al@example.com> SMTPUTF8 BODY=8BITMIME",
+      "rcpt TO:<ayşe@example.org>"
+     ]
+    ],
+    []
+   ],
+   "smtplib.send_message with all recipients refused": [
+    "SMTPRecipientsRefused: {'gone@refused.example': (550, b'no mailbox')}",
+    []
+   ],
+   "smtplib.send_message with one refused recipient": [
+    [
+     {
+      "gone@refused.example": [
+       550,
+       "b'no mailbox'"
+      ]
+     }
+    ],
+    []
+   ],
+   "smtplib.send_message: envelope and the Bcc header the server sees": [
+    [
+     {},
+     [
+      "mail FROM:<al@example.com>",
+      "rcpt TO:<jon@example.org>",
+      "rcpt TO:<secret@example.com>",
+      "rcpt TO:<friend@example.com>"
+     ],
+     null,
+     "friend@example.com"
+    ],
+    []
+   ],
+   "ssl.PROTOCOL_TLS_CLIENT context verify_mode": [
+    "CERT_REQUIRED",
+    []
+   ],
+   "ssl.create_default_context(): check_hostname, verify_mode, minimum_version, verify_flags": [
+    [
+     true,
+     "CERT_REQUIRED",
+     "MINIMUM_SUPPORTED",
+     [
+      "VERIFY_X509_TRUSTED_FIRST"
+     ]
+    ],
+    []
+   ],
+   "starttls() on a server that does not offer STARTTLS": [
+    "SMTPNotSupportedError: STARTTLS extension not supported by server.",
+    []
+   ]
+  },
+  "3.13.16": {
+   "EmailMessage X- header with a bare linefeed": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage header with a line break": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage walk of text + html + attachment": [
+    [
+     "multipart/mixed",
+     "multipart/alternative",
+     "text/plain",
+     "text/html",
+     "application/octet-stream"
+    ],
+    []
+   ],
+   "EmailMessage with Turkish text: transfer encoding, charset, last line": [
+    [
+     "8bit",
+     "utf-8",
+     "tamamlandı"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTP, as_bytes": [
+    [
+     "To: =?utf-8?q?ay=C5=9Fe?=@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTPUTF8, as_bytes": [
+    [
+     "To: ayşe@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "MIMEText (the legacy compat32 policy, which EZGmail uses) header with a line break, as_string": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText header with a bare linefeed, as_bytes": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText with Turkish text": [
+    [
+     "text/plain; charset=\"utf-8\"",
+     "base64"
+    ],
+    []
+   ],
+   "connecting to a closed port": [
+    "ConnectionRefusedError: [Errno 111] Connection refused",
+    []
+   ],
+   "email.utils.formatdate(1797000528, usegmt=True)": [
+    "Fri, 11 Dec 2026 14:48:48 GMT",
+    []
+   ],
+   "email.utils.getaddresses of two addresses": [
+    [
+     [
+      "",
+      "real@example.com"
+     ],
+     [
+      "",
+      "evil@example.net"
+     ]
+    ],
+    []
+   ],
+   "email.utils.localtime(isdst=0)": [
+    "2026-01-01 00:00:00+03:00",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "email.utils.make_msgid shape": [
+    [
+     true,
+     true
+    ],
+    []
+   ],
+   "email.utils.parseaddr of a quoted name with a comma": [
+    [
+     "Doe, Jon",
+     "jon@example.org"
+    ],
+    []
+   ],
+   "email.utils.parseaddr of two addresses": [
+    [
+     "",
+     ""
+    ],
+    []
+   ],
+   "email.utils.parseaddr(strict=False)": [
+    [
+     "",
+     "real@example.com"
+    ],
+    []
+   ],
+   "email.utils.supports_strict_parsing": true,
+   "imaplib.IMAP4 has idle and IDLE in Commands": [
+    false,
+    false
+   ],
+   "imaplib.IMAP4.starttls parameters": [
+    "self",
+    "ssl_context"
+   ],
+   "imaplib.IMAP4_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "ssl_context",
+    "timeout"
+   ],
+   "imaplib.IMAP4_SSL(keyfile=) draws": [
+    "TypeError: IMAP4_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "imaplib.Internaldate2tuple": [
+    [
+     1996,
+     7,
+     17,
+     12,
+     44,
+     25
+    ],
+    []
+   ],
+   "imaplib.ParseFlags": [
+    [
+     "b'\\\\Seen'",
+     "b'\\\\Flagged'"
+    ],
+    []
+   ],
+   "imaplib.Time2Internaldate of an aware datetime": [
+    "\"09-Dec-2026 13:28:48 +0000\"",
+    []
+   ],
+   "import asynchat": [
+    "ModuleNotFoundError: No module named 'asynchat'",
+    []
+   ],
+   "import asyncore": [
+    "ModuleNotFoundError: No module named 'asyncore'",
+    []
+   ],
+   "import cgi": [
+    "ModuleNotFoundError: No module named 'cgi'",
+    []
+   ],
+   "import imghdr": [
+    "ModuleNotFoundError: No module named 'imghdr'",
+    []
+   ],
+   "import nntplib": [
+    "ModuleNotFoundError: No module named 'nntplib'",
+    []
+   ],
+   "import smtpd": [
+    "ModuleNotFoundError: No module named 'smtpd'",
+    []
+   ],
+   "import sndhdr": [
+    "ModuleNotFoundError: No module named 'sndhdr'",
+    []
+   ],
+   "import telnetlib": [
+    "ModuleNotFoundError: No module named 'telnetlib'",
+    []
+   ],
+   "login() on a server that does not offer AUTH": [
+    "SMTPNotSupportedError: SMTP AUTH extension not supported by server.",
+    []
+   ],
+   "longest line of a header with 1200 characters and no space": [
+    78,
+    []
+   ],
+   "mimetypes.guess_type of seven names": [
+    [
+     "image/jpeg",
+     "audio/mpeg",
+     "application/x-msdos-program",
+     "application/zip",
+     "application/pdf",
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     null
+    ],
+    []
+   ],
+   "platform": [
+    "linux",
+    "posix"
+   ],
+   "ports": [
+    25,
+    465,
+    143,
+    993
+   ],
+   "series": "3.13.x",
+   "smtplib.SMTP.starttls parameters": [
+    "self",
+    "context"
+   ],
+   "smtplib.SMTP_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "local_hostname",
+    "timeout",
+    "source_address",
+    "context"
+   ],
+   "smtplib.SMTP_SSL(keyfile=) draws": [
+    "TypeError: SMTP_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "smtplib.send_message to a non-ASCII address (SMTPUTF8 offered by the server)": [
+    [
+     {},
+     [
+      "mail from:<al@example.com> SMTPUTF8 BODY=8BITMIME",
+      "rcpt to:<ayşe@example.org>"
+     ]
+    ],
+    []
+   ],
+   "smtplib.send_message with all recipients refused": [
+    "SMTPRecipientsRefused: {'gone@refused.example': (550, b'no mailbox')}",
+    []
+   ],
+   "smtplib.send_message with one refused recipient": [
+    [
+     {
+      "gone@refused.example": [
+       550,
+       "b'no mailbox'"
+      ]
+     }
+    ],
+    []
+   ],
+   "smtplib.send_message: envelope and the Bcc header the server sees": [
+    [
+     {},
+     [
+      "mail from:<al@example.com>",
+      "rcpt to:<jon@example.org>",
+      "rcpt to:<secret@example.com>",
+      "rcpt to:<friend@example.com>"
+     ],
+     null,
+     "friend@example.com"
+    ],
+    []
+   ],
+   "ssl.PROTOCOL_TLS_CLIENT context verify_mode": [
+    "CERT_REQUIRED",
+    []
+   ],
+   "ssl.create_default_context(): check_hostname, verify_mode, minimum_version, verify_flags": [
+    [
+     true,
+     "CERT_REQUIRED",
+     "TLSv1_2",
+     [
+      "VERIFY_X509_PARTIAL_CHAIN",
+      "VERIFY_X509_STRICT",
+      "VERIFY_X509_TRUSTED_FIRST"
+     ]
+    ],
+    []
+   ],
+   "starttls() on a server that does not offer STARTTLS": [
+    "SMTPNotSupportedError: STARTTLS extension not supported by server.",
+    []
+   ]
+  },
+  "3.14.0": {
+   "EmailMessage X- header with a bare linefeed": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage header with a line break": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage walk of text + html + attachment": [
+    [
+     "multipart/mixed",
+     "multipart/alternative",
+     "text/plain",
+     "text/html",
+     "application/octet-stream"
+    ],
+    []
+   ],
+   "EmailMessage with Turkish text: transfer encoding, charset, last line": [
+    [
+     "8bit",
+     "utf-8",
+     "tamamlandı"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTP, as_bytes": [
+    [
+     "To: =?utf-8?q?ay=C5=9Fe?=@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTPUTF8, as_bytes": [
+    [
+     "To: ayşe@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "MIMEText (the legacy compat32 policy, which EZGmail uses) header with a line break, as_string": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText header with a bare linefeed, as_bytes": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText with Turkish text": [
+    [
+     "text/plain; charset=\"utf-8\"",
+     "base64"
+    ],
+    []
+   ],
+   "connecting to a closed port": [
+    "ConnectionRefusedError: [Errno 111] Connection refused",
+    []
+   ],
+   "email.utils.formatdate(1797000528, usegmt=True)": [
+    "Fri, 11 Dec 2026 14:48:48 GMT",
+    []
+   ],
+   "email.utils.getaddresses of two addresses": [
+    [
+     [
+      "",
+      "real@example.com"
+     ],
+     [
+      "",
+      "evil@example.net"
+     ]
+    ],
+    []
+   ],
+   "email.utils.localtime(isdst=0)": [
+    "TypeError: localtime() got an unexpected keyword argument 'isdst'",
+    []
+   ],
+   "email.utils.make_msgid shape": [
+    [
+     true,
+     true
+    ],
+    []
+   ],
+   "email.utils.parseaddr of a quoted name with a comma": [
+    [
+     "Doe, Jon",
+     "jon@example.org"
+    ],
+    []
+   ],
+   "email.utils.parseaddr of two addresses": [
+    [
+     "",
+     ""
+    ],
+    []
+   ],
+   "email.utils.parseaddr(strict=False)": [
+    [
+     "",
+     "real@example.com"
+    ],
+    []
+   ],
+   "email.utils.supports_strict_parsing": true,
+   "imaplib.IMAP4 has idle and IDLE in Commands": [
+    true,
+    true
+   ],
+   "imaplib.IMAP4.starttls parameters": [
+    "self",
+    "ssl_context"
+   ],
+   "imaplib.IMAP4_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "ssl_context",
+    "timeout"
+   ],
+   "imaplib.IMAP4_SSL(keyfile=) draws": [
+    "TypeError: IMAP4_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "imaplib.Internaldate2tuple": [
+    [
+     1996,
+     7,
+     17,
+     12,
+     44,
+     25
+    ],
+    []
+   ],
+   "imaplib.ParseFlags": [
+    [
+     "b'\\\\Seen'",
+     "b'\\\\Flagged'"
+    ],
+    []
+   ],
+   "imaplib.Time2Internaldate of an aware datetime": [
+    "\"09-Dec-2026 13:28:48 +0000\"",
+    []
+   ],
+   "import asynchat": [
+    "ModuleNotFoundError: No module named 'asynchat'",
+    []
+   ],
+   "import asyncore": [
+    "ModuleNotFoundError: No module named 'asyncore'",
+    []
+   ],
+   "import cgi": [
+    "ModuleNotFoundError: No module named 'cgi'",
+    []
+   ],
+   "import imghdr": [
+    "ModuleNotFoundError: No module named 'imghdr'",
+    []
+   ],
+   "import nntplib": [
+    "ModuleNotFoundError: No module named 'nntplib'",
+    []
+   ],
+   "import smtpd": [
+    "ModuleNotFoundError: No module named 'smtpd'",
+    []
+   ],
+   "import sndhdr": [
+    "ModuleNotFoundError: No module named 'sndhdr'",
+    []
+   ],
+   "import telnetlib": [
+    "ModuleNotFoundError: No module named 'telnetlib'",
+    []
+   ],
+   "login() on a server that does not offer AUTH": [
+    "SMTPNotSupportedError: SMTP AUTH extension not supported by server.",
+    []
+   ],
+   "longest line of a header with 1200 characters and no space": [
+    78,
+    []
+   ],
+   "mimetypes.guess_type of seven names": [
+    [
+     "image/jpeg",
+     "audio/mpeg",
+     "application/x-msdos-program",
+     "application/zip",
+     "application/pdf",
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     null
+    ],
+    []
+   ],
+   "platform": [
+    "linux",
+    "posix"
+   ],
+   "ports": [
+    25,
+    465,
+    143,
+    993
+   ],
+   "series": "3.14.x",
+   "smtplib.SMTP.starttls parameters": [
+    "self",
+    "context"
+   ],
+   "smtplib.SMTP_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "local_hostname",
+    "timeout",
+    "source_address",
+    "context"
+   ],
+   "smtplib.SMTP_SSL(keyfile=) draws": [
+    "TypeError: SMTP_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "smtplib.send_message to a non-ASCII address (SMTPUTF8 offered by the server)": [
+    [
+     {},
+     [
+      "mail from:<al@example.com> SMTPUTF8 BODY=8BITMIME",
+      "rcpt to:<ayşe@example.org>"
+     ]
+    ],
+    []
+   ],
+   "smtplib.send_message with all recipients refused": [
+    "SMTPRecipientsRefused: {'gone@refused.example': (550, b'no mailbox')}",
+    []
+   ],
+   "smtplib.send_message with one refused recipient": [
+    [
+     {
+      "gone@refused.example": [
+       550,
+       "b'no mailbox'"
+      ]
+     }
+    ],
+    []
+   ],
+   "smtplib.send_message: envelope and the Bcc header the server sees": [
+    [
+     {},
+     [
+      "mail from:<al@example.com>",
+      "rcpt to:<jon@example.org>",
+      "rcpt to:<secret@example.com>",
+      "rcpt to:<friend@example.com>"
+     ],
+     null,
+     "friend@example.com"
+    ],
+    []
+   ],
+   "ssl.PROTOCOL_TLS_CLIENT context verify_mode": [
+    "CERT_REQUIRED",
+    []
+   ],
+   "ssl.create_default_context(): check_hostname, verify_mode, minimum_version, verify_flags": [
+    [
+     true,
+     "CERT_REQUIRED",
+     "TLSv1_2",
+     [
+      "VERIFY_X509_PARTIAL_CHAIN",
+      "VERIFY_X509_STRICT",
+      "VERIFY_X509_TRUSTED_FIRST"
+     ]
+    ],
+    []
+   ],
+   "starttls() on a server that does not offer STARTTLS": [
+    "SMTPNotSupportedError: STARTTLS extension not supported by server.",
+    []
+   ]
+  },
+  "3.14.1": {
+   "EmailMessage X- header with a bare linefeed": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage header with a line break": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage walk of text + html + attachment": [
+    [
+     "multipart/mixed",
+     "multipart/alternative",
+     "text/plain",
+     "text/html",
+     "application/octet-stream"
+    ],
+    []
+   ],
+   "EmailMessage with Turkish text: transfer encoding, charset, last line": [
+    [
+     "8bit",
+     "utf-8",
+     "tamamlandı"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTP, as_bytes": [
+    [
+     "To: =?utf-8?q?ay=C5=9Fe?=@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTPUTF8, as_bytes": [
+    [
+     "To: ayşe@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "MIMEText (the legacy compat32 policy, which EZGmail uses) header with a line break, as_string": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText header with a bare linefeed, as_bytes": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText with Turkish text": [
+    [
+     "text/plain; charset=\"utf-8\"",
+     "base64"
+    ],
+    []
+   ],
+   "connecting to a closed port": [
+    "ConnectionRefusedError: [Errno 111] Connection refused",
+    []
+   ],
+   "email.utils.formatdate(1797000528, usegmt=True)": [
+    "Fri, 11 Dec 2026 14:48:48 GMT",
+    []
+   ],
+   "email.utils.getaddresses of two addresses": [
+    [
+     [
+      "",
+      "real@example.com"
+     ],
+     [
+      "",
+      "evil@example.net"
+     ]
+    ],
+    []
+   ],
+   "email.utils.localtime(isdst=0)": [
+    "TypeError: localtime() got an unexpected keyword argument 'isdst'",
+    []
+   ],
+   "email.utils.make_msgid shape": [
+    [
+     true,
+     true
+    ],
+    []
+   ],
+   "email.utils.parseaddr of a quoted name with a comma": [
+    [
+     "Doe, Jon",
+     "jon@example.org"
+    ],
+    []
+   ],
+   "email.utils.parseaddr of two addresses": [
+    [
+     "",
+     ""
+    ],
+    []
+   ],
+   "email.utils.parseaddr(strict=False)": [
+    [
+     "",
+     "real@example.com"
+    ],
+    []
+   ],
+   "email.utils.supports_strict_parsing": true,
+   "imaplib.IMAP4 has idle and IDLE in Commands": [
+    true,
+    true
+   ],
+   "imaplib.IMAP4.starttls parameters": [
+    "self",
+    "ssl_context"
+   ],
+   "imaplib.IMAP4_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "ssl_context",
+    "timeout"
+   ],
+   "imaplib.IMAP4_SSL(keyfile=) draws": [
+    "TypeError: IMAP4_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "imaplib.Internaldate2tuple": [
+    [
+     1996,
+     7,
+     17,
+     12,
+     44,
+     25
+    ],
+    []
+   ],
+   "imaplib.ParseFlags": [
+    [
+     "b'\\\\Seen'",
+     "b'\\\\Flagged'"
+    ],
+    []
+   ],
+   "imaplib.Time2Internaldate of an aware datetime": [
+    "\"09-Dec-2026 13:28:48 +0000\"",
+    []
+   ],
+   "import asynchat": [
+    "ModuleNotFoundError: No module named 'asynchat'",
+    []
+   ],
+   "import asyncore": [
+    "ModuleNotFoundError: No module named 'asyncore'",
+    []
+   ],
+   "import cgi": [
+    "ModuleNotFoundError: No module named 'cgi'",
+    []
+   ],
+   "import imghdr": [
+    "ModuleNotFoundError: No module named 'imghdr'",
+    []
+   ],
+   "import nntplib": [
+    "ModuleNotFoundError: No module named 'nntplib'",
+    []
+   ],
+   "import smtpd": [
+    "ModuleNotFoundError: No module named 'smtpd'",
+    []
+   ],
+   "import sndhdr": [
+    "ModuleNotFoundError: No module named 'sndhdr'",
+    []
+   ],
+   "import telnetlib": [
+    "ModuleNotFoundError: No module named 'telnetlib'",
+    []
+   ],
+   "login() on a server that does not offer AUTH": [
+    "SMTPNotSupportedError: SMTP AUTH extension not supported by server.",
+    []
+   ],
+   "longest line of a header with 1200 characters and no space": [
+    78,
+    []
+   ],
+   "mimetypes.guess_type of seven names": [
+    [
+     "image/jpeg",
+     "audio/mpeg",
+     "application/x-msdos-program",
+     "application/zip",
+     "application/pdf",
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     null
+    ],
+    []
+   ],
+   "platform": [
+    "linux",
+    "posix"
+   ],
+   "ports": [
+    25,
+    465,
+    143,
+    993
+   ],
+   "series": "3.14.x",
+   "smtplib.SMTP.starttls parameters": [
+    "self",
+    "context"
+   ],
+   "smtplib.SMTP_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "local_hostname",
+    "timeout",
+    "source_address",
+    "context"
+   ],
+   "smtplib.SMTP_SSL(keyfile=) draws": [
+    "TypeError: SMTP_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "smtplib.send_message to a non-ASCII address (SMTPUTF8 offered by the server)": [
+    [
+     {},
+     [
+      "mail from:<al@example.com> SMTPUTF8 BODY=8BITMIME",
+      "rcpt to:<ayşe@example.org>"
+     ]
+    ],
+    []
+   ],
+   "smtplib.send_message with all recipients refused": [
+    "SMTPRecipientsRefused: {'gone@refused.example': (550, b'no mailbox')}",
+    []
+   ],
+   "smtplib.send_message with one refused recipient": [
+    [
+     {
+      "gone@refused.example": [
+       550,
+       "b'no mailbox'"
+      ]
+     }
+    ],
+    []
+   ],
+   "smtplib.send_message: envelope and the Bcc header the server sees": [
+    [
+     {},
+     [
+      "mail from:<al@example.com>",
+      "rcpt to:<jon@example.org>",
+      "rcpt to:<secret@example.com>",
+      "rcpt to:<friend@example.com>"
+     ],
+     null,
+     "friend@example.com"
+    ],
+    []
+   ],
+   "ssl.PROTOCOL_TLS_CLIENT context verify_mode": [
+    "CERT_REQUIRED",
+    []
+   ],
+   "ssl.create_default_context(): check_hostname, verify_mode, minimum_version, verify_flags": [
+    [
+     true,
+     "CERT_REQUIRED",
+     "TLSv1_2",
+     [
+      "VERIFY_X509_PARTIAL_CHAIN",
+      "VERIFY_X509_STRICT",
+      "VERIFY_X509_TRUSTED_FIRST"
+     ]
+    ],
+    []
+   ],
+   "starttls() on a server that does not offer STARTTLS": [
+    "SMTPNotSupportedError: STARTTLS extension not supported by server.",
+    []
+   ]
+  },
+  "3.14.2": {
+   "EmailMessage X- header with a bare linefeed": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage header with a line break": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage walk of text + html + attachment": [
+    [
+     "multipart/mixed",
+     "multipart/alternative",
+     "text/plain",
+     "text/html",
+     "application/octet-stream"
+    ],
+    []
+   ],
+   "EmailMessage with Turkish text: transfer encoding, charset, last line": [
+    [
+     "8bit",
+     "utf-8",
+     "tamamlandı"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTP, as_bytes": [
+    [
+     "To: =?utf-8?q?ay=C5=9Fe?=@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTPUTF8, as_bytes": [
+    [
+     "To: ayşe@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "MIMEText (the legacy compat32 policy, which EZGmail uses) header with a line break, as_string": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText header with a bare linefeed, as_bytes": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText with Turkish text": [
+    [
+     "text/plain; charset=\"utf-8\"",
+     "base64"
+    ],
+    []
+   ],
+   "connecting to a closed port": [
+    "ConnectionRefusedError: [Errno 111] Connection refused",
+    []
+   ],
+   "email.utils.formatdate(1797000528, usegmt=True)": [
+    "Fri, 11 Dec 2026 14:48:48 GMT",
+    []
+   ],
+   "email.utils.getaddresses of two addresses": [
+    [
+     [
+      "",
+      "real@example.com"
+     ],
+     [
+      "",
+      "evil@example.net"
+     ]
+    ],
+    []
+   ],
+   "email.utils.localtime(isdst=0)": [
+    "TypeError: localtime() got an unexpected keyword argument 'isdst'",
+    []
+   ],
+   "email.utils.make_msgid shape": [
+    [
+     true,
+     true
+    ],
+    []
+   ],
+   "email.utils.parseaddr of a quoted name with a comma": [
+    [
+     "Doe, Jon",
+     "jon@example.org"
+    ],
+    []
+   ],
+   "email.utils.parseaddr of two addresses": [
+    [
+     "",
+     ""
+    ],
+    []
+   ],
+   "email.utils.parseaddr(strict=False)": [
+    [
+     "",
+     "real@example.com"
+    ],
+    []
+   ],
+   "email.utils.supports_strict_parsing": true,
+   "imaplib.IMAP4 has idle and IDLE in Commands": [
+    true,
+    true
+   ],
+   "imaplib.IMAP4.starttls parameters": [
+    "self",
+    "ssl_context"
+   ],
+   "imaplib.IMAP4_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "ssl_context",
+    "timeout"
+   ],
+   "imaplib.IMAP4_SSL(keyfile=) draws": [
+    "TypeError: IMAP4_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "imaplib.Internaldate2tuple": [
+    [
+     1996,
+     7,
+     17,
+     12,
+     44,
+     25
+    ],
+    []
+   ],
+   "imaplib.ParseFlags": [
+    [
+     "b'\\\\Seen'",
+     "b'\\\\Flagged'"
+    ],
+    []
+   ],
+   "imaplib.Time2Internaldate of an aware datetime": [
+    "\"09-Dec-2026 13:28:48 +0000\"",
+    []
+   ],
+   "import asynchat": [
+    "ModuleNotFoundError: No module named 'asynchat'",
+    []
+   ],
+   "import asyncore": [
+    "ModuleNotFoundError: No module named 'asyncore'",
+    []
+   ],
+   "import cgi": [
+    "ModuleNotFoundError: No module named 'cgi'",
+    []
+   ],
+   "import imghdr": [
+    "ModuleNotFoundError: No module named 'imghdr'",
+    []
+   ],
+   "import nntplib": [
+    "ModuleNotFoundError: No module named 'nntplib'",
+    []
+   ],
+   "import smtpd": [
+    "ModuleNotFoundError: No module named 'smtpd'",
+    []
+   ],
+   "import sndhdr": [
+    "ModuleNotFoundError: No module named 'sndhdr'",
+    []
+   ],
+   "import telnetlib": [
+    "ModuleNotFoundError: No module named 'telnetlib'",
+    []
+   ],
+   "login() on a server that does not offer AUTH": [
+    "SMTPNotSupportedError: SMTP AUTH extension not supported by server.",
+    []
+   ],
+   "longest line of a header with 1200 characters and no space": [
+    78,
+    []
+   ],
+   "mimetypes.guess_type of seven names": [
+    [
+     "image/jpeg",
+     "audio/mpeg",
+     "application/x-msdos-program",
+     "application/zip",
+     "application/pdf",
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     null
+    ],
+    []
+   ],
+   "platform": [
+    "linux",
+    "posix"
+   ],
+   "ports": [
+    25,
+    465,
+    143,
+    993
+   ],
+   "series": "3.14.x",
+   "smtplib.SMTP.starttls parameters": [
+    "self",
+    "context"
+   ],
+   "smtplib.SMTP_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "local_hostname",
+    "timeout",
+    "source_address",
+    "context"
+   ],
+   "smtplib.SMTP_SSL(keyfile=) draws": [
+    "TypeError: SMTP_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "smtplib.send_message to a non-ASCII address (SMTPUTF8 offered by the server)": [
+    [
+     {},
+     [
+      "mail from:<al@example.com> SMTPUTF8 BODY=8BITMIME",
+      "rcpt to:<ayşe@example.org>"
+     ]
+    ],
+    []
+   ],
+   "smtplib.send_message with all recipients refused": [
+    "SMTPRecipientsRefused: {'gone@refused.example': (550, b'no mailbox')}",
+    []
+   ],
+   "smtplib.send_message with one refused recipient": [
+    [
+     {
+      "gone@refused.example": [
+       550,
+       "b'no mailbox'"
+      ]
+     }
+    ],
+    []
+   ],
+   "smtplib.send_message: envelope and the Bcc header the server sees": [
+    [
+     {},
+     [
+      "mail from:<al@example.com>",
+      "rcpt to:<jon@example.org>",
+      "rcpt to:<secret@example.com>",
+      "rcpt to:<friend@example.com>"
+     ],
+     null,
+     "friend@example.com"
+    ],
+    []
+   ],
+   "ssl.PROTOCOL_TLS_CLIENT context verify_mode": [
+    "CERT_REQUIRED",
+    []
+   ],
+   "ssl.create_default_context(): check_hostname, verify_mode, minimum_version, verify_flags": [
+    [
+     true,
+     "CERT_REQUIRED",
+     "TLSv1_2",
+     [
+      "VERIFY_X509_PARTIAL_CHAIN",
+      "VERIFY_X509_STRICT",
+      "VERIFY_X509_TRUSTED_FIRST"
+     ]
+    ],
+    []
+   ],
+   "starttls() on a server that does not offer STARTTLS": [
+    "SMTPNotSupportedError: STARTTLS extension not supported by server.",
+    []
+   ]
+  },
+  "3.14.3": {
+   "EmailMessage X- header with a bare linefeed": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage header with a line break": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage walk of text + html + attachment": [
+    [
+     "multipart/mixed",
+     "multipart/alternative",
+     "text/plain",
+     "text/html",
+     "application/octet-stream"
+    ],
+    []
+   ],
+   "EmailMessage with Turkish text: transfer encoding, charset, last line": [
+    [
+     "8bit",
+     "utf-8",
+     "tamamlandı"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTP, as_bytes": [
+    [
+     "To: =?utf-8?q?ay=C5=9Fe?=@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTPUTF8, as_bytes": [
+    [
+     "To: ayşe@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "MIMEText (the legacy compat32 policy, which EZGmail uses) header with a line break, as_string": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText header with a bare linefeed, as_bytes": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText with Turkish text": [
+    [
+     "text/plain; charset=\"utf-8\"",
+     "base64"
+    ],
+    []
+   ],
+   "connecting to a closed port": [
+    "ConnectionRefusedError: [Errno 111] Connection refused",
+    []
+   ],
+   "email.utils.formatdate(1797000528, usegmt=True)": [
+    "Fri, 11 Dec 2026 14:48:48 GMT",
+    []
+   ],
+   "email.utils.getaddresses of two addresses": [
+    [
+     [
+      "",
+      "real@example.com"
+     ],
+     [
+      "",
+      "evil@example.net"
+     ]
+    ],
+    []
+   ],
+   "email.utils.localtime(isdst=0)": [
+    "TypeError: localtime() got an unexpected keyword argument 'isdst'",
+    []
+   ],
+   "email.utils.make_msgid shape": [
+    [
+     true,
+     true
+    ],
+    []
+   ],
+   "email.utils.parseaddr of a quoted name with a comma": [
+    [
+     "Doe, Jon",
+     "jon@example.org"
+    ],
+    []
+   ],
+   "email.utils.parseaddr of two addresses": [
+    [
+     "",
+     ""
+    ],
+    []
+   ],
+   "email.utils.parseaddr(strict=False)": [
+    [
+     "",
+     "real@example.com"
+    ],
+    []
+   ],
+   "email.utils.supports_strict_parsing": true,
+   "imaplib.IMAP4 has idle and IDLE in Commands": [
+    true,
+    true
+   ],
+   "imaplib.IMAP4.starttls parameters": [
+    "self",
+    "ssl_context"
+   ],
+   "imaplib.IMAP4_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "ssl_context",
+    "timeout"
+   ],
+   "imaplib.IMAP4_SSL(keyfile=) draws": [
+    "TypeError: IMAP4_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "imaplib.Internaldate2tuple": [
+    [
+     1996,
+     7,
+     17,
+     12,
+     44,
+     25
+    ],
+    []
+   ],
+   "imaplib.ParseFlags": [
+    [
+     "b'\\\\Seen'",
+     "b'\\\\Flagged'"
+    ],
+    []
+   ],
+   "imaplib.Time2Internaldate of an aware datetime": [
+    "\"09-Dec-2026 13:28:48 +0000\"",
+    []
+   ],
+   "import asynchat": [
+    "ModuleNotFoundError: No module named 'asynchat'",
+    []
+   ],
+   "import asyncore": [
+    "ModuleNotFoundError: No module named 'asyncore'",
+    []
+   ],
+   "import cgi": [
+    "ModuleNotFoundError: No module named 'cgi'",
+    []
+   ],
+   "import imghdr": [
+    "ModuleNotFoundError: No module named 'imghdr'",
+    []
+   ],
+   "import nntplib": [
+    "ModuleNotFoundError: No module named 'nntplib'",
+    []
+   ],
+   "import smtpd": [
+    "ModuleNotFoundError: No module named 'smtpd'",
+    []
+   ],
+   "import sndhdr": [
+    "ModuleNotFoundError: No module named 'sndhdr'",
+    []
+   ],
+   "import telnetlib": [
+    "ModuleNotFoundError: No module named 'telnetlib'",
+    []
+   ],
+   "login() on a server that does not offer AUTH": [
+    "SMTPNotSupportedError: SMTP AUTH extension not supported by server.",
+    []
+   ],
+   "longest line of a header with 1200 characters and no space": [
+    78,
+    []
+   ],
+   "mimetypes.guess_type of seven names": [
+    [
+     "image/jpeg",
+     "audio/mpeg",
+     "application/x-msdos-program",
+     "application/zip",
+     "application/pdf",
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     null
+    ],
+    []
+   ],
+   "platform": [
+    "linux",
+    "posix"
+   ],
+   "ports": [
+    25,
+    465,
+    143,
+    993
+   ],
+   "series": "3.14.x",
+   "smtplib.SMTP.starttls parameters": [
+    "self",
+    "context"
+   ],
+   "smtplib.SMTP_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "local_hostname",
+    "timeout",
+    "source_address",
+    "context"
+   ],
+   "smtplib.SMTP_SSL(keyfile=) draws": [
+    "TypeError: SMTP_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "smtplib.send_message to a non-ASCII address (SMTPUTF8 offered by the server)": [
+    [
+     {},
+     [
+      "mail from:<al@example.com> SMTPUTF8 BODY=8BITMIME",
+      "rcpt to:<ayşe@example.org>"
+     ]
+    ],
+    []
+   ],
+   "smtplib.send_message with all recipients refused": [
+    "SMTPRecipientsRefused: {'gone@refused.example': (550, b'no mailbox')}",
+    []
+   ],
+   "smtplib.send_message with one refused recipient": [
+    [
+     {
+      "gone@refused.example": [
+       550,
+       "b'no mailbox'"
+      ]
+     }
+    ],
+    []
+   ],
+   "smtplib.send_message: envelope and the Bcc header the server sees": [
+    [
+     {},
+     [
+      "mail from:<al@example.com>",
+      "rcpt to:<jon@example.org>",
+      "rcpt to:<secret@example.com>",
+      "rcpt to:<friend@example.com>"
+     ],
+     null,
+     "friend@example.com"
+    ],
+    []
+   ],
+   "ssl.PROTOCOL_TLS_CLIENT context verify_mode": [
+    "CERT_REQUIRED",
+    []
+   ],
+   "ssl.create_default_context(): check_hostname, verify_mode, minimum_version, verify_flags": [
+    [
+     true,
+     "CERT_REQUIRED",
+     "TLSv1_2",
+     [
+      "VERIFY_X509_PARTIAL_CHAIN",
+      "VERIFY_X509_STRICT",
+      "VERIFY_X509_TRUSTED_FIRST"
+     ]
+    ],
+    []
+   ],
+   "starttls() on a server that does not offer STARTTLS": [
+    "SMTPNotSupportedError: STARTTLS extension not supported by server.",
+    []
+   ]
+  },
+  "3.14.4": {
+   "EmailMessage X- header with a bare linefeed": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage header with a line break": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage walk of text + html + attachment": [
+    [
+     "multipart/mixed",
+     "multipart/alternative",
+     "text/plain",
+     "text/html",
+     "application/octet-stream"
+    ],
+    []
+   ],
+   "EmailMessage with Turkish text: transfer encoding, charset, last line": [
+    [
+     "8bit",
+     "utf-8",
+     "tamamlandı"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTP, as_bytes": [
+    [
+     "To: =?utf-8?q?ay=C5=9Fe?=@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTPUTF8, as_bytes": [
+    [
+     "To: ayşe@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "MIMEText (the legacy compat32 policy, which EZGmail uses) header with a line break, as_string": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText header with a bare linefeed, as_bytes": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText with Turkish text": [
+    [
+     "text/plain; charset=\"utf-8\"",
+     "base64"
+    ],
+    []
+   ],
+   "connecting to a closed port": [
+    "ConnectionRefusedError: [Errno 111] Connection refused",
+    []
+   ],
+   "email.utils.formatdate(1797000528, usegmt=True)": [
+    "Fri, 11 Dec 2026 14:48:48 GMT",
+    []
+   ],
+   "email.utils.getaddresses of two addresses": [
+    [
+     [
+      "",
+      "real@example.com"
+     ],
+     [
+      "",
+      "evil@example.net"
+     ]
+    ],
+    []
+   ],
+   "email.utils.localtime(isdst=0)": [
+    "TypeError: localtime() got an unexpected keyword argument 'isdst'",
+    []
+   ],
+   "email.utils.make_msgid shape": [
+    [
+     true,
+     true
+    ],
+    []
+   ],
+   "email.utils.parseaddr of a quoted name with a comma": [
+    [
+     "Doe, Jon",
+     "jon@example.org"
+    ],
+    []
+   ],
+   "email.utils.parseaddr of two addresses": [
+    [
+     "",
+     ""
+    ],
+    []
+   ],
+   "email.utils.parseaddr(strict=False)": [
+    [
+     "",
+     "real@example.com"
+    ],
+    []
+   ],
+   "email.utils.supports_strict_parsing": true,
+   "imaplib.IMAP4 has idle and IDLE in Commands": [
+    true,
+    true
+   ],
+   "imaplib.IMAP4.starttls parameters": [
+    "self",
+    "ssl_context"
+   ],
+   "imaplib.IMAP4_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "ssl_context",
+    "timeout"
+   ],
+   "imaplib.IMAP4_SSL(keyfile=) draws": [
+    "TypeError: IMAP4_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "imaplib.Internaldate2tuple": [
+    [
+     1996,
+     7,
+     17,
+     12,
+     44,
+     25
+    ],
+    []
+   ],
+   "imaplib.ParseFlags": [
+    [
+     "b'\\\\Seen'",
+     "b'\\\\Flagged'"
+    ],
+    []
+   ],
+   "imaplib.Time2Internaldate of an aware datetime": [
+    "\"09-Dec-2026 13:28:48 +0000\"",
+    []
+   ],
+   "import asynchat": [
+    "ModuleNotFoundError: No module named 'asynchat'",
+    []
+   ],
+   "import asyncore": [
+    "ModuleNotFoundError: No module named 'asyncore'",
+    []
+   ],
+   "import cgi": [
+    "ModuleNotFoundError: No module named 'cgi'",
+    []
+   ],
+   "import imghdr": [
+    "ModuleNotFoundError: No module named 'imghdr'",
+    []
+   ],
+   "import nntplib": [
+    "ModuleNotFoundError: No module named 'nntplib'",
+    []
+   ],
+   "import smtpd": [
+    "ModuleNotFoundError: No module named 'smtpd'",
+    []
+   ],
+   "import sndhdr": [
+    "ModuleNotFoundError: No module named 'sndhdr'",
+    []
+   ],
+   "import telnetlib": [
+    "ModuleNotFoundError: No module named 'telnetlib'",
+    []
+   ],
+   "login() on a server that does not offer AUTH": [
+    "SMTPNotSupportedError: SMTP AUTH extension not supported by server.",
+    []
+   ],
+   "longest line of a header with 1200 characters and no space": [
+    78,
+    []
+   ],
+   "mimetypes.guess_type of seven names": [
+    [
+     "image/jpeg",
+     "audio/mpeg",
+     "application/x-msdos-program",
+     "application/zip",
+     "application/pdf",
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     null
+    ],
+    []
+   ],
+   "platform": [
+    "linux",
+    "posix"
+   ],
+   "ports": [
+    25,
+    465,
+    143,
+    993
+   ],
+   "series": "3.14.x",
+   "smtplib.SMTP.starttls parameters": [
+    "self",
+    "context"
+   ],
+   "smtplib.SMTP_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "local_hostname",
+    "timeout",
+    "source_address",
+    "context"
+   ],
+   "smtplib.SMTP_SSL(keyfile=) draws": [
+    "TypeError: SMTP_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "smtplib.send_message to a non-ASCII address (SMTPUTF8 offered by the server)": [
+    [
+     {},
+     [
+      "mail from:<al@example.com> SMTPUTF8 BODY=8BITMIME",
+      "rcpt to:<ayşe@example.org>"
+     ]
+    ],
+    []
+   ],
+   "smtplib.send_message with all recipients refused": [
+    "SMTPRecipientsRefused: {'gone@refused.example': (550, b'no mailbox')}",
+    []
+   ],
+   "smtplib.send_message with one refused recipient": [
+    [
+     {
+      "gone@refused.example": [
+       550,
+       "b'no mailbox'"
+      ]
+     }
+    ],
+    []
+   ],
+   "smtplib.send_message: envelope and the Bcc header the server sees": [
+    [
+     {},
+     [
+      "mail from:<al@example.com>",
+      "rcpt to:<jon@example.org>",
+      "rcpt to:<secret@example.com>",
+      "rcpt to:<friend@example.com>"
+     ],
+     null,
+     "friend@example.com"
+    ],
+    []
+   ],
+   "ssl.PROTOCOL_TLS_CLIENT context verify_mode": [
+    "CERT_REQUIRED",
+    []
+   ],
+   "ssl.create_default_context(): check_hostname, verify_mode, minimum_version, verify_flags": [
+    [
+     true,
+     "CERT_REQUIRED",
+     "TLSv1_2",
+     [
+      "VERIFY_X509_PARTIAL_CHAIN",
+      "VERIFY_X509_STRICT",
+      "VERIFY_X509_TRUSTED_FIRST"
+     ]
+    ],
+    []
+   ],
+   "starttls() on a server that does not offer STARTTLS": [
+    "SMTPNotSupportedError: STARTTLS extension not supported by server.",
+    []
+   ]
+  },
+  "3.14.5": {
+   "EmailMessage X- header with a bare linefeed": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage header with a line break": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage walk of text + html + attachment": [
+    [
+     "multipart/mixed",
+     "multipart/alternative",
+     "text/plain",
+     "text/html",
+     "application/octet-stream"
+    ],
+    []
+   ],
+   "EmailMessage with Turkish text: transfer encoding, charset, last line": [
+    [
+     "8bit",
+     "utf-8",
+     "tamamlandı"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTP, as_bytes": [
+    [
+     "To: =?utf-8?q?ay=C5=9Fe?=@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTPUTF8, as_bytes": [
+    [
+     "To: ayşe@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "MIMEText (the legacy compat32 policy, which EZGmail uses) header with a line break, as_string": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText header with a bare linefeed, as_bytes": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText with Turkish text": [
+    [
+     "text/plain; charset=\"utf-8\"",
+     "base64"
+    ],
+    []
+   ],
+   "connecting to a closed port": [
+    "ConnectionRefusedError: [Errno 111] Connection refused",
+    []
+   ],
+   "email.utils.formatdate(1797000528, usegmt=True)": [
+    "Fri, 11 Dec 2026 14:48:48 GMT",
+    []
+   ],
+   "email.utils.getaddresses of two addresses": [
+    [
+     [
+      "",
+      "real@example.com"
+     ],
+     [
+      "",
+      "evil@example.net"
+     ]
+    ],
+    []
+   ],
+   "email.utils.localtime(isdst=0)": [
+    "TypeError: localtime() got an unexpected keyword argument 'isdst'",
+    []
+   ],
+   "email.utils.make_msgid shape": [
+    [
+     true,
+     true
+    ],
+    []
+   ],
+   "email.utils.parseaddr of a quoted name with a comma": [
+    [
+     "Doe, Jon",
+     "jon@example.org"
+    ],
+    []
+   ],
+   "email.utils.parseaddr of two addresses": [
+    [
+     "",
+     ""
+    ],
+    []
+   ],
+   "email.utils.parseaddr(strict=False)": [
+    [
+     "",
+     "real@example.com"
+    ],
+    []
+   ],
+   "email.utils.supports_strict_parsing": true,
+   "imaplib.IMAP4 has idle and IDLE in Commands": [
+    true,
+    true
+   ],
+   "imaplib.IMAP4.starttls parameters": [
+    "self",
+    "ssl_context"
+   ],
+   "imaplib.IMAP4_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "ssl_context",
+    "timeout"
+   ],
+   "imaplib.IMAP4_SSL(keyfile=) draws": [
+    "TypeError: IMAP4_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "imaplib.Internaldate2tuple": [
+    [
+     1996,
+     7,
+     17,
+     12,
+     44,
+     25
+    ],
+    []
+   ],
+   "imaplib.ParseFlags": [
+    [
+     "b'\\\\Seen'",
+     "b'\\\\Flagged'"
+    ],
+    []
+   ],
+   "imaplib.Time2Internaldate of an aware datetime": [
+    "\"09-Dec-2026 13:28:48 +0000\"",
+    []
+   ],
+   "import asynchat": [
+    "ModuleNotFoundError: No module named 'asynchat'",
+    []
+   ],
+   "import asyncore": [
+    "ModuleNotFoundError: No module named 'asyncore'",
+    []
+   ],
+   "import cgi": [
+    "ModuleNotFoundError: No module named 'cgi'",
+    []
+   ],
+   "import imghdr": [
+    "ModuleNotFoundError: No module named 'imghdr'",
+    []
+   ],
+   "import nntplib": [
+    "ModuleNotFoundError: No module named 'nntplib'",
+    []
+   ],
+   "import smtpd": [
+    "ModuleNotFoundError: No module named 'smtpd'",
+    []
+   ],
+   "import sndhdr": [
+    "ModuleNotFoundError: No module named 'sndhdr'",
+    []
+   ],
+   "import telnetlib": [
+    "ModuleNotFoundError: No module named 'telnetlib'",
+    []
+   ],
+   "login() on a server that does not offer AUTH": [
+    "SMTPNotSupportedError: SMTP AUTH extension not supported by server.",
+    []
+   ],
+   "longest line of a header with 1200 characters and no space": [
+    78,
+    []
+   ],
+   "mimetypes.guess_type of seven names": [
+    [
+     "image/jpeg",
+     "audio/mpeg",
+     "application/x-msdos-program",
+     "application/zip",
+     "application/pdf",
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     null
+    ],
+    []
+   ],
+   "platform": [
+    "linux",
+    "posix"
+   ],
+   "ports": [
+    25,
+    465,
+    143,
+    993
+   ],
+   "series": "3.14.x",
+   "smtplib.SMTP.starttls parameters": [
+    "self",
+    "context"
+   ],
+   "smtplib.SMTP_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "local_hostname",
+    "timeout",
+    "source_address",
+    "context"
+   ],
+   "smtplib.SMTP_SSL(keyfile=) draws": [
+    "TypeError: SMTP_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "smtplib.send_message to a non-ASCII address (SMTPUTF8 offered by the server)": [
+    [
+     {},
+     [
+      "mail from:<al@example.com> SMTPUTF8 BODY=8BITMIME",
+      "rcpt to:<ayşe@example.org>"
+     ]
+    ],
+    []
+   ],
+   "smtplib.send_message with all recipients refused": [
+    "SMTPRecipientsRefused: {'gone@refused.example': (550, b'no mailbox')}",
+    []
+   ],
+   "smtplib.send_message with one refused recipient": [
+    [
+     {
+      "gone@refused.example": [
+       550,
+       "b'no mailbox'"
+      ]
+     }
+    ],
+    []
+   ],
+   "smtplib.send_message: envelope and the Bcc header the server sees": [
+    [
+     {},
+     [
+      "mail from:<al@example.com>",
+      "rcpt to:<jon@example.org>",
+      "rcpt to:<secret@example.com>",
+      "rcpt to:<friend@example.com>"
+     ],
+     null,
+     "friend@example.com"
+    ],
+    []
+   ],
+   "ssl.PROTOCOL_TLS_CLIENT context verify_mode": [
+    "CERT_REQUIRED",
+    []
+   ],
+   "ssl.create_default_context(): check_hostname, verify_mode, minimum_version, verify_flags": [
+    [
+     true,
+     "CERT_REQUIRED",
+     "TLSv1_2",
+     [
+      "VERIFY_X509_PARTIAL_CHAIN",
+      "VERIFY_X509_STRICT",
+      "VERIFY_X509_TRUSTED_FIRST"
+     ]
+    ],
+    []
+   ],
+   "starttls() on a server that does not offer STARTTLS": [
+    "SMTPNotSupportedError: STARTTLS extension not supported by server.",
+    []
+   ]
+  },
+  "3.14.6": {
+   "EmailMessage X- header with a bare linefeed": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage header with a line break": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage walk of text + html + attachment": [
+    [
+     "multipart/mixed",
+     "multipart/alternative",
+     "text/plain",
+     "text/html",
+     "application/octet-stream"
+    ],
+    []
+   ],
+   "EmailMessage with Turkish text: transfer encoding, charset, last line": [
+    [
+     "8bit",
+     "utf-8",
+     "tamamlandı"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTP, as_bytes": [
+    [
+     "To: =?utf-8?q?ay=C5=9Fe?=@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTPUTF8, as_bytes": [
+    [
+     "To: ayşe@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "MIMEText (the legacy compat32 policy, which EZGmail uses) header with a line break, as_string": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText header with a bare linefeed, as_bytes": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText with Turkish text": [
+    [
+     "text/plain; charset=\"utf-8\"",
+     "base64"
+    ],
+    []
+   ],
+   "connecting to a closed port": [
+    "ConnectionRefusedError: [Errno 111] Connection refused",
+    []
+   ],
+   "email.utils.formatdate(1797000528, usegmt=True)": [
+    "Fri, 11 Dec 2026 14:48:48 GMT",
+    []
+   ],
+   "email.utils.getaddresses of two addresses": [
+    [
+     [
+      "",
+      "real@example.com"
+     ],
+     [
+      "",
+      "evil@example.net"
+     ]
+    ],
+    []
+   ],
+   "email.utils.localtime(isdst=0)": [
+    "TypeError: localtime() got an unexpected keyword argument 'isdst'",
+    []
+   ],
+   "email.utils.make_msgid shape": [
+    [
+     true,
+     true
+    ],
+    []
+   ],
+   "email.utils.parseaddr of a quoted name with a comma": [
+    [
+     "Doe, Jon",
+     "jon@example.org"
+    ],
+    []
+   ],
+   "email.utils.parseaddr of two addresses": [
+    [
+     "",
+     ""
+    ],
+    []
+   ],
+   "email.utils.parseaddr(strict=False)": [
+    [
+     "",
+     "real@example.com"
+    ],
+    []
+   ],
+   "email.utils.supports_strict_parsing": true,
+   "imaplib.IMAP4 has idle and IDLE in Commands": [
+    true,
+    true
+   ],
+   "imaplib.IMAP4.starttls parameters": [
+    "self",
+    "ssl_context"
+   ],
+   "imaplib.IMAP4_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "ssl_context",
+    "timeout"
+   ],
+   "imaplib.IMAP4_SSL(keyfile=) draws": [
+    "TypeError: IMAP4_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "imaplib.Internaldate2tuple": [
+    [
+     1996,
+     7,
+     17,
+     12,
+     44,
+     25
+    ],
+    []
+   ],
+   "imaplib.ParseFlags": [
+    [
+     "b'\\\\Seen'",
+     "b'\\\\Flagged'"
+    ],
+    []
+   ],
+   "imaplib.Time2Internaldate of an aware datetime": [
+    "\"09-Dec-2026 13:28:48 +0000\"",
+    []
+   ],
+   "import asynchat": [
+    "ModuleNotFoundError: No module named 'asynchat'",
+    []
+   ],
+   "import asyncore": [
+    "ModuleNotFoundError: No module named 'asyncore'",
+    []
+   ],
+   "import cgi": [
+    "ModuleNotFoundError: No module named 'cgi'",
+    []
+   ],
+   "import imghdr": [
+    "ModuleNotFoundError: No module named 'imghdr'",
+    []
+   ],
+   "import nntplib": [
+    "ModuleNotFoundError: No module named 'nntplib'",
+    []
+   ],
+   "import smtpd": [
+    "ModuleNotFoundError: No module named 'smtpd'",
+    []
+   ],
+   "import sndhdr": [
+    "ModuleNotFoundError: No module named 'sndhdr'",
+    []
+   ],
+   "import telnetlib": [
+    "ModuleNotFoundError: No module named 'telnetlib'",
+    []
+   ],
+   "login() on a server that does not offer AUTH": [
+    "SMTPNotSupportedError: SMTP AUTH extension not supported by server.",
+    []
+   ],
+   "longest line of a header with 1200 characters and no space": [
+    78,
+    []
+   ],
+   "mimetypes.guess_type of seven names": [
+    [
+     "image/jpeg",
+     "audio/mpeg",
+     "application/x-msdos-program",
+     "application/zip",
+     "application/pdf",
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     null
+    ],
+    []
+   ],
+   "platform": [
+    "linux",
+    "posix"
+   ],
+   "ports": [
+    25,
+    465,
+    143,
+    993
+   ],
+   "series": "3.14.x",
+   "smtplib.SMTP.starttls parameters": [
+    "self",
+    "context"
+   ],
+   "smtplib.SMTP_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "local_hostname",
+    "timeout",
+    "source_address",
+    "context"
+   ],
+   "smtplib.SMTP_SSL(keyfile=) draws": [
+    "TypeError: SMTP_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "smtplib.send_message to a non-ASCII address (SMTPUTF8 offered by the server)": [
+    [
+     {},
+     [
+      "mail from:<al@example.com> SMTPUTF8 BODY=8BITMIME",
+      "rcpt to:<ayşe@example.org>"
+     ]
+    ],
+    []
+   ],
+   "smtplib.send_message with all recipients refused": [
+    "SMTPRecipientsRefused: {'gone@refused.example': (550, b'no mailbox')}",
+    []
+   ],
+   "smtplib.send_message with one refused recipient": [
+    [
+     {
+      "gone@refused.example": [
+       550,
+       "b'no mailbox'"
+      ]
+     }
+    ],
+    []
+   ],
+   "smtplib.send_message: envelope and the Bcc header the server sees": [
+    [
+     {},
+     [
+      "mail from:<al@example.com>",
+      "rcpt to:<jon@example.org>",
+      "rcpt to:<secret@example.com>",
+      "rcpt to:<friend@example.com>"
+     ],
+     null,
+     "friend@example.com"
+    ],
+    []
+   ],
+   "ssl.PROTOCOL_TLS_CLIENT context verify_mode": [
+    "CERT_REQUIRED",
+    []
+   ],
+   "ssl.create_default_context(): check_hostname, verify_mode, minimum_version, verify_flags": [
+    [
+     true,
+     "CERT_REQUIRED",
+     "TLSv1_2",
+     [
+      "VERIFY_X509_PARTIAL_CHAIN",
+      "VERIFY_X509_STRICT",
+      "VERIFY_X509_TRUSTED_FIRST"
+     ]
+    ],
+    []
+   ],
+   "starttls() on a server that does not offer STARTTLS": [
+    "SMTPNotSupportedError: STARTTLS extension not supported by server.",
+    []
+   ]
+  },
+  "3.15.0b4": {
+   "EmailMessage X- header with a bare linefeed": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage header with a line break": [
+    "ValueError: Header values may not contain linefeed or carriage return characters",
+    []
+   ],
+   "EmailMessage walk of text + html + attachment": [
+    [
+     "multipart/mixed",
+     "multipart/alternative",
+     "text/plain",
+     "text/html",
+     "application/octet-stream"
+    ],
+    []
+   ],
+   "EmailMessage with Turkish text: transfer encoding, charset, last line": [
+    [
+     "8bit",
+     "utf-8",
+     "tamamlandı"
+    ],
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTP, as_bytes": [
+    "HeaderWriteError: Non-ASCII local-part 'ayşe' is invalid under current policy setting (utf8=False)",
+    []
+   ],
+   "EmailMessage with a non-ASCII address, policy.SMTPUTF8, as_bytes": [
+    [
+     "To: ayşe@example.org",
+     "From: a@example.com"
+    ],
+    []
+   ],
+   "MIMEText (the legacy compat32 policy, which EZGmail uses) header with a line break, as_string": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText header with a bare linefeed, as_bytes": [
+    "HeaderParseError: header value appears to contain an embedded header: 'hello\\nBcc: evil@example.net'",
+    []
+   ],
+   "MIMEText with Turkish text": [
+    [
+     "text/plain; charset=\"utf-8\"",
+     "base64"
+    ],
+    []
+   ],
+   "connecting to a closed port": [
+    "ConnectionRefusedError: [Errno 111] Connection refused",
+    []
+   ],
+   "email.utils.formatdate(1797000528, usegmt=True)": [
+    "Fri, 11 Dec 2026 14:48:48 GMT",
+    []
+   ],
+   "email.utils.getaddresses of two addresses": [
+    [
+     [
+      "",
+      "real@example.com"
+     ],
+     [
+      "",
+      "evil@example.net"
+     ]
+    ],
+    []
+   ],
+   "email.utils.localtime(isdst=0)": [
+    "TypeError: localtime() got an unexpected keyword argument 'isdst'",
+    []
+   ],
+   "email.utils.make_msgid shape": [
+    [
+     true,
+     true
+    ],
+    []
+   ],
+   "email.utils.parseaddr of a quoted name with a comma": [
+    [
+     "Doe, Jon",
+     "jon@example.org"
+    ],
+    []
+   ],
+   "email.utils.parseaddr of two addresses": [
+    [
+     "",
+     ""
+    ],
+    []
+   ],
+   "email.utils.parseaddr(strict=False)": [
+    [
+     "",
+     "real@example.com"
+    ],
+    []
+   ],
+   "email.utils.supports_strict_parsing": true,
+   "imaplib.IMAP4 has idle and IDLE in Commands": [
+    true,
+    true
+   ],
+   "imaplib.IMAP4.starttls parameters": [
+    "self",
+    "ssl_context"
+   ],
+   "imaplib.IMAP4_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "ssl_context",
+    "timeout"
+   ],
+   "imaplib.IMAP4_SSL(keyfile=) draws": [
+    "TypeError: IMAP4_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "imaplib.Internaldate2tuple": [
+    [
+     1996,
+     7,
+     17,
+     12,
+     44,
+     25
+    ],
+    []
+   ],
+   "imaplib.ParseFlags": [
+    [
+     "b'\\\\Seen'",
+     "b'\\\\Flagged'"
+    ],
+    []
+   ],
+   "imaplib.Time2Internaldate of an aware datetime": [
+    "\"09-Dec-2026 13:28:48 +0000\"",
+    []
+   ],
+   "import asynchat": [
+    "ModuleNotFoundError: No module named 'asynchat'",
+    []
+   ],
+   "import asyncore": [
+    "ModuleNotFoundError: No module named 'asyncore'",
+    []
+   ],
+   "import cgi": [
+    "ModuleNotFoundError: No module named 'cgi'",
+    []
+   ],
+   "import imghdr": [
+    "ModuleNotFoundError: No module named 'imghdr'",
+    []
+   ],
+   "import nntplib": [
+    "ModuleNotFoundError: No module named 'nntplib'",
+    []
+   ],
+   "import smtpd": [
+    "ModuleNotFoundError: No module named 'smtpd'",
+    []
+   ],
+   "import sndhdr": [
+    "ModuleNotFoundError: No module named 'sndhdr'",
+    []
+   ],
+   "import telnetlib": [
+    "ModuleNotFoundError: No module named 'telnetlib'",
+    []
+   ],
+   "login() on a server that does not offer AUTH": [
+    "SMTPNotSupportedError: SMTP AUTH extension not supported by server.",
+    []
+   ],
+   "longest line of a header with 1200 characters and no space": [
+    78,
+    []
+   ],
+   "mimetypes.guess_type of seven names": [
+    [
+     "image/jpeg",
+     "audio/mpeg",
+     "application/x-msdos-program",
+     "application/zip",
+     "application/pdf",
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     null
+    ],
+    []
+   ],
+   "platform": [
+    "linux",
+    "posix"
+   ],
+   "ports": [
+    25,
+    465,
+    143,
+    993
+   ],
+   "series": "3.15.x",
+   "smtplib.SMTP.starttls parameters": [
+    "self",
+    "context"
+   ],
+   "smtplib.SMTP_SSL parameters": [
+    "self",
+    "host",
+    "port",
+    "local_hostname",
+    "timeout",
+    "source_address",
+    "context"
+   ],
+   "smtplib.SMTP_SSL(keyfile=) draws": [
+    "TypeError: SMTP_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+    []
+   ],
+   "smtplib.send_message to a non-ASCII address (SMTPUTF8 offered by the server)": [
+    [
+     {},
+     [
+      "mail from:<al@example.com> SMTPUTF8 BODY=8BITMIME",
+      "rcpt to:<ayşe@example.org>"
+     ]
+    ],
+    []
+   ],
+   "smtplib.send_message with all recipients refused": [
+    "SMTPRecipientsRefused: {'gone@refused.example': (550, b'no mailbox')}",
+    []
+   ],
+   "smtplib.send_message with one refused recipient": [
+    [
+     {
+      "gone@refused.example": [
+       550,
+       "b'no mailbox'"
+      ]
+     }
+    ],
+    []
+   ],
+   "smtplib.send_message: envelope and the Bcc header the server sees": [
+    [
+     {},
+     [
+      "mail from:<al@example.com>",
+      "rcpt to:<jon@example.org>",
+      "rcpt to:<secret@example.com>",
+      "rcpt to:<friend@example.com>"
+     ],
+     null,
+     "friend@example.com"
+    ],
+    []
+   ],
+   "ssl.PROTOCOL_TLS_CLIENT context verify_mode": [
+    "CERT_REQUIRED",
+    []
+   ],
+   "ssl.create_default_context(): check_hostname, verify_mode, minimum_version, verify_flags": [
+    [
+     true,
+     "CERT_REQUIRED",
+     "TLSv1_2",
+     [
+      "VERIFY_X509_PARTIAL_CHAIN",
+      "VERIFY_X509_STRICT",
+      "VERIFY_X509_TRUSTED_FIRST"
+     ]
+    ],
+    []
+   ],
+   "starttls() on a server that does not offer STARTTLS": [
+    "SMTPNotSupportedError: STARTTLS extension not supported by server.",
+    []
+   ]
+  }
+ },
+ "items compared": 48,
+ "differ": {
+  "EmailMessage with a non-ASCII address, policy.SMTP, as_bytes": [
+   [
+    [
+     [
+      "To: =?utf-8?q?ay=C5=9Fe?=@example.org",
+      "From: a@example.com"
+     ],
+     []
+    ],
+    [
+     "3.11.17",
+     "3.12.3",
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6"
+    ]
+   ],
+   [
+    [
+     "HeaderWriteError: Non-ASCII local-part 'ayşe' is invalid under current policy setting (utf8=False)",
+     []
+    ],
+    [
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "email.utils.localtime(isdst=0)": [
+   [
+    [
+     "2026-01-01 00:00:00+03:00",
+     []
+    ],
+    [
+     "3.11.17"
+    ]
+   ],
+   [
+    [
+     "2026-01-01 00:00:00+03:00",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.12.3",
+     "3.13.16"
+    ]
+   ],
+   [
+    [
+     "TypeError: localtime() got an unexpected keyword argument 'isdst'",
+     []
+    ],
+    [
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "imaplib.IMAP4 has idle and IDLE in Commands": [
+   [
+    [
+     false,
+     false
+    ],
+    [
+     "3.11.17",
+     "3.12.3",
+     "3.13.16"
+    ]
+   ],
+   [
+    [
+     true,
+     true
+    ],
+    [
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "imaplib.IMAP4_SSL parameters": [
+   [
+    [
+     "self",
+     "host",
+     "port",
+     "keyfile",
+     "certfile",
+     "ssl_context",
+     "timeout"
+    ],
+    [
+     "3.11.17"
+    ]
+   ],
+   [
+    [
+     "self",
+     "host",
+     "port",
+     "ssl_context",
+     "timeout"
+    ],
+    [
+     "3.12.3",
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "imaplib.IMAP4_SSL(keyfile=) draws": [
+   [
+    [
+     "ValueError: certfile must be specified",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.11.17"
+    ]
+   ],
+   [
+    [
+     "TypeError: IMAP4_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+     []
+    ],
+    [
+     "3.12.3",
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "import asynchat": [
+   [
+    [
+     "imported",
+     []
+    ],
+    [
+     "3.11.17"
+    ]
+   ],
+   [
+    [
+     "ModuleNotFoundError: No module named 'asynchat'",
+     []
+    ],
+    [
+     "3.12.3",
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "import asyncore": [
+   [
+    [
+     "imported",
+     []
+    ],
+    [
+     "3.11.17"
+    ]
+   ],
+   [
+    [
+     "ModuleNotFoundError: No module named 'asyncore'",
+     []
+    ],
+    [
+     "3.12.3",
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "import cgi": [
+   [
+    [
+     "imported",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.11.17",
+     "3.12.3"
+    ]
+   ],
+   [
+    [
+     "ModuleNotFoundError: No module named 'cgi'",
+     []
+    ],
+    [
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "import imghdr": [
+   [
+    [
+     "imported",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.11.17",
+     "3.12.3"
+    ]
+   ],
+   [
+    [
+     "ModuleNotFoundError: No module named 'imghdr'",
+     []
+    ],
+    [
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "import nntplib": [
+   [
+    [
+     "imported",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.11.17",
+     "3.12.3"
+    ]
+   ],
+   [
+    [
+     "ModuleNotFoundError: No module named 'nntplib'",
+     []
+    ],
+    [
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "import smtpd": [
+   [
+    [
+     "imported",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.11.17"
+    ]
+   ],
+   [
+    [
+     "ModuleNotFoundError: No module named 'smtpd'",
+     []
+    ],
+    [
+     "3.12.3",
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "import sndhdr": [
+   [
+    [
+     "imported",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.11.17",
+     "3.12.3"
+    ]
+   ],
+   [
+    [
+     "ModuleNotFoundError: No module named 'sndhdr'",
+     []
+    ],
+    [
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "import telnetlib": [
+   [
+    [
+     "imported",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.11.17",
+     "3.12.3"
+    ]
+   ],
+   [
+    [
+     "ModuleNotFoundError: No module named 'telnetlib'",
+     []
+    ],
+    [
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "smtplib.SMTP.starttls parameters": [
+   [
+    [
+     "self",
+     "keyfile",
+     "certfile",
+     "context"
+    ],
+    [
+     "3.11.17"
+    ]
+   ],
+   [
+    [
+     "self",
+     "context"
+    ],
+    [
+     "3.12.3",
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "smtplib.SMTP_SSL parameters": [
+   [
+    [
+     "self",
+     "host",
+     "port",
+     "local_hostname",
+     "keyfile",
+     "certfile",
+     "timeout",
+     "source_address",
+     "context"
+    ],
+    [
+     "3.11.17"
+    ]
+   ],
+   [
+    [
+     "self",
+     "host",
+     "port",
+     "local_hostname",
+     "timeout",
+     "source_address",
+     "context"
+    ],
+    [
+     "3.12.3",
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "smtplib.SMTP_SSL(keyfile=) draws": [
+   [
+    [
+     "ValueError: certfile must be specified",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.11.17"
+    ]
+   ],
+   [
+    [
+     "TypeError: SMTP_SSL.__init__() got an unexpected keyword argument 'keyfile'",
+     []
+    ],
+    [
+     "3.12.3",
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "smtplib.send_message to a non-ASCII address (SMTPUTF8 offered by the server)": [
+   [
+    [
+     [
+      {},
+      [
+       "mail FROM:<al@example.com> SMTPUTF8 BODY=8BITMIME",
+       "rcpt TO:<ayşe@example.org>"
+      ]
+     ],
+     []
+    ],
+    [
+     "3.11.17",
+     "3.12.3"
+    ]
+   ],
+   [
+    [
+     [
+      {},
+      [
+       "mail from:<al@example.com> SMTPUTF8 BODY=8BITMIME",
+       "rcpt to:<ayşe@example.org>"
+      ]
+     ],
+     []
+    ],
+    [
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "smtplib.send_message: envelope and the Bcc header the server sees": [
+   [
+    [
+     [
+      {},
+      [
+       "mail FROM:<al@example.com>",
+       "rcpt TO:<jon@example.org>",
+       "rcpt TO:<secret@example.com>",
+       "rcpt TO:<friend@example.com>"
+      ],
+      null,
+      "friend@example.com"
+     ],
+     []
+    ],
+    [
+     "3.11.17",
+     "3.12.3"
+    ]
+   ],
+   [
+    [
+     [
+      {},
+      [
+       "mail from:<al@example.com>",
+       "rcpt to:<jon@example.org>",
+       "rcpt to:<secret@example.com>",
+       "rcpt to:<friend@example.com>"
+      ],
+      null,
+      "friend@example.com"
+     ],
+     []
+    ],
+    [
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ],
+  "ssl.create_default_context(): check_hostname, verify_mode, minimum_version, verify_flags": [
+   [
+    [
+     [
+      true,
+      "CERT_REQUIRED",
+      "TLSv1_2",
+      [
+       "VERIFY_X509_TRUSTED_FIRST"
+      ]
+     ],
+     []
+    ],
+    [
+     "3.11.17"
+    ]
+   ],
+   [
+    [
+     [
+      true,
+      "CERT_REQUIRED",
+      "MINIMUM_SUPPORTED",
+      [
+       "VERIFY_X509_TRUSTED_FIRST"
+      ]
+     ],
+     []
+    ],
+    [
+     "3.12.3"
+    ]
+   ],
+   [
+    [
+     [
+      true,
+      "CERT_REQUIRED",
+      "TLSv1_2",
+      [
+       "VERIFY_X509_PARTIAL_CHAIN",
+       "VERIFY_X509_STRICT",
+       "VERIFY_X509_TRUSTED_FIRST"
+      ]
+     ],
+     []
+    ],
+    [
+     "3.13.16",
+     "3.14.0",
+     "3.14.1",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ]
+  ]
+ }
+}
