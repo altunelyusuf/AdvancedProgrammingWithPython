@@ -1,0 +1,181 @@
+{
+ "_version": "1.0.1",
+ "items": [
+  {
+   "q": "line = 'Alice,30,\"San Francisco, CA\"'. What do len(line.split(',')) and len(next(csv.reader([line]))) give?",
+   "options": [
+    "4 and 3",
+    "3 and 3",
+    "4 and 4"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO2",
+   "rationales": [
+    "",
+    "Not three pieces: split cuts at every comma, quoted or not, so it gives four, while the reader keeps the quoted field whole and gives three.",
+    "The reader respects the quotes, so it gives three fields, not four."
+   ]
+  },
+  {
+   "q": "What does csv.writer(io.StringIO()).writerow(['spam', 'eggs', 'bacon', 'ham']) return?",
+   "options": [
+    "19",
+    "21",
+    "4"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO1",
+   "rationales": [
+    "19 is the length of 'spam,eggs,bacon,ham' without the line terminator.",
+    "",
+    "4 is the number of values, not the number of characters written."
+   ]
+  },
+  {
+   "q": "row = next(csv.reader(['4/5/2035 13:34,Apples,73'])). What is type(row[2]).__name__?",
+   "options": [
+    "int",
+    "str",
+    "float"
+   ],
+   "answer": 1,
+   "level": "Understand",
+   "objective": "CO2",
+   "rationales": [
+    "The csv module does no conversion; a program calls int itself.",
+    "",
+    "Only quoting=csv.QUOTE_NONNUMERIC reads unquoted values as floats."
+   ]
+  },
+  {
+   "q": "A file saved by Excel as 'CSV UTF-8' starts with a byte order mark. It is read with open(name, encoding='utf-8'), and the first row is ['Name', 'City']. What is the first field of the row as Python sees it?",
+   "options": [
+    "'Name'",
+    "'\\ufeffName'",
+    "an error is raised"
+   ],
+   "answer": 1,
+   "level": "Analyze",
+   "objective": "CO2",
+   "rationales": [
+    "That is what encoding='utf-8-sig' gives, because it strips the mark.",
+    "",
+    "utf-8 decodes the three bytes of the mark as the character U+FEFF without complaint; it stays in the first field."
+   ]
+  },
+  {
+   "q": "json.loads(json.dumps({1: 'a'})) returns what?",
+   "options": [
+    "{1: 'a'}",
+    "{'1': 'a'}",
+    "an error is raised"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO3",
+   "rationales": [
+    "JSON object keys are always strings, so the integer key comes back as the string '1'.",
+    "",
+    "dumps accepts int keys and writes them as strings; it refuses only keys that are not str, int, float, bool or None."
+   ]
+  },
+  {
+   "q": "A tuple (1, 2) is written with json.dumps and read back with json.loads. What comes back?",
+   "options": [
+    "(1, 2)",
+    "[1, 2]",
+    "'[1, 2]'"
+   ],
+   "answer": 1,
+   "level": "Understand",
+   "objective": "CO3",
+   "rationales": [
+    "JSON has no tuple, so the round trip gives a list.",
+    "",
+    "loads returns the Python value the text describes; the string is the text that dumps wrote."
+   ]
+  },
+  {
+   "q": "json.loads('[\"spam\", \"eggs\",]') is run. What happens?",
+   "options": [
+    "It returns ['spam', 'eggs']",
+    "It raises json.JSONDecodeError, a kind of ValueError",
+    "It returns ['spam', 'eggs', None]"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO3",
+   "rationales": [
+    "That is how a Python list literal behaves; JSON does not allow the trailing comma.",
+    "",
+    "Nothing is added after the comma; the text is refused."
+   ]
+  },
+  {
+   "q": "ET.fromstring('<a><b>1</b></a>').find('b').text is what?",
+   "options": [
+    "the integer 1",
+    "the string '1'",
+    "the element b"
+   ],
+   "answer": 1,
+   "level": "Understand",
+   "objective": "CO4",
+   "rationales": [
+    "Every value in XML is text; a program converts it with int().",
+    "",
+    "text is the string between the tags, here '1'; find returned the element and .text is its text."
+   ]
+  },
+  {
+   "q": "In xmltodict, xmltodict.parse('<a><b>1</b></a>')['a']['b'] and xmltodict.parse('<a><b>1</b><b>2</b></a>')['a']['b'] have which types?",
+   "options": [
+    "str and list",
+    "str and str",
+    "list and list"
+   ],
+   "answer": 0,
+   "level": "Analyze",
+   "objective": "CO4",
+   "rationales": [
+    "",
+    "A repeated tag becomes a list and a single tag a plain value, so a program has to handle both shapes.",
+    "A single tag gives its text, not a list."
+   ]
+  },
+  {
+   "q": "doc = '<!DOCTYPE a [<!ENTITY e \"xxxx\">]><a>&e;&e;</a>'. What does ET.fromstring(doc).text give, and what does defusedxml.ElementTree.fromstring(doc) do?",
+   "options": [
+    "'&e;&e;' and the same",
+    "'xxxxxxxx' and it raises EntitiesForbidden",
+    "'xxxxxxxx' and the same"
+   ],
+   "answer": 1,
+   "level": "Evaluate",
+   "objective": "CO5",
+   "rationales": [
+    "ElementTree expands an entity defined in the document itself, so the text is the expanded value.",
+    "",
+    "defusedxml refuses documents that declare entities, which is why it is the choice for XML from an untrusted source."
+   ]
+  },
+  {
+   "q": "A row a,,\"\" (the third field is an empty quoted string) is read with quoting=csv.QUOTE_NOTNULL. What does list(csv.reader(..., quoting=csv.QUOTE_NOTNULL)) give for that row?",
+   "options": [
+    "[['a', '', '']]",
+    "[['a', None, '']]",
+    "[['a', None, None]]"
+   ],
+   "answer": 1,
+   "level": "Analyze",
+   "objective": "CO2",
+   "rationales": [
+    "With QUOTE_NOTNULL an empty field without quotes is read as None.",
+    "",
+    "Only the unquoted empty field becomes None; the quoted one stays an empty string."
+   ]
+  }
+ ]
+}
