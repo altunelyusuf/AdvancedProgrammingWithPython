@@ -1,0 +1,4473 @@
+{
+ "meta": {
+  "title": "Ch. 19: Time, Tasks, and Programs",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "1.0.0",
+  "python": "3.14.6",
+  "total": 26,
+  "diagrams": {
+   "WaitingUntilADate": 7,
+   "TimingALapOfTheStopwatch": 8,
+   "WhatAProgramCanDoWithDatetime": 10,
+   "ChoosingHowToLaunchAProgram": 16,
+   "ARunningAChildProcess": 17,
+   "ALaunchedProcessFromStartToExit": 18,
+   "WhatAProgramCanDoToRunALaterJob": 20,
+   "KeepingTimeAtAGlance": 24
+  },
+  "notExecuted": [
+   13,
+   19,
+   21,
+   22
+  ],
+  "measured": [
+   9
+  ],
+  "emulated": [
+   6,
+   8,
+   20,
+   22
+  ]
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Ch. 19: Time, Tasks, and Programs",
+   "sub": "Keeping time, scheduling tasks, and launching programs: time, datetime, zoneinfo, subprocess, and cron",
+   "items": [
+    {
+     "t": "code",
+     "x": 5.0,
+     "y": 0.4,
+     "w": 4.5,
+     "h": 1.68,
+     "rows": [
+      [
+       "import platform, importlib.metadata as m",
+       ""
+      ],
+      [
+       "platform.python_version()",
+       "'3.14.6'"
+      ],
+      [
+       "m.version('tzdata')",
+       "'2026.5'"
+      ],
+      [
+       "m.version('schedule')",
+       "'1.2.2'"
+      ]
+     ],
+     "fs": 10
+    },
+    {
+     "t": "foot",
+     "x": 0.6,
+     "y": 3.85,
+     "w": 8.8,
+     "h": 0.41,
+     "fs": 11,
+     "body": "Every output on these slides was printed by the Python above when the deck was made. No slide reads the clock: moments are built from numbers and zones are named. What could not be run is marked on its slide."
+    }
+   ],
+   "notes": "Chapter 18 worked with files that programs read and write. Chapter 19 turns to time and to other programs: how a program reads a clock, waits, writes and reads dates, and how it starts, stops and schedules another program. This deck follows the chapter in its own order: the time module with the epoch timestamp and sleep and Project 14, the Super Stopwatch; the datetime module with moments, durations, strftime() and strptime(); launching programs with subprocess.run() and subprocess.Popen(), the start and open commands and the scheduler paragraph; and Project 15, the Simple Countdown, with the two practice programs. It adds what the chapter leaves out and what the research found when every printed output was run again: four en dashes that make listings a SyntaxError, a profiling listing that does not match the file the book ships, a time zone named Pacific Standard Time on a day when it was Pacific Daylight Time, a two-digit year that maps 69 to 1969, thirty years that are seven days short, time zones and daylight saving, the utcnow() deprecation, the commands of Windows and macOS that Linux lacks, and what real cron did on a real machine. Everything printed on these slides was produced by Python 3.14.6, installed with uv, with tzdata 2026.5 and schedule 1.2.2; time, datetime, zoneinfo and subprocess are the standard library. Nothing on a slide depends on the time of day: every moment is built from numbers, every zone is named, and the stopwatch and countdown run on a clock the program moves. What could not be run, a Windows computer, a Mac, a systemd timer, a sound card and the final release of Python 3.15, is marked NOT EXECUTED on its slide.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Six parts; every range is a run of slides you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 6.3,
+     "h": 3.55,
+     "fs": 11.5,
+     "items": [
+      "Clocks, sleeping and the stopwatch (slides 4-9)",
+      "Dates, durations and text (slides 10-13)",
+      "Time zones (slides 14-15)",
+      "Launching programs (slides 16-19)",
+      "Scheduling and the practice programs (slides 20-23)",
+      "Summary and resources (slides 24-25)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "26",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "2 + 4",
+       "label": "true stories: 2 on slides, 4 in the notes"
+      },
+      {
+       "n": "25",
+       "label": "consoles and programs, all run before they were shown"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has six parts. It starts with clocks: the epoch timestamp and the choice of an engineer in the story of the epoch, the clock that answers each question, sleeping and the drift of a loop, Project 14, the Super Stopwatch, and the repairs the listings need before they run. Then dates and text: what a program can do with datetime, durations in a timedelta, strftime() with Table 19-1 and strptime() with its two-digit year. Then time zones: naive and aware values, the zone of the chapter's example, and the 23-hour day, the gap and the fold of daylight saving. Then launching programs: run() and Popen(), poll, wait, the check and the timeout, exit codes and signals, and the shell with the commands start and open that Linux lacks. The fifth part is scheduling and the practice programs: Timer, sched and call_later inside a process, cron fields and what real cron did, Project 15 with the Prettified Stopwatch, and the Friday the 13th finder. The last part is a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. Two of the slides are true stories and four more are told in the notes; the eight narrative diagrams of the chapter are drawn from the same specifications as the interactive page. Every output was printed by Python 3.14.6 with tzdata 2026.5 and schedule 1.2.2, and what could not be run is marked on its slide.",
+   "take": "Six parts, from the epoch to a cron job in its small world.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "The chapter's own competency questions; the summary comes back to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 2.2,
+     "fs": 13,
+     "items": [
+      "Which clock answers which question, which moments and durations can a datetime hold and which does it refuse or misread, and how does a program launch, wait for, stop and schedule another program on an operating system where the commands of the book do not exist?",
+      "Which printed outputs, programs, numbers and statements of the chapter differ in current releases of Python, in the zone and the clock of the author, in the files the book ships or in the pages it points to, and on what source?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 3.8,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 10,
+     "items": [
+      "6 branches",
+      "90 topics",
+      "25 console rows",
+      "30 programs run",
+      "8 diagrams",
+      "Python 3.14.6",
+      "tzdata 2026.5",
+      "schedule 1.2.2"
+     ]
+    }
+   ],
+   "notes": "The first question is the spine of the chapter. A program can read several clocks, and they answer different questions: time.time() answers what moment is it, time.monotonic() answers how long did this take. A datetime holds a moment and a timedelta a duration, and both refuse or misread things: a timedelta has no months, a two-digit year maps 69 to 1969, a value with no zone cannot be compared with one that has a zone, and a day added across a daylight saving change is 23 hours long. A program launches another program with a list of arguments through subprocess.run(), which waits, or subprocess.Popen(), which does not, and it schedules a program either inside a process that stays alive or with the operating system, where the commands of the book, start and open, may not exist. The second question is the watch-out of the deck. The chapter page of 13 October 2026 has 29 listings, 20 of them interactive sessions of 75 statements, one figure and one table. All 75 statements were replayed in order under Python 3.14.6 with the zone of the author, America/Los_Angeles: 54 printed what the book prints and 21 did not, of which 7 depend on the clock, 1 is the en dash and 13 launch Windows or macOS programs or call a program that Linux lacks; with the dash repaired 55 matched. The online materials of the book, 91 files, hold three files of this chapter, calcProd.py, stopwatch.py and simplecountdown.py, and none of the alarm.wav, the hello.txt or the practice programs. Each slide says where a printed line differs and on what evidence.",
+   "take": "Know which clock, which moment and which launcher answers each question.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The epoch timestamp",
+   "sub": "Seconds since 1 January 1970 UTC; a leap second has no number; 32 bits end in 2038",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.82,
+     "h": 2.95,
+     "lines": [
+      "t = calendar.timegm((2026, 3, 18, 6, 4, 35))",
+      "print('2026-03-18 06:04:35 UTC is', t)",
+      "print('timestamp 0 is', DT.fromtimestamp(0, UTC).isoformat())",
+      "a = calendar.timegm((2016, 12, 31, 23, 59, 59))",
+      "b = calendar.timegm((2017, 1, 1, 0, 0, 0))",
+      "print('across the 2016 leap second, seconds apart:', b - a)",
+      "try: DT(2016, 12, 31, 23, 59, 60)",
+      "except ValueError as e: print('datetime refuses:', e)",
+      "print('float spacing near the timestamp:', math.ulp(t + 0.35))",
+      "print('2**31 - 1 ->', DT.fromtimestamp(2**31 - 1, UTC).isoformat())",
+      "print('wrapped:', DT.fromtimestamp(-2**31, UTC).isoformat())"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "2026-03-18 06:04:35 UTC is 1773813875\ntimestamp 0 is 1970-01-01T00:00:00+00:00\nacross the 2016 leap second, seconds apart: 1\ndatetime refuses: second must be in 0..59, not 60\nfloat spacing near the timestamp: 2.384185791015625e-07\n2**31 - 1 -> 2038-01-19T03:14:07+00:00\nwrapped: 1901-12-13T20:45:52+00:00",
+     "outLabel": "prints",
+     "label": "program epochCut_v1_0_0.py, lines 6 to 16 of 16"
+    },
+    {
+     "t": "card",
+     "head": "What the number counts",
+     "body": "Seconds since 00:00:00 UTC on 1 January 1970, by a formula that gives every day 86,400 seconds, so a leap second has no number of its own.",
+     "x": 5.57,
+     "y": 1.5,
+     "w": 3.93,
+     "h": 1.75,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "Where it stops",
+     "body": "A signed 32-bit count ends at 03:14:07 UTC on 19 January 2038; Python's datetime reaches the year 9999.",
+     "x": 5.57,
+     "y": 3.35,
+     "w": 3.93,
+     "h": 1.45,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 4.82,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "The chapter says the epoch timestamp is the number of seconds since the epoch, a reference moment that many date and time programs use, and that the moment is January 1, 1970, UTC. The program shows what that definition leaves out. calendar.timegm() turns a moment in UTC into its timestamp, so the moment 06:04:35 on 18 March 2026 is 1773813875, the whole-second part of the chapter's example; timestamp 0 is the first moment of 1970. The POSIX formula that defines the number gives every day exactly 86,400 seconds, so the leap second of 31 December 2016 has no number: the two seconds on either side of it are one second apart in epoch time, and datetime refuses a 60th second. A float has limited precision: near the chapter's timestamp neighbouring floats are about 2.4e-07 apart, a quarter of a microsecond. The last lines show the year 2038 problem: a signed 32-bit count of seconds reaches 2**31 - 1 at 03:14:07 UTC on 19 January 2038, and the next second, packed into 32 bits and read back as signed, is -2147483648, which is 20:45:52 UTC on 13 December 1901. Python on a 64-bit machine is not affected, but file formats and old C programs may be. The chapter does not mention leap seconds or 2038; Appendix B's answer to question 1 names the same moment, January 1, 1970, UTC.",
+   "take": "A timestamp counts seconds since 1970 UTC; leap seconds have no number.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "An epoch chosen by engineers",
+   "sub": "3 November 1971 and 15 March 1972, and the epoch of 1 January 1970 afterwards",
+   "items": [
+    {
+     "t": "card",
+     "head": "Before 1970",
+     "body": "The first Unix manual counted sixtieths of a second from 1 January 1971; the third said 32 bits \"guarantees a crisis every 2.26 years\".",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 4.5,
+     "h": 1.2,
+     "fs": 9
+    },
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 2.7,
+     "w": 4.5,
+     "h": 1.67,
+     "rows": [
+      [
+       "import time, calendar",
+       ""
+      ],
+      [
+       "time.gmtime(0)[:6]",
+       "(1970, 1, 1, 0, 0, 0)"
+      ],
+      [
+       "calendar.timegm((1970, 1, 1, 0, 0, 0))",
+       "0"
+      ],
+      [
+       "calendar.timegm((2038, 1, 19, 3, 14, 7)) == 2**31 - 1",
+       "True"
+      ],
+      [
+       "round(2**32 / 60 / (86400 * 365.25), 2)",
+       "2.27"
+      ]
+     ],
+     "fs": 7.5,
+     "cap": "run under Python 3.14.6, tzdata 2026.5; no row reads the clock"
+    },
+    {
+     "t": "beats",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 2.8,
+     "fs": 12,
+     "items": [
+      "Nov 1971: counts from 1 Jan 1971",
+      "Mar 1972: counts from 1 Jan 1972",
+      "Then: 1 Jan 1970, chosen arbitrarily",
+      "Jan 2038: a signed 32-bit count wraps"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.6,
+     "w": 9.0,
+     "who": "The Unix engineers at Bell Labs, whose Programmer's Manual described the time call",
+     "where": "The first and third editions of the Unix Programmer's Manual, the time system call",
+     "when": "3 November 1971 and 15 March 1972, and the epoch of 1 January 1970 afterwards",
+     "link": "https://en.wikipedia.org/wiki/Unix_time",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on Unix time cites the first edition of the Unix Programmer's Manual, dated 3 November 1971, which says time returns the time since 00:00:00, Jan. 1, 1971, measured in sixtieths of a second. The third edition, dated 15 March 1972, counts from Jan. 1, 1972, and adds that the time is stored in 32 bits, which guarantees a crisis every 2.26 years. Counting sixtieths of a second in 32 bits runs out after 2**32 / 60 seconds, which is 2.27 years by this study's arithmetic. The article says the current epoch of 1 January 1970 was selected arbitrarily by Unix engineers because it was a convenient date to work with, and the precision was changed to seconds to avoid short-term overflow. In this study time.gmtime(0) gave 1970-01-01 00:00:00 and calendar.timegm of that moment gave 0. The account rests on these sources. Wikipedia, 'Unix time' (the epoch selected arbitrarily; the manual of 3 November 1971 with the epoch of 1971; the manual of 15 March 1972 with the epoch of 1972 and 2.26 years), read 2026-10-13; this study's leaves EpochZero and FloatPrecision. The console on the slide runs the arithmetic of the story: time.gmtime(0) is the first moment of 1970 and calendar.timegm of it is 0, the largest signed 32-bit count is 03:14:07 UTC on 19 January 2038, and 2**32 sixtieths of a second last 2.27 years by this deck's arithmetic, close to the 2.26 the manual states.",
+   "take": "An epoch is a choice engineers made, not a fact of nature.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Which clock answers which question",
+   "sub": "time() can be set back; monotonic() cannot; the chapter subtracts two time() readings",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.95,
+     "h": 2.36,
+     "lines": [
+      "for n in ('time', 'monotonic', 'perf_counter', 'process_time'):",
+      "    i = time.get_clock_info(n)",
+      "    print(n.ljust(13), i.monotonic, i.adjustable, i.implementation)",
+      "wall, mono = iter([1000.0, 990.0]), iter([50.0, 60.0])",
+      "w0, m0, w1, m1 = next(wall), next(mono), next(wall), next(mono)",
+      "print('set back by 10 sec: wall', w1 - w0, '| monotonic', m1 - m0)",
+      "t = time.monotonic(); time.sleep(0.2)",
+      "print('sleep(0.2) lasted at least 0.2:', time.monotonic() - t >= 0.2)"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "time          False True clock_gettime(CLOCK_REALTIME)\nmonotonic     True False clock_gettime(CLOCK_MONOTONIC)\nperf_counter  True False clock_gettime(CLOCK_MONOTONIC)\nprocess_time  True False clock_gettime(CLOCK_PROCESS_CPUTIME_ID)\nset back by 10 sec: wall -10.0 | monotonic 10.0\nsleep(0.2) lasted at least 0.2: True",
+     "outLabel": "prints",
+     "label": "program clocksCut_v1_0_0.py, lines 6 to 13 of 13"
+    },
+    {
+     "t": "card",
+     "head": "A moment or an interval",
+     "body": "time.time() answers what moment it is. monotonic() and perf_counter() answer how long something took and never go back; process_time() counts this process's CPU.",
+     "x": 5.7,
+     "y": 1.5,
+     "w": 3.8,
+     "h": 1.9,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "EMULATED, not a changed clock",
+     "body": "Nothing set a clock back: two numbers stand in for a wall clock set back by 10 sec and for the monotonic clock beside it.",
+     "x": 5.7,
+     "y": 3.5,
+     "w": 3.8,
+     "h": 1.4,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.99,
+     "w": 4.95,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "The chapter times code by subtracting two readings of time.time(), and Project 14 does the same for laps. get_clock_info() says what each clock is. time.time() reads CLOCK_REALTIME, which is the system clock: monotonic False, adjustable True, so an administrator or a time service can set it, and then a difference can be negative. monotonic() and perf_counter() read CLOCK_MONOTONIC, which cannot go backwards and cannot be adjusted; the Python documentation and PEP 418 name them for intervals. process_time() reads the CPU time of this process, so it does not run while the program sleeps. The program cannot set the real clock back, so it says EMULATED: two numbers stand in, the wall clock 1000.0 then 990.0 and the monotonic clock 50.0 then 60.0, and the difference is -10.0 on the first and +10.0 on the second. The last line measures a sleep on the monotonic clock and compares it with a bound, so the line prints the same on every run. For an exact interval the course therefore uses monotonic() or perf_counter(), and keeps time() for a moment on a calendar.",
+   "take": "Use monotonic() for an interval and time() for a moment.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Pausing: sleep, polling and drift",
+   "sub": "sleep() waits at least what you ask; a loop that sleeps after its work starts late",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.3,
+     "h": 3.1,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.46,
+       "w": 2.3,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Make a datetime for the date",
+       "x": 0.57,
+       "y": 1.633,
+       "w": 2.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.08,
+       "w": 2.3,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the current moment with datetime.now()",
+       "x": 0.57,
+       "y": 2.186,
+       "w": 2.16,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.5,
+       "y": 2.65,
+       "w": 2.3,
+       "h": 0.6,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the current moment earlier than the date?",
+       "x": 0.67,
+       "y": 2.806,
+       "w": 1.96,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.32,
+       "w": 2.3,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Continue with the rest of the program",
+       "x": 0.57,
+       "y": 3.493,
+       "w": 2.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.15,
+       "y": 2.7,
+       "w": 1.65,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Pause the program with time.sleep(1)",
+       "x": 3.22,
+       "y": 2.806,
+       "w": 1.51,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.875,
+       "y": 1.61,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.51,
+       "y": 4.05,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.57,
+       "y": 4.11,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.875,
+       "y1": 1.71,
+       "x2": 2.8,
+       "y2": 1.71,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 1.96,
+       "x2": 1.65,
+       "y2": 2.08,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 2.58,
+       "x2": 1.65,
+       "y2": 2.65,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.8,
+       "y1": 2.95,
+       "x2": 3.15,
+       "y2": 2.95,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.85,
+       "y": 2.75,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 3.975,
+       "y1": 2.7,
+       "x2": 3.975,
+       "y2": 2.33,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.975,
+       "y1": 2.33,
+       "x2": 2.8,
+       "y2": 2.33,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 3.25,
+       "x2": 1.65,
+       "y2": 3.32,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 1.71,
+       "y": 3.195,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 3.82,
+       "x2": 1.65,
+       "y2": 4.05,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "WaitingUntilADate"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.53,
+     "w": 4.3,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WaitingUntilADate - Workflow pattern, 17 of 20 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.85,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 3.07,
+     "lines": [
+      "t = time.monotonic(); r = time.sleep(0.2)",
+      "ok = time.monotonic() - t >= 0.2",
+      "print('sleep returns', r, '| lasted at least 0.2:', ok)",
+      "hits = []",
+      "signal.signal(signal.SIGALRM, lambda s, f: hits.append('ran'))",
+      "signal.setitimer(signal.ITIMER_REAL, 0.05)",
+      "t = time.monotonic(); time.sleep(0.3)",
+      "ok = time.monotonic() - t >= 0.3",
+      "print('handler', hits, '| not cut short:', ok)",
+      "def start_of_round(n, work, fixed):",
+      "    t = 0.0",
+      "    for _ in range(n - 1):",
+      "        t += work + 1.0 if fixed else max(work, 1.0)",
+      "    return round(t, 2)",
+      "print('sleeping after work:', start_of_round(3600, 0.02, True))",
+      "print('anchored to the tick:', start_of_round(3600, 0.02, False))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "sleep returns None | lasted at least 0.2: True\nhandler ['ran'] | not cut short: True\nsleeping after work: 3670.98\nanchored to the tick: 3599.0",
+     "outLabel": "prints",
+     "label": "program sleepCut_v1_0_0.py, lines 6 to 21 of 21"
+    },
+    {
+     "t": "foot",
+     "x": 4.85,
+     "y": 4.7,
+     "w": 4.65,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "The activity diagram is the chapter's way of pausing a program until a date: make a datetime for the date, read the current moment, and while the moment is earlier than the date pause with time.sleep(1) and read it again, then continue. The one-second sleep is what keeps the loop from using the processor all the time; the research measured it once: the loop with the sleep used under 0.05 of processor time in 1.2 of elapsed time, and the loop without it over 0.1 in 0.3. The program shows four things the chapter does not say. time.sleep() returns None and lasts at least the time asked, measured on the monotonic clock. Since Python 3.5 a signal handler that returns does not shorten the sleep, which is retried for the time that remains, as PEP 475 says: the handler ran and the sleep still lasted at least 0.3. A loop that sleeps one second after its work drifts: with 0.02 of work in each round, the 3600th round starts at 3670.98, which is 71.98 late, while a loop anchored to the tick starts it at 3599.0 as it should. And round() goes to the even neighbour on a tie, so round(2.5) is 2 and round(3.5) is 4, and it returns an int without a digits argument; round(2.675, 2) is 2.67 because the float is a little below 2.675. Appendix B answers question 5 with the closest integer, which is incomplete for exactly this reason.",
+   "take": "sleep() waits at least what you ask; a sleep after the work drifts.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Project 14: the Super Stopwatch",
+   "sub": "Subtract the last reading, round both times, print the lap; Ctrl-C ends the loop",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.2,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.459,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Note the start time with time.time()",
+       "x": 0.57,
+       "y": 1.551,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.916,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Wait for the user to press ENTER",
+       "x": 0.57,
+       "y": 2.008,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.373,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Subtract the last time to get the lap time",
+       "x": 0.57,
+       "y": 2.466,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.83,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Round the lap time and the total time to two digits",
+       "x": 0.57,
+       "y": 2.923,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.287,
+       "w": 3.3,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Print the lap number, the total time and the lap time",
+       "x": 0.57,
+       "y": 3.38,
+       "w": 3.16,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.5,
+       "y": 3.694,
+       "w": 3.3,
+       "h": 0.44,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Did the user press Ctrl-C?",
+       "x": 0.67,
+       "y": 3.837,
+       "w": 2.96,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 4.35,
+       "y": 1.529,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.01,
+       "y": 4.231,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.07,
+       "y": 4.291,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 4.35,
+       "y1": 1.629,
+       "x2": 3.8,
+       "y2": 1.629,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 1.799,
+       "x2": 2.15,
+       "y2": 1.916,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 2.256,
+       "x2": 2.15,
+       "y2": 2.373,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 2.713,
+       "x2": 2.15,
+       "y2": 2.83,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 3.17,
+       "x2": 2.15,
+       "y2": 3.287,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 3.627,
+       "x2": 2.15,
+       "y2": 3.694,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.8,
+       "y1": 3.914,
+       "x2": 4.02,
+       "y2": 3.914,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.02,
+       "y1": 3.914,
+       "x2": 4.02,
+       "y2": 2.086,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.02,
+       "y1": 2.086,
+       "x2": 3.8,
+       "y2": 2.086,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 3.84,
+       "y": 3.944,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 4.134,
+       "x2": 2.15,
+       "y2": 4.231,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.21,
+       "y": 4.093,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      }
+     ],
+     "did": "TimingALapOfTheStopwatch"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.2,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram TimingALapOfTheStopwatch - Workflow pattern, 29 of 33 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.85,
+     "y": 1.55,
+     "w": 4.53,
+     "h": 2.66,
+     "lines": [
+      "now = [1000.0]",
+      "clock = lambda: now[0]",
+      "start_time = last_time = clock()",
+      "lap_number = 1",
+      "for gap in (3.56, 5.07, 9.05, 1.43):",
+      "    now[0] += gap                  # the user presses ENTER",
+      "    lap_time = round(clock() - last_time, 2)",
+      "    total_time = round(clock() - start_time, 2)",
+      "    print(f'Lap #{lap_number}: {total_time}({lap_time})')",
+      "    lap_number += 1",
+      "    last_time = clock()",
+      "print('as shipped:', 'Lap #{lap_number}: {total_time}({lap_time})')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "Lap #1: 3.56(3.56)\nLap #2: 8.63(5.07)\nLap #3: 17.68(9.05)\nLap #4: 19.11(1.43)\nas shipped: Lap #{lap_number}: {total_time}({lap_time})",
+     "outLabel": "prints",
+     "label": "program stopwatchCut_v1_0_0.py, lines 6 to 17 of 17"
+    },
+    {
+     "t": "foot",
+     "x": 4.85,
+     "y": 4.29,
+     "w": 4.65,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "EMULATED: the key presses are numbers added to a fake clock, so the laps are known. Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "The activity diagram is the chapter's program, step by step: note the start time with time.time(), wait for ENTER, subtract the last time to get the lap time, round the lap time and the total time to two digits, print the lap number, the total time and the lap time, and ask whether the user pressed Ctrl-C. The real program needs a terminal, because it calls input(); run without one it raises EOFError at the first call. So the program on the slide says EMULATED: it adds the gaps 3.56, 5.07, 9.05 and 1.43 to a fake clock instead of waiting for a person, and prints the laps the chapter prints, 3.56 and 3.56, 8.63 and 5.07, 17.68 and 9.05, 19.11 and 1.43. The last line shows a trap of the shipped file: stopwatch.py in the online materials has no f prefix on its print, so it prints the braces, Lap #{lap_number}: {total_time}({lap_time}), where the chapter's listing has the prefix; the shipped file also has two en dashes, which the next slide explains. The chapter prints the total time and the lap time without a space between them, while the Prettified Stopwatch practice program, on a later slide, pads them into columns with rjust().",
+   "take": "Subtract the last reading from this one; print the laps.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What the listings need before they run",
+   "sub": "Four en dashes, a digit limit, and the Pacific time that was not standard",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 9.0,
+     "h": 2.29,
+     "rows": [
+      [
+       "compile('d = 5 \u2013 3', 'listing', 'eval')",
+       "SyntaxError: invalid character '\u2013' (U+2013) (listing, line 1)"
+      ],
+      [
+       "eval(compile('5 - 3', 'listing', 'eval'))",
+       "2"
+      ],
+      [
+       "import math, sys",
+       ""
+      ],
+      [
+       "sys.get_int_max_str_digits()",
+       "4300"
+      ],
+      [
+       "len(str(math.factorial(1000)))",
+       "2568"
+      ],
+      [
+       "str(math.factorial(100000))[:5]",
+       "ValueError: Exceeds the limit (4300 digits) for integer string conversion; use sys.set_int_max_str_digits() to increase the limit"
+      ],
+      [
+       "int(math.lgamma(100001) / math.log(10)) + 1",
+       "456574"
+      ]
+     ],
+     "fs": 7.6,
+     "cap": "run under Python 3.14.6, tzdata 2026.5; no row reads the clock"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.1,
+     "w": 9.0,
+     "h": 0.38,
+     "fs": 10,
+     "body": "Listings 2, 6 (twice) and 12 write the en dash U+2013 for a minus sign; Python refuses each. The shipped stopwatch.py has two of them, CRLF line ends and no f prefix."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.52,
+     "w": 9.0,
+     "h": 0.38,
+     "fs": 10,
+     "body": "Single run, research: the shipped calcProd.py needs sys.set_int_max_str_digits(); the chapter's product took 2.3 to 2.6 s, math.factorial(100000) 0.136 s."
+    }
+   ],
+   "notes": "The chapter's listings, as served on its web page, need repairs before they run. Four places in three listings, listings 2, 6 and 12, write the en dash U+2013 instead of the minus sign, in end_time \u2013 start_time, time.time() \u2013 last_time and oct_21st \u2013 about_thirty_years. The first console rows show the refusal, SyntaxError: invalid character '\u2013' (U+2013), and the same expression with a minus sign. A reader who copies the listing gets a program that does not start. The shipped files are another matter: calcProd.py in the online materials is not the program the chapter prints. It loops over range(1, 100000), prints len(str(result)) and has an en dash; repaired, it raises ValueError because Python refuses to convert an integer of more than 4300 digits to a string by default, which the console shows with str(math.factorial(100000)). The number of digits of 100000! is 456574, computed here without converting it. The timings are single runs of the research on one machine: the product took about 2.3 to 2.6 seconds and math.factorial(100000), which gives the same integer, 0.136 seconds, and they vary with the machine. The chapter prints 2.844162940979004 seconds for its own run. The shipped stopwatch.py also has CRLF line ends, two en dashes and no f prefix on its print, which the previous slide showed.",
+   "take": "Copy the dashes out of a listing before you run it; Python refuses them.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What a program can do with datetime",
+   "sub": "Seven things through one module; the chapter shows six and no time zone",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 3.9,
+     "h": 3.15,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 1.3,
+       "y": 1.73,
+       "w": 3.1,
+       "h": 2.87,
+       "fill": "FBF8F2",
+       "line": "6E655C",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "THE DATETIME MODULE",
+       "x": 1.38,
+       "y": 1.47,
+       "w": 2.95,
+       "h": 0.24,
+       "fs": 8.5,
+       "color": "6E655C",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 1.84,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Make a moment from a year, month and day",
+       "x": 1.73,
+       "y": 1.865,
+       "w": 2.24,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.239,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the current moment",
+       "x": 1.73,
+       "y": 2.331,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.637,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Compare two moments",
+       "x": 1.73,
+       "y": 2.729,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.036,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Add a duration to a moment",
+       "x": 1.73,
+       "y": 3.128,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.434,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Turn a moment into text with strftime()",
+       "x": 1.73,
+       "y": 3.526,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.833,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read text into a moment with strptime()",
+       "x": 1.73,
+       "y": 3.925,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 4.231,
+       "w": 2.8,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Attach a time zone with ZoneInfo",
+       "x": 1.73,
+       "y": 4.323,
+       "w": 2.24,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 0.74,
+       "y": 2.325,
+       "w": 0.22,
+       "h": 0.22,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 1.5
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.545,
+       "x2": 0.85,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.65,
+       "y1": 2.645,
+       "x2": 1.05,
+       "y2": 2.645,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.925,
+       "x2": 0.69,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.925,
+       "x2": 1.01,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A program",
+       "x": 0.5,
+       "y": 3.225,
+       "w": 0.8,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.009,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.408,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.806,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 3.205,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 3.604,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 4.002,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 4.401,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      }
+     ],
+     "did": "WhatAProgramCanDoWithDatetime"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 3.9,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WhatAProgramCanDoWithDatetime - SetOfUses pattern, 30 of 31 words grounded in the chapter's text"
+    },
+    {
+     "t": "code",
+     "x": 4.6,
+     "y": 1.5,
+     "w": 4.9,
+     "h": 2.61,
+     "rows": [
+      [
+       "import datetime",
+       ""
+      ],
+      [
+       "halloween = datetime.datetime(2026, 10, 31)",
+       ""
+      ],
+      [
+       "later = datetime.datetime(2027, 1, 1)",
+       ""
+      ],
+      [
+       "halloween < later",
+       "True"
+      ],
+      [
+       "later - halloween",
+       "datetime.timedelta(days=62)"
+      ],
+      [
+       "halloween.weekday()",
+       "5"
+      ],
+      [
+       "datetime.datetime(2026, 10, 21, 16, 29).isoformat()",
+       "'2026-10-21T16:29:00'"
+      ],
+      [
+       "datetime.datetime(2026, 2, 30)",
+       "ValueError: day 30 must be in range 1..28 for month 2 in year 2026"
+      ],
+      [
+       "datetime.date(2019, 1, 7).weekday()",
+       "0"
+      ]
+     ],
+     "fs": 7.7,
+     "cap": "run under Python 3.14.6, tzdata 2026.5; no row reads the clock"
+    },
+    {
+     "t": "foot",
+     "x": 4.6,
+     "y": 4.67,
+     "w": 4.9,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "No now() on these slides: datetime.now() is the time of the day it runs. Every moment here is built from numbers, so every row prints the same on any day."
+    }
+   ],
+   "notes": "The use-case diagram lists what the chapter does with moments and durations through one module: make a moment from a year, month and day, read the current moment, compare two moments, add a duration to a moment, turn a moment into text with strftime() and read text into a moment with strptime(). They are independent uses of the same module and not a sequence, which is why the picture is a set of uses. The seventh, attaching a time zone with ZoneInfo, is not in the chapter. The console builds the moments from numbers: Halloween 2026 is earlier than 1 January 2027, their difference is the timedelta of 62 days, 31 October 2026 is a weekday numbered 5, a Saturday, and a day that does not exist, 30 February, raises ValueError. The last row is Appendix B's answer to question 7: the weekday() of 7 January 2019 is 0, Monday. datetime.now() would print the moment the slide was run, so no row calls it; the research recorded the chapter's own statements of that kind, and they differ from the book's because they come from four different days in the book (11:05 on 17 March 2026, 27 February 2026, 21 October 2026 and 2 December 2026). Python 3.12 deprecated utcnow() for now(datetime.UTC), which a later slide shows.",
+   "take": "A datetime is a moment: compare and subtract moments, not months.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Durations: timedelta",
+   "sub": "Days, seconds and microseconds only; thirty years of 365 days are 7 days short",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.82,
+     "h": 3.07,
+     "lines": [
+      "d = TD(days=11, hours=10, minutes=9, seconds=8)",
+      "print(d.days, d.seconds, d.total_seconds(), '|', d)",
+      "try: TD(months=1)",
+      "except TypeError as e: print('TypeError:', e)",
+      "print('31 Jan + 30 days:', (DT(2026, 1, 31) + TD(days=30)).date())",
+      "o = DT(2026, 10, 21, 16, 29)",
+      "thirty = TD(days=365 * 30)",
+      "real = o.replace(year=1996)",
+      "print('book: 30 years back =', (o - thirty).date(), '| real:', real.date())",
+      "print('days off:', (o - thirty - real).days, '| leap days:', (o - real).days - 365 * 30)",
+      "print('book: 60 years back =', (o - 2 * thirty).date(), '| real: 1966-10-21')",
+      "try: datetime.delta(days=1)",
+      "except AttributeError as e: print('AttributeError:', e)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "11 36548 986948.0 | 11 days, 10:09:08\nTypeError: __new__() got an unexpected keyword argument 'months'\n31 Jan + 30 days: 2026-03-02\nbook: 30 years back = 1996-10-28 | real: 1996-10-21\ndays off: 7 | leap days: 7\nbook: 60 years back = 1966-11-05 | real: 1966-10-21\nAttributeError: module 'datetime' has no attribute 'delta'",
+     "outLabel": "prints",
+     "label": "program durationsCut_v1_0_0.py, lines 6 to 18 of 18"
+    },
+    {
+     "t": "card",
+     "head": "No months or years",
+     "body": "TypeError for months= and years=. A month has 28 to 31 days, so 31 Jan + 30 days is 2 March and + 31 days is 3 March.",
+     "x": 6.57,
+     "y": 1.5,
+     "w": 2.93,
+     "h": 1.55,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "Thirty years off",
+     "body": "365 * 30 days back from 21 Oct 2026 is 28 Oct 1996: 7 days off, the 7 leap days.",
+     "x": 6.57,
+     "y": 3.15,
+     "w": 2.93,
+     "h": 1.75,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.7,
+     "w": 5.82,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "A timedelta stores a duration as days, seconds and microseconds. The chapter's example, 11 days, 10 hours, 9 minutes and 8 seconds, has days 11, seconds 36548 and total_seconds() 986948.0, and prints as 11 days, 10:09:08. It has no months or years, because they are not fixed lengths: months=1 raised TypeError, with the message of Python 3.14, which differs in 3.11, 3.12 and 3.15, as the research found by running eleven interpreters. Adding 30 days to 31 January gives 2 March and adding 31 gives 3 March, so there is no single addition that means a month. The chapter's about_thirty_years is 365 * 30 days and the chapter says it ignores leap years, but it prints 28 October 1996 for 30 years before 21 October 2026, which is 7 days off because the span holds 7 leap days; twice the span prints 5 November 1966, 15 days off. The text before the example calls the function datetime.delta(), which raises AttributeError: module 'datetime' has no attribute 'delta'; the function is datetime.timedelta(). For a real calendar span use replace(year=...), as the program does, or a library.",
+   "take": "A timedelta has days and seconds only; 30 times 365 days is not 30 years.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "strftime: a moment to text",
+   "sub": "Table 19-1, computed; isoformat() and fromisoformat() are the way to store a moment",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 4.5,
+     "colW": [
+      0.7,
+      1.95,
+      1.85
+     ],
+     "fs": 9,
+     "rowH": 0.27,
+     "rows": [
+      [
+       "directive",
+       "meaning",
+       "3 Nov 2026 16:29:07"
+      ],
+      [
+       "%Y",
+       "year, four digits",
+       "2026"
+      ],
+      [
+       "%y",
+       "year, two digits",
+       "26"
+      ],
+      [
+       "%m",
+       "month number",
+       "11"
+      ],
+      [
+       "%B",
+       "month name",
+       "November"
+      ],
+      [
+       "%d",
+       "day of the month",
+       "03"
+      ],
+      [
+       "%j",
+       "day of the year",
+       "307"
+      ],
+      [
+       "%w",
+       "weekday, Sunday is 0",
+       "2"
+      ],
+      [
+       "%A",
+       "weekday name",
+       "Tuesday"
+      ],
+      [
+       "%H",
+       "hour, 24-hour clock",
+       "16"
+      ],
+      [
+       "%I",
+       "hour, 12-hour clock",
+       "04"
+      ],
+      [
+       "%p",
+       "AM or PM",
+       "PM"
+      ]
+     ]
+    },
+    {
+     "t": "prog",
+     "x": 5.2,
+     "y": 1.55,
+     "w": 4.22,
+     "h": 2.52,
+     "lines": [
+      "dt = DT(2026, 11, 3, 16, 29, 7)",
+      "print(dt.strftime('%Y/%m/%d %H:%M:%S'))",
+      "print(dt.strftime('%I:%M %p'), '|', dt.strftime('%A, %B %d'))",
+      "print(dt.strftime('%j %w'), '| percent:', dt.strftime('%d%%'))",
+      "print(dt.isoformat(), '|', dt.isoformat(timespec='minutes'))",
+      "x = DT(2026, 10, 21, 16, 29, 7, 123456, tzinfo=UTC)",
+      "print(x.isoformat())",
+      "print(DT.fromisoformat('2026-10-21T16:29:07Z'))",
+      "print(D.fromisoformat('2026-W43-3'))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "2026/11/03 16:29:07\n04:29 PM | Tuesday, November 03\n307 2 | percent: 03%\n2026-11-03T16:29:07 | 2026-11-03T16:29\n2026-10-21T16:29:07.123456+00:00\n2026-10-21 16:29:07+00:00\n2026-10-21",
+     "outLabel": "prints",
+     "label": "program strftimeCut_v1_0_0.py, lines 6 to 14 of 14"
+    },
+    {
+     "t": "foot",
+     "x": 5.2,
+     "y": 4.15,
+     "w": 4.3,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "Table 19-1 of the chapter lists the directives of strftime(). The table on the slide is computed, not typed: for each directive it calls strftime() on the moment 16:29:07 on 3 November 2026, a Tuesday, so %w, the weekday with Sunday as 0, prints 2 and %j, the day of the year, prints 307. The names of days and months come from the C locale. The chapter sends the reader to strftime.org for the directives; that address now redirects with HTTP 301 to a cheatsheet of another company, which the links check of this deck does not count on. The program writes the chapter's year/month/day format, a 12-hour clock with %p, the weekday and month names, and a literal percent sign written as %%. It then shows the form the course recommends for storing a moment, ISO 8601: isoformat() writes 2026-11-03T16:29:07, timespec='minutes' shortens it, an aware value ends in +00:00, and fromisoformat() reads it back, since Python 3.11 including the letter Z and the week form 2026-W43-3, a Wednesday. The chapter mentions neither isoformat() nor ISO 8601, and the internet standard for timestamps is RFC 3339.",
+   "take": "strftime() writes text; isoformat() is the format to store.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "strptime: text to a moment",
+   "sub": "The format must match the text; %y maps 69 to 99 to 1969 to 1999",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.47,
+     "h": 2.63,
+     "lines": [
+      "print(DT.strptime('October 21, 2026', '%B %d, %Y'))",
+      "print(DT.strptime(\"November of '63\", \"%B of '%y\").date())",
+      "print(DT.strptime(\"November of '73\", \"%B of '%y\").date())",
+      "for s, f in (('2026-10-21', '%Y/%m/%d'), ('Oct 21, 2026', '%B %d, %Y')):",
+      "    try: DT.strptime(s, f)",
+      "    except ValueError as e: print('ValueError:', e)",
+      "print(DT.strptime('10/21', '%m/%d').date(), '<- a date with no year')",
+      "print(D.strptime('2026-10-21', '%Y-%m-%d'), '<- new in Python 3.14')"
+     ],
+     "fs": 8.0,
+     "compact": true,
+     "out": "2026-10-21 00:00:00\n2063-11-01\n1973-11-01\nValueError: time data '2026-10-21' does not match format '%Y/%m/%d'\nValueError: time data 'Oct 21, 2026' does not match format '%B %d, %Y'\n1900-10-21 <- a date with no year\n2026-10-21 <- new in Python 3.14",
+     "outLabel": "prints",
+     "label": "program strptimeCut_v1_0_0.py, lines 6 to 13 of 13"
+    },
+    {
+     "t": "table",
+     "x": 6.17,
+     "y": 1.5,
+     "w": 3.33,
+     "colW": [
+      1.5,
+      1.83
+     ],
+     "fs": 9.5,
+     "rowH": 0.3,
+     "rows": [
+      [
+       "text",
+       "%y gives"
+      ],
+      [
+       "'00'",
+       "2000"
+      ],
+      [
+       "'26'",
+       "2026"
+      ],
+      [
+       "'68'",
+       "2068"
+      ],
+      [
+       "'69'",
+       "1969"
+      ],
+      [
+       "'99'",
+       "1999"
+      ]
+     ]
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "Python 3.15.0 final and 3.14.7 or later were not run; only 3.15.0b4 was: it raises ValueError for %d without a year.",
+     "x": 6.17,
+     "y": 3.5,
+     "w": 3.33,
+     "h": 1.4,
+     "fs": 9,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.26,
+     "w": 5.47,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "strptime() is the inverse of strftime(): the format must describe the text exactly. October 21, 2026 with %B %d, %Y is a moment at midnight. The chapter's example uses November of '63 and '73, and the table of this slide computes the rule for %y: Table 19-1 says 00 to 99 means 1970 to 2069, but Python and POSIX map 69 to 99 to 1969 to 1999 and 00 to 68 to 2000 to 2068, so '68' is 2068 and '69' is 1969; the book's two examples, 63 as 2063 and 73 as 1973, are right either way. A text that does not match raises ValueError and names the text and the format, as the second part of the transcript shows; %B wants the full month name and refuses Oct. A date with no year gets the year 1900, which draws a DeprecationWarning since Python 3.13 for 29 February, since 1900 was not a leap year. Python 3.15.0b4, the only 3.15 the research could install, raises ValueError for %d without a year; Python 3.15.0 final, released on 9 October 2026 by python.org's list, and Python 3.14.7 and later were NOT EXECUTED, because uv offered only 3.14.6 and 3.15.0b4 on the day. Python 3.14 added date.strptime() and time.strptime(), which the last line uses.",
+   "take": "strptime() needs the exact format; 69 to 99 mean 1969 to 1999.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Time zones: naive and aware",
+   "sub": "A value with no zone cannot be compared with one that has one; zoneinfo names the zone",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.33,
+     "h": 3.07,
+     "lines": [
+      "n = DT(2026, 10, 21, 16, 29)",
+      "a = DT(2026, 10, 21, 16, 29, tzinfo=UTC)",
+      "print('naive == aware:', n == a)",
+      "try: n - a",
+      "except TypeError as e: print('TypeError:', e)",
+      "ist = ZoneInfo('Europe/Istanbul')",
+      "print('16:29 UTC == 19:29 Istanbul:', a == DT(2026, 10, 21, 19, 29, tzinfo=ist))",
+      "d = DT.fromtimestamp(1773813875.3518236, ZoneInfo('America/Los_Angeles'))",
+      "print('the chapter:', d.isoformat(timespec='seconds'), d.tzname())",
+      "for z in ('America/Los_Angeles', 'UTC', 'Europe/Istanbul'):",
+      "    print(z.ljust(20), DT.fromtimestamp(1000000, ZoneInfo(z)).isoformat())",
+      "print('Istanbul:', ist.utcoffset(DT(1970, 1, 1)), ist.utcoffset(DT(2026, 7, 1)))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "naive == aware: False\nTypeError: can't subtract offset-naive and offset-aware datetimes\n16:29 UTC == 19:29 Istanbul: True\nthe chapter: 2026-03-17T23:04:35-07:00 PDT\nAmerica/Los_Angeles  1970-01-12T05:46:40-08:00\nUTC                  1970-01-12T13:46:40+00:00\nEurope/Istanbul      1970-01-12T15:46:40+02:00\nIstanbul: 2:00:00 3:00:00",
+     "outLabel": "prints",
+     "label": "program zonesCut_v1_0_0.py, lines 6 to 17 of 17"
+    },
+    {
+     "t": "card",
+     "head": "Pacific Standard Time?",
+     "body": "On 17 March 2026 the zone was Pacific Daylight Time: daylight saving began on 8 March 2026. The chapter says Standard.",
+     "x": 6.03,
+     "y": 1.5,
+     "w": 3.47,
+     "h": 1.7,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "card",
+     "head": "Zones are data",
+     "body": "zoneinfo reads the tz database: tzdata 2026.5 here. A Python with no tzdata package: ModuleNotFoundError: No module named 'tzdata'; zoneinfo imported.",
+     "x": 6.03,
+     "y": 3.3,
+     "w": 3.47,
+     "h": 1.6,
+     "fs": 9,
+     "accent": "slate"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.7,
+     "w": 5.33,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "A naive datetime has no zone and an aware one has; comparing them for equality gives False and subtracting them raises TypeError. The chapter has no time zone object, so the program uses zoneinfo, in the standard library since Python 3.9 (PEP 615): 16:29 UTC is equal to 19:29 in Istanbul. The chapter's moment, 1773813875.35, is 23:04:35 on 17 March 2026 in Los Angeles, and the zone name is PDT: the chapter says Pacific Standard Time, but daylight saving time began in the United States on 8 March 2026, so the zone was Pacific Daylight Time at -07:00, and the printed ctime of 11:05:38 reads 23:05 on a 24-hour clock. The same second, 1,000,000, is 05:46:40 in Los Angeles, 13:46:40 in UTC and 15:46:40 in Istanbul, so the chapter's fromtimestamp(1000000) is right only in the author's zone; Istanbul was UTC+02:00 in January 1970 and UTC+03:00 in July 2026, as the last line prints, so the offset of a zone depends on the date. zoneinfo reads the operating system's tz database or the tzdata package and raises ZoneInfoNotFoundError with neither; in the bare environment of the research, with no tzdata package, zoneinfo still worked from the system's data. The story of the database, a lawsuit that shut down its mailing list for a week in October 2011 until ICANN took it over, is in the notes of the resources slide. This is a record of 13 October 2026 on an Ubuntu 24.04 machine whose system tz database is 2026c.",
+   "take": "A naive moment has no zone; name the zone with ZoneInfo.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Daylight saving: 23 hours, a gap, a fold",
+   "sub": "A day added across the change; 02:30 does not exist; 01:30 happens twice; utcnow()",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.96,
+     "h": 2.66,
+     "lines": [
+      "import warnings",
+      "ny = ZoneInfo('America/New_York')",
+      "x = DT(2026, 3, 7, 12, tzinfo=ny)",
+      "y = x + TD(days=1)",
+      "print(x.isoformat(' ', 'minutes'), '->', y.isoformat(' ', 'minutes'))",
+      "print('UTC difference:', y.astimezone(UTC) - x.astimezone(UTC))",
+      "print('wall difference:', y - x)",
+      "g = DT(2026, 3, 8, 2, 30, tzinfo=ny)",
+      "print('02:30 in the gap ->', g.astimezone(UTC).astimezone(ny).isoformat())",
+      "f0 = DT(2026, 11, 1, 1, 30, tzinfo=ny)",
+      "f1 = f0.replace(fold=1)",
+      "utc = lambda v: v.astimezone(UTC).isoformat()[11:16]",
+      "print('01:30 twice, in UTC:', utc(f0), utc(f1), '| equal:', f0 == f1)",
+      "with warnings.catch_warnings(record=True) as w:",
+      "    warnings.simplefilter('always'); u = DT.utcnow()",
+      "print('naive:', u.tzinfo is None, [x.category.__name__ for x in w])",
+      "print('now(UTC) is aware:', DT.now(UTC).tzinfo)"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program dstCut_v1_0_0.py, lines 6 to 22 of 22"
+    },
+    {
+     "t": "prog",
+     "x": 5.66,
+     "y": 1.55,
+     "w": 3.79,
+     "h": 1.27,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "2026-03-07 12:00-05:00 -> 2026-03-08 12:00-04:00\nUTC difference: 23:00:00\nwall difference: 1 day, 0:00:00\n02:30 in the gap -> 2026-03-08T03:30:00-04:00\n01:30 twice, in UTC: 05:30 06:30 | equal: True\nnaive: True ['DeprecationWarning']\nnow(UTC) is aware: UTC",
+     "outLabel": "prints",
+     "label": "transcript of program dstCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.27,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.61,
+     "w": 9.0,
+     "h": 0.38,
+     "fs": 10,
+     "body": "Adding a timedelta to an aware moment moves the wall clock; astimezone(UTC) first if you want the span. utcnow() returns a naive value and warns; use now(UTC)."
+    }
+   ],
+   "notes": "Noon on 7 March 2026 in New York plus one day is noon on 8 March, and between them the clocks went forward: the difference in UTC is 23 hours while the wall-clock difference is 1 day, because a timedelta added to an aware datetime moves the wall clock. The hour from 02:00 to 03:00 on 8 March does not exist: asking for 02:30 there and converting to UTC and back gives 03:30. The hour from 01:00 to 02:00 on 1 November happens twice, and the attribute fold, added by PEP 495, tells the two apart: 01:30 with fold 0 is 05:30 UTC and with fold 1 is 06:30 UTC, although the two values compare equal. The chapter has none of this. The last two lines are about a deprecation: Python 3.12 deprecated datetime.utcnow() and utcfromtimestamp(), which return naive values in UTC, in favour of now(datetime.UTC), which returns an aware value; the program catches the DeprecationWarning and prints its category. The Python documentation lists datetime.UTC, added in Python 3.11, as an alias of timezone.utc. The research ran the same lines under eleven interpreters, 3.11, 3.12, 3.13, the seven 3.14 releases and 3.15.0b4: 11 of 48 compared items differ between releases, among them this deprecation, the error text of sleep('1'), and the text of the error for timedelta(months=1).",
+   "take": "Add a day to an aware moment and the wall clock moves, not 24 hours.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Launching a program: run() or Popen()",
+   "sub": "A list of strings starts the program; run() waits for it and Popen() does not",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.4,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.457,
+       "w": 2.1,
+       "h": 0.42,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Put the program and its arguments in a list of strings",
+       "x": 0.57,
+       "y": 1.522,
+       "w": 1.96,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.5,
+       "y": 1.95,
+       "w": 2.1,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Does the program wait for the process to end?",
+       "x": 0.67,
+       "y": 2.056,
+       "w": 1.76,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.523,
+       "w": 2.1,
+       "h": 0.42,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call subprocess.run() with the list",
+       "x": 0.57,
+       "y": 2.589,
+       "w": 1.96,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.057,
+       "w": 2.1,
+       "h": 0.42,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Pass capture_output=True and text=True to get the output",
+       "x": 0.57,
+       "y": 3.122,
+       "w": 1.96,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.59,
+       "w": 2.1,
+       "h": 0.42,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Pass check=True and a timeout to raise on a failure",
+       "x": 0.57,
+       "y": 3.656,
+       "w": 1.96,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.8,
+       "y": 2.523,
+       "w": 2.1,
+       "h": 0.42,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call subprocess.Popen() with the list",
+       "x": 2.87,
+       "y": 2.589,
+       "w": 1.96,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.8,
+       "y": 3.057,
+       "w": 2.1,
+       "h": 0.42,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call poll(), which returns None while the process runs",
+       "x": 2.87,
+       "y": 3.122,
+       "w": 1.96,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.75,
+       "y": 1.567,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.41,
+       "y": 4.193,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.47,
+       "y": 4.253,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.75,
+       "y1": 1.667,
+       "x2": 2.6,
+       "y2": 1.667,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.55,
+       "y1": 1.877,
+       "x2": 1.55,
+       "y2": 1.95,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.55,
+       "y1": 2.45,
+       "x2": 1.55,
+       "y2": 2.523,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 1.61,
+       "y": 2.397,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.6,
+       "y1": 2.2,
+       "x2": 3.85,
+       "y2": 2.2,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.85,
+       "y1": 2.2,
+       "x2": 3.85,
+       "y2": 2.523,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.65,
+       "y": 2.0,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.55,
+       "y1": 2.943,
+       "x2": 1.55,
+       "y2": 3.057,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.55,
+       "y1": 3.477,
+       "x2": 1.55,
+       "y2": 3.59,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.85,
+       "y1": 2.943,
+       "x2": 3.85,
+       "y2": 3.057,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.85,
+       "y1": 3.477,
+       "x2": 3.85,
+       "y2": 4.333,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.85,
+       "y1": 4.333,
+       "x2": 1.69,
+       "y2": 4.333,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.55,
+       "y1": 4.01,
+       "x2": 1.55,
+       "y2": 4.193,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "ChoosingHowToLaunchAProgram"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.4,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ChoosingHowToLaunchAProgram - Workflow pattern, 39 of 40 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 5.1,
+     "y": 1.55,
+     "w": 4.16,
+     "h": 2.52,
+     "lines": [
+      "r = subprocess.run(['sleep', '0.3'])",
+      "print(r)",
+      "c = 'import sys; print(\"out\"); print(\"err\", file=sys.stderr)'",
+      "cmd = [sys.executable, '-c', c]",
+      "r = subprocess.run(cmd, capture_output=True)",
+      "print(r.returncode, r.stdout, r.stderr)",
+      "r = subprocess.run(cmd, capture_output=True, text=True)",
+      "print(type(r.stdout).__name__, repr(r.stdout))",
+      "p = subprocess.Popen(['sleep', '0.4'])",
+      "print('Popen returned; poll() ->', p.poll())",
+      "print('wait() ->', p.wait(), '| poll() ->', p.poll())"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "CompletedProcess(args=['sleep', '0.3'], returncode=0)\n0 b'out\\n' b'err\\n'\nstr 'out\\n'\nPopen returned; poll() -> None\nwait() -> 0 | poll() -> 0",
+     "outLabel": "prints",
+     "label": "program runCut_v1_0_0.py, lines 6 to 16 of 16"
+    },
+    {
+     "t": "foot",
+     "x": 5.1,
+     "y": 4.15,
+     "w": 4.4,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "The flow chart is the choice the chapter walks through: put the program and its arguments in a list of strings, then decide whether the program should wait for the process to end. If it should, call subprocess.run() with the list, pass capture_output=True and text=True to get the output, and check=True and a timeout to raise on a failure; if it should not, call subprocess.Popen() and use poll(), which returns None while the process runs. The program runs both on this machine. run(['sleep', '0.3']) returned a CompletedProcess with returncode 0 after the child ended. With capture_output=True the output is bytes, b'out\\n' and b'err\\n', and the child's standard error is captured separately; with text=True the same output is a str. Popen returned at once: poll() gave None while the child slept, then wait() blocked and returned 0, and poll() gave 0. The chapter opens the calculator six times with Popen on Windows, and Figure 19-1 is a screenshot of the six windows; calc.exe, notepad and mspaint were NOT EXECUTED, because the machine is Linux, and the picture is not reproduced here. The alt text of the opening picture of the chapter is empty and the alt text of Figure 19-1 describes a Windows desktop with six overlapping calculator programs.",
+   "take": "run() waits for the program; Popen() returns at once.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Popen: poll, wait, check, timeout",
+   "sub": "A failing program raises, a hung one times out, a list passes arguments untouched",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 3.9,
+     "h": 3.15,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.45,
+       "w": 1.05,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The program",
+       "x": 0.61,
+       "y": 1.566,
+       "w": 0.93,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.075,
+       "y1": 1.87,
+       "x2": 1.075,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.925,
+       "y": 1.45,
+       "w": 1.05,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The Popen object",
+       "x": 1.985,
+       "y": 1.482,
+       "w": 0.93,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.45,
+       "y1": 1.87,
+       "x2": 2.45,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.3,
+       "y": 1.45,
+       "w": 1.05,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The process",
+       "x": 3.36,
+       "y": 1.566,
+       "w": 0.93,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.825,
+       "y1": 1.87,
+       "x2": 3.825,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.075,
+       "y1": 2.343,
+       "x2": 2.45,
+       "y2": 2.343,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls subprocess.Popen() with a list",
+       "x": 1.175,
+       "y": 1.87,
+       "w": 1.175,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.45,
+       "y1": 2.653,
+       "x2": 3.825,
+       "y2": 2.653,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Starts the process",
+       "x": 2.55,
+       "y": 2.449,
+       "w": 1.175,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.45,
+       "y1": 2.963,
+       "x2": 1.075,
+       "y2": 2.963,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns the Popen object at once",
+       "x": 1.175,
+       "y": 2.624,
+       "w": 1.175,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.075,
+       "y1": 3.273,
+       "x2": 2.45,
+       "y2": 3.273,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls poll()",
+       "x": 1.175,
+       "y": 3.069,
+       "w": 1.175,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.45,
+       "y1": 3.583,
+       "x2": 1.075,
+       "y2": 3.583,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns None while the process runs",
+       "x": 1.175,
+       "y": 3.244,
+       "w": 1.175,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.075,
+       "y1": 3.893,
+       "x2": 2.45,
+       "y2": 3.893,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls wait()",
+       "x": 1.175,
+       "y": 3.689,
+       "w": 1.175,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.825,
+       "y1": 4.203,
+       "x2": 2.45,
+       "y2": 4.203,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Ends with an exit code",
+       "x": 2.55,
+       "y": 3.864,
+       "w": 1.175,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.45,
+       "y1": 4.513,
+       "x2": 1.075,
+       "y2": 4.513,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns the exit code",
+       "x": 1.175,
+       "y": 4.174,
+       "w": 1.175,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "ARunningAChildProcess"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 3.9,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ARunningAChildProcess - Interaction pattern, 29 of 29 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.5,
+     "y": 1.55,
+     "w": 4.9,
+     "h": 2.1,
+     "lines": [
+      "for call in (lambda: subprocess.run(['nosuch']),",
+      "             lambda: subprocess.run(['false'], check=True),",
+      "             lambda: subprocess.run(['sleep', '5'], timeout=0.2)):",
+      "    try: call()",
+      "    except Exception as e: print(type(e).__name__, e)",
+      "c = 'import sys; print(sys.argv[1:])'",
+      "a = ['my file.txt', 'a b', '*.txt']",
+      "cmd = [sys.executable, '-c', c, *a]",
+      "print(subprocess.run(cmd, capture_output=True, text=True).stdout.strip())"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "FileNotFoundError [Errno 2] No such file or directory: 'nosuch'\nCalledProcessError Command '['false']' returned non-zero exit status 1.\nTimeoutExpired Command '['sleep', '5']' timed out after 0.2 seconds\n['my file.txt', 'a b', '*.txt']",
+     "outLabel": "prints",
+     "label": "program popenCut_v1_0_0.py, lines 6 to 14 of 14"
+    },
+    {
+     "t": "foot",
+     "x": 4.5,
+     "y": 3.73,
+     "w": 5.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "The sequence diagram follows the exchange between the program, the Popen object and the process: the program calls Popen() with a list, the object starts the process and returns at once, poll() returns None while the process runs, wait() blocks until the process ends with an exit code, and the object returns the code. The program on the slide shows what the chapter does not. check=True turns a non-zero exit status into CalledProcessError: false exits 1, and the message says so. A timeout turns a program that hangs into TimeoutExpired, and run() kills the child before it raises; the message names the command and the time, and its wording of the time depends on the release, which the research found by running eleven interpreters. A program that does not exist raises FileNotFoundError, not a non-zero exit code. The last lines show that a list passes the arguments untouched: 'my file.txt' stays one argument, and '*.txt' is not expanded, because no shell is involved. That is the reason to prefer a list over a string for a program you know. The chapter's example passes the name of a file to notepad on Windows as the second item of the list; that program was NOT EXECUTED here.",
+   "take": "Check the exit status, give a timeout, and pass a list, not a string.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A process from start to exit",
+   "sub": "Exit code 0 is success; a negative code is the signal that ended the child",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 2.0,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.75,
+       "y": 2.15,
+       "w": 1.25,
+       "h": 0.5,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A process started by Popen",
+       "x": 0.81,
+       "y": 2.23,
+       "w": 1.13,
+       "h": 0.339,
+       "fs": 9.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.5,
+       "y": 1.6,
+       "w": 1.5,
+       "h": 1.7,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A running process",
+       "x": 3.56,
+       "y": 2.36,
+       "w": 1.38,
+       "h": 0.18,
+       "fs": 9.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 7.2,
+       "y": 1.4,
+       "w": 1.65,
+       "h": 0.9,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A process that exited with a return code",
+       "x": 7.26,
+       "y": 1.68,
+       "w": 1.53,
+       "h": 0.339,
+       "fs": 9.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 7.2,
+       "y": 2.5,
+       "w": 1.65,
+       "h": 0.9,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A process ended by a signal",
+       "x": 7.26,
+       "y": 2.78,
+       "w": 1.53,
+       "h": 0.339,
+       "fs": 9.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.285,
+       "y": 1.6,
+       "w": 0.18,
+       "h": 0.18,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 1.375,
+       "y1": 1.78,
+       "x2": 1.375,
+       "y2": 2.15,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.0,
+       "y1": 2.4,
+       "x2": 3.5,
+       "y2": 2.4,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Popen returns and poll() gives None",
+       "x": 2.05,
+       "y": 2.081,
+       "w": 1.4,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 5.0,
+       "y1": 1.82,
+       "x2": 7.2,
+       "y2": 1.82,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The program ends and poll() gives its exit code",
+       "x": 5.05,
+       "y": 1.501,
+       "w": 2.1,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 5.0,
+       "y1": 2.28,
+       "x2": 7.2,
+       "y2": 2.28,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "terminate() sends SIGTERM and a handler exits with 0",
+       "x": 5.05,
+       "y": 1.961,
+       "w": 2.1,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 5.0,
+       "y1": 2.92,
+       "x2": 7.2,
+       "y2": 2.92,
+       "color": "2F6D62",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "kill() sends SIGKILL and the return code is -9",
+       "x": 5.05,
+       "y": 2.601,
+       "w": 2.1,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 5.0,
+       "y1": 3.38,
+       "x2": 7.2,
+       "y2": 3.38,
+       "color": "2F6D62",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A timeout expires and run() kills the child",
+       "x": 5.05,
+       "y": 3.061,
+       "w": 2.1,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.85,
+       "y1": 1.85,
+       "x2": 9.05,
+       "y2": 1.85,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 9.05,
+       "y": 1.71,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 9.11,
+       "y": 1.77,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 8.85,
+       "y1": 2.95,
+       "x2": 9.05,
+       "y2": 2.95,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 9.05,
+       "y": 2.81,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 9.11,
+       "y": 2.87,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      }
+     ],
+     "did": "ALaunchedProcessFromStartToExit"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.43,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram ALaunchedProcessFromStartToExit - LifeCycle pattern, 33 of 38 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 3.9,
+     "w": 6.67,
+     "h": 1.04,
+     "lines": [
+      "run = lambda s: subprocess.run([sys.executable, '-c', s], stderr=subprocess.DEVNULL).returncode",
+      "K = 'import os, signal; os.kill(os.getpid(), signal.SIG%s)'",
+      "codes = [run('pass'), run('import sys; sys.exit(3)'), run('raise ValueError')]",
+      "print(*codes, run(K % 'KILL'), run(K % 'TERM'))"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "0 3 1 -9 -15",
+     "outLabel": "prints",
+     "label": "program exitsCut_v1_0_0.py, lines 6 to 9 of 9"
+    },
+    {
+     "t": "foot",
+     "x": 7.32,
+     "y": 3.9,
+     "w": 2.18,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "The state diagram follows a launched process: Popen starts it, it runs while poll() gives None, and it ends either with an exit code or by a signal. The program runs five children and prints their return codes: a program that does nothing returns 0, sys.exit(3) returns 3, an uncaught exception returns 1, and a child that was killed by SIGKILL has the return code -9 and one ended by SIGTERM -15, the negative of the signal number. The corpus program of the research ran the rest: sys.exit('msg') also returns 1, os._exit(256 + 7) returns 7 because an exit status holds eight bits, terminate() on a child with a SIGTERM handler printed asked to stop, saving work and returned 0, kill() returned -9 and printed nothing, and trying to handle SIGKILL raised OSError with errno 22. The chapter mentions none of this; it has no exit codes, no terminate() and no kill(). A timeout in run() kills the child with SIGKILL, which is the last transition of the diagram. On Windows the same words exist, terminate() and kill() both call TerminateProcess, but Windows was NOT EXECUTED, so the slide claims nothing about it.",
+   "take": "A process ends with a return code; a negative one is a signal.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The shell, and opening files",
+   "sub": "shell=True with a list runs only the first item; start and open are not on Linux",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.39,
+     "h": 3.07,
+     "lines": [
+      "import shutil, webbrowser",
+      "sh = lambda a, **k: subprocess.run(a, capture_output=True, text=True, **k)",
+      "print('list + shell=True:', repr(sh(['echo', 'hi', 'there'], shell=True).stdout))",
+      "print('string + shell=True:', repr(sh('echo hi there', shell=True).stdout))",
+      "r = sh(['start', 'hello.txt'], shell=True)",
+      "print('start hello.txt:', r.returncode, '|', r.stderr.strip())",
+      "name = 'x; echo INJECTED'",
+      "print(repr(sh(f'echo opening {name}', shell=True).stdout))",
+      "print(repr(sh(f'echo opening {shlex.quote(name)}', shell=True).stdout))",
+      "print(repr(sh(['echo', 'opening', name]).stdout))",
+      "print('open:', shutil.which('open'), '| xdg-open:', shutil.which('xdg-open'))",
+      "print('webbrowser.open with no browser:', webbrowser.open('file:///nonexistent'))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "list + shell=True: '\\n'\nstring + shell=True: 'hi there\\n'\nstart hello.txt: 127 | hello.txt: 1: start: not found\n'opening x\\nINJECTED\\n'\n'opening x; echo INJECTED\\n'\n'opening x; echo INJECTED\\n'\nopen: /usr/bin/open | xdg-open: /usr/bin/xdg-open\nwebbrowser.open with no browser: False",
+     "outLabel": "prints",
+     "label": "program shellCut_v1_0_0.py, lines 6 to 17 of 17"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "start, notepad and calc.exe (Windows), open for an application (macOS) and a desktop that xdg-open could use were not run.",
+     "x": 6.09,
+     "y": 1.5,
+     "w": 3.41,
+     "h": 1.9,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "card",
+     "head": "What Linux does",
+     "body": "open exists only because xdg-utils registers it as an alternative of xdg-open; start does not exist.",
+     "x": 6.09,
+     "y": 3.5,
+     "w": 3.41,
+     "h": 1.4,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.7,
+     "w": 5.39,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "The chapter opens a file with the default application by running start on Windows and open on macOS and Linux. The program asks what a Linux machine does. A list with shell=True runs only its first item: echo ran with no arguments and printed an empty line, and the second item became the zero argument of the shell, which is why the failing start printed hello.txt: 1: start: not found and returned 127. A string with shell=True works. A command built from a file name is the danger: the file name x; echo INJECTED ran a second command, shlex.quote() prevented it, and so did a list with no shell. open exists here as /usr/bin/open only because the xdg-utils package registers it as an alternative of xdg-open; start does not exist, and os.startfile, the Windows way, is absent. webbrowser.open() returned False with no browser to open, and pyperclip, which the chapter introduces in Chapter 8, raised an error with no clipboard program. All of the following were NOT EXECUTED: the commands of Windows and macOS, and any program that needs a desktop. The research ran xdg-open on a file that did not exist, which exited 2 and said so, and that is all it can say about it here.",
+   "take": "Never build a shell string from a file name; pass a list.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Running a job later",
+   "sub": "Timer, sched and call_later run inside a live process; cron and launchd outside it",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 3.6,
+     "h": 3.15,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 1.3,
+       "y": 1.73,
+       "w": 2.8,
+       "h": 2.87,
+       "fill": "FBF8F2",
+       "line": "6E655C",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "A JOB THAT RUNS LATER",
+       "x": 1.38,
+       "y": 1.47,
+       "w": 2.65,
+       "h": 0.24,
+       "fs": 8.5,
+       "color": "6E655C",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 1.84,
+       "w": 2.5,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Write a cron entry with five time fields",
+       "x": 1.73,
+       "y": 1.865,
+       "w": 1.94,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.239,
+       "w": 2.5,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call a function once after a delay with Timer",
+       "x": 1.73,
+       "y": 2.263,
+       "w": 1.94,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.637,
+       "w": 2.5,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Order events by time and priority with sched",
+       "x": 1.73,
+       "y": 2.662,
+       "w": 1.94,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.036,
+       "w": 2.5,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call a function later with call_later",
+       "x": 1.73,
+       "y": 3.061,
+       "w": 1.94,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.434,
+       "w": 2.5,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Run jobs every day with the schedule package",
+       "x": 1.73,
+       "y": 3.459,
+       "w": 1.94,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.833,
+       "w": 2.5,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Describe a job in a launchd property list",
+       "x": 1.73,
+       "y": 3.858,
+       "w": 1.94,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 4.231,
+       "w": 2.5,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Normalise a systemd calendar expression",
+       "x": 1.73,
+       "y": 4.256,
+       "w": 1.94,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 0.74,
+       "y": 2.325,
+       "w": 0.22,
+       "h": 0.22,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 1.5
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.545,
+       "x2": 0.85,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.65,
+       "y1": 2.645,
+       "x2": 1.05,
+       "y2": 2.645,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.925,
+       "x2": 0.69,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.925,
+       "x2": 1.01,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A program",
+       "x": 0.5,
+       "y": 3.225,
+       "w": 0.8,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.009,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.408,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.806,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 3.205,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 3.604,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 4.002,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 4.401,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      }
+     ],
+     "did": "WhatAProgramCanDoToRunALaterJob"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 3.6,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WhatAProgramCanDoToRunALaterJob - SetOfUses pattern, 40 of 40 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.3,
+     "y": 1.55,
+     "w": 4.77,
+     "h": 2.93,
+     "lines": [
+      "now, log = [0.0], []",
+      "def advance(d): now[0] += d",
+      "s = sched.scheduler(lambda: now[0], advance)",
+      "jobs = [(5, 1, 'five'), (2, 1, 'two'), (5, 0, 'five-0'), (0, 9, 'now')]",
+      "for d, p, w in jobs: s.enter(d, p, log.append, (w,))",
+      "s.run(); print(log, now[0])",
+      "hits = []",
+      "t = threading.Timer(0.1, hits.append, args=('fired',))",
+      "t.start(); print('after start():', hits)",
+      "t.join(); print('after join():', hits)",
+      "async def main():",
+      "    loop = asyncio.get_running_loop(); out = []",
+      "    for d in (0.2, 0.1, 0): loop.call_later(d, out.append, d)",
+      "    await asyncio.sleep(0.3); return out",
+      "print('call_later order:', asyncio.run(main()))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "['now', 'two', 'five-0', 'five'] 5.0\nafter start(): []\nafter join(): ['fired']\ncall_later order: [0, 0.1, 0.2]",
+     "outLabel": "prints",
+     "label": "program schedCut_v1_0_0.py, lines 7 to 21 of 21"
+    },
+    {
+     "t": "foot",
+     "x": 4.3,
+     "y": 4.56,
+     "w": 4.77,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "EMULATED: sched runs on a clock the program moves. Lines 1 to 6 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "The use-case diagram lists what a program can do to run a job later: write a cron entry with five time fields, call a function once after a delay with Timer, order events by time and priority with sched, call a function later with asyncio's call_later, run jobs every day with the schedule package, describe a job in a launchd property list, and normalise a systemd calendar expression. The chapter gives the operating system schedulers one paragraph, Task Scheduler, launchd and cron, and its Summary points to the book's page at No Starch Press for instructions that the page does not hold. The program runs the three that live inside a process. sched ran its events in order of time and then priority on a clock the program moves, so it says EMULATED: now at 0, two at 2, five first at 5 with priority 0 and five at 5 with priority 1, and the clock ended at 5.0. threading.Timer returns at once, so the list was still empty after start() and held fired after join(). call_later ran soon first, then the 0.1 callback, then the 0.2 one. The schedule package, version 1.2.2, the newest release on 13 October 2026, uploaded on 25 May 2024, computed its first run at 10:30 for a job set every day at that time; in a Python with only the standard library, importing it raised ModuleNotFoundError. All four need a process that stays alive; if the machine restarts, they are gone, which is the reason for an operating system scheduler.",
+   "take": "Timer, sched and call_later run inside a process that stays alive.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Cron: five fields and a small world",
+   "sub": "Both day fields restricted means either matches; the job runs in cron's environment",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.71,
+     "h": 2.52,
+     "lines": [
+      "def nxt(expr, t):",
+      "    m, h, dom, mon, dow = expr.split()",
+      "    M, H, MON = field(m, 0, 59), field(h, 0, 23), field(mon, 1, 12)",
+      "    DOM, DOW = field(dom, 1, 31), field(dow.replace('7', '0'), 0, 6)",
+      "    t = t.replace(second=0) + TD(minutes=1)",
+      "    while True:",
+      "        cd = (t.weekday() + 1) % 7",
+      "        if dow == '*': day = t.day in DOM",
+      "        elif dom == '*': day = cd in DOW",
+      "        else: day = t.day in DOM or cd in DOW",
+      "        if t.minute in M and t.hour in H and t.month in MON and day:",
+      "            return t",
+      "        t += TD(minutes=1)",
+      "s = DT(2026, 10, 13, 9, 30)",
+      "for e in ('30 9 * * 1-5', '*/15 * * * *', '0 0 13 * 5', '0 0 29 2 *'):",
+      "    print(e.ljust(13), nxt(e, s).strftime('%Y-%m-%d %H:%M %a'))"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program cronCut_v1_0_0.py, lines 13 to 28 of 28"
+    },
+    {
+     "t": "prog",
+     "x": 5.41,
+     "y": 1.55,
+     "w": 2.93,
+     "h": 0.85,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "30 9 * * 1-5  2026-10-14 09:30 Wed\n*/15 * * * *  2026-10-13 09:45 Tue\n0 0 13 * 5    2026-10-16 00:00 Fri\n0 0 29 2 *    2028-02-29 00:00 Tue",
+     "outLabel": "prints",
+     "label": "transcript of program cronCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.13,
+     "w": 4.7,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 12 (imports, a comment and field(), which turns one time field into its set of numbers) are not shown."
+    },
+    {
+     "t": "card",
+     "head": "Real cron, recorded 13 Oct 2026",
+     "body": "Ubuntu 24.04, cron 3.0pl1. The job saw PATH=/usr/bin:/bin, /root, no terminal, parent sh. A TZ line reached it; CRON_TZ did not move the schedule.",
+     "x": 5.41,
+     "y": 2.5,
+     "w": 4.09,
+     "h": 1.3,
+     "fs": 8.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "Task Scheduler (schtasks) and launchd (the plist only written and read back) and a systemd timer (OnCalendar only normalised).",
+     "x": 5.41,
+     "y": 3.85,
+     "w": 4.09,
+     "h": 1.12,
+     "fs": 8.5,
+     "accent": "orange"
+    }
+   ],
+   "notes": "A crontab line has five time fields, minute, hour, day of the month, month and day of the week, and then the command. The matcher on the slide is the study's own function, written to the rule of the Debian manual page. The manual page says that when both day fields are restricted a command runs when either matches, so 0 0 13 * 5 is not Friday the 13th: it fires on every 13th and on every Friday, and the next run after 9:30 on Tuesday 13 October 2026 is the Friday 16 October. The other lines show 9:30 on weekdays, every 15 minutes, and 29 February, which waits until 2028. The research then ran cron for real on this machine, cron 3.0pl1-184 on Ubuntu 24.04, and these are records of 13 October 2026, not results the deck recomputes. A Python job started by cron two seconds after the turn of the minute saw PATH=/usr/bin:/bin, the working directory /root, no terminal and sh as its parent, and its local clock read 22:36:01 UTC while the shell showed 01:36:01 +03. A TZ=Asia/Kolkata line in the crontab reached the job and set its clock to IST; a minute of 61 was refused by crontab with exit code 1 and the message bad minute. The schedule follows the zone of the cron daemon: started from a shell whose TZ was Europe/Istanbul, an entry written on the Istanbul clock fired at the target moment and the entry for the same moment on the UTC clock did not, while a CRON_TZ=Asia/Kolkata line was passed to the job as a variable but did not move the schedule, and the Debian manual page does not mention CRON_TZ. Task Scheduler, launchd and a systemd timer were NOT EXECUTED: a launchd property list for 04:00 daily was written and read back with plistlib, 501 bytes and equal, and systemd-analyze only normalised Mon..Fri 09:00 to Mon..Fri *-*-* 09:00:00. Wikipedia's article on cron says the cron of Version 7 Unix was a daemon that read its crontab, ran the commands due at that minute as root, slept for one minute and repeated. It was robust but consumed resources whether or not there was work, and an experiment at Purdue University in the late 1970s to give cron's service to all 100 users of a time-shared VAX put too much load on the system. A Purdue graduate student, Robert Brown, recognised the parallel between cron and discrete event simulators after reading the article of Franta and Maly and built an event-list implementation. On this study's machine cron 3.0pl1 started a Python job at the turn of a minute with PATH=/usr/bin:/bin, the working directory /root and no terminal. The account rests on these sources. Wikipedia, 'Cron' (Version 7 algorithm; Purdue in the late 1970s; Robert Brown and the Franta-Maly event list manager), read 2026-10-13; this study's real cron run (live record) and leaves CronFields and CronEnvironment.",
+   "take": "Cron runs the job in its own small world, in the zone of its daemon.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Project 15 and the Prettified Stopwatch",
+   "sub": "A countdown is a loop that sleeps; rjust() lines the laps up in columns",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.02,
+     "h": 1.55,
+     "lines": [
+      "now = [0.0]",
+      "time_left = 5",
+      "while time_left > 0:",
+      "    print(time_left, end=' ')",
+      "    now[0] += 1                      # the program would call time.sleep(1)",
+      "    time_left = time_left - 1",
+      "print('\\ncounted', now[0], 'seconds; the alarm needs a sound card')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "5 4 3 2 1 \ncounted 5.0 seconds; the alarm needs a sound card",
+     "outLabel": "prints",
+     "label": "program countdownCut_v1_0_0.py, lines 6 to 12 of 12"
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 3.4,
+     "w": 5.82,
+     "h": 1.54,
+     "lines": [
+      "rows = [(1, 3.56, 3.56), (2, 8.63, 5.07), (3, 17.68, 9.05), (4, 19.11, 1.43)]",
+      "r = lambda v, k: str(v).rjust(k)",
+      "for n, total, lap in rows:",
+      "    print('Lap #' + r(n, 2) + ': ' + r(total, 6) + ' (' + r(lap, 6) + ')')"
+     ],
+     "fs": 8.0,
+     "compact": true,
+     "out": "Lap # 1:   3.56 (  3.56)\nLap # 2:   8.63 (  5.07)\nLap # 3:  17.68 (  9.05)\nLap # 4:  19.11 (  1.43)",
+     "outLabel": "prints",
+     "label": "program prettyCut_v1_0_0.py, lines 6 to 9 of 9"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "No sound was played: the machine has no sound card. alarm.wav is not in the online materials; autbor.com/alarm.wav redirects (HTTP 302) to a 582,952-byte file.",
+     "x": 6.52,
+     "y": 1.5,
+     "w": 2.98,
+     "h": 1.55,
+     "fs": 9,
+     "accent": "orange"
+    },
+    {
+     "t": "card",
+     "head": "Pinned and newest",
+     "body": "Appendix A pins playsound3 2.4.0. Recorded in the pins environment: playsound3 2.4.0, pyperclip 1.11.0.",
+     "x": 6.52,
+     "y": 3.1,
+     "w": 2.98,
+     "h": 1.2,
+     "fs": 9,
+     "accent": "slate"
+    },
+    {
+     "t": "foot",
+     "x": 6.52,
+     "y": 4.28,
+     "w": 2.98,
+     "h": 0.58,
+     "fs": 8,
+     "body": "EMULATED: a number stands in for the clock time.sleep(1) would move; the chapter counts from 60. Lines 1 to 5 (imports, a temporary folder and a comment) are not shown."
+    }
+   ],
+   "notes": "Project 15, the Simple Countdown, counts down from 60 with time.sleep(1) between the numbers and then plays a sound file with playsound3. The loop on the slide is the same loop with 5 in place of 60, and it says EMULATED: a number that the loop increases stands in for the clock that time.sleep(1) would move, so it prints 5 4 3 2 1 and counts 5.0 seconds of fake time without waiting. The sound was NOT EXECUTED: the machine has no sound card, the online materials do not hold alarm.wav, and autbor.com/alarm.wav redirects with HTTP 302 to a file of 582,952 bytes and 3.30 seconds on the book's own site. The shipped simplecountdown.py matches the printed listing apart from spacing, but the copy served at autbor.com differs: it sets timeLeft to 2, uses camel case and has the Windows start line uncommented. Appendix A pins playsound3 2.4.0; the newest release on 13 October 2026 is 3.3.2, uploaded on 18 July 2026, and the pins environment of the research holds 2.4.0. The second program is the first practice program, the Prettified Stopwatch: rjust() pads the lap number to 2, and the times to 6, so the columns line up, where the chapter's Project 14 printed them without padding. The numbers come from the laps of the stopwatch slide.",
+   "take": "A countdown is a loop that sleeps; rjust() lines columns up.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Friday the 13th, forward and backward",
+   "sub": "Python's dates run back to the year 1; the 13th is a Friday 688 times in 400 years",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.65,
+     "h": 2.79,
+     "lines": [
+      "import collections",
+      "d = D(2026, 10, 13)",
+      "found = []",
+      "while len(found) < 10:",
+      "    if d.day == 13 and d.weekday() == 4: found.append(d.isoformat())",
+      "    d += TD(days=1)",
+      "print(found[0], '...', found[-1])",
+      "d, n, last = D(2026, 10, 13), 0, None",
+      "try:",
+      "    while True:",
+      "        if d.day == 13 and d.weekday() == 4: n, last = n + 1, d",
+      "        d -= TD(days=1)",
+      "except OverflowError as e:",
+      "    print('backward:', n, 'dates, earliest', last)",
+      "    print('stopped at', d, '-', e)",
+      "days = (D(y, m, 13) for y in range(2000, 2400) for m in range(1, 13))",
+      "by = collections.Counter(x.weekday() for x in days)",
+      "print('Mon..Sun in 400 years:', [by[i] for i in range(7)])"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program fridayCut_v1_0_0.py, lines 6 to 23 of 23"
+    },
+    {
+     "t": "prog",
+     "x": 5.35,
+     "y": 1.55,
+     "w": 3.97,
+     "h": 0.85,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "2026-11-13 ... 2032-08-13\nbackward: 3485 dates, earliest 0001-04-13\nstopped at 0001-01-01 - date value out of range\nMon..Sun in 400 years: [685, 685, 687, 684, 688, 684, 687]",
+     "outLabel": "prints",
+     "label": "transcript of program fridayCut_v1_0_0.py"
+    },
+    {
+     "t": "chart",
+     "ctype": "bar",
+     "x": 5.35,
+     "y": 2.45,
+     "w": 4.15,
+     "h": 1.93,
+     "labels": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun"
+     ],
+     "title": "13ths by weekday, 400 years",
+     "series": [
+      {
+       "name": "13ths",
+       "data": [
+        685.0,
+        685.0,
+        687.0,
+        684.0,
+        688.0,
+        684.0,
+        687.0
+       ]
+      }
+     ],
+     "dataLabels": true,
+     "dlFs": 9
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.42,
+     "w": 9.0,
+     "who": "Pope Gregory XIII, who issued the bull Inter gravissimas",
+     "where": "The Catholic countries that adopted the Gregorian calendar first; others followed centuries later",
+     "when": "24 February 1582 for the bull, and October 1582 for the ten days",
+     "link": "https://en.wikipedia.org/wiki/Gregorian_calendar",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on the Gregorian calendar says it was instituted by the papal bull Inter gravissimas dated 24 February 1582 by Pope Gregory XIII, after whom it is named. To bring Easter back to the season of its introduction the reform advanced the date by 10 days, so Thursday 4 October 1582 was followed by Friday 15 October 1582. The Python documentation calls date an idealized naive date, assuming the current Gregorian calendar always was, and always will be, in effect. In this study date(1582, 10, 5) existed and was a Tuesday, and date(1582, 10, 15) was a Friday, as in the history. The account rests on these sources. Wikipedia, 'Gregorian calendar' (the bull of 24 February 1582; Thursday 4 October 1582 followed by Friday 15 October 1582), read 2026-10-13; Python 3.14 documentation of datetime; this study's leaves GregorianCalendar and WeekdayOfDate. The second practice program of the chapter finds the next ten Friday the 13ths from a date. From a fixed day, 13 October 2026, the first is 13 November 2026 and the tenth 13 August 2032. The research also walked backward day by day until Python stopped it: 3,485 such dates down to 13 April of the year 1, and then OverflowError: date value out of range at 1 January of the year 1. The chart is computed: over 400 years from 2000, the 13th falls on a Friday 688 times, the most of any weekday, and on a Thursday 684 times, because the Gregorian calendar repeats every 146,097 days, which is exactly 20,871 weeks. Every year from 1 to 9999 has at least one Friday the 13th, which the corpus program of the research checked. The chapter's two practice programs are not in the online materials: the zip holds no prettifiedStopwatch.py and no fridayThirteenth.py, so this deck's programs are written from the chapter's description.",
+   "take": "The 13th is a Friday 688 times in 400 years; Python dates reach year 1.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in one map",
+   "sub": "Six branches; the slides of each branch hold the examples",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.0,
+       "y": 2.425,
+       "w": 2.0,
+       "h": 1.15,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A program reads time, waits, launches and schedules other programs",
+       "x": 4.08,
+       "y": 2.62,
+       "w": 1.84,
+       "h": 0.759,
+       "fs": 11,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 1.91,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The epoch and the clock",
+       "x": 0.6,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The epoch is 1970 in UTC\nA monotonic clock gives the true difference\nSleep waits at least the time asked",
+       "x": 0.6,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 3.0,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The datetime module",
+       "x": 0.6,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "A timedelta has no months\nA two-digit year maps 69 to 1969\nA date with no year uses 1900",
+       "x": 0.6,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 4.09,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Time zones",
+       "x": 0.6,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "A naive value has no zone\nA day across the change is 23 hours\nA signed 32-bit count ends in 2038",
+       "x": 0.6,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 1.91,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Launching programs",
+       "x": 6.5,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "run() waits and Popen does not\nA list of arguments passes through no shell\nstart and open are not on Linux",
+       "x": 6.5,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 3.0,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Scheduling",
+       "x": 6.5,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "Cron has five time fields\nA cron job does not run in the shell\nsched and Timer run inside a Python process",
+       "x": 6.5,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 4.09,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The book and practice",
+       "x": 6.5,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "Four places write an en dash\nThe stopwatch prints the laps\nFriday the 13th has 688 in 400 years",
+       "x": 6.5,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      }
+     ],
+     "did": "KeepingTimeAtAGlance"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram KeepingTimeAtAGlance - TopicAndParts pattern, 99 of 100 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "These six branches are the route of the deck. The epoch and the clock: the epoch is 1970 in UTC, a monotonic clock gives the true difference, and sleep waits at least the time asked. The datetime module: a timedelta has no months, a two-digit year maps 69 to 1969, and a date with no year uses 1900. Time zones: a naive value has no zone, a day across the change is 23 hours, and a signed 32-bit count ends in 2038. Launching programs: run() waits and Popen does not, a list of arguments passes through no shell, and start and open are not on Linux. Scheduling: cron has five time fields, a cron job does not run in your shell, and sched and Timer run inside a Python process. The last branch is the book and its practice: four places write an en dash, the stopwatch prints the laps, and the 13th is a Friday 688 times in 400 years. Together they answer the first question of the chapter, which clock, which moment and which launcher answers each question, and the slides that say where a printed line differs answer the second. The map is drawn from the same specification as the interactive page.",
+   "take": "If a branch feels unproven, its slides hold the example.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Every link was opened on the day this deck was made",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.55,
+     "fs": 9.5,
+     "groups": [
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, chapter 19 - free online",
+         "https://automatetheboringstuff.com/3e/chapter19.html"
+        ],
+        [
+         "time module documentation",
+         "https://docs.python.org/3.14/library/time.html"
+        ],
+        [
+         "datetime module documentation",
+         "https://docs.python.org/3.14/library/datetime.html"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "zoneinfo documentation",
+         "https://docs.python.org/3.14/library/zoneinfo.html"
+        ],
+        [
+         "subprocess documentation",
+         "https://docs.python.org/3.14/library/subprocess.html"
+        ],
+        [
+         "POSIX: seconds since the epoch",
+         "https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap04.html"
+        ],
+        [
+         "crontab(5), the Debian manual page",
+         "https://manpages.debian.org/bookworm/cron/crontab.5.en.html"
+        ]
+       ]
+      },
+      {
+       "head": "History and standards",
+       "rows": [
+        [
+         "Unix time (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Unix_time"
+        ],
+        [
+         "The year 2038 problem (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Year_2038_problem"
+        ],
+        [
+         "Cron and Purdue (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Cron"
+        ],
+        [
+         "The tz database (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Tz_database"
+        ]
+       ]
+      },
+      {
+       "head": "The two packages",
+       "rows": [
+        [
+         "schedule on PyPI",
+         "https://pypi.org/pypi/schedule/json"
+        ],
+        [
+         "tzdata on PyPI",
+         "https://pypi.org/pypi/tzdata/json"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every listing of the chapter; the documentation of the time, datetime, zoneinfo, subprocess and sched modules describes them. The reference links are the pages for the topics where the deck corrected or extended the chapter: the POSIX definition of seconds since the epoch, and the manual page of crontab that states the rule for the two day fields. The history links are the sources behind the six stories of the chapter. Two of them are slides, the epoch chosen by Unix engineers and the Gregorian calendar; the other four are told in the notes: the leap second and the year 2038 on the slide of the epoch timestamp, the lawsuit that shut down the time zone database's mailing list on the slide of time zones, and cron at Purdue on the slide of cron. The tzdata and schedule packages are the two third-party packages whose versions the deck records. The rest of the sixty-odd sources of the research, among them the PEPs, the RFCs and the manual pages of launchd and systemd, are in the research package.",
+   "take": "Textbook, documentation and history, opened the day this deck was built.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What you should now be able to say",
+   "sub": "Four claims, each carried by a result you saw printed",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 1.5,
+     "w": 8.8,
+     "h": 2.4,
+     "fs": 15,
+     "items": [
+      "Use monotonic() for an interval; time() and datetime name a moment, with a zone.",
+      "A timedelta has no months, %y maps 69 to 1969, and a day across daylight saving is 23 hours.",
+      "Launch with a list of arguments, check the exit code, and give a timeout.",
+      "Cron runs the job in its own small world; Timer and sched need a live process."
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.6,
+     "y": 4.1,
+     "w": 8.8,
+     "h": 0.6,
+     "fs": 13,
+     "big": true,
+     "items": [
+      "25 rows run",
+      "30 programs run",
+      "8 diagrams"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The console rows use only numbers and named zones, so they can be typed into any Python and give the same text on any day; time, datetime, calendar, zoneinfo and subprocess are the standard library, and the programs build their own files in a temporary folder and use no network. The rows were run again under Python 3.14.6 with tzdata 2026.5 each time the deck was built, and the programs were run again by the check that compares the slides with the recording. What was not run is marked on its slide: a Windows computer, a Mac, a systemd timer, a sound card, and the final release of Python 3.15 with Python 3.14.7 and later. The next chapter of the book sends email, texts and push notifications, and what this chapter taught about launching and scheduling programs, and about the difference between a moment and an interval, carries over.",
+   "take": "Questions are welcome; bring a time problem to run.",
+   "bg": "light"
+  }
+ ]
+}

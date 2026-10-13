@@ -1,0 +1,596 @@
+{
+ "_version": "1.0.0",
+ "_python": "3.14.6",
+ "_packages": "schedule 1.2.2 | tzdata 2026.5 | pyperclip 1.11.0 | playsound3 3.3.2",
+ "title": [
+  [
+   "import platform, importlib.metadata as m",
+   ""
+  ],
+  [
+   "platform.python_version()",
+   "'3.14.6'"
+  ],
+  [
+   "m.version('tzdata')",
+   "'2026.5'"
+  ],
+  [
+   "m.version('schedule')",
+   "'1.2.2'"
+  ]
+ ],
+ "epoch": [
+  [
+   "import time, calendar",
+   ""
+  ],
+  [
+   "time.gmtime(0)[:6]",
+   "(1970, 1, 1, 0, 0, 0)"
+  ],
+  [
+   "calendar.timegm((1970, 1, 1, 0, 0, 0))",
+   "0"
+  ],
+  [
+   "calendar.timegm((2038, 1, 19, 3, 14, 7)) == 2**31 - 1",
+   "True"
+  ],
+  [
+   "round(2**32 / 60 / (86400 * 365.25), 2)",
+   "2.27"
+  ]
+ ],
+ "repairs": [
+  [
+   "compile('d = 5 \u2013 3', 'listing', 'eval')",
+   "SyntaxError: invalid character '\u2013' (U+2013) (listing, line 1)"
+  ],
+  [
+   "eval(compile('5 - 3', 'listing', 'eval'))",
+   "2"
+  ],
+  [
+   "import math, sys",
+   ""
+  ],
+  [
+   "sys.get_int_max_str_digits()",
+   "4300"
+  ],
+  [
+   "len(str(math.factorial(1000)))",
+   "2568"
+  ],
+  [
+   "str(math.factorial(100000))[:5]",
+   "ValueError: Exceeds the limit (4300 digits) for integer string conversion; use sys.set_int_max_str_digits() to increase the limit"
+  ],
+  [
+   "int(math.lgamma(100001) / math.log(10)) + 1",
+   "456574"
+  ]
+ ],
+ "dtbasics": [
+  [
+   "import datetime",
+   ""
+  ],
+  [
+   "halloween = datetime.datetime(2026, 10, 31)",
+   ""
+  ],
+  [
+   "later = datetime.datetime(2027, 1, 1)",
+   ""
+  ],
+  [
+   "halloween < later",
+   "True"
+  ],
+  [
+   "later - halloween",
+   "datetime.timedelta(days=62)"
+  ],
+  [
+   "halloween.weekday()",
+   "5"
+  ],
+  [
+   "datetime.datetime(2026, 10, 21, 16, 29).isoformat()",
+   "'2026-10-21T16:29:00'"
+  ],
+  [
+   "datetime.datetime(2026, 2, 30)",
+   "ValueError: day 30 must be in range 1..28 for month 2 in year 2026"
+  ],
+  [
+   "datetime.date(2019, 1, 7).weekday()",
+   "0"
+  ]
+ ],
+ "_programs": {
+  "epochTimestamp_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# The epoch timestamp: the zero point, the POSIX expression, leap seconds that have no number, the float, and the wrap of 32 bits.\nimport struct\nprint('epoch:', time.gmtime(0)[:6], calendar.timegm((1970, 1, 1, 0, 0, 0)), DT(1970, 1, 1, tzinfo=UTC).timestamp())\nt = calendar.timegm((2026, 3, 18, 6, 4, 35))\nprint('timegm of 2026-03-18 06:04:35 UTC:', t, '| from the float of the chapter:', DT.fromtimestamp(1773813875.3518236, UTC).isoformat())\nprint('one second across the leap second of 2016:', calendar.timegm((2017, 1, 1, 0, 0, 0)) - calendar.timegm((2016, 12, 31, 23, 59, 59)))\ntry: DT(2016, 12, 31, 23, 59, 60)\nexcept ValueError as e: print('datetime refuses a 60th second:', e)\nprint('spacing of floats near the timestamp:', math.ulp(1773813875.35), '| time_ns is an int:', type(time.time_ns()).__name__)\nwrapped = struct.unpack('<i', struct.pack('<I', 2**31))[0]\nprint('2**31 - 1 ->', DT.fromtimestamp(2**31 - 1, UTC).isoformat(), '| 2**31 in 32 bits ->', wrapped, DT.fromtimestamp(wrapped, UTC).isoformat())\nfor z in ('America/Los_Angeles', 'UTC', 'Europe/Istanbul'):\n    print('fromtimestamp(1000000) in', z, DT.fromtimestamp(1000000, ZoneInfo(z)).isoformat())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "epoch: (1970, 1, 1, 0, 0, 0) 0 0.0\ntimegm of 2026-03-18 06:04:35 UTC: 1773813875 | from the float of the chapter: 2026-03-18T06:04:35.351824+00:00\none second across the leap second of 2016: 1\ndatetime refuses a 60th second: second must be in 0..59, not 60\nspacing of floats near the timestamp: 2.384185791015625e-07 | time_ns is an int: int\n2**31 - 1 -> 2038-01-19T03:14:07+00:00 | 2**31 in 32 bits -> -2147483648 1901-12-13T20:45:52+00:00\nfromtimestamp(1000000) in America/Los_Angeles 1970-01-12T05:46:40-08:00\nfromtimestamp(1000000) in UTC 1970-01-12T13:46:40+00:00\nfromtimestamp(1000000) in Europe/Istanbul 1970-01-12T15:46:40+02:00",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "clocksAndSleep_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Which clock answers which question: get_clock_info, a wall clock that is set back, sleep timed on a monotonic clock, and drift.\nfor n in ('time', 'monotonic', 'perf_counter', 'process_time'):\n    i = time.get_clock_info(n); print(n, 'monotonic', i.monotonic, 'adjustable', i.adjustable, i.implementation)\nwall = iter([1000.0, 990.0]); mono = iter([50.0, 60.0])\nw0, m0, w1, m1 = next(wall), next(mono), next(wall), next(mono)\nprint('a wall clock set back by 10 s: difference', w1 - w0, '| monotonic difference', m1 - m0)\nt = time.monotonic(); r = time.sleep(0.2); e = time.monotonic() - t\nprint('sleep(0.2) returned', r, 'and lasted at least 0.2 s:', e >= 0.2)\nfor call in (lambda: time.sleep(-1), lambda: time.sleep('1')):\n    try: call()\n    except Exception as ex: print(type(ex).__name__, ex)\nhits = []\nsignal.signal(signal.SIGALRM, lambda s, f: hits.append('handler ran')); signal.setitimer(signal.ITIMER_REAL, 0.05)\nt = time.monotonic(); time.sleep(0.3); print('a handler that returns does not cut the sleep short:', hits, time.monotonic() - t >= 0.3)\ndef drifting(n, work):\n    t = 0.0\n    for _ in range(n - 1): t += work + 1.0\n    return t\ndef anchored(n, work):\n    t = 0.0\n    for i in range(n - 1): t += max(work, 1.0)\n    return t\nprint('start of round 3600 with 0.02 s of work, fixed sleep:', round(drifting(3600, 0.02), 2), '| anchored to the tick:', round(anchored(3600, 0.02), 2))\nprint('round:', round(2.4), round(2.5), round(3.5), round(2.675, 2), type(round(2.5)).__name__, type(round(2.5, 2)).__name__)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "time monotonic False adjustable True clock_gettime(CLOCK_REALTIME)\nmonotonic monotonic True adjustable False clock_gettime(CLOCK_MONOTONIC)\nperf_counter monotonic True adjustable False clock_gettime(CLOCK_MONOTONIC)\nprocess_time monotonic True adjustable False clock_gettime(CLOCK_PROCESS_CPUTIME_ID)\na wall clock set back by 10 s: difference -10.0 | monotonic difference 10.0\nsleep(0.2) returned None and lasted at least 0.2 s: True\nValueError sleep length must be non-negative\nTypeError 'str' object cannot be interpreted as an integer or float\na handler that returns does not cut the sleep short: ['handler ran'] True\nstart of round 3600 with 0.02 s of work, fixed sleep: 3670.98 | anchored to the tick: 3599.0\nround: 2 2 4 2.67 int float",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "durationsAndDates_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Durations and the chapter's examples: timedelta fields, no months, 1000 days, and the thirty years that are 7 days off.\nd = TD(days=11, hours=10, minutes=9, seconds=8)\nprint(d.days, d.seconds, d.microseconds, d.total_seconds(), '|', d, '|', repr(TD(seconds=-1)))\nfor kw in ({'months': 1}, {'years': 1}):\n    try: TD(**kw)\n    except TypeError as e: print('TypeError:', e)\nprint('31 Jan + 30 days:', (DT(2026, 1, 31) + TD(days=30)).date(), '| + 31 days:', (DT(2026, 1, 31) + TD(days=31)).date())\nnow = DT(2026, 12, 2, 18, 38, 50, 636181)\nprint('now + 1000 days:', now + TD(days=1000), (now + TD(days=1000)).strftime('%A'))\no = DT(2026, 10, 21, 16, 29); thirty = TD(days=365 * 30)\nprint('minus about thirty years:', o - thirty, '| the real date:', o.replace(year=1996), '| days off:', (o - thirty - o.replace(year=1996)).days)\nprint('minus sixty years:', o - 2 * thirty, '| days off from 1966-10-21:', (o.replace(year=1966) - (o - 2 * thirty)).days)\nprint('leap days in the thirty years:', (o - DT(1996, 10, 21, 16, 29)).days - 365 * 30)\ntry: datetime.delta(days=1)\nexcept AttributeError as e: print('AttributeError:', e)\nprint(D(2019, 1, 7).strftime('%A'), D(2019, 1, 7).weekday(), D(2019, 1, 7).isoweekday())\nh, n = DT(2026, 10, 31), DT(2027, 1, 1)\nprint(h == DT(2026, 10, 31), h > n, n > h, n - h)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "11 36548 0 986948.0 | 11 days, 10:09:08 | datetime.timedelta(days=-1, seconds=86399)\nTypeError: __new__() got an unexpected keyword argument 'months'\nTypeError: __new__() got an unexpected keyword argument 'years'\n31 Jan + 30 days: 2026-03-02 | + 31 days: 2026-03-03\nnow + 1000 days: 2029-08-28 18:38:50.636181 Tuesday\nminus about thirty years: 1996-10-28 16:29:00 | the real date: 1996-10-21 16:29:00 | days off: 7\nminus sixty years: 1966-11-05 16:29:00 | days off from 1966-10-21: -15\nleap days in the thirty years: 7\nAttributeError: module 'datetime' has no attribute 'delta'\nMonday 0 1\nTrue False True 62 days, 0:00:00",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "formatAndParse_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Table 19-1 on a fixed moment, strftime, strptime, the %y rule, the year-less date and ISO 8601.\nimport warnings\ndt = DT(2026, 11, 3, 16, 29, 7)\nprint({d: dt.strftime(d) for d in '%Y %y %m %B %b %d %j %w %A %a %H %I %M %S %p %%'.split()})\nprint(DT(2026, 10, 21, 16, 29).strftime('%Y/%m/%d %H:%M:%S'), '|', DT(2026, 10, 21, 16, 29).strftime('%I:%M %p'))\nprint(DT.strptime('October 21, 2026', '%B %d, %Y'), DT.strptime(\"November of '63\", \"%B of '%y\"), DT.strptime(\"November of '73\", \"%B of '%y\"))\nfor s, f in (('2026-10-21', '%Y/%m/%d'), ('Oct 21, 2026', '%B %d, %Y')):\n    try: DT.strptime(s, f)\n    except ValueError as e: print('ValueError:', e)\nprint('%y:', [(s, DT.strptime(s, '%y').year) for s in ('00', '26', '68', '69', '99')])\nwith warnings.catch_warnings(record=True) as w:\n    warnings.simplefilter('always')\n    try: DT.strptime('02/29', '%m/%d')\n    except ValueError as e: print('year-less 29 February:', e, [x.category.__name__ for x in w])\n    print('year-less 21 October:', DT.strptime('10/21', '%m/%d'), '| with a year:', DT.strptime('02/29;1984', '%m/%d;%Y').date())\nprint('3.14 methods:', D.strptime('2026-10-21', '%Y-%m-%d'), datetime.time.strptime('16:29', '%H:%M'))\nx = DT(2026, 10, 21, 16, 29, 7, 123456, tzinfo=UTC)\nprint(x.isoformat(), x.isoformat(timespec='seconds'), DT.fromisoformat('2026-10-21T16:29:07Z'), D.fromisoformat('2026-W43-3'))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "{'%Y': '2026', '%y': '26', '%m': '11', '%B': 'November', '%b': 'Nov', '%d': '03', '%j': '307', '%w': '2', '%A': 'Tuesday', '%a': 'Tue', '%H': '16', '%I': '04', '%M': '29', '%S': '07', '%p': 'PM', '%%': '%'}\n2026/10/21 16:29:00 | 04:29 PM\n2026-10-21 00:00:00 2063-11-01 00:00:00 1973-11-01 00:00:00\nValueError: time data '2026-10-21' does not match format '%Y/%m/%d'\nValueError: time data 'Oct 21, 2026' does not match format '%B %d, %Y'\n%y: [('00', 2000), ('26', 2026), ('68', 2068), ('69', 1969), ('99', 1999)]\nyear-less 29 February: day 29 must be in range 1..28 for month 2 in year 1900 ['DeprecationWarning']\nyear-less 21 October: 1900-10-21 00:00:00 | with a year: 1984-02-29\n3.14 methods: 2026-10-21 16:29:00\n2026-10-21T16:29:07.123456+00:00 2026-10-21T16:29:07+00:00 2026-10-21 16:29:07+00:00 2026-10-21",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "zonesAndDaylightSaving_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Naive and aware values, zones, the day of 23 hours, the hour that does not exist and the hour that happens twice.\nimport importlib.metadata as md\nn, a = DT(2026, 10, 21, 16, 29), DT(2026, 10, 21, 16, 29, tzinfo=UTC)\nprint('naive == aware:', n == a)\nfor call in (lambda: n < a, lambda: n - a):\n    try: call()\n    except TypeError as e: print('TypeError:', e)\nprint('16:29 UTC == 19:29 Istanbul:', a == DT(2026, 10, 21, 19, 29, tzinfo=ZoneInfo('Europe/Istanbul')))\nla = ZoneInfo('America/Los_Angeles'); d = DT.fromtimestamp(1773813875.3518236, la)\nprint('the chapter\\'s moment in Los Angeles:', d.isoformat(timespec='seconds'), d.tzname(), '(not Pacific Standard Time)')\nprint('Istanbul offsets 1970 / 2015 / 2026:', ZoneInfo('Europe/Istanbul').utcoffset(DT(1970, 1, 12)), ZoneInfo('Europe/Istanbul').utcoffset(DT(2015, 7, 1)), ZoneInfo('Europe/Istanbul').utcoffset(DT(2026, 7, 1)), '| tzdata', md.version('tzdata'))\nny = ZoneInfo('America/New_York'); x = DT(2026, 3, 7, 12, tzinfo=ny); y = x + TD(days=1)\nprint('a day added across 8 March 2026:', x.isoformat(), '->', y.isoformat(), '| UTC difference', y.astimezone(UTC) - x.astimezone(UTC), '| wall difference', y - x)\ng = DT(2026, 3, 8, 2, 30, tzinfo=ny); print('02:30 in the gap:', g.astimezone(UTC).astimezone(ny).isoformat())\nf0 = DT(2026, 11, 1, 1, 30, tzinfo=ny); f1 = f0.replace(fold=1)\nprint('01:30 twice:', f0.astimezone(UTC).isoformat(), f1.astimezone(UTC).isoformat(), 'equal:', f0 == f1)\nprint('range:', D.min, D.max, '| 5 October 1582 is a', D(1582, 10, 5).strftime('%A'))\nfor call in (lambda: DT.max + TD(microseconds=1), lambda: D.min - TD(days=1)):\n    try: call()\n    except OverflowError as e: print('OverflowError:', e)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "naive == aware: False\nTypeError: can't compare offset-naive and offset-aware datetimes\nTypeError: can't subtract offset-naive and offset-aware datetimes\n16:29 UTC == 19:29 Istanbul: True\nthe chapter's moment in Los Angeles: 2026-03-17T23:04:35-07:00 PDT (not Pacific Standard Time)\nIstanbul offsets 1970 / 2015 / 2026: 2:00:00 3:00:00 3:00:00 | tzdata 2026.5\na day added across 8 March 2026: 2026-03-07T12:00:00-05:00 -> 2026-03-08T12:00:00-04:00 | UTC difference 23:00:00 | wall difference 1 day, 0:00:00\n02:30 in the gap: 2026-03-08T03:30:00-04:00\n01:30 twice: 2026-11-01T05:30:00+00:00 2026-11-01T06:30:00+00:00 equal: True\nrange: 0001-01-01 9999-12-31 | 5 October 1582 is a Tuesday\nOverflowError: date value out of range\nOverflowError: date value out of range",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "subprocessRunAndPopen_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# run() waits and returns a CompletedProcess, Popen does not wait, poll() and wait(), check and timeout. The children are Python itself and sleep.\nt = time.monotonic(); r = subprocess.run(['sleep', '0.3']); print(r, '| waited:', time.monotonic() - t >= 0.3)\nr = subprocess.run([sys.executable, '-c', 'print(\"hi\")'], capture_output=True, text=True)\nprint(repr(r).replace(sys.executable, 'PY'), r.returncode, repr(r.stdout))\nt = time.monotonic(); p = subprocess.Popen(['sleep', '0.4']); print('Popen returned at once:', time.monotonic() - t < 0.2, '| poll:', p.poll())\nprint('wait:', p.wait(), '| poll after:', p.poll(), '| pid is a number:', p.pid > 0)\nfor call in (lambda: subprocess.run(['false'], check=True), lambda: subprocess.run(['sleep', '5'], timeout=0.2),\n             lambda: subprocess.run(['no-such-program-xyz']), lambda: subprocess.Popen(['sleep', '2']).wait(timeout=0.1)):\n    try: call()\n    except Exception as e: print(type(e).__name__, e)\nc = 'import sys; print(sys.argv[1:])'\nprint(subprocess.run([sys.executable, '-c', c, 'my file.txt', 'a b', '*.txt'], capture_output=True, text=True).stdout.strip())\nb = subprocess.run([sys.executable, '-c', 'import sys; print(\"out\"); print(\"err\", file=sys.stderr)'], capture_output=True)\nprint(b.stdout, b.stderr, '| text=True gives str')\nprint('ping -n 4 on Linux exits', subprocess.run(['ping', '-n', '4', 'localhost'], capture_output=True, text=True).returncode, '| ping -c 2 exits', subprocess.run(['ping', '-c', '2', '-W', '2', '127.0.0.1'], capture_output=True, text=True).returncode)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "CompletedProcess(args=['sleep', '0.3'], returncode=0) | waited: True\nCompletedProcess(args=['PY', '-c', 'print(\"hi\")'], returncode=0, stdout='hi\\n', stderr='') 0 'hi\\n'\nPopen returned at once: True | poll: None\nwait: 0 | poll after: 0 | pid is a number: True\nCalledProcessError Command '['false']' returned non-zero exit status 1.\nTimeoutExpired Command '['sleep', '5']' timed out after 0.2 seconds\nFileNotFoundError [Errno 2] No such file or directory: 'no-such-program-xyz'\nTimeoutExpired Command '['sleep', '2']' timed out after 0.1 seconds\n['my file.txt', 'a b', '*.txt']\nb'out\\n' b'err\\n' | text=True gives str\nping -n 4 on Linux exits 2 | ping -c 2 exits 0",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "shellSafety_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# shell=True with a list, a command built from a file name, shlex.quote. start is a Windows command; on POSIX it is not found.\nr = subprocess.run(['echo', 'hi', 'there'], shell=True, capture_output=True, text=True); print('list with shell=True prints', repr(r.stdout))\nr = subprocess.run('echo hi there', shell=True, capture_output=True, text=True); print('string with shell=True prints', repr(r.stdout))\nr = subprocess.run(['start', 'hello.txt'], shell=True, capture_output=True, text=True); print('start hello.txt:', r.returncode, r.stderr.strip().split(': ', 1)[1])\nname = 'x; echo INJECTED'\nprint(repr(subprocess.run(f'echo opening {name}', shell=True, capture_output=True, text=True).stdout))\nprint(repr(subprocess.run(f'echo opening {shlex.quote(name)}', shell=True, capture_output=True, text=True).stdout))\nprint(repr(subprocess.run(['echo', 'opening', name], capture_output=True, text=True).stdout))\nprint(shlex.split(\"notepad 'my file.txt' x\"), shlex.quote('a b'), shlex.join(['a', 'b c']))\nimport shutil\nprint('open ->', shutil.which('open'), '| xdg-open ->', shutil.which('xdg-open'), '| startfile:', hasattr(os, 'startfile'))\nimport webbrowser\nprint('webbrowser.open without a browser:', webbrowser.open('file:///nonexistent'))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "list with shell=True prints '\\n'\nstring with shell=True prints 'hi there\\n'\nstart hello.txt: 127 1: start: not found\n'opening x\\nINJECTED\\n'\n'opening x; echo INJECTED\\n'\n'opening x; echo INJECTED\\n'\n['notepad', 'my file.txt', 'x'] 'a b' a 'b c'\nopen -> /usr/bin/open | xdg-open -> /usr/bin/xdg-open | startfile: False\nwebbrowser.open without a browser: False",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "exitCodesAndSignals_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Exit codes, a negative code for a signal, terminate against kill, and SIGKILL that cannot be handled.\nc = lambda code: subprocess.run([sys.executable, '-c', code], stderr=subprocess.DEVNULL).returncode\nprint([c('pass'), c('import sys; sys.exit(3)'), c('raise ValueError'), c('import sys; sys.exit(\"msg\")'), c('import os; os._exit(256+7)'),\n       c('import os,signal; os.kill(os.getpid(), signal.SIGKILL)'), c('import os,signal; os.kill(os.getpid(), signal.SIGTERM)')])\ncode = \"import signal,time,sys\\nsignal.signal(signal.SIGTERM, lambda s,f: (print('asked to stop, saving work', flush=True), sys.exit(0)))\\nprint('ready', flush=True)\\ntime.sleep(30)\"\nfor how in ('terminate', 'kill'):\n    p = subprocess.Popen([sys.executable, '-c', code], stdout=subprocess.PIPE, text=True); p.stdout.readline(); getattr(p, how)()\n    print(how, '->', repr(p.communicate()[0].strip()), p.returncode)\ntry: signal.signal(signal.SIGKILL, lambda *a: None)\nexcept OSError as e: print('SIGKILL cannot be handled:', type(e).__name__, e.errno)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "[0, 3, 1, 1, 7, -9, -15]\nterminate -> 'asked to stop, saving work' 0\nkill -> '' -9\nSIGKILL cannot be handled: OSError 22",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "inProcessSchedulers_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# The schedulers that live inside a process: sched with a fake clock, threading.Timer, asyncio call_later and the schedule package.\nclock = [0.0]; log = []\ns = sched.scheduler(lambda: clock[0], lambda d: clock.__setitem__(0, clock[0] + d))\ns.enter(5, 1, log.append, ('five',)); s.enter(2, 1, log.append, ('two',)); s.enter(5, 0, log.append, ('five, priority 0',)); s.enter(0, 9, log.append, ('now',))\nprint('queued', len(s.queue)); s.run(); print(log, clock[0], s.empty())\nhits = []\nt = threading.Timer(0.1, hits.append, args=('fired',)); t.start(); print('right after start:', hits); t.join(); print('after join:', hits)\nt2 = threading.Timer(5, hits.append, args=('never',)); t2.start(); t2.cancel(); t2.join(1); print('cancelled:', hits, t2.is_alive())\nimport asyncio\norder = []\nasync def main():\n    loop = asyncio.get_running_loop(); loop.call_later(0.2, order.append, 'later 0.2'); loop.call_later(0.1, order.append, 'later 0.1'); loop.call_soon(order.append, 'soon')\n    await asyncio.sleep(0.3)\nasyncio.run(main()); print(order)\ntry:\n    import schedule\n    sc = schedule.Scheduler(); j = sc.every().day.at('10:30').do(print, 'job'); sc.every(10).minutes.do(print, 'tick')\n    print('schedule', __import__('importlib.metadata', fromlist=['version']).version('schedule'), 'first run', j.next_run.strftime('%H:%M:%S'), 'jobs', len(sc.jobs))\nexcept ImportError:\n    print('the schedule package is not installed in this environment')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "queued 4\n['now', 'two', 'five, priority 0', 'five'] 5.0 True\nright after start: []\nafter join: ['fired']\ncancelled: ['fired'] False\n['soon', 'later 0.1', 'later 0.2']\nschedule 1.2.2 first run 10:30:00 jobs 2",
+   "live": false,
+   "kind": "emulated",
+   "exit": 0,
+   "livekey": [],
+   "emukey": [
+    "EMULATED"
+   ]
+  },
+  "cronFieldsAndTimers_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# A crontab line has five time fields; with both day fields restricted a day matches if either does. Next runs found by a small matcher\n# (the study's own function, written to the rule of the Debian manual page), and a plist and a systemd calendar expression.\ndef parse(f, lo, hi):\n    vals = set()\n    for part in f.split(','):\n        step = 1\n        if '/' in part: part, s = part.split('/'); step = int(s)\n        if part == '*': a, b = lo, hi\n        elif '-' in part: a, b = map(int, part.split('-'))\n        else: a = b = int(part)\n        if '/' in f and '-' not in part and part != '*': b = hi\n        vals.update(range(a, b + 1, step))\n    return vals\ndef nxt(expr, start):\n    m, h, dom, mon, dow = expr.split()\n    M, H, DOM, MON, DOW = parse(m, 0, 59), parse(h, 0, 23), parse(dom, 1, 31), parse(mon, 1, 12), parse(dow.replace('7', '0'), 0, 6)\n    t = start.replace(second=0, microsecond=0) + TD(minutes=1)\n    while True:\n        cd = (t.weekday() + 1) % 7\n        day = (t.day in DOM) if dow == '*' else (cd in DOW) if dom == '*' else (t.day in DOM or cd in DOW)\n        if t.minute in M and t.hour in H and t.month in MON and day: return t\n        t += TD(minutes=1)\ns = DT(2026, 10, 13, 9, 30)\nfor e in ('30 9 * * 1-5', '*/15 * * * *', '0 0 13 * 5', '0 4 * * *', '0 0 29 2 *'): print('%-14s next after %s: %s %s' % (e, s, nxt(e, s), nxt(e, s).strftime('%a')))\nimport plistlib\nd = {'Label': 'org.example.backup', 'ProgramArguments': ['/usr/bin/python3', '/Users/al/backup.py'], 'StartCalendarInterval': {'Hour': 4, 'Minute': 0}}\nb = plistlib.dumps(d); print('plist', len(b), 'bytes, reads back equal:', plistlib.loads(b) == d)\nimport shutil\nif shutil.which('systemd-analyze'):\n    for ex in ('Mon..Fri 09:00', 'daily', 'weekly'):\n        r = subprocess.run(['systemd-analyze', 'calendar', ex], capture_output=True, text=True, env=dict(os.environ, TZ='UTC')); print(r.stdout.splitlines()[1].strip())\nelse:\n    print('systemd-analyze is not on this machine')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "30 9 * * 1-5   next after 2026-10-13 09:30:00: 2026-10-14 09:30:00 Wed\n*/15 * * * *   next after 2026-10-13 09:30:00: 2026-10-13 09:45:00 Tue\n0 0 13 * 5     next after 2026-10-13 09:30:00: 2026-10-16 00:00:00 Fri\n0 4 * * *      next after 2026-10-13 09:30:00: 2026-10-14 04:00:00 Wed\n0 0 29 2 *     next after 2026-10-13 09:30:00: 2028-02-29 00:00:00 Tue\nplist 501 bytes, reads back equal: True\nNormalized form: Mon..Fri *-*-* 09:00:00\nNormalized form: *-*-* 00:00:00\nNormalized form: Mon *-*-* 00:00:00",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "stopwatchAndCountdown_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Project 14 (the Super Stopwatch) and Project 15 (the Simple Countdown) on a clock that the program advances, so the laps are known.\nimport builtins\nnow = [1000.0]\nclass FakeTime:\n    def time(self): return now[0]\n    def sleep(self, s): now[0] += s\nftime = FakeTime()\npresses = iter([3.56, 5.07, 9.05, 1.43])\ndef fake_input(prompt=''):\n    try: now[0] += next(presses)\n    except StopIteration: raise KeyboardInterrupt\n    return ''\n# the chapter's program with its en dashes written as minus signs and its f prefix on the print, time replaced by the fake\nprint('Press ENTER to begin. Afterward, press ENTER to \"click\" the stopwatch. Press Ctrl-C to quit.')\nstart_time = ftime.time(); last_time = start_time; lap_number = 1\ntry:\n    while True:\n        fake_input()\n        lap_time = round(ftime.time() - last_time, 2)\n        total_time = round(ftime.time() - start_time, 2)\n        print(f'Lap #{lap_number}: {total_time}({lap_time})')\n        lap_number += 1\n        last_time = ftime.time()\nexcept KeyboardInterrupt:\n    print('\\nDone.')\nprint('as shipped, without the f prefix:', 'Lap #{lap_number}: {total_time}({lap_time})')\n# Practice program: the columns.\nrows = [(1, 3.56, 3.56), (2, 8.63, 5.07), (3, 17.68, 9.05), (4, 19.11, 1.43)]\nfor n, t, l in rows: print('Lap #' + str(n).rjust(2) + ': ' + str(t).rjust(6) + ' (' + str(l).rjust(6) + ')')\n# Project 15: the countdown from 5 with the fake sleep; the chapter counts from 60.\ntime_left = 5\nwhile time_left > 0:\n    print(time_left, end=' '); ftime.sleep(1); time_left = time_left - 1\nprint('\\nthe fake clock advanced', round(now[0] - 1000.0 - sum([3.56, 5.07, 9.05, 1.43]), 2), 'seconds in the countdown; the alarm is played by opening alarm.wav, which needs a desktop')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Press ENTER to begin. Afterward, press ENTER to \"click\" the stopwatch. Press Ctrl-C to quit.\nLap #1: 3.56(3.56)\nLap #2: 8.63(5.07)\nLap #3: 17.68(9.05)\nLap #4: 19.11(1.43)\n\nDone.\nas shipped, without the f prefix: Lap #{lap_number}: {total_time}({lap_time})\nLap # 1:   3.56 (  3.56)\nLap # 2:   8.63 (  5.07)\nLap # 3:  17.68 (  9.05)\nLap # 4:  19.11 (  1.43)\n5 4 3 2 1 \nthe fake clock advanced 5.0 seconds in the countdown; the alarm is played by opening alarm.wav, which needs a desktop",
+   "live": false,
+   "kind": "emulated",
+   "exit": 0,
+   "livekey": [],
+   "emukey": [
+    "EMULATED"
+   ]
+  },
+  "practiceFridayThirteenth_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# The practice program: the next ten Friday the 13ths from a fixed day, the walk backward to the end of the date range, and the 400-year cycle.\nfrom collections import Counter\nd = D(2026, 10, 13); found = []\nwhile len(found) < 10:\n    if d.day == 13 and d.weekday() == 4: found.append(d)\n    d += TD(days=1)\nprint([x.isoformat() for x in found])\nd = D(2026, 10, 13); n = 0; first = last = None\ntry:\n    while True:\n        if d.day == 13 and d.weekday() == 4:\n            n += 1; last = d\n            if first is None: first = d\n        d -= TD(days=1)\nexcept OverflowError as e: print('backward:', n, 'dates, latest', first, 'earliest', last, '| stopped at', d, '|', e)\nby = Counter(D(y, m, 13).weekday() for y in range(2000, 2400) for m in range(1, 13))\nprint('13ths by weekday in 400 years, Monday first:', [by[i] for i in range(7)], '| cycle days', 400 * 365 + 97, 'mod 7 =', (400 * 365 + 97) % 7)\nprint('Friday the 13th in the years 1 to 9999: every year has at least one:', all(any(D(y, m, 13).weekday() == 4 for m in range(1, 13)) for y in range(1, 10000)))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "['2026-11-13', '2027-08-13', '2028-10-13', '2029-04-13', '2029-07-13', '2030-09-13', '2030-12-13', '2031-06-13', '2032-02-13', '2032-08-13']\nbackward: 3485 dates, latest 2026-03-13 earliest 0001-04-13 | stopped at 0001-01-01 | date value out of range\n13ths by weekday in 400 years, Monday first: [685, 685, 687, 684, 688, 684, 687] | cycle days 146097 mod 7 = 0\nFriday the 13th in the years 1 to 9999: every year has at least one: True",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "epochCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# The epoch timestamp: a count of seconds, and what it cannot hold.\nt = calendar.timegm((2026, 3, 18, 6, 4, 35))\nprint('2026-03-18 06:04:35 UTC is', t)\nprint('timestamp 0 is', DT.fromtimestamp(0, UTC).isoformat())\na = calendar.timegm((2016, 12, 31, 23, 59, 59))\nb = calendar.timegm((2017, 1, 1, 0, 0, 0))\nprint('across the 2016 leap second, seconds apart:', b - a)\ntry: DT(2016, 12, 31, 23, 59, 60)\nexcept ValueError as e: print('datetime refuses:', e)\nprint('float spacing near the timestamp:', math.ulp(t + 0.35))\nprint('2**31 - 1 ->', DT.fromtimestamp(2**31 - 1, UTC).isoformat())\nprint('wrapped:', DT.fromtimestamp(-2**31, UTC).isoformat())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "2026-03-18 06:04:35 UTC is 1773813875\ntimestamp 0 is 1970-01-01T00:00:00+00:00\nacross the 2016 leap second, seconds apart: 1\ndatetime refuses: second must be in 0..59, not 60\nfloat spacing near the timestamp: 2.384185791015625e-07\n2**31 - 1 -> 2038-01-19T03:14:07+00:00\nwrapped: 1901-12-13T20:45:52+00:00",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "clocksCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Which clock answers which question. EMULATED: two numbers stand in for a clock that is set back.\nfor n in ('time', 'monotonic', 'perf_counter', 'process_time'):\n    i = time.get_clock_info(n)\n    print(n.ljust(13), i.monotonic, i.adjustable, i.implementation)\nwall, mono = iter([1000.0, 990.0]), iter([50.0, 60.0])\nw0, m0, w1, m1 = next(wall), next(mono), next(wall), next(mono)\nprint('set back by 10 sec: wall', w1 - w0, '| monotonic', m1 - m0)\nt = time.monotonic(); time.sleep(0.2)\nprint('sleep(0.2) lasted at least 0.2:', time.monotonic() - t >= 0.2)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "time          False True clock_gettime(CLOCK_REALTIME)\nmonotonic     True False clock_gettime(CLOCK_MONOTONIC)\nperf_counter  True False clock_gettime(CLOCK_MONOTONIC)\nprocess_time  True False clock_gettime(CLOCK_PROCESS_CPUTIME_ID)\nset back by 10 sec: wall -10.0 | monotonic 10.0\nsleep(0.2) lasted at least 0.2: True",
+   "live": false,
+   "kind": "emulated",
+   "exit": 0,
+   "livekey": [],
+   "emukey": [
+    "EMULATED"
+   ]
+  },
+  "sleepCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# sleep returns None; a handler that returns does not cut it short; a loop that sleeps after its work drifts.\nt = time.monotonic(); r = time.sleep(0.2)\nok = time.monotonic() - t >= 0.2\nprint('sleep returns', r, '| lasted at least 0.2:', ok)\nhits = []\nsignal.signal(signal.SIGALRM, lambda s, f: hits.append('ran'))\nsignal.setitimer(signal.ITIMER_REAL, 0.05)\nt = time.monotonic(); time.sleep(0.3)\nok = time.monotonic() - t >= 0.3\nprint('handler', hits, '| not cut short:', ok)\ndef start_of_round(n, work, fixed):\n    t = 0.0\n    for _ in range(n - 1):\n        t += work + 1.0 if fixed else max(work, 1.0)\n    return round(t, 2)\nprint('sleeping after work:', start_of_round(3600, 0.02, True))\nprint('anchored to the tick:', start_of_round(3600, 0.02, False))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "sleep returns None | lasted at least 0.2: True\nhandler ['ran'] | not cut short: True\nsleeping after work: 3670.98\nanchored to the tick: 3599.0",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "stopwatchCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Project 14 on a clock the program moves. EMULATED: the user's key presses are numbers added to a fake clock.\nnow = [1000.0]\nclock = lambda: now[0]\nstart_time = last_time = clock()\nlap_number = 1\nfor gap in (3.56, 5.07, 9.05, 1.43):\n    now[0] += gap                  # the user presses ENTER\n    lap_time = round(clock() - last_time, 2)\n    total_time = round(clock() - start_time, 2)\n    print(f'Lap #{lap_number}: {total_time}({lap_time})')\n    lap_number += 1\n    last_time = clock()\nprint('as shipped:', 'Lap #{lap_number}: {total_time}({lap_time})')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Lap #1: 3.56(3.56)\nLap #2: 8.63(5.07)\nLap #3: 17.68(9.05)\nLap #4: 19.11(1.43)\nas shipped: Lap #{lap_number}: {total_time}({lap_time})",
+   "live": false,
+   "kind": "emulated",
+   "exit": 0,
+   "livekey": [],
+   "emukey": [
+    "EMULATED"
+   ]
+  },
+  "durationsCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# timedelta has days, seconds and microseconds; no months; thirty years of 365 days are 7 days short.\nd = TD(days=11, hours=10, minutes=9, seconds=8)\nprint(d.days, d.seconds, d.total_seconds(), '|', d)\ntry: TD(months=1)\nexcept TypeError as e: print('TypeError:', e)\nprint('31 Jan + 30 days:', (DT(2026, 1, 31) + TD(days=30)).date())\no = DT(2026, 10, 21, 16, 29)\nthirty = TD(days=365 * 30)\nreal = o.replace(year=1996)\nprint('book: 30 years back =', (o - thirty).date(), '| real:', real.date())\nprint('days off:', (o - thirty - real).days, '| leap days:', (o - real).days - 365 * 30)\nprint('book: 60 years back =', (o - 2 * thirty).date(), '| real: 1966-10-21')\ntry: datetime.delta(days=1)\nexcept AttributeError as e: print('AttributeError:', e)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "11 36548 986948.0 | 11 days, 10:09:08\nTypeError: __new__() got an unexpected keyword argument 'months'\n31 Jan + 30 days: 2026-03-02\nbook: 30 years back = 1996-10-28 | real: 1996-10-21\ndays off: 7 | leap days: 7\nbook: 60 years back = 1966-11-05 | real: 1966-10-21\nAttributeError: module 'datetime' has no attribute 'delta'",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "strftimeCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# strftime turns a moment into text; isoformat and fromisoformat are the standard way to store one.\ndt = DT(2026, 11, 3, 16, 29, 7)\nprint(dt.strftime('%Y/%m/%d %H:%M:%S'))\nprint(dt.strftime('%I:%M %p'), '|', dt.strftime('%A, %B %d'))\nprint(dt.strftime('%j %w'), '| percent:', dt.strftime('%d%%'))\nprint(dt.isoformat(), '|', dt.isoformat(timespec='minutes'))\nx = DT(2026, 10, 21, 16, 29, 7, 123456, tzinfo=UTC)\nprint(x.isoformat())\nprint(DT.fromisoformat('2026-10-21T16:29:07Z'))\nprint(D.fromisoformat('2026-W43-3'))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "2026/11/03 16:29:07\n04:29 PM | Tuesday, November 03\n307 2 | percent: 03%\n2026-11-03T16:29:07 | 2026-11-03T16:29\n2026-10-21T16:29:07.123456+00:00\n2026-10-21 16:29:07+00:00\n2026-10-21",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "strptimeCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# strptime turns text into a moment; the format must match the text exactly.\nprint(DT.strptime('October 21, 2026', '%B %d, %Y'))\nprint(DT.strptime(\"November of '63\", \"%B of '%y\").date())\nprint(DT.strptime(\"November of '73\", \"%B of '%y\").date())\nfor s, f in (('2026-10-21', '%Y/%m/%d'), ('Oct 21, 2026', '%B %d, %Y')):\n    try: DT.strptime(s, f)\n    except ValueError as e: print('ValueError:', e)\nprint(DT.strptime('10/21', '%m/%d').date(), '<- a date with no year')\nprint(D.strptime('2026-10-21', '%Y-%m-%d'), '<- new in Python 3.14')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "2026-10-21 00:00:00\n2063-11-01\n1973-11-01\nValueError: time data '2026-10-21' does not match format '%Y/%m/%d'\nValueError: time data 'Oct 21, 2026' does not match format '%B %d, %Y'\n1900-10-21 <- a date with no year\n2026-10-21 <- new in Python 3.14",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "zonesCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Naive and aware values, and the zone of the chapter's example.\nn = DT(2026, 10, 21, 16, 29)\na = DT(2026, 10, 21, 16, 29, tzinfo=UTC)\nprint('naive == aware:', n == a)\ntry: n - a\nexcept TypeError as e: print('TypeError:', e)\nist = ZoneInfo('Europe/Istanbul')\nprint('16:29 UTC == 19:29 Istanbul:', a == DT(2026, 10, 21, 19, 29, tzinfo=ist))\nd = DT.fromtimestamp(1773813875.3518236, ZoneInfo('America/Los_Angeles'))\nprint('the chapter:', d.isoformat(timespec='seconds'), d.tzname())\nfor z in ('America/Los_Angeles', 'UTC', 'Europe/Istanbul'):\n    print(z.ljust(20), DT.fromtimestamp(1000000, ZoneInfo(z)).isoformat())\nprint('Istanbul:', ist.utcoffset(DT(1970, 1, 1)), ist.utcoffset(DT(2026, 7, 1)))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "naive == aware: False\nTypeError: can't subtract offset-naive and offset-aware datetimes\n16:29 UTC == 19:29 Istanbul: True\nthe chapter: 2026-03-17T23:04:35-07:00 PDT\nAmerica/Los_Angeles  1970-01-12T05:46:40-08:00\nUTC                  1970-01-12T13:46:40+00:00\nEurope/Istanbul      1970-01-12T15:46:40+02:00\nIstanbul: 2:00:00 3:00:00",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "dstCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# A day added across the change, an hour that does not exist, an hour that happens twice, and utcnow.\nimport warnings\nny = ZoneInfo('America/New_York')\nx = DT(2026, 3, 7, 12, tzinfo=ny)\ny = x + TD(days=1)\nprint(x.isoformat(' ', 'minutes'), '->', y.isoformat(' ', 'minutes'))\nprint('UTC difference:', y.astimezone(UTC) - x.astimezone(UTC))\nprint('wall difference:', y - x)\ng = DT(2026, 3, 8, 2, 30, tzinfo=ny)\nprint('02:30 in the gap ->', g.astimezone(UTC).astimezone(ny).isoformat())\nf0 = DT(2026, 11, 1, 1, 30, tzinfo=ny)\nf1 = f0.replace(fold=1)\nutc = lambda v: v.astimezone(UTC).isoformat()[11:16]\nprint('01:30 twice, in UTC:', utc(f0), utc(f1), '| equal:', f0 == f1)\nwith warnings.catch_warnings(record=True) as w:\n    warnings.simplefilter('always'); u = DT.utcnow()\nprint('naive:', u.tzinfo is None, [x.category.__name__ for x in w])\nprint('now(UTC) is aware:', DT.now(UTC).tzinfo)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "2026-03-07 12:00-05:00 -> 2026-03-08 12:00-04:00\nUTC difference: 23:00:00\nwall difference: 1 day, 0:00:00\n02:30 in the gap -> 2026-03-08T03:30:00-04:00\n01:30 twice, in UTC: 05:30 06:30 | equal: True\nnaive: True ['DeprecationWarning']\nnow(UTC) is aware: UTC",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "runCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# run() waits and returns a CompletedProcess; Popen returns at once; text=True gives str.\nr = subprocess.run(['sleep', '0.3'])\nprint(r)\nc = 'import sys; print(\"out\"); print(\"err\", file=sys.stderr)'\ncmd = [sys.executable, '-c', c]\nr = subprocess.run(cmd, capture_output=True)\nprint(r.returncode, r.stdout, r.stderr)\nr = subprocess.run(cmd, capture_output=True, text=True)\nprint(type(r.stdout).__name__, repr(r.stdout))\np = subprocess.Popen(['sleep', '0.4'])\nprint('Popen returned; poll() ->', p.poll())\nprint('wait() ->', p.wait(), '| poll() ->', p.poll())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "CompletedProcess(args=['sleep', '0.3'], returncode=0)\n0 b'out\\n' b'err\\n'\nstr 'out\\n'\nPopen returned; poll() -> None\nwait() -> 0 | poll() -> 0",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "popenCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# check=True, a timeout, a missing program, and arguments that pass through no shell.\nfor call in (lambda: subprocess.run(['nosuch']),\n             lambda: subprocess.run(['false'], check=True),\n             lambda: subprocess.run(['sleep', '5'], timeout=0.2)):\n    try: call()\n    except Exception as e: print(type(e).__name__, e)\nc = 'import sys; print(sys.argv[1:])'\na = ['my file.txt', 'a b', '*.txt']\ncmd = [sys.executable, '-c', c, *a]\nprint(subprocess.run(cmd, capture_output=True, text=True).stdout.strip())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "FileNotFoundError [Errno 2] No such file or directory: 'nosuch'\nCalledProcessError Command '['false']' returned non-zero exit status 1.\nTimeoutExpired Command '['sleep', '5']' timed out after 0.2 seconds\n['my file.txt', 'a b', '*.txt']",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "exitsCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Exit codes, and a negative code for a signal.\nrun = lambda s: subprocess.run([sys.executable, '-c', s], stderr=subprocess.DEVNULL).returncode\nK = 'import os, signal; os.kill(os.getpid(), signal.SIG%s)'\ncodes = [run('pass'), run('import sys; sys.exit(3)'), run('raise ValueError')]\nprint(*codes, run(K % 'KILL'), run(K % 'TERM'))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "0 3 1 -9 -15",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "shellCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# shell=True with a list, a command built from a file name, and shlex.quote. start is a Windows command.\nimport shutil, webbrowser\nsh = lambda a, **k: subprocess.run(a, capture_output=True, text=True, **k)\nprint('list + shell=True:', repr(sh(['echo', 'hi', 'there'], shell=True).stdout))\nprint('string + shell=True:', repr(sh('echo hi there', shell=True).stdout))\nr = sh(['start', 'hello.txt'], shell=True)\nprint('start hello.txt:', r.returncode, '|', r.stderr.strip())\nname = 'x; echo INJECTED'\nprint(repr(sh(f'echo opening {name}', shell=True).stdout))\nprint(repr(sh(f'echo opening {shlex.quote(name)}', shell=True).stdout))\nprint(repr(sh(['echo', 'opening', name]).stdout))\nprint('open:', shutil.which('open'), '| xdg-open:', shutil.which('xdg-open'))\nprint('webbrowser.open with no browser:', webbrowser.open('file:///nonexistent'))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "list + shell=True: '\\n'\nstring + shell=True: 'hi there\\n'\nstart hello.txt: 127 | hello.txt: 1: start: not found\n'opening x\\nINJECTED\\n'\n'opening x; echo INJECTED\\n'\n'opening x; echo INJECTED\\n'\nopen: /usr/bin/open | xdg-open: /usr/bin/xdg-open\nwebbrowser.open with no browser: False",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "schedCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Schedulers inside a process. EMULATED: sched runs on a clock the program moves. Then Timer and call_later.\nimport asyncio\nnow, log = [0.0], []\ndef advance(d): now[0] += d\ns = sched.scheduler(lambda: now[0], advance)\njobs = [(5, 1, 'five'), (2, 1, 'two'), (5, 0, 'five-0'), (0, 9, 'now')]\nfor d, p, w in jobs: s.enter(d, p, log.append, (w,))\ns.run(); print(log, now[0])\nhits = []\nt = threading.Timer(0.1, hits.append, args=('fired',))\nt.start(); print('after start():', hits)\nt.join(); print('after join():', hits)\nasync def main():\n    loop = asyncio.get_running_loop(); out = []\n    for d in (0.2, 0.1, 0): loop.call_later(d, out.append, d)\n    await asyncio.sleep(0.3); return out\nprint('call_later order:', asyncio.run(main()))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "['now', 'two', 'five-0', 'five'] 5.0\nafter start(): []\nafter join(): ['fired']\ncall_later order: [0, 0.1, 0.2]",
+   "live": false,
+   "kind": "emulated",
+   "exit": 0,
+   "livekey": [],
+   "emukey": [
+    "EMULATED"
+   ]
+  },
+  "cronCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# A crontab line has five time fields; with both day fields restricted a day matches if EITHER does.\ndef field(f, lo, hi):\n    ok = set()\n    for p in f.split(','):\n        r, _, st = p.partition('/')\n        a, b = (lo, hi) if r == '*' else (r.split('-') * 2)[:2]\n        ok |= set(range(int(a), int(b) + 1, int(st or 1)))\n    return ok\ndef nxt(expr, t):\n    m, h, dom, mon, dow = expr.split()\n    M, H, MON = field(m, 0, 59), field(h, 0, 23), field(mon, 1, 12)\n    DOM, DOW = field(dom, 1, 31), field(dow.replace('7', '0'), 0, 6)\n    t = t.replace(second=0) + TD(minutes=1)\n    while True:\n        cd = (t.weekday() + 1) % 7\n        if dow == '*': day = t.day in DOM\n        elif dom == '*': day = cd in DOW\n        else: day = t.day in DOM or cd in DOW\n        if t.minute in M and t.hour in H and t.month in MON and day:\n            return t\n        t += TD(minutes=1)\ns = DT(2026, 10, 13, 9, 30)\nfor e in ('30 9 * * 1-5', '*/15 * * * *', '0 0 13 * 5', '0 0 29 2 *'):\n    print(e.ljust(13), nxt(e, s).strftime('%Y-%m-%d %H:%M %a'))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "30 9 * * 1-5  2026-10-14 09:30 Wed\n*/15 * * * *  2026-10-13 09:45 Tue\n0 0 13 * 5    2026-10-16 00:00 Fri\n0 0 29 2 *    2028-02-29 00:00 Tue",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "countdownCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Project 15 without the wait. EMULATED: a number stands in for the clock that time.sleep(1) would move.\nnow = [0.0]\ntime_left = 5\nwhile time_left > 0:\n    print(time_left, end=' ')\n    now[0] += 1                      # the program would call time.sleep(1)\n    time_left = time_left - 1\nprint('\\ncounted', now[0], 'seconds; the alarm needs a sound card')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "5 4 3 2 1 \ncounted 5.0 seconds; the alarm needs a sound card",
+   "live": false,
+   "kind": "emulated",
+   "exit": 0,
+   "livekey": [],
+   "emukey": [
+    "EMULATED"
+   ]
+  },
+  "prettyCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Practice program: the stopwatch laps in columns with rjust().\nrows = [(1, 3.56, 3.56), (2, 8.63, 5.07), (3, 17.68, 9.05), (4, 19.11, 1.43)]\nr = lambda v, k: str(v).rjust(k)\nfor n, total, lap in rows:\n    print('Lap #' + r(n, 2) + ': ' + r(total, 6) + ' (' + r(lap, 6) + ')')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Lap # 1:   3.56 (  3.56)\nLap # 2:   8.63 (  5.07)\nLap # 3:  17.68 (  9.05)\nLap # 4:  19.11 (  1.43)",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  },
+  "fridayCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, time, datetime, subprocess, tempfile, calendar, signal, threading, shlex, sched, math\nfrom datetime import datetime as DT, timedelta as TD, date as D, UTC\nfrom zoneinfo import ZoneInfo\nos.chdir(tempfile.mkdtemp())\n# Practice program: the next ten Friday the 13ths from a fixed day, then backward to the edge of the date range.\nimport collections\nd = D(2026, 10, 13)\nfound = []\nwhile len(found) < 10:\n    if d.day == 13 and d.weekday() == 4: found.append(d.isoformat())\n    d += TD(days=1)\nprint(found[0], '...', found[-1])\nd, n, last = D(2026, 10, 13), 0, None\ntry:\n    while True:\n        if d.day == 13 and d.weekday() == 4: n, last = n + 1, d\n        d -= TD(days=1)\nexcept OverflowError as e:\n    print('backward:', n, 'dates, earliest', last)\n    print('stopped at', d, '-', e)\ndays = (D(y, m, 13) for y in range(2000, 2400) for m in range(1, 13))\nby = collections.Counter(x.weekday() for x in days)\nprint('Mon..Sun in 400 years:', [by[i] for i in range(7)])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "2026-11-13 ... 2032-08-13\nbackward: 3485 dates, earliest 0001-04-13\nstopped at 0001-01-01 - date value out of range\nMon..Sun in 400 years: [685, 685, 687, 684, 688, 684, 687]",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "livekey": [],
+   "emukey": []
+  }
+ },
+ "_charts": {
+  "thirteenths": {
+   "setup": "import datetime as dt, collections\ndef counts():\n    by = collections.Counter(dt.date(y, m, 13).weekday() for y in range(2000, 2400) for m in range(1, 13))\n    return [[n, by[i]] for i, n in enumerate(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])]\n",
+   "expr": "counts()",
+   "labels": [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun"
+   ],
+   "values": [
+    685.0,
+    685.0,
+    687.0,
+    684.0,
+    688.0,
+    684.0,
+    687.0
+   ]
+  }
+ },
+ "_tables": {
+  "directives": {
+   "setup": "import datetime as dt\nM = dt.datetime(2026, 11, 3, 16, 29, 7)\n",
+   "expr": "[['directive', 'meaning', '3 Nov 2026 16:29:07']] + [[d, m, M.strftime(d)] for d, m in (('%Y', 'year, four digits'), ('%y', 'year, two digits'), ('%m', 'month number'), ('%B', 'month name'), ('%d', 'day of the month'), ('%j', 'day of the year'), ('%w', 'weekday, Sunday is 0'), ('%A', 'weekday name'), ('%H', 'hour, 24-hour clock'), ('%I', 'hour, 12-hour clock'), ('%p', 'AM or PM'))]",
+   "rows": [
+    [
+     "directive",
+     "meaning",
+     "3 Nov 2026 16:29:07"
+    ],
+    [
+     "%Y",
+     "year, four digits",
+     "2026"
+    ],
+    [
+     "%y",
+     "year, two digits",
+     "26"
+    ],
+    [
+     "%m",
+     "month number",
+     "11"
+    ],
+    [
+     "%B",
+     "month name",
+     "November"
+    ],
+    [
+     "%d",
+     "day of the month",
+     "03"
+    ],
+    [
+     "%j",
+     "day of the year",
+     "307"
+    ],
+    [
+     "%w",
+     "weekday, Sunday is 0",
+     "2"
+    ],
+    [
+     "%A",
+     "weekday name",
+     "Tuesday"
+    ],
+    [
+     "%H",
+     "hour, 24-hour clock",
+     "16"
+    ],
+    [
+     "%I",
+     "hour, 12-hour clock",
+     "04"
+    ],
+    [
+     "%p",
+     "AM or PM",
+     "PM"
+    ]
+   ]
+  },
+  "twoDigitYear": {
+   "setup": "import datetime as dt\ndef yy(s):\n    return dt.datetime.strptime(s, '%y').year\n",
+   "expr": "[['text', '%y gives']] + [[repr(s), str(yy(s))] for s in ('00', '26', '68', '69', '99')]",
+   "rows": [
+    [
+     "text",
+     "%y gives"
+    ],
+    [
+     "'00'",
+     "2000"
+    ],
+    [
+     "'26'",
+     "2026"
+    ],
+    [
+     "'68'",
+     "2068"
+    ],
+    [
+     "'69'",
+     "1969"
+    ],
+    [
+     "'99'",
+     "1999"
+    ]
+   ]
+  }
+ },
+ "_bare": {
+  "python": "3.14.6",
+  "packages": [],
+  "code": "for name in ('schedule', 'tzdata', 'zoneinfo'):\n    try:\n        __import__(name); print(name, 'imported')\n    except ImportError as e:\n        print(type(e).__name__, '-', e)\nimport zoneinfo, datetime\nprint(datetime.datetime(2026, 3, 8, 12, tzinfo=zoneinfo.ZoneInfo('America/New_York')).isoformat())\n",
+  "transcript": "ModuleNotFoundError - No module named 'schedule'\nModuleNotFoundError - No module named 'tzdata'\nzoneinfo imported\n2026-03-08T12:00:00-04:00"
+ },
+ "_pins": {
+  "python": "3.14.6",
+  "packages": [
+   "certifi==2026.7.22",
+   "playsound3==2.4.0",
+   "pyperclip==1.11.0",
+   "tzdata==2026.5"
+  ],
+  "code": "import importlib.metadata as m\nprint('playsound3', m.version('playsound3'), '| pyperclip', m.version('pyperclip'))\ntry:\n    import schedule\nexcept ImportError as e:\n    print(type(e).__name__, '-', e)\n",
+  "transcript": "playsound3 2.4.0 | pyperclip 1.11.0\nModuleNotFoundError - No module named 'schedule'"
+ }
+}
