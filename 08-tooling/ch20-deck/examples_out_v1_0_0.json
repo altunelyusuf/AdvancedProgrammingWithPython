@@ -1,0 +1,637 @@
+{
+ "_version": "1.0.0",
+ "_python": "3.14.6",
+ "_packages": "ezgmail 2026.4.28 | requests 2.34.2 | aiosmtpd 1.4.6 | google-api-python-client 2.201.0 | oauth2client 4.1.3",
+ "title": [
+  [
+   "import platform, importlib.metadata as m",
+   ""
+  ],
+  [
+   "platform.python_version()",
+   "'3.14.6'"
+  ],
+  [
+   "m.version('ezgmail')",
+   "'2026.4.28'"
+  ],
+  [
+   "m.version('requests')",
+   "'2.34.2'"
+  ]
+ ],
+ "address": [
+  [
+   "from email.utils import parseaddr, formataddr",
+   ""
+  ],
+  [
+   "parseaddr('Al Sweigart <al@inventwithpython.com>')",
+   "('Al Sweigart', 'al@inventwithpython.com')"
+  ],
+  [
+   "'al@inventwithpython.com'.partition('@')",
+   "('al', '@', 'inventwithpython.com')"
+  ],
+  [
+   "formataddr(('Jon Doe', 'jon@example.org'))",
+   "'Jon Doe <jon@example.org>'"
+  ],
+  [
+   "parseaddr('real@example.com, evil@example.net')",
+   "('', '')"
+  ],
+  [
+   "parseaddr('real@example.com, evil@example.net', strict=False)",
+   "('', 'real@example.com')"
+  ]
+ ],
+ "imap": [
+  [
+   "import imaplib, smtplib",
+   ""
+  ],
+  [
+   "smtplib.SMTP_PORT, smtplib.SMTP_SSL_PORT",
+   "(25, 465)"
+  ],
+  [
+   "imaplib.IMAP4_PORT, imaplib.IMAP4_SSL_PORT",
+   "(143, 993)"
+  ],
+  [
+   "hasattr(imaplib.IMAP4, 'idle')",
+   "True"
+  ],
+  [
+   "imaplib.Commands['IDLE']",
+   "('AUTH', 'SELECTED')"
+  ],
+  [
+   "imaplib.ParseFlags(b'1 (FLAGS (\\\\Seen))')",
+   "(b'\\\\Seen',)"
+  ],
+  [
+   "from datetime import datetime as dt, timezone as tz",
+   ""
+  ],
+  [
+   "d = dt(2026, 12, 9, 13, 28, 48, tzinfo=tz.utc)",
+   ""
+  ],
+  [
+   "imaplib.Time2Internaldate(d)",
+   "'\"09-Dec-2026 13:28:48 +0000\"'"
+  ]
+ ],
+ "shell": [
+  [
+   "import subprocess as sp",
+   ""
+  ],
+  [
+   "sp.run('echo a; echo PWNED', shell=True, capture_output=True).stdout",
+   "b'a\\nPWNED\\n'"
+  ],
+  [
+   "sp.run(['echo', 'a; echo PWNED'], capture_output=True).stdout",
+   "b'a; echo PWNED\\n'"
+  ]
+ ],
+ "jsonlines": [
+  [
+   "import json",
+   ""
+  ],
+  [
+   "t = '{\"id\": \"a\"}\\n{\"id\": \"b\"}\\n'",
+   ""
+  ],
+  [
+   "json.loads(t)",
+   "JSONDecodeError: Extra data: line 2 column 1 (char 12)"
+  ],
+  [
+   "[json.loads(x)['id'] for x in t.splitlines()]",
+   "['a', 'b']"
+  ],
+  [
+   "json.loads('')",
+   "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+  ]
+ ],
+ "_programs": {
+  "emailMessageBuild_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef mk(**kw):\n    m = EmailMessage(); m['From'] = kw.get('frm', 'Al Sweigart <al@example.com>'); m['To'] = kw.get('to', 'Jon Doe <jon@example.org>'); m['Subject'] = kw.get('subj', 'RoboCop')\n    m['Date'] = eu.formatdate(1797000528, usegmt=True); m['Message-ID'] = '<fixed-1@example.com>'\n    for k, v in kw.get('extra', {}).items(): m[k] = v\n    m.set_content(kw.get('body', 'Do you want to watch RoboCop this weekend?')); return m\n# The standard library's way to build a message (the chapter uses EZGmail instead): EmailMessage, the MIME tree, encoded headers, address parsing.\nm = mk()\nraw = m.as_bytes()\nprint('class:', type(m).__name__, '| policy:', type(m.policy).__name__, '| CRLF in as_bytes():', raw.count(b'\\r\\n'), '| in as_bytes(policy=SMTP):', m.as_bytes(policy=policy.SMTP).count(b'\\r\\n'))\nprint('\\n'.join(raw.decode().splitlines()))\nm.add_alternative('<p>Do you want to watch <b>RoboCop</b>?</p>', subtype='html'); m.add_attachment(b'\\x00\\x01\\x02', maintype='application', subtype='octet-stream', filename='poster.bin')\nprint('MIME tree:', [p.get_content_type() for p in m.walk()], '| attachments:', [a.get_filename() for a in m.iter_attachments()], '| preferred body:', m.get_body(preferencelist=('html', 'plain')).get_content_type())\nfrom email.header import decode_header, make_header\nt = mk(subj='Yedekleme bitti \\u2713 \\u015f\\u011f\\u0131', to='\"Y\\u0131lmaz, Ay\\u015fe\" <ayse@example.org>').as_bytes().decode('ascii').splitlines()\nprint([x for x in t if x.startswith(('Subject', 'To'))])\nprint('decoded subject:', str(make_header(decode_header([x for x in t if x.startswith('Subject')][0].split(': ', 1)[1]))))\ns = '\"Doe, Jon\" <jon@example.org>, Al Sweigart <al@inventwithpython.com>, plain@example.com'\nprint('getaddresses:', eu.getaddresses([s]), '| without the quotes:', eu.getaddresses([s.replace('\"Doe, Jon\"', 'Doe, Jon')]))\nprint('parseaddr of two addresses:', eu.parseaddr('real@example.com, evil@example.net'), '| strict=False:', eu.parseaddr('real@example.com, evil@example.net', strict=False))\nprint('formataddr:', eu.formataddr(('Jon Doe', 'jon@example.org')), '|', eu.formataddr(('Y\\u0131lmaz, Ay\\u015fe', 'ayse@example.org')))\ntry:\n    e = EmailMessage(); e['Subject'] = 'hello\\r\\nBcc: evil@example.net'\nexcept ValueError as ex: print('EmailMessage refuses a line break in a header:', ex)\ntry: MIMEText('body')['Subject']; l = MIMEText('body'); l['Subject'] = 'hello\\r\\nBcc: evil@example.net'; l.as_string()\nexcept Exception as ex: print('MIMEText (what EZGmail uses) refuses it only when written:', type(ex).__name__)\nmid = eu.make_msgid(idstring='job1', domain='example.com'); print('Message-ID shape:', mid.startswith('<') and mid.endswith('job1@example.com>'), '| Date:', eu.formatdate(1797000528, usegmt=True))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "class: EmailMessage | policy: EmailPolicy | CRLF in as_bytes(): 0 | in as_bytes(policy=SMTP): 10\nFrom: Al Sweigart <al@example.com>\nTo: Jon Doe <jon@example.org>\nSubject: RoboCop\nDate: Fri, 11 Dec 2026 14:48:48 +0000\nMessage-ID: <fixed-1@example.com>\nContent-Type: text/plain; charset=\"utf-8\"\nContent-Transfer-Encoding: 7bit\nMIME-Version: 1.0\n\nDo you want to watch RoboCop this weekend?\nMIME tree: ['multipart/mixed', 'multipart/alternative', 'text/plain', 'text/html', 'application/octet-stream'] | attachments: ['poster.bin'] | preferred body: text/html\n['To: =?utf-8?q?Y=C4=B1lmaz=2C_Ay=C5=9Fe?= <ayse@example.org>', 'Subject: Yedekleme bitti =?utf-8?b?4pyTIMWfxJ/EsQ==?=']\ndecoded subject: Yedekleme bitti \u2713 \u015f\u011f\u0131\ngetaddresses: [('Doe, Jon', 'jon@example.org'), ('Al Sweigart', 'al@inventwithpython.com'), ('', 'plain@example.com')] | without the quotes: [('', 'Doe'), ('Jon', 'jon@example.org'), ('Al Sweigart', 'al@inventwithpython.com'), ('', 'plain@example.com')]\nparseaddr of two addresses: ('', '') | strict=False: ('', 'real@example.com')\nformataddr: Jon Doe <jon@example.org> | =?utf-8?b?WcSxbG1heiwgQXnFn2U=?= <ayse@example.org>\nEmailMessage refuses a line break in a header: Header values may not contain linefeed or carriage return characters\nMIMEText (what EZGmail uses) refuses it only when written: HeaderParseError\nMessage-ID shape: True | Date: Fri, 11 Dec 2026 14:48:48 GMT",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": []
+  },
+  "smtpLocalStarttls_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef mk(**kw):\n    m = EmailMessage(); m['From'] = kw.get('frm', 'Al Sweigart <al@example.com>'); m['To'] = kw.get('to', 'Jon Doe <jon@example.org>'); m['Subject'] = kw.get('subj', 'RoboCop')\n    m['Date'] = eu.formatdate(1797000528, usegmt=True); m['Message-ID'] = '<fixed-1@example.com>'\n    for k, v in kw.get('extra', {}).items(): m[k] = v\n    m.set_content(kw.get('body', 'Do you want to watch RoboCop this weekend?')); return m\nimport ipaddress, logging\nlogging.getLogger('mail.log').setLevel(logging.CRITICAL)\nfrom aiosmtpd.controller import Controller\nfrom aiosmtpd.smtp import AuthResult, LoginPassword\nfrom cryptography import x509\nfrom cryptography.x509.oid import NameOID\nfrom cryptography.hazmat.primitives import hashes, serialization\nfrom cryptography.hazmat.primitives.asymmetric import ec\ndef serve(**kw):\n    d = tempfile.mkdtemp(); key = ec.generate_private_key(ec.SECP256R1()); nm = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'localhost')]); t0 = datetime.datetime(2026, 1, 1)\n    crt = (x509.CertificateBuilder().subject_name(nm).issuer_name(nm).public_key(key.public_key()).serial_number(1).not_valid_before(t0).not_valid_after(t0 + datetime.timedelta(days=3650))\n           .add_extension(x509.SubjectAlternativeName([x509.DNSName('localhost'), x509.IPAddress(ipaddress.ip_address('127.0.0.1'))]), critical=False).sign(key, hashes.SHA256()))\n    cp, kp = d + '/c.pem', d + '/k.pem'\n    open(cp, 'wb').write(crt.public_bytes(serialization.Encoding.PEM)); open(kp, 'wb').write(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))\n    sc = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER); sc.load_cert_chain(cp, kp); box = []\n    class H:\n        async def handle_RCPT(s, server, session, envelope, address, rcpt_options):\n            if address.endswith('@refused.example'): return '550 5.1.1 no such mailbox'\n            envelope.rcpt_tos.append(address); return '250 OK'\n        async def handle_DATA(s, server, session, envelope):\n            box.append({'from': envelope.mail_from, 'to': list(envelope.rcpt_tos), 'data': envelope.original_content, 'tls': session.ssl is not None, 'auth': bool(session.authenticated), 'opts': list(envelope.mail_options)}); return '250 OK queued'\n    def authn(server, session, envelope, mechanism, data):\n        ok = isinstance(data, LoginPassword) and data.login == b'user' and data.password == b'secret'\n        return AuthResult(success=ok, handled=ok)\n    so = socket.socket(); so.bind(('127.0.0.1', 0)); port = so.getsockname()[1]; so.close()\n    c = Controller(H(), hostname='127.0.0.1', port=port, tls_context=sc, authenticator=authn, auth_required=kw.get('auth_required', False), auth_require_tls=kw.get('auth_require_tls', True), require_starttls=kw.get('require_starttls', False), enable_SMTPUTF8=True)\n    c.start(); return c, box, port, cp\n# smtplib against a LOCAL STAND-IN (aiosmtpd with a self-signed certificate on 127.0.0.1), not against Gmail: STARTTLS, certificate checks, AUTH only after TLS.\nc, box, port, cp = serve()\ntry:\n    s = smtplib.SMTP('127.0.0.1', port, timeout=10); print('EHLO before STARTTLS:', s.ehlo()[1].decode().splitlines()[1:])\n    print('STARTTLS:', s.starttls(context=ssl.create_default_context(cafile=cp))[0], '| EHLO after:', s.ehlo()[1].decode().splitlines()[1:])\n    print('send_message:', s.send_message(mk()), '| the server saw TLS:', box[0]['tls'], '| envelope:', box[0]['from'], box[0]['to']); s.quit()\n    s = smtplib.SMTP('127.0.0.1', port, timeout=10); s.ehlo()\n    try: s.starttls(context=ssl.create_default_context())\n    except ssl.SSLCertVerificationError as e: print('default context, self-signed certificate:', type(e).__name__, '|', e.verify_message)\n    s = smtplib.SMTP('127.0.0.1', port, timeout=10); s.ehlo(); r = s.starttls()\n    print('starttls() with NO context:', r[0], '(no certificate check: the connection is encrypted but not authenticated)'); s.close()\n    ctx = ssl.create_default_context(cafile=cp); print('create_default_context():', ctx.check_hostname, ctx.verify_mode.name)\n    s = smtplib.SMTP('127.0.0.1', port, timeout=10); s.ehlo()\n    try: s.login('user', 'secret')\n    except smtplib.SMTPNotSupportedError as e: print('login before STARTTLS:', e)\n    s.starttls(context=ctx); s.ehlo(); print('AUTH advertised after TLS:', [x for x in s.ehlo()[1].decode().splitlines() if x.startswith('AUTH')], '| login:', s.login('user', 'secret')); s.quit()\nfinally: c.stop()\n",
+   "inputs": [],
+   "needs": [
+    "aiosmtpd",
+    "cryptography"
+   ],
+   "transcript": "EHLO before STARTTLS: ['SIZE 33554432', '8BITMIME', 'SMTPUTF8', 'STARTTLS', 'HELP']\nSTARTTLS: 220 | EHLO after: ['SIZE 33554432', '8BITMIME', 'SMTPUTF8', 'AUTH LOGIN PLAIN', 'HELP']\nsend_message: {} | the server saw TLS: True | envelope: al@example.com ['jon@example.org']\ndefault context, self-signed certificate: SSLCertVerificationError | self-signed certificate\nstarttls() with NO context: 220 (no certificate check: the connection is encrypted but not authenticated)\ncreate_default_context(): True CERT_REQUIRED\nlogin before STARTTLS: SMTP AUTH extension not supported by server.\nAUTH advertised after TLS: ['AUTH LOGIN PLAIN'] | login: (235, b'2.7.0 Authentication successful')",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for an SMTP server"
+   ]
+  },
+  "smtpErrorsLocal_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef mk(**kw):\n    m = EmailMessage(); m['From'] = kw.get('frm', 'Al Sweigart <al@example.com>'); m['To'] = kw.get('to', 'Jon Doe <jon@example.org>'); m['Subject'] = kw.get('subj', 'RoboCop')\n    m['Date'] = eu.formatdate(1797000528, usegmt=True); m['Message-ID'] = '<fixed-1@example.com>'\n    for k, v in kw.get('extra', {}).items(): m[k] = v\n    m.set_content(kw.get('body', 'Do you want to watch RoboCop this weekend?')); return m\nimport ipaddress, logging\nlogging.getLogger('mail.log').setLevel(logging.CRITICAL)\nfrom aiosmtpd.controller import Controller\nfrom aiosmtpd.smtp import AuthResult, LoginPassword\nfrom cryptography import x509\nfrom cryptography.x509.oid import NameOID\nfrom cryptography.hazmat.primitives import hashes, serialization\nfrom cryptography.hazmat.primitives.asymmetric import ec\ndef serve(**kw):\n    d = tempfile.mkdtemp(); key = ec.generate_private_key(ec.SECP256R1()); nm = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'localhost')]); t0 = datetime.datetime(2026, 1, 1)\n    crt = (x509.CertificateBuilder().subject_name(nm).issuer_name(nm).public_key(key.public_key()).serial_number(1).not_valid_before(t0).not_valid_after(t0 + datetime.timedelta(days=3650))\n           .add_extension(x509.SubjectAlternativeName([x509.DNSName('localhost'), x509.IPAddress(ipaddress.ip_address('127.0.0.1'))]), critical=False).sign(key, hashes.SHA256()))\n    cp, kp = d + '/c.pem', d + '/k.pem'\n    open(cp, 'wb').write(crt.public_bytes(serialization.Encoding.PEM)); open(kp, 'wb').write(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))\n    sc = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER); sc.load_cert_chain(cp, kp); box = []\n    class H:\n        async def handle_RCPT(s, server, session, envelope, address, rcpt_options):\n            if address.endswith('@refused.example'): return '550 5.1.1 no such mailbox'\n            envelope.rcpt_tos.append(address); return '250 OK'\n        async def handle_DATA(s, server, session, envelope):\n            box.append({'from': envelope.mail_from, 'to': list(envelope.rcpt_tos), 'data': envelope.original_content, 'tls': session.ssl is not None, 'auth': bool(session.authenticated), 'opts': list(envelope.mail_options)}); return '250 OK queued'\n    def authn(server, session, envelope, mechanism, data):\n        ok = isinstance(data, LoginPassword) and data.login == b'user' and data.password == b'secret'\n        return AuthResult(success=ok, handled=ok)\n    so = socket.socket(); so.bind(('127.0.0.1', 0)); port = so.getsockname()[1]; so.close()\n    c = Controller(H(), hostname='127.0.0.1', port=port, tls_context=sc, authenticator=authn, auth_required=kw.get('auth_required', False), auth_require_tls=kw.get('auth_require_tls', True), require_starttls=kw.get('require_starttls', False), enable_SMTPUTF8=True)\n    c.start(); return c, box, port, cp\n# What smtplib raises when the server refuses, on a LOCAL STAND-IN (aiosmtpd on 127.0.0.1): one recipient refused, all refused, wrong password, closed port.\nc, box, port, cp = serve()\ntry:\n    s = smtplib.SMTP('127.0.0.1', port, timeout=10); s.ehlo()\n    print('one of two refused -> returns a dict, the message WAS sent to the other:', s.send_message(mk(to='ok@example.org, gone@refused.example')), [x['to'] for x in box])\n    try: s.send_message(mk(to='gone@refused.example'))\n    except smtplib.SMTPRecipientsRefused as e: print('all refused ->', type(e).__name__, e.recipients, '| messages stored:', len(box))\n    s.quit()\n    ctx = ssl.create_default_context(cafile=cp); s = smtplib.SMTP('127.0.0.1', port, timeout=10); s.ehlo(); s.starttls(context=ctx); s.ehlo()\n    try: s.login('user', 'wrong')\n    except smtplib.SMTPAuthenticationError as e: print('wrong password ->', type(e).__name__, e.smtp_code, e.smtp_error)\n    s.close()\nfinally: c.stop()\ntry: smtplib.SMTP('127.0.0.1', 1, timeout=3)\nexcept OSError as e: print('closed port ->', type(e).__name__)\n",
+   "inputs": [],
+   "needs": [
+    "aiosmtpd",
+    "cryptography"
+   ],
+   "transcript": "one of two refused -> returns a dict, the message WAS sent to the other: {'gone@refused.example': (550, b'5.1.1 no such mailbox')} [['ok@example.org']]\nall refused -> SMTPRecipientsRefused {'gone@refused.example': (550, b'5.1.1 no such mailbox')} | messages stored: 1\nwrong password -> SMTPAuthenticationError 535 b'5.7.8 Authentication credentials invalid'\nclosed port -> ConnectionRefusedError",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for an SMTP server"
+   ]
+  },
+  "envelopeVersusHeaders_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef mk(**kw):\n    m = EmailMessage(); m['From'] = kw.get('frm', 'Al Sweigart <al@example.com>'); m['To'] = kw.get('to', 'Jon Doe <jon@example.org>'); m['Subject'] = kw.get('subj', 'RoboCop')\n    m['Date'] = eu.formatdate(1797000528, usegmt=True); m['Message-ID'] = '<fixed-1@example.com>'\n    for k, v in kw.get('extra', {}).items(): m[k] = v\n    m.set_content(kw.get('body', 'Do you want to watch RoboCop this weekend?')); return m\nimport ipaddress, logging\nlogging.getLogger('mail.log').setLevel(logging.CRITICAL)\nfrom aiosmtpd.controller import Controller\nfrom aiosmtpd.smtp import AuthResult, LoginPassword\nfrom cryptography import x509\nfrom cryptography.x509.oid import NameOID\nfrom cryptography.hazmat.primitives import hashes, serialization\nfrom cryptography.hazmat.primitives.asymmetric import ec\ndef serve(**kw):\n    d = tempfile.mkdtemp(); key = ec.generate_private_key(ec.SECP256R1()); nm = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'localhost')]); t0 = datetime.datetime(2026, 1, 1)\n    crt = (x509.CertificateBuilder().subject_name(nm).issuer_name(nm).public_key(key.public_key()).serial_number(1).not_valid_before(t0).not_valid_after(t0 + datetime.timedelta(days=3650))\n           .add_extension(x509.SubjectAlternativeName([x509.DNSName('localhost'), x509.IPAddress(ipaddress.ip_address('127.0.0.1'))]), critical=False).sign(key, hashes.SHA256()))\n    cp, kp = d + '/c.pem', d + '/k.pem'\n    open(cp, 'wb').write(crt.public_bytes(serialization.Encoding.PEM)); open(kp, 'wb').write(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))\n    sc = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER); sc.load_cert_chain(cp, kp); box = []\n    class H:\n        async def handle_RCPT(s, server, session, envelope, address, rcpt_options):\n            if address.endswith('@refused.example'): return '550 5.1.1 no such mailbox'\n            envelope.rcpt_tos.append(address); return '250 OK'\n        async def handle_DATA(s, server, session, envelope):\n            box.append({'from': envelope.mail_from, 'to': list(envelope.rcpt_tos), 'data': envelope.original_content, 'tls': session.ssl is not None, 'auth': bool(session.authenticated), 'opts': list(envelope.mail_options)}); return '250 OK queued'\n    def authn(server, session, envelope, mechanism, data):\n        ok = isinstance(data, LoginPassword) and data.login == b'user' and data.password == b'secret'\n        return AuthResult(success=ok, handled=ok)\n    so = socket.socket(); so.bind(('127.0.0.1', 0)); port = so.getsockname()[1]; so.close()\n    c = Controller(H(), hostname='127.0.0.1', port=port, tls_context=sc, authenticator=authn, auth_required=kw.get('auth_required', False), auth_require_tls=kw.get('auth_require_tls', True), require_starttls=kw.get('require_starttls', False), enable_SMTPUTF8=True)\n    c.start(); return c, box, port, cp\n# The envelope is not the header: Bcc recipients are in RCPT TO and not in the message, and the From of the header can be anything. LOCAL STAND-IN (aiosmtpd).\nc, box, port, cp = serve()\ntry:\n    s = smtplib.SMTP('127.0.0.1', port, timeout=10); s.ehlo()\n    m = mk(extra={'Cc': 'friend@example.com', 'Bcc': 'secret@example.com'}); s.send_message(m)\n    h = email.message_from_bytes(box[0]['data'], policy=policy.default)\n    print('send_message: envelope', box[0]['from'], box[0]['to'], '| header Bcc:', h['Bcc'], '| header Cc:', h['Cc'], '| secret address anywhere in the message:', 'secret@example.com' in box[0]['data'].decode())\n    s.sendmail('bounces@mallory.example', ['jon@example.org', 'hidden@example.org'], mk(frm='CEO <ceo@bank.example>').as_bytes()); s.quit()\n    h = email.message_from_bytes(box[1]['data'], policy=policy.default)\n    print('sendmail: envelope from', box[1]['from'], '| header From:', h['From'], '| rcpt:', box[1]['to'], '| the server asked for no login:', box[1]['auth'])\nfinally: c.stop()\nprint('the book: \"it is fairly trivial for hackers to fake a from address\"; here the server accepted a From that matches neither the envelope nor a login.')\n",
+   "inputs": [],
+   "needs": [
+    "aiosmtpd",
+    "cryptography"
+   ],
+   "transcript": "send_message: envelope al@example.com ['jon@example.org', 'secret@example.com', 'friend@example.com'] | header Bcc: None | header Cc: friend@example.com | secret address anywhere in the message: False\nsendmail: envelope from bounces@mallory.example | header From: CEO <ceo@bank.example> | rcpt: ['jon@example.org', 'hidden@example.org'] | the server asked for no login: False\nthe book: \"it is fairly trivial for hackers to fake a from address\"; here the server accepted a From that matches neither the envelope nor a login.",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for an SMTP server"
+   ]
+  },
+  "ezgmailSendWithStandIn_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nimport ezgmail, httplib2\nfrom googleapiclient.discovery import build\nclass Rec(httplib2.Http):\n    def __init__(s, replies=()): super().__init__(); s.log = []; s.replies = list(replies)\n    def request(s, uri, method='GET', body=None, headers=None, **k):\n        s.log.append((method, uri.split('/gmail/v1/')[-1], body)); r = s.replies.pop(0) if s.replies else {}\n        return httplib2.Response({'status': '200', 'content-type': 'application/json'}), json.dumps(r).encode()\ndef gm(*replies):\n    h = Rec(replies); ezgmail.SERVICE_GMAIL = build('gmail', 'v1', http=h); ezgmail.EMAIL_ADDRESS = 'me@example.com'; return h\ndef b64(t): return base64.urlsafe_b64encode(t if isinstance(t, bytes) else t.encode()).decode()\ndef api_msg(i, tid, frm, to, subj, text, ms, parts=None):\n    h = [{'name': 'From', 'value': frm}, {'name': 'To', 'value': to}, {'name': 'Subject', 'value': subj}, {'name': 'Content-Type', 'value': 'text/plain; charset=\"UTF-8\"'}]\n    if parts is None: pl = {'headers': h, 'mimeType': 'text/plain', 'body': {'size': len(text), 'data': b64(text)}}\n    else: pl = {'headers': h, 'mimeType': 'multipart/mixed', 'body': {'size': 0}, 'parts': parts}\n    return {'id': i, 'threadId': tid, 'snippet': text[:60], 'historyId': '1', 'internalDate': str(ms), 'payload': pl}\ndef raw_of(h, n=0): return email.message_from_bytes(base64.urlsafe_b64decode(json.loads(h.log[n][2])['raw']), policy=policy.default)\n# The real ezgmail library on a STAND-IN for Google's server (the HTTP layer returns replies written by this study); nothing leaves the machine.\nd = wd(); open('attachment1.jpg', 'wb').write(b'\\xff\\xd8\\xff\\xe0' + b'0' * 20); open('attachment2.mp3', 'wb').write(b'ID3' + b'0' * 20); open('setup.exe', 'wb').write(b'MZ' + b'0' * 8)\ne = err(lambda: ezgmail.init()); print('init() with no credentials:', e[0], '|', e[1].split(' You can')[0].replace(d, 'DIR'), '| LOGGED_IN:', ezgmail.LOGGED_IN, '| SCOPES:', ezgmail.SCOPES, '| version:', ezgmail.__version__)\nprint('last line of the module:', inspect.getsource(ezgmail).rstrip().splitlines()[-1])\nh = gm({}, {}, {}, {}, {})\nezgmail.send('recipient@example.com', 'Subject line', 'Body of the email'); m = raw_of(h, 0)\nprint('send ->', h.log[0][0], h.log[0][1], '| body keys:', list(json.loads(h.log[0][2])), '| headers:', list(m.keys()), '|', m.get_content_type(), m['Content-Transfer-Encoding'])\nezgmail.send('recipient@example.com', 'Subject line', 'Body', ['attachment1.jpg', 'attachment2.mp3', 'setup.exe']); m = raw_of(h, 1)\nprint('attachments:', [(p.get_content_type(), p.get_filename()) for p in m.iter_parts()], '| the library did not refuse the .exe (the Gmail help page says Gmail blocks it; not run against Gmail)')\nezgmail.send('recipient@example.com', 'Subject line', 'Body of the email', cc='friend@example.com', bcc='otherfriend@example.com,someoneelse@example.com'); m = raw_of(h, 2)\nprint('cc:', m['cc'], '| bcc header written into the message:', m['bcc'])\nezgmail.send('a@example.com', 'Rapor: \\u015f\\u011f\\u0131', 'Yedekleme tamamland\\u0131'); m = raw_of(h, 3)\nprint('non-ASCII: subject', m['subject'], '| body', m.get_content().strip(), '| charset', m.get_content_charset())\ntry: ezgmail.send('a@example.com', 'hello\\nBcc: evil@example.net', 'body')\nexcept Exception as ex: print('a line break in the subject:', type(ex).__name__)\nsrc = ezgmail.GmailMessage(api_msg('M1', 'T1', 'Al Sweigart <al@inventwithpython.com>', 'Jon Doe <example@gmail.com>', 'RoboCop', 'Do you want to watch RoboCop this weekend?', 1797000000000))\nsrc.reply('Yes, Saturday works.'); body = json.loads(h.log[4][2]); m = raw_of(h, 4)\nprint('reply -> body keys', sorted(body), '| threadId', body['threadId'], '| To', m['to'], '| Subject', m['subject'], '| In-Reply-To/References:', [k for k in m.keys() if k.lower() in ('in-reply-to', 'references')], '| replyAll() returns', ezgmail.GmailMessage.replyAll(src, 'x'))\n",
+   "inputs": [],
+   "needs": [
+    "ezgmail"
+   ],
+   "transcript": "init() with no credentials: EZGmailException | Can't find credentials file at DIR/credentials.json. | LOGGED_IN: False | SCOPES: https://mail.google.com/ | version: 2026.4.28\nlast line of the module: init(_raiseException=False)\nsend -> POST users/me/messages/send?alt=json | body keys: ['raw'] | headers: ['Content-Type', 'MIME-Version', 'Content-Transfer-Encoding', 'to', 'from', 'subject'] | text/plain 7bit\nattachments: [('text/plain', None), ('image/jpeg', 'attachment1.jpg'), ('audio/mpeg', 'attachment2.mp3'), ('application/x-msdos-program', 'setup.exe')] | the library did not refuse the .exe (the Gmail help page says Gmail blocks it; not run against Gmail)\ncc: friend@example.com | bcc header written into the message: otherfriend@example.com, someoneelse@example.com\nnon-ASCII: subject Rapor: \u015f\u011f\u0131 | body Yedekleme tamamland\u0131 | charset utf-8\na line break in the subject: HeaderParseError\nreply -> body keys ['raw', 'threadId'] | threadId T1 | To Al Sweigart <al@inventwithpython.com> | Subject RoboCop | In-Reply-To/References: [] | replyAll() returns None",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for Gmail"
+   ]
+  },
+  "ezgmailReadWithStandIn_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nimport ezgmail, httplib2\nfrom googleapiclient.discovery import build\nclass Rec(httplib2.Http):\n    def __init__(s, replies=()): super().__init__(); s.log = []; s.replies = list(replies)\n    def request(s, uri, method='GET', body=None, headers=None, **k):\n        s.log.append((method, uri.split('/gmail/v1/')[-1], body)); r = s.replies.pop(0) if s.replies else {}\n        return httplib2.Response({'status': '200', 'content-type': 'application/json'}), json.dumps(r).encode()\ndef gm(*replies):\n    h = Rec(replies); ezgmail.SERVICE_GMAIL = build('gmail', 'v1', http=h); ezgmail.EMAIL_ADDRESS = 'me@example.com'; return h\ndef b64(t): return base64.urlsafe_b64encode(t if isinstance(t, bytes) else t.encode()).decode()\ndef api_msg(i, tid, frm, to, subj, text, ms, parts=None):\n    h = [{'name': 'From', 'value': frm}, {'name': 'To', 'value': to}, {'name': 'Subject', 'value': subj}, {'name': 'Content-Type', 'value': 'text/plain; charset=\"UTF-8\"'}]\n    if parts is None: pl = {'headers': h, 'mimeType': 'text/plain', 'body': {'size': len(text), 'data': b64(text)}}\n    else: pl = {'headers': h, 'mimeType': 'multipart/mixed', 'body': {'size': 0}, 'parts': parts}\n    return {'id': i, 'threadId': tid, 'snippet': text[:60], 'historyId': '1', 'internalDate': str(ms), 'payload': pl}\ndef raw_of(h, n=0): return email.message_from_bytes(base64.urlsafe_b64decode(json.loads(h.log[n][2])['raw']), policy=policy.default)\n# ezgmail's read side on a STAND-IN for Google's server: threads, messages, the repr, summary(), the quoted-text cut, attachment download and a hostile file name.\nt = {'id': 'T1', 'snippet': 'Do you want to watch RoboCop this weekend?', 'historyId': '9'}\nfull = {'id': 'T1', 'messages': [api_msg('M1', 'T1', 'Al Sweigart <al@inventwithpython.com>', 'Jon Doe <example@gmail.com>', 'RoboCop', 'Do you want to watch RoboCop this weekend?\\r\\n', 1797000000000), api_msg('M2', 'T1', 'Jon Doe <example@gmail.com>', 'Al Sweigart <al@inventwithpython.com>', 'Re: RoboCop', 'Yes.\\r\\n', 1797000100000)]}\nh = gm(full); th = ezgmail.GmailThread(t); n0 = len(h.log); s = str(th); n1 = len(h.log)\nprint('API calls before / after str(thread):', n0, n1, '| the repr:', s, '| the book prints: <GmailThread len=2 snippet= Do you want to watch RoboCop this weekend?\\'>')\nprint('messages:', len(th.messages), [type(x).__name__ for x in th.messages], th.text, th.senders())\nh = gm({}, {}, {}, {}, {}); ezgmail.unread(); ezgmail.unread(maxResults=50); ezgmail.recent(); ezgmail.search('has:attachment'); ezgmail.search('from:al@inventwithpython.com subject:hello', maxResults=3)\nprint('queries sent:', [x[1] for x in h.log])\nm = ezgmail.GmailMessage(api_msg('M1', 'T1', 'Al Sweigart <al@inventwithpython.com>', 'Jon Doe <example@gmail.com>', 'RoboCop', 'Do you want to watch RoboCop this weekend?\\r\\n', 1797000528000))\nres = []\nfor z in ('UTC', 'America/Chicago', 'Europe/Istanbul'):\n    os.environ['TZ'] = z; time.tzset(); res.append((z, str(ezgmail.GmailMessage(api_msg('M1', 'T1', 'a', 'b', 'c', 'd', 1797000528000)).timestamp)))\nprint('subject', m.subject, '| sender', m.sender, '| body', repr(m.body), '| timestamp by zone:', res)\nbare = api_msg('M2', 'T2', 'x@example.com', 'y@example.com', 'S', 'text', 1); bare['payload']['headers'] = [x for x in bare['payload']['headers'] if x['name'] != 'Subject']\nnm = ezgmail.GmailMessage(bare); print('a message with no Subject header:', err(lambda: nm.subject)[0], '|', err(lambda: str(nm))[0])\nq1 = 'Sounds good.\\n\\nOn Sun, Jan 1, 2018 at 12:00 PM Al Sweigart <al@inventwithpython.com> wrote:\\n> Do you want to watch?'\nq3 = 'Tamam.\\n\\n1 Oca 2018 Paz 12:00 tarihinde Al Sweigart <al@inventwithpython.com> yazd\\u0131:\\n> Film izleyelim mi?'\nprint('removeQuotedParts: English pattern ->', repr(ezgmail.removeQuotedParts(q1)), '| Turkish pattern ->', ezgmail.removeQuotedParts(q3) == q3)\nths = [ezgmail.GmailThread({'id': 'T1', 'snippet': 'x', 'historyId': '1'}), ezgmail.GmailThread({'id': 'T2', 'snippet': 'y', 'historyId': '1'})]\ngm({'id': 'T1', 'messages': full['messages']}, {'id': 'T2', 'messages': [api_msg('M3', 'T2', 'noreply@example.com', 'j@example.com', 'News', 'Thanks for stopping me from buying Bitcoin.', 1797000200000)]})\nos.environ['TZ'] = 'UTC'; time.tzset(); ezgmail.summary(ths)\nd = wd(); os.mkdir('inbox')\nparts = [{'mimeType': 'text/plain', 'filename': '', 'headers': [], 'body': {'size': 1, 'data': b64('x')}}, {'mimeType': 'text/plain', 'filename': '../evil.txt', 'headers': [], 'body': {'attachmentId': 'A9', 'size': 4}}]\nm = ezgmail.GmailMessage(api_msg('M1', 'T1', 'a@example.com', 'b@example.com', 's', 'x', 1797000000000, parts)); gm({'data': b64(b'PWNED'), 'size': 5})\nprint('downloadAllAttachments(downloadFolder=\"inbox\") with a file named ../evil.txt ->', m.downloadAllAttachments(downloadFolder='inbox'), '| inside inbox:', os.listdir('inbox'), '| beside it:', sorted(os.listdir('.')))\nparts = [{'mimeType': 'text/plain', 'filename': '', 'headers': [], 'body': {'size': 1, 'data': b64('x')}}, {'mimeType': 'image/jpeg', 'filename': 'tulips.jpg', 'headers': [], 'body': {'attachmentId': 'A1', 'size': 4}}]\nm = ezgmail.GmailMessage(api_msg('M1', 'T1', 'a@example.com', 'b@example.com', 's', 'x', 1797000000000, parts)); open('tulips.jpg', 'wb').write(b'MINE'); gm({'data': b64(b'AAAA'), 'size': 4})\nm.downloadAttachment('tulips.jpg'); print('an existing tulips.jpg after downloadAttachment:', open('tulips.jpg', 'rb').read(), '(overwritten, as the book says)')\nprint('downloadAttachment of a name that is not there:', err(lambda: m.downloadAttachment('nothere.jpg'))[0])\n",
+   "inputs": [],
+   "needs": [
+    "ezgmail"
+   ],
+   "transcript": "API calls before / after str(thread): 0 1 | the repr: <GmailThread numMessages=2 snippet='Do you want to watch RoboCop this weekend?'> | the book prints: <GmailThread len=2 snippet= Do you want to watch RoboCop this weekend?'>\nmessages: 2 ['GmailMessage', 'GmailMessage'] ['Do you want to watch RoboCop this weekend?\\r\\n', 'Yes.\\r\\n'] ['Al Sweigart <al@inventwithpython.com>', 'Jon Doe <example@gmail.com>']\nqueries sent: ['users/me/threads?q=label%3AUNREAD&maxResults=25&alt=json', 'users/me/threads?q=label%3AUNREAD&maxResults=50&alt=json', 'users/me/threads?q=label%3AINBOX&maxResults=25&alt=json', 'users/me/threads?q=has%3Aattachment&maxResults=25&alt=json', 'users/me/threads?q=from%3Aal%40inventwithpython.com+subject%3Ahello&maxResults=3&alt=json']\nsubject RoboCop | sender Al Sweigart <al@inventwithpython.com> | body 'Do you want to watch RoboCop this weekend?\\r\\n' | timestamp by zone: [('UTC', '2026-12-11 14:48:48'), ('America/Chicago', '2026-12-11 08:48:48'), ('Europe/Istanbul', '2026-12-11 17:48:48')]\na message with no Subject header: AttributeError | AttributeError\nremoveQuotedParts: English pattern -> 'Sounds good.\\n\\n' | Turkish pattern -> True\nAl, Jon - x - Dec 11\nnoreply@example.co - y - Dec 11\ndownloadAllAttachments(downloadFolder=\"inbox\") with a file named ../evil.txt -> ['../evil.txt'] | inside inbox: [] | beside it: ['evil.txt', 'inbox']\nan existing tulips.jpg after downloadAttachment: b'AAAA' (overwritten, as the book says)\ndownloadAttachment of a name that is not there: AttributeError",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for Gmail"
+   ]
+  },
+  "smsGatewaysAndSegments_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\n# SMS email gateways (Table 20-1) and the length of a text. Pure arithmetic; no message is sent.\nT = {'AT&T': ('txt.att.net', 'mms.att.net'), 'Boost Mobile': ('sms.myboostmobile.com', None), 'Cricket': ('sms.cricketwireless.net', 'mms.cricketwireless.net'), 'Google Fi': ('msg.fi.google.com', None),\n     'Metro PCS': ('mymetropcs.com', None), 'Republic Wireless': ('text.republicwireless.com', None), 'Sprint': ('messaging.sprintpcs.com', 'pm.sprint.com'), 'T-Mobile': ('tmomail.net', None),\n     'U.S. Cellular': ('email.uscc.net', 'mms.uscc.net'), 'Verizon': ('vtext.com', 'vzwpix.com'), 'Virgin Mobile': ('vmobl.com', 'vmpix.com'), 'Xfinity Mobile': ('vtext.com', 'mypixmessages.com')}\ndef addr(number, carrier, mms=False):\n    sms, m = T[carrier]; return '%s@%s' % (number, (m or sms) if mms else sms)\nprint(len(T), 'providers;', 'SMS', addr('2125551234', 'Verizon'), '| MMS', addr('2125551234', 'Verizon', True), '| Boost MMS (\"Same as SMS\"):', addr('5555550100', 'Boost Mobile', True))\nprint('the same SMS domain for two carriers:', [c for c, v in T.items() if v[0] == 'vtext.com'], '| distinct SMS domains:', len(set(v[0] for v in T.values())))\nprint('AT&T notice: shutdown 2025-06-17 is', (datetime.date(2026, 10, 13) - datetime.date(2025, 6, 17)).days, 'days before 2026-10-13 | Verizon notice: 2027-03-31 is', (datetime.date(2027, 3, 31) - datetime.date(2026, 10, 13)).days, 'days after')\nBASIC = '@\\u00a3$\\u00a5\\u00e8\\u00e9\\u00f9\\u00ec\\u00f2\\u00c7\\n\\u00d8\\u00f8\\r\\u00c5\\u00e5\\u0394_\\u03a6\\u0393\\u039b\\u03a9\\u03a0\\u03a8\\u03a3\\u0398\\u039e\\x1b\\u00c6\\u00e6\\u00df\\u00c9 !\"#\\u00a4%&\\'()*+,-./0123456789:;<=>?\\u00a1ABCDEFGHIJKLMNOPQRSTUVWXYZ\\u00c4\\u00d6\\u00d1\\u00dc\\u00a7\\u00bfabcdefghijklmnopqrstuvwxyz\\u00e4\\u00f6\\u00f1\\u00fc\\u00e0'\nEXT = '^{}\\\\[~]|\\u20ac'\ndef segments(t):\n    n = 0\n    for ch in t:\n        if ch in BASIC: n += 1\n        elif ch in EXT: n += 2\n        else: n = None; break\n    if n is not None: return ('GSM-7', n, 1 if n <= 160 else -(-n // 153))\n    u = len(t.encode('utf-16-le')) // 2; return ('UCS-2', u, 1 if u <= 70 else -(-u // 67))\nprint('140 bytes * 8 / 7 =', 140 * 8 // 7, 'characters')\nfor t in ('Hello, world!', 'a' * 160, 'a' * 161, 'a' * 306, 'a' * 307, '{x}', 'Yedekleme tamamlandi', 'Yedekleme tamamland\\u0131', '\\u015f' * 70, '\\u015f' * 71, '\\U0001F600' * 35, '\\U0001F600' * 36):\n    print(repr(t[:24]) + ('...' if len(t) > 24 else ''), len(t), 'characters ->', segments(t))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "12 providers; SMS 2125551234@vtext.com | MMS 2125551234@vzwpix.com | Boost MMS (\"Same as SMS\"): 5555550100@sms.myboostmobile.com\nthe same SMS domain for two carriers: ['Verizon', 'Xfinity Mobile'] | distinct SMS domains: 11\nAT&T notice: shutdown 2025-06-17 is 483 days before 2026-10-13 | Verizon notice: 2027-03-31 is 169 days after\n140 bytes * 8 / 7 = 160 characters\n'Hello, world!' 13 characters -> ('GSM-7', 13, 1)\n'aaaaaaaaaaaaaaaaaaaaaaaa'... 160 characters -> ('GSM-7', 160, 1)\n'aaaaaaaaaaaaaaaaaaaaaaaa'... 161 characters -> ('GSM-7', 161, 2)\n'aaaaaaaaaaaaaaaaaaaaaaaa'... 306 characters -> ('GSM-7', 306, 2)\n'aaaaaaaaaaaaaaaaaaaaaaaa'... 307 characters -> ('GSM-7', 307, 3)\n'{x}' 3 characters -> ('GSM-7', 5, 1)\n'Yedekleme tamamlandi' 20 characters -> ('GSM-7', 20, 1)\n'Yedekleme tamamland\u0131' 20 characters -> ('UCS-2', 20, 1)\n'\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f'... 70 characters -> ('UCS-2', 70, 1)\n'\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f'... 71 characters -> ('UCS-2', 71, 2)\n'\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00'... 35 characters -> ('UCS-2', 70, 1)\n'\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00'... 36 characters -> ('UCS-2', 72, 2)",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": []
+  },
+  "ntfyPublishRecorder_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nimport http.server, requests\ndef recorder(status=200, text=''):\n    log = []\n    class Hd(http.server.BaseHTTPRequestHandler):\n        def _do(s):\n            n = int(s.headers.get('Content-Length') or 0); body = s.rfile.read(n) if n else b''\n            log.append({'method': s.command, 'path': s.path, 'headers': dict(s.headers.items()), 'body': body})\n            s.send_response(status); s.send_header('Content-Length', str(len(text.encode()))); s.end_headers(); s.wfile.write(text.encode())\n        do_GET = do_POST = do_PUT = _do\n        def log_message(s, *a): pass\n    srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Hd); threading.Thread(target=srv.serve_forever, daemon=True).start()\n    return srv, log, 'http://127.0.0.1:%d' % srv.server_address[1]\n# Publishing to ntfy with requests, against a LOCAL RECORDER on 127.0.0.1 (it logs what requests sends; it is not ntfy and says nothing about what ntfy.sh does).\nsrv, log, base = recorder(200, '{}')\nr = requests.post(base + '/AlSweigartZPgxBQ42', 'Hello, world!'); q = log[0]\nprint('post:', r.status_code, q['method'], q['path'], q['body'], '| Content-Length', q['headers'].get('Content-Length'), '| Content-Type', q['headers'].get('Content-Type'), '| User-Agent starts python-requests/', q['headers']['User-Agent'].startswith('python-requests/'))\nrequests.post(base + '/t', 'The rent is too high!', headers={'Title': 'Important: Read this!', 'Tags': 'warning,neutral_face', 'Priority': '5'}); h = log[1]['headers']\nprint('headers on the wire:', {k: h[k] for k in ('Title', 'Tags', 'Priority')})\nfor hd in ({'Priority': 5}, {'Title': 'Yedekleme tamamland\\u0131'}):\n    try: requests.post(base + '/t', 'x', headers=hd)\n    except Exception as e: print('headers', hd, '->', type(e).__name__, str(e)[:70])\nt = 'Yedekleme tamamland\\u0131'\nrequests.post(base + '/t', t); requests.post(base + '/t', 'caf\\u00e9'); requests.post(base + '/t', t.encode('latin-1', 'replace'))\nprint('a str body is sent as UTF-8 by urllib3', md.version('urllib3'), ':', log[-3]['body'], '| Content-Length', log[-3]['headers']['Content-Length'], 'for', len(t), 'characters; no Content-Type:', log[-3]['headers'].get('Content-Type'), '| latin-1 encoding by hand:', log[-1]['body'])\nsrv.shutdown(); srv, log, base = recorder(429, '{\"code\":42908,\"http\":429,\"error\":\"limit reached\"}')\nr = requests.post(base + '/t', 'Hello, world!'); print('a refused post (429): the call returned', r, '| ok', r.ok, '| text', r.text, '| nothing raised; raise_for_status ->', end=' ')\ntry: r.raise_for_status()\nexcept requests.HTTPError as e: print(type(e).__name__)\nsrv.shutdown()\n",
+   "inputs": [],
+   "needs": [
+    "requests"
+   ],
+   "transcript": "post: 200 POST /AlSweigartZPgxBQ42 b'Hello, world!' | Content-Length 13 | Content-Type None | User-Agent starts python-requests/ True\nheaders on the wire: {'Title': 'Important: Read this!', 'Tags': 'warning,neutral_face', 'Priority': '5'}\nheaders {'Priority': 5} -> InvalidHeader Header part (5) from ('Priority', 5) must be of type str or bytes, not\nheaders {'Title': 'Yedekleme tamamland\u0131'} -> UnicodeEncodeError 'latin-1' codec can't encode character '\\u0131' in position 19: ordina\na str body is sent as UTF-8 by urllib3 2.8.0 : b'Yedekleme tamamland\\xc4\\xb1' | Content-Length 21 for 20 characters; no Content-Type: None | latin-1 encoding by hand: b'Yedekleme tamamland?'\na refused post (429): the call returned <Response [429]> | ok False | text {\"code\":42908,\"http\":429,\"error\":\"limit reached\"} | nothing raised; raise_for_status -> HTTPError",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for ntfy"
+   ]
+  },
+  "ntfyPollParse_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nimport http.server, requests\ndef recorder(status=200, text=''):\n    log = []\n    class Hd(http.server.BaseHTTPRequestHandler):\n        def _do(s):\n            n = int(s.headers.get('Content-Length') or 0); body = s.rfile.read(n) if n else b''\n            log.append({'method': s.command, 'path': s.path, 'headers': dict(s.headers.items()), 'body': body})\n            s.send_response(status); s.send_header('Content-Length', str(len(text.encode()))); s.end_headers(); s.wfile.write(text.encode())\n        do_GET = do_POST = do_PUT = _do\n        def log_message(s, *a): pass\n    srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Hd); threading.Thread(target=srv.serve_forever, daemon=True).start()\n    return srv, log, 'http://127.0.0.1:%d' % srv.server_address[1]\n# Receiving from ntfy: the poll URL, the JSON lines, the event types and the timestamps. The server is a LOCAL RECORDER that answers the text the book prints.\nTXT = ('{\"id\":\"1jnHKeFNqwnS\",\"time\":1797823340,\"expires\":1797866540,\"event\":\"message\",\"topic\":\"AlSweigartZPgxBQ42\",\"message\":\"Hello, world!\"}\\n'\n       '{\"id\":\"wZ22cjyKXw1F\",\"time\":1797823712,\"expires\":1797866912,\"event\":\"message\",\"topic\":\"AlSweigartZPgxBQ42\",\"title\":\"Important: Read this!\",\"message\":\"The rent is too high!\",\"priority\":5,\"tags\":[\"warning\",\"neutral_face\"]}\\n')\nsrv, log, base = recorder(200, TXT)\nresp = requests.get(base + '/AlSweigartZPgxBQ42/json?poll=1'); requests.get(base + '/AlSweigartZPgxBQ42/json?poll=1&since=10m'); requests.get(base + '/AlSweigartZPgxBQ42/json', params={'poll': 1, 'since': '2h30m'}); requests.get(base + '/AlSweigartZPgxBQ42/json', params={'poll': 1, 'since': 1737866912})\nprint('paths asked:', [x['path'] for x in log], '| methods:', {x['method'] for x in log})\ntry: json.loads(resp.text)\nexcept json.JSONDecodeError as e: print('json.loads of the whole text:', type(e).__name__, e)\nn = [json.loads(x) for x in resp.text.splitlines()]\nprint('splitlines then loads:', len(n), n[0]['message'], '|', n[1]['message'], '| keys of the second:', sorted(n[1]))\nbook = {'message', 'open', 'keepalive', 'poll_request'}; docs = {'open', 'keepalive', 'message', 'message_delete', 'message_clear', 'poll_request'}\nprint('event types the documentation lists that the book does not:', sorted(docs - book), '| expires - time =', n[1]['expires'] - n[1]['time'], 'seconds =', (n[1]['expires'] - n[1]['time']) / 3600, 'hours')\nts = 1797823712\nfor z in ('America/Chicago', 'America/Los_Angeles', 'UTC', 'Europe/Istanbul'): print(z, str(DT.fromtimestamp(ts, ZoneInfo(z))))\nprint('the book prints 2026-12-20 21:28:32 for str(datetime.fromtimestamp(1797823712)), which is a clock at UTC-6 (Central Standard Time)')\nprint('a blank line (a keepalive in a stream, or a trailing newline)', end=' -> ')\ntry: [json.loads(x) for x in (TXT + '\\n').splitlines()]\nexcept json.JSONDecodeError as e: print(type(e).__name__)\nsrv.shutdown()\n",
+   "inputs": [],
+   "needs": [
+    "requests"
+   ],
+   "transcript": "paths asked: ['/AlSweigartZPgxBQ42/json?poll=1', '/AlSweigartZPgxBQ42/json?poll=1&since=10m', '/AlSweigartZPgxBQ42/json?poll=1&since=2h30m', '/AlSweigartZPgxBQ42/json?poll=1&since=1737866912'] | methods: {'GET'}\njson.loads of the whole text: JSONDecodeError Extra data: line 2 column 1 (char 134)\nsplitlines then loads: 2 Hello, world! | The rent is too high! | keys of the second: ['event', 'expires', 'id', 'message', 'priority', 'tags', 'time', 'title', 'topic']\nevent types the documentation lists that the book does not: ['message_clear', 'message_delete'] | expires - time = 43200 seconds = 12.0 hours\nAmerica/Chicago 2026-12-20 21:28:32-06:00\nAmerica/Los_Angeles 2026-12-20 19:28:32-08:00\nUTC 2026-12-21 03:28:32+00:00\nEurope/Istanbul 2026-12-21 06:28:32+03:00\nthe book prints 2026-12-20 21:28:32 for str(datetime.fromtimestamp(1797823712)), which is a clock at UTC-6 (Central Standard Time)\na blank line (a keepalive in a stream, or a trailing newline) -> JSONDecodeError",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for ntfy"
+   ]
+  },
+  "topicSecrecyAndLimits_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\n# The topic name is the only secret: how many bits the book's example has, a random one, and what the 250-a-day and 4,096-byte limits mean in bytes. Arithmetic only.\nbook = 'AlSweigartZPgxBQ42'; rnd = book[len('AlSweigart'):]\nprint('the book\\'s topic:', book, '| random part:', rnd, len(rnd), 'characters of 62 ->', round(len(rnd) * math.log2(62), 1), 'bits; the name part is guessable')\nt = secrets.token_urlsafe(16); print('secrets.token_urlsafe(16):', len(t), 'characters, 128 bits, alphabet', set(t) <= set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'))\nprint('62**8 =', 62 ** 8, '| the topic is part of the URL path:', 'https://ntfy.sh/' + book, '(it lands in logs, proxies and browser history)')\nok = 'a' * 4096; no = 'a' * 4097; tr = '\\u0131' * 2049\nprint('4096 ASCII characters =', len(ok.encode()), 'bytes | 4097 =', len(no.encode()), '| 2049 Turkish dotless i =', len(tr), 'characters but', len(tr.encode()), 'bytes (over the limit)')\nprint('250 messages of 4096 bytes =', 250 * 4096, 'bytes a day;', 'one message every', 86400 / 250, 'seconds on average')\nprint('the book: \"Anyone in the world can send messages to a topic ... there is no way to determine who posted a message\"; the sender line has to be inside the text')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "the book's topic: AlSweigartZPgxBQ42 | random part: ZPgxBQ42 8 characters of 62 -> 47.6 bits; the name part is guessable\nsecrets.token_urlsafe(16): 22 characters, 128 bits, alphabet True\n62**8 = 218340105584896 | the topic is part of the URL path: https://ntfy.sh/AlSweigartZPgxBQ42 (it lands in logs, proxies and browser history)\n4096 ASCII characters = 4096 bytes | 4097 = 4097 | 2049 Turkish dotless i = 2049 characters but 4098 bytes (over the limit)\n250 messages of 4096 bytes = 1024000 bytes a day; one message every 345.6 seconds on average\nthe book: \"Anyone in the world can send messages to a topic ... there is no way to determine who posted a message\"; the sender line has to be inside the text",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": []
+  },
+  "unsubscribeFinder_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\n# The Auto Unsubscriber practice program: find unsubscribe links in HTML with html.parser (the book suggests Beautiful Soup) and read the List-Unsubscribe header (RFC 2369, RFC 8058).\nfrom html.parser import HTMLParser\nHTML = '<p>Hi <a href=\"https://example.com/u?id=1\">Unsubscribe</a> | <a href=\"https://example.com/p\">Preferences</a> | <a href=\"https://example.com/x\"><img alt=\"unsubscribe\"></a> <a href=\"https://example.com/u2\">click here to opt out</a></p>'\nclass P(HTMLParser):\n    def __init__(s): super().__init__(); s.cur = None; s.found = []; s.txt = ''\n    def handle_starttag(s, tag, attrs):\n        if tag == 'a': s.cur = dict(attrs).get('href'); s.txt = ''\n    def handle_data(s, d):\n        if s.cur: s.txt += d\n    def handle_endtag(s, tag):\n        if tag == 'a':\n            if s.cur and 'unsubscribe' in s.txt.lower(): s.found.append(s.cur)\n            s.cur = None\np = P(); p.feed(HTML)\nprint('links whose text says unsubscribe:', p.found, '| the word occurs', len(re.findall('unsubscribe', HTML, re.I)), 'times in the HTML (an alt text and a link that says \"opt out\" are not found by the book\\'s method)')\nm = EmailMessage(); m['List-Unsubscribe'] = '<mailto:unsub@example.com?subject=unsubscribe>, <https://example.com/u?id=1>'; m['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click'\nlu = [x.strip('<>') for x in m['List-Unsubscribe'].split(', ')]; print('List-Unsubscribe:', lu, '| One-Click:', m['List-Unsubscribe-Post'])\nopened = []\nclass FakeBrowser:\n    def open(self, url): opened.append(url); return True\nimport webbrowser; webbrowser.open = FakeBrowser().open\nfor u in p.found: webbrowser.open(u)\nprint('webbrowser.open was replaced by a recorder; it would have opened', opened, '- opening a link from an unknown sender with a browser confirms to the sender that the address is read')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "links whose text says unsubscribe: ['https://example.com/u?id=1'] | the word occurs 2 times in the HTML (an alt text and a link that says \"opt out\" are not found by the book's method)\nList-Unsubscribe: ['mailto:unsub@example.com?subject=unsubscribe', 'https://example.com/u?id=1'] | One-Click: List-Unsubscribe=One-Click\nwebbrowser.open was replaced by a recorder; it would have opened ['https://example.com/u?id=1'] - opening a link from an unknown sender with a browser confirms to the sender that the address is read",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for the browser"
+   ]
+  },
+  "emailControlLoop_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\n# The Email-Based Computer Control practice program: the password check, an allow-list, Popen and wait, deleting what was read. The mailbox is a list in memory\n# (the IMAP version ran against a real IMAP server in sen0414_ch20_live_v1_0_0.py).\nSECRET = 'correct horse'; ALLOW = {'sleep': [sys.executable, '-c', 'import time; time.sleep(0.2)'], 'noop': [sys.executable, '-c', 'pass']}\ninbox = [('me@example.com', 'correct horse:noop'), ('x@example.net', 'guess:noop'), ('me@example.com', 'correct horse:rm'), ('me@example.com', 'correct horse:sleep')]\ndone = []\nwhile inbox:\n    frm, body = inbox.pop(0); pw, _, cmd = body.partition(':')\n    if not hmac.compare_digest(pw.encode(), SECRET.encode()): done.append((frm, 'bad password')); continue\n    if cmd not in ALLOW: done.append((frm, 'refused ' + cmd)); continue\n    p = subprocess.Popen(ALLOW[cmd]); done.append((frm, cmd, p.wait()))\nprint(done, '| left in the inbox:', inbox)\ntry: subprocess.Popen(['C:\\\\Program Files (x86)\\\\qBittorrent\\\\qbittorrent.exe', 'shakespeare_complete_works.torrent'])\nexcept FileNotFoundError as e: print(\"the book's Popen on Linux:\", type(e).__name__)\nsubj = 'status; echo PWNED'\nprint('shell=True with text from an e-mail:', subprocess.run('echo ' + subj, shell=True, capture_output=True, text=True).stdout.splitlines(), '| as a list:', subprocess.run(['echo', subj], capture_output=True, text=True).stdout.splitlines(), '| shlex.quote:', shlex.quote(subj))\ntry: hmac.compare_digest('\\u00e9', '\\u00e9')\nexcept TypeError as e: print('compare_digest of non-ASCII str:', type(e).__name__)\nprint('the book: \"require that the emails contain a password\" - an e-mail password travels in clear text through every server unless the hops use TLS (see smtpLocalStarttls)')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "[('me@example.com', 'noop', 0), ('x@example.net', 'bad password'), ('me@example.com', 'refused rm'), ('me@example.com', 'sleep', 0)] | left in the inbox: []\nthe book's Popen on Linux: FileNotFoundError\nshell=True with text from an e-mail: ['status', 'PWNED'] | as a list: ['status; echo PWNED'] | shlex.quote: 'status; echo PWNED'\ncompare_digest of non-ASCII str: TypeError\nthe book: \"require that the emails contain a password\" - an e-mail password travels in clear text through every server unless the hops use TLS (see smtpLocalStarttls)",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in mailbox"
+   ]
+  },
+  "setupCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nimport ezgmail, httplib2\nfrom googleapiclient.discovery import build\nclass Rec(httplib2.Http):\n    def __init__(s, replies=()): super().__init__(); s.log = []; s.replies = list(replies)\n    def request(s, uri, method='GET', body=None, headers=None, **k):\n        s.log.append((method, uri.split('/gmail/v1/')[-1], body)); r = s.replies.pop(0) if s.replies else {}\n        return httplib2.Response({'status': '200', 'content-type': 'application/json'}), json.dumps(r).encode()\ndef gm(*replies):\n    h = Rec(replies); ezgmail.SERVICE_GMAIL = build('gmail', 'v1', http=h); ezgmail.EMAIL_ADDRESS = 'me@example.com'; return h\ndef b64(t): return base64.urlsafe_b64encode(t if isinstance(t, bytes) else t.encode()).decode()\ndef api_msg(i, tid, frm, to, subj, text, ms, parts=None):\n    h = [{'name': 'From', 'value': frm}, {'name': 'To', 'value': to}, {'name': 'Subject', 'value': subj}, {'name': 'Content-Type', 'value': 'text/plain; charset=\"UTF-8\"'}]\n    if parts is None: pl = {'headers': h, 'mimeType': 'text/plain', 'body': {'size': len(text), 'data': b64(text)}}\n    else: pl = {'headers': h, 'mimeType': 'multipart/mixed', 'body': {'size': 0}, 'parts': parts}\n    return {'id': i, 'threadId': tid, 'snippet': text[:60], 'historyId': '1', 'internalDate': str(ms), 'payload': pl}\ndef raw_of(h, n=0): return email.message_from_bytes(base64.urlsafe_b64decode(json.loads(h.log[n][2])['raw']), policy=policy.default)\n# ezgmail with no credentials.json: what init() says, and what a token.json holds. Made-up values; nothing leaves the machine.\nd = wd()\ntry:\n    ezgmail.init()\nexcept ezgmail.EZGmailException as e:\n    print('init():', str(e).split(' You can')[0].replace(d, '.'))\nprint('LOGGED_IN', ezgmail.LOGGED_IN, ezgmail.SCOPES)\nprint(inspect.getsource(ezgmail).splitlines()[-1])\nfrom oauth2client import client, file\nc = client.OAuth2Credentials('tok','id','sec','ref',None,'u','ua')\nfile.Storage('token.json').put(c)\nt = json.load(open('token.json'))\nprint(len(t), 'keys, mode', oct(os.stat('token.json').st_mode)[-3:])\nprint('in the file:', t['refresh_token'], t['client_secret'])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "init(): Can't find credentials file at ./credentials.json.\nLOGGED_IN False https://mail.google.com/\ninit(_raiseException=False)\n16 keys, mode 600\nin the file: ref sec",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": []
+  },
+  "sendCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nimport ezgmail, httplib2\nfrom googleapiclient.discovery import build\nclass Rec(httplib2.Http):\n    def __init__(s, replies=()): super().__init__(); s.log = []; s.replies = list(replies)\n    def request(s, uri, method='GET', body=None, headers=None, **k):\n        s.log.append((method, uri.split('/gmail/v1/')[-1], body)); r = s.replies.pop(0) if s.replies else {}\n        return httplib2.Response({'status': '200', 'content-type': 'application/json'}), json.dumps(r).encode()\ndef gm(*replies):\n    h = Rec(replies); ezgmail.SERVICE_GMAIL = build('gmail', 'v1', http=h); ezgmail.EMAIL_ADDRESS = 'me@example.com'; return h\ndef b64(t): return base64.urlsafe_b64encode(t if isinstance(t, bytes) else t.encode()).decode()\ndef api_msg(i, tid, frm, to, subj, text, ms, parts=None):\n    h = [{'name': 'From', 'value': frm}, {'name': 'To', 'value': to}, {'name': 'Subject', 'value': subj}, {'name': 'Content-Type', 'value': 'text/plain; charset=\"UTF-8\"'}]\n    if parts is None: pl = {'headers': h, 'mimeType': 'text/plain', 'body': {'size': len(text), 'data': b64(text)}}\n    else: pl = {'headers': h, 'mimeType': 'multipart/mixed', 'body': {'size': 0}, 'parts': parts}\n    return {'id': i, 'threadId': tid, 'snippet': text[:60], 'historyId': '1', 'internalDate': str(ms), 'payload': pl}\ndef raw_of(h, n=0): return email.message_from_bytes(base64.urlsafe_b64decode(json.loads(h.log[n][2])['raw']), policy=policy.default)\nBODY = {'mimeType': 'text/plain', 'filename': '', 'headers': [], 'body': {'size': 1, 'data': b64('x')}}\ndef part(name, aid='A1'): return {'mimeType': 'text/plain', 'filename': name, 'headers': [], 'body': {'attachmentId': aid, 'size': 4}}\ndef one(subj='RoboCop', ms=1797000528000, parts=None):\n    return api_msg('M1', 'T1', 'Al <al@example.com>', 'Jon <jon@example.org>', subj, 'Do you want to watch RoboCop?\\r\\n', ms, parts)\n# ezgmail.send() on a STAND-IN for Google's server: the real library, replies written by this study; nothing leaves the machine.\nd = wd()\nfor n in ('a.jpg', 'b.mp3', 'setup.exe'): open(n, 'wb').write(b'0' * 9)\nh = gm({}, {}, {}, {})\nezgmail.send('r@example.com', 'Subject line', 'Body of the email')\nm = raw_of(h, 0)\nprint('POST', h.log[0][1], '| body keys', list(json.loads(h.log[0][2])))\nprint('headers:', [k for k in m.keys() if k in ('to', 'from', 'subject')])\nezgmail.send('r@example.com', 'S', 'B', ['a.jpg', 'b.mp3', 'setup.exe'])\nprint('attachments:', [a.get_filename() for a in raw_of(h, 1).iter_attachments()])\nezgmail.send('r@example.com', 'S', 'B', cc='f@example.com', bcc='o@example.com')\nm = raw_of(h, 2)\nprint('cc:', m['cc'], '| Bcc header in the message:', m['bcc'])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "POST users/me/messages/send?alt=json | body keys ['raw']\nheaders: ['to', 'from', 'subject']\nattachments: ['a.jpg', 'b.mp3', 'setup.exe']\ncc: f@example.com | Bcc header in the message: o@example.com",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for Gmail"
+   ]
+  },
+  "readCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nimport ezgmail, httplib2\nfrom googleapiclient.discovery import build\nclass Rec(httplib2.Http):\n    def __init__(s, replies=()): super().__init__(); s.log = []; s.replies = list(replies)\n    def request(s, uri, method='GET', body=None, headers=None, **k):\n        s.log.append((method, uri.split('/gmail/v1/')[-1], body)); r = s.replies.pop(0) if s.replies else {}\n        return httplib2.Response({'status': '200', 'content-type': 'application/json'}), json.dumps(r).encode()\ndef gm(*replies):\n    h = Rec(replies); ezgmail.SERVICE_GMAIL = build('gmail', 'v1', http=h); ezgmail.EMAIL_ADDRESS = 'me@example.com'; return h\ndef b64(t): return base64.urlsafe_b64encode(t if isinstance(t, bytes) else t.encode()).decode()\ndef api_msg(i, tid, frm, to, subj, text, ms, parts=None):\n    h = [{'name': 'From', 'value': frm}, {'name': 'To', 'value': to}, {'name': 'Subject', 'value': subj}, {'name': 'Content-Type', 'value': 'text/plain; charset=\"UTF-8\"'}]\n    if parts is None: pl = {'headers': h, 'mimeType': 'text/plain', 'body': {'size': len(text), 'data': b64(text)}}\n    else: pl = {'headers': h, 'mimeType': 'multipart/mixed', 'body': {'size': 0}, 'parts': parts}\n    return {'id': i, 'threadId': tid, 'snippet': text[:60], 'historyId': '1', 'internalDate': str(ms), 'payload': pl}\ndef raw_of(h, n=0): return email.message_from_bytes(base64.urlsafe_b64decode(json.loads(h.log[n][2])['raw']), policy=policy.default)\nBODY = {'mimeType': 'text/plain', 'filename': '', 'headers': [], 'body': {'size': 1, 'data': b64('x')}}\ndef part(name, aid='A1'): return {'mimeType': 'text/plain', 'filename': name, 'headers': [], 'body': {'attachmentId': aid, 'size': 4}}\ndef one(subj='RoboCop', ms=1797000528000, parts=None):\n    return api_msg('M1', 'T1', 'Al <al@example.com>', 'Jon <jon@example.org>', subj, 'Do you want to watch RoboCop?\\r\\n', ms, parts)\n# The read side of ezgmail on a STAND-IN for Google's server: a thread, the zone of a timestamp, a message with no Subject header.\nth = ezgmail.GmailThread({'id': 'T1', 'snippet': 'Do you want to watch?',\n                          'historyId': '9'})\nh = gm({'id': 'T1', 'messages': [one(), one('Re: RoboCop')]})\ntext = str(th)\nprint('requests made by str(thread):', len(h.log))\nprint(text)\nfor z in ('UTC', 'America/Chicago', 'Europe/Istanbul'):\n    os.environ['TZ'] = z; time.tzset()\n    print(z.ljust(16), ezgmail.GmailMessage(one()).timestamp)\nnm = one()\nhs = nm['payload']['headers']\nnm['payload']['headers'] = [x for x in hs if x['name'] != 'Subject']\nprint('no Subject header:', err(lambda: ezgmail.GmailMessage(nm).subject)[0])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "requests made by str(thread): 1\n<GmailThread numMessages=2 snippet='Do you want to watch?'>\nUTC              2026-12-11 14:48:48\nAmerica/Chicago  2026-12-11 08:48:48\nEurope/Istanbul  2026-12-11 17:48:48\nno Subject header: AttributeError",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for Gmail"
+   ]
+  },
+  "replyCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nimport ezgmail, httplib2\nfrom googleapiclient.discovery import build\nclass Rec(httplib2.Http):\n    def __init__(s, replies=()): super().__init__(); s.log = []; s.replies = list(replies)\n    def request(s, uri, method='GET', body=None, headers=None, **k):\n        s.log.append((method, uri.split('/gmail/v1/')[-1], body)); r = s.replies.pop(0) if s.replies else {}\n        return httplib2.Response({'status': '200', 'content-type': 'application/json'}), json.dumps(r).encode()\ndef gm(*replies):\n    h = Rec(replies); ezgmail.SERVICE_GMAIL = build('gmail', 'v1', http=h); ezgmail.EMAIL_ADDRESS = 'me@example.com'; return h\ndef b64(t): return base64.urlsafe_b64encode(t if isinstance(t, bytes) else t.encode()).decode()\ndef api_msg(i, tid, frm, to, subj, text, ms, parts=None):\n    h = [{'name': 'From', 'value': frm}, {'name': 'To', 'value': to}, {'name': 'Subject', 'value': subj}, {'name': 'Content-Type', 'value': 'text/plain; charset=\"UTF-8\"'}]\n    if parts is None: pl = {'headers': h, 'mimeType': 'text/plain', 'body': {'size': len(text), 'data': b64(text)}}\n    else: pl = {'headers': h, 'mimeType': 'multipart/mixed', 'body': {'size': 0}, 'parts': parts}\n    return {'id': i, 'threadId': tid, 'snippet': text[:60], 'historyId': '1', 'internalDate': str(ms), 'payload': pl}\ndef raw_of(h, n=0): return email.message_from_bytes(base64.urlsafe_b64decode(json.loads(h.log[n][2])['raw']), policy=policy.default)\nBODY = {'mimeType': 'text/plain', 'filename': '', 'headers': [], 'body': {'size': 1, 'data': b64('x')}}\ndef part(name, aid='A1'): return {'mimeType': 'text/plain', 'filename': name, 'headers': [], 'body': {'attachmentId': aid, 'size': 4}}\ndef one(subj='RoboCop', ms=1797000528000, parts=None):\n    return api_msg('M1', 'T1', 'Al <al@example.com>', 'Jon <jon@example.org>', subj, 'Do you want to watch RoboCop?\\r\\n', ms, parts)\n# reply(), the queries of unread(), recent() and search(), and removeQuotedParts(), on a STAND-IN for Google's server.\nsrc = ezgmail.GmailMessage(one()); h = gm({}, {}, {}, {})\nsrc.reply('Yes, Saturday works.')\nbody = json.loads(h.log[0][2]); m = raw_of(h, 0)\nprint(list(body), body['threadId'], m['subject'], m['in-reply-to'])\nprint('replyAll:', src.replyAll('x'), len(h.log))\nezgmail.unread(); ezgmail.recent()\nezgmail.search('has:attachment')\nfor r in h.log[1:]:\n    print(r[1].split('?')[1].replace('&alt=json', ''))\nq1 = 'Ok.\\n\\nOn Sun, Jan 1, 2018 at 12:00 PM Al <a@b.c> wrote:'\nq2 = 'Ok.\\n\\nOn Sun, 1 Jan 2018 at 12:00, Al <a@b.c> wrote:'\nrq = ezgmail.removeQuotedParts\nprint(repr(rq(q1)), 'day-month form uncut:', rq(q2) == q2)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "['raw', 'threadId'] T1 RoboCop None\nreplyAll: None 1\nq=label%3AUNREAD&maxResults=25\nq=label%3AINBOX&maxResults=25\nq=has%3Aattachment&maxResults=25\n'Ok.\\n\\n' day-month form uncut: True",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for Gmail"
+   ]
+  },
+  "downloadCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nimport ezgmail, httplib2\nfrom googleapiclient.discovery import build\nclass Rec(httplib2.Http):\n    def __init__(s, replies=()): super().__init__(); s.log = []; s.replies = list(replies)\n    def request(s, uri, method='GET', body=None, headers=None, **k):\n        s.log.append((method, uri.split('/gmail/v1/')[-1], body)); r = s.replies.pop(0) if s.replies else {}\n        return httplib2.Response({'status': '200', 'content-type': 'application/json'}), json.dumps(r).encode()\ndef gm(*replies):\n    h = Rec(replies); ezgmail.SERVICE_GMAIL = build('gmail', 'v1', http=h); ezgmail.EMAIL_ADDRESS = 'me@example.com'; return h\ndef b64(t): return base64.urlsafe_b64encode(t if isinstance(t, bytes) else t.encode()).decode()\ndef api_msg(i, tid, frm, to, subj, text, ms, parts=None):\n    h = [{'name': 'From', 'value': frm}, {'name': 'To', 'value': to}, {'name': 'Subject', 'value': subj}, {'name': 'Content-Type', 'value': 'text/plain; charset=\"UTF-8\"'}]\n    if parts is None: pl = {'headers': h, 'mimeType': 'text/plain', 'body': {'size': len(text), 'data': b64(text)}}\n    else: pl = {'headers': h, 'mimeType': 'multipart/mixed', 'body': {'size': 0}, 'parts': parts}\n    return {'id': i, 'threadId': tid, 'snippet': text[:60], 'historyId': '1', 'internalDate': str(ms), 'payload': pl}\ndef raw_of(h, n=0): return email.message_from_bytes(base64.urlsafe_b64decode(json.loads(h.log[n][2])['raw']), policy=policy.default)\nBODY = {'mimeType': 'text/plain', 'filename': '', 'headers': [], 'body': {'size': 1, 'data': b64('x')}}\ndef part(name, aid='A1'): return {'mimeType': 'text/plain', 'filename': name, 'headers': [], 'body': {'attachmentId': aid, 'size': 4}}\ndef one(subj='RoboCop', ms=1797000528000, parts=None):\n    return api_msg('M1', 'T1', 'Al <al@example.com>', 'Jon <jon@example.org>', subj, 'Do you want to watch RoboCop?\\r\\n', ms, parts)\n# Downloading attachments on a STAND-IN for Google's server: a name with a path, and a file that already exists.\nd = wd(); os.mkdir('inbox')\nps = [BODY, part('../evil.txt', 'A9')]\nm = ezgmail.GmailMessage(one(parts=ps))\ngm({'data': b64(b'PWNED'), 'size': 5})\nprint(m.downloadAllAttachments(downloadFolder='inbox'))\nprint(os.listdir('inbox'), sorted(os.listdir('.')))\nopen('tulips.jpg', 'wb').write(b'MINE')\nps = [BODY, part('tulips.jpg')]\nm = ezgmail.GmailMessage(one(parts=ps))\ngm({'data': b64(b'AAAA'), 'size': 4})\nm.downloadAttachment('tulips.jpg')\nprint('tulips.jpg is now', open('tulips.jpg', 'rb').read())\nprint('no.jpg:', err(lambda: m.downloadAttachment('no.jpg'))[0])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "['../evil.txt']\n[] ['evil.txt', 'inbox']\ntulips.jpg is now b'AAAA'\nno.jpg: AttributeError",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for Gmail"
+   ]
+  },
+  "buildCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef mk(**kw):\n    m = EmailMessage(); m['From'] = kw.get('frm', 'Al Sweigart <al@example.com>'); m['To'] = kw.get('to', 'Jon Doe <jon@example.org>'); m['Subject'] = kw.get('subj', 'RoboCop')\n    m['Date'] = eu.formatdate(1797000528, usegmt=True); m['Message-ID'] = '<fixed-1@example.com>'\n    for k, v in kw.get('extra', {}).items(): m[k] = v\n    m.set_content(kw.get('body', 'Do you want to watch RoboCop this weekend?')); return m\n# The standard library builds a message (EZGmail does this for you): EmailMessage, the MIME tree and the bytes that are sent.\nm = mk()\nraw = m.as_bytes()\nsmtp = m.as_bytes(policy=policy.SMTP)\nprint('CRLF:', raw.count(b'\\r\\n'), '| with policy.SMTP:', smtp.count(b'\\r\\n'))\nprint(len(m.keys()), 'headers;', m['Content-Type'], m['Content-Transfer-Encoding'])\nm.add_alternative('<p>Watch <b>RoboCop</b>?</p>', subtype='html')\nm.add_attachment(b'\\0\\1\\2', maintype='application', subtype='octet-stream',\n                 filename='poster.bin')\nfor p in m.walk():\n    print(p.get_content_type())\nprint([a.get_filename() for a in m.iter_attachments()])\nprint(m.get_body(preferencelist=('html', 'plain')).get_content_type())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "CRLF: 0 | with policy.SMTP: 10\n8 headers; text/plain; charset=\"utf-8\" 7bit\nmultipart/mixed\nmultipart/alternative\ntext/plain\ntext/html\napplication/octet-stream\n['poster.bin']\ntext/html",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": []
+  },
+  "headersCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\n# Encoded headers, addresses and a line break in a header, with the standard library only.\nfrom email.header import decode_header, make_header\nm = EmailMessage(); m['Subject'] = 'Yedekleme bitti \u015f\u011f\u0131'\nprint(line := m.as_bytes().decode().splitlines()[0])\nprint(str(make_header(decode_header(line.split(': ', 1)[1]))))\ns = '\"Doe, Jon\" <jon@example.org>, Al Sweigart <al@example.com>'\nprint(eu.getaddresses([s]))\nprint(eu.getaddresses([s.replace('\"Doe, Jon\"', 'Doe, Jon')]))\ntwo = 'real@example.com, evil@example.net'\nprint(eu.parseaddr(two), eu.parseaddr(two, strict=False))\nbad = 'hi\\r\\nBcc: evil@example.net'\ntry: EmailMessage()['Subject'] = bad\nexcept ValueError: print('EmailMessage: ValueError at once')\nt = MIMEText('x'); t['Subject'] = bad\ntry: t.as_string()\nexcept Exception as ex: print('MIMEText, when written:', type(ex).__name__)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Subject: Yedekleme bitti =?utf-8?b?xZ/En8Sx?=\nYedekleme bitti \u015f\u011f\u0131\n[('Doe, Jon', 'jon@example.org'), ('Al Sweigart', 'al@example.com')]\n[('', 'Doe'), ('Jon', 'jon@example.org'), ('Al Sweigart', 'al@example.com')]\n('', '') ('', 'real@example.com')\nEmailMessage: ValueError at once\nMIMEText, when written: HeaderParseError",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": []
+  },
+  "starttlsCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef mk(**kw):\n    m = EmailMessage(); m['From'] = kw.get('frm', 'Al Sweigart <al@example.com>'); m['To'] = kw.get('to', 'Jon Doe <jon@example.org>'); m['Subject'] = kw.get('subj', 'RoboCop')\n    m['Date'] = eu.formatdate(1797000528, usegmt=True); m['Message-ID'] = '<fixed-1@example.com>'\n    for k, v in kw.get('extra', {}).items(): m[k] = v\n    m.set_content(kw.get('body', 'Do you want to watch RoboCop this weekend?')); return m\nimport ipaddress, logging\nlogging.getLogger('mail.log').setLevel(logging.CRITICAL)\nfrom aiosmtpd.controller import Controller\nfrom aiosmtpd.smtp import AuthResult, LoginPassword\nfrom cryptography import x509\nfrom cryptography.x509.oid import NameOID\nfrom cryptography.hazmat.primitives import hashes, serialization\nfrom cryptography.hazmat.primitives.asymmetric import ec\ndef serve(**kw):\n    d = tempfile.mkdtemp(); key = ec.generate_private_key(ec.SECP256R1()); nm = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'localhost')]); t0 = datetime.datetime(2026, 1, 1)\n    crt = (x509.CertificateBuilder().subject_name(nm).issuer_name(nm).public_key(key.public_key()).serial_number(1).not_valid_before(t0).not_valid_after(t0 + datetime.timedelta(days=3650))\n           .add_extension(x509.SubjectAlternativeName([x509.DNSName('localhost'), x509.IPAddress(ipaddress.ip_address('127.0.0.1'))]), critical=False).sign(key, hashes.SHA256()))\n    cp, kp = d + '/c.pem', d + '/k.pem'\n    open(cp, 'wb').write(crt.public_bytes(serialization.Encoding.PEM)); open(kp, 'wb').write(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))\n    sc = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER); sc.load_cert_chain(cp, kp); box = []\n    class H:\n        async def handle_RCPT(s, server, session, envelope, address, rcpt_options):\n            if address.endswith('@refused.example'): return '550 5.1.1 no such mailbox'\n            envelope.rcpt_tos.append(address); return '250 OK'\n        async def handle_DATA(s, server, session, envelope):\n            box.append({'from': envelope.mail_from, 'to': list(envelope.rcpt_tos), 'data': envelope.original_content, 'tls': session.ssl is not None, 'auth': bool(session.authenticated), 'opts': list(envelope.mail_options)}); return '250 OK queued'\n    def authn(server, session, envelope, mechanism, data):\n        ok = isinstance(data, LoginPassword) and data.login == b'user' and data.password == b'secret'\n        return AuthResult(success=ok, handled=ok)\n    so = socket.socket(); so.bind(('127.0.0.1', 0)); port = so.getsockname()[1]; so.close()\n    c = Controller(H(), hostname='127.0.0.1', port=port, tls_context=sc, authenticator=authn, auth_required=kw.get('auth_required', False), auth_require_tls=kw.get('auth_require_tls', True), require_starttls=kw.get('require_starttls', False), enable_SMTPUTF8=True)\n    c.start(); return c, box, port, cp\n# smtplib against a LOCAL STAND-IN (aiosmtpd, a self-signed certificate, 127.0.0.1), not Gmail: STARTTLS, certificate checks, AUTH after TLS.\nc, box, port, cp = serve()\nimport atexit; atexit.register(c.stop)\nctx = ssl.create_default_context(cafile=cp)\ndef conn():\n    s = smtplib.SMTP('127.0.0.1', port, timeout=10); s.ehlo(); return s\ndef ehlo(s):\n    return [x for x in s.ehlo()[1].decode().splitlines() if x[:2] in ('ST', 'AU')]\ns = conn(); print('before:', ehlo(s))\ns.starttls(context=ctx); print('after:', ehlo(s))\ns.send_message(mk()); print('TLS seen:', box[0]['tls']); s.quit()\ns = conn()\ntry: s.starttls(context=ssl.create_default_context())\nexcept ssl.SSLCertVerificationError as e: print(e.verify_message)\ns = conn(); print('no context:', s.starttls()[0])\ns = conn(); s.starttls(context=ctx); s.ehlo()\nprint('login after:', s.login('user', 'secret')[0])\ns.quit()\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "before: ['STARTTLS']\nafter: ['AUTH LOGIN PLAIN']\nTLS seen: True\nself-signed certificate\nno context: 220\nlogin after: 235",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for an SMTP server"
+   ]
+  },
+  "refusalsCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef mk(**kw):\n    m = EmailMessage(); m['From'] = kw.get('frm', 'Al Sweigart <al@example.com>'); m['To'] = kw.get('to', 'Jon Doe <jon@example.org>'); m['Subject'] = kw.get('subj', 'RoboCop')\n    m['Date'] = eu.formatdate(1797000528, usegmt=True); m['Message-ID'] = '<fixed-1@example.com>'\n    for k, v in kw.get('extra', {}).items(): m[k] = v\n    m.set_content(kw.get('body', 'Do you want to watch RoboCop this weekend?')); return m\nimport ipaddress, logging\nlogging.getLogger('mail.log').setLevel(logging.CRITICAL)\nfrom aiosmtpd.controller import Controller\nfrom aiosmtpd.smtp import AuthResult, LoginPassword\nfrom cryptography import x509\nfrom cryptography.x509.oid import NameOID\nfrom cryptography.hazmat.primitives import hashes, serialization\nfrom cryptography.hazmat.primitives.asymmetric import ec\ndef serve(**kw):\n    d = tempfile.mkdtemp(); key = ec.generate_private_key(ec.SECP256R1()); nm = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'localhost')]); t0 = datetime.datetime(2026, 1, 1)\n    crt = (x509.CertificateBuilder().subject_name(nm).issuer_name(nm).public_key(key.public_key()).serial_number(1).not_valid_before(t0).not_valid_after(t0 + datetime.timedelta(days=3650))\n           .add_extension(x509.SubjectAlternativeName([x509.DNSName('localhost'), x509.IPAddress(ipaddress.ip_address('127.0.0.1'))]), critical=False).sign(key, hashes.SHA256()))\n    cp, kp = d + '/c.pem', d + '/k.pem'\n    open(cp, 'wb').write(crt.public_bytes(serialization.Encoding.PEM)); open(kp, 'wb').write(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))\n    sc = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER); sc.load_cert_chain(cp, kp); box = []\n    class H:\n        async def handle_RCPT(s, server, session, envelope, address, rcpt_options):\n            if address.endswith('@refused.example'): return '550 5.1.1 no such mailbox'\n            envelope.rcpt_tos.append(address); return '250 OK'\n        async def handle_DATA(s, server, session, envelope):\n            box.append({'from': envelope.mail_from, 'to': list(envelope.rcpt_tos), 'data': envelope.original_content, 'tls': session.ssl is not None, 'auth': bool(session.authenticated), 'opts': list(envelope.mail_options)}); return '250 OK queued'\n    def authn(server, session, envelope, mechanism, data):\n        ok = isinstance(data, LoginPassword) and data.login == b'user' and data.password == b'secret'\n        return AuthResult(success=ok, handled=ok)\n    so = socket.socket(); so.bind(('127.0.0.1', 0)); port = so.getsockname()[1]; so.close()\n    c = Controller(H(), hostname='127.0.0.1', port=port, tls_context=sc, authenticator=authn, auth_required=kw.get('auth_required', False), auth_require_tls=kw.get('auth_require_tls', True), require_starttls=kw.get('require_starttls', False), enable_SMTPUTF8=True)\n    c.start(); return c, box, port, cp\n# What smtplib does when the LOCAL STAND-IN (aiosmtpd on 127.0.0.1) refuses a recipient or the password, and when nothing listens.\nc, box, port, cp = serve()\nimport atexit; atexit.register(c.stop)\nctx = ssl.create_default_context(cafile=cp)\ndef conn():\n    s = smtplib.SMTP('127.0.0.1', port, timeout=10); s.ehlo(); return s\ns = conn()\nr = s.send_message(mk(to='ok@example.org, x@refused.example'))\nprint(r)\nprint('stored for', box[0]['to'])\ntry: s.send_message(mk(to='x@refused.example'))\nexcept smtplib.SMTPRecipientsRefused:\n    print('raised; stored:', len(box))\ns.quit()\ns = conn(); s.starttls(context=ctx); s.ehlo()\ntry: s.login('user', 'wrong')\nexcept smtplib.SMTPAuthenticationError as e:\n    print('password:', e.smtp_code)\ns.close()\ntry: smtplib.SMTP('127.0.0.1', 1, timeout=3)\nexcept OSError as e: print('closed port:', type(e).__name__)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "{'x@refused.example': (550, b'5.1.1 no such mailbox')}\nstored for ['ok@example.org']\nraised; stored: 1\npassword: 535\nclosed port: ConnectionRefusedError",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for an SMTP server"
+   ]
+  },
+  "envelopeCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef mk(**kw):\n    m = EmailMessage(); m['From'] = kw.get('frm', 'Al Sweigart <al@example.com>'); m['To'] = kw.get('to', 'Jon Doe <jon@example.org>'); m['Subject'] = kw.get('subj', 'RoboCop')\n    m['Date'] = eu.formatdate(1797000528, usegmt=True); m['Message-ID'] = '<fixed-1@example.com>'\n    for k, v in kw.get('extra', {}).items(): m[k] = v\n    m.set_content(kw.get('body', 'Do you want to watch RoboCop this weekend?')); return m\nimport ipaddress, logging\nlogging.getLogger('mail.log').setLevel(logging.CRITICAL)\nfrom aiosmtpd.controller import Controller\nfrom aiosmtpd.smtp import AuthResult, LoginPassword\nfrom cryptography import x509\nfrom cryptography.x509.oid import NameOID\nfrom cryptography.hazmat.primitives import hashes, serialization\nfrom cryptography.hazmat.primitives.asymmetric import ec\ndef serve(**kw):\n    d = tempfile.mkdtemp(); key = ec.generate_private_key(ec.SECP256R1()); nm = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'localhost')]); t0 = datetime.datetime(2026, 1, 1)\n    crt = (x509.CertificateBuilder().subject_name(nm).issuer_name(nm).public_key(key.public_key()).serial_number(1).not_valid_before(t0).not_valid_after(t0 + datetime.timedelta(days=3650))\n           .add_extension(x509.SubjectAlternativeName([x509.DNSName('localhost'), x509.IPAddress(ipaddress.ip_address('127.0.0.1'))]), critical=False).sign(key, hashes.SHA256()))\n    cp, kp = d + '/c.pem', d + '/k.pem'\n    open(cp, 'wb').write(crt.public_bytes(serialization.Encoding.PEM)); open(kp, 'wb').write(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))\n    sc = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER); sc.load_cert_chain(cp, kp); box = []\n    class H:\n        async def handle_RCPT(s, server, session, envelope, address, rcpt_options):\n            if address.endswith('@refused.example'): return '550 5.1.1 no such mailbox'\n            envelope.rcpt_tos.append(address); return '250 OK'\n        async def handle_DATA(s, server, session, envelope):\n            box.append({'from': envelope.mail_from, 'to': list(envelope.rcpt_tos), 'data': envelope.original_content, 'tls': session.ssl is not None, 'auth': bool(session.authenticated), 'opts': list(envelope.mail_options)}); return '250 OK queued'\n    def authn(server, session, envelope, mechanism, data):\n        ok = isinstance(data, LoginPassword) and data.login == b'user' and data.password == b'secret'\n        return AuthResult(success=ok, handled=ok)\n    so = socket.socket(); so.bind(('127.0.0.1', 0)); port = so.getsockname()[1]; so.close()\n    c = Controller(H(), hostname='127.0.0.1', port=port, tls_context=sc, authenticator=authn, auth_required=kw.get('auth_required', False), auth_require_tls=kw.get('auth_require_tls', True), require_starttls=kw.get('require_starttls', False), enable_SMTPUTF8=True)\n    c.start(); return c, box, port, cp\n# The envelope is not the header, on a LOCAL STAND-IN (aiosmtpd on 127.0.0.1): Bcc is in RCPT TO and not in the text; From can be anything.\nc, box, port, cp = serve()\nimport atexit; atexit.register(c.stop)\ndef parse(i):\n    return email.message_from_bytes(box[i]['data'], policy=policy.default)\ns = smtplib.SMTP('127.0.0.1', port, timeout=10); s.ehlo()\ns.send_message(mk(extra={'Cc': 'cc@x.org', 'Bcc': 'bcc@x.org'}))\nh = parse(0)\nprint(box[0]['from'], box[0]['to'])\nprint('header Bcc:', h['Bcc'], '| Cc:', h['Cc'])\nprint('bcc@x.org in text:', b'bcc@x.org' in box[0]['data'])\ns.sendmail('bounces@mallory.example', ['jon@example.org'],\n           mk(frm='CEO <ceo@bank.example>').as_bytes())\nh = parse(1)\nprint(box[1]['from'], '|', h['From'], '| login:', box[1]['auth'])\ns.quit()\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "al@example.com ['jon@example.org', 'bcc@x.org', 'cc@x.org']\nheader Bcc: None | Cc: cc@x.org\nbcc@x.org in text: False\nbounces@mallory.example | CEO <ceo@bank.example> | login: False",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for an SMTP server"
+   ]
+  },
+  "gatewayCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nT = {'AT&T': ('txt.att.net', 'mms.att.net'), 'Boost Mobile': ('sms.myboostmobile.com', None), 'Cricket': ('sms.cricketwireless.net', 'mms.cricketwireless.net'), 'Google Fi': ('msg.fi.google.com', None),\n     'Metro PCS': ('mymetropcs.com', None), 'Republic Wireless': ('text.republicwireless.com', None), 'Sprint': ('messaging.sprintpcs.com', 'pm.sprint.com'), 'T-Mobile': ('tmomail.net', None),\n     'U.S. Cellular': ('email.uscc.net', 'mms.uscc.net'), 'Verizon': ('vtext.com', 'vzwpix.com'), 'Virgin Mobile': ('vmobl.com', 'vmpix.com'), 'Xfinity Mobile': ('vtext.com', 'mypixmessages.com')}\ndef addr(number, carrier, mms=False):\n    sms, m = T[carrier]; return '%s@%s' % (number, (m or sms) if mms else sms)\n# Table 20-1 as a dict (typed from the chapter) and the dates of the two notices. Pure arithmetic; no message is sent.\nprint(len(T), 'providers; SMS', addr('2125551234', 'Verizon'))\nprint('MMS', addr('2125551234', 'Verizon', True))\nprint('Boost MMS:', addr('5555550100', 'Boost Mobile', True))\nprint('vtext.com:', [c for c, v in T.items() if v[0] == 'vtext.com'])\nprint('distinct SMS domains:', len(set(v[0] for v in T.values())))\ntoday = D(2026, 10, 13)\nprint('AT&T off', (today - D(2025, 6, 17)).days, 'days before', today)\nprint('Verizon ends in', (D(2027, 3, 31) - today).days, 'days from', today)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "12 providers; SMS 2125551234@vtext.com\nMMS 2125551234@vzwpix.com\nBoost MMS: 5555550100@sms.myboostmobile.com\nvtext.com: ['Verizon', 'Xfinity Mobile']\ndistinct SMS domains: 11\nAT&T off 483 days before 2026-10-13\nVerizon ends in 169 days from 2026-10-13",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": []
+  },
+  "segmentsCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nBASIC = '@\u00a3$\u00a5\u00e8\u00e9\u00f9\u00ec\u00f2\u00c7\\n\u00d8\u00f8\\r\u00c5\u00e5\u0394_\u03a6\u0393\u039b\u03a9\u03a0\u03a8\u03a3\u0398\u039e\\x1b\u00c6\u00e6\u00df\u00c9 !\"#\u00a4%&\\'()*+,-./0123456789:;<=>?\u00a1ABCDEFGHIJKLMNOPQRSTUVWXYZ\u00c4\u00d6\u00d1\u00dc\u00a7\u00bfabcdefghijklmnopqrstuvwxyz\u00e4\u00f6\u00f1\u00fc\u00e0'\nEXT = '^{}\\\\[~]|\u20ac'\ndef segments(t):\n    n = 0\n    for ch in t:\n        if ch in BASIC: n += 1\n        elif ch in EXT: n += 2\n        else: n = None; break\n    if n is not None: return ('GSM-7', n, 1 if n <= 160 else -(-n // 153))\n    u = len(t.encode('utf-16-le')) // 2; return ('UCS-2', u, 1 if u <= 70 else -(-u // 67))\n# How many characters a text holds. A GSM-7 table written for this study; no message is sent and no carrier is asked.\nprint('140 * 8 // 7 =', 140 * 8 // 7, '| 140 // 2 =', 140 // 2)\nfor t in ('Hello, world!', 'a' * 160, 'a' * 161, '{x}', 'Yedekleme tamamlandi',\n          'Yedekleme tamamland\u0131', '\u015f' * 70, '\u015f' * 71):\n    print(t[:20].ljust(21), str(len(t)).rjust(3), segments(t))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "140 * 8 // 7 = 160 | 140 // 2 = 70\nHello, world!          13 ('GSM-7', 13, 1)\naaaaaaaaaaaaaaaaaaaa  160 ('GSM-7', 160, 1)\naaaaaaaaaaaaaaaaaaaa  161 ('GSM-7', 161, 2)\n{x}                     3 ('GSM-7', 5, 1)\nYedekleme tamamlandi   20 ('GSM-7', 20, 1)\nYedekleme tamamland\u0131   20 ('UCS-2', 20, 1)\n\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f   70 ('UCS-2', 70, 1)\n\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f   71 ('UCS-2', 71, 2)",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": []
+  },
+  "ntfyPubCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nimport http.server, requests\ndef recorder(status=200, text=''):\n    log = []\n    class Hd(http.server.BaseHTTPRequestHandler):\n        def _do(s):\n            n = int(s.headers.get('Content-Length') or 0); body = s.rfile.read(n) if n else b''\n            log.append({'method': s.command, 'path': s.path, 'headers': dict(s.headers.items()), 'body': body})\n            s.send_response(status); s.send_header('Content-Length', str(len(text.encode()))); s.end_headers(); s.wfile.write(text.encode())\n        do_GET = do_POST = do_PUT = _do\n        def log_message(s, *a): pass\n    srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Hd); threading.Thread(target=srv.serve_forever, daemon=True).start()\n    return srv, log, 'http://127.0.0.1:%d' % srv.server_address[1]\n# Publishing with requests to a LOCAL RECORDER on 127.0.0.1 (it logs what requests sends; it is not ntfy and says nothing about ntfy.sh).\nsrv, log, base = recorder(200, '{}')\nr = requests.post(base + '/AlSweigartZPgxBQ42', 'Hello, world!')\nq = log[0]; h = q['headers']\nprint(r.status_code, q['method'], q['path'], q['body'])\nprint('length', h['Content-Length'], 'type', h.get('Content-Type'))\nhd = {'Title': 'Important: Read this!',\n      'Tags': 'warning,neutral_face', 'Priority': '5'}\nrequests.post(base + '/t', 'The rent is too high!', headers=hd)\nfor k in hd:\n    print(k.ljust(9), log[1]['headers'][k])\nsrv.shutdown()\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "200 POST /AlSweigartZPgxBQ42 b'Hello, world!'\nlength 13 type None\nTitle     Important: Read this!\nTags      warning,neutral_face\nPriority  5",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for ntfy"
+   ]
+  },
+  "ntfyHdrCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nimport http.server, requests\ndef recorder(status=200, text=''):\n    log = []\n    class Hd(http.server.BaseHTTPRequestHandler):\n        def _do(s):\n            n = int(s.headers.get('Content-Length') or 0); body = s.rfile.read(n) if n else b''\n            log.append({'method': s.command, 'path': s.path, 'headers': dict(s.headers.items()), 'body': body})\n            s.send_response(status); s.send_header('Content-Length', str(len(text.encode()))); s.end_headers(); s.wfile.write(text.encode())\n        do_GET = do_POST = do_PUT = _do\n        def log_message(s, *a): pass\n    srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Hd); threading.Thread(target=srv.serve_forever, daemon=True).start()\n    return srv, log, 'http://127.0.0.1:%d' % srv.server_address[1]\n# Bytes and errors with requests against a LOCAL RECORDER on 127.0.0.1 (not ntfy): a header that is not latin-1, a body with a dotless i, a 429.\nsrv, log, base = recorder(200, '{}')\nfor hd in ({'Priority': 5}, {'Title': 'Yedekleme tamamland\u0131'}):\n    try: requests.post(base + '/t', 'x', headers=hd)\n    except Exception as e: print(hd, '->', type(e).__name__)\nt = 'Yedekleme tamamland\u0131'\nrequests.post(base + '/t', t); b = log[-1]\nprint('wire:', b['body'], '| bytes', b['headers']['Content-Length'], '| chars', len(t))\nsrv, log, base = recorder(429, '{\"code\":42908,\"http\":429,\"error\":\"limit reached\"}')\nr = requests.post(base + '/t', 'Hello, world!')\nprint('refused post: ok', r.ok, '| nothing raised')\ntry: r.raise_for_status()\nexcept requests.HTTPError as e: print('raise_for_status ->', type(e).__name__)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "{'Priority': 5} -> InvalidHeader\n{'Title': 'Yedekleme tamamland\u0131'} -> UnicodeEncodeError\nwire: b'Yedekleme tamamland\\xc4\\xb1' | bytes 21 | chars 20\nrefused post: ok False | nothing raised\nraise_for_status -> HTTPError",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for ntfy"
+   ]
+  },
+  "ntfyPollCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\nimport http.server, requests\ndef recorder(status=200, text=''):\n    log = []\n    class Hd(http.server.BaseHTTPRequestHandler):\n        def _do(s):\n            n = int(s.headers.get('Content-Length') or 0); body = s.rfile.read(n) if n else b''\n            log.append({'method': s.command, 'path': s.path, 'headers': dict(s.headers.items()), 'body': body})\n            s.send_response(status); s.send_header('Content-Length', str(len(text.encode()))); s.end_headers(); s.wfile.write(text.encode())\n        do_GET = do_POST = do_PUT = _do\n        def log_message(s, *a): pass\n    srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Hd); threading.Thread(target=srv.serve_forever, daemon=True).start()\n    return srv, log, 'http://127.0.0.1:%d' % srv.server_address[1]\nTXT = ('{\"id\":\"1jnHKeFNqwnS\",\"time\":1797823340,\"expires\":1797866540,\"event\":\"message\",\"topic\":\"AlSweigartZPgxBQ42\",\"message\":\"Hello, world!\"}\\n'\n       '{\"id\":\"wZ22cjyKXw1F\",\"time\":1797823712,\"expires\":1797866912,\"event\":\"message\",\"topic\":\"AlSweigartZPgxBQ42\",\"title\":\"Important: Read this!\",\"message\":\"The rent is too high!\",\"priority\":5,\"tags\":[\"warning\",\"neutral_face\"]}\\n')\n# Reading a poll answer. The server is a LOCAL RECORDER on 127.0.0.1 that answers the text the book prints (not ntfy).\nsrv, log, base = recorder(200, TXT)\nresp = requests.get(base + '/AlSweigartZPgxBQ42/json?poll=1')\ntry: json.loads(resp.text)\nexcept json.JSONDecodeError as e: print('whole text:', e.msg)\nn = [json.loads(x) for x in resp.text.splitlines()]\nprint(len(n), [x['message'] for x in n])\nprint(sorted(set(n[1]) - set(n[0])))\nfor z in ('America/Chicago', 'UTC'):\n    print(z.ljust(16), DT.fromtimestamp(n[1]['time'], ZoneInfo(z)))\nsrv.shutdown()\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "whole text: Extra data\n2 ['Hello, world!', 'The rent is too high!']\n['priority', 'tags', 'title']\nAmerica/Chicago  2026-12-20 21:28:32-06:00\nUTC              2026-12-21 03:28:32+00:00",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for ntfy"
+   ]
+  },
+  "secrecyCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\n# The topic name is the only secret, and the limits in bytes. Arithmetic only; nothing is published.\nbook = 'AlSweigartZPgxBQ42'; rnd = book[len('AlSweigart'):]\nbits = round(len(rnd) * math.log2(62), 1)\nprint(rnd, len(rnd), 'chars of 62 ->', bits, 'bits')\nt = secrets.token_urlsafe(16)\nprint('token_urlsafe(16):', len(t), 'characters, 128 bits')\nprint('the topic is in the URL path: https://ntfy.sh/' + book)\nok, tr = 'a' * 4096, '\u0131' * 2049\nprint(len(ok.encode()), 'bytes for 4096 characters')\nprint(len(tr), 'dotless i:', len(tr.encode()), 'bytes, over the limit')\nprint('250 messages of 4096 bytes =', 250 * 4096, 'bytes a day')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "ZPgxBQ42 8 chars of 62 -> 47.6 bits\ntoken_urlsafe(16): 22 characters, 128 bits\nthe topic is in the URL path: https://ntfy.sh/AlSweigartZPgxBQ42\n4096 bytes for 4096 characters\n2049 dotless i: 4098 bytes, over the limit\n250 messages of 4096 bytes = 1024000 bytes a day",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": []
+  },
+  "unsubCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\n# Auto Unsubscriber: links whose text says unsubscribe, and the List-Unsubscribe header. webbrowser.open is replaced by a recorder.\nimport webbrowser\nfrom html.parser import HTMLParser\nHTML = ('<p><a href=\"https://example.com/u?id=1\">Unsubscribe</a> | <a href=\"https://example.com/p\">Preferences</a> | '\n        '<a href=\"https://example.com/x\"><img alt=\"unsubscribe\"></a> <a href=\"https://example.com/u2\">click here to opt out</a></p>')\nclass P(HTMLParser):\n    def __init__(s): super().__init__(); s.cur = None; s.found = []; s.txt = ''\n    def handle_starttag(s, tag, attrs):\n        if tag == 'a': s.cur = dict(attrs).get('href'); s.txt = ''\n    def handle_data(s, d):\n        if s.cur: s.txt += d\n    def handle_endtag(s, tag):\n        if tag == 'a':\n            if s.cur and 'unsubscribe' in s.txt.lower(): s.found.append(s.cur)\n            s.cur = None\np = P(); p.feed(HTML)\nprint('links whose text says unsubscribe:', p.found)\nm = EmailMessage()\na = '<mailto:unsub@example.com?subject=unsubscribe>'\nm['List-Unsubscribe'] = a + ', <https://example.com/u?id=1>'\nlu = [x.strip('<>') for x in m['List-Unsubscribe'].split(', ')]\nprint(f'List-Unsubscribe gives {len(lu)} addresses:', *lu, sep='\\n  ')\nopened = []\nwebbrowser.open = lambda u: opened.append(u) or True\nfor u in p.found: webbrowser.open(u)\nprint('the recorder was asked to open', opened)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "links whose text says unsubscribe: ['https://example.com/u?id=1']\nList-Unsubscribe gives 2 addresses:\n  mailto:unsub@example.com?subject=unsubscribe\n  https://example.com/u?id=1\nthe recorder was asked to open ['https://example.com/u?id=1']",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in for the browser"
+   ]
+  },
+  "umbrellaCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\n# Umbrella Reminder: searching the text for 'rain' against comparing the chance of precipitation. SAMPLE periods in the shape of api.weather.gov, no network.\nP = [{'shortForecast': 'Chance Showers And Thunderstorms', 'detailedForecast': 'A chance of showers and thunderstorms. Sunny.',\n      'probabilityOfPrecipitation': {'unitCode': 'wmoUnit:percent', 'value': 60}},\n     {'shortForecast': 'Mostly Cloudy', 'detailedForecast': 'Mostly cloudy, with a low around 50.',\n      'probabilityOfPrecipitation': {'unitCode': 'wmoUnit:percent', 'value': None}}]\nwords = lambda p: (p['shortForecast'] + p['detailedForecast']).lower()\nchance = lambda p: p['probabilityOfPrecipitation']['value']\nprint('text has rain:', ['rain' in words(p) for p in P])\nprint('limit 40:', [(chance(p) or 0) >= 40 for p in P])\nprint('chances:', [chance(p) for p in P])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "text has rain: [False, False]\nlimit 40: [True, False]\nchances: [60, None]",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Sample forecast data"
+   ]
+  },
+  "controlCut_v1_0_0.py": {
+   "code": "import io, os, re, sys, math, shlex, subprocess, json, time, base64, shutil, socket, ssl, smtplib, tempfile, threading, datetime, hashlib, hmac, mimetypes, secrets, warnings, email, inspect, contextlib, importlib.metadata as md\nfrom datetime import datetime as DT, timedelta as TD, date as D, timezone, UTC\nfrom zoneinfo import ZoneInfo\nfrom email import policy, utils as eu\nfrom email.message import EmailMessage\nfrom email.mime.text import MIMEText\nfrom email.mime.multipart import MIMEMultipart\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\n# Email-Based Computer Control. The MAILBOX IS A LIST IN MEMORY (the IMAP version ran against dovecot, recorded). Only an allow-list is run.\ninbox = [('me@a.org', 'correct horse:noop'), ('x@b.net', 'guess:noop'),\n         ('me@a.org', 'correct horse:rm')]\nSECRET = 'correct horse'\nALLOW = {'noop': [sys.executable, '-c', 'pass']}\ndef handle(frm, body):\n    pw, _, cmd = body.partition(':')\n    if not hmac.compare_digest(pw.encode(), SECRET.encode()):\n        return (frm, 'bad password')\n    if cmd not in ALLOW:\n        return (frm, 'refused ' + cmd)\n    return (frm, cmd, subprocess.Popen(ALLOW[cmd]).wait())\nfor m in inbox: print(handle(*m))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "('me@a.org', 'noop', 0)\n('x@b.net', 'bad password')\n('me@a.org', 'refused rm')",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Stand-in mailbox"
+   ]
+  }
+ },
+ "_charts": {
+  "topicBits": {
+   "setup": "import math, secrets\n",
+   "expr": "[['book: 8 of 62', round(8 * math.log2(62), 1)], ['urlsafe(16)', 16 * 8], ['urlsafe(32)', 32 * 8]]",
+   "labels": [
+    "book: 8 of 62",
+    "urlsafe(16)",
+    "urlsafe(32)"
+   ],
+   "values": [
+    47.6,
+    128.0,
+    256.0
+   ]
+  }
+ },
+ "_tables": {
+  "interpreters": {
+   "setup": "import json, subprocess\nPROBE = \"\\nimport ssl, smtplib, imaplib, importlib, inspect, warnings, socketserver, threading, time, json, datetime, email.utils as eu\\nfrom email.message import EmailMessage\\nwarnings.simplefilter('ignore')\\nr = {}\\nr['idle'] = 'yes' if hasattr(imaplib.IMAP4, 'idle') else 'no'\\nr['keyfile'] = 'yes' if 'keyfile' in inspect.signature(smtplib.SMTP.starttls).parameters else 'no'\\ndef imp(n):\\n    try: importlib.import_module(n); return 'yes'\\n    except ModuleNotFoundError: return 'gone'\\nr['smtpd'] = imp('smtpd'); r['telnetlib'] = imp('telnetlib')\\nf = ssl.create_default_context().verify_flags\\nr['strict'] = 'yes' if (f & ssl.VERIFY_X509_STRICT and f & ssl.VERIFY_X509_PARTIAL_CHAIN) else 'no'\\nr['minv'] = ssl.create_default_context().minimum_version.name.replace('TLSv1_2', 'TLS 1.2').replace('MINIMUM_SUPPORTED', 'lowest')\\nr['pstrict'] = 'yes' if 'strict' in inspect.signature(eu.parseaddr).parameters else 'no'\\ntry: eu.localtime(datetime.datetime(2026, 1, 1), isdst=0); r['isdst'] = 'yes'\\nexcept TypeError: r['isdst'] = 'TypeError'\\nlog = []\\nclass H(socketserver.StreamRequestHandler):\\n    def handle(self):\\n        w = lambda s: (self.wfile.write(s.encode() + b'\\\\r\\\\n'), self.wfile.flush()); w('220 x'); cm = []\\n        while True:\\n            l = self.rfile.readline()\\n            if not l: break\\n            c = l.decode().strip(); cm.append(c); u = c.upper()\\n            if u == 'DATA':\\n                w('354 go')\\n                while self.rfile.readline() not in (b'.\\\\r\\\\n', b''): pass\\n                w('250 q')\\n            elif u == 'QUIT': w('221 b'); break\\n            else: w('250 ok')\\n        log.append(cm)\\nsrv = socketserver.ThreadingTCPServer(('127.0.0.1', 0), H); srv.daemon_threads = True; threading.Thread(target=srv.serve_forever, daemon=True).start()\\nm = EmailMessage(); m['From'] = 'al@example.com'; m['To'] = 'jon@example.org'; m['Subject'] = 's'; m.set_content('b')\\nwith smtplib.SMTP('127.0.0.1', srv.server_address[1]) as s: s.send_message(m)\\nfor _ in range(200):\\n    if log: break\\n    time.sleep(0.02)\\nr['wire'] = [x for x in log[0] if x.lower().startswith('mail')][0].split(':')[0]\\nprint(json.dumps(r))\\n\"\nINTERPS = [('3.11.17', '/usr/bin/python3.11'), ('3.12.3', '/usr/bin/python3.12'), ('3.13.16', '/usr/bin/python3.13'), ('3.14.6', '/root/.local/bin/python3.14'), ('3.15.0b4', '/root/.local/bin/python3.15')]\nres = []\nfor v, p in INTERPS:\n    r = subprocess.run([p, '-c', PROBE], capture_output=True, text=True)\n    assert r.returncode == 0, (v, r.stderr[-300:])\n    res.append(json.loads(r.stdout))\nROWS = [('IMAP4.idle() exists', 'idle'), ('starttls(keyfile=...) accepted', 'keyfile'), ('import smtpd', 'smtpd'), ('import telnetlib', 'telnetlib'), ('default context: STRICT + PARTIAL_CHAIN', 'strict'), ('default context: lowest TLS version', 'minv'), ('parseaddr(strict=...) accepted', 'pstrict'), ('localtime(isdst=0)', 'isdst'), ('smtplib writes', 'wire')]\n",
+   "expr": "[['check'] + [v for v, p in INTERPS]] + [[label] + [x[key] for x in res] for label, key in ROWS]",
+   "rows": [
+    [
+     "check",
+     "3.11.17",
+     "3.12.3",
+     "3.13.16",
+     "3.14.6",
+     "3.15.0b4"
+    ],
+    [
+     "IMAP4.idle() exists",
+     "no",
+     "no",
+     "no",
+     "yes",
+     "yes"
+    ],
+    [
+     "starttls(keyfile=...) accepted",
+     "yes",
+     "no",
+     "no",
+     "no",
+     "no"
+    ],
+    [
+     "import smtpd",
+     "yes",
+     "gone",
+     "gone",
+     "gone",
+     "gone"
+    ],
+    [
+     "import telnetlib",
+     "yes",
+     "yes",
+     "gone",
+     "gone",
+     "gone"
+    ],
+    [
+     "default context: STRICT + PARTIAL_CHAIN",
+     "no",
+     "no",
+     "yes",
+     "yes",
+     "yes"
+    ],
+    [
+     "default context: lowest TLS version",
+     "TLS 1.2",
+     "lowest",
+     "TLS 1.2",
+     "TLS 1.2",
+     "TLS 1.2"
+    ],
+    [
+     "parseaddr(strict=...) accepted",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes"
+    ],
+    [
+     "localtime(isdst=0)",
+     "yes",
+     "yes",
+     "yes",
+     "TypeError",
+     "TypeError"
+    ],
+    [
+     "smtplib writes",
+     "mail FROM",
+     "mail FROM",
+     "mail from",
+     "mail from",
+     "mail from"
+    ]
+   ]
+  }
+ },
+ "_bare": {
+  "python": "3.14.6",
+  "packages": [],
+  "code": "for name in ('ezgmail', 'requests', 'aiosmtpd'):\n    try:\n        __import__(name); print(name, 'imported')\n    except ImportError as e:\n        print(type(e).__name__, '-', e)\nimport smtplib, email.message, imaplib\nprint('smtplib, email and imaplib imported')\n",
+  "transcript": "ModuleNotFoundError - No module named 'ezgmail'\nModuleNotFoundError - No module named 'requests'\nModuleNotFoundError - No module named 'aiosmtpd'\nsmtplib, email and imaplib imported"
+ },
+ "_pins": {
+  "python": "3.14.6",
+  "packages": [
+   "certifi==2026.7.22",
+   "cffi==2.1.1",
+   "charset-normalizer==3.5.2",
+   "cryptography==50.0.2",
+   "ezgmail==2026.4.28",
+   "google-api-core==2.30.3",
+   "google-api-python-client==2.201.0",
+   "google-auth==2.62.0",
+   "google-auth-httplib2==0.4.4",
+   "googleapis-common-protos==1.75.5",
+   "httplib2==0.32.0",
+   "idna==3.20",
+   "oauth2client==4.1.3",
+   "proto-plus==1.29.0",
+   "protobuf==7.36.2",
+   "pyasn1==0.6.4",
+   "pyasn1-modules==0.4.2",
+   "pycparser==3.11",
+   "pyparsing==3.3.3",
+   "requests==2.32.3",
+   "rsa==4.9.1",
+   "six==1.17.0",
+   "uritemplate==4.2.0",
+   "urllib3==2.8.0"
+  ],
+  "code": "import importlib.metadata as m, requests\nprint('requests', m.version('requests'), '| ezgmail', m.version('ezgmail'))\nr = requests.Request('POST', 'http://127.0.0.1:1/t', data='Yedekleme tamamland\u0131').prepare()\nprint('body', r.body, '| Content-Length', r.headers['Content-Length'], '| Content-Type', r.headers.get('Content-Type'))\ntry:\n    requests.Request('POST', 'http://127.0.0.1:1/t', data='x', headers={'Priority': 5}).prepare()\nexcept Exception as e:\n    print('Priority 5 ->', type(e).__name__)\n",
+  "transcript": "requests 2.32.3 | ezgmail 2026.4.28\nbody Yedekleme tamamland\u0131 | Content-Length 21 | Content-Type None\nPriority 5 -> InvalidHeader"
+ }
+}
