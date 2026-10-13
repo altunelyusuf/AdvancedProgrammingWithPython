@@ -1,0 +1,4872 @@
+{
+ "meta": {
+  "title": "Ch. 21: Graphs and Images",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "1.0.0",
+  "python": "3.14.6",
+  "total": 26,
+  "diagrams": {
+   "WhatAProgramCanDoWithAnImage": 4,
+   "TilingAPictureWithPaste": 9,
+   "AddingALogoToEveryPicture": 13,
+   "FromADrawingToAPngFile": 16,
+   "CopyingAnImageToTheClipboard": 19,
+   "TheLifeOfAPyplotFigure": 22,
+   "ShowingAGraphInAWindow": 23,
+   "MakingGraphsAndManipulatingImagesAtAGlance": 24
+  },
+  "notExecuted": [
+   11,
+   14,
+   19,
+   21,
+   22,
+   23
+  ],
+  "recorded": [
+   4,
+   17,
+   20,
+   21
+  ],
+  "standin": {
+   "19": [
+    "clipboardCut_v1_0_0.py"
+   ]
+  }
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Ch. 21: Graphs and Images",
+   "sub": "Making graphs and manipulating images: Pillow, ImageDraw, the clipboard and Matplotlib",
+   "items": [
+    {
+     "t": "code",
+     "x": 5.0,
+     "y": 0.4,
+     "w": 4.5,
+     "h": 1.68,
+     "rows": [
+      [
+       "import platform, importlib.metadata as m",
+       ""
+      ],
+      [
+       "platform.python_version()",
+       "'3.14.6'"
+      ],
+      [
+       "m.version('pillow')",
+       "'12.3.0'"
+      ],
+      [
+       "m.version('matplotlib')",
+       "'3.11.2'"
+      ]
+     ],
+     "fs": 10
+    },
+    {
+     "t": "foot",
+     "x": 0.6,
+     "y": 3.85,
+     "w": 8.8,
+     "h": 0.59,
+     "fs": 11,
+     "body": "Every output on these slides was printed by the Python above when the deck was made, and every picture was saved by a program that is run again to check it. Windows, macOS and a real screen were never used: the clipboard program ran on a virtual display, and what could not be run is marked on its slide."
+    }
+   ],
+   "notes": "Chapter 20 taught a program to reach a person. Chapter 21 teaches a program to make pictures: edit them with Pillow, draw on them, put them on the clipboard, and draw graphs with Matplotlib. The chapter has 31 listings, 20 figures and 1 table, and ends with 12 practice questions and 3 practice programs, Tile Maker, the photo folder finder and the seating cards. This deck follows the chapter in its own order: colours and coordinates, cropping, pasting, resizing, rotating, pixels, Project 16 that adds a logo to every picture, shapes and text, the clipboard, and graphs with line, scatter, bar and pie. It adds what the research found when every printed output was run again: Table 21-1 gives Green as the colour that CSS calls lime; a PNG saved without a dpi has no pixel density although the chapter says 72; the fill of a rotated corner follows the mode of the image and not the operating system; Appendix A pins matplotlib==3.92, which does not exist; Appendix B answers 3, 6 and 12 wrongly or partly wrongly; the printed listing of Project 16 has an en dash that stops it with a SyntaxError; textsize and getsize exist only in Pillow 9.5.0; and plt.pie returns a tuple up to Matplotlib 3.10.8 and a PieContainer from 3.11. The outputs of this chapter are pictures, so the deck shows real ones: sixteen pictures that programs saved are on the slides as images, and each caption names the program that made the picture. The build runs every such program again and refuses the deck unless the slide holds a picture that is byte for byte, or pixel for pixel, what the program saves now. Every output on the slides was printed by Python 3.14.6, installed with uv, with Pillow 12.3.0, Matplotlib 3.11.2, NumPy 2.5.4 and pyperclipimg 0.2.0. Four programs download the publisher's zip of online materials and check each of the four files of the chapter against its SHA-256. Windows and macOS were never used, and nobody looked at a real screen: the clipboard program ran on a virtual display, which the slide says. What could not be run, Windows and macOS, the windows of Matplotlib and of Image.show on a real screen, and two Matplotlib releases on Python 3.14.6, is marked on its slide.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Six parts; every range is a run of slides you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 6.3,
+     "h": 3.55,
+     "fs": 11.5,
+     "items": [
+      "Colours, grids and coordinates (slides 4-7)",
+      "Cropping, pasting, masks, rotating, saving (slides 8-12)",
+      "Project 16: a logo on every picture (slides 13-14)",
+      "Drawing, text, Pillow releases, practice (slides 15-18)",
+      "The clipboard and Matplotlib graphs (slides 19-23)",
+      "Summary and resources (slides 24-25)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "26",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "4 + 2",
+       "label": "true stories: 4 on slides, 2 in the notes"
+      },
+      {
+       "n": "16",
+       "label": "pictures, each saved by a program that is run again"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has six parts. It starts with colours, grids and coordinates: what a program can do with one image, the first scanned picture as a grid of numbers, colours and Table 21-1, and the coordinates and box tuples. Then the editing: cropping, pasting and tiling, masks and the alpha channel, resizing, rotating and flipping, and saving as PNG or JPEG with the question of pixel density. The third part is Project 16, a logo on every picture, as a flow chart and as the file that ships. The fourth is drawing shapes, text and fonts, the Pillow releases that changed the chapter, and the practice programs. The fifth is the clipboard and Matplotlib: the four graphs, the pins of Appendix A run now, the life of a pyplot figure and showing a graph in a window. The last part is a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. Four of the six stories are on slides, each with a link, and two, on PNG and on JPEG, are told in the notes of the slide about saving; the eight narrative diagrams of the chapter are drawn from the same specifications as the interactive page. Every output was printed by Python 3.14.6 with Pillow 12.3.0, Matplotlib 3.11.2, NumPy 2.5.4 and pyperclipimg 0.2.0, the clipboard ran on a virtual display, and what could not be run is marked on its slide.",
+   "take": "Six parts, from a grid of numbers to a graph.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "The chapter's own competency questions; the summary comes back to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 2.2,
+     "fs": 13,
+     "items": [
+      "Which parts of a program that edits pictures, draws on them and plots graphs can be shown to work, and which can only be shown to fail, on a machine that has no screen, no clipboard owner and no Windows or macOS?",
+      "Which printed outputs, programs, numbers and statements of the chapter differ in current releases of Python, Pillow and Matplotlib, with the versions its appendix pins, with the operating system of the reader, or in the files and pages it points to, and on what source?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 3.8,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 10,
+     "items": [
+      "6 branches",
+      "89 topics",
+      "41 console rows",
+      "27 programs run",
+      "8 diagrams",
+      "16 pictures",
+      "Python 3.14.6"
+     ]
+    }
+   ],
+   "notes": "The first question is the spine of the chapter, and the deck answers it slide by slide. On a machine with no screen, a program can make a picture, change it, draw on it, save it and read its pixels back, and the picture can be compared with what was meant; that is what can be shown to work. What can only be shown to fail on such a machine is the part that needs a person's screen: plt.show() and Image.show() open a window, and the clipboard needs a display and a clipboard owner. The research used a virtual X display, Xvfb, with the real xclip, and a Tk window on it, and took a screenshot of the screen; nobody looked at a real monitor, Windows and macOS were never used, and the deck says so where it comes up. The second question is the watch-out. The chapter's 138 interactive statements were replayed as printed in four environments. With Python 3.14.6, Pillow 12.3.0 and Matplotlib 3.11.2, 131 of 138 matched the book headless and 135 on a virtual X display; with the Pillow 10.4.0 and Matplotlib 3.9.2 that Appendix A pins, built from source on 3.14.6, 125 matched headless and 108 on the display; with the same pins as wheels on Python 3.13.14, 129 and 108; with an empty Python, 15. The three that still differ with the newest packages and a display are os.chdir to a Windows path, the font arial.ttf, and the printed tuple of plt.pie, which is a PieContainer. The online materials of the book, 91 files, hold the four files of this chapter and not the others the chapter names. Each slide says where a printed line differs and on what evidence.",
+   "take": "Know what can be shown to work and what can only be shown to fail.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What a program can do with an image",
+   "sub": "Eight things through one object; the chapter adds graphs, a clipboard and a project",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.6,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 1.3,
+       "y": 1.68,
+       "w": 3.8,
+       "h": 2.92,
+       "fill": "FBF8F2",
+       "line": "6E655C",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "THE PILLOW IMAGE OBJECT",
+       "x": 1.38,
+       "y": 1.42,
+       "w": 3.65,
+       "h": 0.24,
+       "fs": 8.5,
+       "color": "6E655C",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 1.79,
+       "w": 3.5,
+       "h": 0.295,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Crop a rectangle with a box tuple",
+       "x": 1.73,
+       "y": 1.86,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.145,
+       "w": 3.5,
+       "h": 0.295,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Paste one image onto another",
+       "x": 1.73,
+       "y": 2.215,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.5,
+       "w": 3.5,
+       "h": 0.295,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Resize to an integer width and height",
+       "x": 1.73,
+       "y": 2.57,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.855,
+       "w": 3.5,
+       "h": 0.295,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Rotate and expand the image",
+       "x": 1.73,
+       "y": 2.925,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.21,
+       "w": 3.5,
+       "h": 0.295,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Flip the image with transpose()",
+       "x": 1.73,
+       "y": 3.28,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.565,
+       "w": 3.5,
+       "h": 0.295,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Change one pixel with putpixel()",
+       "x": 1.73,
+       "y": 3.635,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.92,
+       "w": 3.5,
+       "h": 0.295,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Draw shapes on the image with ImageDraw",
+       "x": 1.73,
+       "y": 3.99,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 4.275,
+       "w": 3.5,
+       "h": 0.295,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Save the image in a format by its extension",
+       "x": 1.73,
+       "y": 4.345,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 0.74,
+       "y": 2.3,
+       "w": 0.22,
+       "h": 0.22,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 1.5
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.52,
+       "x2": 0.85,
+       "y2": 2.9,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.65,
+       "y1": 2.62,
+       "x2": 1.05,
+       "y2": 2.62,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.9,
+       "x2": 0.69,
+       "y2": 3.15,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.9,
+       "x2": 1.01,
+       "y2": 3.15,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A program",
+       "x": 0.5,
+       "y": 3.2,
+       "w": 0.8,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.7,
+       "x2": 1.45,
+       "y2": 1.937,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.7,
+       "x2": 1.45,
+       "y2": 2.292,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.7,
+       "x2": 1.45,
+       "y2": 2.647,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.7,
+       "x2": 1.45,
+       "y2": 3.002,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.7,
+       "x2": 1.45,
+       "y2": 3.357,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.7,
+       "x2": 1.45,
+       "y2": 3.712,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.7,
+       "x2": 1.45,
+       "y2": 4.067,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.7,
+       "x2": 1.45,
+       "y2": 4.423,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      }
+     ],
+     "did": "WhatAProgramCanDoWithAnImage"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.6,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WhatAProgramCanDoWithAnImage - SetOfUses pattern, 32 of 33 words grounded in the chapter's text"
+    },
+    {
+     "t": "card",
+     "head": "Two libraries and a clipboard",
+     "body": "Pillow edits and draws pictures, Matplotlib draws graphs, and pyperclipimg copies a picture to the clipboard. The chapter ends with 12 practice questions and 3 practice programs.",
+     "x": 5.3,
+     "y": 1.5,
+     "w": 4.2,
+     "h": 1.55,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "Recorded 13 Oct 2026",
+     "body": "The online materials hold 91 files, four of them for this chapter: zophie.png, catlogo.png, guests.txt and resizeAndAddLogo.py. The zip has no zophie_the_cat.jpg, no zophie_xmas_tree.png and no flower image, which the chapter mentions.",
+     "x": 5.3,
+     "y": 3.15,
+     "w": 4.2,
+     "h": 1.8,
+     "fs": 9.5,
+     "accent": "orange"
+    }
+   ],
+   "notes": "The use-case diagram lists what the chapter does with one Pillow Image object: crop a rectangle with a box tuple, paste one image onto another, resize to integers, rotate and expand, flip with transpose, change one pixel with putpixel, draw shapes with ImageDraw, and save in a format chosen by the extension. They are independent uses of the same object and not a sequence, which is why the picture is a set of uses. The chapter teaches Pillow for pictures, pyperclipimg for the clipboard and Matplotlib for graphs: line, scatter, bar and pie. The chapter's page was read on 13 October 2026; it returned 200 with 119,144 bytes and holds 31 listings, 20 figures and 1 table, and its SHA-256 equals the digest that the book's own chapter ontology records. The card records what the research found on that day and this deck does not run again: the online materials of the third edition, a zip of 91 files, hold zophie.png of 816 by 1088 pixels in mode RGB, catlogo.png of 100 by 95 pixels in mode LA, guests.txt with 5 names and resizeAndAddLogo.py. The zip has none of zophie_xmas_tree.png, me_and_zophie.png, zophie_the_cat.jpg, or a file with flower in its name among 184 entries, although the chapter says a public domain flower image is available; and the publisher's book page has one occurrence of Making Graphs and none of Pillow, Matplotlib, zophie or catlogo. The deck downloads the zip while it runs and checks the SHA-256 of each of the four files; the cat picture is the book's own example, and the study did not check its licence, so it is used here for teaching only. The second edition's chapter 19, Manipulating Images, mentions Pillow 30 times, textsize 3 times and ImageFont 13 times and neither Matplotlib nor pyperclipimg; the third edition's chapter adds both and uses neither textsize nor getsize.",
+   "take": "One object, eight uses; the book's files are the starting point.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A picture is a grid of numbers",
+   "sub": "1957: one of the first scanned photographs was 176 by 176 pixels, one bit each",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 4.9,
+     "h": 2.95,
+     "rows": [
+      [
+       "from PIL import Image",
+       ""
+      ],
+      [
+       "im = Image.new('1', (176, 176))",
+       ""
+      ],
+      [
+       "im.size, im.mode",
+       "((176, 176), '1')"
+      ],
+      [
+       "176 * 176",
+       "30976"
+      ],
+      [
+       "len(im.tobytes())",
+       "3872"
+      ],
+      [
+       "im.getpixel((0, 0))",
+       "0"
+      ],
+      [
+       "im.putpixel((0, 0), 1)",
+       ""
+      ],
+      [
+       "im.getpixel((0, 0))",
+       "1"
+      ],
+      [
+       "im.getpixel((1, 0))",
+       "0"
+      ]
+     ],
+     "fs": 9
+    },
+    {
+     "t": "beats",
+     "x": 5.7,
+     "y": 1.5,
+     "w": 3.8,
+     "h": 2.6,
+     "fs": 12,
+     "items": [
+      "1957: a drum scanner at the NBS",
+      "176 x 176 = 30,976 pixels",
+      "One bit each: black or white",
+      "Today: mode '1' holds the same"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.5,
+     "w": 9.0,
+     "who": "Russell A. Kirsch, an engineer whose group at the National Bureau of Standards developed a drum scanner",
+     "where": "The National Bureau of Standards (now NIST), where Kirsch had joined the team that ran the computer SEAC in 1951",
+     "when": "1957",
+     "link": "https://en.wikipedia.org/wiki/Russell_A._Kirsch",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on Russell A. Kirsch says that in 1957 his group developed a drum scanner, and that one of the first photographs scanned was a picture of his three-month-old son, Walden. It was captured as just 30,976 pixels, a 176 x 176 array, in an area of 5 cm x 5 cm. The bit depth was one bit per pixel, black or white with no shades of gray. In this study Image.new('1', (176, 176)) made a picture of mode 1 with 30,976 pixels, each holding 0 or 1. The account rests on these sources. Wikipedia, 'Russell A. Kirsch' (the 1957 scan of his three-month-old son Walden; 30,976 pixels, a 176 x 176 array, one bit per pixel), read 2026-10-13; this study's leaves ImageModes and NewImage. The console on the slide uses only Pillow, so each row can be typed into a Python that has Pillow: Image.new('1', (176, 176)) makes a picture of mode 1, one bit for each pixel, size (176, 176), 30,976 pixels; tobytes() packs eight pixels into a byte, so it holds 3,872 bytes, which is 30,976 divided by 8. A new picture is all zero, black; putpixel() writes a 1 and returns None, and getpixel() reads it back, while the pixel beside it is still 0. The same two calls work for the RGB pictures of the rest of the chapter, with a tuple of three integers in place of 0 or 1. The chapter's own first section, Computer Image Fundamentals, says the same thing in words: a picture is a grid of pixels and each pixel is numbers.",
+   "take": "Every picture you open began as a grid of numbers.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Colours, names and Table 21-1",
+   "sub": "ImageColor.getcolor() turns a name into four integers from 0 to 255",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.15,
+     "h": 3.09,
+     "lines": [
+      "names = ['red', 'green', 'lime', 'blue', 'CornflowerBlue', '#CCDDEE']",
+      "strip = Image.new('RGB', (len(names) * 60, 60))",
+      "for i, n in enumerate(names):",
+      "    print('%-15s' % n, ImageColor.getcolor(n, 'RGBA'))",
+      "    strip.paste(Image.new('RGB', (60, 60), n), (i * 60, 0))",
+      "print('Table 21-1 says Green is (0, 255, 0, 255); Pillow:',",
+      "      ImageColor.getcolor('green', 'RGBA'))",
+      "print(len(ImageColor.colormap), 'names;', err(lambda:",
+      "      ImageColor.getcolor('transparent', 'RGBA'))[0], 'for transparent')",
+      "d = wd(); strip.save('swatches.png'); done('swatches.png')"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "red             (255, 0, 0, 255)\ngreen           (0, 128, 0, 255)\nlime            (0, 255, 0, 255)\nblue            (0, 0, 255, 255)\nCornflowerBlue  (100, 149, 237, 255)\n#CCDDEE         (204, 221, 238, 255)\nTable 21-1 says Green is (0, 255, 0, 255); Pillow: (0, 128, 0, 255)\n148 names; ValueError for transparent\nsaved swatches.png: 301 bytes, sha256 543f5aa052ef",
+     "outLabel": "prints",
+     "label": "program colorsSwatchCut_v1_0_0.py, lines 19 to 28 of 28"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/swatches.png",
+     "x": 5.85,
+     "y": 1.5,
+     "w": 3.65,
+     "h": 0.61
+    },
+    {
+     "t": "foot",
+     "x": 5.85,
+     "y": 2.14,
+     "w": 3.65,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image swatches.png made by colorsSwatchCut_v1_0_0.py"
+    },
+    {
+     "t": "card",
+     "head": "Table 21-1: Green is lime",
+     "body": "The table gives Green as (0, 255, 0, 255), the colour CSS calls lime. Pillow returns (0, 128, 0, 255) for green, as the program prints; of the table's 8 rows only Green differs.",
+     "x": 5.85,
+     "y": 2.51,
+     "w": 3.65,
+     "h": 1.75,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.7,
+     "w": 5.15,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 18 (imports, helpers, a download check) are not shown."
+    }
+   ],
+   "notes": "A colour in Pillow is a tuple of four integers from 0 to 255: red, green, blue and alpha. ImageColor.getcolor(name, 'RGBA') turns a colour name or a hex string into that tuple, and the name is not case sensitive: CornflowerBlue gives (100, 149, 237, 255), and #CCDDEE gives (204, 221, 238, 255). The strip of six colours under the program is the picture that the program saved; its caption names the program, and the build runs the program again and compares the picture with this one. The research compared Table 21-1 of the book with Pillow 12.3.0. Of its 8 rows only Green differs: the table says Green is (0, 255, 0, 255), but that is lime in the CSS list that Pillow follows, and the strip shows both side by side, a dark green and a bright one. ImageColor.colormap holds 148 names, from aliceblue to yellowgreen, where the Pillow page says some 140 and the chapter more than 100; and 'transparent' is not one of them, so getcolor() raises ValueError. The new picture of the chapter, Image.new('RGBA', (100, 200), 'purple'), has the pixel (128, 0, 128, 255); with no colour an RGBA picture is the invisible (0, 0, 0, 0). The program was cut from colorsAndModes_v1_0_0.py of the corpus, which also ran: RGBA to JPEG raised OSError with cannot write mode RGBA as JPEG, and an unknown extension raised ValueError.",
+   "take": "Green of Table 21-1 is lime; Pillow's green is (0, 128, 0).",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Coordinates and box tuples",
+   "sub": "The origin is top left; a box keeps its left and top, not its right and bottom",
+   "items": [
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 4.9,
+     "h": 2.43,
+     "rows": [
+      [
+       "from PIL import Image",
+       ""
+      ],
+      [
+       "im = Image.new('RGB', (28, 27))",
+       ""
+      ],
+      [
+       "im.crop((3, 1, 9, 6)).size",
+       "(6, 5)"
+      ],
+      [
+       "(9 - 3) * (6 - 1)",
+       "30"
+      ],
+      [
+       "im.crop((9, 1, 3, 6))",
+       "ValueError: Coordinate 'right' is less than 'left'"
+      ],
+      [
+       "im.getpixel((28, 0))",
+       "IndexError: image index out of range"
+      ],
+      [
+       "im.getpixel((-1, 0)) == im.getpixel((27, 0))",
+       "True"
+      ]
+     ],
+     "fs": 9,
+     "cap": "run under Python 3.14.6; no row reads the clock or the network"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/boxTuple.png",
+     "x": 5.8,
+     "y": 1.5,
+     "w": 3.06,
+     "h": 2.95
+    },
+    {
+     "t": "foot",
+     "x": 5.8,
+     "y": 4.48,
+     "w": 3.7,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image boxTuple.png made by boxTupleCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.19,
+     "w": 4.9,
+     "h": 0.65,
+     "fs": 9,
+     "body": "Appendix B, answer 3, calls the box left, top, width and height; the chapter, and Pillow, say left, top, right and bottom. The picture is Figure 21-2 drawn by a program: 6 columns and 5 rows are orange, the box (3, 1, 9, 6) is their size."
+    }
+   ],
+   "notes": "A pixel is addressed by (x, y), with the origin at the top left, x growing to the right and y growing down; the last pixel of a 28 by 27 picture is (27, 26), (28, 0) raises IndexError with image index out of range, and a negative x counts from the right edge. A box tuple has four integers in the order left, top, right, bottom, and the box includes the left and top edge and excludes the right and bottom one. The box (3, 1, 9, 6) of Figure 21-2 covers 6 columns and 5 rows, which is 30 pixels; the width is right minus left, not the third number, and a box with right smaller than left raises ValueError with the text Coordinate 'right' is less than 'left'. The picture on the right is made by the program boxTupleCut: it paints the pixels 3 to 8 and 1 to 5 orange on a white 28 by 27 picture, crops the box (3, 1, 9, 6) and finds only orange in it, then crops one column more to the left and finds white; it then enlarges the picture ten times without smoothing and draws a grid so the pixels can be counted. Appendix B of the book answers question 3 by calling a box left, top, width and height, where the chapter says right and bottom; the next slide shows the answer to question 6. Rectangles in ImageDraw are different again: both end points are painted, which the drawing slide counts.",
+   "take": "Right and bottom are not in the box; the width is right minus left.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Cropping a picture",
+   "sub": "crop() takes one box tuple, returns a new Image and leaves the original alone",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.02,
+     "h": 2.06,
+     "lines": [
+      "cat = Image.open('zophie.png')",
+      "face = cat.crop((335, 345, 565, 560))",
+      "print(cat.size, cat.mode, '->', face.size, face.mode)",
+      "print('right < left:', err(lambda: cat.crop((565, 345, 335, 560)))[1])",
+      "edge = cat.crop((700, 1000, 900, 1200))",
+      "print('past the edge:', edge.size, 'black', edge.getpixel((199, 199)))",
+      "face.save('face.png'); done('face.png')"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\n(816, 1088) RGB -> (230, 215) RGB\nright < left: Coordinate 'right' is less than 'left'\npast the edge: (200, 200) black (0, 0, 0)\nsaved face.png: 94353 bytes, sha256 450258df6c9b",
+     "outLabel": "prints",
+     "label": "program cropFaceCut_v1_0_0.py, lines 42 to 48 of 48"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/face.png",
+     "x": 5.72,
+     "y": 1.5,
+     "w": 1.55,
+     "h": 1.45
+    },
+    {
+     "t": "foot",
+     "x": 5.72,
+     "y": 2.98,
+     "w": 3.78,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image face.png made by cropFaceCut_v1_0_0.py"
+    },
+    {
+     "t": "code",
+     "x": 5.72,
+     "y": 3.4,
+     "w": 3.78,
+     "h": 1.33,
+     "rows": [
+      [
+       "from PIL import Image",
+       ""
+      ],
+      [
+       "im = Image.new('RGB', (100, 100))",
+       ""
+      ],
+      [
+       "im.crop((0, 50, 50, 50)).size",
+       "(50, 0)"
+      ],
+      [
+       "im.crop((0, 50, 50, 100)).size",
+       "(50, 50)"
+      ]
+     ],
+     "fs": 8.5
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.66,
+     "w": 5.02,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 41 (imports, helpers, a download check) are not shown. The cat is zophie.png of the book's online materials."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.11,
+     "w": 5.02,
+     "h": 0.49,
+     "fs": 9,
+     "body": "Appendix B answers question 6 with im.crop((0, 50, 50, 50)), whose size is (50, 0): an empty picture. The 50 by 50 lower-left quarter of a 100 by 100 picture is (0, 50, 50, 100), as the console shows."
+    }
+   ],
+   "notes": "crop() takes one box tuple, not four arguments, and returns a new Image without changing the original: the face box (335, 345, 565, 560) of zophie.png, which is 816 by 1088 pixels in mode RGB, gives a picture of 230 by 215 pixels, and the original keeps its size. The picture on the right is that face, saved by the program, and the build compares it with what the program saves now. A box with right smaller than left raises ValueError, and a box that runs past the edge does not fail: crop((700, 1000, 900, 1200)) of the 816 by 1088 picture is still 200 by 200 and the pixels outside are black, (0, 0, 0). Appendix B of the book answers practice question 6 with im.crop((0, 50, 50, 50)); because the top and the bottom are both 50 that box is 50 wide and 0 high, and the console shows the size (50, 0), where the lower-left quarter of a 100 by 100 picture is (0, 50, 50, 100) and is 50 by 50. The program was cut from cropPasteTile_v1_0_0.py of the corpus, which also ran and printed that Pillow 12.3.0 gives the filename zophie.png; the Pillow releases 10.3.0, 10.4.0 and 11.0.0 give the absolute path, which is what the book's pinned Pillow 10.4.0 returns and the book's printed listing does not. The cat picture is the book's own example from its online materials; the study did not check the licence of the picture, so the deck uses it for teaching only.",
+   "take": "crop() returns a new picture; right and bottom are outside it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Pasting and tiling",
+   "sub": "paste() changes the image it is called on and returns None, so copy first",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 3.7,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.9,
+       "y": 1.449,
+       "w": 2.8,
+       "h": 0.36,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Crop the face with a box tuple",
+       "x": 0.97,
+       "y": 1.551,
+       "w": 2.66,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.9,
+       "y": 1.906,
+       "w": 2.8,
+       "h": 0.36,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Copy the picture with copy()",
+       "x": 0.97,
+       "y": 2.008,
+       "w": 2.66,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.9,
+       "y": 2.363,
+       "w": 2.8,
+       "h": 0.36,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Take the next left in range(0, width, face width)",
+       "x": 0.97,
+       "y": 2.398,
+       "w": 2.66,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.9,
+       "y": 2.82,
+       "w": 2.8,
+       "h": 0.36,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Take the next top in range(0, height, face height)",
+       "x": 0.97,
+       "y": 2.856,
+       "w": 2.66,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.9,
+       "y": 3.277,
+       "w": 2.8,
+       "h": 0.36,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Paste the face at left and top",
+       "x": 0.97,
+       "y": 3.38,
+       "w": 2.66,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.9,
+       "y": 3.684,
+       "w": 2.8,
+       "h": 0.46,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is there another top or left to paste?",
+       "x": 1.07,
+       "y": 3.837,
+       "w": 2.46,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.9,
+       "y": 4.191,
+       "w": 2.8,
+       "h": 0.36,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Save the modified copy",
+       "x": 0.97,
+       "y": 4.294,
+       "w": 2.66,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.9,
+       "y": 1.529,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.86,
+       "y": 4.231,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.92,
+       "y": 4.291,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.9,
+       "y1": 1.629,
+       "x2": 3.7,
+       "y2": 1.629,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.3,
+       "y1": 1.809,
+       "x2": 2.3,
+       "y2": 1.906,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.3,
+       "y1": 2.266,
+       "x2": 2.3,
+       "y2": 2.363,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.3,
+       "y1": 2.723,
+       "x2": 2.3,
+       "y2": 2.82,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.3,
+       "y1": 3.18,
+       "x2": 2.3,
+       "y2": 3.277,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.3,
+       "y1": 3.637,
+       "x2": 2.3,
+       "y2": 3.684,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.9,
+       "y1": 3.914,
+       "x2": 0.68,
+       "y2": 3.914,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.68,
+       "y1": 3.914,
+       "x2": 0.68,
+       "y2": 2.543,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.68,
+       "y1": 2.543,
+       "x2": 0.9,
+       "y2": 2.543,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 0.68,
+       "y": 3.714,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.3,
+       "y1": 4.144,
+       "x2": 2.3,
+       "y2": 4.191,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.36,
+       "y": 4.078,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 3.7,
+       "y1": 4.371,
+       "x2": 3.86,
+       "y2": 4.371,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "TilingAPictureWithPaste"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 3.7,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram TilingAPictureWithPaste - Workflow pattern, 29 of 33 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.45,
+     "y": 1.55,
+     "w": 5.02,
+     "h": 2.24,
+     "lines": [
+      "tiled = cat.copy(); n = 0",
+      "for left in range(0, cat.width, face.width):",
+      "    for top in range(0, cat.height, face.height):",
+      "        tiled.paste(face, (left, top)); n += 1",
+      "print(n, 'pastes, the last at', (left, top))",
+      "print('paste returns', tiled.paste(face, (0, 0)))",
+      "corner = lambda im: im.getpixel((0, 0)) == face.getpixel((0, 0))",
+      "print('corner is the face: copy', corner(tiled), '| original', corner(cat))",
+      "tiled.resize((204, 272)).save('tiled.png'); done('tiled.png')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\n24 pastes, the last at (690, 1075)\npaste returns None\ncorner is the face: copy True | original False\nsaved tiled.png: 74143 bytes, sha256 c333117d8a9a",
+     "outLabel": "prints",
+     "label": "program tileCatCut_v1_0_0.py, lines 43 to 51 of 51"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/tiled.png",
+     "x": 4.45,
+     "y": 3.89,
+     "w": 0.8,
+     "h": 1.06
+    },
+    {
+     "t": "foot",
+     "x": 5.4,
+     "y": 3.89,
+     "w": 4.1,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image tiled.png made by tileCatCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 5.4,
+     "y": 4.34,
+     "w": 4.1,
+     "h": 0.49,
+     "fs": 9,
+     "body": "Lines 1 to 42 (imports, helpers, a download check) are not shown. 816 by 1088 holds 4 columns and 6 rows of the 230 by 215 face: 24 pastes, the last row and column cut off at the edge."
+    }
+   ],
+   "notes": "paste(im, (left, top)) changes the picture it is called on and returns None, so the program copies the picture first with copy(); after the face is pasted into the copy the corner of the copy equals the corner of the face while the original's corner does not. paste() and copy() have nothing to do with the clipboard. The flow chart is the book's tiling loop: crop the face, copy the picture, take the next left in range(0, width, face width) and inside it the next top in range(0, height, face height), paste the face there, and repeat until the grid is full. On the 816 by 1088 picture with the 230 by 215 face that is 4 columns and 6 rows, 24 pastes from (0, 0) to the last, (690, 1075); the last column and row run past the edge and Pillow cuts them off, which the program shows. The picture is a thumbnail of the tiled copy, 204 by 272 pixels, made by the same program and compared by the build with the picture on the slide. The corpus program cropPasteTile_v1_0_0.py, which also ran, resized the same picture to twice its size, (1632, 2176), and showed that resize() with floats raises TypeError; the next slides use both.",
+   "take": "Copy first, then paste in two loops; the last tiles are cut off.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Masks and the alpha channel",
+   "sub": "The late 1970s, with a paper in 1984",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.02,
+     "h": 2.66,
+     "lines": [
+      "logo = Image.open('catlogo.png')",
+      "print(logo.size, logo.mode, 'corner pixel', logo.getpixel((0, 0)))",
+      "red = Image.new('RGBA', (100, 95), (200, 0, 0, 255))",
+      "masked = red.copy(); masked.paste(logo, (0, 0), logo)",
+      "plain = red.copy(); plain.paste(logo.convert('RGBA'), (0, 0))",
+      "print('masked:', masked.getpixel((0, 0)), 'plain:', plain.getpixel((0, 0)))",
+      "bg = Image.new('RGB', (1, 1), 'red')",
+      "blue = Image.new('RGBA', (1, 1), (0, 0, 255, 128))",
+      "bg.paste(blue, (0, 0), blue); print('alpha 128:', bg.getpixel((0, 0)))",
+      "both = Image.new('RGBA', (210, 95), 'white')",
+      "both.paste(masked, (0, 0)); both.paste(plain, (110, 0))",
+      "both.save('maskPair.png'); done('maskPair.png')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\n(100, 95) LA corner pixel (255, 0)\nmasked: (200, 0, 0, 255) plain: (255, 255, 255, 0)\nalpha 128: (127, 0, 128)\nsaved maskPair.png: 5869 bytes, sha256 83c44901a498",
+     "outLabel": "prints",
+     "label": "program maskPairCut_v1_0_0.py, lines 42 to 53 of 53"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/maskPair.png",
+     "x": 5.72,
+     "y": 1.5,
+     "w": 3.78,
+     "h": 1.71
+    },
+    {
+     "t": "foot",
+     "x": 5.72,
+     "y": 3.24,
+     "w": 3.78,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image maskPair.png made by maskPairCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 5.72,
+     "y": 3.56,
+     "w": 3.78,
+     "h": 0.49,
+     "fs": 9,
+     "body": "Left: the logo pasted with itself as the mask. Right: the same call without the mask, so the invisible corner is copied as white and clear."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.25,
+     "w": 5.02,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 41 (imports, helpers, a download check) are not shown."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.5,
+     "w": 9.0,
+     "who": "Alvy Ray Smith and Ed Catmull, and later Thomas Porter and Tom Duff",
+     "where": "The New York Institute of Technology Computer Graphics Lab",
+     "when": "The late 1970s, with a paper in 1984",
+     "link": "https://en.wikipedia.org/wiki/Alpha_compositing",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on alpha compositing says the concept of an alpha channel was introduced by Alvy Ray Smith and Ed Catmull in the late 1970s at the New York Institute of Technology Computer Graphics Lab. It adds that a 1984 paper by Thomas Porter and Tom Duff introduced premultiplied alpha. The fourth number of an RGBA tuple in chapter 21 is that alpha, from 0 for clear to 255 for solid. In this study a blue square with alpha 128 pasted with itself as the mask over a red one gave the pixel (127, 0, 128). The account rests on these sources. Wikipedia, 'Alpha compositing' (alpha channel introduced by Smith and Catmull in the late 1970s; Porter and Duff in 1984), read 2026-10-13; this study's leaves PasteMask and RgbaTuple. The third argument of paste() is a mask, and the program shows what it does with catlogo.png of the book's online materials, which is 100 by 95 pixels in mode LA, a grey channel and an alpha channel, with the corner pixel (255, 0): white and fully clear. Pasted onto a red picture with the logo as its own mask, the corner stays the red (200, 0, 0, 255); pasted without a mask the same corner is copied as (255, 255, 255, 0), so the invisible pixels of the copy overwrite what is below them. That is Figure 21-13 of the book, and the picture on the right shows both results next to each other. The last lines are the story's own experiment: a blue square at alpha 128 pasted over a red pixel with itself as the mask gives (127, 0, 128), half of each. In the corpus program tileMaker_v1_0_0.py, which also ran, pasting the LA logo onto an RGB picture with no mask runs without an error and gives white and black pixels, and with the logo as the mask the transparent corner stays white.",
+   "take": "Alpha is how much of the top picture you see.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Resize, rotate, flip and set a pixel",
+   "sub": "The fill of a rotated corner follows the image's mode, not the operating system",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.9,
+     "h": 3.21,
+     "lines": [
+      "im = Image.new('RGB', (120, 80))",
+      "im.putdata([(x * 2, y * 3, 160) for y in range(80) for x in range(120)])",
+      "r1 = im.rotate(20); r2 = im.convert('RGBA').rotate(20)",
+      "r3 = im.rotate(20, fillcolor='red'); r4 = im.rotate(20, expand=True)",
+      "for r in (r1, r2, r3): print(r.mode, r.getpixel((0, 0)))",
+      "print('rotate(20):', r1.size, '| expand=True:', r4.size)",
+      "print('rotate(90):', im.rotate(90).size, '| expand=True:',",
+      "      im.rotate(90, expand=True).size)",
+      "f = im.transpose(Image.Transpose.FLIP_LEFT_RIGHT)",
+      "print('flip left-right:', f.getpixel((0, 0)) == im.getpixel((119, 0)))",
+      "print('resize floats:', err(lambda: im.resize((60.0, 40.5)))[1])",
+      "c = im.copy(); print('putpixel returns', c.putpixel((0, 0), (255, 0, 0)))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "RGB (0, 0, 0)\nRGBA (0, 0, 0, 0)\nRGB (255, 0, 0)\nrotate(20): (120, 80) | expand=True: (142, 118)\nrotate(90): (120, 80) | expand=True: (80, 120)\nflip left-right: True\nresize floats: 'float' object cannot be interpreted as an integer\nputpixel returns None\nsaved rotateSheet.png: 6485 bytes, sha256 49dea2274a9f",
+     "outLabel": "prints",
+     "label": "program rotateSheetCut_v1_0_0.py, lines 19 to 30 of 35"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/rotateSheet.png",
+     "x": 5.6,
+     "y": 1.5,
+     "w": 2.88,
+     "h": 1.8
+    },
+    {
+     "t": "foot",
+     "x": 5.6,
+     "y": 3.33,
+     "w": 3.9,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image rotateSheet.png made by rotateSheetCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 5.6,
+     "y": 3.54,
+     "w": 3.9,
+     "h": 0.34,
+     "fs": 9,
+     "body": "The panels: the picture; rotate(20); an RGBA copy rotated; fillcolor='red'; expand=True; rotate(90)."
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "Windows and macOS were never used, so black versus transparent is read, not run.",
+     "x": 5.6,
+     "y": 3.9,
+     "w": 3.9,
+     "h": 1.05,
+     "fs": 9,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.79,
+     "w": 4.9,
+     "h": 0.17,
+     "fs": 8,
+     "body": "Lines 1 to 18 (imports, helpers) and 31 to 35 (the sheet) are not shown."
+    }
+   ],
+   "notes": "rotate() turns a picture counterclockwise and keeps its size; the corners that no pixel reaches are filled. The chapter says that rotation gaps are black on Windows and transparent on macOS and Linux; on Linux the fill followed the mode of the picture: an RGB picture got (0, 0, 0), an RGBA copy got (0, 0, 0, 0), and the keyword fillcolor='red' gave (255, 0, 0). The Pillow page of rotate() names a fill colour and no operating system. Windows and macOS were never used, so that part of the chapter's sentence is read and not run. With expand=True the picture grows to hold the turned one: 120 by 80 becomes 142 by 118 at 20 degrees, and on the book's 816 by 1088 cat 6 degrees gives 926 by 1168; rotate(90) without expand keeps 120 by 80 and cuts the corners, with expand it is 80 by 120. transpose(Image.Transpose.FLIP_LEFT_RIGHT) mirrors the picture, so the left pixel is the old right pixel, and the old constant Image.FLIP_LEFT_RIGHT also still works. resize() takes integers: floats raise TypeError with the text 'float' object cannot be interpreted as an integer, which is why the chapter wraps the division in int(); and with no filter named it uses bicubic for an RGB picture. putpixel() returns None and takes a tuple, not a colour name; getpixel((-1, 0)) is the pixel of the last column. The sheet on the right is the picture the program saved: six panels on a beige ground, so the transparent corners of the RGBA copy show the ground and the others do not. The corpus program rotateFlipPixels_v1_0_0.py ran the same checks on a 60 by 40 gradient.",
+   "take": "The fill of a rotated corner follows the mode of the picture.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Saving: PNG, JPEG and pixel density",
+   "sub": "28 December 1994 to 1 October 1996",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.02,
+     "h": 3.21,
+     "lines": [
+      "cat = Image.open('zophie.png'); n = []",
+      "for q in (95, 75, 50, 30, 10):",
+      "    f = 'q%d.jpg' % q; cat.save(f, quality=q); n.append(os.path.getsize(f))",
+      "print('zophie.png:', os.path.getsize('zophie.png'), 'bytes')",
+      "print('JPEG bytes at q 95/75/50/30/10:', n)",
+      "cat.save('copy.png'); dpi = Image.open('copy.png').info.get('dpi')",
+      "print('PNG saved with no dpi: dpi =', dpi)",
+      "cat.save('c72.png', dpi=(72, 72))",
+      "back = Image.open('c72.png').info['dpi'][0]",
+      "print('dpi=(72, 72) reads back as', round(back, 3))",
+      "j = Image.open('q75.jpg').info",
+      "print('JPEG density, unit:', j.get('jfif_density'), j.get('jfif_unit'))",
+      "print('RGBA to JPEG:', *err(lambda: cat.convert('RGBA').save('x.jpg')))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\nzophie.png: 1287443 bytes\nJPEG bytes at q 95/75/50/30/10: [327361, 125433, 81267, 58200, 29630]\nPNG saved with no dpi: dpi = None\ndpi=(72, 72) reads back as 72.009\nJPEG density, unit: (1, 1) 0\nRGBA to JPEG: OSError cannot write mode RGBA as JPEG\nsaved pngVsJpeg.png: 144684 bytes, sha256 3b7257b5cc8d",
+     "outLabel": "prints",
+     "label": "program saveFormatsCut_v1_0_0.py, lines 42 to 54 of 58"
+    },
+    {
+     "t": "chart",
+     "ctype": "bar",
+     "x": 5.72,
+     "y": 1.4,
+     "w": 3.78,
+     "h": 1.85,
+     "labels": [
+      "PNG",
+      "JPEG 95",
+      "JPEG 75",
+      "JPEG 50",
+      "JPEG 30",
+      "JPEG 10"
+     ],
+     "title": "Kilobytes of the cat picture",
+     "series": [
+      {
+       "name": "KB",
+       "data": [
+        1257.3,
+        319.7,
+        122.5,
+        79.4,
+        56.8,
+        28.9
+       ]
+      }
+     ],
+     "dataLabels": true,
+     "dlFs": 9
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/pngVsJpeg.png",
+     "x": 5.72,
+     "y": 3.3,
+     "w": 2.95,
+     "h": 1.35
+    },
+    {
+     "t": "foot",
+     "x": 5.72,
+     "y": 4.67,
+     "w": 3.78,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image pngVsJpeg.png made by saveFormatsCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.79,
+     "w": 5.02,
+     "h": 0.17,
+     "fs": 8,
+     "body": "Lines 1 to 41 (head) and 55 to 58 (the pair picture) are not shown."
+    }
+   ],
+   "notes": "save() chooses the format from the extension. The cat, zophie.png, is 1,287,443 bytes as a PNG; saved as a JPEG at quality 95, 75, 50, 30 and 10 it is 327,361, 125,433, 81,267, 58,200 and 29,630 bytes, which the chart shows in kilobytes; the deck check computes the six numbers again every time it runs. JPEG is lossy: reading the quality 75 file back changes the largest channel value by 37, and the picture on the lower right shows the face as a PNG and as a JPEG of quality 10, side by side. A mode with an alpha channel cannot be written as JPEG, which raises OSError with cannot write mode RGBA as JPEG, and an extension Pillow does not know raises ValueError. The chapter says that Pillow's PNG files are 72 pixels per inch by default, and the program shows that they are not: a PNG saved with no dpi has no pHYs chunk and no density to read back, dpi is None; with dpi=(72, 72) the chunk holds 2835 pixels per metre, which Pillow reads as 72.009 dpi; a JPEG saved with the defaults has the density (1, 1) and unit 0, no unit at all; and a PNG that Matplotlib saves carries 100 dpi, as the graph slides show. The sums of the seating cards are right, 4 by 5 inches at 72 pixels per inch is 288 by 360 pixels, but that is arithmetic and not a property of the file. Wikipedia's article on PNG says the motivation for creating the format was the announcement on 28 December 1994 that implementations of GIF would have to pay royalties to Unisys for their patent of the LZW compression algorithm. Thomas Boutell posted a thread on comp.graphics on 4 January 1995 in which he devised a plan for a free alternative. The article gives the initial release of PNG as 1 October 1996. In this study img.save(buffer, 'PNG') and a reopen gave back the format PNG, and the format keeps the alpha channel that chapter 21 uses for its logo. The account rests on these sources. Wikipedia, 'PNG' (announcement on 28 December 1994; Boutell's posting on 4 January 1995; initial release 1 October 1996), read 2026-10-13; this study's leaves SaveFormats and PasteMask. The story of JPEG, which the notes carry and the slide does not: Wikipedia's article on JPEG says the Joint Photographic Experts Group created the standard in 1992 and that its lossy compression is based on the discrete cosine transform. That transform was first proposed by Nasir Ahmed as an image compression technique in 1972. The article gives the initial release as 18 September 1992. In this study img.save(buffer, 'JPEG') and a reopen gave back the format JPEG, the format chapter 21 uses for the photographs of its logo project. Source: Wikipedia, 'JPEG' (standard created in 1992; discrete cosine transform first proposed by Nasir Ahmed in 1972; initial release 18 September 1992), read 2026-10-13; this study's leaves SaveFormats and ImageFilename.",
+   "take": "A PNG has no dpi unless you give one; JPEG is lossy.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Project 16: a logo on every picture",
+   "sub": "One loop over a folder, two decisions, and a paste with the logo as its own mask",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 5.6,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.95,
+       "y": 1.459,
+       "w": 2.9,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Open the logo as an Image object",
+       "x": 1.02,
+       "y": 1.551,
+       "w": 2.76,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.95,
+       "y": 1.916,
+       "w": 2.9,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Loop over the names that os.listdir() returns",
+       "x": 1.02,
+       "y": 2.008,
+       "w": 2.76,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.95,
+       "y": 2.323,
+       "w": 2.9,
+       "h": 0.44,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Does the name end in .png or .jpg and is it not the logo?",
+       "x": 1.12,
+       "y": 2.398,
+       "w": 2.56,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.95,
+       "y": 2.83,
+       "w": 2.9,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Open the picture and read its width and height",
+       "x": 1.02,
+       "y": 2.923,
+       "w": 2.76,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.95,
+       "y": 3.237,
+       "w": 2.9,
+       "h": 0.44,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Are the width and the height both larger than 300?",
+       "x": 1.12,
+       "y": 3.313,
+       "w": 2.56,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.95,
+       "y": 3.744,
+       "w": 2.9,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Paste the logo in the corner with the logo as the mask",
+       "x": 1.02,
+       "y": 3.77,
+       "w": 2.76,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.95,
+       "y": 4.201,
+       "w": 2.9,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Save the picture in the folder withLogo",
+       "x": 1.02,
+       "y": 4.294,
+       "w": 2.76,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.35,
+       "y": 3.287,
+       "w": 1.7,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Calculate the new size and call resize()",
+       "x": 4.42,
+       "y": 3.313,
+       "w": 1.56,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.1,
+       "y": 1.529,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.06,
+       "y": 1.946,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.12,
+       "y": 2.006,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 5.1,
+       "y1": 1.629,
+       "x2": 3.85,
+       "y2": 1.629,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.4,
+       "y1": 1.799,
+       "x2": 2.4,
+       "y2": 1.916,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.4,
+       "y1": 2.256,
+       "x2": 2.4,
+       "y2": 2.323,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.4,
+       "y1": 2.763,
+       "x2": 2.4,
+       "y2": 2.83,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.46,
+       "y": 2.706,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 0.95,
+       "y1": 2.543,
+       "x2": 0.73,
+       "y2": 2.543,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.73,
+       "y1": 2.543,
+       "x2": 0.73,
+       "y2": 2.086,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.73,
+       "y1": 2.086,
+       "x2": 0.95,
+       "y2": 2.086,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 0.73,
+       "y": 2.343,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.4,
+       "y1": 3.17,
+       "x2": 2.4,
+       "y2": 3.237,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.85,
+       "y1": 3.457,
+       "x2": 4.35,
+       "y2": 3.457,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 3.9,
+       "y": 3.257,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.4,
+       "y1": 3.677,
+       "x2": 2.4,
+       "y2": 3.744,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.46,
+       "y": 3.621,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 5.2,
+       "y1": 3.627,
+       "x2": 5.2,
+       "y2": 3.914,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 5.2,
+       "y1": 3.914,
+       "x2": 3.85,
+       "y2": 3.914,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.4,
+       "y1": 4.084,
+       "x2": 2.4,
+       "y2": 4.201,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.95,
+       "y1": 4.371,
+       "x2": 0.53,
+       "y2": 4.371,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.53,
+       "y1": 4.371,
+       "x2": 0.53,
+       "y2": 2.086,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.53,
+       "y1": 2.086,
+       "x2": 0.95,
+       "y2": 2.086,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.85,
+       "y1": 2.086,
+       "x2": 5.06,
+       "y2": 2.086,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "AddingALogoToEveryPicture"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 5.6,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram AddingALogoToEveryPicture - Workflow pattern, 39 of 41 words grounded in the chapter's text"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/zophieLogo.png",
+     "x": 6.3,
+     "y": 1.45,
+     "w": 1.3,
+     "h": 1.73
+    },
+    {
+     "t": "foot",
+     "x": 7.7,
+     "y": 1.45,
+     "w": 1.8,
+     "h": 0.31,
+     "fs": 8,
+     "body": "image zophieLogo.png made by addLogoCut_v1_0_0.py"
+    },
+    {
+     "t": "card",
+     "head": "Resize only big ones",
+     "body": "Both sides must be larger than 300. A strip of 1200 by 250 keeps its size, a panorama of 1200 by 400 becomes 300 by 100.",
+     "x": 6.3,
+     "y": 3.3,
+     "w": 3.2,
+     "h": 1.65,
+     "fs": 9.5,
+     "accent": "slate"
+    }
+   ],
+   "notes": "The flow chart is the book's Project 16, Adding a Logo to Every Picture. It opens catlogo.png once, then loops over the names that os.listdir() returns, skips every name that does not end in .png or .jpg and the logo itself, opens the picture and reads its size, and resizes it only if both the width and the height are larger than 300, so that the longer side becomes 300. It pastes the logo in the lower-right corner with the logo as its own mask and saves the result in the folder withLogo, then goes back to the loop. The research ran the shipped file resizeAndAddLogo.py of the online materials, after its SHA-256 was checked, in a folder with four test pictures: a panorama of 1200 by 400, a strip of 1200 by 250, a tall.jpg and the cat zophie.png of 816 by 1088. The exit code was 0 and withLogo held four pictures: panorama.png of 300 by 100, strip.png of 1200 by 250, tall.jpg of 214 by 300 and zophie.png of 225 by 300. The strip kept its size because only one of its sides is larger than 300, and the cat shrank from 816 by 1088 to 225 by 300; the logo landed at (125, 205), the lower-right corner of the 225 by 300 picture, and the pixel there changed. The picture on the right is that cat with the logo, saved by the program of the next slide, and the build compares it with what the program saves now. The size is int(300 / 1088 * 816), which is 225; without int() the division gives 225.00000000000003, and resize() refuses a float. A file called UPPER.PNG was skipped, because the test endswith('.png') is case sensitive.",
+   "take": "Two decisions guard the paste: the extension, then the size.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Project 16, as printed and as shipped",
+   "sub": "The page has an en dash that stops the listing; the file in the zip has a minus sign",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.1,
+     "h": 2.79,
+     "lines": [
+      "Image.new('RGB', (1200, 400), 'orange').save('panorama.png')",
+      "Image.new('RGB', (1200, 250), 'olive').save('strip.png')",
+      "Image.new('RGB', (900, 900), 'gray').save('UPPER.PNG')",
+      "r = subprocess.run([sys.executable, 'resizeAndAddLogo.py'],",
+      "                   capture_output=True, text=True)",
+      "print('exit', r.returncode, '| folder withLogo:')",
+      "for n in sorted(os.listdir('withLogo')):",
+      "    print(' ', n, Image.open('withLogo/' + n).size)",
+      "print('300 / 1088 * 816 =', 300 / 1088 * 816)",
+      "shutil.copy('withLogo/zophie.png', 'zophieLogo.png')",
+      "done('zophieLogo.png')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\nexit 0 | folder withLogo:\n  panorama.png (300, 100)\n  strip.png (1200, 250)\n  zophie.png (225, 300)\n300 / 1088 * 816 = 225.00000000000003\nsaved zophieLogo.png: 113229 bytes, sha256 a8ab12beda3f",
+     "outLabel": "prints",
+     "label": "program addLogoCut_v1_0_0.py, lines 42 to 52 of 52"
+    },
+    {
+     "t": "code",
+     "x": 4.8,
+     "y": 1.5,
+     "w": 4.7,
+     "h": 2.2,
+     "rows": [
+      [
+       "compile('x = 816 \u2013 100', 'listing', 'exec')",
+       "SyntaxError: invalid character '\u2013' (U+2013) (listing, line 1)"
+      ],
+      [
+       "type(compile('x = 816 - 100', 'listing', 'exec')).__name__",
+       "'code'"
+      ],
+      [
+       "300 / 1088 * 816",
+       "225.00000000000003"
+      ],
+      [
+       "int(300 / 1088 * 816)",
+       "225"
+      ],
+      [
+       "'UPPER.PNG'.endswith('.png')",
+       "False"
+      ],
+      [
+       "'UPPER.PNG'.lower().endswith('.png')",
+       "True"
+      ]
+     ],
+     "fs": 7.9,
+     "cap": "run under Python 3.14.6; no row reads the clock or the network"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.38,
+     "w": 4.1,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "Lines 1 to 41 (imports, helpers, a download check) are not shown."
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "The chapter's folder path C:\\folder_with_image_file is for Windows, never used here; the shipped file ran on Linux.",
+     "x": 4.8,
+     "y": 3.96,
+     "w": 4.7,
+     "h": 1.0,
+     "fs": 9,
+     "accent": "orange"
+    }
+   ],
+   "notes": "The printed listing of Project 16 on the chapter's page holds an en dash, U+2013, where the file has a minus sign: compile() of a line with 816 followed by an en dash and 100 raises SyntaxError with invalid character '\u2013' (U+2013), and the same line with a minus sign compiles. Copying the listing from the page therefore stops with a SyntaxError, and copying the file from the zip does not. The research checked the shipped file for the character and found none; the SHA-256 of resizeAndAddLogo.py is one of the four that the deck checks while it runs. The program on the left makes three test pictures, runs the shipped file in that folder and lists withLogo: panorama.png (300, 100), strip.png (1200, 250) and zophie.png (225, 300), and UPPER.PNG is not in the list because the test is case sensitive; the console shows that 'UPPER.PNG'.endswith('.png') is False and 'UPPER.PNG'.lower().endswith('.png') is True. The sum 300 / 1088 * 816 is 225.00000000000003, which is why the shipped file wraps it in int(). The corpus program addLogoProject_v1_0_0.py ran the same file with one more test picture, tall.jpg, which became 214 by 300, and printed the messages of the shipped file, Adding logo to and Resizing. Nothing ran on Windows or macOS, so the folder path of the listing is read and not run.",
+   "take": "Copy the file from the zip, not the listing from the page.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Drawing shapes on a picture",
+   "sub": "A rectangle includes its end points, so 41 by 31 pixels are blue, not 40 by 30",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.9,
+     "h": 3.07,
+     "lines": [
+      "im = Image.new('RGBA', (200, 200), 'white'); draw = ImageDraw.Draw(im)",
+      "draw.line([(0, 0), (199, 0), (199, 199), (0, 199), (0, 0)], fill='black')",
+      "draw.rectangle((20, 30, 60, 60), fill='blue')",
+      "draw.ellipse((120, 30, 160, 60), fill='red')",
+      "draw.polygon(((57, 87), (79, 62), (94, 85), (120, 90), (103, 113)),",
+      "             fill='brown')",
+      "for i in range(100, 200, 10):",
+      "    draw.line([(i, 0), (200, i - 100)], fill='green')",
+      "n = {c: k for k, c in im.getcolors(1000)}",
+      "print('blue pixels:', n[(0, 0, 255, 255)], '= 41 x 31 =', 41 * 31)",
+      "print('crop((20, 30, 60, 60)) is', im.crop((20, 30, 60, 60)).size)",
+      "print('green drawn:', (0, 128, 0, 255) in n,",
+      "      '| lime drawn:', (0, 255, 0, 255) in n)",
+      "print('reversed:', err(lambda: draw.rectangle((60, 60, 20, 30)))[1])",
+      "d = wd(); im.save('drawing.png'); done('drawing.png')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "blue pixels: 1271 = 41 x 31 = 1271\ncrop((20, 30, 60, 60)) is (40, 30)\ngreen drawn: True | lime drawn: False\nreversed: x1 must be greater than or equal to x0\nsaved drawing.png: 1685 bytes, sha256 2998b86f8fc8",
+     "outLabel": "prints",
+     "label": "program drawingPngCut_v1_0_0.py, lines 19 to 33 of 33"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/drawing.png",
+     "x": 5.65,
+     "y": 1.5,
+     "w": 1.9,
+     "h": 1.9
+    },
+    {
+     "t": "foot",
+     "x": 5.65,
+     "y": 3.43,
+     "w": 3.85,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image drawing.png made by drawingPngCut_v1_0_0.py"
+    },
+    {
+     "t": "card",
+     "head": "Colour names again",
+     "body": "'green' draws (0, 128, 0, 255), and the program finds no lime pixel. A box with its corners reversed raises ValueError.",
+     "x": 5.65,
+     "y": 3.78,
+     "w": 3.85,
+     "h": 1.2,
+     "fs": 9,
+     "accent": "slate"
+    }
+   ],
+   "notes": "ImageDraw.Draw(im) draws on the picture it is given and changes it in place. The program draws a black frame with line(), a blue rectangle, a red ellipse, a brown polygon and a fan of green lines, then counts colours with getcolors(). The rectangle (20, 30, 60, 60) paints 41 by 31 pixels, 1,271 of them blue, because both end points are painted, where crop((20, 30, 60, 60)) of the same picture is 40 by 30: a drawing box and a cropping box are not the same kind of box. Drawing in the colour name green paints (0, 128, 0, 255), the colour of Table 21-1's mistake, and no pixel of lime appears. A rectangle whose corners are reversed raises ValueError with x1 must be greater than or equal to x0. The corpus program drawingPixelCounts_v1_0_0.py ran too: a rectangle with no fill and no outline still paints an outline in white; an ellipse in the box (0, 0, 99, 99) of a 100 by 100 picture touches all four edges; and the picture saved as a PNG and read back is 200 by 200, mode RGBA, with the pixel (0, 0, 255, 255) in the blue square. The picture on the right is the drawing as the program saved it; its caption names the program and the build compares the two. The listing of the chapter has the same calls; the lines the slide does not show are the head and the lines that save the picture.",
+   "take": "A drawing box includes its end points; a cropping box does not.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Text and fonts",
+   "sub": "textbbox() measures text; textsize() and getsize() are gone; arial.ttf is not on Linux",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.0,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.497,
+       "w": 2.2,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Make an image with Image.new()",
+       "x": 0.62,
+       "y": 1.589,
+       "w": 2.06,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 2.03,
+       "w": 2.2,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Pass the image to ImageDraw.Draw()",
+       "x": 0.62,
+       "y": 2.123,
+       "w": 2.06,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 2.563,
+       "w": 2.2,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call line(), rectangle(), ellipse() and polygon()",
+       "x": 0.62,
+       "y": 2.589,
+       "w": 2.06,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.55,
+       "y": 3.017,
+       "w": 2.2,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Does ImageFont.truetype() find the font file?",
+       "x": 0.72,
+       "y": 3.122,
+       "w": 1.86,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 3.63,
+       "w": 2.2,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Draw the text with draw.text() and the font",
+       "x": 0.62,
+       "y": 3.656,
+       "w": 2.06,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 4.163,
+       "w": 2.2,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Save the picture with save()",
+       "x": 0.62,
+       "y": 4.256,
+       "w": 2.06,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.3,
+       "y": 3.097,
+       "w": 1.2,
+       "h": 0.34,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Load a font by another file name",
+       "x": 3.37,
+       "y": 3.122,
+       "w": 1.06,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.8,
+       "y": 1.567,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.76,
+       "y": 4.193,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.82,
+       "y": 4.253,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.8,
+       "y1": 1.667,
+       "x2": 2.75,
+       "y2": 1.667,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 1.837,
+       "x2": 1.65,
+       "y2": 2.03,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 2.37,
+       "x2": 1.65,
+       "y2": 2.563,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 2.903,
+       "x2": 1.65,
+       "y2": 3.017,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 3.517,
+       "x2": 1.65,
+       "y2": 3.63,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 1.71,
+       "y": 3.483,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.75,
+       "y1": 3.267,
+       "x2": 3.3,
+       "y2": 3.267,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.8,
+       "y": 3.067,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 3.9,
+       "y1": 3.097,
+       "x2": 3.9,
+       "y2": 2.847,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.9,
+       "y1": 2.847,
+       "x2": 1.65,
+       "y2": 2.847,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 2.847,
+       "x2": 1.65,
+       "y2": 3.017,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 3.97,
+       "x2": 1.65,
+       "y2": 4.163,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.75,
+       "y1": 4.333,
+       "x2": 3.76,
+       "y2": 4.333,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "FromADrawingToAPngFile"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.0,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram FromADrawingToAPngFile - Workflow pattern, 31 of 32 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.79,
+     "y": 1.55,
+     "w": 4.71,
+     "h": 2.93,
+     "lines": [
+      "f = dejavu()",
+      "print('arial.ttf:', err(lambda: ImageFont.truetype('arial.ttf', 32)))",
+      "im = Image.new('RGBA', (240, 100), 'white'); draw = ImageDraw.Draw(im)",
+      "box = draw.textbbox((20, 20), 'Howdy', font=f)",
+      "print('textbbox', box, '-> width', box[2] - box[0],",
+      "      'height', box[3] - box[1])",
+      "draw.rectangle(box, outline='red')",
+      "draw.text((20, 20), 'Howdy', fill='purple', font=f)",
+      "print('textsize on ImageDraw:', hasattr(draw, 'textsize'),",
+      "      '| getsize on a font:', hasattr(f, 'getsize'))",
+      "w = [ImageFont.truetype('DejaVuSans.ttf', s).getlength('Howdy')",
+      "     for s in (16, 32, 64)]",
+      "print('Howdy is', [round(x) for x in w], 'px wide at 16, 32, 64')",
+      "d = wd(); im.save('howdy.png'); done('howdy.png')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "arial.ttf: ('OSError', 'cannot open resource')\ntextbbox (20, 26, 129, 57) -> width 109 height 31\ntextsize on ImageDraw: False | getsize on a font: False\nHowdy is [55, 109, 218] px wide at 16, 32, 64\nsaved howdy.png: 2915 bytes, sha256 b35acf2df851",
+     "outLabel": "prints",
+     "label": "program textHowdyCut_v1_0_0.py, lines 19 to 32 of 32"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/howdy.png",
+     "x": 4.79,
+     "y": 4.56,
+     "w": 1.06,
+     "h": 0.44
+    },
+    {
+     "t": "foot",
+     "x": 5.95,
+     "y": 4.58,
+     "w": 3.55,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image howdy.png made by textHowdyCut_v1_0_0.py"
+    }
+   ],
+   "notes": "The flow chart is the book's way to a drawing: make an image, hand it to ImageDraw.Draw(), call line(), rectangle(), ellipse() and polygon(), then load a font. ImageFont.truetype('arial.ttf', 32) raised OSError with cannot open resource on this Linux machine, so the chapter's listing did not run as printed; if the font is not found you load a font by another file name, which here is DejaVuSans.ttf, and then draw the text and save. textbbox((20, 20), 'Howdy', font=f) returned (20, 26, 129, 57), 109 pixels wide and 31 high, and the program draws it as a red rectangle round the purple word, which is the picture on the lower right. ImageDraw has no textsize() and a font has no getsize(): both hasattr() calls print False, and the next slide shows the one Pillow release among those run that still had them. getlength('Howdy') gives 55, 109 and 218 pixels at the sizes 16, 32 and 64, so the width grows with the size. The book calls the size points and Pillow reads it as pixels: the same number gives the same height on every screen. The corpus program textAndFonts_v1_0_0.py also ran: the default font of Pillow 12.3.0 is a FreeTypeFont of size 10, text() returns None, textlength gives 109.06 and a box at (100, 150) runs past the right edge of a 200-pixel picture.",
+   "take": "Measure with textbbox() or getlength(), and read the size as pixels.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Pillow releases that changed the chapter",
+   "sub": "Recorded: the same small programs under 14 releases, 9.5.0 to 12.3.0",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 9.0,
+     "colW": [
+      1.5,
+      0.5357,
+      0.5357,
+      0.5357,
+      0.5357,
+      0.5357,
+      0.5357,
+      0.5357,
+      0.5357,
+      0.5357,
+      0.5357,
+      0.5357,
+      0.5357,
+      0.5357,
+      0.5357
+     ],
+     "fs": 8,
+     "rowH": 0.24,
+     "rows": [
+      [
+       "Pillow",
+       "9.5.0",
+       "10.0.0",
+       "10.1.0",
+       "10.2.0",
+       "10.3.0",
+       "10.4.0",
+       "11.0.0",
+       "11.1.0",
+       "11.2.1",
+       "11.3.0",
+       "12.0.0",
+       "12.1.0",
+       "12.2.0",
+       "12.3.0"
+      ],
+      [
+       "textsize()",
+       "yes",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no"
+      ],
+      [
+       "getsize()",
+       "yes",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no"
+      ],
+      [
+       "FreeType default font",
+       "no",
+       "no",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes"
+      ],
+      [
+       "size= accepted",
+       "no",
+       "no",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes"
+      ],
+      [
+       "filename is full path",
+       "no",
+       "no",
+       "no",
+       "no",
+       "yes",
+       "yes",
+       "yes",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no",
+       "no"
+      ]
+     ]
+    },
+    {
+     "t": "card",
+     "head": "Recorded 13 Oct 2026",
+     "body": "textsize() and getsize() exist only in 9.5.0 of these 14. The default font is a FreeTypeFont from 10.1.0, which also takes size=.",
+     "x": 0.5,
+     "y": 3.05,
+     "w": 4.4,
+     "h": 1.35,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "card",
+     "head": "Full path: three releases",
+     "body": "Image.open().filename is absolute only in 10.3.0, 10.4.0 and 11.0.0; the book's pin, 10.4.0, is one of them.",
+     "x": 5.1,
+     "y": 3.05,
+     "w": 4.4,
+     "h": 1.35,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.5,
+     "w": 9.0,
+     "who": "Fredrik Lundh, the original author of the Python Imaging Library, and the developers of the Pillow fork",
+     "where": "Secret Labs AB, the library's developer, and then the Pillow project",
+     "when": "1995 to 2011",
+     "link": "https://en.wikipedia.org/wiki/Python_Imaging_Library",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on the Python Imaging Library gives Fredrik Lundh as the original author and 1995 as the release. It says development of the original project, known as PIL, was discontinued in 2011, and that a successor project named Pillow forked the repository and added Python 3.x support. Chapter 21 still imports from PIL, because Pillow kept the package name. In this study Pillow 12.3.0 imported as PIL and its ImageDraw class had no textsize method any more. The account rests on these sources. Wikipedia, 'Python Imaging Library' (Fredrik Lundh; release 1995; development discontinued in 2011; Pillow forked the repository), read 2026-10-13; this study's leaves TextsizeGone and OpenAndSize. The table is the research's record of small programs run under 14 Pillow releases on 13 October 2026, and the deck reads it from the record and does not run it again; the deck check computes the cells from the record every time it runs. In the 14 releases textsize() of ImageDraw and getsize() of a font exist only in 9.5.0 and are gone in 10.0.0; the default font is a bitmap ImageFont in 9.5.0 and 10.0.0 and a FreeTypeFont from 10.1.0, and load_default(size=20) is accepted from 10.1.0; Image.open('z.png').filename is an absolute path in 10.3.0, 10.4.0 and 11.0.0 and the name as given in the others. The book's Appendix A pins Pillow 10.4.0, so the cat's filename is the full path there and zophie.png in 12.3.0, and the second edition's textsize() fails in all of the last 13. The chapter uses neither textsize nor getsize, the second edition's chapter 19 uses textsize 3 times.",
+   "take": "Install Pillow, import PIL, and read the release notes.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The practice programs: cards and folders",
+   "sub": "Seating cards, Tile Maker and the photo folder finder, each run on test files",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.08,
+     "h": 2.24,
+     "lines": [
+      "guests = open('guests.txt').read().splitlines()",
+      "f = ImageFont.truetype('DejaVuSans.ttf', 28); os.makedirs('cards')",
+      "sheet = Image.new('RGB', (len(guests) * 150, 190), '#d8d0c0'); wide = []",
+      "for i, g in enumerate(guests):",
+      "    card = Image.new('RGBA', (288, 360), 'white'); dr = ImageDraw.Draw(card)",
+      "    dr.rectangle((0, 0, 287, 359), outline='black')",
+      "    l, t, r, b = dr.textbbox((0, 0), g, font=f); wide.append(r - l)",
+      "    dr.text(((288 - (r - l)) // 2 - l, 200), g, fill='black', font=f)",
+      "    card.save('cards/%d.png' % i)",
+      "    sheet.paste(card.resize((144, 180)), (i * 150 + 3, 5))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\nname widths in px: [140, 168, 176, 159, 121]\n5 cards of (288, 360)\nsaved seatingCards.png: 8036 bytes, sha256 c0b755735558",
+     "outLabel": "prints",
+     "label": "program seatingCardsCut_v1_0_0.py, lines 42 to 51 of 54"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/seatingCards.png",
+     "x": 5.78,
+     "y": 1.5,
+     "w": 3.72,
+     "h": 0.94
+    },
+    {
+     "t": "foot",
+     "x": 5.78,
+     "y": 2.47,
+     "w": 3.72,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image seatingCards.png made by seatingCardsCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 5.78,
+     "y": 2.79,
+     "w": 3.72,
+     "h": 0.49,
+     "fs": 9,
+     "body": "Five cards of 288 by 360 pixels, 4 by 5 inches at 72 pixels per inch; the widest name, Col. Mustard, is 176 pixels."
+    },
+    {
+     "t": "foot",
+     "x": 5.78,
+     "y": 3.34,
+     "w": 3.72,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "Lines 1 to 41 (imports, helpers, a download check) are not shown. Lines 52 to 54 (the prints and the saving of the strip) are not shown."
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 4.07,
+     "w": 9.0,
+     "h": 0.59,
+     "lines": [],
+     "fs": 7.5,
+     "compact": true,
+     "out": "make_tile('t.jpg', 6, 10): ((120, 500), 60) (book: 120x500)\nphotos: ['a.png', 'c.png'] of ['a.png', 'b.png', 'c.png', 'notes.txt', 't.jpg']",
+     "outLabel": "prints",
+     "label": "transcript of program tileFolderCut_v1_0_0.py"
+    }
+   ],
+   "notes": "The three practice programs of the chapter are Tile Maker, the photo folder finder and the seating cards. The seating cards program reads guests.txt of the online materials, five names, and makes a card of 288 by 360 pixels for each, which is 4 by 5 inches at 72 pixels per inch, with a black frame and the name centred with textbbox(); the widest name, Col. Mustard, is 176 pixels, so every name fits. The strip on the right is the five cards as thumbnails, saved by the program and compared by the build. The panel at the bottom is the transcript of a second program, tileFolderCut: make_tile('t.jpg', 6, 10) on a 20 by 50 picture gives a picture of (120, 500) and 60 tiles, the 120 by 500 that the book says, and the photo test, width and height both larger than 500, picks a.png and c.png of three pictures and a text file. The corpus programs tileMaker_v1_0_0.py and photoFolderFinder_v1_0_0.py ran as well. The first tiled the 100 by 95 logo over 400 by 300 in 16 pastes, with the logo as its own mask the transparent corner stays white, and without a mask the clear pixel is copied as (255, 255, 255, 0); the second walked a tree of four folders and found two with photos, ./a and ./b/c, and sorts the subfolders so that the lines are the same on every machine. The chapter says a public domain flower image is available; the zip has no file with flower in its name.",
+   "take": "Each practice program was run on files it made or on the book's.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The clipboard needs a display",
+   "sub": "copy() and paste() worked on a virtual display and failed without one",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 3.55,
+     "h": 3.1,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.4,
+       "w": 1.0,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The program",
+       "x": 0.61,
+       "y": 1.516,
+       "w": 0.88,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 1.82,
+       "x2": 1.05,
+       "y2": 4.5,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.0,
+       "y": 1.4,
+       "w": 1.0,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The clipboard",
+       "x": 3.06,
+       "y": 1.432,
+       "w": 0.88,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.5,
+       "y1": 1.82,
+       "x2": 3.5,
+       "y2": 4.5,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.362,
+       "x2": 3.5,
+       "y2": 2.362,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls pyperclipimg.copy() with an Image",
+       "x": 1.15,
+       "y": 2.157,
+       "w": 2.25,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.5,
+       "y1": 2.767,
+       "x2": 1.05,
+       "y2": 2.767,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Holds the image and copy() returns None",
+       "x": 1.15,
+       "y": 2.562,
+       "w": 2.25,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 3.172,
+       "x2": 3.5,
+       "y2": 3.172,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls pyperclipimg.paste()",
+       "x": 1.15,
+       "y": 2.967,
+       "w": 2.25,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.5,
+       "y1": 3.577,
+       "x2": 1.05,
+       "y2": 3.577,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns the image as an Image object",
+       "x": 1.15,
+       "y": 3.372,
+       "w": 2.25,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 3.982,
+       "x2": 3.5,
+       "y2": 3.982,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls paste() with text on the clipboard",
+       "x": 1.15,
+       "y": 3.643,
+       "w": 2.25,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.5,
+       "y1": 4.387,
+       "x2": 1.05,
+       "y2": 4.387,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Raises UnidentifiedImageError",
+       "x": 1.15,
+       "y": 4.182,
+       "w": 2.25,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "CopyingAnImageToTheClipboard"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.53,
+     "w": 3.55,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram CopyingAnImageToTheClipboard - Interaction pattern, 22 of 24 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.17,
+     "y": 1.55,
+     "w": 5.33,
+     "h": 2.66,
+     "lines": [
+      "code = \"\"\"",
+      "import pyperclipimg",
+      "from PIL import Image",
+      "a = Image.new('RGB', (40, 30), (10, 200, 30))",
+      "print('copy returns', pyperclipimg.copy(a))",
+      "b = pyperclipimg.paste()",
+      "print('paste', b.format, b.mode, b.size, list(b.getdata()) == list(a.getdata()))",
+      "\"\"\"",
+      "print('DISPLAY set:', *run(dict(os.environ, DISPLAY=disp)), sep='\\n  ')",
+      "bare = {k: v for k, v in os.environ.items() if k != 'DISPLAY'}",
+      "print('no DISPLAY:', *run(bare), sep='\\n  ')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "DISPLAY set:\n  copy returns None\n  paste PNG RGB (40, 30) True\nno DISPLAY:\n  copy returns None\n  ChildProcessError: xclip error: Error: Can't open display: (null)",
+     "outLabel": "prints",
+     "label": "program clipboardCut_v1_0_0.py, lines 34 to 44 of 44"
+    },
+    {
+     "t": "foot",
+     "x": 4.17,
+     "y": 4.26,
+     "w": 5.33,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "NOT EXECUTED: Windows, macOS and a real screen. Virtual display: Xvfb with the real xclip, a local stand-in for a screen; nobody sees the picture. Lines 1 to 33 (the start of Xvfb and the helper) are not shown."
+    }
+   ],
+   "notes": "The sequence diagram is the chapter's clipboard: the program calls pyperclipimg.copy() with an Image, the clipboard holds the image and copy() returns None, and a later paste() returns the image as an Image object; with text on the clipboard paste() raises UnidentifiedImageError. The program on the right ran for real on a virtual X display, Xvfb, with the real xclip and pyperclipimg 0.2.0, and it is a local stand-in for a screen, because nobody sees the picture. With DISPLAY set, copy() returned None and paste() returned a PNG image in mode RGB of 40 by 30 pixels whose pixels equal the original; without DISPLAY copy() also returned None, and paste() raised ChildProcessError with xclip's message that it cannot open the display. The research also found that with no xclip the import itself raised NotImplementedError, that the clipboard offered image/png, and that Image.show() started xdg-open and a display program, with a screenshot of the virtual screen matching 5 of 6 probe pixels of zophie.png. Windows and macOS were never used, and no real screen was looked at, so how the clipboard behaves there is read from the library's page and not run. The corpus program clipboardOnXvfb_v1_0_0.py is the same experiment with more checks. The program in the panel is the part of the program from the child's code onward; the start of Xvfb and the helper that runs the child with and without DISPLAY are not shown.",
+   "take": "A clipboard needs a display and a clipboard owner, even for pictures.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Four graphs with pyplot",
+   "sub": "plot, scatter, bar and pie each return an object; savefig writes 100 dpi",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.2,
+     "h": 2.52,
+     "lines": [
+      "def fig(name, draw):",
+      "    plt.figure(figsize=(3, 2.4)); r = draw(); plt.title(name)",
+      "    plt.tight_layout(); plt.savefig(name + '.png'); plt.close('all'); return r",
+      "fig('line', lambda: plt.plot([1, 2, 3, 4], [1, 4, 9, 16]))",
+      "fig('scatter', lambda: plt.scatter([1, 2, 3, 4], [3, 1, 4, 2]))",
+      "bars = fig('bar', lambda: plt.bar(['spam', 'eggs', 'ham'], [3, 1, 2]))",
+      "pie = fig('pie', lambda: plt.pie([10, 20, 30, 40], labels=list('ABCD'),",
+      "                                 autopct='%1.0f%%'))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "bar returns BarContainer [np.int64(3), np.int64(1), np.int64(2)]\npie returns PieContainer | items: 3\nline colour: tuple [0.12, 0.47, 0.71]\nline.png (300, 240) RGBA dpi 100\nsaved line.png: 7834 bytes, sha256 1255a3131604\nsaved scatter.png: 5572 bytes, sha256 6ea656298d19\nsaved bar.png: 5258 bytes, sha256 fb613caeaed1\nsaved pie.png: 11019 bytes, sha256 bafe8b665d56",
+     "outLabel": "prints",
+     "label": "program plotsFourCut_v1_0_0.py, lines 20 to 27 of 34"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/line.png",
+     "x": 5.9,
+     "y": 1.45,
+     "w": 1.76,
+     "h": 1.41
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/scatter.png",
+     "x": 7.74,
+     "y": 1.45,
+     "w": 1.76,
+     "h": 1.41
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/bar.png",
+     "x": 5.9,
+     "y": 2.92,
+     "w": 1.76,
+     "h": 1.41
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/pie.png",
+     "x": 7.74,
+     "y": 2.92,
+     "w": 1.76,
+     "h": 1.41
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.11,
+     "w": 5.2,
+     "h": 0.44,
+     "fs": 8,
+     "body": "image line.png made by plotsFourCut_v1_0_0.py; image scatter.png made by plotsFourCut_v1_0_0.py; image bar.png made by plotsFourCut_v1_0_0.py; image pie.png made by plotsFourCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.57,
+     "w": 5.2,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 19 (imports, helpers, a download check) are not shown. Lines 28 to 34 (the prints of the colour and of the file, and the saving) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 5.9,
+     "y": 4.39,
+     "w": 3.6,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Recorded 13 Oct 2026: pie() returns a tuple up to Matplotlib 3.10.8 and a PieContainer from 3.11."
+    }
+   ],
+   "notes": "plt.plot(), plt.scatter(), plt.bar() and plt.pie() draw on the current axes of the current figure, and savefig() writes the figure as a PNG. The program makes the four graphs of the chapter at 3 by 2.4 inches, so each file is 300 by 240 pixels; the four pictures are the files it saved, and the build compares each with what the program saves now. plt.bar() returns a BarContainer whose heights are NumPy integers, which Matplotlib 3.11.2 with NumPy 2.5.4 prints as np.int64(3), np.int64(1) and np.int64(2); plt.pie() returned a PieContainer in 3.11.2, and with autopct it unpacks to three items, wedges, texts and autotexts. The research recorded that pie() returns a tuple up to Matplotlib 3.10.8 and a PieContainer from 3.11, so code that unpacks the result into two or three names breaks differently by release; the next slide runs both in the two environments. A line's colour is a tuple of three floats in 3.11.2 and a string in 3.9.2. The default figure is 6.4 by 4.8 inches, so with the default 100 dpi a PNG is 640 by 480 pixels; a PNG that Matplotlib saves is RGBA and carries the density 100 dpi, where Pillow's own PNGs carry none. The corpus program pyplotReturns_v1_0_0.py ran too: xlabel, ylabel and title return Text objects, legend() returns a Legend, scatter returns a PathCollection and hist returns three items.",
+   "take": "Each graph call returns an object, and its type depends on the release.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The pins of Appendix A, run now",
+   "sub": "matplotlib==3.92 is not a release; the pins ran as a source build on 3.14.6",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 5.6,
+     "colW": [
+      1.45,
+      0.8,
+      1.0,
+      0.78,
+      1.57
+     ],
+     "fs": 7.5,
+     "rowH": 0.23,
+     "rows": [
+      [
+       "check",
+       "3.14.6 newest",
+       "3.14.6 pins",
+       "3.13.14 pins",
+       "3.14.6 empty"
+      ],
+      [
+       "Python",
+       "3.14.6",
+       "3.14.6",
+       "3.13.14",
+       "3.14.6"
+      ],
+      [
+       "Pillow",
+       "12.3.0",
+       "10.4.0",
+       "10.4.0",
+       "PackageNotFoundError"
+      ],
+      [
+       "Matplotlib",
+       "3.11.2",
+       "3.9.2",
+       "3.9.2",
+       "PackageNotFoundError"
+      ],
+      [
+       "filename is full path",
+       "False",
+       "True",
+       "True",
+       "-"
+      ],
+      [
+       "textsize() exists",
+       "False",
+       "False",
+       "False",
+       "-"
+      ],
+      [
+       "default font",
+       "FreeTypeFont",
+       "FreeTypeFont",
+       "FreeTypeFont",
+       "-"
+      ],
+      [
+       "plt.pie() returns",
+       "PieContainer",
+       "tuple",
+       "tuple",
+       "-"
+      ],
+      [
+       "line colour is a",
+       "tuple",
+       "str",
+       "str",
+       "-"
+      ],
+      [
+       "savefig() of a line",
+       "saved",
+       "RecursionError",
+       "saved",
+       "-"
+      ],
+      [
+       "legend()",
+       "Legend",
+       "RecursionError",
+       "Legend",
+       "-"
+      ],
+      [
+       "import",
+       "-",
+       "-",
+       "-",
+       "ModuleNotFoundError"
+      ]
+     ]
+    },
+    {
+     "t": "code",
+     "x": 6.3,
+     "y": 1.45,
+     "w": 3.2,
+     "h": 1.72,
+     "rows": [
+      [
+       "from packaging.version import Version",
+       ""
+      ],
+      [
+       "Version('3.9.2')",
+       "<Version('3.9.2')>"
+      ],
+      [
+       "Version('3.92')",
+       "<Version('3.92')>"
+      ],
+      [
+       "Version('3.92') == Version('3.9.2')",
+       "False"
+      ],
+      [
+       "Version('3.92') > Version('3.11.2')",
+       "True"
+      ]
+     ],
+     "fs": 7.8,
+     "cap": "run under Python 3.14.6; no clock, no network"
+    },
+    {
+     "t": "foot",
+     "x": 6.3,
+     "y": 3.49,
+     "w": 3.2,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "Recorded 13 Oct 2026: PyPI lists no Matplotlib 3.92 among 85 plain-numbered releases; the first CPython 3.14 wheels are Pillow 11.3.0 and Matplotlib 3.10.5."
+    },
+    {
+     "t": "foot",
+     "x": 6.3,
+     "y": 4.04,
+     "w": 3.2,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "NOT EXECUTED here: Matplotlib 3.10.0 on Python 3.14.6, where no wheel exists. 3.9.2 on 3.14.6 in the table is a build from source."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.75,
+     "w": 5.6,
+     "h": 0.19,
+     "fs": 9,
+     "body": "The table runs the probe in four interpreters while the deck is checked."
+    }
+   ],
+   "notes": "Appendix A of the book pins pillow==10.4.0 and matplotlib==3.92. There is no Matplotlib 3.92: the release the book means is 3.9.2, and pip or uv answers that no such version exists. The console shows what a version parser makes of it, Version('3.92') is a different version from Version('3.9.2') and is greater than 3.11.2, so a pin written the way the book writes it can never be the old release. The table is the same probe run under four interpreters when the deck is built: Python 3.14.6 with the newest packages, Python 3.14.6 with the pins, built from source because neither Pillow 10.4.0 nor Matplotlib 3.9.2 has a wheel for 3.14, Python 3.13.14 with the pins as wheels, and an empty Python 3.14.6. Under the pins on 3.14.6 savefig() and legend() raised RecursionError, while on 3.13.14 the same pins saved and drew a Legend; the pie returned a tuple and a line's colour a string in both pin environments, and a PieContainer and a tuple of floats in the newest. Pillow's filename of an opened file is the full path in the pins and the bare name in 12.3.0, and the empty environment raises ModuleNotFoundError on import and PackageNotFoundError for both packages. The research also found that Matplotlib 3.9.2's TkAgg backend failed with ImportError against Tk 9.0 in Python 3.14.6 and 3.13.14, while 3.11.2 opened its windows. What the research could not run, Matplotlib 3.9.2 and 3.10.0 as wheels on Python 3.14.6, is marked on the slide because those wheels do not exist. The console needs the packaging module, so it does not run in a Python in a browser unless packaging is installed.",
+   "take": "Appendix A pins a version that does not exist.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The life of a pyplot figure",
+   "sub": "Agg keeps the figure after show(); every plot call adds to the current axes",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.4,
+     "h": 2.9,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.0,
+       "y": 1.68,
+       "w": 1.4,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A new figure with no lines",
+       "x": 2.06,
+       "y": 1.716,
+       "w": 1.28,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.0,
+       "y": 2.433,
+       "w": 1.4,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A figure with lines on the current axes",
+       "x": 2.06,
+       "y": 2.469,
+       "w": 1.28,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.0,
+       "y": 3.187,
+       "w": 1.4,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A figure in a window",
+       "x": 2.06,
+       "y": 3.289,
+       "w": 1.28,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.0,
+       "y": 3.94,
+       "w": 1.4,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A closed figure and an empty list of figures",
+       "x": 2.06,
+       "y": 3.976,
+       "w": 1.28,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.61,
+       "y": 1.42,
+       "w": 0.18,
+       "h": 0.18,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 1.6,
+       "x2": 2.7,
+       "y2": 1.68,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 2.04,
+       "x2": 2.7,
+       "y2": 2.433,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.72,
+       "y1": 2.237,
+       "x2": 3.66,
+       "y2": 2.237,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "plt.plot() draws on the current axes",
+       "x": 3.7,
+       "y": 2.092,
+       "w": 1.2,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 2.793,
+       "x2": 2.7,
+       "y2": 3.187,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.72,
+       "y1": 2.99,
+       "x2": 3.66,
+       "y2": 2.99,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "plt.show() with Tk opens a window",
+       "x": 3.7,
+       "y": 2.846,
+       "w": 1.2,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 3.547,
+       "x2": 2.7,
+       "y2": 3.94,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.72,
+       "y1": 3.743,
+       "x2": 3.66,
+       "y2": 3.743,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "The user closes the window and the figure is gone",
+       "x": 3.7,
+       "y": 3.532,
+       "w": 1.2,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.0,
+       "y1": 2.453,
+       "x2": 1.72,
+       "y2": 2.453,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.72,
+       "y1": 2.453,
+       "x2": 1.72,
+       "y2": 2.573,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.72,
+       "y1": 2.573,
+       "x2": 2.0,
+       "y2": 2.573,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "plt.show() with Agg returns None and keeps the figure",
+       "x": 0.5,
+       "y": 1.956,
+       "w": 0.95,
+       "h": 0.558,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "right",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.0,
+       "y1": 2.653,
+       "x2": 1.72,
+       "y2": 2.653,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.72,
+       "y1": 2.653,
+       "x2": 1.72,
+       "y2": 2.773,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.72,
+       "y1": 2.773,
+       "x2": 2.0,
+       "y2": 2.773,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "plt.savefig() writes the figure as an image",
+       "x": 0.5,
+       "y": 2.713,
+       "w": 0.95,
+       "h": 0.558,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "right",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.4,
+       "y1": 4.12,
+       "x2": 3.8,
+       "y2": 4.12,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.8,
+       "y": 3.98,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.86,
+       "y": 4.04,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      }
+     ],
+     "did": "TheLifeOfAPyplotFigure"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.33,
+     "w": 4.4,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram TheLifeOfAPyplotFigure - LifeCycle pattern, 40 of 41 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 5.03,
+     "y": 1.55,
+     "w": 4.47,
+     "h": 3.07,
+     "lines": [
+      "def parts():",
+      "    ax = plt.gca(); return len(ax.lines), len(ax.patches)",
+      "plt.figure(figsize=(3, 2.4))",
+      "plt.plot([1, 2, 3]); plt.plot([3, 2, 1])",
+      "print('lines, bars:', parts(), plt.get_fignums())",
+      "print('show():', plt.show(), plt.get_fignums())",
+      "plt.bar(['a', 'b'], [1, 2])",
+      "print('after bar, same figure:', parts())",
+      "plt.tight_layout(); plt.savefig('accumulated.png')",
+      "plt.clf(); plt.plot([1, 2]); print('after clf():', parts())",
+      "plt.figure(); print('new figure:', plt.get_fignums()[-1], parts())",
+      "plt.close('all'); print('close(\"all\"):', plt.get_fignums())",
+      "done('accumulated.png')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "lines, bars: (2, 0) [1]\nshow(): None [1]\nafter bar, same figure: (2, 2)\nafter clf(): (1, 0)\nnew figure: 2 (0, 0)\nclose(\"all\"): []\nsaved accumulated.png: 8759 bytes, sha256 23707f84b0f3",
+     "outLabel": "prints",
+     "label": "program aggFigureCut_v1_0_0.py, lines 20 to 32 of 32"
+    },
+    {
+     "t": "foot",
+     "x": 5.03,
+     "y": 4.67,
+     "w": 4.47,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "NOT EXECUTED: the window of plt.show() on a real screen; Agg never opens one. Lines 1 to 19 (imports, helpers, a download check) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.65,
+     "w": 4.4,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Appendix B, answer 12, says plt.show() resets the graph data; under Agg it did not."
+    }
+   ],
+   "notes": "pyplot remembers a current figure and a current axes, and every call draws on them. The state diagram is the chapter's and the program's: a new figure has no lines; plt.plot() draws on the current axes and the figure holds lines; under the Agg backend plt.show() returns None and keeps the figure, and so does savefig(); with a window backend the user closes the window and the figure is gone. The program shows the first part for real: two plot calls give two lines and the list of figures [1]; show() returns None and the list is still [1]; plt.bar() on the same axes adds two bars to the two lines, which is why the book's later examples draw on the figure of the earlier ones unless plt.figure() or plt.clf() is called; clf() and one plot leaves one line; plt.figure() makes figure 2 with nothing in it; close('all') leaves the empty list. Appendix B of the book answers question 12 with the statement that plt.show() resets the graph data, and with Agg it does not: the corpus program aggFigureLifecycle_v1_0_0.py saved the figure before and after show() and the two files were equal. The sentence is true only for a window backend, where closing the window closes the figure, and the research did not run a window on a real screen, so that half of the diagram is the chapter's word and is marked on the slide. The research did open Matplotlib 3.11.2's Tk windows on the virtual display. The diagram has two loops on the plotted state, show() and savefig(), which is why it is drawn with the loops at the left of the state.",
+   "take": "pyplot draws on the current figure until you start a new one.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Showing a graph in a window",
+   "sub": "Save before you show; with a window backend the second savefig is blank",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.3,
+     "h": 2.75,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.4,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The program",
+       "x": 0.61,
+       "y": 1.516,
+       "w": 0.98,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 1.82,
+       "x2": 1.1,
+       "y2": 4.15,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.65,
+       "y": 1.4,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The Tk window",
+       "x": 3.71,
+       "y": 1.516,
+       "w": 0.98,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.2,
+       "y1": 1.82,
+       "x2": 4.2,
+       "y2": 4.15,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 2.284,
+       "x2": 4.2,
+       "y2": 2.284,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls plt.savefig() to write the image",
+       "x": 1.2,
+       "y": 2.079,
+       "w": 2.9,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 2.581,
+       "x2": 4.2,
+       "y2": 2.581,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls plt.show() to open the window",
+       "x": 1.2,
+       "y": 2.377,
+       "w": 2.9,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.2,
+       "y1": 2.878,
+       "x2": 1.1,
+       "y2": 2.878,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Blocks until the user closes the window",
+       "x": 1.2,
+       "y": 2.674,
+       "w": 2.9,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 3.175,
+       "x2": 4.2,
+       "y2": 3.175,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls plt.show() a second time",
+       "x": 1.2,
+       "y": 2.971,
+       "w": 2.9,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.2,
+       "y1": 3.473,
+       "x2": 1.1,
+       "y2": 3.473,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns at once because no figure is left",
+       "x": 1.2,
+       "y": 3.268,
+       "w": 2.9,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 3.77,
+       "x2": 4.2,
+       "y2": 3.77,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls plt.savefig() after the window",
+       "x": 1.2,
+       "y": 3.565,
+       "w": 2.9,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.2,
+       "y1": 4.067,
+       "x2": 1.1,
+       "y2": 4.067,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Saves a blank image of a new figure",
+       "x": 1.2,
+       "y": 3.862,
+       "w": 2.9,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "ShowingAGraphInAWindow"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.18,
+     "w": 4.3,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ShowingAGraphInAWindow - Interaction pattern, 36 of 38 words grounded in the chapter's text"
+    },
+    {
+     "t": "code",
+     "x": 5.0,
+     "y": 1.45,
+     "w": 4.5,
+     "h": 1.73,
+     "rows": [
+      [
+       "import matplotlib as mpl; mpl.use('Agg')",
+       ""
+      ],
+      [
+       "import matplotlib.pyplot as plt",
+       ""
+      ],
+      [
+       "x = plt.plot([1, 2, 3])",
+       ""
+      ],
+      [
+       "plt.show(); plt.show()",
+       ""
+      ],
+      [
+       "len(plt.gca().lines), plt.get_fignums()",
+       "(1, [1])"
+      ],
+      [
+       "plt.get_backend()",
+       "'Agg'"
+      ]
+     ],
+     "fs": 9,
+     "cap": "run under Python 3.14.6; no row reads the clock or the network"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch21-deck/images/accumulated.png",
+     "x": 5.0,
+     "y": 3.49,
+     "w": 1.11,
+     "h": 0.89
+    },
+    {
+     "t": "foot",
+     "x": 6.21,
+     "y": 3.49,
+     "w": 3.29,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image accumulated.png made by aggFigureCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 6.21,
+     "y": 3.94,
+     "w": 3.29,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "NOT EXECUTED: a window on a real screen. The blank image is the chapter's account of a window backend."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "John D. Hunter, the original author of Matplotlib",
+     "where": "The Python language, with the numerical library NumPy",
+     "when": "2003",
+     "link": "https://en.wikipedia.org/wiki/Matplotlib",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on Matplotlib gives John D. Hunter as the original author and 2003 as the release. It explains the name as a portmanteau of MATLAB, plot and library, and calls it a plotting library for Python and its numerical extension NumPy. The pyplot module of chapter 21 keeps one current figure that each call draws on. In this study plt.plot([1, 2, 3]) under Matplotlib 3.11.2 returned a list holding the line it drew. The account rests on these sources. Wikipedia, 'Matplotlib' (original author John D. Hunter; release 2003; a portmanteau of MATLAB, plot, and library), read 2026-10-13; this study's leaves LinePlot and PyplotState. The sequence diagram is the chapter's advice: call savefig() before show(), because show() blocks until the user closes the window, a second show() returns at once, and a savefig() after the window saves a blank image of a new figure. The console runs the part that can be run without a window: with the Agg backend, plt.plot() draws a line, calling show() twice changes nothing, and the current axes still hold the one line and the list of figures is still [1]; the backend is Agg. The small picture is the graph of the previous slide's program, a figure with two lines and two bars drawn on the same axes, saved by the program and compared by the build with what it saves now. The window was not shown on a real screen. The research opened a Tk window on the virtual display with Matplotlib 3.11.2 and took a screenshot of the display, and Matplotlib 3.9.2's TkAgg backend failed against Tk 9.0; neither is a statement about how the window looks to a person, and the blank second image is read from the chapter and not run.",
+   "take": "Save the figure first, then show it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in one map",
+   "sub": "Six branches; the slides of each branch hold the examples",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.0,
+       "y": 2.425,
+       "w": 2.0,
+       "h": 1.15,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A program edits pictures and draws graphs with Pillow and Matplotlib",
+       "x": 4.08,
+       "y": 2.62,
+       "w": 1.84,
+       "h": 0.759,
+       "fs": 11,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 1.91,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Image fundamentals",
+       "x": 0.6,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "A colour is four integers from 0 to 255\nThe origin is the top left pixel\nA box excludes its right and bottom edge",
+       "x": 0.6,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 3.0,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Image editing",
+       "x": 0.6,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "paste() changes the image in place\nresize() takes integers only\nrotate() fills the corners by the mode",
+       "x": 0.6,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 4.09,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The logo project",
+       "x": 0.6,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "Resize only if both sides are larger than 300\nPaste the logo with the logo as the mask\nThe page has an en dash and the file has a minus sign",
+       "x": 0.6,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.631,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 1.91,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Drawing and the clipboard",
+       "x": 6.5,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "A rectangle includes its last pixel\ntextbbox() replaced textsize()\ncopy() needs xclip and a display",
+       "x": 6.5,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 3.0,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Matplotlib graphs",
+       "x": 6.5,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "Agg returns from show() at once\npie() returns a PieContainer in 3.11\nsavefig() comes before show()",
+       "x": 6.5,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 4.09,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The book and practice",
+       "x": 6.5,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "Green of Table 21-1 is lime\nmatplotlib==3.92 is not a release\nThe 2nd edition used textsize",
+       "x": 6.5,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      }
+     ],
+     "did": "MakingGraphsAndManipulatingImagesAtAGlance"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram MakingGraphsAndManipulatingImagesAtAGlance - TopicAndParts pattern, 97 of 98 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "These six branches are the route of the deck. Image fundamentals: a colour is four integers from 0 to 255, the origin is the top left pixel, and a box excludes its right and bottom edge. Image editing: paste() changes the image in place, resize() takes integers only, and rotate() fills the corners by the mode of the picture. The logo project: resize only if both sides are larger than 300, paste the logo with the logo as the mask, and remember that the page has an en dash where the file has a minus sign. Drawing and the clipboard: a rectangle includes its last pixel, textbbox() replaced textsize(), and copy() needs xclip and a display. Matplotlib graphs: Agg returns from show() at once, pie() returns a PieContainer in 3.11, and savefig() comes before show(). The book and practice: Green of Table 21-1 is lime, matplotlib==3.92 is not a release, and the second edition used textsize. Together they answer the first question of the chapter, what a program can be shown to do with a picture on a machine with no screen and what can only be shown to fail, and the slides that say where a printed line differs answer the second. The map is drawn from the same specification as the interactive page.",
+   "take": "If a branch feels unproven, its slides hold the example.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Every link was opened on the day this deck was made",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.55,
+     "fs": 9,
+     "groups": [
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, chapter 21 - free online",
+         "https://automatetheboringstuff.com/3e/chapter21.html"
+        ],
+        [
+         "Appendix A: installing third-party modules",
+         "https://automatetheboringstuff.com/3e/appendixa.html"
+        ],
+        [
+         "Online materials of the 3rd edition (zip)",
+         "https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "Pillow: Image module",
+         "https://pillow.readthedocs.io/en/stable/reference/Image.html"
+        ],
+        [
+         "Pillow: ImageDraw module",
+         "https://pillow.readthedocs.io/en/stable/reference/ImageDraw.html"
+        ],
+        [
+         "Matplotlib: pyplot.pie",
+         "https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.pie.html"
+        ],
+        [
+         "pyperclipimg README",
+         "https://raw.githubusercontent.com/asweigart/pyperclipimg/main/README.md"
+        ]
+       ]
+      },
+      {
+       "head": "Stories in the notes",
+       "rows": [
+        [
+         "PNG (Wikipedia)",
+         "https://en.wikipedia.org/wiki/PNG"
+        ],
+        [
+         "JPEG (Wikipedia)",
+         "https://en.wikipedia.org/wiki/JPEG"
+        ]
+       ]
+      },
+      {
+       "head": "Standards",
+       "rows": [
+        [
+         "PNG specification, third edition (W3C)",
+         "https://www.w3.org/TR/png-3/"
+        ],
+        [
+         "Pillow image file formats",
+         "https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every listing of the chapter; the online materials are the zip of 91 files that the programs of this deck download and check by SHA-256, and Appendix A is where the book pins Pillow 10.4.0 and the Matplotlib release it writes as 3.92. The reference links are the pages of Pillow and Matplotlib that the chapter relies on and the README of pyperclipimg. Four of the six stories of the chapter are on slides with their own link, on the slide itself: Russell Kirsch and the first scanned picture, alpha compositing, the Python Imaging Library and Matplotlib. The other two, on PNG and on JPEG, are told in the notes of the slide about saving, and their pages are the third group. The last group is the PNG specification of the W3C and the Pillow page on file formats. The rest of the sixty sources of the research, among them the release notes of Pillow, the API changes of Matplotlib, the PyPI metadata and the standards for JPEG and JFIF, are in the research package. No photograph of a person is used in the deck.",
+   "take": "Textbook, documentation, standards and history, all opened today.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What you should now be able to say",
+   "sub": "Four claims, each carried by a result you saw printed",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 1.5,
+     "w": 8.8,
+     "h": 2.4,
+     "fs": 15,
+     "items": [
+      "A box has its left and top, not its right and bottom; crop() and paste() copy first.",
+      "A rotated corner is filled by the mode; a PNG has no dpi unless you give one.",
+      "textbbox() measures text; the clipboard and a window need a display.",
+      "Appendix A pins a release that does not exist; pie() changed in 3.11."
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.6,
+     "y": 4.1,
+     "w": 8.8,
+     "h": 0.6,
+     "fs": 10,
+     "big": false,
+     "items": [
+      "41 console rows",
+      "27 programs run",
+      "8 diagrams",
+      "16 pictures"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The console rows of the grid, the box, the answer of Appendix B, the Agg window and the pins need Pillow, Matplotlib or packaging, so they run in a Python that has those; the first three need only Pillow, and the version rows need packaging. The rows were run again under Python 3.14.6 each time the deck was built, and the programs, and with them the sixteen pictures, were run again by the check that compares the slides with the recording. What was not run is marked on its slide: Windows and macOS, a real screen, Matplotlib 3.9.2 and 3.10.0 as wheels on Python 3.14.6, and the licence of the cat picture was not checked. Nothing was ever shown to a person on a screen by the clipboard program. The next chapter of the book automates the keyboard and the mouse, and what this chapter taught about checking what a program saves, and about reading a printed output with care, carries over.",
+   "take": "Questions are welcome; bring a picture problem to run.",
+   "bg": "light"
+  }
+ ]
+}

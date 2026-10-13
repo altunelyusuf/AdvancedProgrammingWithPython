@@ -1,0 +1,802 @@
+{
+ "_version": "1.0.0",
+ "_python": "3.14.6",
+ "_packages": "Pillow 12.3.0 | Matplotlib 3.11.2 | NumPy 2.5.4 | pyperclipimg 0.2.0",
+ "title": [
+  [
+   "import platform, importlib.metadata as m",
+   ""
+  ],
+  [
+   "platform.python_version()",
+   "'3.14.6'"
+  ],
+  [
+   "m.version('pillow')",
+   "'12.3.0'"
+  ],
+  [
+   "m.version('matplotlib')",
+   "'3.11.2'"
+  ]
+ ],
+ "grid": [
+  [
+   "from PIL import Image",
+   ""
+  ],
+  [
+   "im = Image.new('1', (176, 176))",
+   ""
+  ],
+  [
+   "im.size, im.mode",
+   "((176, 176), '1')"
+  ],
+  [
+   "176 * 176",
+   "30976"
+  ],
+  [
+   "len(im.tobytes())",
+   "3872"
+  ],
+  [
+   "im.getpixel((0, 0))",
+   "0"
+  ],
+  [
+   "im.putpixel((0, 0), 1)",
+   ""
+  ],
+  [
+   "im.getpixel((0, 0))",
+   "1"
+  ],
+  [
+   "im.getpixel((1, 0))",
+   "0"
+  ]
+ ],
+ "box": [
+  [
+   "from PIL import Image",
+   ""
+  ],
+  [
+   "im = Image.new('RGB', (28, 27))",
+   ""
+  ],
+  [
+   "im.crop((3, 1, 9, 6)).size",
+   "(6, 5)"
+  ],
+  [
+   "(9 - 3) * (6 - 1)",
+   "30"
+  ],
+  [
+   "im.crop((9, 1, 3, 6))",
+   "ValueError: Coordinate 'right' is less than 'left'"
+  ],
+  [
+   "im.getpixel((28, 0))",
+   "IndexError: image index out of range"
+  ],
+  [
+   "im.getpixel((-1, 0)) == im.getpixel((27, 0))",
+   "True"
+  ]
+ ],
+ "appb": [
+  [
+   "from PIL import Image",
+   ""
+  ],
+  [
+   "im = Image.new('RGB', (100, 100))",
+   ""
+  ],
+  [
+   "im.crop((0, 50, 50, 50)).size",
+   "(50, 0)"
+  ],
+  [
+   "im.crop((0, 50, 50, 100)).size",
+   "(50, 50)"
+  ]
+ ],
+ "logo": [
+  [
+   "compile('x = 816 \u2013 100', 'listing', 'exec')",
+   "SyntaxError: invalid character '\u2013' (U+2013) (listing, line 1)"
+  ],
+  [
+   "type(compile('x = 816 - 100', 'listing', 'exec')).__name__",
+   "'code'"
+  ],
+  [
+   "300 / 1088 * 816",
+   "225.00000000000003"
+  ],
+  [
+   "int(300 / 1088 * 816)",
+   "225"
+  ],
+  [
+   "'UPPER.PNG'.endswith('.png')",
+   "False"
+  ],
+  [
+   "'UPPER.PNG'.lower().endswith('.png')",
+   "True"
+  ]
+ ],
+ "pins": [
+  [
+   "from packaging.version import Version",
+   ""
+  ],
+  [
+   "Version('3.9.2')",
+   "<Version('3.9.2')>"
+  ],
+  [
+   "Version('3.92')",
+   "<Version('3.92')>"
+  ],
+  [
+   "Version('3.92') == Version('3.9.2')",
+   "False"
+  ],
+  [
+   "Version('3.92') > Version('3.11.2')",
+   "True"
+  ]
+ ],
+ "window": [
+  [
+   "import matplotlib as mpl; mpl.use('Agg')",
+   ""
+  ],
+  [
+   "import matplotlib.pyplot as plt",
+   ""
+  ],
+  [
+   "x = plt.plot([1, 2, 3])",
+   ""
+  ],
+  [
+   "plt.show(); plt.show()",
+   ""
+  ],
+  [
+   "len(plt.gca().lines), plt.get_fignums()",
+   "(1, [1])"
+  ],
+  [
+   "plt.get_backend()",
+   "'Agg'"
+  ]
+ ],
+ "_programs": {
+  "colorsAndModes_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\n# Chapter 21, \"Colors and RGBA Values\": names, hex strings, the table of the book, JPEG and the pixel density.\nprint('Pillow', md.version('pillow'))\nfor n in ('red', 'green', 'lime', 'blue', 'white', 'black', 'CornflowerBlue', 'cornflowerblue', '#CCDDEE', '#ccddee'):\n    print(' ', n, ImageColor.getcolor(n, 'RGBA'))\nprint('colormap entries:', len(ImageColor.colormap), ImageColor.colormap['aliceblue'], '...', sorted(ImageColor.colormap)[-1])\nprint('Table 21-1 of the book lists Green as (0, 255, 0, 255); Pillow says green is', ImageColor.getcolor('green', 'RGBA'), 'and lime is', ImageColor.getcolor('lime', 'RGBA'))\nprint('transparent:', err(lambda: ImageColor.getcolor('transparent', 'RGBA')))\nprint('RGB mode of a name:', ImageColor.getcolor('green', 'RGB'), ' a short hex:', ImageColor.getcolor('#fa0', 'RGBA'))\nim = Image.new('RGBA', (100, 200), 'purple'); print('new purple RGBA:', im.size, im.mode, im.getpixel((0, 0)), ' new with no colour:', Image.new('RGBA', (1, 1)).getpixel((0, 0)), Image.new('RGB', (1, 1)).getpixel((0, 0)))\nd = wd(); im.save('a.png'); print('RGBA to JPEG:', err(lambda: im.save('a.jpg')))\nim.convert('RGB').save('a.jpg'); print('after convert(\"RGB\"): saved', os.path.getsize('a.jpg') > 0, ' unknown extension:', err(lambda: im.save('a.unknownext')))\npng = Image.open('a.png'); print('PNG saved with no dpi has a density:', png.info.get('dpi'))\nim.save('b.png', dpi=(72, 72)); print('PNG saved with dpi=(72, 72):', tuple(round(v, 3) for v in Image.open('b.png').info['dpi']), ' JPEG default:', Image.open('a.jpg').info.get('jfif_density'), Image.open('a.jpg').info.get('jfif_unit'))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Pillow 12.3.0\n  red (255, 0, 0, 255)\n  green (0, 128, 0, 255)\n  lime (0, 255, 0, 255)\n  blue (0, 0, 255, 255)\n  white (255, 255, 255, 255)\n  black (0, 0, 0, 255)\n  CornflowerBlue (100, 149, 237, 255)\n  cornflowerblue (100, 149, 237, 255)\n  #CCDDEE (204, 221, 238, 255)\n  #ccddee (204, 221, 238, 255)\ncolormap entries: 148 #f0f8ff ... yellowgreen\nTable 21-1 of the book lists Green as (0, 255, 0, 255); Pillow says green is (0, 128, 0, 255) and lime is (0, 255, 0, 255)\ntransparent: ('ValueError', \"unknown color specifier: 'transparent'\")\nRGB mode of a name: (0, 128, 0)  a short hex: (255, 170, 0, 255)\nnew purple RGBA: (100, 200) RGBA (128, 0, 128, 255)  new with no colour: (0, 0, 0, 0) (0, 0, 0)\nRGBA to JPEG: ('OSError', 'cannot write mode RGBA as JPEG')\nafter convert(\"RGB\"): saved True  unknown extension: ('ValueError', 'unknown file extension: .unknownext')\nPNG saved with no dpi has a density: None\nPNG saved with dpi=(72, 72): (72.009, 72.009)  JPEG default: (1, 1) 0",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": true
+  },
+  "cropPasteTile_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\nZIPSHA = 'dac627e807f69ee14913ba621a15dec1f98db739d76939555ba5360d05eba916'\nFILESHA = {'zophie.png': '5c5bf02fd0c95cee5d490a6daf3f1c4ccbbcab9fdc59bd8bba9564cad1462ba1', 'catlogo.png': '107740e7ca46ce7642b6940ff1232689bc3d34eb14c026813a61cfae45385db0',\n           'guests.txt': 'e6136e39f829ae7380be4969b780c72bd8022a1a97efc399f0f2002ce1fd5164', 'resizeAndAddLogo.py': '4291c7cedd9dcf37b792ee7c20485902ad746b2743f66873ccc953bf4681634a'}\ndef shipped(directory):\n    \"\"\"writes the four shipped files into directory, each checked against its SHA-256; prints NOT EXECUTED and stops (exit 0) when the zip cannot be had\"\"\"\n    import urllib.request\n    try:\n        cache = os.environ.get('CH21_CACHE'); p = os.path.join(cache, 'ch21_materials.zip') if cache else None\n        if p and os.path.exists(p): b = open(p, 'rb').read()\n        else:\n            rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n            b = urllib.request.urlopen(rq, timeout=180).read()\n    except Exception as e:\n        print('NOT EXECUTED: the online materials could not be fetched (%s)' % type(e).__name__); sys.exit(0)\n    if hashlib.sha256(b).hexdigest() != ZIPSHA:\n        print('NOT EXECUTED: the zip differs from the one the study recorded (SHA-256 %s)' % hashlib.sha256(b).hexdigest()[:12]); sys.exit(0)\n    z = zipfile.ZipFile(io.BytesIO(b)); names = [n for n in z.namelist() if '__MACOSX' not in n]\n    for f, h in FILESHA.items():\n        n = [x for x in names if x.endswith('/' + f)][0]; data = z.read(n)\n        assert hashlib.sha256(data).hexdigest() == h, f\n        open(os.path.join(directory, f), 'wb').write(data)\n    print('shipped files checked against their SHA-256:', ', '.join(sorted(FILESHA)))\n# Chapter 21, \"Cropping Images\", \"Pasting Images onto Other Images\" and the tiling loop, on the book's zophie.png.\nd = wd(); shipped(d)\ncat = Image.open('zophie.png'); print('zophie.png:', cat.size, cat.format, cat.mode, ' width, height =', cat.width, cat.height)\nprint('filename as Pillow %s reports it:' % md.version('pillow'), cat.filename)\nface = cat.crop((335, 345, 565, 560)); print('crop((335, 345, 565, 560)) ->', face.size, ' (right - left, bottom - top) =', (565 - 335, 560 - 345))\nprint('crop with right < left:', err(lambda: cat.crop((565, 345, 335, 560))))\nprint('crop that runs past the edge:', cat.crop((700, 1000, 900, 1200)).size, cat.crop((700, 1000, 900, 1200)).getpixel((199, 199)))\ncopy = cat.copy(); r = copy.paste(face, (0, 0)); print('paste returns', r, ' the corner of the copy equals the face corner:', copy.getpixel((0, 0)) == face.getpixel((0, 0)), ' the original is unchanged:', Image.open('zophie.png').getpixel((0, 0)) == cat.getpixel((0, 0)))\ncopy = cat.copy(); w, h = face.size; n = 0\nfor left in range(0, cat.width, w):\n    for top in range(0, cat.height, h):\n        copy.paste(face, (left, top)); n += 1\nprint('tiling loop: step %dx%d over %dx%d pastes' % (w, h, cat.width, cat.height), n, 'tiles')\nbig = cat.copy().resize((cat.width * 2, cat.height * 2)); print('resize((1632, 2176)):', big.size)\nprint('resize with floats:', err(lambda: cat.resize((408.0, 544.5))))\nhalf = cat.resize((cat.width // 2, cat.height // 2)); print('resize to half:', half.size, ' int(300/1088*816) =', int(300 / 1088 * 816), ' the float is', 300 / 1088 * 816)\nprint('resize to a wrong shape squashes it:', cat.resize((cat.width, 100)).size)\nj = cat.copy(); j.save('zophie.jpg'); print('JPEG bytes vs PNG bytes:', os.path.getsize('zophie.jpg'), os.path.getsize('zophie.png'))\nfrom PIL import ImageChops\na = Image.open('zophie.png'); b = Image.open('zophie.jpg'); print('JPEG is lossy: largest difference in each channel after the round trip:', [hi for lo, hi in ImageChops.difference(a, b).getextrema()], ' mode', b.mode)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "shipped files checked against their SHA-256: catlogo.png, guests.txt, resizeAndAddLogo.py, zophie.png\nzophie.png: (816, 1088) PNG RGB  width, height = 816 1088\nfilename as Pillow 12.3.0 reports it: zophie.png\ncrop((335, 345, 565, 560)) -> (230, 215)  (right - left, bottom - top) = (230, 215)\ncrop with right < left: ('ValueError', \"Coordinate 'right' is less than 'left'\")\ncrop that runs past the edge: (200, 200) (0, 0, 0)\npaste returns None  the corner of the copy equals the face corner: True  the original is unchanged: True\ntiling loop: step 230x215 over 816x1088 pastes 24 tiles\nresize((1632, 2176)): (1632, 2176)\nresize with floats: ('TypeError', \"'float' object cannot be interpreted as an integer\")\nresize to half: (408, 544)  int(300/1088*816) = 225  the float is 225.00000000000003\nresize to a wrong shape squashes it: (816, 100)\nJPEG bytes vs PNG bytes: 125433 1287443\nJPEG is lossy: largest difference in each channel after the round trip: [33, 36, 37]  mode RGB",
+   "live": true,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": true
+  },
+  "rotateFlipPixels_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\n# Chapter 21, \"Rotating and Flipping Images\" and \"Changing Individual Pixels\": the fill colour, expand, FLIP_LEFT_RIGHT, putpixel.\ndef grad():\n    im = Image.new('RGB', (60, 40))\n    for x in range(60):\n        for y in range(40): im.putpixel((x, y), (x * 4 % 256, y * 6 % 256, (x + y) * 3 % 256))\n    return im\ng = grad(); print('gradient', g.size, g.mode, ' pixel (3, 2):', g.getpixel((3, 2)))\nfor deg in (90, 180, 270, 6):\n    print('rotate(%d): %s, with expand=True: %s' % (deg, g.rotate(deg).size, g.rotate(deg, expand=True).size))\nprint('rotate(6) corner on an RGB image:', g.rotate(6).getpixel((0, 0)), ' on an RGBA image:', g.convert('RGBA').rotate(6).getpixel((0, 0)), ' with fillcolor:', g.rotate(6, fillcolor='red').getpixel((0, 0)))\nprint('rotate(90) on a 60x40 image keeps 60x40 and loses the corners, corner pixel', g.rotate(90).getpixel((0, 0)), '; transpose(ROTATE_90) turns the top-right pixel into the top-left one (counter-clockwise):', g.transpose(Image.Transpose.ROTATE_90).getpixel((0, 0)) == g.getpixel((59, 0)))\nprint('flip with Image.FLIP_LEFT_RIGHT:', g.transpose(Image.FLIP_LEFT_RIGHT).getpixel((0, 0)) == g.getpixel((59, 0)), ' with Image.Transpose.FLIP_LEFT_RIGHT:', g.transpose(Image.Transpose.FLIP_LEFT_RIGHT).getpixel((0, 0)) == g.getpixel((59, 0)))\nprint('FLIP_TOP_BOTTOM:', g.transpose(Image.Transpose.FLIP_TOP_BOTTOM).getpixel((0, 0)) == g.getpixel((0, 39)), ' ROTATE_90 size:', g.transpose(Image.Transpose.ROTATE_90).size)\nc = g.copy(); print('putpixel returns', c.putpixel((0, 0), (255, 0, 0)), ' now', c.getpixel((0, 0)))\nprint('putpixel with a colour name:', err(lambda: c.putpixel((1, 0), 'red')), ' with ImageColor:', c.putpixel((1, 0), ImageColor.getcolor('red', 'RGB')), c.getpixel((1, 0)))\nprint('getpixel((60, 0)):', err(lambda: g.getpixel((60, 0))), ' getpixel((-1, 0)):', g.getpixel((-1, 0)), '== getpixel((59, 0)):', g.getpixel((-1, 0)) == g.getpixel((59, 0)))\nprint('putpixel on a tuple of the wrong length:', err(lambda: c.putpixel((2, 0), (1, 2))))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "gradient (60, 40) RGB  pixel (3, 2): (12, 12, 15)\nrotate(90): (60, 40), with expand=True: (40, 60)\nrotate(180): (60, 40), with expand=True: (60, 40)\nrotate(270): (60, 40), with expand=True: (40, 60)\nrotate(6): (60, 40), with expand=True: (64, 48)\nrotate(6) corner on an RGB image: (0, 0, 0)  on an RGBA image: (0, 0, 0, 0)  with fillcolor: (255, 0, 0)\nrotate(90) on a 60x40 image keeps 60x40 and loses the corners, corner pixel (0, 0, 0) ; transpose(ROTATE_90) turns the top-right pixel into the top-left one (counter-clockwise): True\nflip with Image.FLIP_LEFT_RIGHT: True  with Image.Transpose.FLIP_LEFT_RIGHT: True\nFLIP_TOP_BOTTOM: True  ROTATE_90 size: (40, 60)\nputpixel returns None  now (255, 0, 0)\nputpixel with a colour name: ('TypeError', 'color must be int or tuple')  with ImageColor: None (255, 0, 0)\ngetpixel((60, 0)): ('IndexError', 'image index out of range')  getpixel((-1, 0)): (236, 0, 177) == getpixel((59, 0)): True\nputpixel on a tuple of the wrong length: ('TypeError', 'color must be int, or tuple of one, three or four elements')",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": true
+  },
+  "drawingPixelCounts_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\n# Chapter 21, \"A Drawing Example\": the book's 200x200 image (its listing as printed, with a white background), with the end points counted.\nd = wd(); im = Image.new('RGBA', (200, 200), 'white'); draw = ImageDraw.Draw(im)\ndraw.line([(0, 0), (199, 0), (199, 199), (0, 199), (0, 0)], fill='black')\ndraw.rectangle((20, 30, 60, 60), fill='blue'); draw.ellipse((120, 30, 160, 60), fill='red')\ndraw.polygon(((57, 87), (79, 62), (94, 85), (120, 90), (103, 113)), fill='brown')\nP0 = list(im.getdata()); count0 = lambda c: sum(1 for p in P0 if p == c)\nprint('blue rectangle (20, 30, 60, 60) paints', count0((0, 0, 255, 255)), 'pixels; 41 x 31 =', 41 * 31, ' (the ends are included, unlike crop)')\nfor i in range(100, 200, 10): draw.line([(i, 0), (200, i - 100)], fill='green')\nim.save('drawing.png')\nP = list(im.getdata()); count = lambda c: sum(1 for p in P if p == c)\nprint('crop((20, 30, 60, 60)) is', im.crop((20, 30, 60, 60)).size)\nprint('red ellipse pixels:', count((255, 0, 0, 255)) > 600, ' brown polygon pixels > 300:', count((165, 42, 42, 255)) > 300)\nprint('green (the colour name) as drawn:', ImageColor.getcolor('green', 'RGBA'), ' pixels of it:', count((0, 128, 0, 255)) > 100)\nprint('pixel (100, 0) after the green lines:', im.getpixel((100, 0)), ' pixel (50, 45) inside the rectangle:', im.getpixel((50, 45)), ' corner (0, 0):', im.getpixel((0, 0)))\nprint('a rectangle with the corners reversed:', err(lambda: draw.rectangle((60, 60, 20, 30), fill='blue')))\nd2 = ImageDraw.Draw(Image.new('RGB', (50, 50), 'blue')); print('rectangle with no fill and no outline paints an outline in white:', (lambda i: (ImageDraw.Draw(i).rectangle((5, 5, 20, 20)), i.getpixel((5, 5)), i.getpixel((10, 10))))(Image.new('RGB', (50, 50), 'blue')))\nprint('ellipse((0, 0, 99, 99)) bounding box in a 100x100 image touches all four edges:', (lambda i: (ImageDraw.Draw(i).ellipse((0, 0, 99, 99), fill='white'), [i.getpixel((0, 49)), i.getpixel((99, 49)), i.getpixel((49, 0)), i.getpixel((49, 99))])[1])(Image.new('RGB', (100, 100))))\nchk = Image.open('drawing.png'); print('saved and reloaded:', chk.size, chk.mode, chk.getpixel((50, 45)))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "blue rectangle (20, 30, 60, 60) paints 1271 pixels; 41 x 31 = 1271  (the ends are included, unlike crop)\ncrop((20, 30, 60, 60)) is (40, 30)\nred ellipse pixels: True  brown polygon pixels > 300: True\ngreen (the colour name) as drawn: (0, 128, 0, 255)  pixels of it: True\npixel (100, 0) after the green lines: (0, 128, 0, 255)  pixel (50, 45) inside the rectangle: (0, 0, 255, 255)  corner (0, 0): (0, 0, 0, 255)\na rectangle with the corners reversed: ('ValueError', 'x1 must be greater than or equal to x0')\nrectangle with no fill and no outline paints an outline in white: (None, (255, 255, 255), (0, 0, 255))\nellipse((0, 0, 99, 99)) bounding box in a 100x100 image touches all four edges: [(255, 255, 255), (255, 255, 255), (255, 255, 255), (255, 255, 255)]\nsaved and reloaded: (200, 200) RGBA (0, 0, 255, 255)",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": true
+  },
+  "textAndFonts_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\n# Chapter 21, \"Drawing Text\": the fonts and the size of the text. 'arial.ttf' is not on this machine; DejaVu Sans is.\nprint('default font:', type(ImageFont.load_default()).__name__, ' size 10:', ImageFont.load_default().size)\nprint('arial.ttf:', err(lambda: ImageFont.truetype('arial.ttf', 32)))\nf = dejavu(); print('DejaVuSans.ttf, 32:', type(f).__name__, f.size, f.getname())\nim = Image.new('RGBA', (200, 200), 'white'); draw = ImageDraw.Draw(im)\nbox = draw.textbbox((100, 150), 'Howdy', font=f); print('textbbox((100, 150), \"Howdy\") =', box, ' width', box[2] - box[0], ' height', box[3] - box[1], ' the right edge is outside the 200-pixel image:', box[2] > 200)\nprint('textlength(\"Howdy\") =', round(draw.textlength('Howdy', font=f), 2), ' font.getbbox(\"Howdy\") =', f.getbbox('Howdy'), ' getlength:', round(f.getlength('Howdy'), 2))\ndraw.text((20, 150), 'Hello', fill='purple', font=f); print('textsize on ImageDraw:', hasattr(draw, 'textsize'), ' getsize on a font:', hasattr(f, 'getsize'))\nprint('text(...) returns', draw.text((20, 20), 'Hi', fill='black', font=ImageFont.load_default(size=20)))\ninked = [(x, y) for x in range(200) for y in range(200) if im.getpixel((x, y))[:3] == (128, 0, 128)]; print('purple pixels exist:', len(inked) > 100, ' leftmost x >= 20:', min(p[0] for p in inked) >= 20)\nbig = ImageFont.truetype('DejaVuSans.ttf', 64); small = ImageFont.truetype('DejaVuSans.ttf', 16); print('width of \"Hello\" at 16, 32, 64 points:', [round(x.getlength('Hello')) for x in (small, f, big)])\nprint('the book says the size is in points; Pillow reads the size argument as pixels, so the same number gives the same height on every screen:', f.size)\nd = wd(); im.save('text.png'); print('saved text.png', Image.open('text.png').size)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "default font: FreeTypeFont  size 10: 10\narial.ttf: ('OSError', 'cannot open resource')\nDejaVuSans.ttf, 32: FreeTypeFont 32 ('DejaVu Sans', 'Book')\ntextbbox((100, 150), \"Howdy\") = (100, 156, 209, 187)  width 109  height 31  the right edge is outside the 200-pixel image: True\ntextlength(\"Howdy\") = 109.06  font.getbbox(\"Howdy\") = (0, 6, 109, 37)  getlength: 109.06\ntextsize on ImageDraw: False  getsize on a font: False\ntext(...) returns None\npurple pixels exist: True  leftmost x >= 20: True\nwidth of \"Hello\" at 16, 32, 64 points: [41, 81, 162]\nthe book says the size is in points; Pillow reads the size argument as pixels, so the same number gives the same height on every screen: 32\nsaved text.png (200, 200)",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": true
+  },
+  "tileMaker_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\nZIPSHA = 'dac627e807f69ee14913ba621a15dec1f98db739d76939555ba5360d05eba916'\nFILESHA = {'zophie.png': '5c5bf02fd0c95cee5d490a6daf3f1c4ccbbcab9fdc59bd8bba9564cad1462ba1', 'catlogo.png': '107740e7ca46ce7642b6940ff1232689bc3d34eb14c026813a61cfae45385db0',\n           'guests.txt': 'e6136e39f829ae7380be4969b780c72bd8022a1a97efc399f0f2002ce1fd5164', 'resizeAndAddLogo.py': '4291c7cedd9dcf37b792ee7c20485902ad746b2743f66873ccc953bf4681634a'}\ndef shipped(directory):\n    \"\"\"writes the four shipped files into directory, each checked against its SHA-256; prints NOT EXECUTED and stops (exit 0) when the zip cannot be had\"\"\"\n    import urllib.request\n    try:\n        cache = os.environ.get('CH21_CACHE'); p = os.path.join(cache, 'ch21_materials.zip') if cache else None\n        if p and os.path.exists(p): b = open(p, 'rb').read()\n        else:\n            rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n            b = urllib.request.urlopen(rq, timeout=180).read()\n    except Exception as e:\n        print('NOT EXECUTED: the online materials could not be fetched (%s)' % type(e).__name__); sys.exit(0)\n    if hashlib.sha256(b).hexdigest() != ZIPSHA:\n        print('NOT EXECUTED: the zip differs from the one the study recorded (SHA-256 %s)' % hashlib.sha256(b).hexdigest()[:12]); sys.exit(0)\n    z = zipfile.ZipFile(io.BytesIO(b)); names = [n for n in z.namelist() if '__MACOSX' not in n]\n    for f, h in FILESHA.items():\n        n = [x for x in names if x.endswith('/' + f)][0]; data = z.read(n)\n        assert hashlib.sha256(data).hexdigest() == h, f\n        open(os.path.join(directory, f), 'wb').write(data)\n    print('shipped files checked against their SHA-256:', ', '.join(sorted(FILESHA)))\n# Chapter 21, \"Practice Project: Tile Maker\": make_tile(filename, across, down) as the book specifies it, and the same loop with the shipped catlogo.png (mode LA).\nd = wd(); shipped(d)\nImage.new('RGB', (20, 50), 'tan').save('zophie_the_cat.jpg')\ndef make_tile(filename, across, down):\n    tile = Image.open(filename); w, h = tile.size; out = Image.new('RGB', (w * across, h * down)); n = 0\n    for x in range(across):\n        for y in range(down):\n            out.paste(tile, (x * w, y * h)); n += 1\n    return out, n\nt, n = make_tile('zophie_the_cat.jpg', 6, 10); print(\"make_tile('zophie_the_cat.jpg', 6, 10) on a 20x50 image:\", t.size, n, 'tiles  (the book: 120x500, 60 tiles)')\nlogo = Image.open('catlogo.png'); print('catlogo.png:', logo.size, logo.mode, ' transparent corner pixel:', logo.getpixel((0, 0)))\nout = Image.new('RGBA', (400, 300), 'white'); pastes = 0\nfor left in range(0, 400, logo.width):\n    for top in range(0, 300, logo.height): out.paste(logo, (left, top), logo.convert('RGBA')); pastes += 1\nprint('tiling the logo over 400x300 with its own mask:', out.size, pastes, 'pastes; the transparent corner stays', out.getpixel((0, 0)), ' an opaque logo pixel is copied:', out.getpixel((50, 47)) != (255, 255, 255, 255))\nnomask = Image.new('RGBA', (100, 95), 'white'); nomask.paste(logo.convert('RGBA'), (0, 0)); print('paste without the mask copies the transparent pixel as it is, alpha included:', nomask.getpixel((0, 0)))\nrgb = Image.new('RGB', (200, 200), 'white'); rgb.paste(logo, (0, 0)); print('paste of an LA logo onto an RGB image with no mask runs:', rgb.getpixel((0, 0)), rgb.getpixel((50, 47)))\nrgb2 = Image.new('RGB', (200, 200), 'white'); rgb2.paste(logo, (0, 0), logo); print('with itself as the mask:', rgb2.getpixel((0, 0)), rgb2.getpixel((50, 47)))\nrandom_ok = [Image.open('zophie_the_cat.jpg').transpose(m).size for m in (Image.Transpose.FLIP_LEFT_RIGHT, Image.Transpose.ROTATE_90)]; print('the bonus: flipping keeps (20, 50), turning by 90 gives', random_ok)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "shipped files checked against their SHA-256: catlogo.png, guests.txt, resizeAndAddLogo.py, zophie.png\nmake_tile('zophie_the_cat.jpg', 6, 10) on a 20x50 image: (120, 500) 60 tiles  (the book: 120x500, 60 tiles)\ncatlogo.png: (100, 95) LA  transparent corner pixel: (255, 0)\ntiling the logo over 400x300 with its own mask: (400, 300) 16 pastes; the transparent corner stays (255, 255, 255, 255)  an opaque logo pixel is copied: True\npaste without the mask copies the transparent pixel as it is, alpha included: (255, 255, 255, 0)\npaste of an LA logo onto an RGB image with no mask runs: (255, 255, 255) (0, 0, 0)\nwith itself as the mask: (255, 255, 255) (0, 0, 0)\nthe bonus: flipping keeps (20, 50), turning by 90 gives [(20, 50), (50, 20)]",
+   "live": true,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": true
+  },
+  "photoFolderFinder_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\n# Chapter 21, \"Practice Project: Photo Folder Finder\": walks a tree and reports the folders where more than half the files are photos (both sides over 500 pixels).\nd = wd()\ndef mk(path, size):\n    os.makedirs(os.path.dirname(path), exist_ok=True); Image.new('RGB', size, 'gray').save(path)\nmk('a/p1.png', (800, 600)); mk('a/p2.jpg', (900, 700)); open('a/notes.txt', 'w').write('x')\nmk('b/small.png', (300, 300)); mk('b/wide.png', (2000, 400)); mk('b/c/q1.png', (600, 600)); mk('b/c/q2.JPG', (700, 800)); mk('b/c/q3.jpg', (650, 900)); open('b/c/readme.txt', 'w').write('x')\nopen('d/x.txt', 'w').write('x') if os.makedirs('d', exist_ok=True) is None else None\ndef photo(path):\n    ext = os.path.splitext(path)[1].lower()\n    if ext not in ('.png', '.jpg'): return False\n    try:\n        with Image.open(path) as im: return im.width > 500 and im.height > 500\n    except OSError: return False\nfound = []\nfor folder, subs, files in os.walk('.'):\n    subs.sort(); files.sort()\n    if not files: continue\n    n = sum(photo(os.path.join(folder, f)) for f in files)\n    print('%-6s files %d, photos %d' % (folder, len(files), n))\n    if n > len(files) / 2: found.append(folder)\nprint('photo folders:', sorted(found))\nprint('os.walk visits folders in the order the file system returns them (here subs.sort() fixes it) so the lines are the same on every machine')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "./a    files 3, photos 2\n./b    files 2, photos 0\n./b/c  files 4, photos 3\n./d    files 1, photos 0\nphoto folders: ['./a', './b/c']\nos.walk visits folders in the order the file system returns them (here subs.sort() fixes it) so the lines are the same on every machine",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": true
+  },
+  "seatingCards_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\nZIPSHA = 'dac627e807f69ee14913ba621a15dec1f98db739d76939555ba5360d05eba916'\nFILESHA = {'zophie.png': '5c5bf02fd0c95cee5d490a6daf3f1c4ccbbcab9fdc59bd8bba9564cad1462ba1', 'catlogo.png': '107740e7ca46ce7642b6940ff1232689bc3d34eb14c026813a61cfae45385db0',\n           'guests.txt': 'e6136e39f829ae7380be4969b780c72bd8022a1a97efc399f0f2002ce1fd5164', 'resizeAndAddLogo.py': '4291c7cedd9dcf37b792ee7c20485902ad746b2743f66873ccc953bf4681634a'}\ndef shipped(directory):\n    \"\"\"writes the four shipped files into directory, each checked against its SHA-256; prints NOT EXECUTED and stops (exit 0) when the zip cannot be had\"\"\"\n    import urllib.request\n    try:\n        cache = os.environ.get('CH21_CACHE'); p = os.path.join(cache, 'ch21_materials.zip') if cache else None\n        if p and os.path.exists(p): b = open(p, 'rb').read()\n        else:\n            rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n            b = urllib.request.urlopen(rq, timeout=180).read()\n    except Exception as e:\n        print('NOT EXECUTED: the online materials could not be fetched (%s)' % type(e).__name__); sys.exit(0)\n    if hashlib.sha256(b).hexdigest() != ZIPSHA:\n        print('NOT EXECUTED: the zip differs from the one the study recorded (SHA-256 %s)' % hashlib.sha256(b).hexdigest()[:12]); sys.exit(0)\n    z = zipfile.ZipFile(io.BytesIO(b)); names = [n for n in z.namelist() if '__MACOSX' not in n]\n    for f, h in FILESHA.items():\n        n = [x for x in names if x.endswith('/' + f)][0]; data = z.read(n)\n        assert hashlib.sha256(data).hexdigest() == h, f\n        open(os.path.join(directory, f), 'wb').write(data)\n    print('shipped files checked against their SHA-256:', ', '.join(sorted(FILESHA)))\n# Chapter 21, \"Practice Project: Seating Cards\": one 288x360 card for each name of guests.txt (a 4x5 inch card at 72 pixels per inch).\nd = wd(); shipped(d)\nguests = open('guests.txt').read().splitlines(); print('guests:', len(guests), guests)\nf = ImageFont.truetype('DejaVuSans.ttf', 28); os.makedirs('cards')\nfor i, g in enumerate(guests):\n    card = Image.new('RGBA', (288, 360), 'white'); dr = ImageDraw.Draw(card)\n    dr.rectangle((0, 0, 287, 359), outline='black'); dr.ellipse((94, 20, 194, 120), fill='pink')\n    l, t, r, b = dr.textbbox((0, 0), g, font=f); x = (288 - (r - l)) // 2 - l; dr.text((x, 200), g, fill='black', font=f); card.save('cards/%d.png' % i)\n    print('card %d %-13s width of the name %3d fits: %s' % (i, g, r - l, r - l <= 288))\nprint('files:', sorted(os.listdir('cards')), ' sizes:', {Image.open('cards/' + n).size for n in os.listdir('cards')})\ncard = Image.open('cards/0.png'); print('black pixels on card 0:', sum(1 for p in card.getdata() if p[:3] == (0, 0, 0)) > 200, ' the border pixel (0, 0):', card.getpixel((0, 0)))\nprint('the book mentions a public domain flower image; the zip has no flower file:', [n for n in os.listdir('.') if 'flower' in n.lower()])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "shipped files checked against their SHA-256: catlogo.png, guests.txt, resizeAndAddLogo.py, zophie.png\nguests: 5 ['Prof. Plum', 'Miss Scarlet', 'Col. Mustard', 'Al Sweigart', 'Robocop']\ncard 0 Prof. Plum    width of the name 140 fits: True\ncard 1 Miss Scarlet  width of the name 168 fits: True\ncard 2 Col. Mustard  width of the name 176 fits: True\ncard 3 Al Sweigart   width of the name 159 fits: True\ncard 4 Robocop       width of the name 121 fits: True\nfiles: ['0.png', '1.png', '2.png', '3.png', '4.png']  sizes: {(288, 360)}\nblack pixels on card 0: True  the border pixel (0, 0): (0, 0, 0, 255)\nthe book mentions a public domain flower image; the zip has no flower file: []",
+   "live": true,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": true
+  },
+  "addLogoProject_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\nZIPSHA = 'dac627e807f69ee14913ba621a15dec1f98db739d76939555ba5360d05eba916'\nFILESHA = {'zophie.png': '5c5bf02fd0c95cee5d490a6daf3f1c4ccbbcab9fdc59bd8bba9564cad1462ba1', 'catlogo.png': '107740e7ca46ce7642b6940ff1232689bc3d34eb14c026813a61cfae45385db0',\n           'guests.txt': 'e6136e39f829ae7380be4969b780c72bd8022a1a97efc399f0f2002ce1fd5164', 'resizeAndAddLogo.py': '4291c7cedd9dcf37b792ee7c20485902ad746b2743f66873ccc953bf4681634a'}\ndef shipped(directory):\n    \"\"\"writes the four shipped files into directory, each checked against its SHA-256; prints NOT EXECUTED and stops (exit 0) when the zip cannot be had\"\"\"\n    import urllib.request\n    try:\n        cache = os.environ.get('CH21_CACHE'); p = os.path.join(cache, 'ch21_materials.zip') if cache else None\n        if p and os.path.exists(p): b = open(p, 'rb').read()\n        else:\n            rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n            b = urllib.request.urlopen(rq, timeout=180).read()\n    except Exception as e:\n        print('NOT EXECUTED: the online materials could not be fetched (%s)' % type(e).__name__); sys.exit(0)\n    if hashlib.sha256(b).hexdigest() != ZIPSHA:\n        print('NOT EXECUTED: the zip differs from the one the study recorded (SHA-256 %s)' % hashlib.sha256(b).hexdigest()[:12]); sys.exit(0)\n    z = zipfile.ZipFile(io.BytesIO(b)); names = [n for n in z.namelist() if '__MACOSX' not in n]\n    for f, h in FILESHA.items():\n        n = [x for x in names if x.endswith('/' + f)][0]; data = z.read(n)\n        assert hashlib.sha256(data).hexdigest() == h, f\n        open(os.path.join(directory, f), 'wb').write(data)\n    print('shipped files checked against their SHA-256:', ', '.join(sorted(FILESHA)))\n# Chapter 21, \"Project 16: Add a Logo\": the shipped resizeAndAddLogo.py, run on the book's zophie.png and on three pictures made here.\nd = wd(); shipped(d)\nImage.new('RGB', (1200, 400), 'orange').save('panorama.png'); Image.new('RGB', (1200, 250), 'olive').save('strip.png'); Image.new('RGB', (500, 700), 'teal').save('tall.jpg'); Image.new('RGB', (900, 900), 'gray').save('UPPER.PNG'); open('notes.txt', 'w').write('x')\nr = subprocess.run([sys.executable, 'resizeAndAddLogo.py'], capture_output=True, text=True); print('exit', r.returncode); print('\\n'.join(sorted(r.stdout.splitlines())))\nout = sorted(os.listdir('withLogo')); print('withLogo:', out)\nfor n in out: print(' ', n, Image.open('withLogo/' + n).size)\nz = Image.open('withLogo/zophie.png'); logo = Image.open('catlogo.png'); print('zophie 816x1088 -> 225x300:', z.size == (225, 300), ' int((300 / 1088) * 816) =', int((300 / 1088) * 816))\nprint('the logo lands at', (z.width - logo.width, z.height - logo.height), 'the lower-right corner; pixel under the logo changed:', z.getpixel((z.width - 50, z.height - 47)) != Image.open('zophie.png').resize((225, 300)).getpixel((z.width - 50, z.height - 47)))\nprint('panorama 1200x400 (both sides over 300) ->', Image.open('withLogo/panorama.png').size, '; strip 1200x250 (one side not over 300) ->', Image.open('withLogo/strip.png').size, '(the program leaves the size when either side is 300 or less)')\nprint('UPPER.PNG skipped (the test is endswith(\".png\") on a case-sensitive string):', 'UPPER.PNG' not in out)\nprint('the shipped file holds an en dash (U+2013):', '\u2013' in open('resizeAndAddLogo.py', encoding='utf-8').read(), ' (the printed listing of the page does)')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "shipped files checked against their SHA-256: catlogo.png, guests.txt, resizeAndAddLogo.py, zophie.png\nexit 0\nAdding logo to panorama.png...\nAdding logo to strip.png...\nAdding logo to tall.jpg...\nAdding logo to zophie.png...\nResizing panorama.png...\nResizing tall.jpg...\nResizing zophie.png...\nwithLogo: ['panorama.png', 'strip.png', 'tall.jpg', 'zophie.png']\n  panorama.png (300, 100)\n  strip.png (1200, 250)\n  tall.jpg (214, 300)\n  zophie.png (225, 300)\nzophie 816x1088 -> 225x300: True  int((300 / 1088) * 816) = 225\nthe logo lands at (125, 205) the lower-right corner; pixel under the logo changed: True\npanorama 1200x400 (both sides over 300) -> (300, 100) ; strip 1200x250 (one side not over 300) -> (1200, 250) (the program leaves the size when either side is 300 or less)\nUPPER.PNG skipped (the test is endswith(\".png\") on a case-sensitive string): True\nthe shipped file holds an en dash (U+2013): False  (the printed listing of the page does)",
+   "live": true,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": true
+  },
+  "pyplotReturns_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\n# Chapter 21, \"Making Graphs with Matplotlib\": what pyplot returns, in Matplotlib %s.\nprint('Matplotlib', md.version('matplotlib'), 'backend', matplotlib.get_backend(), ' default figure', [float(v) for v in plt.figure().get_size_inches()], 'dpi', plt.gcf().dpi); plt.close('all')\nln, = plt.plot([1, 2, 3, 4], [1, 4, 9, 16]); print('plot returns a list of', type(ln).__name__, ' colour', ln.get_color(), ' second line colour', plt.plot([1, 2, 3, 4], [2, 3, 5, 7])[0].get_color())\nprint('xlabel/ylabel/title return:', plt.xlabel('X'), plt.ylabel('Y'), plt.title('T').get_text(), ' legend ->', type(plt.legend(['a', 'b'])).__name__)\nplt.close('all'); bars = plt.bar(['spam', 'eggs', 'ham'], [3, 1, 2]); print('bar: container', type(bars).__name__, 'heights', [h.get_height() for h in bars], [type(h.get_height()).__name__ for h in bars], ' x labels', [t.get_text() for t in plt.gca().get_xticklabels()])\nplt.close('all'); res = plt.pie([10, 20, 30, 40], labels=['A', 'B', 'C', 'D'], autopct='%1.1f%%'); print('pie returns', type(res).__name__, ' unpacks to', len(tuple(res)), ' autopct texts', [t.get_text() for t in res[2]], ' first wedge', res[0][0].theta1 - res[0][0].theta2 if False else (res[0][0].theta1, res[0][0].theta2))\nprint('pie without autopct unpacks to', len(tuple(plt.pie([1, 2, 3]))), ' (3.9.2 and earlier return a tuple; 3.11 returns a PieContainer)'); print('axes aspect after pie:', plt.gca().get_aspect())\nplt.close('all'); plt.plot([1, 2, 3], label='a'); plt.xlabel('x'); b = io.BytesIO(); plt.savefig(b, format='png'); im = Image.open(io.BytesIO(b.getvalue())); print('savefig to PNG:', im.size, im.mode, ' dpi', tuple(round(v, 1) for v in im.info['dpi']))\nb2 = io.BytesIO(); plt.savefig(b2, format='png', dpi=200); print('savefig(dpi=200):', Image.open(io.BytesIO(b2.getvalue())).size)\nprint('scatter returns', type(plt.scatter([1, 2], [3, 4])).__name__, ' hist returns', len(plt.hist([1, 2, 2, 3], bins=3)), 'items')\n",
+   "inputs": [],
+   "needs": [
+    "matplotlib"
+   ],
+   "transcript": "Matplotlib 3.11.2 backend Agg  default figure [6.4, 4.8] dpi 100.0\nplot returns a list of Line2D  colour (0.12156862745098039, 0.4666666666666667, 0.7058823529411765)  second line colour (1.0, 0.4980392156862745, 0.054901960784313725)\nxlabel/ylabel/title return: Text(0.5, 0, 'X') Text(0, 0.5, 'Y') T  legend -> Legend\nbar: container BarContainer heights [np.int64(3), np.int64(1), np.int64(2)] ['int64', 'int64', 'int64']  x labels ['spam', 'eggs', 'ham']\npie returns PieContainer  unpacks to 3  autopct texts ['10.0%', '20.0%', '30.0%', '40.0%']  first wedge (0.0, np.float64(36.0))\npie without autopct unpacks to 2  (3.9.2 and earlier return a tuple; 3.11 returns a PieContainer)\naxes aspect after pie: 1.0\nsavefig to PNG: (640, 480) RGBA  dpi (100.0, 100.0)\nsavefig(dpi=200): (1280, 960)\nscatter returns PathCollection  hist returns 3 items",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": true
+  },
+  "aggFigureLifecycle_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\n# Chapter 21, \"plt.show()\" and what a figure keeps: the Agg backend has no window, so show() returns at once and the figure stays.\nd = wd(); print('backend', matplotlib.get_backend(), '(no DISPLAY in this program: %s)' % ('DISPLAY' in os.environ))\ndef parts():\n    ax = plt.gca(); return (len(ax.lines), len(ax.collections), len(ax.patches))\nplt.plot([1, 2, 3], [1, 2, 3]); plt.plot([1, 2, 3], [3, 2, 1]); print('figures', plt.get_fignums(), ' lines, collections, patches:', parts()); plt.savefig('line.png')\nprint('show() returns', plt.show(), ' figures after show:', plt.get_fignums(), '(a window backend would close and forget the figure)')\nplt.scatter([1, 2, 3], [1, 2, 3]); plt.savefig('scatter.png'); print('after scatter:', parts())\nplt.bar(['a', 'b'], [1, 2]); plt.savefig('bar.png'); print('after bar:', parts(), '- the book\\'s later examples draw on the same figure unless plt.figure() or plt.clf() is called')\nplt.clf(); plt.plot([1, 2]); print('after plt.clf() and one plot:', parts()); plt.figure(); print('plt.figure() starts a new one, now figures', plt.get_fignums(), 'and parts', parts())\nplt.close('all'); print('after close(\"all\"):', plt.get_fignums())\ncols = lambda n: len(set(Image.open(n).convert('RGB').getdata())); print('colours in line.png, scatter.png, bar.png:', cols('line.png'), cols('scatter.png'), cols('bar.png'))\nplt.close('all'); plt.plot([1, 2, 3]); plt.savefig('first.png'); plt.show(); plt.savefig('second.png'); print('with Agg the second savefig after show() still holds the line:', cols('first.png') == cols('second.png'))\n",
+   "inputs": [],
+   "needs": [
+    "matplotlib"
+   ],
+   "transcript": "backend Agg (no DISPLAY in this program: False)\nfigures [1]  lines, collections, patches: (2, 0, 0)\nshow() returns None  figures after show: [1] (a window backend would close and forget the figure)\nafter scatter: (2, 1, 0)\nafter bar: (2, 1, 2) - the book's later examples draw on the same figure unless plt.figure() or plt.clf() is called\nafter plt.clf() and one plot: (1, 0, 0)\nplt.figure() starts a new one, now figures [1, 2] and parts (0, 0, 0)\nafter close(\"all\"): []\ncolours in line.png, scatter.png, bar.png: 753 777 830\nwith Agg the second savefig after show() still holds the line: True",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": true
+  },
+  "clipboardOnXvfb_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\n# Chapter 21, \"Copying and Pasting Images\" with pyperclipimg 0.2.0 and the real xclip, on a virtual X display (Xvfb) started here.\nimport shutil, subprocess\nif not (shutil.which('Xvfb') and shutil.which('xclip')): print('NOT EXECUTED: Xvfb or xclip is not on the PATH'); sys.exit(0)\ndisp = ':%d' % (110 + os.getpid() % 80); xv = subprocess.Popen(['Xvfb', disp, '-screen', '0', '640x480x24'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); time.sleep(3)\ncode = r\"\"\"\nimport pyperclipimg, json\nfrom PIL import Image\na = Image.new('RGB', (40, 30), (10, 200, 30)); a.putpixel((3, 4), (255, 0, 1))\nr = pyperclipimg.copy(a); b = pyperclipimg.paste()\nprint(json.dumps([repr(r), type(b).__name__, b.format, b.mode, list(b.size), list(b.getdata()) == list(a.getdata())]))\n\"\"\"\ndef child(c, env_extra, drop=()):\n    e = dict(os.environ); e.update(env_extra)\n    for k in drop: e.pop(k, None)\n    fo = tempfile.TemporaryFile('w+'); fe = tempfile.TemporaryFile('w+')\n    r = subprocess.run([sys.executable, '-W', 'ignore', '-c', c], stdin=subprocess.DEVNULL, stdout=fo, stderr=fe, text=True, env=e, timeout=120); fo.seek(0); fe.seek(0)\n    return r.returncode, fo.read().strip(), (fe.read().strip().splitlines() or [''])[-1][:90]\ntry:\n    print('with a display (copy returns, paste type, format, mode, size, same pixels):', child(code, {'DISPLAY': disp})[1])\n    rc, out, e = child(\"import pyperclipimg\\nfrom PIL import Image\\nprint(repr(pyperclipimg.copy(Image.new('RGB', (4, 4)))))\\ntry: pyperclipimg.paste()\\nexcept Exception as x: print(type(x).__name__)\", {}, ('DISPLAY',)); print('with no DISPLAY:', out.replace('\\n', ' then paste raises '))\n    print('pyperclipimg 0.2.0 is on the PATH of this program:', md.version('pyperclipimg'))\nfinally:\n    subprocess.run(['pkill', '-x', 'xclip']); xv.terminate(); xv.wait()\n",
+   "inputs": [],
+   "needs": [
+    "pyperclipimg"
+   ],
+   "transcript": "with a display (copy returns, paste type, format, mode, size, same pixels): [\"None\", \"PngImageFile\", \"PNG\", \"RGB\", [40, 30], true]\nwith no DISPLAY: None then paste raises ChildProcessError\npyperclipimg 0.2.0 is on the PATH of this program: 0.2.0",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Virtual display"
+   ],
+   "corpus": true
+  },
+  "colorsSwatchCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nnames = ['red', 'green', 'lime', 'blue', 'CornflowerBlue', '#CCDDEE']\nstrip = Image.new('RGB', (len(names) * 60, 60))\nfor i, n in enumerate(names):\n    print('%-15s' % n, ImageColor.getcolor(n, 'RGBA'))\n    strip.paste(Image.new('RGB', (60, 60), n), (i * 60, 0))\nprint('Table 21-1 says Green is (0, 255, 0, 255); Pillow:',\n      ImageColor.getcolor('green', 'RGBA'))\nprint(len(ImageColor.colormap), 'names;', err(lambda:\n      ImageColor.getcolor('transparent', 'RGBA'))[0], 'for transparent')\nd = wd(); strip.save('swatches.png'); done('swatches.png')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "red             (255, 0, 0, 255)\ngreen           (0, 128, 0, 255)\nlime            (0, 255, 0, 255)\nblue            (0, 0, 255, 255)\nCornflowerBlue  (100, 149, 237, 255)\n#CCDDEE         (204, 221, 238, 255)\nTable 21-1 says Green is (0, 255, 0, 255); Pillow: (0, 128, 0, 255)\n148 names; ValueError for transparent\nsaved swatches.png: 301 bytes, sha256 543f5aa052ef",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "boxTupleCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nim = Image.new('RGB', (28, 27), 'white')\ndraw = ImageDraw.Draw(im)\nbox = (3, 1, 9, 6)\ndraw.rectangle((3, 1, 8, 5), fill='orange')    # the last pixel is 8, 5\npart = im.crop(box)\nprint('crop', box, '->', part.size, '| all orange:',\n      set(part.getdata()) == {(255, 165, 0)})\nprint('one more column to the left is not:',\n      set(im.crop((2, 1, 9, 6)).getdata()) == {(255, 165, 0)})\nbig = im.resize((280, 270), Image.Resampling.NEAREST)\ng = ImageDraw.Draw(big)\nfor k in range(0, 281, 10): g.line([(k, 0), (k, 270)], fill='gray')\nfor k in range(0, 271, 10): g.line([(0, k), (280, k)], fill='gray')\nd = wd(); big.save('boxTuple.png'); done('boxTuple.png')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "crop (3, 1, 9, 6) -> (6, 5) | all orange: True\none more column to the left is not: False\nsaved boxTuple.png: 1001 bytes, sha256 7f3009b959a5",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "cropFaceCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\nZIPSHA = 'dac627e807f69ee14913ba621a15dec1f98db739d76939555ba5360d05eba916'\nFILESHA = {'zophie.png': '5c5bf02fd0c95cee5d490a6daf3f1c4ccbbcab9fdc59bd8bba9564cad1462ba1', 'catlogo.png': '107740e7ca46ce7642b6940ff1232689bc3d34eb14c026813a61cfae45385db0',\n           'guests.txt': 'e6136e39f829ae7380be4969b780c72bd8022a1a97efc399f0f2002ce1fd5164', 'resizeAndAddLogo.py': '4291c7cedd9dcf37b792ee7c20485902ad746b2743f66873ccc953bf4681634a'}\ndef shipped(directory):\n    \"\"\"writes the four shipped files into directory, each checked against its SHA-256; prints NOT EXECUTED and stops (exit 0) when the zip cannot be had\"\"\"\n    import urllib.request\n    try:\n        cache = os.environ.get('CH21_CACHE'); p = os.path.join(cache, 'ch21_materials.zip') if cache else None\n        if p and os.path.exists(p): b = open(p, 'rb').read()\n        else:\n            rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n            b = urllib.request.urlopen(rq, timeout=180).read()\n    except Exception as e:\n        print('NOT EXECUTED: the online materials could not be fetched (%s)' % type(e).__name__); sys.exit(0)\n    if hashlib.sha256(b).hexdigest() != ZIPSHA:\n        print('NOT EXECUTED: the zip differs from the one the study recorded (SHA-256 %s)' % hashlib.sha256(b).hexdigest()[:12]); sys.exit(0)\n    z = zipfile.ZipFile(io.BytesIO(b)); names = [n for n in z.namelist() if '__MACOSX' not in n]\n    for f, h in FILESHA.items():\n        n = [x for x in names if x.endswith('/' + f)][0]; data = z.read(n)\n        assert hashlib.sha256(data).hexdigest() == h, f\n        open(os.path.join(directory, f), 'wb').write(data)\n    print('4 shipped files match their SHA-256')\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nd = wd(); shipped(d)\ncat = Image.open('zophie.png')\nface = cat.crop((335, 345, 565, 560))\nprint(cat.size, cat.mode, '->', face.size, face.mode)\nprint('right < left:', err(lambda: cat.crop((565, 345, 335, 560)))[1])\nedge = cat.crop((700, 1000, 900, 1200))\nprint('past the edge:', edge.size, 'black', edge.getpixel((199, 199)))\nface.save('face.png'); done('face.png')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "4 shipped files match their SHA-256\n(816, 1088) RGB -> (230, 215) RGB\nright < left: Coordinate 'right' is less than 'left'\npast the edge: (200, 200) black (0, 0, 0)\nsaved face.png: 94353 bytes, sha256 450258df6c9b",
+   "live": true,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "tileCatCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\nZIPSHA = 'dac627e807f69ee14913ba621a15dec1f98db739d76939555ba5360d05eba916'\nFILESHA = {'zophie.png': '5c5bf02fd0c95cee5d490a6daf3f1c4ccbbcab9fdc59bd8bba9564cad1462ba1', 'catlogo.png': '107740e7ca46ce7642b6940ff1232689bc3d34eb14c026813a61cfae45385db0',\n           'guests.txt': 'e6136e39f829ae7380be4969b780c72bd8022a1a97efc399f0f2002ce1fd5164', 'resizeAndAddLogo.py': '4291c7cedd9dcf37b792ee7c20485902ad746b2743f66873ccc953bf4681634a'}\ndef shipped(directory):\n    \"\"\"writes the four shipped files into directory, each checked against its SHA-256; prints NOT EXECUTED and stops (exit 0) when the zip cannot be had\"\"\"\n    import urllib.request\n    try:\n        cache = os.environ.get('CH21_CACHE'); p = os.path.join(cache, 'ch21_materials.zip') if cache else None\n        if p and os.path.exists(p): b = open(p, 'rb').read()\n        else:\n            rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n            b = urllib.request.urlopen(rq, timeout=180).read()\n    except Exception as e:\n        print('NOT EXECUTED: the online materials could not be fetched (%s)' % type(e).__name__); sys.exit(0)\n    if hashlib.sha256(b).hexdigest() != ZIPSHA:\n        print('NOT EXECUTED: the zip differs from the one the study recorded (SHA-256 %s)' % hashlib.sha256(b).hexdigest()[:12]); sys.exit(0)\n    z = zipfile.ZipFile(io.BytesIO(b)); names = [n for n in z.namelist() if '__MACOSX' not in n]\n    for f, h in FILESHA.items():\n        n = [x for x in names if x.endswith('/' + f)][0]; data = z.read(n)\n        assert hashlib.sha256(data).hexdigest() == h, f\n        open(os.path.join(directory, f), 'wb').write(data)\n    print('4 shipped files match their SHA-256')\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nd = wd(); shipped(d)\ncat = Image.open('zophie.png'); face = cat.crop((335, 345, 565, 560))\ntiled = cat.copy(); n = 0\nfor left in range(0, cat.width, face.width):\n    for top in range(0, cat.height, face.height):\n        tiled.paste(face, (left, top)); n += 1\nprint(n, 'pastes, the last at', (left, top))\nprint('paste returns', tiled.paste(face, (0, 0)))\ncorner = lambda im: im.getpixel((0, 0)) == face.getpixel((0, 0))\nprint('corner is the face: copy', corner(tiled), '| original', corner(cat))\ntiled.resize((204, 272)).save('tiled.png'); done('tiled.png')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "4 shipped files match their SHA-256\n24 pastes, the last at (690, 1075)\npaste returns None\ncorner is the face: copy True | original False\nsaved tiled.png: 74143 bytes, sha256 c333117d8a9a",
+   "live": true,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "maskPairCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\nZIPSHA = 'dac627e807f69ee14913ba621a15dec1f98db739d76939555ba5360d05eba916'\nFILESHA = {'zophie.png': '5c5bf02fd0c95cee5d490a6daf3f1c4ccbbcab9fdc59bd8bba9564cad1462ba1', 'catlogo.png': '107740e7ca46ce7642b6940ff1232689bc3d34eb14c026813a61cfae45385db0',\n           'guests.txt': 'e6136e39f829ae7380be4969b780c72bd8022a1a97efc399f0f2002ce1fd5164', 'resizeAndAddLogo.py': '4291c7cedd9dcf37b792ee7c20485902ad746b2743f66873ccc953bf4681634a'}\ndef shipped(directory):\n    \"\"\"writes the four shipped files into directory, each checked against its SHA-256; prints NOT EXECUTED and stops (exit 0) when the zip cannot be had\"\"\"\n    import urllib.request\n    try:\n        cache = os.environ.get('CH21_CACHE'); p = os.path.join(cache, 'ch21_materials.zip') if cache else None\n        if p and os.path.exists(p): b = open(p, 'rb').read()\n        else:\n            rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n            b = urllib.request.urlopen(rq, timeout=180).read()\n    except Exception as e:\n        print('NOT EXECUTED: the online materials could not be fetched (%s)' % type(e).__name__); sys.exit(0)\n    if hashlib.sha256(b).hexdigest() != ZIPSHA:\n        print('NOT EXECUTED: the zip differs from the one the study recorded (SHA-256 %s)' % hashlib.sha256(b).hexdigest()[:12]); sys.exit(0)\n    z = zipfile.ZipFile(io.BytesIO(b)); names = [n for n in z.namelist() if '__MACOSX' not in n]\n    for f, h in FILESHA.items():\n        n = [x for x in names if x.endswith('/' + f)][0]; data = z.read(n)\n        assert hashlib.sha256(data).hexdigest() == h, f\n        open(os.path.join(directory, f), 'wb').write(data)\n    print('4 shipped files match their SHA-256')\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nd = wd(); shipped(d)\nlogo = Image.open('catlogo.png')\nprint(logo.size, logo.mode, 'corner pixel', logo.getpixel((0, 0)))\nred = Image.new('RGBA', (100, 95), (200, 0, 0, 255))\nmasked = red.copy(); masked.paste(logo, (0, 0), logo)\nplain = red.copy(); plain.paste(logo.convert('RGBA'), (0, 0))\nprint('masked:', masked.getpixel((0, 0)), 'plain:', plain.getpixel((0, 0)))\nbg = Image.new('RGB', (1, 1), 'red')\nblue = Image.new('RGBA', (1, 1), (0, 0, 255, 128))\nbg.paste(blue, (0, 0), blue); print('alpha 128:', bg.getpixel((0, 0)))\nboth = Image.new('RGBA', (210, 95), 'white')\nboth.paste(masked, (0, 0)); both.paste(plain, (110, 0))\nboth.save('maskPair.png'); done('maskPair.png')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "4 shipped files match their SHA-256\n(100, 95) LA corner pixel (255, 0)\nmasked: (200, 0, 0, 255) plain: (255, 255, 255, 0)\nalpha 128: (127, 0, 128)\nsaved maskPair.png: 5869 bytes, sha256 83c44901a498",
+   "live": true,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "rotateSheetCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nim = Image.new('RGB', (120, 80))\nim.putdata([(x * 2, y * 3, 160) for y in range(80) for x in range(120)])\nr1 = im.rotate(20); r2 = im.convert('RGBA').rotate(20)\nr3 = im.rotate(20, fillcolor='red'); r4 = im.rotate(20, expand=True)\nfor r in (r1, r2, r3): print(r.mode, r.getpixel((0, 0)))\nprint('rotate(20):', r1.size, '| expand=True:', r4.size)\nprint('rotate(90):', im.rotate(90).size, '| expand=True:',\n      im.rotate(90, expand=True).size)\nf = im.transpose(Image.Transpose.FLIP_LEFT_RIGHT)\nprint('flip left-right:', f.getpixel((0, 0)) == im.getpixel((119, 0)))\nprint('resize floats:', err(lambda: im.resize((60.0, 40.5)))[1])\nc = im.copy(); print('putpixel returns', c.putpixel((0, 0), (255, 0, 0)))\nsheet = Image.new('RGB', (480, 300), '#d8d0c0')\nfor i, p in enumerate([im, r1, r2, r3, r4, im.rotate(90)]):\n    mask = p if p.mode == 'RGBA' else None\n    sheet.paste(p, ((i % 3) * 160 + 10, (i // 3) * 150 + 10), mask)\nd = wd(); sheet.save('rotateSheet.png'); done('rotateSheet.png')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "RGB (0, 0, 0)\nRGBA (0, 0, 0, 0)\nRGB (255, 0, 0)\nrotate(20): (120, 80) | expand=True: (142, 118)\nrotate(90): (120, 80) | expand=True: (80, 120)\nflip left-right: True\nresize floats: 'float' object cannot be interpreted as an integer\nputpixel returns None\nsaved rotateSheet.png: 6485 bytes, sha256 49dea2274a9f",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "saveFormatsCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\nZIPSHA = 'dac627e807f69ee14913ba621a15dec1f98db739d76939555ba5360d05eba916'\nFILESHA = {'zophie.png': '5c5bf02fd0c95cee5d490a6daf3f1c4ccbbcab9fdc59bd8bba9564cad1462ba1', 'catlogo.png': '107740e7ca46ce7642b6940ff1232689bc3d34eb14c026813a61cfae45385db0',\n           'guests.txt': 'e6136e39f829ae7380be4969b780c72bd8022a1a97efc399f0f2002ce1fd5164', 'resizeAndAddLogo.py': '4291c7cedd9dcf37b792ee7c20485902ad746b2743f66873ccc953bf4681634a'}\ndef shipped(directory):\n    \"\"\"writes the four shipped files into directory, each checked against its SHA-256; prints NOT EXECUTED and stops (exit 0) when the zip cannot be had\"\"\"\n    import urllib.request\n    try:\n        cache = os.environ.get('CH21_CACHE'); p = os.path.join(cache, 'ch21_materials.zip') if cache else None\n        if p and os.path.exists(p): b = open(p, 'rb').read()\n        else:\n            rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n            b = urllib.request.urlopen(rq, timeout=180).read()\n    except Exception as e:\n        print('NOT EXECUTED: the online materials could not be fetched (%s)' % type(e).__name__); sys.exit(0)\n    if hashlib.sha256(b).hexdigest() != ZIPSHA:\n        print('NOT EXECUTED: the zip differs from the one the study recorded (SHA-256 %s)' % hashlib.sha256(b).hexdigest()[:12]); sys.exit(0)\n    z = zipfile.ZipFile(io.BytesIO(b)); names = [n for n in z.namelist() if '__MACOSX' not in n]\n    for f, h in FILESHA.items():\n        n = [x for x in names if x.endswith('/' + f)][0]; data = z.read(n)\n        assert hashlib.sha256(data).hexdigest() == h, f\n        open(os.path.join(directory, f), 'wb').write(data)\n    print('4 shipped files match their SHA-256')\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nd = wd(); shipped(d)\ncat = Image.open('zophie.png'); n = []\nfor q in (95, 75, 50, 30, 10):\n    f = 'q%d.jpg' % q; cat.save(f, quality=q); n.append(os.path.getsize(f))\nprint('zophie.png:', os.path.getsize('zophie.png'), 'bytes')\nprint('JPEG bytes at q 95/75/50/30/10:', n)\ncat.save('copy.png'); dpi = Image.open('copy.png').info.get('dpi')\nprint('PNG saved with no dpi: dpi =', dpi)\ncat.save('c72.png', dpi=(72, 72))\nback = Image.open('c72.png').info['dpi'][0]\nprint('dpi=(72, 72) reads back as', round(back, 3))\nj = Image.open('q75.jpg').info\nprint('JPEG density, unit:', j.get('jfif_density'), j.get('jfif_unit'))\nprint('RGBA to JPEG:', *err(lambda: cat.convert('RGBA').save('x.jpg')))\nface = (335, 345, 565, 560); pair = Image.new('RGB', (470, 215), 'white')\npair.paste(cat.crop(face), (0, 0))\npair.paste(Image.open('q10.jpg').crop(face), (240, 0))\npair.save('pngVsJpeg.png'); done('pngVsJpeg.png')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "4 shipped files match their SHA-256\nzophie.png: 1287443 bytes\nJPEG bytes at q 95/75/50/30/10: [327361, 125433, 81267, 58200, 29630]\nPNG saved with no dpi: dpi = None\ndpi=(72, 72) reads back as 72.009\nJPEG density, unit: (1, 1) 0\nRGBA to JPEG: OSError cannot write mode RGBA as JPEG\nsaved pngVsJpeg.png: 144684 bytes, sha256 3b7257b5cc8d",
+   "live": true,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "addLogoCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\nZIPSHA = 'dac627e807f69ee14913ba621a15dec1f98db739d76939555ba5360d05eba916'\nFILESHA = {'zophie.png': '5c5bf02fd0c95cee5d490a6daf3f1c4ccbbcab9fdc59bd8bba9564cad1462ba1', 'catlogo.png': '107740e7ca46ce7642b6940ff1232689bc3d34eb14c026813a61cfae45385db0',\n           'guests.txt': 'e6136e39f829ae7380be4969b780c72bd8022a1a97efc399f0f2002ce1fd5164', 'resizeAndAddLogo.py': '4291c7cedd9dcf37b792ee7c20485902ad746b2743f66873ccc953bf4681634a'}\ndef shipped(directory):\n    \"\"\"writes the four shipped files into directory, each checked against its SHA-256; prints NOT EXECUTED and stops (exit 0) when the zip cannot be had\"\"\"\n    import urllib.request\n    try:\n        cache = os.environ.get('CH21_CACHE'); p = os.path.join(cache, 'ch21_materials.zip') if cache else None\n        if p and os.path.exists(p): b = open(p, 'rb').read()\n        else:\n            rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n            b = urllib.request.urlopen(rq, timeout=180).read()\n    except Exception as e:\n        print('NOT EXECUTED: the online materials could not be fetched (%s)' % type(e).__name__); sys.exit(0)\n    if hashlib.sha256(b).hexdigest() != ZIPSHA:\n        print('NOT EXECUTED: the zip differs from the one the study recorded (SHA-256 %s)' % hashlib.sha256(b).hexdigest()[:12]); sys.exit(0)\n    z = zipfile.ZipFile(io.BytesIO(b)); names = [n for n in z.namelist() if '__MACOSX' not in n]\n    for f, h in FILESHA.items():\n        n = [x for x in names if x.endswith('/' + f)][0]; data = z.read(n)\n        assert hashlib.sha256(data).hexdigest() == h, f\n        open(os.path.join(directory, f), 'wb').write(data)\n    print('4 shipped files match their SHA-256')\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nd = wd(); shipped(d)\nImage.new('RGB', (1200, 400), 'orange').save('panorama.png')\nImage.new('RGB', (1200, 250), 'olive').save('strip.png')\nImage.new('RGB', (900, 900), 'gray').save('UPPER.PNG')\nr = subprocess.run([sys.executable, 'resizeAndAddLogo.py'],\n                   capture_output=True, text=True)\nprint('exit', r.returncode, '| folder withLogo:')\nfor n in sorted(os.listdir('withLogo')):\n    print(' ', n, Image.open('withLogo/' + n).size)\nprint('300 / 1088 * 816 =', 300 / 1088 * 816)\nshutil.copy('withLogo/zophie.png', 'zophieLogo.png')\ndone('zophieLogo.png')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "4 shipped files match their SHA-256\nexit 0 | folder withLogo:\n  panorama.png (300, 100)\n  strip.png (1200, 250)\n  zophie.png (225, 300)\n300 / 1088 * 816 = 225.00000000000003\nsaved zophieLogo.png: 113229 bytes, sha256 a8ab12beda3f",
+   "live": true,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "drawingPngCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nim = Image.new('RGBA', (200, 200), 'white'); draw = ImageDraw.Draw(im)\ndraw.line([(0, 0), (199, 0), (199, 199), (0, 199), (0, 0)], fill='black')\ndraw.rectangle((20, 30, 60, 60), fill='blue')\ndraw.ellipse((120, 30, 160, 60), fill='red')\ndraw.polygon(((57, 87), (79, 62), (94, 85), (120, 90), (103, 113)),\n             fill='brown')\nfor i in range(100, 200, 10):\n    draw.line([(i, 0), (200, i - 100)], fill='green')\nn = {c: k for k, c in im.getcolors(1000)}\nprint('blue pixels:', n[(0, 0, 255, 255)], '= 41 x 31 =', 41 * 31)\nprint('crop((20, 30, 60, 60)) is', im.crop((20, 30, 60, 60)).size)\nprint('green drawn:', (0, 128, 0, 255) in n,\n      '| lime drawn:', (0, 255, 0, 255) in n)\nprint('reversed:', err(lambda: draw.rectangle((60, 60, 20, 30)))[1])\nd = wd(); im.save('drawing.png'); done('drawing.png')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "blue pixels: 1271 = 41 x 31 = 1271\ncrop((20, 30, 60, 60)) is (40, 30)\ngreen drawn: True | lime drawn: False\nreversed: x1 must be greater than or equal to x0\nsaved drawing.png: 1685 bytes, sha256 2998b86f8fc8",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "textHowdyCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nf = dejavu()\nprint('arial.ttf:', err(lambda: ImageFont.truetype('arial.ttf', 32)))\nim = Image.new('RGBA', (240, 100), 'white'); draw = ImageDraw.Draw(im)\nbox = draw.textbbox((20, 20), 'Howdy', font=f)\nprint('textbbox', box, '-> width', box[2] - box[0],\n      'height', box[3] - box[1])\ndraw.rectangle(box, outline='red')\ndraw.text((20, 20), 'Howdy', fill='purple', font=f)\nprint('textsize on ImageDraw:', hasattr(draw, 'textsize'),\n      '| getsize on a font:', hasattr(f, 'getsize'))\nw = [ImageFont.truetype('DejaVuSans.ttf', s).getlength('Howdy')\n     for s in (16, 32, 64)]\nprint('Howdy is', [round(x) for x in w], 'px wide at 16, 32, 64')\nd = wd(); im.save('howdy.png'); done('howdy.png')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "arial.ttf: ('OSError', 'cannot open resource')\ntextbbox (20, 26, 129, 57) -> width 109 height 31\ntextsize on ImageDraw: False | getsize on a font: False\nHowdy is [55, 109, 218] px wide at 16, 32, 64\nsaved howdy.png: 2915 bytes, sha256 b35acf2df851",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "seatingCardsCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\nZIPSHA = 'dac627e807f69ee14913ba621a15dec1f98db739d76939555ba5360d05eba916'\nFILESHA = {'zophie.png': '5c5bf02fd0c95cee5d490a6daf3f1c4ccbbcab9fdc59bd8bba9564cad1462ba1', 'catlogo.png': '107740e7ca46ce7642b6940ff1232689bc3d34eb14c026813a61cfae45385db0',\n           'guests.txt': 'e6136e39f829ae7380be4969b780c72bd8022a1a97efc399f0f2002ce1fd5164', 'resizeAndAddLogo.py': '4291c7cedd9dcf37b792ee7c20485902ad746b2743f66873ccc953bf4681634a'}\ndef shipped(directory):\n    \"\"\"writes the four shipped files into directory, each checked against its SHA-256; prints NOT EXECUTED and stops (exit 0) when the zip cannot be had\"\"\"\n    import urllib.request\n    try:\n        cache = os.environ.get('CH21_CACHE'); p = os.path.join(cache, 'ch21_materials.zip') if cache else None\n        if p and os.path.exists(p): b = open(p, 'rb').read()\n        else:\n            rq = urllib.request.Request('https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0'})\n            b = urllib.request.urlopen(rq, timeout=180).read()\n    except Exception as e:\n        print('NOT EXECUTED: the online materials could not be fetched (%s)' % type(e).__name__); sys.exit(0)\n    if hashlib.sha256(b).hexdigest() != ZIPSHA:\n        print('NOT EXECUTED: the zip differs from the one the study recorded (SHA-256 %s)' % hashlib.sha256(b).hexdigest()[:12]); sys.exit(0)\n    z = zipfile.ZipFile(io.BytesIO(b)); names = [n for n in z.namelist() if '__MACOSX' not in n]\n    for f, h in FILESHA.items():\n        n = [x for x in names if x.endswith('/' + f)][0]; data = z.read(n)\n        assert hashlib.sha256(data).hexdigest() == h, f\n        open(os.path.join(directory, f), 'wb').write(data)\n    print('4 shipped files match their SHA-256')\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nd = wd(); shipped(d)\nguests = open('guests.txt').read().splitlines()\nf = ImageFont.truetype('DejaVuSans.ttf', 28); os.makedirs('cards')\nsheet = Image.new('RGB', (len(guests) * 150, 190), '#d8d0c0'); wide = []\nfor i, g in enumerate(guests):\n    card = Image.new('RGBA', (288, 360), 'white'); dr = ImageDraw.Draw(card)\n    dr.rectangle((0, 0, 287, 359), outline='black')\n    l, t, r, b = dr.textbbox((0, 0), g, font=f); wide.append(r - l)\n    dr.text(((288 - (r - l)) // 2 - l, 200), g, fill='black', font=f)\n    card.save('cards/%d.png' % i)\n    sheet.paste(card.resize((144, 180)), (i * 150 + 3, 5))\nprint('name widths in px:', wide)\nprint(len(os.listdir('cards')), 'cards of', Image.open('cards/0.png').size)\nsheet.save('seatingCards.png'); done('seatingCards.png')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "4 shipped files match their SHA-256\nname widths in px: [140, 168, 176, 159, 121]\n5 cards of (288, 360)\nsaved seatingCards.png: 8036 bytes, sha256 c0b755735558",
+   "live": true,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "tileFolderCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nd = wd()\ndef make_tile(filename, across, down):\n    tile = Image.open(filename); w, h = tile.size; n = 0\n    out = Image.new('RGB', (w * across, h * down))\n    for x in range(across):\n        for y in range(down): out.paste(tile, (x * w, y * h)); n += 1\n    return out.size, n\nImage.new('RGB', (20, 50), 'tan').save('t.jpg')\nprint(\"make_tile('t.jpg', 6, 10):\", make_tile('t.jpg', 6, 10),\n      '(book: 120x500)')\ndef photo(p):\n    try:\n        with Image.open(p) as im: return im.width > 500 and im.height > 500\n    except OSError: return False\nfor n, s in (('a.png', (800, 600)), ('b.png', (300, 300)),\n             ('c.png', (600, 600))):\n    Image.new('RGB', s).save(n)\nopen('notes.txt', 'w').write('x')\nfiles = sorted(os.listdir('.'))\nprint('photos:', [f for f in files if photo(f)], 'of', files)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "make_tile('t.jpg', 6, 10): ((120, 500), 60) (book: 120x500)\nphotos: ['a.png', 'c.png'] of ['a.png', 'b.png', 'c.png', 'notes.txt', 't.jpg']",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "clipboardCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nimport shutil\nassert shutil.which('Xvfb') and shutil.which('xclip'), 'NOT EXECUTED: Xvfb or xclip is missing'\nimport atexit\ndisp = ':%d' % (110 + os.getpid() % 80)\nxv = subprocess.Popen(['Xvfb', disp, '-screen', '0', '640x480x24'],\n                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)\natexit.register(lambda: (subprocess.run(['pkill', '-x', 'xclip']), xv.terminate()))\ntime.sleep(3)\ndef run(env):\n    o, e = tempfile.TemporaryFile('w+'), tempfile.TemporaryFile('w+')\n    subprocess.run([sys.executable, '-W', 'ignore', '-c', code], text=True,\n                   stdin=subprocess.DEVNULL, stdout=o, stderr=e,\n                   env=env, timeout=120)\n    o.seek(0); e.seek(0)\n    return o.read().strip().splitlines() + e.read().strip().splitlines()[-1:]\ncode = \"\"\"\nimport pyperclipimg\nfrom PIL import Image\na = Image.new('RGB', (40, 30), (10, 200, 30))\nprint('copy returns', pyperclipimg.copy(a))\nb = pyperclipimg.paste()\nprint('paste', b.format, b.mode, b.size, list(b.getdata()) == list(a.getdata()))\n\"\"\"\nprint('DISPLAY set:', *run(dict(os.environ, DISPLAY=disp)), sep='\\n  ')\nbare = {k: v for k, v in os.environ.items() if k != 'DISPLAY'}\nprint('no DISPLAY:', *run(bare), sep='\\n  ')\n",
+   "inputs": [],
+   "needs": [
+    "pyperclipimg"
+   ],
+   "transcript": "DISPLAY set:\n  copy returns None\n  paste PNG RGB (40, 30) True\nno DISPLAY:\n  copy returns None\n  ChildProcessError: xclip error: Error: Can't open display: (null)",
+   "live": false,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "Virtual display"
+   ],
+   "corpus": false
+  },
+  "plotsFourCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nd = wd()\ndef fig(name, draw):\n    plt.figure(figsize=(3, 2.4)); r = draw(); plt.title(name)\n    plt.tight_layout(); plt.savefig(name + '.png'); plt.close('all'); return r\nfig('line', lambda: plt.plot([1, 2, 3, 4], [1, 4, 9, 16]))\nfig('scatter', lambda: plt.scatter([1, 2, 3, 4], [3, 1, 4, 2]))\nbars = fig('bar', lambda: plt.bar(['spam', 'eggs', 'ham'], [3, 1, 2]))\npie = fig('pie', lambda: plt.pie([10, 20, 30, 40], labels=list('ABCD'),\n                                 autopct='%1.0f%%'))\nprint('bar returns', type(bars).__name__, [b.get_height() for b in bars])\nprint('pie returns', type(pie).__name__, '| items:', len(tuple(pie)))\nc = matplotlib.rcParams['axes.prop_cycle'].by_key()['color'][0]\nprint('line colour:', type(c).__name__, [round(v, 2) for v in c])\nim = Image.open('line.png')\nprint('line.png', im.size, im.mode, 'dpi', round(im.info['dpi'][0]))\nfor n in ('line', 'scatter', 'bar', 'pie'): done(n + '.png')\n",
+   "inputs": [],
+   "needs": [
+    "matplotlib"
+   ],
+   "transcript": "bar returns BarContainer [np.int64(3), np.int64(1), np.int64(2)]\npie returns PieContainer | items: 3\nline colour: tuple [0.12, 0.47, 0.71]\nline.png (300, 240) RGBA dpi 100\nsaved line.png: 7834 bytes, sha256 1255a3131604\nsaved scatter.png: 5572 bytes, sha256 6ea656298d19\nsaved bar.png: 5258 bytes, sha256 fb613caeaed1\nsaved pie.png: 11019 bytes, sha256 bafe8b665d56",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "aggFigureCut_v1_0_0.py": {
+   "code": "import io, os, sys, re, math, json, time, shutil, zipfile, hashlib, tempfile, warnings, subprocess, importlib.metadata as md\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nfrom PIL import Image, ImageColor, ImageDraw, ImageFont\nwarnings.simplefilter('ignore')\ndef err(f):\n    try: return ('ok', f())\n    except BaseException as e: return (type(e).__name__, str(e))\ndef wd():\n    d = tempfile.mkdtemp(); os.chdir(d); return d\ndef dejavu():\n    return ImageFont.truetype('DejaVuSans.ttf', 32)\ndef sha(n): return hashlib.sha256(open(n, 'rb').read()).hexdigest()[:12]\ndef done(n):\n    k = os.environ.get('CH21_KEEP')\n    if k: shutil.copy(n, os.path.join(k, os.path.basename(n)))\n    print('saved %s: %d bytes, sha256 %s' % (os.path.basename(n), os.path.getsize(n), sha(n)))\nd = wd()\ndef parts():\n    ax = plt.gca(); return len(ax.lines), len(ax.patches)\nplt.figure(figsize=(3, 2.4))\nplt.plot([1, 2, 3]); plt.plot([3, 2, 1])\nprint('lines, bars:', parts(), plt.get_fignums())\nprint('show():', plt.show(), plt.get_fignums())\nplt.bar(['a', 'b'], [1, 2])\nprint('after bar, same figure:', parts())\nplt.tight_layout(); plt.savefig('accumulated.png')\nplt.clf(); plt.plot([1, 2]); print('after clf():', parts())\nplt.figure(); print('new figure:', plt.get_fignums()[-1], parts())\nplt.close('all'); print('close(\"all\"):', plt.get_fignums())\ndone('accumulated.png')\n",
+   "inputs": [],
+   "needs": [
+    "matplotlib"
+   ],
+   "transcript": "lines, bars: (2, 0) [1]\nshow(): None [1]\nafter bar, same figure: (2, 2)\nafter clf(): (1, 0)\nnew figure: 2 (0, 0)\nclose(\"all\"): []\nsaved accumulated.png: 8759 bytes, sha256 23707f84b0f3",
+   "live": false,
+   "kind": "none",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  }
+ },
+ "_images": {
+  "swatches.png": {
+   "program": "colorsSwatchCut_v1_0_0.py",
+   "bytes": 301,
+   "sha256": "543f5aa052ef89615494a4d86ec3b6daa18ec56818288af7cef3787dbd9018b8"
+  },
+  "boxTuple.png": {
+   "program": "boxTupleCut_v1_0_0.py",
+   "bytes": 1001,
+   "sha256": "7f3009b959a5b84d0c2919d9a59857c1541437d60cf8626dfef71d8f59d4be4a"
+  },
+  "face.png": {
+   "program": "cropFaceCut_v1_0_0.py",
+   "bytes": 94353,
+   "sha256": "450258df6c9b9ddc21d435c84bd336d4e8766f67048454f6fa6d99e3a9aaae8a"
+  },
+  "tiled.png": {
+   "program": "tileCatCut_v1_0_0.py",
+   "bytes": 74143,
+   "sha256": "c333117d8a9a4d4dbd38fb0634ffa6521feb0b0260610585c8e7ec2be5586b4e"
+  },
+  "maskPair.png": {
+   "program": "maskPairCut_v1_0_0.py",
+   "bytes": 5869,
+   "sha256": "83c44901a4980512e23c8350f35124b131bae0619364e56b67d76a4a87847289"
+  },
+  "rotateSheet.png": {
+   "program": "rotateSheetCut_v1_0_0.py",
+   "bytes": 6485,
+   "sha256": "49dea2274a9fb806b4c69b754a2f5aef20f9bad0395205c0c46d537274e5187b"
+  },
+  "pngVsJpeg.png": {
+   "program": "saveFormatsCut_v1_0_0.py",
+   "bytes": 144684,
+   "sha256": "3b7257b5cc8df3e02ec6eda9d240ff001f73ca81086cd8e3b6e676dd501cc9f2"
+  },
+  "zophieLogo.png": {
+   "program": "addLogoCut_v1_0_0.py",
+   "bytes": 113229,
+   "sha256": "a8ab12beda3fba38c745ec20b0ccbd75e586b96ab542a488a0a8227dcbe3f76f"
+  },
+  "drawing.png": {
+   "program": "drawingPngCut_v1_0_0.py",
+   "bytes": 1685,
+   "sha256": "2998b86f8fc89e66fc852664fa244612e9b556e64b0a3afcbf993ff0cc7fd769"
+  },
+  "howdy.png": {
+   "program": "textHowdyCut_v1_0_0.py",
+   "bytes": 2915,
+   "sha256": "b35acf2df851a6f9e5119a7b606a422f861f7a632849f03690b3a11df9410614"
+  },
+  "seatingCards.png": {
+   "program": "seatingCardsCut_v1_0_0.py",
+   "bytes": 8036,
+   "sha256": "c0b755735558f1c82ee78af64fd21eaada6c28b2b53389299e154e3ac9309f95"
+  },
+  "line.png": {
+   "program": "plotsFourCut_v1_0_0.py",
+   "bytes": 7834,
+   "sha256": "1255a3131604bc5976d796704bc522e328565bd0e7e11d458bb0ecaebc53be32"
+  },
+  "scatter.png": {
+   "program": "plotsFourCut_v1_0_0.py",
+   "bytes": 5572,
+   "sha256": "6ea656298d19f04f92b6b2927deee0edc428f23f980a4f645642aa19ac9f3915"
+  },
+  "bar.png": {
+   "program": "plotsFourCut_v1_0_0.py",
+   "bytes": 5258,
+   "sha256": "fb613caeaed1c45b5c199ba4261b703c2711d15703e1485ed074a5c9476c7c0a"
+  },
+  "pie.png": {
+   "program": "plotsFourCut_v1_0_0.py",
+   "bytes": 11019,
+   "sha256": "bafe8b665d565d004fb742463f39a9e72473e87cb4b6432f4016cf72b5457fbc"
+  },
+  "accumulated.png": {
+   "program": "aggFigureCut_v1_0_0.py",
+   "bytes": 8759,
+   "sha256": "23707f84b0f3781e4720bde182222b901945e686c8512a91bc5e8bb8ccd97cec"
+  }
+ },
+ "_charts": {
+  "jpegBytes": {
+   "setup": "import io, os, zipfile, hashlib\nfrom PIL import Image\nZ = open('/home/claude/ch21_cache/ch21_materials.zip', 'rb').read()\nassert hashlib.sha256(Z).hexdigest() == 'dac627e807f69ee14913ba621a15dec1f98db739d76939555ba5360d05eba916'\nzf = zipfile.ZipFile(io.BytesIO(Z)); data = zf.read([n for n in zf.namelist() if n.endswith('/zophie.png') and '__MACOSX' not in n][0])\nim = Image.open(io.BytesIO(data)); im.load()\ndef kb(**kw):\n    b = io.BytesIO(); im.save(b, **kw); return round(len(b.getvalue()) / 1024, 1)\nROWS = [('PNG', round(len(data) / 1024, 1))] + [('JPEG %d' % q, kb(format='JPEG', quality=q)) for q in (95, 75, 50, 30, 10)]\n",
+   "expr": "ROWS",
+   "labels": [
+    "PNG",
+    "JPEG 95",
+    "JPEG 75",
+    "JPEG 50",
+    "JPEG 30",
+    "JPEG 10"
+   ],
+   "values": [
+    1257.3,
+    319.7,
+    122.5,
+    79.4,
+    56.8,
+    28.9
+   ]
+  }
+ },
+ "_tables": {
+  "environments": {
+   "setup": "import json, subprocess\nPROBE = \"import json, io, os, sys, tempfile, warnings\\nwarnings.simplefilter('ignore')\\nR = {}\\ndef t(f):\\n    try: return f()\\n    except BaseException as e: return type(e).__name__\\ndef run():\\n    import importlib.metadata as m\\n    R['Python'] = sys.version.split()[0]\\n    R['Pillow'] = t(lambda: m.version('pillow'))\\n    R['Matplotlib'] = t(lambda: m.version('matplotlib'))\\n    from PIL import Image, ImageDraw, ImageFont, ImageColor\\n    d = tempfile.mkdtemp(); os.chdir(d); Image.new('RGB', (3, 3)).save('z.png')\\n    R['filename is absolute'] = str(os.path.isabs(Image.open('z.png').filename))\\n    R['ImageDraw.textsize'] = str(hasattr(ImageDraw.ImageDraw, 'textsize'))\\n    R['default font'] = type(ImageFont.load_default()).__name__\\n    R['green'] = str(ImageColor.getcolor('green', 'RGBA'))\\n    import matplotlib; matplotlib.use('Agg')\\n    import matplotlib.pyplot as plt\\n    R['pie returns'] = t(lambda: type(plt.pie([1, 2, 3])).__name__)\\n    R['line colour is'] = t(lambda: type(plt.plot([1, 2])[0].get_color()).__name__)\\n    plt.close('all')\\n    R['savefig'] = t(lambda: (plt.plot([1, 2]), plt.savefig(io.BytesIO(), format='png'), 'saved')[2])\\n    plt.close('all')\\n    R['legend'] = t(lambda: (plt.plot([1, 2], label='a'), type(plt.legend()).__name__)[1])\\ntry: run()\\nexcept BaseException as e: R['import'] = type(e).__name__\\nprint(json.dumps(R))\\n\"\nINTERPS = [('3.14.6 newest', '/home/claude/venv314_ch21_latest/bin/python'), ('3.14.6 pins', '/home/claude/venv314_ch21_pins/bin/python'), ('3.13.14 pins', '/home/claude/venv313_ch21_pins/bin/python'), ('3.14.6 empty', '/home/claude/venv314_ch21_bare/bin/python')]\nres = []\nfor v, p in INTERPS:\n    r = subprocess.run([p, '-c', PROBE], capture_output=True, text=True)\n    assert r.returncode == 0, (v, r.stderr[-300:])\n    res.append(json.loads(r.stdout))\nROWS = [('Python', 'Python'), ('Pillow', 'Pillow'), ('Matplotlib', 'Matplotlib'), ('filename is full path', 'filename is absolute'), ('textsize() exists', 'ImageDraw.textsize'), ('default font', 'default font'), ('plt.pie() returns', 'pie returns'), ('line colour is a', 'line colour is'), ('savefig() of a line', 'savefig'), ('legend()', 'legend'), ('import', 'import')]\n",
+   "expr": "[['check'] + [v for v, p in INTERPS]] + [[label] + [x.get(key, '-') for x in res] for label, key in ROWS]",
+   "rows": [
+    [
+     "check",
+     "3.14.6 newest",
+     "3.14.6 pins",
+     "3.13.14 pins",
+     "3.14.6 empty"
+    ],
+    [
+     "Python",
+     "3.14.6",
+     "3.14.6",
+     "3.13.14",
+     "3.14.6"
+    ],
+    [
+     "Pillow",
+     "12.3.0",
+     "10.4.0",
+     "10.4.0",
+     "PackageNotFoundError"
+    ],
+    [
+     "Matplotlib",
+     "3.11.2",
+     "3.9.2",
+     "3.9.2",
+     "PackageNotFoundError"
+    ],
+    [
+     "filename is full path",
+     "False",
+     "True",
+     "True",
+     "-"
+    ],
+    [
+     "textsize() exists",
+     "False",
+     "False",
+     "False",
+     "-"
+    ],
+    [
+     "default font",
+     "FreeTypeFont",
+     "FreeTypeFont",
+     "FreeTypeFont",
+     "-"
+    ],
+    [
+     "plt.pie() returns",
+     "PieContainer",
+     "tuple",
+     "tuple",
+     "-"
+    ],
+    [
+     "line colour is a",
+     "tuple",
+     "str",
+     "str",
+     "-"
+    ],
+    [
+     "savefig() of a line",
+     "saved",
+     "RecursionError",
+     "saved",
+     "-"
+    ],
+    [
+     "legend()",
+     "Legend",
+     "RecursionError",
+     "Legend",
+     "-"
+    ],
+    [
+     "import",
+     "-",
+     "-",
+     "-",
+     "ModuleNotFoundError"
+    ]
+   ]
+  },
+  "pillowReleases": {
+   "setup": "import json, os\nR = json.load(open(os.path.join(HERE, '..', 'ch21-page', 'interpreter_record_v1_0_0.json')))['pillow releases']\ndef b(x): return 'yes' if x else 'no'\n",
+   "expr": "[['Pillow'] + list(R)] + [['textsize()'] + [b(R[v]['ImageDraw.textsize'][0]) for v in R], ['getsize()'] + [b(R[v]['ImageFont.getsize'][0]) for v in R], ['FreeType default font'] + [b(R[v]['load_default class'][0] == 'FreeTypeFont') for v in R], ['size= accepted'] + [b(not str(R[v]['load_default(size=20) accepted'][0]).startswith('TypeError')) for v in R], ['filename is full path'] + [b(R[v]['Image.open(\"z.png\").filename is absolute'][0][0]) for v in R]]",
+   "rows": [
+    [
+     "Pillow",
+     "9.5.0",
+     "10.0.0",
+     "10.1.0",
+     "10.2.0",
+     "10.3.0",
+     "10.4.0",
+     "11.0.0",
+     "11.1.0",
+     "11.2.1",
+     "11.3.0",
+     "12.0.0",
+     "12.1.0",
+     "12.2.0",
+     "12.3.0"
+    ],
+    [
+     "textsize()",
+     "yes",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no"
+    ],
+    [
+     "getsize()",
+     "yes",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no"
+    ],
+    [
+     "FreeType default font",
+     "no",
+     "no",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes"
+    ],
+    [
+     "size= accepted",
+     "no",
+     "no",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "yes"
+    ],
+    [
+     "filename is full path",
+     "no",
+     "no",
+     "no",
+     "no",
+     "yes",
+     "yes",
+     "yes",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no",
+     "no"
+    ]
+   ]
+  }
+ }
+}
