@@ -1,0 +1,4544 @@
+{
+ "_version": "1.0.0",
+ "observed": "2026-10-13",
+ "_note": "Recorded by sen0414_ch23_interpreters_v1_0_0.py: one program (PyAutoGUI calls observed as delivered events on a virtual X display, Xvfb, not a real screen) under every installed Python 3.14 patch release and the 3.15 beta, 3.13, 3.12 and 3.11, with the newest packages for each; the same checks across releases of PyAutoGUI, PyScreeze, Pillow and PyMsgBox. A result is what the program printed on the day on this machine (Ubuntu 24.04, Europe/Istanbul); a row that cannot run says NOT EXECUTED or failed and why. Windows and macOS were not executed.",
+ "program": "import os, sys\nos.environ['CH23_LATEST'] = sys.executable\nimport io, os, sys, re, json, time, shutil, signal, tempfile, warnings, subprocess, importlib.metadata as md\nwarnings.simplefilter('ignore')\nLATEST = os.environ.get('CH23_LATEST', '/home/claude/venv314_ch23_latest/bin/python')\nNOCV = os.environ.get('CH23_NOCV', '/home/claude/venv314_ch23_nocv/bin/python')\nTK86 = os.environ.get('CH23_TK86', '/home/claude/venv312_ch23_tk86/bin/python')\nOLDSCREEZE = os.environ.get('CH23_OLDSCREEZE', '/home/claude/venv314_ch23_oldscreeze/bin/python')\nOBSERVER = r'''\nimport sys, os, json, time, tkinter as tk\ncfg = json.loads(sys.argv[1]); log = open(cfg['log'], 'a', buffering=1)\nroot = tk.Tk(); root.title(cfg.get('title', 'observer')); root.geometry(cfg.get('geometry', '600x400+100+100'))\nif cfg.get('scaling'): root.tk.call('tk', 'scaling', cfg['scaling'])\nmode = cfg.get('mode', 'events')\ndef q(v): return None if v == '??' else v\ndef put(e, kind):\n    s = getattr(e, 'state', 0)\n    log.write(json.dumps({'t': time.time(), 'type': kind, 'x': q(getattr(e, 'x', None)), 'y': q(getattr(e, 'y', None)), 'x_root': q(getattr(e, 'x_root', None)), 'y_root': q(getattr(e, 'y_root', None)),\n         'num': q(getattr(e, 'num', None)), 'delta': q(getattr(e, 'delta', None)), 'keysym': q(getattr(e, 'keysym', None)), 'char': q(getattr(e, 'char', None)),\n         'state': s if isinstance(s, int) else str(s), 'send_event': bool(getattr(e, 'send_event', False))}) + '\\n')\nfor ev, kind in (('<Motion>', 'Motion'), ('<ButtonPress>', 'ButtonPress'), ('<ButtonRelease>', 'ButtonRelease'), ('<MouseWheel>', 'MouseWheel'), ('<KeyPress>', 'KeyPress'), ('<KeyRelease>', 'KeyRelease'), ('<Double-ButtonPress-1>', 'DoubleClick'), ('<Triple-ButtonPress-1>', 'TripleClick')):\n    root.bind(ev, lambda e, k=kind: put(e, k), add='+')\nent = txt = None; blist = []\nif mode in ('events', 'text'):\n    ent = tk.Entry(root, width=40); ent.pack(side='top', fill='x'); txt = tk.Text(root, height=cfg.get('lines', 8)); txt.pack(side='top', fill='both', expand=True)\n    txt.bind('<Control-a>', lambda e: (txt.tag_add('sel', '1.0', 'end-1c'), 'break')[1])\n    if cfg.get('fill'): txt.insert('1.0', '\\n'.join('line %d' % i for i in range(1, cfg['fill'] + 1)))\n    if cfg.get('focus', 'entry') == 'entry': root.after(200, lambda: ent.focus_force())\n    else: root.after(200, lambda: txt.focus_force())\nif mode == 'paint':\n    cv = tk.Canvas(root, width=cfg.get('w', 600), height=cfg.get('h', 400), bg='white', highlightthickness=0); cv.pack(); last = {}\n    def move(e):\n        if 'p' in last and (e.state & 0x100): cv.create_line(*last['p'], e.x, e.y, fill='black', width=2)\n        last['p'] = (e.x, e.y)\n    cv.bind('<Motion>', move); cv.bind('<ButtonPress-1>', lambda e: last.update(p=(e.x, e.y)))\nif mode == 'button':\n    root.configure(bg=cfg.get('bg', '#828790'))\n    for i, (bx, by) in enumerate(cfg.get('buttons', [[100, 100]])):\n        b = tk.Button(root, text=cfg.get('label', 'Submit'), font=('Helvetica', cfg.get('fsize', 12)), command=lambda i=i: log.write(json.dumps({'t': time.time(), 'type': 'Command', 'button': i}) + '\\n'))\n        b.place(x=bx, y=by); blist.append(b)\ndef dump():\n    st = {'entry': ent.get() if ent else None, 'text': txt.get('1.0', 'end-1c') if txt else None, 'top': txt.index('@0,0') if txt else None, 'rootx': root.winfo_rootx(), 'rooty': root.winfo_rooty(), 'w': root.winfo_width(), 'h': root.winfo_height(),\n          'buttons': [[b.winfo_rootx(), b.winfo_rooty(), b.winfo_width(), b.winfo_height()] for b in blist], 'tk': root.tk.call('info', 'patchlevel')}\n    open(cfg['state'] + '.tmp', 'w').write(json.dumps(st)); os.replace(cfg['state'] + '.tmp', cfg['state']); root.after(50, dump)\nroot.after(100, dump); root.mainloop()\n'''\nclass Desk:\n    # a private virtual X display (Xvfb, not a real screen) with an optional window manager (openbox); everything started on it is stopped on exit\n    def __init__(self, w=1920, h=1080, depth=24, wm=True):\n        self.w, self.h, self.depth, self.wm = w, h, depth, wm; self.kids = []; self.dir = tempfile.mkdtemp(prefix='desk'); self.saved = {}\n    def start(self, argv, name, env=None):\n        p = subprocess.Popen(argv, stdout=open(os.path.join(self.dir, name + '.out'), 'wb'), stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, env=env or self.env, start_new_session=True); self.kids.append(p); return p\n    def out(self, name): return open(os.path.join(self.dir, name + '.out'), errors='replace').read()\n    def __enter__(self):\n        n = 100 + os.getpid() % 800\n        while os.path.exists('/tmp/.X11-unix/X%d' % n) or os.path.exists('/tmp/.X%d-lock' % n): n += 1\n        self.n = n; self.display = ':%d' % n\n        env = dict(os.environ); env.pop('WAYLAND_DISPLAY', None); env.update({'DISPLAY': self.display, 'XDG_SESSION_TYPE': 'x11', 'PYTHONDONTWRITEBYTECODE': '1'})\n        xa = os.path.join(self.dir, 'Xauthority'); open(xa, 'w').close(); env['XAUTHORITY'] = xa; self.env = env\n        for k in ('DISPLAY', 'XDG_SESSION_TYPE', 'XAUTHORITY', 'WAYLAND_DISPLAY'): self.saved[k] = os.environ.get(k)\n        self.x = self.start(['Xvfb', self.display, '-screen', '0', '%dx%dx%d' % (self.w, self.h, self.depth), '-nolisten', 'tcp', '-noreset'], 'xvfb', env)\n        for _ in range(200):\n            if os.path.exists('/tmp/.X11-unix/X%d' % n): break\n            time.sleep(0.05)\n        else: raise RuntimeError('Xvfb did not start')\n        time.sleep(0.2); os.environ.update({'DISPLAY': self.display, 'XDG_SESSION_TYPE': 'x11', 'XAUTHORITY': xa}); os.environ.pop('WAYLAND_DISPLAY', None)\n        if self.wm:\n            self.start(['openbox'], 'openbox')\n            for _ in range(200):\n                if 'window id' in subprocess.run(['xprop', '-root', '_NET_SUPPORTING_WM_CHECK'], capture_output=True, text=True, env=env).stdout: break\n                time.sleep(0.05)\n        return self\n    def __exit__(self, *a):\n        for p in reversed(self.kids):\n            try: os.killpg(p.pid, signal.SIGTERM)\n            except Exception: pass\n        for p in reversed(self.kids):\n            try: p.wait(timeout=5)\n            except Exception:\n                try: os.killpg(p.pid, signal.SIGKILL)\n                except Exception: pass\n        for k, v in self.saved.items():\n            if v is None: os.environ.pop(k, None)\n            else: os.environ[k] = v\n        shutil.rmtree(self.dir, ignore_errors=True)\n    def sh(self, *argv, **kw):\n        r = subprocess.run(list(argv), capture_output=True, text=True, env=self.env, stdin=subprocess.DEVNULL, timeout=kw.get('timeout', 60)); return r.stdout.strip()\n    def observer(self, mode='events', geometry='600x400+100+100', **kw):\n        k = len(self.kids); cfg = dict(mode=mode, geometry=geometry, log=os.path.join(self.dir, 'ev%d.jsonl' % k), state=os.path.join(self.dir, 'st%d.json' % k), **kw)\n        open(cfg['log'], 'w').close(); p = self.start([LATEST if kw.get('py') is None else kw['py'], '-c', OBSERVER, json.dumps(cfg)], 'obs%d' % k)\n        for _ in range(300):\n            if os.path.exists(cfg['state']): break\n            time.sleep(0.05)\n        else: raise RuntimeError('observer did not appear: ' + self.out('obs%d' % k)[-300:])\n        time.sleep(0.4); return Obs(cfg, p)\nclass Obs:\n    def __init__(self, cfg, p): self.cfg, self.p = cfg, p\n    def close(self):\n        try: os.killpg(self.p.pid, signal.SIGTERM); self.p.wait(timeout=5)\n        except Exception: pass\n    def events(self, settle=True):\n        if settle: self.settle()\n        out = []\n        for l in open(self.cfg['log']):\n            try: out.append(json.loads(l))\n            except ValueError: pass\n        return out\n    def state(self): return json.load(open(self.cfg['state']))\n    def entry(self): self.settle(); time.sleep(0.12); return self.state()['entry']\n    def text(self): self.settle(); time.sleep(0.12); return self.state()['text']\n    def clear(self): self.settle(); open(self.cfg['log'], 'w').close()\n    def settle(self, quiet=0.25, limit=10):\n        n = -1; t0 = time.time()\n        while time.time() - t0 < limit:\n            m = len(self.events(settle=False))\n            if m == n: return m\n            n = m; time.sleep(quiet)\n        return n\n    def kinds(self, *types, key=None):\n        ev = [e for e in self.events() if not types or e['type'] in types]\n        return [(e['type'], e[key]) if key else e['type'] for e in ev]\ndef child(code, py=None, env=None, timeout=120, cwd=None):\n    # runs code in a new interpreter (default the LATEST venv) and returns (return code, stdout lines without Xlib warnings, last stderr line)\n    r = subprocess.run([py or LATEST, '-W', 'ignore', '-c', code], capture_output=True, text=True, env=env or os.environ, timeout=timeout, stdin=subprocess.DEVNULL, cwd=cwd)\n    return r.returncode, [l for l in r.stdout.splitlines() if 'xauth' not in l], (r.stderr.strip().splitlines() or [''])[-1][:160]\n\n# one program for every interpreter: what PyAutoGUI does on a virtual X display, observed as delivered events (the body that follows HEAD)\nres = {}\ndef w(f):\n    with warnings.catch_warnings(record=True) as seen:\n        warnings.simplefilter('always')\n        try: v = f()\n        except BaseException as e: v = type(e).__name__ + ': ' + (str(e).splitlines() or [''])[0][:100]\n    return [v, sorted({x.category.__name__ for x in seen if x.category.__name__ != 'ResourceWarning'})]\nres['series'] = sys.version.split()[0].rsplit('.', 1)[0] + '.x'\nres['versions'] = [md.version(n) for n in ('pyautogui', 'pyscreeze', 'pymsgbox', 'pytweening', 'pillow')]\nres['Tk version of this interpreter'] = w(lambda: __import__('tkinter').Tcl().eval('info patchlevel'))[0]\nwith Desk() as d:\n    import pyautogui; res['PAUSE, FAILSAFE at import'] = [pyautogui.PAUSE, pyautogui.FAILSAFE]; pyautogui.PAUSE = 0\n    res['import pyautogui: warnings'] = w(lambda: __import__('pyautogui').__version__)\n    res['size, named tuple'] = w(lambda: [tuple(pyautogui.size()), type(pyautogui.size()).__name__])\n    res['moveTo then position'] = w(lambda: (pyautogui.moveTo(321, 123), tuple(pyautogui.position()))[1])\n    res['fail-safe points'] = w(lambda: sorted(pyautogui.FAILSAFE_POINTS))\n    def fs():\n        pyautogui.moveTo(0, 0)\n        try: pyautogui.click(); return 'no exception'\n        except pyautogui.FailSafeException: return 'FailSafeException'\n    res['click while the pointer is in the corner'] = w(fs)\n    try:\n        o = d.observer(geometry='1920x1080+0+0', mode='paint', w=1900, h=1000)\n        pyautogui.FAILSAFE = False; pyautogui.moveTo(700, 400); o.clear()\n        def click_events():\n            pyautogui.click(710, 405); ev = o.events(); return [(e['type'], e['num'], e['send_event']) for e in ev if e['type'].startswith('Button')]\n        res['click: events delivered'] = w(click_events)\n        def scroll_events():\n            x = d.start(['xev', '-geometry', '300x200+1500+100', '-event', 'mouse'], 'xev'); time.sleep(0.8); pyautogui.moveTo(1600, 200); rows = []\n            def btns():\n                time.sleep(0.4); t = d.out('xev'); open(os.path.join(d.dir, 'xev.out'), 'w').close(); return [int(b) for a, b in re.findall(r'(ButtonPress) event.*?button (\\d)', t, re.S)]\n            btns()\n            for f in (lambda: pyautogui.scroll(3), lambda: pyautogui.scroll(-2), lambda: pyautogui.hscroll(1)): f(); rows.append(btns())\n            os.killpg(x.pid, signal.SIGTERM); pyautogui.moveTo(700, 400); return rows\n        res['scroll(3), scroll(-2), hscroll(1): wheel buttons'] = w(scroll_events)\n        def drag_events():\n            pyautogui.moveTo(500, 500); o.clear(); pyautogui.drag(300, 0, duration=0.25); ev = o.events()\n            return [[e['type'], e['num']] for e in ev if e['type'].startswith('Button')], len([e for e in ev if e['type'] == 'Motion']), sorted({e['state'] for e in ev if e['type'] == 'Motion'})\n        res['drag: buttons, motions, button state'] = w(drag_events)\n        o.close()\n    except Exception as e: res['observer block failed at: ' + \"o = d.observer(geometry='1920x1080+0+0'\"] = str(e)[:140]\n    try:\n        o = d.observer(geometry='600x400+100+100'); st = o.state(); pyautogui.moveTo(st['rootx'] + 100, st['rooty'] + 10); pyautogui.click(); o.clear()\n        def typed():\n            pyautogui.write('Hello, world!'); return o.entry()\n        res['write: text received'] = w(typed)\n        def hot():\n            o.clear(); pyautogui.hotkey('ctrl', 'alt', 'shift', 's'); return [(e['type'][3:], e['keysym']) for e in o.events()]\n        res['hotkey(ctrl, alt, shift, s): events'] = w(hot)\n        def silent():\n            o.clear(); before = o.entry(); pyautogui.press('nokey'); pyautogui.write('café'); return o.entry()[len(before):]\n        res['unknown key name and a character outside the table'] = w(silent)\n        o.close()\n    except Exception as e: res['observer block failed at: ' + \"o = d.observer(geometry='600x400+100+100')\"] = str(e)[:140]\n    d.sh('xsetroot', '-solid', '#828790'); time.sleep(0.2)\n    res['pixel(50, 200), pixelMatchesColor'] = w(lambda: [tuple(pyautogui.pixel(50, 200)), pyautogui.pixelMatchesColor(50, 200, (130, 135, 144))])\n    res['screenshot: size, mode, type'] = w(lambda: (lambda im: [im.size, im.mode, type(im).__name__])(pyautogui.screenshot()))\n    try:\n        o = d.observer(mode='button', geometry='400x300+300+200', buttons=[[100, 100]]); x, y, bw, bh = o.state()['buttons'][0]; os.chdir(d.dir)\n        pyautogui.screenshot().crop((x, y, x + bw, y + bh)).save('submit.png')\n        res['locateOnScreen: box'] = w(lambda: [int(v) for v in pyautogui.locateOnScreen('submit.png')])\n        res['locateCenterOnScreen: point'] = w(lambda: [int(v) for v in pyautogui.locateCenterOnScreen('submit.png')])\n        from PIL import Image; im = Image.open('submit.png').convert('RGB'); im.putpixel((3, 3), (0, 0, 0)); im.save('off.png')\n        def nf():\n            try: pyautogui.locateOnScreen('off.png'); return 'found'\n            except Exception as e: return type(e).__module__ + '.' + type(e).__name__\n        res['locateOnScreen of an image that is one pixel off'] = w(nf)\n        res['confidence keyword'] = w(lambda: 'found' if pyautogui.locateOnScreen('off.png', confidence=0.9) else 'None')\n        o.close()\n    except Exception as e: res['observer block failed at: ' + \"o = d.observer(mode='button'\"] = str(e)[:140]\n    res['window functions on this platform'] = w(lambda: [sys.platform, [n for n in ('getActiveWindow', 'getAllWindows', 'getWindowsWithTitle', 'getAllTitles') if hasattr(pyautogui, n)]])\n    res['KEYBOARD_KEYS: count, shift alias'] = w(lambda: [len(pyautogui.KEYBOARD_KEYS), 'shiftleft' in pyautogui.KEYBOARD_KEYS])\n    p = d.start([sys.executable, '-W', 'ignore', '-c', 'import pyautogui; pyautogui.mouseInfo()'], 'mi'); time.sleep(3.5)\n    res['mouseInfo(): window after 3.5 s'] = w(lambda: ['running' if p.poll() is None else 'exited %s' % p.returncode, [l for l in d.out('mi').splitlines() if 'Error' in l][-1:]])\n    res['import pyautogui without DISPLAY'] = w(lambda: child(\"import pyautogui\", py=sys.executable, env={k: v for k, v in os.environ.items() if k != 'DISPLAY'})[2][:60])\nimport importlib.util\nres['compile the X11 backend: warnings'] = w(lambda: (lambda src: compile(src, 'x11.py', 'exec') and 'compiled')(open(os.path.join(os.path.dirname(importlib.util.find_spec('pyautogui').origin), '_pyautogui_x11.py')).read()))\nprint(json.dumps(res, sort_keys=True, default=repr))\n",
+ "matrix program": "import os, sys\nos.environ['CH23_LATEST'] = sys.executable\nimport io, os, sys, re, json, time, shutil, signal, tempfile, warnings, subprocess, importlib.metadata as md\nwarnings.simplefilter('ignore')\nLATEST = os.environ.get('CH23_LATEST', '/home/claude/venv314_ch23_latest/bin/python')\nNOCV = os.environ.get('CH23_NOCV', '/home/claude/venv314_ch23_nocv/bin/python')\nTK86 = os.environ.get('CH23_TK86', '/home/claude/venv312_ch23_tk86/bin/python')\nOLDSCREEZE = os.environ.get('CH23_OLDSCREEZE', '/home/claude/venv314_ch23_oldscreeze/bin/python')\nOBSERVER = r'''\nimport sys, os, json, time, tkinter as tk\ncfg = json.loads(sys.argv[1]); log = open(cfg['log'], 'a', buffering=1)\nroot = tk.Tk(); root.title(cfg.get('title', 'observer')); root.geometry(cfg.get('geometry', '600x400+100+100'))\nif cfg.get('scaling'): root.tk.call('tk', 'scaling', cfg['scaling'])\nmode = cfg.get('mode', 'events')\ndef q(v): return None if v == '??' else v\ndef put(e, kind):\n    s = getattr(e, 'state', 0)\n    log.write(json.dumps({'t': time.time(), 'type': kind, 'x': q(getattr(e, 'x', None)), 'y': q(getattr(e, 'y', None)), 'x_root': q(getattr(e, 'x_root', None)), 'y_root': q(getattr(e, 'y_root', None)),\n         'num': q(getattr(e, 'num', None)), 'delta': q(getattr(e, 'delta', None)), 'keysym': q(getattr(e, 'keysym', None)), 'char': q(getattr(e, 'char', None)),\n         'state': s if isinstance(s, int) else str(s), 'send_event': bool(getattr(e, 'send_event', False))}) + '\\n')\nfor ev, kind in (('<Motion>', 'Motion'), ('<ButtonPress>', 'ButtonPress'), ('<ButtonRelease>', 'ButtonRelease'), ('<MouseWheel>', 'MouseWheel'), ('<KeyPress>', 'KeyPress'), ('<KeyRelease>', 'KeyRelease'), ('<Double-ButtonPress-1>', 'DoubleClick'), ('<Triple-ButtonPress-1>', 'TripleClick')):\n    root.bind(ev, lambda e, k=kind: put(e, k), add='+')\nent = txt = None; blist = []\nif mode in ('events', 'text'):\n    ent = tk.Entry(root, width=40); ent.pack(side='top', fill='x'); txt = tk.Text(root, height=cfg.get('lines', 8)); txt.pack(side='top', fill='both', expand=True)\n    txt.bind('<Control-a>', lambda e: (txt.tag_add('sel', '1.0', 'end-1c'), 'break')[1])\n    if cfg.get('fill'): txt.insert('1.0', '\\n'.join('line %d' % i for i in range(1, cfg['fill'] + 1)))\n    if cfg.get('focus', 'entry') == 'entry': root.after(200, lambda: ent.focus_force())\n    else: root.after(200, lambda: txt.focus_force())\nif mode == 'paint':\n    cv = tk.Canvas(root, width=cfg.get('w', 600), height=cfg.get('h', 400), bg='white', highlightthickness=0); cv.pack(); last = {}\n    def move(e):\n        if 'p' in last and (e.state & 0x100): cv.create_line(*last['p'], e.x, e.y, fill='black', width=2)\n        last['p'] = (e.x, e.y)\n    cv.bind('<Motion>', move); cv.bind('<ButtonPress-1>', lambda e: last.update(p=(e.x, e.y)))\nif mode == 'button':\n    root.configure(bg=cfg.get('bg', '#828790'))\n    for i, (bx, by) in enumerate(cfg.get('buttons', [[100, 100]])):\n        b = tk.Button(root, text=cfg.get('label', 'Submit'), font=('Helvetica', cfg.get('fsize', 12)), command=lambda i=i: log.write(json.dumps({'t': time.time(), 'type': 'Command', 'button': i}) + '\\n'))\n        b.place(x=bx, y=by); blist.append(b)\ndef dump():\n    st = {'entry': ent.get() if ent else None, 'text': txt.get('1.0', 'end-1c') if txt else None, 'top': txt.index('@0,0') if txt else None, 'rootx': root.winfo_rootx(), 'rooty': root.winfo_rooty(), 'w': root.winfo_width(), 'h': root.winfo_height(),\n          'buttons': [[b.winfo_rootx(), b.winfo_rooty(), b.winfo_width(), b.winfo_height()] for b in blist], 'tk': root.tk.call('info', 'patchlevel')}\n    open(cfg['state'] + '.tmp', 'w').write(json.dumps(st)); os.replace(cfg['state'] + '.tmp', cfg['state']); root.after(50, dump)\nroot.after(100, dump); root.mainloop()\n'''\nclass Desk:\n    # a private virtual X display (Xvfb, not a real screen) with an optional window manager (openbox); everything started on it is stopped on exit\n    def __init__(self, w=1920, h=1080, depth=24, wm=True):\n        self.w, self.h, self.depth, self.wm = w, h, depth, wm; self.kids = []; self.dir = tempfile.mkdtemp(prefix='desk'); self.saved = {}\n    def start(self, argv, name, env=None):\n        p = subprocess.Popen(argv, stdout=open(os.path.join(self.dir, name + '.out'), 'wb'), stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, env=env or self.env, start_new_session=True); self.kids.append(p); return p\n    def out(self, name): return open(os.path.join(self.dir, name + '.out'), errors='replace').read()\n    def __enter__(self):\n        n = 100 + os.getpid() % 800\n        while os.path.exists('/tmp/.X11-unix/X%d' % n) or os.path.exists('/tmp/.X%d-lock' % n): n += 1\n        self.n = n; self.display = ':%d' % n\n        env = dict(os.environ); env.pop('WAYLAND_DISPLAY', None); env.update({'DISPLAY': self.display, 'XDG_SESSION_TYPE': 'x11', 'PYTHONDONTWRITEBYTECODE': '1'})\n        xa = os.path.join(self.dir, 'Xauthority'); open(xa, 'w').close(); env['XAUTHORITY'] = xa; self.env = env\n        for k in ('DISPLAY', 'XDG_SESSION_TYPE', 'XAUTHORITY', 'WAYLAND_DISPLAY'): self.saved[k] = os.environ.get(k)\n        self.x = self.start(['Xvfb', self.display, '-screen', '0', '%dx%dx%d' % (self.w, self.h, self.depth), '-nolisten', 'tcp', '-noreset'], 'xvfb', env)\n        for _ in range(200):\n            if os.path.exists('/tmp/.X11-unix/X%d' % n): break\n            time.sleep(0.05)\n        else: raise RuntimeError('Xvfb did not start')\n        time.sleep(0.2); os.environ.update({'DISPLAY': self.display, 'XDG_SESSION_TYPE': 'x11', 'XAUTHORITY': xa}); os.environ.pop('WAYLAND_DISPLAY', None)\n        if self.wm:\n            self.start(['openbox'], 'openbox')\n            for _ in range(200):\n                if 'window id' in subprocess.run(['xprop', '-root', '_NET_SUPPORTING_WM_CHECK'], capture_output=True, text=True, env=env).stdout: break\n                time.sleep(0.05)\n        return self\n    def __exit__(self, *a):\n        for p in reversed(self.kids):\n            try: os.killpg(p.pid, signal.SIGTERM)\n            except Exception: pass\n        for p in reversed(self.kids):\n            try: p.wait(timeout=5)\n            except Exception:\n                try: os.killpg(p.pid, signal.SIGKILL)\n                except Exception: pass\n        for k, v in self.saved.items():\n            if v is None: os.environ.pop(k, None)\n            else: os.environ[k] = v\n        shutil.rmtree(self.dir, ignore_errors=True)\n    def sh(self, *argv, **kw):\n        r = subprocess.run(list(argv), capture_output=True, text=True, env=self.env, stdin=subprocess.DEVNULL, timeout=kw.get('timeout', 60)); return r.stdout.strip()\n    def observer(self, mode='events', geometry='600x400+100+100', **kw):\n        k = len(self.kids); cfg = dict(mode=mode, geometry=geometry, log=os.path.join(self.dir, 'ev%d.jsonl' % k), state=os.path.join(self.dir, 'st%d.json' % k), **kw)\n        open(cfg['log'], 'w').close(); p = self.start([LATEST if kw.get('py') is None else kw['py'], '-c', OBSERVER, json.dumps(cfg)], 'obs%d' % k)\n        for _ in range(300):\n            if os.path.exists(cfg['state']): break\n            time.sleep(0.05)\n        else: raise RuntimeError('observer did not appear: ' + self.out('obs%d' % k)[-300:])\n        time.sleep(0.4); return Obs(cfg, p)\nclass Obs:\n    def __init__(self, cfg, p): self.cfg, self.p = cfg, p\n    def close(self):\n        try: os.killpg(self.p.pid, signal.SIGTERM); self.p.wait(timeout=5)\n        except Exception: pass\n    def events(self, settle=True):\n        if settle: self.settle()\n        out = []\n        for l in open(self.cfg['log']):\n            try: out.append(json.loads(l))\n            except ValueError: pass\n        return out\n    def state(self): return json.load(open(self.cfg['state']))\n    def entry(self): self.settle(); time.sleep(0.12); return self.state()['entry']\n    def text(self): self.settle(); time.sleep(0.12); return self.state()['text']\n    def clear(self): self.settle(); open(self.cfg['log'], 'w').close()\n    def settle(self, quiet=0.25, limit=10):\n        n = -1; t0 = time.time()\n        while time.time() - t0 < limit:\n            m = len(self.events(settle=False))\n            if m == n: return m\n            n = m; time.sleep(quiet)\n        return n\n    def kinds(self, *types, key=None):\n        ev = [e for e in self.events() if not types or e['type'] in types]\n        return [(e['type'], e[key]) if key else e['type'] for e in ev]\ndef child(code, py=None, env=None, timeout=120, cwd=None):\n    # runs code in a new interpreter (default the LATEST venv) and returns (return code, stdout lines without Xlib warnings, last stderr line)\n    r = subprocess.run([py or LATEST, '-W', 'ignore', '-c', code], capture_output=True, text=True, env=env or os.environ, timeout=timeout, stdin=subprocess.DEVNULL, cwd=cwd)\n    return r.returncode, [l for l in r.stdout.splitlines() if 'xauth' not in l], (r.stderr.strip().splitlines() or [''])[-1][:160]\n\n# a smaller program for the releases of the packages themselves: what the locate functions do with an image that is one pixel off, the Box type, the screenshot and pixel calls\nres = {}\ndef w(f):\n    with warnings.catch_warnings(record=True) as seen:\n        warnings.simplefilter('always')\n        try: v = f()\n        except BaseException as e: v = type(e).__module__ + '.' + type(e).__name__ + ': ' + (str(e).splitlines() or [''])[0][:80]\n    return [v, sorted({x.category.__name__ for x in seen if x.category.__name__ != 'ResourceWarning'})]\nres['python'] = sys.version.split()[0]\nres['versions'] = {n: (md.version(n) if n in [d.metadata['Name'].lower() for d in md.distributions()] else None) for n in ('pyautogui', 'pyscreeze', 'pymsgbox', 'pillow')}\nwith Desk() as d:\n    import pyautogui, pyscreeze; pyautogui.PAUSE = 0\n    from PIL import Image\n    res['pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION'] = getattr(pyscreeze, 'USE_IMAGE_NOT_FOUND_EXCEPTION', 'absent')\n    res['pyautogui.useImageNotFoundException'] = hasattr(pyautogui, 'useImageNotFoundException')\n    o = d.observer(mode='button', geometry='400x300+300+200', buttons=[[100, 100]]); x, y, bw, bh = o.state()['buttons'][0]; os.chdir(d.dir)\n    res['screenshot: size, mode'] = w(lambda: (lambda im: [im.size, im.mode])(pyautogui.screenshot()))\n    pyautogui.screenshot().crop((x, y, x + bw, y + bh)).save('submit.png')\n    im = Image.open('submit.png').convert('RGB'); im.putpixel((3, 3), (0, 0, 0)); im.save('off.png')\n    res['locateOnScreen: exact image'] = w(lambda: (lambda b: [type(b).__name__, [int(v) for v in b]])(pyautogui.locateOnScreen('submit.png')))\n    res['locateOnScreen: image one pixel off'] = w(lambda: repr(pyautogui.locateOnScreen('off.png')))\n    res['click(image one pixel off)'] = w(lambda: pyautogui.click('off.png'))\n    res['pixel(0, 0) type'] = w(lambda: type(pyautogui.pixel(0, 0)).__name__)\n    res['pixelMatchesColor tolerance keyword'] = w(lambda: pyautogui.pixelMatchesColor(0, 0, tuple(pyautogui.pixel(0, 0)), tolerance=1))\n    res['exception class hierarchy'] = w(lambda: [pyautogui.ImageNotFoundException.__mro__[1].__name__, pyautogui.FailSafeException.__mro__[1].__name__] if hasattr(pyautogui, 'ImageNotFoundException') else 'ImageNotFoundException absent')\n    res['hold context manager'] = hasattr(pyautogui, 'hold')\n    res['write is typewrite'] = pyautogui.write is getattr(pyautogui, 'typewrite', None)\n    res['KEYBOARD_KEYS count'] = len(pyautogui.KEYBOARD_KEYS)\n    o.close()\nprint(json.dumps(res, sort_keys=True, default=repr))\n",
+ "msgbox program": "import sys, json, inspect, importlib.metadata as md\nimport pymsgbox\nres = {'pymsgbox': md.version('pymsgbox'), 'python': sys.version.split()[0]}\nres['functions'] = sorted(n for n in ('alert', 'confirm', 'prompt', 'password') if hasattr(pymsgbox, n))\nres['signatures'] = {n: str(inspect.signature(getattr(pymsgbox, n))) for n in ('alert', 'confirm', 'prompt', 'password')}\nres['constants'] = [pymsgbox.OK_TEXT, pymsgbox.CANCEL_TEXT, pymsgbox.TIMEOUT_RETURN_VALUE]\nres['exceptions'] = sorted(n for n in dir(pymsgbox) if n.endswith('Exception'))\nprint(json.dumps(res, sort_keys=True))\n",
+ "interpreters": [
+  "3.11.17",
+  "3.12.3",
+  "3.13.14",
+  "3.14.0",
+  "3.14.1",
+  "3.14.2",
+  "3.14.3",
+  "3.14.4",
+  "3.14.5",
+  "3.14.6",
+  "3.15.0b4",
+  "3.14.6 with OpenCV"
+ ],
+ "results": {
+  "3.11.17": {
+   "NOT EXECUTED or failed": "warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead. | NOTE: You must install tkinter on Linux to use MouseInfo. Run the following: sudo apt-get install python3-tk python3-dev"
+  },
+  "3.12.3": {
+   "KEYBOARD_KEYS: count, shift alias": [
+    [
+     194,
+     true
+    ],
+    []
+   ],
+   "PAUSE, FAILSAFE at import": [
+    0.1,
+    true
+   ],
+   "Tk version of this interpreter": "8.6.14",
+   "click while the pointer is in the corner": [
+    "FailSafeException",
+    []
+   ],
+   "click: events delivered": [
+    [
+     [
+      "ButtonPress",
+      1,
+      false
+     ],
+     [
+      "ButtonRelease",
+      1,
+      false
+     ]
+    ],
+    []
+   ],
+   "compile the X11 backend: warnings": [
+    "compiled",
+    [
+     "SyntaxWarning"
+    ]
+   ],
+   "confidence keyword": [
+    "NotImplementedError: The confidence keyword argument is only available if OpenCV is installed.",
+    []
+   ],
+   "drag: buttons, motions, button state": [
+    [
+     [
+      [
+       "ButtonPress",
+       1
+      ],
+      [
+       "ButtonRelease",
+       1
+      ]
+     ],
+     8,
+     [
+      0,
+      256
+     ]
+    ],
+    []
+   ],
+   "fail-safe points": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1079
+     ],
+     [
+      1919,
+      0
+     ],
+     [
+      1919,
+      1079
+     ]
+    ],
+    []
+   ],
+   "hotkey(ctrl, alt, shift, s): events": [
+    [
+     [
+      "Press",
+      "Control_L"
+     ],
+     [
+      "Press",
+      "Alt_L"
+     ],
+     [
+      "Press",
+      "Shift_L"
+     ],
+     [
+      "Press",
+      "S"
+     ],
+     [
+      "Release",
+      "S"
+     ],
+     [
+      "Release",
+      "Shift_L"
+     ],
+     [
+      "Release",
+      "Alt_L"
+     ],
+     [
+      "Release",
+      "Control_L"
+     ]
+    ],
+    []
+   ],
+   "import pyautogui without DISPLAY": [
+    "KeyError: 'DISPLAY'",
+    []
+   ],
+   "import pyautogui: warnings": [
+    "0.9.54",
+    []
+   ],
+   "locateCenterOnScreen: point": [
+    [
+     442,
+     336
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen of an image that is one pixel off": [
+    "pyautogui.ImageNotFoundException",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: box": [
+    [
+     401,
+     320,
+     82,
+     32
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "mouseInfo(): window after 3.5 s": [
+    [
+     "running",
+     []
+    ],
+    []
+   ],
+   "moveTo then position": [
+    [
+     321,
+     123
+    ],
+    []
+   ],
+   "pixel(50, 200), pixelMatchesColor": [
+    [
+     [
+      130,
+      135,
+      144
+     ],
+     true
+    ],
+    []
+   ],
+   "screenshot: size, mode, type": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB",
+     "PngImageFile"
+    ],
+    []
+   ],
+   "scroll(3), scroll(-2), hscroll(1): wheel buttons": [
+    [
+     [
+      4,
+      4,
+      4
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      7
+     ]
+    ],
+    []
+   ],
+   "series": "3.12.x",
+   "size, named tuple": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "Size"
+    ],
+    []
+   ],
+   "unknown key name and a character outside the table": [
+    "caf",
+    []
+   ],
+   "versions": [
+    "0.9.54",
+    "1.0.1",
+    "2.0.1",
+    "1.2.0",
+    "12.3.0"
+   ],
+   "window functions on this platform": [
+    [
+     "linux",
+     []
+    ],
+    []
+   ],
+   "write: text received": [
+    "Hello, world!",
+    []
+   ]
+  },
+  "3.13.14": {
+   "KEYBOARD_KEYS: count, shift alias": [
+    [
+     194,
+     true
+    ],
+    []
+   ],
+   "PAUSE, FAILSAFE at import": [
+    0.1,
+    true
+   ],
+   "Tk version of this interpreter": "9.0.3",
+   "click while the pointer is in the corner": [
+    "FailSafeException",
+    []
+   ],
+   "click: events delivered": [
+    [
+     [
+      "ButtonPress",
+      1,
+      false
+     ],
+     [
+      "ButtonRelease",
+      1,
+      false
+     ]
+    ],
+    []
+   ],
+   "compile the X11 backend: warnings": [
+    "compiled",
+    [
+     "SyntaxWarning"
+    ]
+   ],
+   "confidence keyword": [
+    "NotImplementedError: The confidence keyword argument is only available if OpenCV is installed.",
+    []
+   ],
+   "drag: buttons, motions, button state": [
+    [
+     [
+      [
+       "ButtonPress",
+       1
+      ],
+      [
+       "ButtonRelease",
+       1
+      ]
+     ],
+     9,
+     [
+      0,
+      256
+     ]
+    ],
+    []
+   ],
+   "fail-safe points": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1079
+     ],
+     [
+      1919,
+      0
+     ],
+     [
+      1919,
+      1079
+     ]
+    ],
+    []
+   ],
+   "hotkey(ctrl, alt, shift, s): events": [
+    [
+     [
+      "Press",
+      "Control_L"
+     ],
+     [
+      "Press",
+      "Alt_L"
+     ],
+     [
+      "Press",
+      "Shift_L"
+     ],
+     [
+      "Press",
+      "S"
+     ],
+     [
+      "Release",
+      "S"
+     ],
+     [
+      "Release",
+      "Shift_L"
+     ],
+     [
+      "Release",
+      "Alt_L"
+     ],
+     [
+      "Release",
+      "Control_L"
+     ]
+    ],
+    []
+   ],
+   "import pyautogui without DISPLAY": [
+    "KeyError: 'DISPLAY'",
+    []
+   ],
+   "import pyautogui: warnings": [
+    "0.9.54",
+    []
+   ],
+   "locateCenterOnScreen: point": [
+    [
+     443,
+     337
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen of an image that is one pixel off": [
+    "pyautogui.ImageNotFoundException",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: box": [
+    [
+     401,
+     320,
+     84,
+     35
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "mouseInfo(): window after 3.5 s": [
+    [
+     "exited 1",
+     [
+      "_tkinter.TclError: bad option \"variable\": must be add, info, or remove"
+     ]
+    ],
+    []
+   ],
+   "moveTo then position": [
+    [
+     321,
+     123
+    ],
+    []
+   ],
+   "pixel(50, 200), pixelMatchesColor": [
+    [
+     [
+      130,
+      135,
+      144
+     ],
+     true
+    ],
+    []
+   ],
+   "screenshot: size, mode, type": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB",
+     "PngImageFile"
+    ],
+    []
+   ],
+   "scroll(3), scroll(-2), hscroll(1): wheel buttons": [
+    [
+     [
+      4,
+      4,
+      4
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      7
+     ]
+    ],
+    []
+   ],
+   "series": "3.13.x",
+   "size, named tuple": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "Size"
+    ],
+    []
+   ],
+   "unknown key name and a character outside the table": [
+    "caf",
+    []
+   ],
+   "versions": [
+    "0.9.54",
+    "1.0.1",
+    "2.0.1",
+    "1.2.0",
+    "12.3.0"
+   ],
+   "window functions on this platform": [
+    [
+     "linux",
+     []
+    ],
+    []
+   ],
+   "write: text received": [
+    "Hello, world!",
+    []
+   ]
+  },
+  "3.14.0": {
+   "KEYBOARD_KEYS: count, shift alias": [
+    [
+     194,
+     true
+    ],
+    []
+   ],
+   "PAUSE, FAILSAFE at import": [
+    0.1,
+    true
+   ],
+   "Tk version of this interpreter": "TclError: Can't find a usable init.tcl in the following directories: ",
+   "click while the pointer is in the corner": [
+    "FailSafeException",
+    []
+   ],
+   "compile the X11 backend: warnings": [
+    "compiled",
+    [
+     "SyntaxWarning"
+    ]
+   ],
+   "fail-safe points": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1079
+     ],
+     [
+      1919,
+      0
+     ],
+     [
+      1919,
+      1079
+     ]
+    ],
+    []
+   ],
+   "import pyautogui without DISPLAY": [
+    "KeyError: 'DISPLAY'",
+    []
+   ],
+   "import pyautogui: warnings": [
+    "0.9.54",
+    []
+   ],
+   "mouseInfo(): window after 3.5 s": [
+    [
+     "exited 1",
+     [
+      "_tkinter.TclError: Can't find a usable init.tcl in the following directories: "
+     ]
+    ],
+    []
+   ],
+   "moveTo then position": [
+    [
+     321,
+     123
+    ],
+    []
+   ],
+   "observer block failed at: o = d.observer(geometry='1920x1080+0+0'": "observer did not appear: oot/.cache/uv/builds-v0/.tmpS9iwIm/lib/tcl8.6 /root/.cache/uv/builds-v0/lib/tcl8.6 /root/.cache/uv/builds-v0/.tmpS9",
+   "observer block failed at: o = d.observer(geometry='600x400+100+100')": "observer did not appear: oot/.cache/uv/builds-v0/.tmpS9iwIm/lib/tcl8.6 /root/.cache/uv/builds-v0/lib/tcl8.6 /root/.cache/uv/builds-v0/.tmpS9",
+   "observer block failed at: o = d.observer(mode='button'": "observer did not appear: oot/.cache/uv/builds-v0/.tmpS9iwIm/lib/tcl8.6 /root/.cache/uv/builds-v0/lib/tcl8.6 /root/.cache/uv/builds-v0/.tmpS9",
+   "pixel(50, 200), pixelMatchesColor": [
+    [
+     [
+      130,
+      135,
+      144
+     ],
+     true
+    ],
+    []
+   ],
+   "screenshot: size, mode, type": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB",
+     "PngImageFile"
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "size, named tuple": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "Size"
+    ],
+    []
+   ],
+   "versions": [
+    "0.9.54",
+    "1.0.1",
+    "2.0.1",
+    "1.2.0",
+    "12.3.0"
+   ],
+   "window functions on this platform": [
+    [
+     "linux",
+     []
+    ],
+    []
+   ]
+  },
+  "3.14.1": {
+   "KEYBOARD_KEYS: count, shift alias": [
+    [
+     194,
+     true
+    ],
+    []
+   ],
+   "PAUSE, FAILSAFE at import": [
+    0.1,
+    true
+   ],
+   "Tk version of this interpreter": "TclError: Can't find a usable init.tcl in the following directories: ",
+   "click while the pointer is in the corner": [
+    "FailSafeException",
+    []
+   ],
+   "compile the X11 backend: warnings": [
+    "compiled",
+    [
+     "SyntaxWarning"
+    ]
+   ],
+   "fail-safe points": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1079
+     ],
+     [
+      1919,
+      0
+     ],
+     [
+      1919,
+      1079
+     ]
+    ],
+    []
+   ],
+   "import pyautogui without DISPLAY": [
+    "KeyError: 'DISPLAY'",
+    []
+   ],
+   "import pyautogui: warnings": [
+    "0.9.54",
+    []
+   ],
+   "mouseInfo(): window after 3.5 s": [
+    [
+     "exited 1",
+     [
+      "_tkinter.TclError: Can't find a usable init.tcl in the following directories: "
+     ]
+    ],
+    []
+   ],
+   "moveTo then position": [
+    [
+     321,
+     123
+    ],
+    []
+   ],
+   "observer block failed at: o = d.observer(geometry='1920x1080+0+0'": "observer did not appear: oot/.cache/uv/builds-v0/.tmpDs7YUN/lib/tcl8.6 /root/.cache/uv/builds-v0/lib/tcl8.6 /root/.cache/uv/builds-v0/.tmpDs",
+   "observer block failed at: o = d.observer(geometry='600x400+100+100')": "observer did not appear: oot/.cache/uv/builds-v0/.tmpDs7YUN/lib/tcl8.6 /root/.cache/uv/builds-v0/lib/tcl8.6 /root/.cache/uv/builds-v0/.tmpDs",
+   "observer block failed at: o = d.observer(mode='button'": "observer did not appear: oot/.cache/uv/builds-v0/.tmpDs7YUN/lib/tcl8.6 /root/.cache/uv/builds-v0/lib/tcl8.6 /root/.cache/uv/builds-v0/.tmpDs",
+   "pixel(50, 200), pixelMatchesColor": [
+    [
+     [
+      130,
+      135,
+      144
+     ],
+     true
+    ],
+    []
+   ],
+   "screenshot: size, mode, type": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB",
+     "PngImageFile"
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "size, named tuple": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "Size"
+    ],
+    []
+   ],
+   "versions": [
+    "0.9.54",
+    "1.0.1",
+    "2.0.1",
+    "1.2.0",
+    "12.3.0"
+   ],
+   "window functions on this platform": [
+    [
+     "linux",
+     []
+    ],
+    []
+   ]
+  },
+  "3.14.2": {
+   "KEYBOARD_KEYS: count, shift alias": [
+    [
+     194,
+     true
+    ],
+    []
+   ],
+   "PAUSE, FAILSAFE at import": [
+    0.1,
+    true
+   ],
+   "Tk version of this interpreter": "9.0.3",
+   "click while the pointer is in the corner": [
+    "FailSafeException",
+    []
+   ],
+   "click: events delivered": [
+    [
+     [
+      "ButtonPress",
+      1,
+      false
+     ],
+     [
+      "ButtonRelease",
+      1,
+      false
+     ]
+    ],
+    []
+   ],
+   "compile the X11 backend: warnings": [
+    "compiled",
+    [
+     "SyntaxWarning"
+    ]
+   ],
+   "confidence keyword": [
+    "NotImplementedError: The confidence keyword argument is only available if OpenCV is installed.",
+    []
+   ],
+   "drag: buttons, motions, button state": [
+    [
+     [
+      [
+       "ButtonPress",
+       1
+      ],
+      [
+       "ButtonRelease",
+       1
+      ]
+     ],
+     10,
+     [
+      0,
+      256
+     ]
+    ],
+    []
+   ],
+   "fail-safe points": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1079
+     ],
+     [
+      1919,
+      0
+     ],
+     [
+      1919,
+      1079
+     ]
+    ],
+    []
+   ],
+   "hotkey(ctrl, alt, shift, s): events": [
+    [
+     [
+      "Press",
+      "Control_L"
+     ],
+     [
+      "Press",
+      "Alt_L"
+     ],
+     [
+      "Press",
+      "Shift_L"
+     ],
+     [
+      "Press",
+      "S"
+     ],
+     [
+      "Release",
+      "S"
+     ],
+     [
+      "Release",
+      "Shift_L"
+     ],
+     [
+      "Release",
+      "Alt_L"
+     ],
+     [
+      "Release",
+      "Control_L"
+     ]
+    ],
+    []
+   ],
+   "import pyautogui without DISPLAY": [
+    "KeyError: 'DISPLAY'",
+    []
+   ],
+   "import pyautogui: warnings": [
+    "0.9.54",
+    []
+   ],
+   "locateCenterOnScreen: point": [
+    [
+     443,
+     337
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen of an image that is one pixel off": [
+    "pyautogui.ImageNotFoundException",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: box": [
+    [
+     401,
+     320,
+     84,
+     35
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "mouseInfo(): window after 3.5 s": [
+    [
+     "exited 1",
+     [
+      "_tkinter.TclError: bad option \"variable\": must be add, info, or remove"
+     ]
+    ],
+    []
+   ],
+   "moveTo then position": [
+    [
+     321,
+     123
+    ],
+    []
+   ],
+   "pixel(50, 200), pixelMatchesColor": [
+    [
+     [
+      130,
+      135,
+      144
+     ],
+     true
+    ],
+    []
+   ],
+   "screenshot: size, mode, type": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB",
+     "PngImageFile"
+    ],
+    []
+   ],
+   "scroll(3), scroll(-2), hscroll(1): wheel buttons": [
+    [
+     [
+      4,
+      4,
+      4
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      7
+     ]
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "size, named tuple": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "Size"
+    ],
+    []
+   ],
+   "unknown key name and a character outside the table": [
+    "caf",
+    []
+   ],
+   "versions": [
+    "0.9.54",
+    "1.0.1",
+    "2.0.1",
+    "1.2.0",
+    "12.3.0"
+   ],
+   "window functions on this platform": [
+    [
+     "linux",
+     []
+    ],
+    []
+   ],
+   "write: text received": [
+    "Hello, world!",
+    []
+   ]
+  },
+  "3.14.3": {
+   "KEYBOARD_KEYS: count, shift alias": [
+    [
+     194,
+     true
+    ],
+    []
+   ],
+   "PAUSE, FAILSAFE at import": [
+    0.1,
+    true
+   ],
+   "Tk version of this interpreter": "9.0.3",
+   "click while the pointer is in the corner": [
+    "FailSafeException",
+    []
+   ],
+   "click: events delivered": [
+    [
+     [
+      "ButtonPress",
+      1,
+      false
+     ],
+     [
+      "ButtonRelease",
+      1,
+      false
+     ]
+    ],
+    []
+   ],
+   "compile the X11 backend: warnings": [
+    "compiled",
+    [
+     "SyntaxWarning"
+    ]
+   ],
+   "confidence keyword": [
+    "NotImplementedError: The confidence keyword argument is only available if OpenCV is installed.",
+    []
+   ],
+   "drag: buttons, motions, button state": [
+    [
+     [
+      [
+       "ButtonPress",
+       1
+      ],
+      [
+       "ButtonRelease",
+       1
+      ]
+     ],
+     10,
+     [
+      0,
+      256
+     ]
+    ],
+    []
+   ],
+   "fail-safe points": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1079
+     ],
+     [
+      1919,
+      0
+     ],
+     [
+      1919,
+      1079
+     ]
+    ],
+    []
+   ],
+   "hotkey(ctrl, alt, shift, s): events": [
+    [
+     [
+      "Press",
+      "Control_L"
+     ],
+     [
+      "Press",
+      "Alt_L"
+     ],
+     [
+      "Press",
+      "Shift_L"
+     ],
+     [
+      "Press",
+      "S"
+     ],
+     [
+      "Release",
+      "S"
+     ],
+     [
+      "Release",
+      "Shift_L"
+     ],
+     [
+      "Release",
+      "Alt_L"
+     ],
+     [
+      "Release",
+      "Control_L"
+     ]
+    ],
+    []
+   ],
+   "import pyautogui without DISPLAY": [
+    "KeyError: 'DISPLAY'",
+    []
+   ],
+   "import pyautogui: warnings": [
+    "0.9.54",
+    []
+   ],
+   "locateCenterOnScreen: point": [
+    [
+     443,
+     337
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen of an image that is one pixel off": [
+    "pyautogui.ImageNotFoundException",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: box": [
+    [
+     401,
+     320,
+     84,
+     35
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "mouseInfo(): window after 3.5 s": [
+    [
+     "exited 1",
+     [
+      "_tkinter.TclError: bad option \"variable\": must be add, info, or remove"
+     ]
+    ],
+    []
+   ],
+   "moveTo then position": [
+    [
+     321,
+     123
+    ],
+    []
+   ],
+   "pixel(50, 200), pixelMatchesColor": [
+    [
+     [
+      130,
+      135,
+      144
+     ],
+     true
+    ],
+    []
+   ],
+   "screenshot: size, mode, type": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB",
+     "PngImageFile"
+    ],
+    []
+   ],
+   "scroll(3), scroll(-2), hscroll(1): wheel buttons": [
+    [
+     [
+      4,
+      4,
+      4
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      7
+     ]
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "size, named tuple": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "Size"
+    ],
+    []
+   ],
+   "unknown key name and a character outside the table": [
+    "caf",
+    []
+   ],
+   "versions": [
+    "0.9.54",
+    "1.0.1",
+    "2.0.1",
+    "1.2.0",
+    "12.3.0"
+   ],
+   "window functions on this platform": [
+    [
+     "linux",
+     []
+    ],
+    []
+   ],
+   "write: text received": [
+    "Hello, world!",
+    []
+   ]
+  },
+  "3.14.4": {
+   "KEYBOARD_KEYS: count, shift alias": [
+    [
+     194,
+     true
+    ],
+    []
+   ],
+   "PAUSE, FAILSAFE at import": [
+    0.1,
+    true
+   ],
+   "Tk version of this interpreter": "9.0.3",
+   "click while the pointer is in the corner": [
+    "FailSafeException",
+    []
+   ],
+   "click: events delivered": [
+    [
+     [
+      "ButtonPress",
+      1,
+      false
+     ],
+     [
+      "ButtonRelease",
+      1,
+      false
+     ]
+    ],
+    []
+   ],
+   "compile the X11 backend: warnings": [
+    "compiled",
+    [
+     "SyntaxWarning"
+    ]
+   ],
+   "confidence keyword": [
+    "NotImplementedError: The confidence keyword argument is only available if OpenCV is installed.",
+    []
+   ],
+   "drag: buttons, motions, button state": [
+    [
+     [
+      [
+       "ButtonPress",
+       1
+      ],
+      [
+       "ButtonRelease",
+       1
+      ]
+     ],
+     10,
+     [
+      0,
+      256
+     ]
+    ],
+    []
+   ],
+   "fail-safe points": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1079
+     ],
+     [
+      1919,
+      0
+     ],
+     [
+      1919,
+      1079
+     ]
+    ],
+    []
+   ],
+   "hotkey(ctrl, alt, shift, s): events": [
+    [
+     [
+      "Press",
+      "Control_L"
+     ],
+     [
+      "Press",
+      "Alt_L"
+     ],
+     [
+      "Press",
+      "Shift_L"
+     ],
+     [
+      "Press",
+      "S"
+     ],
+     [
+      "Release",
+      "S"
+     ],
+     [
+      "Release",
+      "Shift_L"
+     ],
+     [
+      "Release",
+      "Alt_L"
+     ],
+     [
+      "Release",
+      "Control_L"
+     ]
+    ],
+    []
+   ],
+   "import pyautogui without DISPLAY": [
+    "KeyError: 'DISPLAY'",
+    []
+   ],
+   "import pyautogui: warnings": [
+    "0.9.54",
+    []
+   ],
+   "locateCenterOnScreen: point": [
+    [
+     443,
+     337
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen of an image that is one pixel off": [
+    "pyautogui.ImageNotFoundException",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: box": [
+    [
+     401,
+     320,
+     84,
+     35
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "mouseInfo(): window after 3.5 s": [
+    [
+     "exited 1",
+     [
+      "_tkinter.TclError: bad option \"variable\": must be add, info, or remove"
+     ]
+    ],
+    []
+   ],
+   "moveTo then position": [
+    [
+     321,
+     123
+    ],
+    []
+   ],
+   "pixel(50, 200), pixelMatchesColor": [
+    [
+     [
+      130,
+      135,
+      144
+     ],
+     true
+    ],
+    []
+   ],
+   "screenshot: size, mode, type": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB",
+     "PngImageFile"
+    ],
+    []
+   ],
+   "scroll(3), scroll(-2), hscroll(1): wheel buttons": [
+    [
+     [
+      4,
+      4,
+      4
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      7
+     ]
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "size, named tuple": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "Size"
+    ],
+    []
+   ],
+   "unknown key name and a character outside the table": [
+    "caf",
+    []
+   ],
+   "versions": [
+    "0.9.54",
+    "1.0.1",
+    "2.0.1",
+    "1.2.0",
+    "12.3.0"
+   ],
+   "window functions on this platform": [
+    [
+     "linux",
+     []
+    ],
+    []
+   ],
+   "write: text received": [
+    "Hello, world!",
+    []
+   ]
+  },
+  "3.14.5": {
+   "KEYBOARD_KEYS: count, shift alias": [
+    [
+     194,
+     true
+    ],
+    []
+   ],
+   "PAUSE, FAILSAFE at import": [
+    0.1,
+    true
+   ],
+   "Tk version of this interpreter": "9.0.3",
+   "click while the pointer is in the corner": [
+    "FailSafeException",
+    []
+   ],
+   "click: events delivered": [
+    [
+     [
+      "ButtonPress",
+      1,
+      false
+     ],
+     [
+      "ButtonRelease",
+      1,
+      false
+     ]
+    ],
+    []
+   ],
+   "compile the X11 backend: warnings": [
+    "compiled",
+    [
+     "SyntaxWarning"
+    ]
+   ],
+   "confidence keyword": [
+    "NotImplementedError: The confidence keyword argument is only available if OpenCV is installed.",
+    []
+   ],
+   "drag: buttons, motions, button state": [
+    [
+     [
+      [
+       "ButtonPress",
+       1
+      ],
+      [
+       "ButtonRelease",
+       1
+      ]
+     ],
+     9,
+     [
+      0,
+      256
+     ]
+    ],
+    []
+   ],
+   "fail-safe points": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1079
+     ],
+     [
+      1919,
+      0
+     ],
+     [
+      1919,
+      1079
+     ]
+    ],
+    []
+   ],
+   "hotkey(ctrl, alt, shift, s): events": [
+    [
+     [
+      "Press",
+      "Control_L"
+     ],
+     [
+      "Press",
+      "Alt_L"
+     ],
+     [
+      "Press",
+      "Shift_L"
+     ],
+     [
+      "Press",
+      "S"
+     ],
+     [
+      "Release",
+      "S"
+     ],
+     [
+      "Release",
+      "Shift_L"
+     ],
+     [
+      "Release",
+      "Alt_L"
+     ],
+     [
+      "Release",
+      "Control_L"
+     ]
+    ],
+    []
+   ],
+   "import pyautogui without DISPLAY": [
+    "KeyError: 'DISPLAY'",
+    []
+   ],
+   "import pyautogui: warnings": [
+    "0.9.54",
+    []
+   ],
+   "locateCenterOnScreen: point": [
+    [
+     443,
+     337
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen of an image that is one pixel off": [
+    "pyautogui.ImageNotFoundException",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: box": [
+    [
+     401,
+     320,
+     84,
+     35
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "mouseInfo(): window after 3.5 s": [
+    [
+     "exited 1",
+     [
+      "_tkinter.TclError: bad option \"variable\": must be add, info, or remove"
+     ]
+    ],
+    []
+   ],
+   "moveTo then position": [
+    [
+     321,
+     123
+    ],
+    []
+   ],
+   "pixel(50, 200), pixelMatchesColor": [
+    [
+     [
+      130,
+      135,
+      144
+     ],
+     true
+    ],
+    []
+   ],
+   "screenshot: size, mode, type": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB",
+     "PngImageFile"
+    ],
+    []
+   ],
+   "scroll(3), scroll(-2), hscroll(1): wheel buttons": [
+    [
+     [
+      4,
+      4,
+      4
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      7
+     ]
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "size, named tuple": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "Size"
+    ],
+    []
+   ],
+   "unknown key name and a character outside the table": [
+    "caf",
+    []
+   ],
+   "versions": [
+    "0.9.54",
+    "1.0.1",
+    "2.0.1",
+    "1.2.0",
+    "12.3.0"
+   ],
+   "window functions on this platform": [
+    [
+     "linux",
+     []
+    ],
+    []
+   ],
+   "write: text received": [
+    "Hello, world!",
+    []
+   ]
+  },
+  "3.14.6": {
+   "KEYBOARD_KEYS: count, shift alias": [
+    [
+     194,
+     true
+    ],
+    []
+   ],
+   "PAUSE, FAILSAFE at import": [
+    0.1,
+    true
+   ],
+   "Tk version of this interpreter": "9.0.3",
+   "click while the pointer is in the corner": [
+    "FailSafeException",
+    []
+   ],
+   "click: events delivered": [
+    [
+     [
+      "ButtonPress",
+      1,
+      false
+     ],
+     [
+      "ButtonRelease",
+      1,
+      false
+     ]
+    ],
+    []
+   ],
+   "compile the X11 backend: warnings": [
+    "compiled",
+    [
+     "SyntaxWarning"
+    ]
+   ],
+   "confidence keyword": [
+    "NotImplementedError: The confidence keyword argument is only available if OpenCV is installed.",
+    []
+   ],
+   "drag: buttons, motions, button state": [
+    [
+     [
+      [
+       "ButtonPress",
+       1
+      ],
+      [
+       "ButtonRelease",
+       1
+      ]
+     ],
+     10,
+     [
+      0,
+      256
+     ]
+    ],
+    []
+   ],
+   "fail-safe points": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1079
+     ],
+     [
+      1919,
+      0
+     ],
+     [
+      1919,
+      1079
+     ]
+    ],
+    []
+   ],
+   "hotkey(ctrl, alt, shift, s): events": [
+    [
+     [
+      "Press",
+      "Control_L"
+     ],
+     [
+      "Press",
+      "Alt_L"
+     ],
+     [
+      "Press",
+      "Shift_L"
+     ],
+     [
+      "Press",
+      "S"
+     ],
+     [
+      "Release",
+      "S"
+     ],
+     [
+      "Release",
+      "Shift_L"
+     ],
+     [
+      "Release",
+      "Alt_L"
+     ],
+     [
+      "Release",
+      "Control_L"
+     ]
+    ],
+    []
+   ],
+   "import pyautogui without DISPLAY": [
+    "KeyError: 'DISPLAY'",
+    []
+   ],
+   "import pyautogui: warnings": [
+    "0.9.54",
+    []
+   ],
+   "locateCenterOnScreen: point": [
+    [
+     443,
+     337
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen of an image that is one pixel off": [
+    "pyautogui.ImageNotFoundException",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: box": [
+    [
+     401,
+     320,
+     84,
+     35
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "mouseInfo(): window after 3.5 s": [
+    [
+     "exited 1",
+     [
+      "_tkinter.TclError: bad option \"variable\": must be add, info, or remove"
+     ]
+    ],
+    []
+   ],
+   "moveTo then position": [
+    [
+     321,
+     123
+    ],
+    []
+   ],
+   "pixel(50, 200), pixelMatchesColor": [
+    [
+     [
+      130,
+      135,
+      144
+     ],
+     true
+    ],
+    []
+   ],
+   "screenshot: size, mode, type": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB",
+     "PngImageFile"
+    ],
+    []
+   ],
+   "scroll(3), scroll(-2), hscroll(1): wheel buttons": [
+    [
+     [
+      4,
+      4,
+      4
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      7
+     ]
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "size, named tuple": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "Size"
+    ],
+    []
+   ],
+   "unknown key name and a character outside the table": [
+    "caf",
+    []
+   ],
+   "versions": [
+    "0.9.54",
+    "1.0.1",
+    "2.0.1",
+    "1.2.0",
+    "12.3.0"
+   ],
+   "window functions on this platform": [
+    [
+     "linux",
+     []
+    ],
+    []
+   ],
+   "write: text received": [
+    "Hello, world!",
+    []
+   ]
+  },
+  "3.15.0b4": {
+   "KEYBOARD_KEYS: count, shift alias": [
+    [
+     194,
+     true
+    ],
+    []
+   ],
+   "PAUSE, FAILSAFE at import": [
+    0.1,
+    true
+   ],
+   "Tk version of this interpreter": "9.0.3",
+   "click while the pointer is in the corner": [
+    "FailSafeException",
+    []
+   ],
+   "click: events delivered": [
+    [
+     [
+      "ButtonPress",
+      1,
+      false
+     ],
+     [
+      "ButtonRelease",
+      1,
+      false
+     ]
+    ],
+    []
+   ],
+   "compile the X11 backend: warnings": [
+    "compiled",
+    [
+     "SyntaxWarning"
+    ]
+   ],
+   "confidence keyword": [
+    "NotImplementedError: The confidence keyword argument is only available if OpenCV is installed.",
+    []
+   ],
+   "drag: buttons, motions, button state": [
+    [
+     [
+      [
+       "ButtonPress",
+       1
+      ],
+      [
+       "ButtonRelease",
+       1
+      ]
+     ],
+     10,
+     [
+      0,
+      256
+     ]
+    ],
+    []
+   ],
+   "fail-safe points": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1079
+     ],
+     [
+      1919,
+      0
+     ],
+     [
+      1919,
+      1079
+     ]
+    ],
+    []
+   ],
+   "hotkey(ctrl, alt, shift, s): events": [
+    [
+     [
+      "Press",
+      "Control_L"
+     ],
+     [
+      "Press",
+      "Alt_L"
+     ],
+     [
+      "Press",
+      "Shift_L"
+     ],
+     [
+      "Press",
+      "S"
+     ],
+     [
+      "Release",
+      "S"
+     ],
+     [
+      "Release",
+      "Shift_L"
+     ],
+     [
+      "Release",
+      "Alt_L"
+     ],
+     [
+      "Release",
+      "Control_L"
+     ]
+    ],
+    []
+   ],
+   "import pyautogui without DISPLAY": [
+    "KeyError: 'DISPLAY'",
+    []
+   ],
+   "import pyautogui: warnings": [
+    "0.9.54",
+    []
+   ],
+   "locateCenterOnScreen: point": [
+    [
+     443,
+     337
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen of an image that is one pixel off": [
+    "pyautogui.ImageNotFoundException",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: box": [
+    [
+     401,
+     320,
+     84,
+     35
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "mouseInfo(): window after 3.5 s": [
+    [
+     "exited 1",
+     [
+      "_tkinter.TclError: bad option \"variable\": must be add, info, or remove"
+     ]
+    ],
+    []
+   ],
+   "moveTo then position": [
+    [
+     321,
+     123
+    ],
+    []
+   ],
+   "pixel(50, 200), pixelMatchesColor": [
+    [
+     [
+      130,
+      135,
+      144
+     ],
+     true
+    ],
+    []
+   ],
+   "screenshot: size, mode, type": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB",
+     "PngImageFile"
+    ],
+    []
+   ],
+   "scroll(3), scroll(-2), hscroll(1): wheel buttons": [
+    [
+     [
+      4,
+      4,
+      4
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      7
+     ]
+    ],
+    []
+   ],
+   "series": "3.15.x",
+   "size, named tuple": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "Size"
+    ],
+    []
+   ],
+   "unknown key name and a character outside the table": [
+    "caf",
+    []
+   ],
+   "versions": [
+    "0.9.54",
+    "1.0.1",
+    "2.0.1",
+    "1.2.0",
+    "12.3.0"
+   ],
+   "window functions on this platform": [
+    [
+     "linux",
+     []
+    ],
+    []
+   ],
+   "write: text received": [
+    "Hello, world!",
+    []
+   ]
+  },
+  "3.14.6 with OpenCV": {
+   "KEYBOARD_KEYS: count, shift alias": [
+    [
+     194,
+     true
+    ],
+    []
+   ],
+   "PAUSE, FAILSAFE at import": [
+    0.1,
+    true
+   ],
+   "Tk version of this interpreter": "9.0.3",
+   "click while the pointer is in the corner": [
+    "FailSafeException",
+    []
+   ],
+   "click: events delivered": [
+    [
+     [
+      "ButtonPress",
+      1,
+      false
+     ],
+     [
+      "ButtonRelease",
+      1,
+      false
+     ]
+    ],
+    []
+   ],
+   "compile the X11 backend: warnings": [
+    "compiled",
+    [
+     "SyntaxWarning"
+    ]
+   ],
+   "confidence keyword": [
+    "found",
+    []
+   ],
+   "drag: buttons, motions, button state": [
+    [
+     [
+      [
+       "ButtonPress",
+       1
+      ],
+      [
+       "ButtonRelease",
+       1
+      ]
+     ],
+     10,
+     [
+      0,
+      256
+     ]
+    ],
+    []
+   ],
+   "fail-safe points": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1079
+     ],
+     [
+      1919,
+      0
+     ],
+     [
+      1919,
+      1079
+     ]
+    ],
+    []
+   ],
+   "hotkey(ctrl, alt, shift, s): events": [
+    [
+     [
+      "Press",
+      "Control_L"
+     ],
+     [
+      "Press",
+      "Alt_L"
+     ],
+     [
+      "Press",
+      "Shift_L"
+     ],
+     [
+      "Press",
+      "S"
+     ],
+     [
+      "Release",
+      "S"
+     ],
+     [
+      "Release",
+      "Shift_L"
+     ],
+     [
+      "Release",
+      "Alt_L"
+     ],
+     [
+      "Release",
+      "Control_L"
+     ]
+    ],
+    []
+   ],
+   "import pyautogui without DISPLAY": [
+    "KeyError: 'DISPLAY'",
+    []
+   ],
+   "import pyautogui: warnings": [
+    "0.9.54",
+    []
+   ],
+   "locateCenterOnScreen: point": [
+    [
+     443,
+     337
+    ],
+    []
+   ],
+   "locateOnScreen of an image that is one pixel off": [
+    "pyautogui.ImageNotFoundException",
+    []
+   ],
+   "locateOnScreen: box": [
+    [
+     401,
+     320,
+     84,
+     35
+    ],
+    []
+   ],
+   "mouseInfo(): window after 3.5 s": [
+    [
+     "exited 1",
+     [
+      "_tkinter.TclError: bad option \"variable\": must be add, info, or remove"
+     ]
+    ],
+    []
+   ],
+   "moveTo then position": [
+    [
+     321,
+     123
+    ],
+    []
+   ],
+   "pixel(50, 200), pixelMatchesColor": [
+    [
+     [
+      130,
+      135,
+      144
+     ],
+     true
+    ],
+    []
+   ],
+   "screenshot: size, mode, type": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB",
+     "PngImageFile"
+    ],
+    []
+   ],
+   "scroll(3), scroll(-2), hscroll(1): wheel buttons": [
+    [
+     [
+      4,
+      4,
+      4
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      7
+     ]
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "size, named tuple": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "Size"
+    ],
+    []
+   ],
+   "unknown key name and a character outside the table": [
+    "caf",
+    []
+   ],
+   "versions": [
+    "0.9.54",
+    "1.0.1",
+    "2.0.1",
+    "1.2.0",
+    "12.3.0"
+   ],
+   "window functions on this platform": [
+    [
+     "linux",
+     []
+    ],
+    []
+   ],
+   "write: text received": [
+    "Hello, world!",
+    []
+   ]
+  }
+ },
+ "items compared": 27,
+ "differ": {
+  "click: events delivered": [
+   [
+    [
+     [
+      [
+       "ButtonPress",
+       1,
+       false
+      ],
+      [
+       "ButtonRelease",
+       1,
+       false
+      ]
+     ],
+     []
+    ],
+    [
+     "3.12.3",
+     "3.13.14",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4",
+     "3.14.6 with OpenCV"
+    ]
+   ],
+   [
+    null,
+    [
+     "3.14.0",
+     "3.14.1"
+    ]
+   ]
+  ],
+  "confidence keyword": [
+   [
+    [
+     "NotImplementedError: The confidence keyword argument is only available if OpenCV is installed.",
+     []
+    ],
+    [
+     "3.12.3",
+     "3.13.14",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ],
+   [
+    null,
+    [
+     "3.14.0",
+     "3.14.1"
+    ]
+   ],
+   [
+    [
+     "found",
+     []
+    ],
+    [
+     "3.14.6 with OpenCV"
+    ]
+   ]
+  ],
+  "drag: buttons, motions, button state": [
+   [
+    [
+     [
+      [
+       [
+        "ButtonPress",
+        1
+       ],
+       [
+        "ButtonRelease",
+        1
+       ]
+      ],
+      8,
+      [
+       0,
+       256
+      ]
+     ],
+     []
+    ],
+    [
+     "3.12.3"
+    ]
+   ],
+   [
+    [
+     [
+      [
+       [
+        "ButtonPress",
+        1
+       ],
+       [
+        "ButtonRelease",
+        1
+       ]
+      ],
+      9,
+      [
+       0,
+       256
+      ]
+     ],
+     []
+    ],
+    [
+     "3.13.14",
+     "3.14.5"
+    ]
+   ],
+   [
+    null,
+    [
+     "3.14.0",
+     "3.14.1"
+    ]
+   ],
+   [
+    [
+     [
+      [
+       [
+        "ButtonPress",
+        1
+       ],
+       [
+        "ButtonRelease",
+        1
+       ]
+      ],
+      10,
+      [
+       0,
+       256
+      ]
+     ],
+     []
+    ],
+    [
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.6",
+     "3.15.0b4",
+     "3.14.6 with OpenCV"
+    ]
+   ]
+  ],
+  "hotkey(ctrl, alt, shift, s): events": [
+   [
+    [
+     [
+      [
+       "Press",
+       "Control_L"
+      ],
+      [
+       "Press",
+       "Alt_L"
+      ],
+      [
+       "Press",
+       "Shift_L"
+      ],
+      [
+       "Press",
+       "S"
+      ],
+      [
+       "Release",
+       "S"
+      ],
+      [
+       "Release",
+       "Shift_L"
+      ],
+      [
+       "Release",
+       "Alt_L"
+      ],
+      [
+       "Release",
+       "Control_L"
+      ]
+     ],
+     []
+    ],
+    [
+     "3.12.3",
+     "3.13.14",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4",
+     "3.14.6 with OpenCV"
+    ]
+   ],
+   [
+    null,
+    [
+     "3.14.0",
+     "3.14.1"
+    ]
+   ]
+  ],
+  "locateCenterOnScreen: point": [
+   [
+    [
+     [
+      442,
+      336
+     ],
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.12.3"
+    ]
+   ],
+   [
+    [
+     [
+      443,
+      337
+     ],
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.13.14",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ],
+   [
+    null,
+    [
+     "3.14.0",
+     "3.14.1"
+    ]
+   ],
+   [
+    [
+     [
+      443,
+      337
+     ],
+     []
+    ],
+    [
+     "3.14.6 with OpenCV"
+    ]
+   ]
+  ],
+  "locateOnScreen of an image that is one pixel off": [
+   [
+    [
+     "pyautogui.ImageNotFoundException",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.12.3",
+     "3.13.14",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ],
+   [
+    null,
+    [
+     "3.14.0",
+     "3.14.1"
+    ]
+   ],
+   [
+    [
+     "pyautogui.ImageNotFoundException",
+     []
+    ],
+    [
+     "3.14.6 with OpenCV"
+    ]
+   ]
+  ],
+  "locateOnScreen: box": [
+   [
+    [
+     [
+      401,
+      320,
+      82,
+      32
+     ],
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.12.3"
+    ]
+   ],
+   [
+    [
+     [
+      401,
+      320,
+      84,
+      35
+     ],
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "3.13.14",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4"
+    ]
+   ],
+   [
+    null,
+    [
+     "3.14.0",
+     "3.14.1"
+    ]
+   ],
+   [
+    [
+     [
+      401,
+      320,
+      84,
+      35
+     ],
+     []
+    ],
+    [
+     "3.14.6 with OpenCV"
+    ]
+   ]
+  ],
+  "mouseInfo(): window after 3.5 s": [
+   [
+    [
+     [
+      "running",
+      []
+     ],
+     []
+    ],
+    [
+     "3.12.3"
+    ]
+   ],
+   [
+    [
+     [
+      "exited 1",
+      [
+       "_tkinter.TclError: bad option \"variable\": must be add, info, or remove"
+      ]
+     ],
+     []
+    ],
+    [
+     "3.13.14",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4",
+     "3.14.6 with OpenCV"
+    ]
+   ],
+   [
+    [
+     [
+      "exited 1",
+      [
+       "_tkinter.TclError: Can't find a usable init.tcl in the following directories: "
+      ]
+     ],
+     []
+    ],
+    [
+     "3.14.0",
+     "3.14.1"
+    ]
+   ]
+  ],
+  "observer block failed at: o = d.observer(geometry='1920x1080+0+0'": [
+   [
+    null,
+    [
+     "3.12.3",
+     "3.13.14",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4",
+     "3.14.6 with OpenCV"
+    ]
+   ],
+   [
+    "observer did not appear: oot/.cache/uv/builds-v0/.tmpS9iwIm/lib/tcl8.6 /root/.cache/uv/builds-v0/lib/tcl8.6 /root/.cache/uv/builds-v0/.tmpS9",
+    [
+     "3.14.0"
+    ]
+   ],
+   [
+    "observer did not appear: oot/.cache/uv/builds-v0/.tmpDs7YUN/lib/tcl8.6 /root/.cache/uv/builds-v0/lib/tcl8.6 /root/.cache/uv/builds-v0/.tmpDs",
+    [
+     "3.14.1"
+    ]
+   ]
+  ],
+  "observer block failed at: o = d.observer(geometry='600x400+100+100')": [
+   [
+    null,
+    [
+     "3.12.3",
+     "3.13.14",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4",
+     "3.14.6 with OpenCV"
+    ]
+   ],
+   [
+    "observer did not appear: oot/.cache/uv/builds-v0/.tmpS9iwIm/lib/tcl8.6 /root/.cache/uv/builds-v0/lib/tcl8.6 /root/.cache/uv/builds-v0/.tmpS9",
+    [
+     "3.14.0"
+    ]
+   ],
+   [
+    "observer did not appear: oot/.cache/uv/builds-v0/.tmpDs7YUN/lib/tcl8.6 /root/.cache/uv/builds-v0/lib/tcl8.6 /root/.cache/uv/builds-v0/.tmpDs",
+    [
+     "3.14.1"
+    ]
+   ]
+  ],
+  "observer block failed at: o = d.observer(mode='button'": [
+   [
+    null,
+    [
+     "3.12.3",
+     "3.13.14",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4",
+     "3.14.6 with OpenCV"
+    ]
+   ],
+   [
+    "observer did not appear: oot/.cache/uv/builds-v0/.tmpS9iwIm/lib/tcl8.6 /root/.cache/uv/builds-v0/lib/tcl8.6 /root/.cache/uv/builds-v0/.tmpS9",
+    [
+     "3.14.0"
+    ]
+   ],
+   [
+    "observer did not appear: oot/.cache/uv/builds-v0/.tmpDs7YUN/lib/tcl8.6 /root/.cache/uv/builds-v0/lib/tcl8.6 /root/.cache/uv/builds-v0/.tmpDs",
+    [
+     "3.14.1"
+    ]
+   ]
+  ],
+  "scroll(3), scroll(-2), hscroll(1): wheel buttons": [
+   [
+    [
+     [
+      [
+       4,
+       4,
+       4
+      ],
+      [
+       5,
+       5
+      ],
+      [
+       7
+      ]
+     ],
+     []
+    ],
+    [
+     "3.12.3",
+     "3.13.14",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4",
+     "3.14.6 with OpenCV"
+    ]
+   ],
+   [
+    null,
+    [
+     "3.14.0",
+     "3.14.1"
+    ]
+   ]
+  ],
+  "unknown key name and a character outside the table": [
+   [
+    [
+     "caf",
+     []
+    ],
+    [
+     "3.12.3",
+     "3.13.14",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4",
+     "3.14.6 with OpenCV"
+    ]
+   ],
+   [
+    null,
+    [
+     "3.14.0",
+     "3.14.1"
+    ]
+   ]
+  ],
+  "write: text received": [
+   [
+    [
+     "Hello, world!",
+     []
+    ],
+    [
+     "3.12.3",
+     "3.13.14",
+     "3.14.2",
+     "3.14.3",
+     "3.14.4",
+     "3.14.5",
+     "3.14.6",
+     "3.15.0b4",
+     "3.14.6 with OpenCV"
+    ]
+   ],
+   [
+    null,
+    [
+     "3.14.0",
+     "3.14.1"
+    ]
+   ]
+  ]
+ },
+ "package release rows": {
+  "pyautogui 0.9.40 with pyscreeze 0.1.28 on 3.12": {
+   "NOT EXECUTED or failed": "  File \"/root/.cache/uv/archive-v0/V-civasfl2oDw0xp/lib/python3.12/site-packages/pygetwindow/__init__.py\", line 347, in <module> |     raise NotImplementedError( | NotImplementedError: PyGetWindow currently does not support Linux. If you have Xlib knowledge, please contribute! https://github.com/asweigart/pygetwindow"
+  },
+  "pyautogui 0.9.40 with pyscreeze 1.0.1 on 3.12": {
+   "NOT EXECUTED or failed": "  File \"/root/.cache/uv/archive-v0/WEeh1mZRW4lX1LfP/lib/python3.12/site-packages/pygetwindow/__init__.py\", line 347, in <module> |     raise NotImplementedError( | NotImplementedError: PyGetWindow currently does not support Linux. If you have Xlib knowledge, please contribute! https://github.com/asweigart/pygetwindow"
+  },
+  "pyautogui 0.9.41 with pyscreeze 0.1.28 on 3.12": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "builtins.TypeError: 'NoneType' object is not subscriptable",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "exception class hierarchy": [
+    "ImageNotFoundException absent",
+    []
+   ],
+   "hold context manager": false,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      82,
+      32
+     ]
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: image one pixel off": [
+    "None",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": false,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": false,
+   "python": "3.12.3",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "12.3.0",
+    "pyautogui": "0.9.41",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "0.1.28"
+   },
+   "write is typewrite": true
+  },
+  "pyautogui 0.9.41 with pyscreeze 1.0.1 on 3.12": {
+   "NOT EXECUTED or failed": "  File \"/root/.cache/uv/archive-v0/WC0Ug-o789MGVI55/lib/python3.12/site-packages/pyautogui/__init__.py\", line 91, in couldNotImportPyScreeze |     raise Exception('PyAutoGUI was unable to import pyscreeze. Please install this module.') | Exception: PyAutoGUI was unable to import pyscreeze. Please install this module."
+  },
+  "pyautogui 0.9.50 with pyscreeze 0.1.28 on 3.12": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "builtins.TypeError: cannot unpack non-iterable NoneType object",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": false,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      82,
+      32
+     ]
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: image one pixel off": [
+    "None",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": false,
+   "python": "3.12.3",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "12.3.0",
+    "pyautogui": "0.9.50",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "0.1.28"
+   },
+   "write is typewrite": true
+  },
+  "pyautogui 0.9.50 with pyscreeze 1.0.1 on 3.12": {
+   "NOT EXECUTED or failed": "  File \"/root/.cache/uv/archive-v0/wfkJ1Jusj-Zk5v7W/lib/python3.12/site-packages/pyautogui/__init__.py\", line 224, in _couldNotImportPyScreeze |     raise PyAutoGUIException( | pyautogui.PyAutoGUIException: PyAutoGUI was unable to import pyscreeze. (This is likely because you're running a version of Python that Pillow (which pyscreeze depends on) doesn't support currently.) Please install this module to enable the fu"
+  },
+  "pyautogui 0.9.54 with pyscreeze 0.1.28 on 3.12": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "builtins.TypeError: cannot unpack non-iterable NoneType object",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      82,
+      32
+     ]
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: image one pixel off": [
+    "None",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": false,
+   "python": "3.12.3",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "12.3.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "0.1.28"
+   },
+   "write is typewrite": true
+  },
+  "pyautogui 0.9.54 with pyscreeze 1.0.1 on 3.12": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "pyautogui.ImageNotFoundException: ",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      82,
+      32
+     ]
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: image one pixel off": [
+    "pyautogui.ImageNotFoundException: ",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": true,
+   "python": "3.12.3",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "12.3.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "1.0.1"
+   },
+   "write is typewrite": true
+  },
+  "pyscreeze 0.1.27 with pyautogui 0.9.54 on 3.14.6": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "builtins.TypeError: cannot unpack non-iterable NoneType object",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      84,
+      35
+     ]
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: image one pixel off": [
+    "None",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": false,
+   "python": "3.14.6",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "12.3.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "0.1.27"
+   },
+   "write is typewrite": true
+  },
+  "pyscreeze 0.1.28 with pyautogui 0.9.54 on 3.14.6": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "builtins.TypeError: cannot unpack non-iterable NoneType object",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      84,
+      35
+     ]
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: image one pixel off": [
+    "None",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": false,
+   "python": "3.14.6",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "12.3.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "0.1.28"
+   },
+   "write is typewrite": true
+  },
+  "pyscreeze 0.1.29 with pyautogui 0.9.54 on 3.14.6": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "builtins.TypeError: cannot unpack non-iterable NoneType object",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      84,
+      35
+     ]
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: image one pixel off": [
+    "None",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": false,
+   "python": "3.14.6",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "12.3.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "0.1.29"
+   },
+   "write is typewrite": true
+  },
+  "pyscreeze 0.1.30 with pyautogui 0.9.54 on 3.14.6": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "pyautogui.ImageNotFoundException: ",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      84,
+      35
+     ]
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: image one pixel off": [
+    "pyautogui.ImageNotFoundException: ",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": true,
+   "python": "3.14.6",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "12.3.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "0.1.30"
+   },
+   "write is typewrite": true
+  },
+  "pyscreeze 1.0.0 with pyautogui 0.9.54 on 3.14.6": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "pyautogui.ImageNotFoundException: ",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      84,
+      35
+     ]
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: image one pixel off": [
+    "pyautogui.ImageNotFoundException: ",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": true,
+   "python": "3.14.6",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "12.3.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "1.0.0"
+   },
+   "write is typewrite": true
+  },
+  "pyscreeze 1.0.1 with pyautogui 0.9.54 on 3.14.6": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "pyautogui.ImageNotFoundException: ",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      84,
+      35
+     ]
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: image one pixel off": [
+    "pyautogui.ImageNotFoundException: ",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": true,
+   "python": "3.14.6",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "12.3.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "1.0.1"
+   },
+   "write is typewrite": true
+  }
+ },
+ "package items compared": 13,
+ "package differ": {
+  "click(image one pixel off)": [
+   [
+    [
+     "builtins.TypeError: 'NoneType' object is not subscriptable",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "pyautogui 0.9.41 with pyscreeze 0.1.28 on 3.12"
+    ]
+   ],
+   [
+    [
+     "builtins.TypeError: cannot unpack non-iterable NoneType object",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "pyautogui 0.9.50 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.54 with pyscreeze 0.1.28 on 3.12",
+     "pyscreeze 0.1.27 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.28 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.29 with pyautogui 0.9.54 on 3.14.6"
+    ]
+   ],
+   [
+    [
+     "pyautogui.ImageNotFoundException: ",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "pyautogui 0.9.54 with pyscreeze 1.0.1 on 3.12",
+     "pyscreeze 0.1.30 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.0 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.1 with pyautogui 0.9.54 on 3.14.6"
+    ]
+   ]
+  ],
+  "exception class hierarchy": [
+   [
+    [
+     "ImageNotFoundException absent",
+     []
+    ],
+    [
+     "pyautogui 0.9.41 with pyscreeze 0.1.28 on 3.12"
+    ]
+   ],
+   [
+    [
+     [
+      "PyAutoGUIException",
+      "PyAutoGUIException"
+     ],
+     []
+    ],
+    [
+     "pyautogui 0.9.50 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.54 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.54 with pyscreeze 1.0.1 on 3.12",
+     "pyscreeze 0.1.27 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.28 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.29 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.30 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.0 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.1 with pyautogui 0.9.54 on 3.14.6"
+    ]
+   ]
+  ],
+  "hold context manager": [
+   [
+    false,
+    [
+     "pyautogui 0.9.41 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.50 with pyscreeze 0.1.28 on 3.12"
+    ]
+   ],
+   [
+    true,
+    [
+     "pyautogui 0.9.54 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.54 with pyscreeze 1.0.1 on 3.12",
+     "pyscreeze 0.1.27 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.28 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.29 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.30 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.0 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.1 with pyautogui 0.9.54 on 3.14.6"
+    ]
+   ]
+  ],
+  "locateOnScreen: exact image": [
+   [
+    [
+     [
+      "Box",
+      [
+       401,
+       320,
+       82,
+       32
+      ]
+     ],
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "pyautogui 0.9.41 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.50 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.54 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.54 with pyscreeze 1.0.1 on 3.12"
+    ]
+   ],
+   [
+    [
+     [
+      "Box",
+      [
+       401,
+       320,
+       84,
+       35
+      ]
+     ],
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "pyscreeze 0.1.27 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.28 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.29 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.30 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.0 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.1 with pyautogui 0.9.54 on 3.14.6"
+    ]
+   ]
+  ],
+  "locateOnScreen: image one pixel off": [
+   [
+    [
+     "None",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "pyautogui 0.9.41 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.50 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.54 with pyscreeze 0.1.28 on 3.12",
+     "pyscreeze 0.1.27 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.28 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.29 with pyautogui 0.9.54 on 3.14.6"
+    ]
+   ],
+   [
+    [
+     "pyautogui.ImageNotFoundException: ",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "pyautogui 0.9.54 with pyscreeze 1.0.1 on 3.12",
+     "pyscreeze 0.1.30 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.0 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.1 with pyautogui 0.9.54 on 3.14.6"
+    ]
+   ]
+  ],
+  "pyautogui.useImageNotFoundException": [
+   [
+    false,
+    [
+     "pyautogui 0.9.41 with pyscreeze 0.1.28 on 3.12"
+    ]
+   ],
+   [
+    true,
+    [
+     "pyautogui 0.9.50 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.54 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.54 with pyscreeze 1.0.1 on 3.12",
+     "pyscreeze 0.1.27 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.28 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.29 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.30 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.0 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.1 with pyautogui 0.9.54 on 3.14.6"
+    ]
+   ]
+  ],
+  "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": [
+   [
+    false,
+    [
+     "pyautogui 0.9.41 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.50 with pyscreeze 0.1.28 on 3.12",
+     "pyautogui 0.9.54 with pyscreeze 0.1.28 on 3.12",
+     "pyscreeze 0.1.27 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.28 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 0.1.29 with pyautogui 0.9.54 on 3.14.6"
+    ]
+   ],
+   [
+    true,
+    [
+     "pyautogui 0.9.54 with pyscreeze 1.0.1 on 3.12",
+     "pyscreeze 0.1.30 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.0 with pyautogui 0.9.54 on 3.14.6",
+     "pyscreeze 1.0.1 with pyautogui 0.9.54 on 3.14.6"
+    ]
+   ]
+  ]
+ },
+ "pillow releases": {
+  "9.5.0": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "pyautogui.ImageNotFoundException: ",
+    []
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      82,
+      32
+     ]
+    ],
+    []
+   ],
+   "locateOnScreen: image one pixel off": [
+    "pyautogui.ImageNotFoundException: ",
+    []
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": true,
+   "python": "3.12.3",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "9.5.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "1.0.1"
+   },
+   "write is typewrite": true
+  },
+  "10.0.0": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "pyautogui.ImageNotFoundException: ",
+    []
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      82,
+      32
+     ]
+    ],
+    []
+   ],
+   "locateOnScreen: image one pixel off": [
+    "pyautogui.ImageNotFoundException: ",
+    []
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": true,
+   "python": "3.12.3",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "10.0.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "1.0.1"
+   },
+   "write is typewrite": true
+  },
+  "10.4.0": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "pyautogui.ImageNotFoundException: ",
+    []
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      82,
+      32
+     ]
+    ],
+    []
+   ],
+   "locateOnScreen: image one pixel off": [
+    "pyautogui.ImageNotFoundException: ",
+    []
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": true,
+   "python": "3.12.3",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "10.4.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "1.0.1"
+   },
+   "write is typewrite": true
+  },
+  "11.0.0": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "pyautogui.ImageNotFoundException: ",
+    []
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      82,
+      32
+     ]
+    ],
+    []
+   ],
+   "locateOnScreen: image one pixel off": [
+    "pyautogui.ImageNotFoundException: ",
+    []
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": true,
+   "python": "3.12.3",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "11.0.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "1.0.1"
+   },
+   "write is typewrite": true
+  },
+  "11.3.0": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "pyautogui.ImageNotFoundException: ",
+    []
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      82,
+      32
+     ]
+    ],
+    []
+   ],
+   "locateOnScreen: image one pixel off": [
+    "pyautogui.ImageNotFoundException: ",
+    []
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": true,
+   "python": "3.12.3",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "11.3.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "1.0.1"
+   },
+   "write is typewrite": true
+  },
+  "12.0.0": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "pyautogui.ImageNotFoundException: ",
+    []
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      82,
+      32
+     ]
+    ],
+    []
+   ],
+   "locateOnScreen: image one pixel off": [
+    "pyautogui.ImageNotFoundException: ",
+    []
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": true,
+   "python": "3.12.3",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "12.0.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "1.0.1"
+   },
+   "write is typewrite": true
+  },
+  "12.3.0": {
+   "KEYBOARD_KEYS count": 194,
+   "click(image one pixel off)": [
+    "pyautogui.ImageNotFoundException: ",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "exception class hierarchy": [
+    [
+     "PyAutoGUIException",
+     "PyAutoGUIException"
+    ],
+    []
+   ],
+   "hold context manager": true,
+   "locateOnScreen: exact image": [
+    [
+     "Box",
+     [
+      401,
+      320,
+      82,
+      32
+     ]
+    ],
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "locateOnScreen: image one pixel off": [
+    "pyautogui.ImageNotFoundException: ",
+    [
+     "DeprecationWarning"
+    ]
+   ],
+   "pixel(0, 0) type": [
+    "RGB",
+    []
+   ],
+   "pixelMatchesColor tolerance keyword": [
+    true,
+    []
+   ],
+   "pyautogui.useImageNotFoundException": true,
+   "pyscreeze.USE_IMAGE_NOT_FOUND_EXCEPTION": true,
+   "python": "3.12.3",
+   "screenshot: size, mode": [
+    [
+     [
+      1920,
+      1080
+     ],
+     "RGB"
+    ],
+    []
+   ],
+   "versions": {
+    "pillow": "12.3.0",
+    "pyautogui": "0.9.54",
+    "pymsgbox": "2.0.1",
+    "pyscreeze": "1.0.1"
+   },
+   "write is typewrite": true
+  }
+ },
+ "pillow items compared": 12,
+ "pillow differ": {
+  "click(image one pixel off)": [
+   [
+    [
+     "pyautogui.ImageNotFoundException: ",
+     []
+    ],
+    [
+     "9.5.0",
+     "10.0.0",
+     "10.4.0",
+     "11.0.0",
+     "11.3.0",
+     "12.0.0"
+    ]
+   ],
+   [
+    [
+     "pyautogui.ImageNotFoundException: ",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "12.3.0"
+    ]
+   ]
+  ],
+  "locateOnScreen: exact image": [
+   [
+    [
+     [
+      "Box",
+      [
+       401,
+       320,
+       82,
+       32
+      ]
+     ],
+     []
+    ],
+    [
+     "9.5.0",
+     "10.0.0",
+     "10.4.0",
+     "11.0.0",
+     "11.3.0",
+     "12.0.0"
+    ]
+   ],
+   [
+    [
+     [
+      "Box",
+      [
+       401,
+       320,
+       82,
+       32
+      ]
+     ],
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "12.3.0"
+    ]
+   ]
+  ],
+  "locateOnScreen: image one pixel off": [
+   [
+    [
+     "pyautogui.ImageNotFoundException: ",
+     []
+    ],
+    [
+     "9.5.0",
+     "10.0.0",
+     "10.4.0",
+     "11.0.0",
+     "11.3.0",
+     "12.0.0"
+    ]
+   ],
+   [
+    [
+     "pyautogui.ImageNotFoundException: ",
+     [
+      "DeprecationWarning"
+     ]
+    ],
+    [
+     "12.3.0"
+    ]
+   ]
+  ]
+ },
+ "pymsgbox releases": {
+  "1.0.9": {
+   "constants": [
+    "OK",
+    "Cancel",
+    "Timeout"
+   ],
+   "exceptions": [],
+   "functions": [
+    "alert",
+    "confirm",
+    "password",
+    "prompt"
+   ],
+   "pymsgbox": "1.0.9",
+   "python": "3.14.6",
+   "signatures": {
+    "alert": "(text='', title='', button='OK', root=None, timeout=None)",
+    "confirm": "(text='', title='', buttons=('OK', 'Cancel'), root=None, timeout=None)",
+    "password": "(text='', title='', default='', mask='*', root=None, timeout=None)",
+    "prompt": "(text='', title='', default='', root=None, timeout=None)"
+   }
+  },
+  "2.0.0": {
+   "constants": [
+    "OK",
+    "Cancel",
+    "Timeout"
+   ],
+   "exceptions": [],
+   "functions": [
+    "alert",
+    "confirm",
+    "password",
+    "prompt"
+   ],
+   "pymsgbox": "2.0.0",
+   "python": "3.14.6",
+   "signatures": {
+    "alert": "(text: 'str' = '', title: 'str' = '', button: 'str' = 'OK', root: 'Optional[Any]' = None, timeout: 'Optional[int]' = None) -> 'str'",
+    "confirm": "(text: 'str' = '', title: 'str' = '', buttons: 'tuple' = ('OK', 'Cancel'), root: 'Optional[Any]' = None, timeout: 'Optional[int]' = None) -> 'Optional[str]'",
+    "password": "(text: 'str' = '', title: 'str' = '', default: 'str' = '', mask: 'str' = '*', root: 'Optional[Any]' = None, timeout: 'Optional[int]' = None) -> 'Optional[str]'",
+    "prompt": "(text: 'str' = '', title: 'str' = '', default: 'str' = '', root: 'Optional[Any]' = None, timeout: 'Optional[int]' = None) -> 'Optional[str]'"
+   }
+  },
+  "2.0.1": {
+   "constants": [
+    "OK",
+    "Cancel",
+    "Timeout"
+   ],
+   "exceptions": [],
+   "functions": [
+    "alert",
+    "confirm",
+    "password",
+    "prompt"
+   ],
+   "pymsgbox": "2.0.1",
+   "python": "3.14.6",
+   "signatures": {
+    "alert": "(text: 'str' = '', title: 'str' = '', button: 'str' = 'OK', root: 'Optional[Any]' = None, timeout: 'Optional[int]' = None) -> 'str'",
+    "confirm": "(text: 'str' = '', title: 'str' = '', buttons: 'tuple' = ('OK', 'Cancel'), root: 'Optional[Any]' = None, timeout: 'Optional[int]' = None) -> 'Optional[str]'",
+    "password": "(text: 'str' = '', title: 'str' = '', default: 'str' = '', mask: 'str' = '*', root: 'Optional[Any]' = None, timeout: 'Optional[int]' = None) -> 'Optional[str]'",
+    "prompt": "(text: 'str' = '', title: 'str' = '', default: 'str' = '', root: 'Optional[Any]' = None, timeout: 'Optional[int]' = None) -> 'Optional[str]'"
+   }
+  }
+ },
+ "pymsgbox items compared": 4,
+ "pymsgbox differ": {
+  "signatures": [
+   [
+    {
+     "alert": "(text='', title='', button='OK', root=None, timeout=None)",
+     "confirm": "(text='', title='', buttons=('OK', 'Cancel'), root=None, timeout=None)",
+     "password": "(text='', title='', default='', mask='*', root=None, timeout=None)",
+     "prompt": "(text='', title='', default='', root=None, timeout=None)"
+    },
+    [
+     "1.0.9"
+    ]
+   ],
+   [
+    {
+     "alert": "(text: 'str' = '', title: 'str' = '', button: 'str' = 'OK', root: 'Optional[Any]' = None, timeout: 'Optional[int]' = None) -> 'str'",
+     "confirm": "(text: 'str' = '', title: 'str' = '', buttons: 'tuple' = ('OK', 'Cancel'), root: 'Optional[Any]' = None, timeout: 'Optional[int]' = None) -> 'Optional[str]'",
+     "password": "(text: 'str' = '', title: 'str' = '', default: 'str' = '', mask: 'str' = '*', root: 'Optional[Any]' = None, timeout: 'Optional[int]' = None) -> 'Optional[str]'",
+     "prompt": "(text: 'str' = '', title: 'str' = '', default: 'str' = '', root: 'Optional[Any]' = None, timeout: 'Optional[int]' = None) -> 'Optional[str]'"
+    },
+    [
+     "2.0.0",
+     "2.0.1"
+    ]
+   ]
+  ]
+ }
+}
