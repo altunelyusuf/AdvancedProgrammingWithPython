@@ -1,0 +1,181 @@
+{
+ "_version": "1.0.1",
+ "items": [
+  {
+   "q": "A program times a download. Which clock should it read at the start and at the end, and why?",
+   "options": [
+    "time.time(), because it is the clock of the wall",
+    "time.monotonic() or time.perf_counter(), because they never go backwards",
+    "datetime.now(), because it has a time zone"
+   ],
+   "answer": 1,
+   "level": "Understand",
+   "objective": "CO1",
+   "rationales": [
+    "time() can be set back by the operating system or by a time service, so the difference of two readings can be negative.",
+    "",
+    "datetime.now() reads the same adjustable wall clock and, without an argument, has no time zone at all."
+   ]
+  },
+  {
+   "q": "What does datetime.fromtimestamp(0, datetime.UTC).isoformat() return?",
+   "options": [
+    "'1970-01-01T00:00:00+00:00'",
+    "'1970-01-01T00:00:00'",
+    "'1900-01-01T00:00:00+00:00'"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO1",
+   "rationales": [
+    "",
+    "With a time zone argument the result is aware, so the text ends with the offset +00:00.",
+    "The Unix epoch is 1970, not 1900."
+   ]
+  },
+  {
+   "q": "How many days are in (datetime(2026, 3, 1) - datetime(2026, 1, 1)).days?",
+   "options": [
+    "60",
+    "59",
+    "2"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO2",
+   "rationales": [
+    "January has 31 days and February 2026 has 28, so the difference is 59.",
+    "",
+    "A timedelta has no months: the subtraction gives days (59), not 2 months."
+   ]
+  },
+  {
+   "q": "datetime.strptime('2026-10-21', '%Y/%m/%d') is run. What happens?",
+   "options": [
+    "It returns datetime(2026, 10, 21, 0, 0)",
+    "It raises ValueError, because the text does not match the format",
+    "It returns None"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO2",
+   "rationales": [
+    "The slashes of the format do not match the hyphens of the text, so nothing is parsed.",
+    "",
+    "strptime either returns a datetime or raises; it never returns None."
+   ]
+  },
+  {
+   "q": "What does datetime(2026, 10, 21, 16, 29).strftime('%I:%M %p') return?",
+   "options": [
+    "'16:29 PM'",
+    "'04:29 PM'",
+    "'4:29 pm'"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO2",
+   "rationales": [
+    "%I is the hour on a 12-hour clock, so 16 becomes 04.",
+    "",
+    "%p gives AM or PM in capitals in the C locale, and %I pads the hour to two digits."
+   ]
+  },
+  {
+   "q": "datetime(2026, 1, 1) < datetime(2026, 1, 2, tzinfo=timezone.utc) is evaluated. What happens?",
+   "options": [
+    "It returns True",
+    "It raises TypeError, because a naive and an aware datetime cannot be compared",
+    "It returns False"
+   ],
+   "answer": 1,
+   "level": "Analyze",
+   "objective": "CO3",
+   "rationales": [
+    "The comparison is refused, so no value is returned.",
+    "",
+    "The comparison is refused, so no value is returned."
+   ]
+  },
+  {
+   "q": "With ZoneInfo('America/Los_Angeles'), what is the UTC offset of 12:00 on 1 July 2026 and of 12:00 on 1 January 2026?",
+   "options": [
+    "-07:00 and -08:00",
+    "-08:00 and -08:00",
+    "-08:00 and -07:00"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO3",
+   "rationales": [
+    "",
+    "The zone observes daylight saving time: in July it is PDT, UTC-7.",
+    "The offsets are the other way round: the summer time of Los Angeles is UTC-7."
+   ]
+  },
+  {
+   "q": "subprocess.run(['echo', 'hi'], shell=True, capture_output=True, text=True).stdout is what, on Linux?",
+   "options": [
+    "'hi\\n'",
+    "'\\n'",
+    "an error is raised"
+   ],
+   "answer": 1,
+   "level": "Analyze",
+   "objective": "CO4",
+   "rationales": [
+    "",
+    "With shell=True and a list, only the first item is the command and the rest are arguments of the shell itself, so echo prints an empty line.",
+    "The command runs; it just does not receive 'hi'."
+   ]
+  },
+  {
+   "q": "What do round(2.5) and round(3.5) return?",
+   "options": [
+    "3 and 4",
+    "2 and 4",
+    "2 and 3"
+   ],
+   "answer": 1,
+   "level": "Understand",
+   "objective": "CO1",
+   "rationales": [
+    "Python rounds a half to the even neighbour, so 2.5 goes down.",
+    "",
+    "3.5 goes up to 4, the even neighbour."
+   ]
+  },
+  {
+   "q": "str(math.factorial(100000)) raises ValueError on a default Python. Why?",
+   "options": [
+    "The number is larger than a float",
+    "Converting an integer of more than 4300 digits to text is refused by default",
+    "factorial() cannot take 100000"
+   ],
+   "answer": 1,
+   "level": "Analyze",
+   "objective": "CO1",
+   "rationales": [
+    "Python integers have no upper size; the float limit is not involved.",
+    "",
+    "The call to factorial succeeds; it is the conversion to a string that is limited, and sys.set_int_max_str_digits() changes the limit."
+   ]
+  },
+  {
+   "q": "In a crontab line, what does 0 9 * * 1-5 mean?",
+   "options": [
+    "at 09:00 on every day of the month",
+    "at 09:00 from Monday to Friday",
+    "every 9 minutes on weekdays"
+   ],
+   "answer": 1,
+   "level": "Understand",
+   "objective": "CO5",
+   "rationales": [
+    "The fifth field restricts the days of the week to 1 to 5, Monday to Friday.",
+    "",
+    "The first field is the minute (0) and the second the hour (9); it is not an interval."
+   ]
+  }
+ ]
+}
