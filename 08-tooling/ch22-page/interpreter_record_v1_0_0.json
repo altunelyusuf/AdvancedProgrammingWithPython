@@ -1,0 +1,2605 @@
+{
+ "_version": "1.0.0",
+ "observed": "2026-10-13",
+ "_note": "Recorded by sen0414_ch22_interpreters_v1_0_0.py: one program (pytesseract calls, character error rate and confidences on a page the program draws, errors) under every installed Python 3.14 patch release and 3.15 beta, 3.13, 3.12 and 3.11, each with the newest pytesseract and Pillow wheels uv found; then pytesseract 0.3.4 to 0.3.13 on 3.11, 3.13 and 3.14.6, and Pillow 9.5.0 to 12.3.0 with pytesseract 0.3.13 on 3.11. The Tesseract on the PATH is the apt 5.3.4 with English data in every row. A run that failed is recorded with the last lines uv or Python printed and counts as NOT EXECUTED.",
+ "program": "\nimport sys, os, io, json, re, hashlib, warnings, tempfile, shutil, importlib.metadata as md\nfrom PIL import Image, ImageDraw, ImageFont\nimport pytesseract as tess\nres = {}\ndef w(f):\n    with warnings.catch_warnings(record=True) as seen:\n        warnings.simplefilter('always')\n        try: v = f()\n        except BaseException as e: v = type(e).__name__ + ': ' + str(e).splitlines()[0][:110]\n    return [v, sorted({x.category.__name__ for x in seen})]\nres['series'] = sys.version.split()[0].rsplit('.', 1)[0] + '.x'\nres['versions'] = [md.version('pytesseract'), md.version('pillow')]\nF = '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf'\nTEXT = 'It was on a dreary night of November, that I beheld the accomplishment of my toils.'\ndef page(px=28):\n    f = ImageFont.truetype(F, px); im = Image.new('L', (int(f.getlength(TEXT)) + 40, px * 2 + 20), 255); ImageDraw.Draw(im).text((20, 15), TEXT, font=f, fill=0); return im\ndef lev(a, b):\n    prev = list(range(len(b) + 1))\n    for i, ca in enumerate(a, 1):\n        cur = [i]\n        for j, cb in enumerate(b, 1): cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))\n        prev = cur\n    return prev[-1]\ndef cer(ref, hyp): h = re.sub(r'\\s+', ' ', hyp).strip(); return round(lev(ref, h) / len(ref), 4)\nim = page()\nres['page image size, mode'] = w(lambda: [list(im.size), im.mode])\nres['image_to_string: type, CER against the known text'] = w(lambda: (lambda t: [type(t).__name__, cer(TEXT, t), t.endswith('\\n')])(tess.image_to_string(im)))\nres['image_to_string of a path equals that of the image'] = w(lambda: (im.save('p.png'), tess.image_to_string('p.png') == tess.image_to_string(im))[1])\nres['image_to_string of an RGBA copy equals that of the image'] = w(lambda: tess.image_to_string(im.convert('RGBA')) == tess.image_to_string(im))\nres['image_to_string lang=eng, config=--psm 7: CER'] = w(lambda: cer(TEXT, tess.image_to_string(im, lang='eng', config='--psm 7')))\nres['image_to_data DICT: keys, words, mean conf, lowest conf'] = w(lambda: (lambda d: [list(d), sum(1 for t in d['text'] if t.strip()), round(sum(c for t, c in zip(d['text'], d['conf']) if t.strip()) / max(1, sum(1 for t in d['text'] if t.strip())), 1), min(c for t, c in zip(d['text'], d['conf']) if t.strip())])(tess.image_to_data(im, output_type=tess.Output.DICT)))\nres['image_to_data conf type'] = w(lambda: sorted({type(c).__name__ for c in tess.image_to_data(im, output_type=tess.Output.DICT)['conf']}))\nres['get_languages: result'] = w(lambda: tess.get_languages())\nres['get_tesseract_version: type and text'] = w(lambda: [type(tess.get_tesseract_version()).__name__, str(tess.get_tesseract_version())])\nres['image_to_boxes: lines'] = w(lambda: len(tess.image_to_boxes(im).strip().split('\\n')))\nres['image_to_osd on a page'] = w(lambda: tess.image_to_osd(im).split('\\n')[1])\nres['unknown language raises'] = w(lambda: tess.image_to_string(im, lang='xyz'))\nres['an object that is not an image'] = w(lambda: tess.image_to_string(b'x'))\nres['timeout too short'] = w(lambda: tess.image_to_string(im, timeout=0.01))\nres['Output.BYTES type'] = w(lambda: type(tess.image_to_string(im, output_type=tess.Output.BYTES)).__name__)\nres['image_to_pdf_or_hocr pdf: starts with'] = w(lambda: tess.image_to_pdf_or_hocr(im, extension='pdf')[:5].decode())\nres['temporary files left in the temp folder after a call'] = w(lambda: (lambda b: (tess.image_to_string(im), len([f for f in os.listdir(tempfile.gettempdir()) if f.startswith('tess_')]) - b)[1])(len([f for f in os.listdir(tempfile.gettempdir()) if f.startswith('tess_')])))\nres['cer of 8 px letters'] = w(lambda: cer(TEXT, tess.image_to_string(page(8))))\nres['cer of 24 px letters rotated 4 degrees'] = w(lambda: cer(TEXT, tess.image_to_string(page(24).rotate(4, expand=True, fillcolor=255))))\nprint(json.dumps(res, sort_keys=True, default=repr))\n",
+ "pytesseract program": "\nimport sys, os, io, json, re, warnings, importlib.metadata as md\nres = {'pytesseract': md.version('pytesseract'), 'python': sys.version.split()[0]}\ndef w(f):\n    with warnings.catch_warnings(record=True) as seen:\n        warnings.simplefilter('always')\n        try: v = f()\n        except BaseException as e: v = type(e).__name__ + ': ' + str(e).splitlines()[0][:100]\n    return [v, sorted({str(x.message)[:100] for x in seen})]\nres['import'] = w(lambda: __import__('pytesseract').__name__)\nimport pytesseract as tess\nfrom PIL import Image, ImageDraw, ImageFont\nf = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf', 28); im = Image.new('L', (260, 70), 255); ImageDraw.Draw(im).text((20, 15), 'Hello OCR 2026', font=f, fill=0)\nres['image_to_string'] = w(lambda: tess.image_to_string(im))\nres['image_to_string RGBA'] = w(lambda: tess.image_to_string(im.convert('RGBA')))\nres['get_languages'] = w(lambda: tess.get_languages())\nres['version'] = w(lambda: str(tess.get_tesseract_version()))\nres['image_to_data DICT conf types'] = w(lambda: sorted({type(c).__name__ for c in tess.image_to_data(im, output_type=tess.Output.DICT)['conf']}))\nres['image_to_string DICT keys'] = w(lambda: list(tess.image_to_string(im, output_type=tess.Output.DICT)))\nres['timeout'] = w(lambda: tess.image_to_string(im, timeout=0.01))\nres['numpy array'] = w(lambda: tess.image_to_string(__import__('numpy').asarray(im)))\nprint(json.dumps(res, sort_keys=True))\n",
+ "interpreters": [
+  "3.11.17",
+  "3.12.3",
+  "3.13.14",
+  "3.14.0",
+  "3.14.1",
+  "3.14.2",
+  "3.14.3",
+  "3.14.4",
+  "3.14.5",
+  "3.14.6",
+  "3.15.0b4"
+ ],
+ "results": {
+  "3.11.17": {
+   "Output.BYTES type": [
+    "bytes",
+    []
+   ],
+   "an object that is not an image": [
+    "TypeError: Unsupported image object",
+    []
+   ],
+   "cer of 24 px letters rotated 4 degrees": [
+    0.0241,
+    []
+   ],
+   "cer of 8 px letters": [
+    0.2169,
+    []
+   ],
+   "get_languages: result": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "get_tesseract_version: type and text": [
+    [
+     "Version",
+     "5.3.4"
+    ],
+    []
+   ],
+   "image_to_boxes: lines": [
+    68,
+    []
+   ],
+   "image_to_data DICT: keys, words, mean conf, lowest conf": [
+    [
+     [
+      "level",
+      "page_num",
+      "block_num",
+      "par_num",
+      "line_num",
+      "word_num",
+      "left",
+      "top",
+      "width",
+      "height",
+      "conf",
+      "text"
+     ],
+     16,
+     95.8,
+     94
+    ],
+    []
+   ],
+   "image_to_data conf type": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_osd on a page": [
+    "Orientation in degrees: 0",
+    []
+   ],
+   "image_to_pdf_or_hocr pdf: starts with": [
+    "%PDF-",
+    []
+   ],
+   "image_to_string lang=eng, config=--psm 7: CER": [
+    0.0,
+    []
+   ],
+   "image_to_string of a path equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string of an RGBA copy equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string: type, CER against the known text": [
+    [
+     "str",
+     0.0,
+     true
+    ],
+    []
+   ],
+   "page image size, mode": [
+    [
+     [
+      1232,
+      76
+     ],
+     "L"
+    ],
+    []
+   ],
+   "series": "3.11.x",
+   "temporary files left in the temp folder after a call": [
+    0,
+    []
+   ],
+   "timeout too short": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "unknown language raises": [
+    "TesseractError: (1, 'Error opening data file /usr/share/tesseract-ocr/5/tessdata/xyz.traineddata Please make sure the TESSDATA",
+    []
+   ],
+   "versions": [
+    "0.3.13",
+    "12.3.0"
+   ]
+  },
+  "3.12.3": {
+   "Output.BYTES type": [
+    "bytes",
+    []
+   ],
+   "an object that is not an image": [
+    "TypeError: Unsupported image object",
+    []
+   ],
+   "cer of 24 px letters rotated 4 degrees": [
+    0.0241,
+    []
+   ],
+   "cer of 8 px letters": [
+    0.2169,
+    []
+   ],
+   "get_languages: result": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "get_tesseract_version: type and text": [
+    [
+     "Version",
+     "5.3.4"
+    ],
+    []
+   ],
+   "image_to_boxes: lines": [
+    68,
+    []
+   ],
+   "image_to_data DICT: keys, words, mean conf, lowest conf": [
+    [
+     [
+      "level",
+      "page_num",
+      "block_num",
+      "par_num",
+      "line_num",
+      "word_num",
+      "left",
+      "top",
+      "width",
+      "height",
+      "conf",
+      "text"
+     ],
+     16,
+     95.8,
+     94
+    ],
+    []
+   ],
+   "image_to_data conf type": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_osd on a page": [
+    "Orientation in degrees: 0",
+    []
+   ],
+   "image_to_pdf_or_hocr pdf: starts with": [
+    "%PDF-",
+    []
+   ],
+   "image_to_string lang=eng, config=--psm 7: CER": [
+    0.0,
+    []
+   ],
+   "image_to_string of a path equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string of an RGBA copy equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string: type, CER against the known text": [
+    [
+     "str",
+     0.0,
+     true
+    ],
+    []
+   ],
+   "page image size, mode": [
+    [
+     [
+      1232,
+      76
+     ],
+     "L"
+    ],
+    []
+   ],
+   "series": "3.12.x",
+   "temporary files left in the temp folder after a call": [
+    0,
+    []
+   ],
+   "timeout too short": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "unknown language raises": [
+    "TesseractError: (1, 'Error opening data file /usr/share/tesseract-ocr/5/tessdata/xyz.traineddata Please make sure the TESSDATA",
+    []
+   ],
+   "versions": [
+    "0.3.13",
+    "12.3.0"
+   ]
+  },
+  "3.13.14": {
+   "Output.BYTES type": [
+    "bytes",
+    []
+   ],
+   "an object that is not an image": [
+    "TypeError: Unsupported image object",
+    []
+   ],
+   "cer of 24 px letters rotated 4 degrees": [
+    0.0241,
+    []
+   ],
+   "cer of 8 px letters": [
+    0.2169,
+    []
+   ],
+   "get_languages: result": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "get_tesseract_version: type and text": [
+    [
+     "Version",
+     "5.3.4"
+    ],
+    []
+   ],
+   "image_to_boxes: lines": [
+    68,
+    []
+   ],
+   "image_to_data DICT: keys, words, mean conf, lowest conf": [
+    [
+     [
+      "level",
+      "page_num",
+      "block_num",
+      "par_num",
+      "line_num",
+      "word_num",
+      "left",
+      "top",
+      "width",
+      "height",
+      "conf",
+      "text"
+     ],
+     16,
+     95.8,
+     94
+    ],
+    []
+   ],
+   "image_to_data conf type": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_osd on a page": [
+    "Orientation in degrees: 0",
+    []
+   ],
+   "image_to_pdf_or_hocr pdf: starts with": [
+    "%PDF-",
+    []
+   ],
+   "image_to_string lang=eng, config=--psm 7: CER": [
+    0.0,
+    []
+   ],
+   "image_to_string of a path equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string of an RGBA copy equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string: type, CER against the known text": [
+    [
+     "str",
+     0.0,
+     true
+    ],
+    []
+   ],
+   "page image size, mode": [
+    [
+     [
+      1232,
+      76
+     ],
+     "L"
+    ],
+    []
+   ],
+   "series": "3.13.x",
+   "temporary files left in the temp folder after a call": [
+    0,
+    []
+   ],
+   "timeout too short": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "unknown language raises": [
+    "TesseractError: (1, 'Error opening data file /usr/share/tesseract-ocr/5/tessdata/xyz.traineddata Please make sure the TESSDATA",
+    []
+   ],
+   "versions": [
+    "0.3.13",
+    "12.3.0"
+   ]
+  },
+  "3.14.0": {
+   "Output.BYTES type": [
+    "bytes",
+    []
+   ],
+   "an object that is not an image": [
+    "TypeError: Unsupported image object",
+    []
+   ],
+   "cer of 24 px letters rotated 4 degrees": [
+    0.0241,
+    []
+   ],
+   "cer of 8 px letters": [
+    0.2169,
+    []
+   ],
+   "get_languages: result": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "get_tesseract_version: type and text": [
+    [
+     "Version",
+     "5.3.4"
+    ],
+    []
+   ],
+   "image_to_boxes: lines": [
+    68,
+    []
+   ],
+   "image_to_data DICT: keys, words, mean conf, lowest conf": [
+    [
+     [
+      "level",
+      "page_num",
+      "block_num",
+      "par_num",
+      "line_num",
+      "word_num",
+      "left",
+      "top",
+      "width",
+      "height",
+      "conf",
+      "text"
+     ],
+     16,
+     95.8,
+     94
+    ],
+    []
+   ],
+   "image_to_data conf type": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_osd on a page": [
+    "Orientation in degrees: 0",
+    []
+   ],
+   "image_to_pdf_or_hocr pdf: starts with": [
+    "%PDF-",
+    []
+   ],
+   "image_to_string lang=eng, config=--psm 7: CER": [
+    0.0,
+    []
+   ],
+   "image_to_string of a path equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string of an RGBA copy equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string: type, CER against the known text": [
+    [
+     "str",
+     0.0,
+     true
+    ],
+    []
+   ],
+   "page image size, mode": [
+    [
+     [
+      1232,
+      76
+     ],
+     "L"
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "temporary files left in the temp folder after a call": [
+    0,
+    []
+   ],
+   "timeout too short": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "unknown language raises": [
+    "TesseractError: (1, 'Error opening data file /usr/share/tesseract-ocr/5/tessdata/xyz.traineddata Please make sure the TESSDATA",
+    []
+   ],
+   "versions": [
+    "0.3.13",
+    "12.3.0"
+   ]
+  },
+  "3.14.1": {
+   "Output.BYTES type": [
+    "bytes",
+    []
+   ],
+   "an object that is not an image": [
+    "TypeError: Unsupported image object",
+    []
+   ],
+   "cer of 24 px letters rotated 4 degrees": [
+    0.0241,
+    []
+   ],
+   "cer of 8 px letters": [
+    0.2169,
+    []
+   ],
+   "get_languages: result": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "get_tesseract_version: type and text": [
+    [
+     "Version",
+     "5.3.4"
+    ],
+    []
+   ],
+   "image_to_boxes: lines": [
+    68,
+    []
+   ],
+   "image_to_data DICT: keys, words, mean conf, lowest conf": [
+    [
+     [
+      "level",
+      "page_num",
+      "block_num",
+      "par_num",
+      "line_num",
+      "word_num",
+      "left",
+      "top",
+      "width",
+      "height",
+      "conf",
+      "text"
+     ],
+     16,
+     95.8,
+     94
+    ],
+    []
+   ],
+   "image_to_data conf type": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_osd on a page": [
+    "Orientation in degrees: 0",
+    []
+   ],
+   "image_to_pdf_or_hocr pdf: starts with": [
+    "%PDF-",
+    []
+   ],
+   "image_to_string lang=eng, config=--psm 7: CER": [
+    0.0,
+    []
+   ],
+   "image_to_string of a path equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string of an RGBA copy equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string: type, CER against the known text": [
+    [
+     "str",
+     0.0,
+     true
+    ],
+    []
+   ],
+   "page image size, mode": [
+    [
+     [
+      1232,
+      76
+     ],
+     "L"
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "temporary files left in the temp folder after a call": [
+    0,
+    []
+   ],
+   "timeout too short": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "unknown language raises": [
+    "TesseractError: (1, 'Error opening data file /usr/share/tesseract-ocr/5/tessdata/xyz.traineddata Please make sure the TESSDATA",
+    []
+   ],
+   "versions": [
+    "0.3.13",
+    "12.3.0"
+   ]
+  },
+  "3.14.2": {
+   "Output.BYTES type": [
+    "bytes",
+    []
+   ],
+   "an object that is not an image": [
+    "TypeError: Unsupported image object",
+    []
+   ],
+   "cer of 24 px letters rotated 4 degrees": [
+    0.0241,
+    []
+   ],
+   "cer of 8 px letters": [
+    0.2169,
+    []
+   ],
+   "get_languages: result": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "get_tesseract_version: type and text": [
+    [
+     "Version",
+     "5.3.4"
+    ],
+    []
+   ],
+   "image_to_boxes: lines": [
+    68,
+    []
+   ],
+   "image_to_data DICT: keys, words, mean conf, lowest conf": [
+    [
+     [
+      "level",
+      "page_num",
+      "block_num",
+      "par_num",
+      "line_num",
+      "word_num",
+      "left",
+      "top",
+      "width",
+      "height",
+      "conf",
+      "text"
+     ],
+     16,
+     95.8,
+     94
+    ],
+    []
+   ],
+   "image_to_data conf type": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_osd on a page": [
+    "Orientation in degrees: 0",
+    []
+   ],
+   "image_to_pdf_or_hocr pdf: starts with": [
+    "%PDF-",
+    []
+   ],
+   "image_to_string lang=eng, config=--psm 7: CER": [
+    0.0,
+    []
+   ],
+   "image_to_string of a path equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string of an RGBA copy equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string: type, CER against the known text": [
+    [
+     "str",
+     0.0,
+     true
+    ],
+    []
+   ],
+   "page image size, mode": [
+    [
+     [
+      1232,
+      76
+     ],
+     "L"
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "temporary files left in the temp folder after a call": [
+    0,
+    []
+   ],
+   "timeout too short": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "unknown language raises": [
+    "TesseractError: (1, 'Error opening data file /usr/share/tesseract-ocr/5/tessdata/xyz.traineddata Please make sure the TESSDATA",
+    []
+   ],
+   "versions": [
+    "0.3.13",
+    "12.3.0"
+   ]
+  },
+  "3.14.3": {
+   "Output.BYTES type": [
+    "bytes",
+    []
+   ],
+   "an object that is not an image": [
+    "TypeError: Unsupported image object",
+    []
+   ],
+   "cer of 24 px letters rotated 4 degrees": [
+    0.0241,
+    []
+   ],
+   "cer of 8 px letters": [
+    0.2169,
+    []
+   ],
+   "get_languages: result": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "get_tesseract_version: type and text": [
+    [
+     "Version",
+     "5.3.4"
+    ],
+    []
+   ],
+   "image_to_boxes: lines": [
+    68,
+    []
+   ],
+   "image_to_data DICT: keys, words, mean conf, lowest conf": [
+    [
+     [
+      "level",
+      "page_num",
+      "block_num",
+      "par_num",
+      "line_num",
+      "word_num",
+      "left",
+      "top",
+      "width",
+      "height",
+      "conf",
+      "text"
+     ],
+     16,
+     95.8,
+     94
+    ],
+    []
+   ],
+   "image_to_data conf type": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_osd on a page": [
+    "Orientation in degrees: 0",
+    []
+   ],
+   "image_to_pdf_or_hocr pdf: starts with": [
+    "%PDF-",
+    []
+   ],
+   "image_to_string lang=eng, config=--psm 7: CER": [
+    0.0,
+    []
+   ],
+   "image_to_string of a path equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string of an RGBA copy equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string: type, CER against the known text": [
+    [
+     "str",
+     0.0,
+     true
+    ],
+    []
+   ],
+   "page image size, mode": [
+    [
+     [
+      1232,
+      76
+     ],
+     "L"
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "temporary files left in the temp folder after a call": [
+    0,
+    []
+   ],
+   "timeout too short": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "unknown language raises": [
+    "TesseractError: (1, 'Error opening data file /usr/share/tesseract-ocr/5/tessdata/xyz.traineddata Please make sure the TESSDATA",
+    []
+   ],
+   "versions": [
+    "0.3.13",
+    "12.3.0"
+   ]
+  },
+  "3.14.4": {
+   "Output.BYTES type": [
+    "bytes",
+    []
+   ],
+   "an object that is not an image": [
+    "TypeError: Unsupported image object",
+    []
+   ],
+   "cer of 24 px letters rotated 4 degrees": [
+    0.0241,
+    []
+   ],
+   "cer of 8 px letters": [
+    0.2169,
+    []
+   ],
+   "get_languages: result": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "get_tesseract_version: type and text": [
+    [
+     "Version",
+     "5.3.4"
+    ],
+    []
+   ],
+   "image_to_boxes: lines": [
+    68,
+    []
+   ],
+   "image_to_data DICT: keys, words, mean conf, lowest conf": [
+    [
+     [
+      "level",
+      "page_num",
+      "block_num",
+      "par_num",
+      "line_num",
+      "word_num",
+      "left",
+      "top",
+      "width",
+      "height",
+      "conf",
+      "text"
+     ],
+     16,
+     95.8,
+     94
+    ],
+    []
+   ],
+   "image_to_data conf type": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_osd on a page": [
+    "Orientation in degrees: 0",
+    []
+   ],
+   "image_to_pdf_or_hocr pdf: starts with": [
+    "%PDF-",
+    []
+   ],
+   "image_to_string lang=eng, config=--psm 7: CER": [
+    0.0,
+    []
+   ],
+   "image_to_string of a path equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string of an RGBA copy equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string: type, CER against the known text": [
+    [
+     "str",
+     0.0,
+     true
+    ],
+    []
+   ],
+   "page image size, mode": [
+    [
+     [
+      1232,
+      76
+     ],
+     "L"
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "temporary files left in the temp folder after a call": [
+    0,
+    []
+   ],
+   "timeout too short": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "unknown language raises": [
+    "TesseractError: (1, 'Error opening data file /usr/share/tesseract-ocr/5/tessdata/xyz.traineddata Please make sure the TESSDATA",
+    []
+   ],
+   "versions": [
+    "0.3.13",
+    "12.3.0"
+   ]
+  },
+  "3.14.5": {
+   "Output.BYTES type": [
+    "bytes",
+    []
+   ],
+   "an object that is not an image": [
+    "TypeError: Unsupported image object",
+    []
+   ],
+   "cer of 24 px letters rotated 4 degrees": [
+    0.0241,
+    []
+   ],
+   "cer of 8 px letters": [
+    0.2169,
+    []
+   ],
+   "get_languages: result": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "get_tesseract_version: type and text": [
+    [
+     "Version",
+     "5.3.4"
+    ],
+    []
+   ],
+   "image_to_boxes: lines": [
+    68,
+    []
+   ],
+   "image_to_data DICT: keys, words, mean conf, lowest conf": [
+    [
+     [
+      "level",
+      "page_num",
+      "block_num",
+      "par_num",
+      "line_num",
+      "word_num",
+      "left",
+      "top",
+      "width",
+      "height",
+      "conf",
+      "text"
+     ],
+     16,
+     95.8,
+     94
+    ],
+    []
+   ],
+   "image_to_data conf type": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_osd on a page": [
+    "Orientation in degrees: 0",
+    []
+   ],
+   "image_to_pdf_or_hocr pdf: starts with": [
+    "%PDF-",
+    []
+   ],
+   "image_to_string lang=eng, config=--psm 7: CER": [
+    0.0,
+    []
+   ],
+   "image_to_string of a path equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string of an RGBA copy equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string: type, CER against the known text": [
+    [
+     "str",
+     0.0,
+     true
+    ],
+    []
+   ],
+   "page image size, mode": [
+    [
+     [
+      1232,
+      76
+     ],
+     "L"
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "temporary files left in the temp folder after a call": [
+    0,
+    []
+   ],
+   "timeout too short": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "unknown language raises": [
+    "TesseractError: (1, 'Error opening data file /usr/share/tesseract-ocr/5/tessdata/xyz.traineddata Please make sure the TESSDATA",
+    []
+   ],
+   "versions": [
+    "0.3.13",
+    "12.3.0"
+   ]
+  },
+  "3.14.6": {
+   "Output.BYTES type": [
+    "bytes",
+    []
+   ],
+   "an object that is not an image": [
+    "TypeError: Unsupported image object",
+    []
+   ],
+   "cer of 24 px letters rotated 4 degrees": [
+    0.0241,
+    []
+   ],
+   "cer of 8 px letters": [
+    0.2169,
+    []
+   ],
+   "get_languages: result": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "get_tesseract_version: type and text": [
+    [
+     "Version",
+     "5.3.4"
+    ],
+    []
+   ],
+   "image_to_boxes: lines": [
+    68,
+    []
+   ],
+   "image_to_data DICT: keys, words, mean conf, lowest conf": [
+    [
+     [
+      "level",
+      "page_num",
+      "block_num",
+      "par_num",
+      "line_num",
+      "word_num",
+      "left",
+      "top",
+      "width",
+      "height",
+      "conf",
+      "text"
+     ],
+     16,
+     95.8,
+     94
+    ],
+    []
+   ],
+   "image_to_data conf type": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_osd on a page": [
+    "Orientation in degrees: 0",
+    []
+   ],
+   "image_to_pdf_or_hocr pdf: starts with": [
+    "%PDF-",
+    []
+   ],
+   "image_to_string lang=eng, config=--psm 7: CER": [
+    0.0,
+    []
+   ],
+   "image_to_string of a path equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string of an RGBA copy equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string: type, CER against the known text": [
+    [
+     "str",
+     0.0,
+     true
+    ],
+    []
+   ],
+   "page image size, mode": [
+    [
+     [
+      1232,
+      76
+     ],
+     "L"
+    ],
+    []
+   ],
+   "series": "3.14.x",
+   "temporary files left in the temp folder after a call": [
+    0,
+    []
+   ],
+   "timeout too short": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "unknown language raises": [
+    "TesseractError: (1, 'Error opening data file /usr/share/tesseract-ocr/5/tessdata/xyz.traineddata Please make sure the TESSDATA",
+    []
+   ],
+   "versions": [
+    "0.3.13",
+    "12.3.0"
+   ]
+  },
+  "3.15.0b4": {
+   "Output.BYTES type": [
+    "bytes",
+    []
+   ],
+   "an object that is not an image": [
+    "TypeError: Unsupported image object",
+    []
+   ],
+   "cer of 24 px letters rotated 4 degrees": [
+    0.0241,
+    []
+   ],
+   "cer of 8 px letters": [
+    0.2169,
+    []
+   ],
+   "get_languages: result": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "get_tesseract_version: type and text": [
+    [
+     "Version",
+     "5.3.4"
+    ],
+    []
+   ],
+   "image_to_boxes: lines": [
+    68,
+    []
+   ],
+   "image_to_data DICT: keys, words, mean conf, lowest conf": [
+    [
+     [
+      "level",
+      "page_num",
+      "block_num",
+      "par_num",
+      "line_num",
+      "word_num",
+      "left",
+      "top",
+      "width",
+      "height",
+      "conf",
+      "text"
+     ],
+     16,
+     95.8,
+     94
+    ],
+    []
+   ],
+   "image_to_data conf type": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_osd on a page": [
+    "Orientation in degrees: 0",
+    []
+   ],
+   "image_to_pdf_or_hocr pdf: starts with": [
+    "%PDF-",
+    []
+   ],
+   "image_to_string lang=eng, config=--psm 7: CER": [
+    0.0,
+    []
+   ],
+   "image_to_string of a path equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string of an RGBA copy equals that of the image": [
+    true,
+    []
+   ],
+   "image_to_string: type, CER against the known text": [
+    [
+     "str",
+     0.0,
+     true
+    ],
+    []
+   ],
+   "page image size, mode": [
+    [
+     [
+      1232,
+      76
+     ],
+     "L"
+    ],
+    []
+   ],
+   "series": "3.15.x",
+   "temporary files left in the temp folder after a call": [
+    0,
+    []
+   ],
+   "timeout too short": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "unknown language raises": [
+    "TesseractError: (1, 'Error opening data file /usr/share/tesseract-ocr/5/tessdata/xyz.traineddata Please make sure the TESSDATA",
+    []
+   ],
+   "versions": [
+    "0.3.13",
+    "12.3.0"
+   ]
+  }
+ },
+ "items compared": 19,
+ "differ": {},
+ "pytesseract releases": {
+  "0.3.4 on 3.11": {
+   "NOT EXECUTED or failed": "      pytesseract==0.3.4, we can conclude that your requirements are |       unsatisfiable. | hint: Wheels are required for `pytesseract` because building from source is disabled for all packages (i.e., with `--no-build`)"
+  },
+  "0.3.4 on 3.13": {
+   "NOT EXECUTED or failed": "      pytesseract==0.3.4, we can conclude that your requirements are |       unsatisfiable. | hint: Wheels are required for `pytesseract` because building from source is disabled for all packages (i.e., with `--no-build`)"
+  },
+  "0.3.4 on 3.14.6": {
+   "NOT EXECUTED or failed": "      pytesseract==0.3.4, we can conclude that your requirements are |       unsatisfiable. | hint: Wheels are required for `pytesseract` because building from source is disabled for all packages (i.e., with `--no-build`)"
+  },
+  "0.3.7 on 3.11": {
+   "NOT EXECUTED or failed": "      pytesseract==0.3.7, we can conclude that your requirements are |       unsatisfiable. | hint: Wheels are required for `pytesseract` because building from source is disabled for all packages (i.e., with `--no-build`)"
+  },
+  "0.3.7 on 3.13": {
+   "NOT EXECUTED or failed": "      pytesseract==0.3.7, we can conclude that your requirements are |       unsatisfiable. | hint: Wheels are required for `pytesseract` because building from source is disabled for all packages (i.e., with `--no-build`)"
+  },
+  "0.3.7 on 3.14.6": {
+   "NOT EXECUTED or failed": "      pytesseract==0.3.7, we can conclude that your requirements are |       unsatisfiable. | hint: Wheels are required for `pytesseract` because building from source is disabled for all packages (i.e., with `--no-build`)"
+  },
+  "0.3.8 on 3.11": {
+   "NOT EXECUTED or failed": "      pytesseract==0.3.8, we can conclude that your requirements are |       unsatisfiable. | hint: Wheels are required for `pytesseract` because building from source is disabled for all packages (i.e., with `--no-build`)"
+  },
+  "0.3.8 on 3.13": {
+   "NOT EXECUTED or failed": "      pytesseract==0.3.8, we can conclude that your requirements are |       unsatisfiable. | hint: Wheels are required for `pytesseract` because building from source is disabled for all packages (i.e., with `--no-build`)"
+  },
+  "0.3.8 on 3.14.6": {
+   "NOT EXECUTED or failed": "      pytesseract==0.3.8, we can conclude that your requirements are |       unsatisfiable. | hint: Wheels are required for `pytesseract` because building from source is disabled for all packages (i.e., with `--no-build`)"
+  },
+  "0.3.9 on 3.11": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "str"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pytesseract": "0.3.9",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "0.3.9 on 3.13": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "str"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    [
+     "'pkgutil.find_loader' is deprecated and slated for removal in Python 3.14; use importlib.util.find_s"
+    ]
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pytesseract": "0.3.9",
+   "python": "3.13.14",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "0.3.9 on 3.14.6": {
+   "NOT EXECUTED or failed": "  File \"/root/.cache/uv/archive-v0/KfW6BFR6N-88mrSI/lib/python3.14/site-packages/pytesseract/pytesseract.py\", line 20, in <module> |     from pkgutil import find_loader | ImportError: cannot import name 'find_loader' from 'pkgutil' (/root/.local/share/uv/python/cpython-3.14.6-linux-x86_64-gnu/lib/python3.14/pkgutil.py)"
+  },
+  "0.3.10 on 3.11": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pytesseract": "0.3.10",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "0.3.10 on 3.13": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    [
+     "'pkgutil.find_loader' is deprecated and slated for removal in Python 3.14; use importlib.util.find_s"
+    ]
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pytesseract": "0.3.10",
+   "python": "3.13.14",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "0.3.10 on 3.14.6": {
+   "NOT EXECUTED or failed": "  File \"/root/.cache/uv/archive-v0/eewijb0hdTZ0XsMk/lib/python3.14/site-packages/pytesseract/pytesseract.py\", line 20, in <module> |     from pkgutil import find_loader | ImportError: cannot import name 'find_loader' from 'pkgutil' (/root/.local/share/uv/python/cpython-3.14.6-linux-x86_64-gnu/lib/python3.14/pkgutil.py)"
+  },
+  "0.3.12 on 3.11": {
+   "NOT EXECUTED or failed": "  ╰─▶ Because there is no version of pytesseract==0.3.12 and you require |       pytesseract==0.3.12, we can conclude that your requirements are |       unsatisfiable."
+  },
+  "0.3.12 on 3.13": {
+   "NOT EXECUTED or failed": "  ╰─▶ Because there is no version of pytesseract==0.3.12 and you require |       pytesseract==0.3.12, we can conclude that your requirements are |       unsatisfiable."
+  },
+  "0.3.12 on 3.14.6": {
+   "NOT EXECUTED or failed": "  ╰─▶ Because there is no version of pytesseract==0.3.12 and you require |       pytesseract==0.3.12, we can conclude that your requirements are |       unsatisfiable."
+  },
+  "0.3.13 on 3.11": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "0.3.13 on 3.13": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pytesseract": "0.3.13",
+   "python": "3.13.14",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "0.3.13 on 3.14.6": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pytesseract": "0.3.13",
+   "python": "3.14.6",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  }
+ },
+ "pytesseract items compared": 10,
+ "pytesseract differ": {
+  "image_to_data DICT conf types": [
+   [
+    [
+     [
+      "str"
+     ],
+     []
+    ],
+    [
+     "0.3.9 on 3.11",
+     "0.3.9 on 3.13"
+    ]
+   ],
+   [
+    [
+     [
+      "int"
+     ],
+     []
+    ],
+    [
+     "0.3.10 on 3.11",
+     "0.3.10 on 3.13",
+     "0.3.13 on 3.11",
+     "0.3.13 on 3.13",
+     "0.3.13 on 3.14.6"
+    ]
+   ]
+  ],
+  "import": [
+   [
+    [
+     "pytesseract",
+     []
+    ],
+    [
+     "0.3.9 on 3.11",
+     "0.3.10 on 3.11",
+     "0.3.13 on 3.11",
+     "0.3.13 on 3.13",
+     "0.3.13 on 3.14.6"
+    ]
+   ],
+   [
+    [
+     "pytesseract",
+     [
+      "'pkgutil.find_loader' is deprecated and slated for removal in Python 3.14; use importlib.util.find_s"
+     ]
+    ],
+    [
+     "0.3.9 on 3.13",
+     "0.3.10 on 3.13"
+    ]
+   ]
+  ]
+ },
+ "pillow releases": {
+  "9.5.0": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "9.5.0",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "10.0.0": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "10.0.0",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "10.1.0": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "10.1.0",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "10.2.0": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "10.2.0",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "10.3.0": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "10.3.0",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "10.4.0": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "10.4.0",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "11.0.0": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "11.0.0",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "11.1.0": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "11.1.0",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "11.2.1": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "11.2.1",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "11.3.0": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "11.3.0",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "12.0.0": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "12.0.0",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "12.1.0": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "12.1.0",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "12.2.0": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "12.2.0",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  },
+  "12.3.0": {
+   "get_languages": [
+    [
+     "deu",
+     "eng",
+     "fra",
+     "jpn",
+     "osd",
+     "rus",
+     "tur"
+    ],
+    []
+   ],
+   "image_to_data DICT conf types": [
+    [
+     "int"
+    ],
+    []
+   ],
+   "image_to_string": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "image_to_string DICT keys": [
+    [
+     "text"
+    ],
+    []
+   ],
+   "image_to_string RGBA": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "import": [
+    "pytesseract",
+    []
+   ],
+   "numpy array": [
+    "Hello OCR 2026\n",
+    []
+   ],
+   "pillow": "12.3.0",
+   "pytesseract": "0.3.13",
+   "python": "3.11.17",
+   "timeout": [
+    "RuntimeError: Tesseract process timeout",
+    []
+   ],
+   "version": [
+    "5.3.4",
+    []
+   ]
+  }
+ },
+ "pillow items compared": 9,
+ "pillow differ": {}
+}
