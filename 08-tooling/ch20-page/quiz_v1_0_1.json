@@ -1,0 +1,181 @@
+{
+ "_version": "1.0.1",
+ "items": [
+  {
+   "q": "ezgmail.unread() is called on an account with three unread conversations. What does it return?",
+   "options": [
+    "A list of GmailMessage objects, one for each unread email",
+    "A list of GmailThread objects, one for each unread conversation",
+    "A list of strings that hold the subject lines"
+   ],
+   "answer": 1,
+   "level": "Remember",
+   "objective": "CO1",
+   "rationales": [
+    "It asks the Gmail API for threads (users/me/threads with the query label:UNREAD), so the objects are threads; a thread fetches its messages with one more request when messages is first read.",
+    "",
+    "The subject is an attribute of a message that a thread holds; the function returns the thread objects, not text."
+   ]
+  },
+  {
+   "q": "An EmailMessage is built with set_content(text), add_alternative(html, subtype='html') and add_attachment(data, ...). What is the content type of the whole message?",
+   "options": [
+    "multipart/alternative",
+    "text/html",
+    "multipart/mixed"
+   ],
+   "answer": 2,
+   "level": "Understand",
+   "objective": "CO2",
+   "rationales": [
+    "multipart/alternative is the inner part that holds the text and the HTML; with an attachment added, the message becomes a multipart/mixed that holds it.",
+    "text/html is the type of one inner part, not of the message.",
+    ""
+   ]
+  },
+  {
+   "q": "What does email.utils.parseaddr('real@example.com, evil@example.net') return in Python 3.13 and 3.14?",
+   "options": [
+    "('', 'real@example.com')",
+    "('', '')",
+    "It raises ValueError"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO2",
+   "rationales": [
+    "That is the answer only with strict=False; the default is strict, so a string that holds two addresses is not an address.",
+    "",
+    "parseaddr does not raise; it returns empty strings for input it cannot take as one address."
+   ]
+  },
+  {
+   "q": "A program sends a message whose To header says jon@example.org, but passes ['jon@example.org', 'hidden@example.org'] as the recipients. Who receives it?",
+   "options": [
+    "Both addresses, and the hidden one appears nowhere in the text",
+    "Only jon@example.org, because the header lists only him",
+    "Neither, because the server refuses a header that does not match"
+   ],
+   "answer": 0,
+   "level": "Analyze",
+   "objective": "CO2",
+   "rationales": [
+    "",
+    "The server delivers to the recipients of the envelope (RCPT TO), not to the header; the header is only text.",
+    "The server never compares the two; on the local server the message was accepted with the From header being whatever the sender wrote."
+   ]
+  },
+  {
+   "q": "A plain text of 161 characters from the basic GSM set is sent as an SMS. How many messages does it use?",
+   "options": [
+    "1",
+    "2",
+    "161"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO3",
+   "rationales": [
+    "One message holds 160 characters of 7 bits (140 bytes), so the 161st character needs another.",
+    "",
+    "A character is not a message; a message carries 140 bytes."
+   ]
+  },
+  {
+   "q": "A 100-character text has one dotless i (ı) in it. Compared with the same text without it, how many messages does it need?",
+   "options": [
+    "The same number; one character does not matter",
+    "More: the whole text is sent as UCS-2, which holds 70 characters a message",
+    "Fewer: Unicode is a more compact encoding"
+   ],
+   "answer": 1,
+   "level": "Analyze",
+   "objective": "CO3",
+   "rationales": [
+    "One character outside the GSM sets changes the encoding of the whole text.",
+    "",
+    "UCS-2 uses 16 bits a character, twice the 7 bits of GSM-7 in a message of 140 bytes, so fewer characters fit."
+   ]
+  },
+  {
+   "q": "AT&T's support article says its email-to-text service was shut down on June 17, 2025. What does that show about an address such as 5555550100@txt.att.net?",
+   "options": [
+    "It still works, because the address is correct",
+    "A gateway that worked once can stop working, and the chapter's table still lists it",
+    "Only the MMS address stopped working"
+   ],
+   "answer": 1,
+   "level": "Understand",
+   "objective": "CO3",
+   "rationales": [
+    "A correct address is not enough when the provider has ended the service.",
+    "",
+    "The notice names the email-to-text and text-to-email service, so both the SMS and MMS domains are affected."
+   ]
+  },
+  {
+   "q": "A poll answer holds two JSON objects, one on each line. What does json.loads(text) do with the whole text?",
+   "options": [
+    "It returns a list of the two objects",
+    "It raises JSONDecodeError (Extra data)",
+    "It returns only the first object"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO4",
+   "rationales": [
+    "JSON has no format that holds two objects after one another; a list needs brackets and commas.",
+    "",
+    "It does not stop after the first object; it checks that nothing follows it."
+   ]
+  },
+  {
+   "q": "A message to ntfy has 2049 characters, each a dotless i (ı), and the limit is 4,096 bytes. Is it within the limit?",
+   "options": [
+    "Yes, 2049 is less than 4096",
+    "No, it is 4098 bytes in UTF-8",
+    "Yes, ntfy counts characters"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO4",
+   "rationales": [
+    "The limit counts bytes, and the dotless i takes two bytes in UTF-8.",
+    "",
+    "The limit is in bytes."
+   ]
+  },
+  {
+   "q": "The chapter's topic is the name 'AlSweigart' and 8 random characters (ZPgxBQ42). Why is secrets.token_urlsafe(16) a better topic?",
+   "options": [
+    "It is shorter, so it is easier to type",
+    "It gives 128 bits, where 8 characters of 62 give 47.6 bits, and the topic is the only secret",
+    "It is encrypted by ntfy"
+   ],
+   "answer": 1,
+   "level": "Analyze",
+   "objective": "CO5",
+   "rationales": [
+    "It is longer (22 characters), and being easy to type is the opposite of secret.",
+    "",
+    "ntfy does not encrypt the topic; it is part of the URL and shows in logs, and without access control the topic name is the password."
+   ]
+  },
+  {
+   "q": "The command-by-mail program checks a password in the message body and not the From address. Why?",
+   "options": [
+    "A From header is whatever the sender wrote, so it proves nothing",
+    "The From address is encrypted",
+    "Gmail removes the From address from incoming messages"
+   ],
+   "answer": 0,
+   "level": "Analyze",
+   "objective": "CO5",
+   "rationales": [
+    "",
+    "The header is plain text.",
+    "Gmail keeps the header, and the sender can write any address there."
+   ]
+  }
+ ]
+}
