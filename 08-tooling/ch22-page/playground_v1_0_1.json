@@ -1,0 +1,6 @@
+{
+ "_version": "1.0.1",
+ "label": "How wrong is recognised text? Compare what OCR returned with the known text: edit distance, character and word error rate and the words that differ (no picture is read)",
+ "code": "import re, difflib\n\nknown = 'It was on a dreary night of November, that I beheld the accomplishment of my toils.'\nread = input('Text that OCR returned (try the known text with one letter changed, e.g. IT was on ... ): ')\n\ndef edit_distance(a, b):\n    prev = list(range(len(b) + 1))\n    for i, ca in enumerate(a, 1):\n        cur = [i]\n        for j, cb in enumerate(b, 1):\n            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))\n        prev = cur\n    return prev[-1]\n\ndef norm(t):\n    return re.sub(r'\\s+', ' ', t).strip()\n\nref, hyp = norm(known), norm(read)\nd = edit_distance(ref, hyp)\nprint('characters in the known text:', len(ref))\nprint('edit distance:', d, '| character error rate:', round(d / len(ref), 4))\nwd = edit_distance(ref.split(), hyp.split())\nprint('word error rate:', round(wd / len(ref.split()), 4))\nfor op, a1, a2, b1, b2 in difflib.SequenceMatcher(None, ref.split(), hyp.split()).get_opcodes():\n    if op != 'equal':\n        print(op, ref.split()[a1:a2], '->', hyp.split()[b1:b2])\n",
+ "inputs": "IT was on a dreary night of Novernber, that I beheld the accomplishment of my toils."
+}
