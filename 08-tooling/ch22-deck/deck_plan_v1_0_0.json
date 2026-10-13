@@ -1,0 +1,4604 @@
+{
+ "meta": {
+  "title": "Ch. 22: Recognizing Text",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "1.0.0",
+  "python": "3.14.6",
+  "total": 26,
+  "diagrams": {
+   "WhatPytesseractCanReturn": 4,
+   "ReadingAnImageInFourLines": 5,
+   "ProgramTalkingToTesseract": 8,
+   "CleaningAPageBeforeReadingIt": 11,
+   "MakingASearchablePdfWithNaps2": 19,
+   "AskingNaps2ToOverwriteAFile": 20,
+   "TheLifeOfAScannedPage": 21,
+   "RecognizingTextInImagesAtAGlance": 24
+  },
+  "notExecuted": [
+   7,
+   15,
+   19,
+   22,
+   23
+  ],
+  "recorded": [
+   4,
+   7,
+   12,
+   23
+  ],
+  "standin": {
+   "22": [
+    "screenCut_v1_0_0.py"
+   ]
+  }
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Ch. 22: Recognizing Text",
+   "sub": "Text in images: OCR with Tesseract and pytesseract, searchable PDFs and the screen",
+   "items": [
+    {
+     "t": "code",
+     "x": 5.0,
+     "y": 0.25,
+     "w": 4.5,
+     "h": 1.91,
+     "rows": [
+      [
+       "import platform, importlib.metadata as m",
+       ""
+      ],
+      [
+       "platform.python_version()",
+       "'3.14.6'"
+      ],
+      [
+       "m.version('pytesseract')",
+       "'0.3.13'"
+      ],
+      [
+       "m.version('pillow')",
+       "'12.3.0'"
+      ],
+      [
+       "import pytesseract as t",
+       ""
+      ],
+      [
+       "str(t.get_tesseract_version())",
+       "'5.3.4'"
+      ]
+     ],
+     "fs": 8
+    },
+    {
+     "t": "foot",
+     "x": 0.6,
+     "y": 3.85,
+     "w": 8.8,
+     "h": 0.59,
+     "fs": 11,
+     "body": "Every output on these slides was printed by the Python above when the deck was made, and every picture was saved by a program that is run again to check it. Windows, macOS, a scanner and a real screen were never used: the screen program ran on a virtual display, and what could not be run is marked on its slide."
+    }
+   ],
+   "notes": "Chapter 21 taught a program to make pictures. Chapter 22 teaches a program to read them: Tesseract, an open-source engine that turns the letters of an image into text, and pytesseract, the Python wrapper that calls it. The chapter has 8 listings and 2 figures, and ends with 7 practice questions and 1 practice program, the Browser Text Scraper. This deck follows the chapter in its own order: reading an image in four lines, the mistakes in the result, preparing an image before it is read, other languages, a searchable PDF made with the NAPS2 application run from Python, and reading the screen. It adds what the research found when every printed output was run again: Appendix A pins pytesseract 0.3.10, which cannot even be imported on Python 3.14; the first word of the book's Figure 22-1 is Iv in the book and In with the Tesseract of Ubuntu, because the engine, its data and its version all change the answer; the chapter's advice on small, tilted and noisy pages is true, and the deck puts numbers on it; the language codes are not all what the chapter calls them; NAPS2 refuses to overwrite a file and still returns 0; and the shipped preprocessing script calls names it never defines. The output of this chapter is text from a picture, so the deck shows the picture next to the text: fourteen pictures that programs saved are on the slides as images, and each caption names the program that made the picture. The build runs every such program again and refuses the deck unless the slide holds a picture that is byte for byte, or pixel for pixel, what the program saves now. Every output on the slides was printed by Python 3.14.6, installed with uv, with pytesseract 0.3.13, Pillow 12.3.0, NumPy 2.5.4, OpenCV 5.0.0.93, PyAutoGUI 0.9.54 and the Tesseract 5.3.4 of Ubuntu 24.04. Windows and macOS were never used, no scanner was attached, and nobody looked at a real screen: the screen program ran on a virtual display, which the slide says. What could not be run is marked on its slide.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Six parts; every range is a run of slides you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 6.3,
+     "h": 3.55,
+     "fs": 11.5,
+     "items": [
+      "Reading an image (slides 4-6)",
+      "Installing, and what pytesseract does (slides 7-9)",
+      "Accuracy and preparing an image (slides 10-15)",
+      "Languages, data files and engines (slides 16-18)",
+      "Searchable PDFs, the screen and releases (slides 19-23)",
+      "Summary and resources (slides 24-25)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "26",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "4 + 2",
+       "label": "true stories: 4 on slides, 2 in the notes"
+      },
+      {
+       "n": "14",
+       "label": "pictures, each saved by a program that is run again"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has six parts. It starts with reading an image: what a program can ask Tesseract for, the four lines of the chapter, and the same page read by different engines with a different first word. Then the installation and what pytesseract does: the pins of Appendix A run on Python 3.14, how the wrapper talks to the engine, and the words, boxes and confidence of image_to_data(). The third part is accuracy and preparing an image: what hurts, cleaning a page, straightening and denoising with OpenCV, segmentation modes, hyphens and look-alike digits, and the mistakes a spell checker cannot see. The fourth is languages, data files and engines. The fifth is searchable PDFs, the screen and the releases: NAPS2, its overwrite rule and page slices, the other routes to a PDF, reading the screen, and the nine configurations of the research. The last part is a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. Four of the six stories are on slides, each with a link, and two, Emanuel Goldberg's Statistical Machine and Kurzweil's reading machine, are told in the notes; the eight narrative diagrams of the chapter are drawn from the same specifications as the interactive page. Every output was printed by Python 3.14.6 with pytesseract 0.3.13, Pillow 12.3.0 and the Tesseract 5.3.4 of Ubuntu, the screen program ran on a virtual display, and what could not be run is marked on its slide.",
+   "take": "Six parts, from four lines of code to a screenshot.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "The chapter's own competency questions; the summary comes back to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 2.2,
+     "fs": 13,
+     "items": [
+      "Which parts of a program that reads text from pictures can be shown to work, and which can only be shown to fail, on a machine that has no scanner, no real screen and no Windows or macOS, and how large is the spread between engine versions and data files?",
+      "Which printed outputs, programs, numbers and statements of the chapter differ in current releases of Python, pytesseract, Pillow and Tesseract, with the versions its appendix pins, with the data files installed, or in the files and pages it points to, and on what source?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 3.8,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 10,
+     "items": [
+      "6 branches",
+      "100 topics",
+      "13 console rows",
+      "28 programs run",
+      "8 diagrams",
+      "14 pictures",
+      "Python 3.14.6"
+     ]
+    }
+   ],
+   "notes": "The first question is the spine of the chapter, and the deck answers it slide by slide. On a machine with no scanner and no screen, a program can read a picture, give back the words, their boxes and a confidence for each, and make a searchable PDF, and the result can be compared with the text that was printed on the page; that is what can be shown to work. What can only be shown to fail is the part that needs a person's machine: the Windows and macOS installers, the Flatpak of NAPS2, a scanner, a large language model and a real screen. The research used a virtual X display, Xvfb, with the real ImageMagick display and PyAutoGUI, and took a screenshot of that screen; nobody looked at a real monitor, and the deck says so where it comes up. The second question is the watch-out. The chapter's 22 statements that can be replayed were run as printed in nine configurations: with the Tesseract 5.3.4 of Ubuntu and its fast English data 18 of 22 matched the book; with 5.5.3 and the fast data 20, with 5.5.3 and the best data 18, with 4.1.1 and the fast data 20, with all the apt languages 19 and with all languages under 5.5.3 21; with the book's pins, 18 on Python 3.13.14, 8 on Python 3.14.6, and 0 in an empty Python. The statements that still differ are get_languages(), the first word Iv of Figure 22-1, the Japanese heading and the English gibberish read from the Japanese page. The online materials of the book, 91 files, hold the four files of this chapter and not the others the chapter creates or assumes. Each slide says where a printed line differs and on what evidence.",
+   "take": "Know what can be shown to work and what can only be shown to fail.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What a program can ask Tesseract for",
+   "sub": "One wrapper, six calls; the chapter teaches the first and adds PDFs and the screen",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.7,
+     "h": 2.75,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 1.3,
+       "y": 1.68,
+       "w": 3.9,
+       "h": 2.47,
+       "fill": "FBF8F2",
+       "line": "6E655C",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "THE PYTESSERACT WRAPPER",
+       "x": 1.38,
+       "y": 1.42,
+       "w": 3.75,
+       "h": 0.24,
+       "fs": 8.5,
+       "color": "6E655C",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 1.79,
+       "w": 3.6,
+       "h": 0.338,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the text with image_to_string()",
+       "x": 1.73,
+       "y": 1.882,
+       "w": 3.04,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.188,
+       "w": 3.6,
+       "h": 0.338,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Get words, boxes and confidence with image_to_data()",
+       "x": 1.73,
+       "y": 2.28,
+       "w": 3.04,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.587,
+       "w": 3.6,
+       "h": 0.338,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Make a searchable PDF with image_to_pdf_or_hocr()",
+       "x": 1.73,
+       "y": 2.679,
+       "w": 3.04,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.985,
+       "w": 3.6,
+       "h": 0.338,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Find the orientation of a page with image_to_osd()",
+       "x": 1.73,
+       "y": 3.077,
+       "w": 3.04,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.383,
+       "w": 3.6,
+       "h": 0.338,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "List the languages with get_languages()",
+       "x": 1.73,
+       "y": 3.475,
+       "w": 3.04,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.782,
+       "w": 3.6,
+       "h": 0.338,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the engine version with get_tesseract_version()",
+       "x": 1.73,
+       "y": 3.874,
+       "w": 3.04,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 0.74,
+       "y": 2.075,
+       "w": 0.22,
+       "h": 0.22,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 1.5
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.295,
+       "x2": 0.85,
+       "y2": 2.675,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.65,
+       "y1": 2.395,
+       "x2": 1.05,
+       "y2": 2.395,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.675,
+       "x2": 0.69,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.675,
+       "x2": 1.01,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A program",
+       "x": 0.5,
+       "y": 2.975,
+       "w": 0.8,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 1.959,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 2.357,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 2.756,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 3.154,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 3.553,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 3.951,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      }
+     ],
+     "did": "WhatPytesseractCanReturn"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.18,
+     "w": 4.7,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WhatPytesseractCanReturn - SetOfUses pattern, 34 of 34 words grounded in the chapter's text"
+    },
+    {
+     "t": "card",
+     "head": "Two programs and a wrapper",
+     "body": "Tesseract is the engine, a program of its own. pytesseract starts it and gives its answer back to Python. The chapter ends with 7 practice questions and 1 practice program, the Browser Text Scraper.",
+     "x": 5.4,
+     "y": 1.45,
+     "w": 4.1,
+     "h": 1.4,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "Recorded 13 Oct 2026",
+     "body": "The online materials hold 91 files, four of them for this chapter: ocr-example.png, frankenstein.png, frankenstein_jpn.png and preprocess_ocr.py. There is no ocrscreen.py, output.pdf, cat.png or spam.pdf.",
+     "x": 5.4,
+     "y": 2.95,
+     "w": 4.1,
+     "h": 1.45,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.5,
+     "w": 9.0,
+     "who": "Hyman Eli Goldberg, who was granted the patent, and Edmund Fournier d'Albe, who developed the Optophone",
+     "where": "The patent is US Patent 1165663; the Optophone was a handheld scanner moved across a printed page",
+     "when": "1915",
+     "link": "https://en.wikipedia.org/wiki/Optical_character_recognition",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on optical character recognition says its roots lie in telegraphy and in reading devices for the blind. In 1915 Hyman Eli Goldberg was granted a patent for a device that read perforated or conductive-ink characters and converted them into standard telegraph code. Concurrently Edmund Fournier d'Albe developed the Optophone, a handheld scanner that produced tones corresponding to specific letters when it was moved across a printed page. In this study pytesseract returned the string 'Tesseract reads this line of text' with a newline at its end for a line the program drew, a str and not a tone or a code. The account rests on these sources. Wikipedia, 'Optical character recognition' (Hyman Eli Goldberg's patent of 1915, US Patent 1165663; the Optophone of Edmund Fournier d'Albe), read 2026-10-13; this study's leaves ImageToString and ReturnType. The use-case diagram lists what the wrapper can return: the text with image_to_string(), the words with their boxes and confidence with image_to_data(), a searchable PDF with image_to_pdf_or_hocr(), the orientation of a page with image_to_osd(), the installed languages with get_languages(), and the engine version with get_tesseract_version(). They are independent calls to one program, which is why the picture is a set of uses and not a sequence. The chapter's page was read on 13 October 2026; it returned 200 with 40,521 bytes and holds 8 listings and 2 figures, and its SHA-256 equals the digest that the book's own chapter ontology records. The card records what the research found on that day and this deck does not run again: the online materials of the third edition, a zip of 91 files, hold ocr-example.png of 939 by 1198 pixels in mode RGBA, frankenstein.png of 1130 by 672 pixels in mode P, frankenstein_jpn.png of 1211 by 606 pixels in mode RGB and preprocess_ocr.py of 190 lines; they hold none of ocrscreen.py, output.pdf, cat.png, dog.png, moose.png, spam.pdf, eggs.pdf or output.txt, which the chapter creates or assumes, and the publisher's book page has one occurrence of Recognizing Text and none of Tesseract, OCR or NAPS2. The deck downloads the zip while it runs and checks the SHA-256 of each file it uses; the book's scans are the book's own examples, and the study did not check their licence, so they are used here for teaching only. Two more stories of the study, Emanuel Goldberg and his Statistical Machine of 1931 and Ray Kurzweil's reading machine of 1976, are told in the notes of the slides on PDFs and on the sizes of letters: Wikipedia's article on Emanuel Goldberg says he introduced his \"Statistical Machine\", a document search engine that used photoelectric cells and pattern recognition to search the metadata on rolls of microfilmed documents. The patent, US 1,838,389, is dated 29 December 1931, and the article says the technology was used in a variant form in 1938 by Vannevar Bush in his microfilm rapid selector. A picture of a page is only searchable once something has read it. In this study a PDF that Pillow made from frankenstein.png held 0 characters of text for pdftotext, while the PDF that Tesseract made through pytesseract held 578 characters in 106 word boxes. Wikipedia's article on Kurzweil Computer Products says that in 1974 Ray Kurzweil founded the company and led development of the first omni-font optical character recognition system, a program able to recognize text in any normal font, where scanners before could read only a few fonts. The article on OCR gives 13 January 1976 as the day the finished reading machine for blind people was unveiled at a news conference. He later sold the company to Xerox. In this study six typefaces (DejaVu Sans, Serif, Mono and Bold, Nimbus Roman and Z003 italic script) drawn at 24 pixels were read with character error rates from 0.0 to 0.0116, and the same text drawn at 8 pixels with 0.2394.",
+   "take": "One engine, six calls; the book's files are the starting point.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Reading an image in four lines",
+   "sub": "Import, open, image_to_string(), print; the result is one str that ends with a newline",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 3.05,
+     "h": 2.0,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.45,
+       "w": 2.5,
+       "h": 0.3,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Import pytesseract and Pillow",
+       "x": 0.62,
+       "y": 1.523,
+       "w": 2.36,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.85,
+       "w": 2.5,
+       "h": 0.3,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Open the image file with Image.open()",
+       "x": 0.62,
+       "y": 1.923,
+       "w": 2.36,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 2.25,
+       "w": 2.5,
+       "h": 0.3,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Pass the image to image_to_string()",
+       "x": 0.62,
+       "y": 2.323,
+       "w": 2.36,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 2.65,
+       "w": 2.5,
+       "h": 0.3,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Receive a str that ends with a newline",
+       "x": 0.62,
+       "y": 2.723,
+       "w": 2.36,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 3.05,
+       "w": 2.5,
+       "h": 0.3,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Print the string",
+       "x": 0.62,
+       "y": 3.123,
+       "w": 2.36,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.225,
+       "y": 1.5,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.185,
+       "y": 3.06,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.245,
+       "y": 3.12,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.225,
+       "y1": 1.6,
+       "x2": 3.05,
+       "y2": 1.6,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.8,
+       "y1": 1.75,
+       "x2": 1.8,
+       "y2": 1.85,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.8,
+       "y1": 2.15,
+       "x2": 1.8,
+       "y2": 2.25,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.8,
+       "y1": 2.55,
+       "x2": 1.8,
+       "y2": 2.65,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.8,
+       "y1": 2.95,
+       "x2": 1.8,
+       "y2": 3.05,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.05,
+       "y1": 3.2,
+       "x2": 3.185,
+       "y2": 3.2,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "ReadingAnImageInFourLines"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.43,
+     "w": 3.05,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "diagram ReadingAnImageInFourLines - Workflow pattern, 17 of 18 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 3.75,
+     "y": 1.55,
+     "w": 5.64,
+     "h": 2.66,
+     "lines": [
+      "img = Image.open('ocr-example.png')",
+      "print(img.size, img.mode)",
+      "text = tess.image_to_string(img)",
+      "lines = text.split('\\n')",
+      "print(type(text).__name__, len(text), 'characters,', text.count('\\n'), 'line breaks')",
+      "for line in lines[:4]:",
+      "    print('|', line)",
+      "print('ends with', repr(text[-3:]), '| empty lines:', lines.count('') - 1)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\n(939, 1198) RGBA\nstr 2648 characters, 51 line breaks\n| This book provides you with practice examples of how programming\n| concepts are applied, with a collection of over 80 games, simulations, and dig-\n| ital art programs. These aren't code snippets; they're full, runnable Python\n| programs. You can copy their code to become familiar with how they work,\nends with 'ng\\n' | empty lines: 10\nsaved ocrTop.png: 55786 bytes, sha256 627149054472",
+     "outLabel": "prints",
+     "label": "program fourLinesCut_v1_0_0.py, lines 79 to 86 of 88"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/ocrTop.png",
+     "x": 0.5,
+     "y": 3.94,
+     "w": 3.05,
+     "h": 0.72
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.68,
+     "w": 3.05,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image ocrTop.png made by fourLinesCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 3.75,
+     "y": 4.26,
+     "w": 5.64,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "Lines 1 to 78 (imports, helpers, the folder and the download check) are not shown. Lines 87 to 88 (the saving of the picture) are not shown. The page is ocr-example.png; the strip on the left is its top."
+    }
+   ],
+   "notes": "The four lines of the chapter are: import pytesseract and Pillow, open the file with Image.open(), pass the image to image_to_string(), and print the string. The program on the right is those lines run for real on ocr-example.png of the book's online materials, after the SHA-256 of the file was checked: the picture is 939 by 1198 pixels in mode RGBA, and Tesseract 5.3.4 (the Ubuntu 24.04 package, with the fast English data) returned a str of 2648 characters with 51 line breaks. The first four lines of the result are shown, and they follow the printed page including the hyphens that split dig-ital at the end of a line. The string ends with a newline, and ten of its lines are empty, the gaps between paragraphs. The strip under the flow chart is the top of the page that the program saved, so the picture and the text can be compared by eye, and the build runs the program again and compares the strip with the one on the slide. The corpus program ocrFundamentals_v1_0_0.py ran as well and is not shown, because its lines are wider than a slide: it checks the same file and also the types the other calls return. The chapter's own phrase, that Tesseract works best on clean scans of printed text, is the subject of the slides that follow.",
+   "take": "Four lines turn a picture into a string.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The same page, a different first word",
+   "sub": "The book prints Iv; this Tesseract returns In for the same picture",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.27,
+     "h": 2.52,
+     "lines": [
+      "img = Image.open('frankenstein.png')",
+      "text = tess.image_to_string(img)",
+      "lines = text.split('\\n')",
+      "print(img.size, img.mode, '->', len(text), 'characters,', len(lines), 'pieces')",
+      "for i in (0, 2, 4):",
+      "    print(i, repr(lines[i]))",
+      "print('the book prints Iv; the first word here is', lines[4].split()[0])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\n(1130, 672) P -> 581 characters, 15 pieces\n0 'THE MODERN PROMETHEUS. 43'\n2 'CHAPTER V.'\n4 'In was on a dreary night of November, that I beheld the'\nthe book prints Iv; the first word here is In\nwords that differ: [(['IT'], ['In']), (['motion'], ['Motion'])]\ncharacter error rate against the printed page: 0.0035\nsaved frankLine.png: 12502 bytes, sha256 b46e09fbfaa3",
+     "outLabel": "prints",
+     "label": "program frankCut_v1_0_0.py, lines 79 to 85 of 91"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/frankLine.png",
+     "x": 0.5,
+     "y": 4.12,
+     "w": 5.27,
+     "h": 0.25
+    },
+    {
+     "t": "foot",
+     "x": 5.97,
+     "y": 4.09,
+     "w": 3.53,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image frankLine.png made by frankCut_v1_0_0.py"
+    },
+    {
+     "t": "card",
+     "head": "Iv, In, Ir or It",
+     "body": "With the fast data the first word is Iv under 4.1.1 and 5.5.3 and In under 5.3.4; with the best data it is Ir; with the legacy data It. The page shows an I and a small capital T.",
+     "x": 5.97,
+     "y": 1.5,
+     "w": 3.53,
+     "h": 2.0,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 5.97,
+     "y": 3.6,
+     "w": 3.53,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "Lines 1 to 78 (imports, helpers, the folder and the download check) are not shown. Lines 86 to 91 (the word comparison and the saving of the picture) are not shown."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "Mary Shelley, whose name appeared on the revised edition of 1831 of a novel first published anonymously in 1818",
+     "where": "London; the 1831 text had stylistic revisions and a new preface, and the chapter scans a page of that print",
+     "when": "1831",
+     "link": "https://en.wikipedia.org/wiki/Frankenstein",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on Frankenstein says the novel was first published anonymously on 1 January 1818 and that in 1831 a revised edition was published under Mary Shelley's name. The 1831 version included significant stylistic revisions and a new preface, and chapter 22 of the book scans a page of that print, whose paper is wrinkled and yellowed. The book prints 'Iv' for the first word of the chapter. In this study Tesseract 5.3.4 returned 'In' for it, 4.1.1 and 5.5.3 with the fast data 'Iv', and the 106 words came back with 2 wrong, a character error rate of 0.0035. The account rests on these sources. Wikipedia, 'Frankenstein' (first published anonymously in 1818; the revised edition of 1831 under Mary Shelley's name), read 2026-10-13; this study's leaves FrankensteinOutput and ExactResultsVary. The page is Figure 22-1 of the book, frankenstein.png of the online materials, 1130 by 672 pixels in mode P. Tesseract 5.3.4 with the fast data returned 581 characters, and the book prints Iv as the first word of the sentence where this engine returns In; the picture shows the capital I followed by a small capital T, and the text of the page is IT was on a dreary night of November. Two words of the 106 differ from the printed page: IT came back as In, and motion as Motion, and the character error rate against the printed page is 0.0035 (a MEASURED single run with the Tesseract version named on the slide). The research ran the same page through the three engines the course built or installed and three kinds of English data (the next slides): the first word was Iv with 4.1.1 and with 5.5.3 and the fast data, In with the apt 5.3.4, Ir with the best data of all three, and It with the legacy data under 4.1.1 and 5.5.3. So the sentence the chapter prints, that the output looks like this, is true of one engine and one data set, and the exact text is a property of the version you installed. The corpus program frankensteinPage_v1_0_0.py ran too and is not shown, because its lines are wider than a slide; the program on the slide is cut from it.",
+   "take": "The exact text is a property of the engine and its data.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Appendix A's pins, run on Python 3.14",
+   "sub": "pytesseract 0.3.10 cannot be imported on Python 3.14; 0.3.13 can",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 5.2,
+     "colW": [
+      1.25,
+      0.75,
+      0.85,
+      0.95,
+      1.4
+     ],
+     "fs": 7.5,
+     "rowH": 0.3,
+     "rows": [
+      [
+       "check",
+       "3.14.6 newest",
+       "3.14.6 pins",
+       "3.13.14 pins",
+       "3.14.6 empty"
+      ],
+      [
+       "Python",
+       "3.14.6",
+       "3.14.6",
+       "3.13.14",
+       "3.14.6"
+      ],
+      [
+       "pytesseract",
+       "0.3.13",
+       "0.3.10",
+       "0.3.10",
+       "none"
+      ],
+      [
+       "Pillow",
+       "12.3.0",
+       "10.4.0",
+       "10.4.0",
+       "none"
+      ],
+      [
+       "import pytesseract",
+       "ok",
+       "ImportError: cannot import name 'find_loader'",
+       "ok",
+       "ModuleNotFoundError: No module named 'pytesseract'"
+      ],
+      [
+       "image_to_string()",
+       "'Tesseract reads this'",
+       "-",
+       "'Tesseract reads this'",
+       "-"
+      ],
+      [
+       "get_languages()",
+       "7 codes",
+       "-",
+       "7 codes",
+       "-"
+      ]
+     ]
+    },
+    {
+     "t": "code",
+     "x": 5.8,
+     "y": 1.45,
+     "w": 3.7,
+     "h": 1.95,
+     "rows": [
+      [
+       "import pkgutil, sys",
+       ""
+      ],
+      [
+       "sys.version_info[:2]",
+       "(3, 14)"
+      ],
+      [
+       "hasattr(pkgutil, 'find_loader')",
+       "False"
+      ],
+      [
+       "import inspect, pytesseract",
+       ""
+      ],
+      [
+       "'find_loader' in inspect.getsource(pytesseract)",
+       "False"
+      ],
+      [
+       "from packaging.version import Version",
+       ""
+      ],
+      [
+       "Version('0.3.10') < Version('0.3.13')",
+       "True"
+      ]
+     ],
+     "fs": 7.4,
+     "cap": "run under Python 3.14.6; no clock, no network"
+    },
+    {
+     "t": "foot",
+     "x": 5.8,
+     "y": 3.7,
+     "w": 3.7,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: PyPI lists 28 releases of pytesseract and none numbered 0.3.11 or 0.3.12; 0.3.10 imports pkgutil.find_loader, which Python 3.14 removed."
+    },
+    {
+     "t": "foot",
+     "x": 5.8,
+     "y": 4.2,
+     "w": 3.7,
+     "h": 0.44,
+     "fs": 8,
+     "body": "NOT EXECUTED here: the Windows and macOS installers of Tesseract, Homebrew, and pytesseract 0.3.4, 0.3.7 and 0.3.8, which install only from source."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.3,
+     "w": 5.1,
+     "h": 0.34,
+     "fs": 9,
+     "body": "The table runs one probe in four interpreters while the deck is checked; the console is one session on the newest."
+    }
+   ],
+   "notes": "Appendix A of the book pins pytesseract==0.3.10 and Pillow==10.4.0. The table is the same probe run under four interpreters when the deck is built: Python 3.14.6 with the newest packages, Python 3.14.6 with the pins, Python 3.13.14 with the pins, and an empty Python 3.14.6. The probe imports pytesseract, reads a drawn line of text and counts the languages. With the pins on 3.14.6 the import raises ImportError, cannot import name 'find_loader' from 'pkgutil', because pytesseract 0.3.10 calls pkgutil.find_loader and Python 3.14 removed it; on 3.13.14 the same pins import and read, and the newest pytesseract, 0.3.13, no longer has find_loader, which the console shows by looking for the name in its source. The empty Python raises ModuleNotFoundError. Tesseract itself does not matter for the failure, because the exception is raised before any text is read. The console needs the packaging module for its last two rows, so it does not run in a Python in a browser unless packaging is installed. The research also recorded that PyPI has 28 releases of pytesseract, that none is numbered 0.3.11 or 0.3.12, and that three older ones, 0.3.4, 0.3.7 and 0.3.8, install only from source; the deck did not run those. Between pytesseract 0.3.9, 0.3.10 and 0.3.13 the only change the research found in one program was the type of the confidence, a str in 0.3.9 and an int from 0.3.10. The Windows and macOS installers of Tesseract, Homebrew, and the final release of Python 3.15 were never used here; the research ran Python 3.15 only as a beta, 3.15.0b4.",
+   "take": "A pinned release that predates your Python may not import.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "How pytesseract talks to Tesseract",
+   "sub": "The wrapper starts the program, waits, and turns what it prints into a str or an error",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.35,
+     "w": 4.3,
+     "h": 3.25,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.35,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The Python program",
+       "x": 0.61,
+       "y": 1.382,
+       "w": 0.98,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 1.77,
+       "x2": 1.1,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.1,
+       "y": 1.35,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "pytesseract",
+       "x": 2.16,
+       "y": 1.466,
+       "w": 0.98,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.65,
+       "y1": 1.77,
+       "x2": 2.65,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.65,
+       "y": 1.35,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The tesseract program",
+       "x": 3.71,
+       "y": 1.382,
+       "w": 0.98,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.2,
+       "y1": 1.77,
+       "x2": 4.2,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 2.061,
+       "x2": 2.65,
+       "y2": 2.061,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls image_to_string() with an image",
+       "x": 1.2,
+       "y": 1.722,
+       "w": 1.35,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.65,
+       "y1": 2.465,
+       "x2": 4.2,
+       "y2": 2.465,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Starts tesseract and hands it the image",
+       "x": 2.75,
+       "y": 2.126,
+       "w": 1.35,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.2,
+       "y1": 2.87,
+       "x2": 2.65,
+       "y2": 2.87,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Prints the text it recognised",
+       "x": 2.75,
+       "y": 2.531,
+       "w": 1.35,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.65,
+       "y1": 3.274,
+       "x2": 1.1,
+       "y2": 3.274,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns the text as a string",
+       "x": 1.2,
+       "y": 2.935,
+       "w": 1.35,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 3.678,
+       "x2": 2.65,
+       "y2": 3.678,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls image_to_string() with a language it does not have",
+       "x": 1.2,
+       "y": 3.205,
+       "w": 1.35,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.2,
+       "y1": 4.083,
+       "x2": 2.65,
+       "y2": 4.083,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Reports an error opening the data file",
+       "x": 2.75,
+       "y": 3.744,
+       "w": 1.35,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.65,
+       "y1": 4.487,
+       "x2": 1.1,
+       "y2": 4.487,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Raises TesseractError",
+       "x": 1.2,
+       "y": 4.282,
+       "w": 1.35,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "ProgramTalkingToTesseract"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.3,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ProgramTalkingToTesseract - Interaction pattern, 29 of 32 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.9,
+     "y": 1.55,
+     "w": 4.59,
+     "h": 2.52,
+     "lines": [
+      "F = ImageFont.truetype(FONTS['sans'], 32)",
+      "im = Image.new('L', (700, 60), 255)",
+      "ImageDraw.Draw(im).text((10, 10), 'Tesseract reads', font=F, fill=0)",
+      "print(repr(ocr(im)))",
+      "e = err(lambda: ocr(im, lang='xyz'))",
+      "print('lang xyz:', e[0], 'xyz.traineddata' in e[1])",
+      "print('timeout:', err(lambda: ocr(im, timeout=0.001)))",
+      "print('bytes:', err(lambda: ocr(b'x')))",
+      "tess.pytesseract.tesseract_cmd = '/nowhere/tesseract'",
+      "print('no program:', err(lambda: ocr(im))[0])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "'Tesseract reads\\n'\nlang xyz: TesseractError True\ntimeout: ('RuntimeError', 'Tesseract process timeout')\nbytes: ('TypeError', 'Unsupported image object')\nno program: TesseractNotFoundError\nsaved readsLine.png: 1630 bytes, sha256 98c31cbfc934",
+     "outLabel": "prints",
+     "label": "program errorsCut_v1_0_0.py, lines 57 to 66 of 67"
+    },
+    {
+     "t": "foot",
+     "x": 4.9,
+     "y": 4.11,
+     "w": 4.59,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 56 (imports, helpers and the folder) are not shown. Line 67 (the saving of the picture) is not shown."
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/readsLine.png",
+     "x": 4.9,
+     "y": 4.46,
+     "w": 2.0,
+     "h": 0.17
+    },
+    {
+     "t": "foot",
+     "x": 7.0,
+     "y": 4.46,
+     "w": 2.5,
+     "h": 0.31,
+     "fs": 8,
+     "body": "image readsLine.png made by errorsCut_v1_0_0.py"
+    }
+   ],
+   "notes": "The sequence diagram is the whole story of one call. The program calls image_to_string() with an image; pytesseract saves the image to a temporary file and starts the tesseract program with it; tesseract prints the text it recognised; pytesseract returns it as a str. The second half of the diagram is what happens with a language the engine does not have: tesseract reports an error opening the data file, and pytesseract raises TesseractError. The program on the right makes the line of text in the picture beside it with Pillow and runs the calls for real: the result is the line and a newline; lang='xyz' raises TesseractError and the message names xyz.traineddata; timeout=0.001 raises RuntimeError with the text Tesseract process timeout; an object that is not an image, bytes here, raises TypeError with Unsupported image object; and with tesseract_cmd pointed at a program that is not there the call raises TesseractNotFoundError. That last line is the error a reader gets after installing only the Python package, which is why the chapter makes the engine a separate installation. The corpus program pytesseractInternals_v1_0_0.py ran too and is not shown, because its lines are wider than a slide: it follows the wrapper's own source and the command line it builds.",
+   "take": "A wrapper is only as good as the program it starts.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Words, boxes and a confidence",
+   "sub": "image_to_data() returns one row for every page, block, line and word",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.76,
+     "h": 2.79,
+     "lines": [
+      "dd = tess.image_to_data(img, output_type=tess.Output.DICT)",
+      "t, c, lv = dd['text'], dd['conf'], dd['level']",
+      "L, T, W, H = (dd[k] for k in ('left', 'top', 'width', 'height'))",
+      "ix = [i for i in range(len(t)) if t[i].strip()]",
+      "print(len(t), 'rows,', len(ix), 'words, levels', sorted(set(lv)))",
+      "print('conf above the word level:', sorted({c[i] for i in range(len(t)) if lv[i] < 5}))",
+      "for i in ix[6:9]:",
+      "    print(t[i], c[i], L[i], T[i], W[i], H[i])",
+      "low = [(t[i], c[i]) for i in ix if c[i] < 90]",
+      "print('mean', round(sum(c[i] for i in ix) / len(ix), 2), '| below 90:', low)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\n129 rows, 106 words, levels [1, 2, 3, 4, 5]\nconf above the word level: [-1]\nIn 55 93 278 33 27\nwas 96 140 286 53 18\non 96 207 287 34 17\nmean 94.55 | below 90: [('43', 85), ('In', 55), ('open', 81), (';', 81)]\nsaved wordBoxes.png: 126936 bytes, sha256 b73cb888487c",
+     "outLabel": "prints",
+     "label": "program wordsCut_v1_0_0.py, lines 80 to 89 of 93"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/wordBoxes.png",
+     "x": 6.46,
+     "y": 1.5,
+     "w": 3.04,
+     "h": 1.81
+    },
+    {
+     "t": "foot",
+     "x": 6.46,
+     "y": 3.34,
+     "w": 3.04,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image wordBoxes.png made by wordsCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 6.46,
+     "y": 3.61,
+     "w": 3.04,
+     "h": 0.34,
+     "fs": 9,
+     "body": "Green boxes have a confidence of 90 or more, red boxes less: 43, In, open and the semicolon."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.39,
+     "w": 5.76,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 79 (imports, helpers, the folder, the download check and the opening of the picture) are not shown. Lines 90 to 93 (the drawing of the boxes) are not shown."
+    }
+   ],
+   "notes": "image_to_data() with output_type=Output.DICT returns a dictionary of lists, one entry for each row of the table that Tesseract builds: 129 rows for frankenstein.png, of which 106 hold a word. The levels are 1 for the page, 2 for a block, 3 for a paragraph, 4 for a line and 5 for a word; the rows above the word level have the confidence -1, and each word row has its text, a confidence from 0 to 100, and the left, top, width and height of its box in pixels. The first words are In at (93, 278) with a confidence of 55, was with 96 and on with 96. The mean confidence of the 106 words is 94.55, and four words are below 90: 43 with 85, In with 55, open with 81 and the semicolon with 81. The picture is the page with every box drawn by the program, green for 90 and above and red below; the one wrong word of the first line, In for IT, is the lowest of all. In pytesseract 0.3.13 the confidence is an int; the research found it is a str in 0.3.9. The boxes are in the pixels of the picture that was read, so the same call on an enlarged copy returns boxes in the pixels of the copy. The mean of 94.55 and the list below 90 are MEASURED single runs with the Tesseract version named on the slide, 5.3.4.",
+   "take": "A confidence points at the words worth a second look.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What hurts: size, tilt and noise",
+   "sub": "Characters wrong per character printed, on a drawn page of known text; 0.0 is perfect",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.34,
+     "h": 3.35,
+     "lines": [
+      "def go(name, **kw):",
+      "    im, t = render(**kw); print('%-18s' % name, cer(t, ocr(im)))",
+      "for px in (6, 8, 10, 12, 24): go('letters %d px' % px, px=px)",
+      "for r in (2, 3, 5): go('tilted %d degrees' % r, rot=r)",
+      "for sd in (40, 60): go('noise sd %d' % sd, noise=sd)",
+      "inv, t = render(fg=255, bg=0)",
+      "print('white on black', cer(t, ocr(inv)))",
+      "off = '-c tessedit_do_invert=0'",
+      "print('invert off', cer(t, ocr(inv, config=off)))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "letters 6 px       1.0\nletters 8 px       0.2394\nletters 10 px      0.0232\nletters 12 px      0.0154\nletters 24 px      0.0116\ntilted 2 degrees   0.0116\ntilted 3 degrees   0.6409\ntilted 5 degrees   0.5328\nnoise sd 40        0.0116\nnoise sd 60        1.0\nwhite on black 0.0116\ninvert off 1.1042\nsaved hurts.png: 49626 bytes, sha256 eee7ecec2fd3",
+     "outLabel": "prints",
+     "label": "program hurtsCut_v1_0_0.py, lines 57 to 65 of 72"
+    },
+    {
+     "t": "chart",
+     "ctype": "bar",
+     "x": 5.04,
+     "y": 1.4,
+     "w": 4.46,
+     "h": 1.35,
+     "labels": [
+      "6 px",
+      "8 px",
+      "10 px",
+      "12 px",
+      "16 px",
+      "24 px"
+     ],
+     "title": "Error rate by letter size",
+     "series": [
+      {
+       "name": "error rate",
+       "data": [
+        1.0,
+        0.2394,
+        0.0232,
+        0.0154,
+        0.0077,
+        0.0116
+       ]
+      }
+     ],
+     "dataLabels": true,
+     "dlFs": 8
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/hurts.png",
+     "x": 5.04,
+     "y": 2.8,
+     "w": 4.17,
+     "h": 1.25
+    },
+    {
+     "t": "foot",
+     "x": 5.04,
+     "y": 4.07,
+     "w": 4.46,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image hurts.png made by hurtsCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 5.04,
+     "y": 4.33,
+     "w": 4.46,
+     "h": 0.44,
+     "fs": 8,
+     "body": "MEASURED single runs, Tesseract 5.3.4, one 900-pixel page. Lines 1 to 56 (imports, the page maker and the folder) are not shown. Lines 66 to 72 (the sheet of four pages) are not shown."
+    }
+   ],
+   "notes": "The program draws a page of 259 known characters with Pillow, reads it with Tesseract 5.3.4 and prints the character error rate, which is the edit distance between the known text and the result divided by the length of the known text, with every run of white space made one space. Every number is a MEASURED single run, one page, one font, one engine, and not a law. Letters of 6 pixels read at 1.0, which is nothing right; 8 pixels at 0.2394; 10 pixels at 0.0232; 12 pixels at 0.0154; and 24 pixels at 0.0116, which is the floor of this page, one wrong character in the whole text. A page turned by 2 degrees read at 0.0116, by 3 degrees at 0.6409, and by 5 degrees at 0.5328, so a slight tilt is harmless and a few degrees more is not. Noise of standard deviation 40 read at 0.0116 and of 60 at 1.0. White text on a black ground read at 0.0116, which is as good as black on white, because the engine inverts a light-on-dark page by itself (tessedit_do_invert is 1); with that turned off the result is 1.1042, more wrong characters than the text has. So the chapter's advice, dark text on a light ground, describes what the engine did not need here. The numbers in the research package (F9 and F10) were measured on a 700-pixel page and differ in size, for example 0.2278 at 8 pixels there and 0.2394 here; the pattern is the same, and the deck prints the numbers its own program printed. The corpus program whatHurtsAccuracy_v1_0_0.py ran too and is not shown. Ray Kurzweil's machine of 1976 was built because fonts mattered less than size: Fonts stopped mattering, size still does.",
+   "take": "Size, tilt and noise matter; the engine inverts a dark page itself.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Cleaning a page before reading it",
+   "sub": "Enlarge small text, straighten a tilt, leave a white border; then read",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 3.55,
+     "h": 3.0,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.5,
+       "w": 1.65,
+       "h": 0.4,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Convert the picture to grey with convert('L')",
+       "x": 0.62,
+       "y": 1.556,
+       "w": 1.51,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.55,
+       "y": 2.05,
+       "w": 1.65,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the text smaller than about 10 pixels?",
+       "x": 0.72,
+       "y": 2.156,
+       "w": 1.31,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.6,
+       "y": 2.1,
+       "w": 1.45,
+       "h": 0.4,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Enlarge the image with resize()",
+       "x": 2.67,
+       "y": 2.156,
+       "w": 1.31,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.55,
+       "y": 2.65,
+       "w": 1.65,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the page turned by a few degrees?",
+       "x": 0.72,
+       "y": 2.756,
+       "w": 1.31,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.6,
+       "y": 2.7,
+       "w": 1.45,
+       "h": 0.4,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Estimate the angle and turn the image back",
+       "x": 2.67,
+       "y": 2.756,
+       "w": 1.31,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 3.3,
+       "w": 1.65,
+       "h": 0.4,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Add a white border around the text",
+       "x": 0.62,
+       "y": 3.356,
+       "w": 1.51,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 3.9,
+       "w": 1.65,
+       "h": 0.4,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call image_to_string() and measure the error rate",
+       "x": 0.62,
+       "y": 3.956,
+       "w": 1.51,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.225,
+       "y": 1.6,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.185,
+       "y": 3.96,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.245,
+       "y": 4.02,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.225,
+       "y1": 1.7,
+       "x2": 2.2,
+       "y2": 1.7,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.375,
+       "y1": 1.9,
+       "x2": 1.375,
+       "y2": 2.05,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.2,
+       "y1": 2.3,
+       "x2": 2.6,
+       "y2": 2.3,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.25,
+       "y": 2.1,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.375,
+       "y1": 2.55,
+       "x2": 1.375,
+       "y2": 2.65,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 1.435,
+       "y": 2.51,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 3.325,
+       "y1": 2.5,
+       "x2": 3.325,
+       "y2": 2.9,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.325,
+       "y1": 2.9,
+       "x2": 2.2,
+       "y2": 2.9,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.2,
+       "y1": 2.9,
+       "x2": 2.6,
+       "y2": 2.9,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.25,
+       "y": 2.7,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.375,
+       "y1": 3.15,
+       "x2": 1.375,
+       "y2": 3.3,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 1.435,
+       "y": 3.135,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 3.325,
+       "y1": 3.1,
+       "x2": 3.325,
+       "y2": 3.5,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.325,
+       "y1": 3.5,
+       "x2": 2.2,
+       "y2": 3.5,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.375,
+       "y1": 3.7,
+       "x2": 1.375,
+       "y2": 3.9,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.2,
+       "y1": 4.1,
+       "x2": 3.185,
+       "y2": 4.1,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "CleaningAPageBeforeReadingIt"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.43,
+     "w": 3.55,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram CleaningAPageBeforeReadingIt - Workflow pattern, 30 of 34 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.1,
+     "y": 1.55,
+     "w": 5.33,
+     "h": 2.52,
+     "lines": [
+      "print('9 px page:', cer(t, ocr(small)))",
+      "x2 = small.resize((small.width * 2, small.height * 2), Image.Resampling.LANCZOS)",
+      "print('enlarged 2 times:', cer(t, ocr(x2)))",
+      "print('told it is 300 dpi:', cer(t, ocr(small, config='--dpi 300')))",
+      "f = ImageFont.truetype(FONTS['sans'], 24); s = 'Tesseract reads this line.'",
+      "b = f.getbbox(s); tight = Image.new('L', (b[2] - b[0], b[3] - b[1]), 255)",
+      "ImageDraw.Draw(tight).text((-b[0], -b[1]), s, font=f, fill=0)",
+      "print('a tight crop', tight.size, '->', repr(ocr(tight).strip()))",
+      "framed = ImageOps.expand(tight, border=10, fill=255)",
+      "print('with a 10 px border', framed.size, '->', repr(ocr(framed).strip()))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "9 px page: 0.0579\nenlarged 2 times: 0.0154\ntold it is 300 dpi: 0.7452\na tight crop (297, 18) -> 'tesseract reaas Ttnis line.'\nwith a 10 px border (317, 38) -> 'Tesseract reads this line.'\nsaved cleaned.png: 14533 bytes, sha256 70e194bda04c",
+     "outLabel": "prints",
+     "label": "program cleanCut_v1_0_0.py, lines 58 to 67 of 69"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/cleaned.png",
+     "x": 4.1,
+     "y": 4.12,
+     "w": 1.63,
+     "h": 0.5
+    },
+    {
+     "t": "foot",
+     "x": 5.83,
+     "y": 4.12,
+     "w": 3.67,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image cleaned.png made by cleanCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 4.1,
+     "y": 4.67,
+     "w": 5.33,
+     "h": 0.31,
+     "fs": 8,
+     "body": "MEASURED single runs, Tesseract 5.3.4. Lines 1 to 57 (imports, the page maker and the folder) are not shown. Lines 68 to 69 (the sheet that is saved) are not shown."
+    }
+   ],
+   "notes": "The flow chart is the preparation the chapter recommends: convert the picture to grey, enlarge it if the text is smaller than about 10 pixels, straighten it if the page is turned by a few degrees, put a white border around the text, then read it and measure the error rate. The program shows three of the steps for real. A 9-pixel page reads at 0.0579; enlarged 2 times with LANCZOS it reads at 0.0154; and when the engine is told with --dpi 300 that a 9-pixel page is a 300 dpi scan, the result is 0.7452, a lot worse, because the dpi changes the size the engine expects the letters to have, so a wrong dpi is worse than none. The border is the surprise: a line of text cropped tight to its letters, 297 by 18 pixels, came back as tesseract reaas Ttnis line, and the same line with a 10-pixel white border, 317 by 38 pixels, as Tesseract reads this line. The picture shows the three versions of the page, the 9-pixel original, the enlarged copy and the framed line. These are MEASURED single runs with Tesseract 5.3.4 on pages the program draws; the research package gives 0.0579 and 0.0154 for the same pair, and the same tight crop and border. The chapter's link for more on preprocessing, autbor.com/preprocessingocr, answered 301 and then 200 and says on the page that it is a placeholder, so the advice has to come from the Tesseract documentation page on improving the quality of the output, which is on the resources slide.",
+   "take": "Enlarge the small, frame the tight, and never guess the dpi.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Straightening and denoising with OpenCV",
+   "sub": "minAreaRect finds the angle; a median filter then Otsu removes the noise",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.08,
+     "h": 3.07,
+     "lines": [
+      "import cv2",
+      "im, t = render(rot=6)",
+      "dark = cv2.findNonZero(255 - np.asarray(im))",
+      "angle = cv2.minAreaRect(dark)[2]",
+      "print('minAreaRect:', round(angle, 1), '| CER turned', cer(t, ocr(im)))",
+      "fixed = im.rotate(angle, expand=True, fillcolor=255, resample=Image.BICUBIC)",
+      "print('CER turned back:', cer(t, ocr(fixed)))",
+      "nz, t2 = render(noise=60)",
+      "print('noise sd 60: CER', cer(t2, ocr(nz)))",
+      "med = Image.fromarray(cv2.medianBlur(np.asarray(nz), 3))",
+      "print('median filter 3: CER', cer(t2, ocr(med)))",
+      "flag = cv2.THRESH_BINARY + cv2.THRESH_OTSU",
+      "cut = cv2.threshold(np.asarray(med), 0, 255, flag)[1]",
+      "print('then Otsu: CER', cer(t2, ocr(Image.fromarray(cut))))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "minAreaRect: -6.0 | CER turned 0.6757\nCER turned back: 0.0116\nnoise sd 60: CER 1.0\nmedian filter 3: CER 0.0193\nthen Otsu: CER 0.0116\nsaved cleanCv.png: 85378 bytes, sha256 2c7642829535",
+     "outLabel": "prints",
+     "label": "program cvCut_v1_0_0.py, lines 57 to 70 of 77"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/cleanCv.png",
+     "x": 5.78,
+     "y": 1.5,
+     "w": 3.72,
+     "h": 1.2
+    },
+    {
+     "t": "foot",
+     "x": 5.78,
+     "y": 2.73,
+     "w": 3.72,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image cleanCv.png made by cvCut_v1_0_0.py"
+    },
+    {
+     "t": "card",
+     "head": "Recorded 13 Oct 2026",
+     "body": "The research measured Otsu on a noisy page as worse, 0.0154 to 0.0347; here the median filter comes first, and the order matters.",
+     "x": 5.78,
+     "y": 3.1,
+     "w": 3.72,
+     "h": 1.3,
+     "fs": 9,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.66,
+     "w": 5.08,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "MEASURED single runs, Tesseract 5.3.4. Lines 1 to 56 (imports, the page maker and the folder) are not shown. Lines 71 to 77 (the sheet that is saved) are not shown."
+    }
+   ],
+   "notes": "OpenCV is a library for images that the chapter's preprocessing advice points to. The program turns a drawn page by 6 degrees, finds the dark pixels with findNonZero, and asks minAreaRect for the angle of the smallest rectangle round them: -6.0. Reading the turned page gives 0.6757; turning it back by 6 degrees with Pillow's rotate gives 0.0116, the floor of this page. The second half takes the page with noise of standard deviation 60, which read at 1.0, nothing right. A median filter of size 3 brings it to 0.0193, and an Otsu threshold after the filter, which picks the cut between dark and light from the histogram, to 0.0116. The picture shows four of the pages: turned, turned back, noisy and filtered. All four numbers are MEASURED single runs with Tesseract 5.3.4 on a 900-pixel page that the program draws. The card is the research's record, which the deck does not run again: on its 700-pixel noisy page an Otsu threshold alone raised the error rate from 0.0154 to 0.0347, so a threshold is not always a help, and the deck's order, filter first and threshold second, is the one that was measured to work on this page. The corpus program preprocessingWithOpenCV_v1_0_0.py ran too and is not shown. The book's own preprocess_ocr.py, 190 lines in the online materials, calls FileNotFileError, grayscale_image and open_image, which it never defines, and ends with NameError, so the program on this slide is not that file.",
+   "take": "Find the angle, turn back, filter, then threshold.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Segmentation modes, whitelist and timeout",
+   "sub": "--psm tells Tesseract what the page is; a whitelist limits the characters it returns",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.33,
+     "h": 2.93,
+     "lines": [
+      "print('two columns 4 px apart, default mode:', cer(ta + ' ' + tb, ocr(page)))",
+      "left = page.crop((0, 0, a.width, page.height))",
+      "print('the left column cut out, --psm 6:', cer(ta, ocr(left, config='--psm 6')))",
+      "line, t = render('Order 4417-B shipped on 2026-10-13', px=28, width=640, pad=10)",
+      "print('one line, default:', repr(ocr(line).strip()))",
+      "print('one line, --psm 7:', repr(ocr(line, config='--psm 7').strip()))",
+      "wl = '--psm 7 -c tessedit_char_whitelist=0123456789-'",
+      "print('whitelist 0123456789-:', repr(ocr(line, config=wl).strip()))",
+      "print('timeout=0.001:', err(lambda: ocr(line, timeout=0.001)))",
+      "h = subprocess.check_output(['tesseract', '--help-psm'], text=True)",
+      "print('modes listed by --help-psm:', len(re.findall(r'^\\s+\\d+\\s', h, re.M)))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "two columns 4 px apart, default mode: 0.2577\nthe left column cut out, --psm 6: 0.0\none line, default: 'Order 4417-B shipped on 2026-10-13'\none line, --psm 7: 'Order 4417-B shipped on 2026-10-13'\nwhitelist 0123456789-: '4417-02026-10-13'\ntimeout=0.001: ('RuntimeError', 'Tesseract process timeout')\nmodes listed by --help-psm: 14\nsaved columns.png: 8815 bytes, sha256 8cc05830e4c4",
+     "outLabel": "prints",
+     "label": "program psmCut_v1_0_0.py, lines 62 to 72 of 73"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/columns.png",
+     "x": 6.03,
+     "y": 1.5,
+     "w": 3.47,
+     "h": 0.78
+    },
+    {
+     "t": "foot",
+     "x": 6.03,
+     "y": 2.31,
+     "w": 3.47,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image columns.png made by psmCut_v1_0_0.py"
+    },
+    {
+     "t": "card",
+     "head": "Left out of the chapter",
+     "body": "The chapter uses none of the words psm, dpi, whitelist or timeout. Each changed the result here.",
+     "x": 6.03,
+     "y": 2.7,
+     "w": 3.47,
+     "h": 1.4,
+     "fs": 9,
+     "accent": "slate"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.52,
+     "w": 5.33,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "MEASURED single runs, Tesseract 5.3.4. Lines 1 to 61 (imports, helpers, the folder and the page of two columns) are not shown. Line 73 (the saving of the picture) is not shown."
+    }
+   ],
+   "notes": "A page segmentation mode, --psm, says what kind of page Tesseract is looking at, and tesseract --help-psm lists 14 modes; the default reads a page of unknown layout. The program draws two columns of text only 4 pixels apart and reads them with the default mode: 0.2577, because lines of the two columns run together. Cut out the left column and read it with --psm 6, a single block of text, and the result is 0.0, no wrong character. The second half reads a one-line image, Order 4417-B shipped on 2026-10-13: the default and --psm 7 both return the whole line; a character whitelist, -c tessedit_char_whitelist=0123456789-, returns 4417-02026-10-13, in which the letter B was forced into a digit, the zero of the word on, and the spaces vanished, so a whitelist is a tool for fields that hold only digits and not for a line with words. timeout=0.001 raises RuntimeError with Tesseract process timeout, which is how a program stops a call that never finishes. All of these are MEASURED single runs with Tesseract 5.3.4. The research measured a six-line page with --psm 3, 4, 6 and 11 at 0.0116 and with --psm 7 and 13 at 0.9923 and 0.9961, so a single-line mode on a page of lines is the wrong tool; the deck did not run that again. The corpus program segmentationModes_v1_0_0.py ran too and is not shown, because its lines are wider than a slide.",
+   "take": "Tell the engine what the page is; limit what it may return.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Hyphens, spaces and look-alike digits",
+   "sub": "A hyphen at a line end stays in the text; 9-pixel digits turn 1 into 2 and 0 into o",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.76,
+     "h": 2.52,
+     "lines": [
+      "broken = re.findall(r'(\\w+)-\\n(\\w+)', text)",
+      "print(len(broken), 'line-end hyphens, first three:', ['-'.join(p) for p in broken[:3]])",
+      "s = 'The well-\\nknown author of the straight-\\nforward code.'",
+      "print('naive undo :', repr(undo(s, False)))",
+      "print('strict undo:', repr(undo(s)))",
+      "inv = 'Invoice 1058 Total 1,000.00 Order O8l0'",
+      "for px in (9, 12):",
+      "    im, t = render(inv, px=px, width=700, pad=10)",
+      "    o = norm(ocr(im, config='--psm 7')); print('%2d px:' % px, repr(o), cer(t, o))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\n7 line-end hyphens, first three: ['dig-ital', 'pro-grams', 'compre-hend']\nnaive undo : 'The wellknown author of the straightforward code.'\nstrict undo: 'The well-known author of the straightforward code.'\n 9 px: 'Invoice 2058 Tetl 2,000.00 Order o810' 0.1579\n12 px: 'Invoice 1058 Total 1,000.00 Order O8l0' 0.0\nsaved hyphen.png: 15965 bytes, sha256 5a319e0599d2",
+     "outLabel": "prints",
+     "label": "program hyphenCut_v1_0_0.py, lines 86 to 94 of 96"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/hyphen.png",
+     "x": 0.5,
+     "y": 4.12,
+     "w": 5.76,
+     "h": 0.39
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.53,
+     "w": 5.76,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image hyphen.png made by hyphenCut_v1_0_0.py"
+    },
+    {
+     "t": "card",
+     "head": "Join with a word list",
+     "body": "undo() joins the two halves only if the joined word is in the word list; the naive way turns well-known into wellknown.",
+     "x": 6.46,
+     "y": 1.5,
+     "w": 3.04,
+     "h": 1.45,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "foot",
+     "x": 6.46,
+     "y": 3.05,
+     "w": 3.04,
+     "h": 0.71,
+     "fs": 8,
+     "body": "Lines 1 to 85 (imports, helpers, the folder, the download check, the OCR of the page, the word list /usr/share/dict/words of this machine and undo(t, strict)) are not shown. Lines 95 to 96 (the saving of the picture) are not shown."
+    }
+   ],
+   "notes": "ocr-example.png gave 51 lines, and 7 words are hyphenated at a line end in the result: dig-ital, pro-grams, compre-hend, pro-grams, straight-forward, pro-gramming and graph-ics. Tesseract returns the text as printed, so a program that wants whole words has to join them. The naive way, removing every hyphen at a line end, turns the real compound well-known into wellknown, as the program shows with a two-line sample; the strict way joins the two halves only if the joined word is in a word list, and leaves well-known alone, but it also leaves a real word that the list does not hold. The word list here is /usr/share/dict/words of this machine, so the output of the strict undo depends on that file, which a reader's machine may not have. The second half of the program reads a drawn line, Invoice 1058 Total 1,000.00 Order O8l0, at two sizes with --psm 7: at 12 pixels it returned the line exactly, and at 9 pixels Invoice 2058 Tetl 2,000.00 Order o810, at 0.1579, so 1 became 2, the word Total became Tetl, and the letter O of the order became a small o. Digits that look like letters, and letters that look like digits, are the mistakes a spell checker cannot find in an order number. These numbers are MEASURED single runs with Tesseract 5.3.4. The research found the same 7 hyphens. The corpus program hyphensAndDigits_v1_0_0.py ran too and is not shown.",
+   "take": "Join hyphenated words only with a word list.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Mistakes a spell checker cannot see",
+   "sub": "In and Motion are real words, so only the confidence points at them",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 6.07,
+     "h": 2.38,
+     "lines": [
+      "dd = tess.image_to_data(img, output_type=tess.Output.DICT)",
+      "words = [(w, c) for w, c in zip(dd['text'], dd['conf']) if w.strip()]",
+      "known = {w.lower() for w in open('/usr/share/dict/words').read().split()}",
+      "odd = [w for w, c in words if w.isalpha() and w.lower() not in known]",
+      "print(len(words), 'words, mean confidence', round(sum(c for w, c in words) / len(words), 2))",
+      "print('words a spell check flags:', odd)",
+      "print('In and Motion are real words:', 'in' in known, 'motion' in known)",
+      "low = min(words, key=lambda x: x[1])",
+      "print('lowest confidence:', low, '| Motion:', dict(words)['Motion'])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\n106 words, mean confidence 94.55\nwords a spell check flags: []\nIn and Motion are real words: True True\nlowest confidence: ('In', 55) | Motion: 92\nsaved lowWord.png: 40695 bytes, sha256 dbdab1447423",
+     "outLabel": "prints",
+     "label": "program confCut_v1_0_0.py, lines 80 to 88 of 92"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/lowWord.png",
+     "x": 6.77,
+     "y": 1.5,
+     "w": 2.73,
+     "h": 0.74
+    },
+    {
+     "t": "foot",
+     "x": 6.77,
+     "y": 2.27,
+     "w": 2.73,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image lowWord.png made by confCut_v1_0_0.py"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "The chapter's step that sends the text to a large language model to fix the mistakes was never run. Its sample prompt has 419 characters.",
+     "x": 6.77,
+     "y": 2.64,
+     "w": 2.73,
+     "h": 1.45,
+     "fs": 9,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.97,
+     "w": 6.07,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 79 (imports, helpers, the folder, the download check and the data call) are not shown. Lines 89 to 92 (the cut of the picture) are not shown."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "reCAPTCHA, developed at Carnegie Mellon University and acquired by Google",
+     "where": "Web sites that showed the puzzle, and the digitization of the archives of The New York Times and of Google Books",
+     "when": "2009",
+     "link": "https://en.wikipedia.org/wiki/ReCAPTCHA",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on reCAPTCHA says it was acquired by Google in September 2009 and that it helped to digitize the archives of The New York Times and then Google Books. The original service was a mass collaboration platform for digitizing books too illegible for computers. Its prompts used pairs of words from scanned pages, one known word as a control for verification and a second to crowdsource the reading of an uncertain word. In this study Tesseract's own confidence did a small part of that sorting: of the 106 words of frankenstein.png the wrongly read 'In' had confidence 55 against a mean of 94.5. The account rests on these sources. Wikipedia, 'ReCAPTCHA' (acquired by Google in September 2009; pairs of words with one known control word; the archives of The New York Times), read 2026-10-13; this study's leaves LowConfidenceWords and RealWordErrors. The two wrong words of the 106 on Figure 22-1 are IT read as In and motion read as Motion. Both are real English words, so a spell check against the 104,334 words of /usr/share/dict/words flags nothing; the program prints an empty list. The mean confidence is 94.55, and the wrong In has the lowest of all, 55, while Motion has 92, so the low confidence finds one of the two. The picture is the word In enlarged three times with its neighbours, an I followed by a small capital T. The chapter's last step is to give the text to a large language model with a prompt that asks it to fix the mistakes. The research did not run it: no model was called, and the sample prompt in the chapter has 419 characters. What the deck can say is what a program could hand to a model or to a person: the words with a low confidence, and the words a word list does not know. Both lists are short here, which is the point of reCAPTCHA's design, that people are asked only about the words the machine could not read. The deck makes no statement about how well a model would correct the text. The numbers are MEASURED single runs with Tesseract 5.3.4.",
+   "take": "Real-word mistakes need a confidence or a human, not a spell check.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Other languages: Japanese and mixed lines",
+   "sub": "lang='jpn' reads the Japanese page; lang='eng' returns gibberish; 'eng+jpn' reads both",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.64,
+     "h": 3.21,
+     "lines": [
+      "print('installed packs:', tess.get_languages(config=''))",
+      "img = Image.open('frankenstein_jpn.png')",
+      "jpn = tess.image_to_string(img, lang='jpn')",
+      "j = [l for l in jpn.split('\\n') if l.strip()]",
+      "print('lang=jpn:', len(j), 'lines; first line begins', j[0][:12])",
+      "e = tess.image_to_string(img, lang='eng')",
+      "print('lang=eng:', e[:12], '| Japanese characters:', sum(ord(c) > 0x2E80 for c in e))",
+      "MIX = 'The cat is \u732b and the dog is \u72ac today'",
+      "mi = Image.new('L', (1000, 90), 255); F = ImageFont.truetype(FONTS['jp'], 40)",
+      "ImageDraw.Draw(mi).text((20, 20), MIX, font=F, fill=0)",
+      "for lg in ('eng', 'jpn', 'eng+jpn'):",
+      "    o = tess.image_to_string(mi, lang=lg, config='--psm 7').strip()",
+      "    print('mixed line, lang=%-8s' % lg, repr(o), cer(MIX, o))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\ninstalled packs: ['deu', 'eng', 'fra', 'jpn', 'osd', 'rus', 'tur']\nlang=jpn: 13 lines; first line begins \u7b2c 5 \u5256 \u79c1\u304c\u81ea\u5206\u306e\u52b4\nlang=eng: BS FAMSBADOA | Japanese characters: 0\nmixed line, lang=eng      'The cat is 4 and the dog is % today' 0.0571\nmixed line, lang=jpn      'The cat is \u732b and the dog is \u72ac today' 0.0\nmixed line, lang=eng+jpn  'The cat is \u732b and the dog is \u72ac today' 0.0\nsaved japanese.png: 10767 bytes, sha256 5e90f7086ad2",
+     "outLabel": "prints",
+     "label": "program langCut_v1_0_0.py, lines 79 to 91 of 92"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/japanese.png",
+     "x": 6.34,
+     "y": 1.5,
+     "w": 3.16,
+     "h": 0.5
+    },
+    {
+     "t": "foot",
+     "x": 6.34,
+     "y": 2.03,
+     "w": 3.16,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image japanese.png made by langCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 6.34,
+     "y": 2.35,
+     "w": 3.16,
+     "h": 0.49,
+     "fs": 9,
+     "body": "The picture is the top of frankenstein_jpn.png, Figure 22-2 of the book. The book prints \u7b2c 5 \u5256 and \u829d\u9b31; this engine returns \u7b2c 5 \u5256 and \u611b\u9b31."
+    },
+    {
+     "t": "foot",
+     "x": 6.34,
+     "y": 3.05,
+     "w": 3.16,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "Lines 1 to 78 (imports, helpers, the folder and the download check) are not shown. Line 92 (the cut of the picture) is not shown."
+    }
+   ],
+   "notes": "The Japanese page of the book, frankenstein_jpn.png, is 1211 by 606 pixels with 13 lines. With lang='jpn' Tesseract 5.3.4 returned 13 non-empty lines, and the first begins \u7b2c 5 \u5256 \u79c1\u304c\u81ea\u5206\u306e\u52b4; the picture shows the heading \u7b2c 5 \u7ae0 and the word \u6182\u9b31. The research compared that with the text the book prints and found two characters different, in this engine \u611b\u9b31 where the book has \u829d\u9b31, and the fast data under Tesseract 5.5.3 equalled the book, while the best data returned 901 characters against 538, which is not a better answer but a longer one. With lang='eng' the same picture gave gibberish and not one Japanese character: the program counts 0 characters above U+2E80. The mixed line The cat is \u732b and the dog is \u72ac today, drawn with a Japanese font, read at 0.0571 with eng, where the two characters came back as 4 and %, and at 0.0 with jpn and with eng+jpn. So a language string is a request for data files, joined with a plus sign, and the pack for the script must be installed; get_languages() lists what is installed here, deu, eng, fra, jpn, osd, rus and tur, which is why the chapter's printed list of two languages differs. These numbers are MEASURED single runs with Tesseract 5.3.4 and the fast data. The corpus program languagesAndPacks_v1_0_0.py ran too and is not shown, because its lines are wider than a slide.",
+   "take": "Install the pack for the script, and name it in lang.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Language codes and data files",
+   "sub": "The code is the name of a file; 126 packs, 13 names are not three letters",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 6.07,
+     "h": 2.93,
+     "lines": [
+      "def read(lg): return tess.image_to_string(de, lang=lg, config='--psm 7').strip()",
+      "print('lang=deu:', repr(read('deu')))",
+      "for lg in ('ger', 'German', 'eng+xyz'):",
+      "    e = err(lambda: read(lg)); print('lang=%-8s' % lg, e[0], e[1] if e[0] == 'ok' else '')",
+      "L = tess.get_languages(config='--tessdata-dir ' + ALL)",
+      "bad = [x for x in L if len(x) != 3]",
+      "print(len(L), 'packs:', L[:2], '...', L[-2:], '|', len(bad), 'not three letters:', bad[:2])",
+      "print('osd and equ in the list:', 'osd' in L, 'equ' in L)",
+      "sz = sum(os.path.getsize('%s/%s.traineddata' % (ALL, x)) for x in L)",
+      "sizes = [os.path.getsize(P % k) for k in ('fast', 'best', 'legacy')]",
+      "print('together: %.0f MB' % (sz / 1e6), '| eng fast, best, legacy:', sizes)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "lang=deu: 'Die Gr\u00f6\u00dfe der Stra\u00dfe'\nlang=ger      TesseractError \nlang=German   TesseractError \nlang=eng+xyz  ok Die GrdBe der Strake\n126 packs: ['afr', 'amh'] ... ['yid', 'yor'] | 13 not three letters: ['aze_cyrl', 'chi_sim']\nosd and equ in the list: True True\ntogether: 362 MB | eng fast, best, legacy: [4113088, 15400601, 23466654]\nsaved germanLine.png: 2359 bytes, sha256 ae51aeb959d9",
+     "outLabel": "prints",
+     "label": "program packsCut_v1_0_0.py, lines 61 to 71 of 72"
+    },
+    {
+     "t": "chart",
+     "ctype": "bar",
+     "x": 6.77,
+     "y": 1.4,
+     "w": 2.73,
+     "h": 1.75,
+     "labels": [
+      "fast",
+      "best",
+      "legacy"
+     ],
+     "title": "eng.traineddata, megabytes",
+     "series": [
+      {
+       "name": "MB",
+       "data": [
+        4.1,
+        15.4,
+        23.5
+       ]
+      }
+     ],
+     "dataLabels": true,
+     "dlFs": 9
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/germanLine.png",
+     "x": 6.77,
+     "y": 3.2,
+     "w": 2.5,
+     "h": 0.5
+    },
+    {
+     "t": "foot",
+     "x": 6.77,
+     "y": 3.72,
+     "w": 2.73,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image germanLine.png made by packsCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.52,
+     "w": 6.07,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 60 (imports, the page maker and the folder) are not shown. Line 72 (the sizes and the saving of the picture) is not shown."
+    }
+   ],
+   "notes": "A language string is the name of a file in the data folder: lang='deu' opens deu.traineddata. The chapter calls the strings ISO 639-3 codes while the Tesseract manual page says ISO 639-2, and German shows the difference: lang='deu' read the drawn line Die Gr\u00f6\u00dfe der Stra\u00dfe exactly, lang='ger', the bibliographic code of German in ISO 639-2, raises TesseractError, and lang='German' raises the same error. A pack that is missing inside a combination raises nothing: 'eng+xyz' returned Die GrdBe der Strake, the English pack's reading of the umlaut and the sharp s. The full fast set that the research downloaded, tessdata_fast, has 126 packs and 362 MB of language files (706,776,225 bytes with the 37 script models, where the chapter says all languages add about 600MB); 13 of the 126 names are not three letters, for example chi_sim, chi_sim_vert and aze_cyrl; osd, the orientation data, is in the list although it is no language, and so is equ, the equation pack. The chart is the size of eng.traineddata in the three data sets, read from the files: 4,113,088 bytes in tessdata_fast, 15,400,601 in tessdata_best and 23,466,654 in the legacy set, each equal to the file its GitHub repository served on 13 October 2026; the apt package holds the fast one. The program prints those bytes; the chart is recomputed from the files by the deck check. The corpus program languagesAndPacks_v1_0_0.py ran too and is not shown.",
+   "take": "A language code is a file name, and the wrong code raises an error.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Three Tesseracts, three kinds of data",
+   "sub": "The same page: the first word and the error rate, each a MEASURED single run",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 9.0,
+     "colW": [
+      1.5,
+      2.5,
+      2.5,
+      2.5
+     ],
+     "fs": 9,
+     "rowH": 0.3,
+     "rows": [
+      [
+       "Tesseract",
+       "fast",
+       "best",
+       "legacy+lstm"
+      ],
+      [
+       "4.1.1",
+       "Iv  0.0035",
+       "Ir  0.0017",
+       "It  0.0017"
+      ],
+      [
+       "5.3.4",
+       "In  0.0035",
+       "Ir  0.0017",
+       "Ir  0.0017"
+      ],
+      [
+       "5.5.3",
+       "Iv  0.0035",
+       "Ir  0.0017",
+       "It  0.0017"
+      ]
+     ]
+    },
+    {
+     "t": "card",
+     "head": "Fast, best, legacy",
+     "body": "Each cell is the first word that engine returned and its error rate against the printed page. The apt package has the fast data; the best data is 3.7 times larger and the legacy set 5.7 times.",
+     "x": 0.5,
+     "y": 3.05,
+     "w": 4.4,
+     "h": 1.35,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "Built from source",
+     "body": "Tesseract 4.1.1 and 5.5.3 were built here with their own configure; 5.3.4 is the Ubuntu package. NAPS2 brings a 5.5.0 of its own.",
+     "x": 5.1,
+     "y": 3.05,
+     "w": 4.4,
+     "h": 1.35,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "Hewlett-Packard laboratories in Bristol, England and Greeley, Colorado, then the University of Nevada, Las Vegas, and Google",
+     "where": "Bristol and Greeley, between 1985 and 1994; open source from 2005; sponsored by Google from 2006",
+     "when": "1985",
+     "link": "https://en.wikipedia.org/wiki/Tesseract_(software)",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on Tesseract says the engine was developed as proprietary software at Hewlett-Packard laboratories between 1985 and 1994 and was released as open source in 2005 by Hewlett-Packard and the University of Nevada, Las Vegas. Google sponsored its development from 2006. Version 4, released in 2018, added the LSTM-based engine, and version 5 followed in 2021. In this study the Tesseract on the PATH reported 5.3.4, and the 4,113,088 bytes of its English data were byte for byte the file of the tessdata_fast repository. The account rests on these sources. Wikipedia, 'Tesseract (software)' (Hewlett-Packard 1985 to 1994, open source 2005, Google 2006, LSTM engine in version 4 of 2018, version 5 of 2021), read 2026-10-13; this study's leaves EngineVersion and FastBestLegacy. The table is computed when the deck is checked: three Tesseract programs, 4.1.1, 5.3.4 and 5.5.3, are run on frankenstein.png with three data sets, the fast and best sets of the LSTM models and the legacy set, which holds both the old engine and the new one, and each cell is the first word of the result and the error rate against the printed page. The research recorded the same pattern: the first word was Iv with 4.1.1 and with 5.5.3 and the fast data, In with 5.3.4, Ir with the best data and It with the legacy data under 4.1.1 and 5.5.3; the error rate was 0.0035 with the fast data and 0.0017 with the best and the legacy data. So more data is not always a different answer, but the answer depends on the data. eng.traineddata is 4,113,088 bytes in tessdata_fast, 15,400,601 in tessdata_best and 23,466,654 in tessdata, and the chapter does not say which one its install gets. The statements of the chapter replayed in six configurations of engine and data: 18 of 22 matched the book with the apt 5.3.4, 20 with 5.5.3 and the fast data, 18 with 5.5.3 and the best data, 20 with 4.1.1 and the fast data, 19 with all the apt languages and 21 with all languages under 5.5.3. The corpus program enginesAndData_v1_0_0.py ran too and is not shown. Every cell is a MEASURED single run with the engine named in its row.",
+   "take": "The answer depends on the engine and on the data it was given.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A searchable PDF with NAPS2",
+   "sub": "NAPS2 console reads the image with its own OCR and writes a PDF with the text under it",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.1,
+     "h": 2.75,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.455,
+       "w": 2.05,
+       "h": 0.44,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Name the input image, the output PDF and the language",
+       "x": 0.57,
+       "y": 1.531,
+       "w": 1.91,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.005,
+       "w": 2.05,
+       "h": 0.44,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call subprocess.run() with naps2 console",
+       "x": 0.57,
+       "y": 2.081,
+       "w": 1.91,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.5,
+       "y": 2.565,
+       "w": 2.05,
+       "h": 0.42,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the program found?",
+       "x": 0.67,
+       "y": 2.698,
+       "w": 1.71,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.0,
+       "y": 2.555,
+       "w": 1.15,
+       "h": 0.44,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "subprocess.run() raises FileNotFoundError",
+       "x": 3.07,
+       "y": 2.563,
+       "w": 1.01,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.5,
+       "y": 3.115,
+       "w": 2.05,
+       "h": 0.42,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Does the output file already exist and is -f missing?",
+       "x": 0.67,
+       "y": 3.181,
+       "w": 1.71,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.0,
+       "y": 3.105,
+       "w": 1.15,
+       "h": 0.44,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Add -f to overwrite the file",
+       "x": 3.07,
+       "y": 3.113,
+       "w": 1.01,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.655,
+       "w": 2.05,
+       "h": 0.44,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the text of the PDF",
+       "x": 0.57,
+       "y": 3.798,
+       "w": 1.91,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.475,
+       "y": 1.575,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 4.45,
+       "y": 2.555,
+       "w": 0.1,
+       "h": 1.54,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.475,
+       "y1": 1.675,
+       "x2": 2.55,
+       "y2": 1.675,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.525,
+       "y1": 1.895,
+       "x2": 1.525,
+       "y2": 2.005,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.525,
+       "y1": 2.445,
+       "x2": 1.525,
+       "y2": 2.565,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.55,
+       "y1": 2.775,
+       "x2": 3.0,
+       "y2": 2.775,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.6,
+       "y": 2.575,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.525,
+       "y1": 2.985,
+       "x2": 1.525,
+       "y2": 3.115,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 1.585,
+       "y": 2.96,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 4.15,
+       "y1": 2.775,
+       "x2": 4.45,
+       "y2": 2.775,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.55,
+       "y1": 3.325,
+       "x2": 3.0,
+       "y2": 3.325,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.6,
+       "y": 3.125,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.525,
+       "y1": 3.535,
+       "x2": 1.525,
+       "y2": 3.655,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 1.585,
+       "y": 3.505,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 4.15,
+       "y1": 3.325,
+       "x2": 4.37,
+       "y2": 3.325,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.37,
+       "y1": 3.325,
+       "x2": 4.37,
+       "y2": 2.225,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 4.37,
+       "y1": 2.225,
+       "x2": 2.55,
+       "y2": 2.225,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.55,
+       "y1": 3.875,
+       "x2": 4.45,
+       "y2": 3.875,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "MakingASearchablePdfWithNaps2"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.18,
+     "w": 4.1,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram MakingASearchablePdfWithNaps2 - Workflow pattern, 27 of 29 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.73,
+     "y": 1.55,
+     "w": 4.77,
+     "h": 3.07,
+     "lines": [
+      "args = ['-i', 'frankenstein.png', '-o', 'output.pdf', '--install',",
+      "        'ocr-eng', '--ocrlang', 'eng', '-n', '0', '-f', '-v']",
+      "win = r'C:\\Program Files\\NAPS2\\NAPS2.Console.exe'",
+      "print('Windows path:', err(lambda: subprocess.run([win] + args))[0])",
+      "flat = ['flatpak', 'run', 'com.naps2.Naps2', 'console']",
+      "print('flatpak:', err(lambda: subprocess.run(flat + args))[0])",
+      "naps2_path = ['naps2', 'console']",
+      "proc = subprocess.run(naps2_path + args, capture_output=True)",
+      "out = proc.stdout",
+      "print('returncode', proc.returncode, '| stdout is', type(out).__name__)",
+      "print(out.decode().strip().splitlines()[-1])",
+      "txt = sh('pdftotext', 'output.pdf', '-')",
+      "n = re.search(r'Pages:\\s+(\\d+)', sh('pdfinfo', 'output.pdf')).group(1)",
+      "print('pages', n, '| chars', len(norm(txt)), '| CER', cer(TRUTH, txt))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\nWindows path: FileNotFoundError\nflatpak: FileNotFoundError\nreturncode 0 | stdout is bytes\nSuccessfully saved PDF file to output.pdf\npages 1 | chars 579 | CER 0.0035",
+     "outLabel": "prints",
+     "label": "program naps2Cut_v1_0_0.py, lines 80 to 93 of 93"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.56,
+     "w": 4.1,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "NOT EXECUTED here: the Windows and macOS installers, the Flatpak of NAPS2 and a scanner. Their paths raise FileNotFoundError."
+    },
+    {
+     "t": "foot",
+     "x": 4.73,
+     "y": 4.67,
+     "w": 4.77,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 79 (imports, helpers, the folder and the download check) are not shown."
+    }
+   ],
+   "notes": "NAPS2, Not Another PDF Scanner 2, is a scanning application whose console version the chapter runs from Python with subprocess. The flow chart is the call: build the arguments, naming the input image, the output PDF and the OCR language; run naps2 console; if the program is not found, subprocess.run() raises FileNotFoundError; if the output file already exists and -f is missing, NAPS2 refuses, so add -f; otherwise read the text of the PDF. The program runs the chapter's call for real with NAPS2 8.5.1 from its .deb package, which carries its own Tesseract 5.5.0: the Windows path C:\\Program Files\\NAPS2\\NAPS2.Console.exe and the Flatpak command both raise FileNotFoundError on this Linux machine, naps2 console returned 0, its stdout is bytes, its last line is Successfully saved PDF file to output.pdf, and pdfinfo and pdftotext of the poppler tools show 1 page with 579 characters of text and an error rate of 0.0035 against the printed page, a MEASURED single run with Tesseract 5.5.0 inside NAPS2. The chapter's arguments include --install ocr-eng, which asks NAPS2 to install the English OCR data. The Windows and macOS installers, the Flatpak and a flatbed scanner were never used here, so how the application is installed there, and scanning from a device, are read and not run. The corpus program naps2Pdf_v1_0_0.py ran too and is not shown, because its lines are wider than a slide. A scan only becomes searchable after it is read, which is the whole idea of the PDF: Wikipedia's article on Emanuel Goldberg says he introduced his \"Statistical Machine\", a document search engine that used photoelectric cells and pattern recognition to search the metadata on rolls of microfilmed documents. The patent, US 1,838,389, is dated 29 December 1931, and the article says the technology was used in a variant form in 1938 by Vannevar Bush in his microfilm rapid selector. A picture of a page is only searchable once something has read it. In this study a PDF that Pillow made from frankenstein.png held 0 characters of text for pdftotext, while the PDF that Tesseract made through pytesseract held 578 characters in 106 word boxes.",
+   "take": "A scan becomes searchable when text is put under the picture.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Overwriting and picking pages in NAPS2",
+   "sub": "Without -f NAPS2 says the file exists and still returns 0; [0:2] picks pages 0 and 1",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 3.3,
+     "h": 2.5,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.4,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The Python program",
+       "x": 0.61,
+       "y": 1.432,
+       "w": 0.98,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 1.82,
+       "x2": 1.1,
+       "y2": 3.9,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.65,
+       "y": 1.4,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "NAPS2",
+       "x": 2.71,
+       "y": 1.516,
+       "w": 0.98,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.2,
+       "y1": 1.82,
+       "x2": 3.2,
+       "y2": 3.9,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 2.29,
+       "x2": 3.2,
+       "y2": 2.29,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Runs naps2 console with -f",
+       "x": 1.2,
+       "y": 2.085,
+       "w": 1.9,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.2,
+       "y1": 2.595,
+       "x2": 1.1,
+       "y2": 2.595,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Writes output.pdf and returns 0",
+       "x": 1.2,
+       "y": 2.39,
+       "w": 1.9,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 2.9,
+       "x2": 3.2,
+       "y2": 2.9,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Runs naps2 console without -f",
+       "x": 1.2,
+       "y": 2.695,
+       "w": 1.9,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.2,
+       "y1": 3.205,
+       "x2": 1.1,
+       "y2": 3.205,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Prints File already exists and still returns 0",
+       "x": 1.2,
+       "y": 2.866,
+       "w": 1.9,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 3.51,
+       "x2": 3.2,
+       "y2": 3.51,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Runs naps2 console with -f again",
+       "x": 1.2,
+       "y": 3.305,
+       "w": 1.9,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.2,
+       "y1": 3.815,
+       "x2": 1.1,
+       "y2": 3.815,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Writes the file again and returns 0",
+       "x": 1.2,
+       "y": 3.476,
+       "w": 1.9,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "AskingNaps2ToOverwriteAFile"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.93,
+     "w": 3.3,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram AskingNaps2ToOverwriteAFile - Interaction pattern, 26 of 28 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.11,
+     "y": 1.55,
+     "w": 5.39,
+     "h": 2.38,
+     "lines": [
+      "base = ['-i', 'frankenstein.png', '-o', 'output.pdf'] + opts + ['-v']",
+      "for extra in (['-f'], [], ['-f']):",
+      "    r = subprocess.run(naps2_path + base + extra, capture_output=True, text=True)",
+      "    last = r.stdout.strip().splitlines()[-1].split('. Path')[0]",
+      "    print('with' if extra else 'without', '-f: rc', r.returncode, '|', last)",
+      "for spec in ('spam.pdf[0:2]', 'spam.pdf[-2:]', 'spam.pdf[1:6:2]'):",
+      "    print('-i', spec, '->', pages(spec))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\nwith -f: rc 0 | Successfully saved PDF file to output.pdf\nwithout -f: rc 0 | File already exists. Use --force to overwrite\nwith -f: rc 0 | Successfully saved PDF file to output.pdf\n-i spam.pdf[0:2] -> ['Spam0O', 'Spam1l']\n-i spam.pdf[-2:] -> ['Spam5', 'Spamo6']\n-i spam.pdf[1:6:2] -> ['Spam1l', 'Spam3', 'Spam5']\nsaved pagesPicked.png: 2829 bytes, sha256 04502ee9cd16",
+     "outLabel": "prints",
+     "label": "program overwriteCut_v1_0_0.py, lines 93 to 99 of 104"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/pagesPicked.png",
+     "x": 0.5,
+     "y": 4.32,
+     "w": 3.3,
+     "h": 0.24
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 3.3,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image pagesPicked.png made by overwriteCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 4.11,
+     "y": 3.98,
+     "w": 5.39,
+     "h": 0.61,
+     "fs": 8.5,
+     "body": "Lines 1 to 92 (imports, helpers, the folder, the download check, the maker of spam.pdf with seven pages and the helper pages(spec), which runs NAPS2 with the slice and returns the text of each page) are not shown. Lines 100 to 104 (the sheet of seven pages and the saving of the picture) are not shown."
+    }
+   ],
+   "notes": "The sequence diagram is one detail that costs a student an hour: run naps2 console with -f and the file is written and the return code is 0; run it without -f and NAPS2 prints File already exists. Use --force to overwrite. and still returns 0, so a program that checks only the return code believes it worked and finds the old file; run it again with -f and the file is written again. The program asks for exactly those three calls and prints the last line NAPS2 wrote each time. The second half makes a PDF of seven pages that read spam0 to spam6 and asks for pages with the chapter's slices: spam.pdf[0:2] gave the pages Spam0 and Spam1, spam.pdf[-2:] gave Spam5 and Spam6, and spam.pdf[1:6:2] gave Spam1, Spam3 and Spam5. The text of the pages is what the OCR inside NAPS2 read, and two of the pages were read with a stray character, Spam0O, Spam1l and Spamo6 in this run, so the text of a result is a MEASURED single run and not a given; the page that was picked is what the slices decide. One page of an earlier run of the same program came back empty on its first call and read correctly on three runs after it, a flake of the OCR inside NAPS2 that the deck cannot explain, which is why the program prints the read text and the deck check compares it again each time. The picture shows the seven pages with the three picked by the last slice in red. The Windows, macOS and Flatpak forms of the command were never used here.",
+   "take": "Without -f NAPS2 refuses and still says success.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Three more routes to a searchable PDF",
+   "sub": "Pillow makes a PDF with no text; pytesseract and ocrmypdf put the text in",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.7,
+     "h": 3.15,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.7,
+       "y": 1.7,
+       "w": 1.0,
+       "h": 0.44,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "An image file",
+       "x": 1.76,
+       "y": 1.839,
+       "w": 0.88,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.7,
+       "y": 2.303,
+       "w": 1.0,
+       "h": 0.44,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "An Image object",
+       "x": 1.76,
+       "y": 2.37,
+       "w": 0.88,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.7,
+       "y": 2.905,
+       "w": 1.0,
+       "h": 0.44,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A preprocessed image",
+       "x": 1.76,
+       "y": 2.972,
+       "w": 0.88,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.7,
+       "y": 3.508,
+       "w": 1.0,
+       "h": 0.44,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A string",
+       "x": 1.76,
+       "y": 3.646,
+       "w": 0.88,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.7,
+       "y": 4.11,
+       "w": 1.0,
+       "h": 0.44,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Text without the mistakes",
+       "x": 1.76,
+       "y": 4.177,
+       "w": 0.88,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.9,
+       "y": 2.905,
+       "w": 1.3,
+       "h": 0.44,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A searchable PDF",
+       "x": 3.96,
+       "y": 3.044,
+       "w": 1.18,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.11,
+       "y": 1.42,
+       "w": 0.18,
+       "h": 0.18,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 2.2,
+       "y1": 1.6,
+       "x2": 2.2,
+       "y2": 1.7,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.2,
+       "y1": 2.14,
+       "x2": 2.2,
+       "y2": 2.303,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Image.open() reads the file",
+       "x": 2.8,
+       "y": 2.077,
+       "w": 1.0,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.2,
+       "y1": 2.743,
+       "x2": 2.2,
+       "y2": 2.905,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Convert to grey, resize and deskew",
+       "x": 2.8,
+       "y": 2.679,
+       "w": 1.0,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.2,
+       "y1": 3.345,
+       "x2": 2.2,
+       "y2": 3.508,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "image_to_string() reads the image",
+       "x": 2.8,
+       "y": 3.282,
+       "w": 1.0,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.2,
+       "y1": 3.948,
+       "x2": 2.2,
+       "y2": 4.11,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A language model fixes the mistakes",
+       "x": 2.8,
+       "y": 3.817,
+       "w": 1.0,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.7,
+       "y1": 2.523,
+       "x2": 1.58,
+       "y2": 2.523,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.58,
+       "y1": 2.523,
+       "x2": 1.58,
+       "y2": 3.728,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.58,
+       "y1": 3.728,
+       "x2": 1.7,
+       "y2": 3.728,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "image_to_string() reads the image",
+       "x": 0.5,
+       "y": 2.981,
+       "w": 0.98,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "right",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 3.125,
+       "x2": 3.9,
+       "y2": 3.125,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "image_to_pdf_or_hocr() makes the PDF",
+       "x": 3.9,
+       "y": 2.576,
+       "w": 1.3,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 4.33,
+       "x2": 3.1,
+       "y2": 4.33,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.1,
+       "y": 4.19,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.16,
+       "y": 4.25,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 4.55,
+       "y1": 3.345,
+       "x2": 4.55,
+       "y2": 3.525,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 4.41,
+       "y": 3.525,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 4.47,
+       "y": 3.585,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      }
+     ],
+     "did": "TheLifeOfAScannedPage"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 4.7,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram TheLifeOfAScannedPage - LifeCycle pattern, 32 of 37 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 5.28,
+     "y": 1.55,
+     "w": 4.22,
+     "h": 3.21,
+     "lines": [
+      "img = Image.open('frankenstein.png').convert('RGB')",
+      "img.save('image_only.pdf', resolution=150)",
+      "print('Pillow PDF:', chars('image_only.pdf'), 'chars')",
+      "b = tess.image_to_pdf_or_hocr(img, extension='pdf')",
+      "open('searchable.pdf', 'wb').write(b)",
+      "print('pytesseract:', b[:5], chars('searchable.pdf'), 'chars')",
+      "box = sh('pdftotext', '-bbox', 'searchable.pdf', '-')",
+      "print('word boxes:', box.count('<word'))",
+      "print('ocrmypdf, no dpi:', om('frankenstein.png', 'a.pdf'))",
+      "dpi = om('--image-dpi', '150', 'frankenstein.png', 'b.pdf')",
+      "print('--image-dpi 150:', dpi, chars('b.pdf'), 'chars')",
+      "print('on a PDF with text:', om('b.pdf', 'c.pdf'))",
+      "print('--skip-text:', om('--skip-text', 'b.pdf', 'd.pdf'))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\nPillow PDF: 0 chars\npytesseract: b'%PDF-' 578 chars\nword boxes: 106\nocrmypdf, no dpi: 2\n--image-dpi 150: 0 578 chars\non a PDF with text: 6\n--skip-text: 0",
+     "outLabel": "prints",
+     "label": "program pdfCut_v1_0_0.py, lines 83 to 95 of 95"
+    },
+    {
+     "t": "foot",
+     "x": 5.28,
+     "y": 4.8,
+     "w": 4.22,
+     "h": 0.17,
+     "fs": 8,
+     "body": "Lines 1 to 82 (imports, helpers) are not shown."
+    }
+   ],
+   "notes": "The state diagram follows one scanned page: an image file is opened as an Image object, optionally cleaned, read into a string, and the string may be fixed, or the cleaned image becomes a searchable PDF. The program takes the third route three ways. A PDF that Pillow saves from frankenstein.png holds 0 characters of text, because Pillow only embeds the picture. The PDF of image_to_pdf_or_hocr() is bytes that begin %PDF-, holds 578 characters, and its text layer has 106 word boxes, one for each word of Figure 22-1. ocrmypdf 17.13.0, a tool that adds a text layer to a PDF, exited with 2 for a PNG with no resolution recorded in it, with 0 once told --image-dpi 150, and then the text was 578 characters again; for a PDF that already has text it exited with 6, and with --skip-text it exited with 0. The exit codes are what a script has to check, because the messages go to the error stream. The research measured the error rate of these PDFs at 0.0138 for the pytesseract one and 0.0035 for the ocrmypdf one, MEASURED single runs with Tesseract 5.3.4. The corpus program pdfRoutes_v1_0_0.py ran too and is not shown, because its lines are wider than a slide; ocrmypdf is a separate install, in its own virtual environment here.",
+   "take": "Check the exit code; a PDF made by Pillow has no text.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Reading the screen",
+   "sub": "PyAutoGUI takes a screenshot, Tesseract reads a crop of it, the text goes to a file",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.57,
+     "h": 3.21,
+     "lines": [
+      "code = \"\"\"import pyautogui, pytesseract as tess",
+      "img = pyautogui.screenshot()",
+      "img.save('screen.png')",
+      "text = tess.image_to_string(img.crop(%s))",
+      "open('output.txt', 'a', encoding='utf-8').write(text)",
+      "print(img.size, len(text))\"\"\"",
+      "def run(box):",
+      "    return subprocess.run(cmd + [code % box], **kw)",
+      "for box in ('(400, 200, 1000, 800)', '(0, 0, 1130, 672)', '(0, 0, 1130, 672)'):",
+      "    r = run(box)",
+      "    print(box, '->', r.returncode, r.stdout.strip().splitlines()[-1])",
+      "print('output.txt:', len(open('output.txt', encoding='utf-8').read()), 'characters')",
+      "shot = Image.open('screen.png')",
+      "print('CER of the second run alone:', cer(TRUTH, ocr(shot.crop((0, 0, 1130, 672)))))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 shipped files match their SHA-256\n(400, 200, 1000, 800) -> 0 (1280, 1024) 361\n(0, 0, 1130, 672) -> 0 (1280, 1024) 581\n(0, 0, 1130, 672) -> 0 (1280, 1024) 581\noutput.txt: 1523 characters\nCER of the second run alone: 0.0035\nsaved screenShot.png: 172339 bytes, sha256 284931044ed0",
+     "outLabel": "prints",
+     "label": "program screenCut_v1_0_0.py, lines 91 to 104 of 107"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch22-deck/images/screenShot.png",
+     "x": 6.27,
+     "y": 1.5,
+     "w": 1.5,
+     "h": 1.2
+    },
+    {
+     "t": "foot",
+     "x": 6.27,
+     "y": 2.73,
+     "w": 3.23,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image screenShot.png made by screenCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 6.27,
+     "y": 3.03,
+     "w": 3.23,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with the real ImageMagick display and PyAutoGUI, a local stand-in for a screen; nobody sees the picture."
+    },
+    {
+     "t": "foot",
+     "x": 6.27,
+     "y": 3.52,
+     "w": 3.23,
+     "h": 0.31,
+     "fs": 8,
+     "body": "NOT EXECUTED here: a real screen with a real browser; the Browser Text Scraper was never run."
+    },
+    {
+     "t": "foot",
+     "x": 6.27,
+     "y": 3.88,
+     "w": 3.23,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Lines 1 to 90 (imports, helpers, the start of Xvfb and of the viewer) are not shown. Lines 105 to 107 (the saving of the picture) are not shown."
+    }
+   ],
+   "notes": "The screen scraper of the chapter takes a screenshot with PyAutoGUI, crops it to the box where the text is, reads the crop with Tesseract and appends the text to output.txt. The program on the slide ran on a virtual X display, Xvfb, 1280 by 1024, with the real ImageMagick display program showing frankenstein.png in the corner, and the three calls ran in a child Python with DISPLAY set. The template's own crop, (400, 200, 1000, 800), is 600 by 600 pixels of a screen on which the page is 1130 by 672, so it cut out part of the page and the call appended only 361 characters; the whole window, (0, 0, 1130, 672), gave 581 characters, and running it a second time appended the same 581 again, 1523 characters in all, because the file is opened to append and a screenshot never clears it. The error rate of the whole window is 0.0035 against the printed page, a MEASURED single run with Tesseract 5.3.4. The red rectangle in the picture is the template's crop on the 640 by 512 miniature of the screen. The research recorded that without DISPLAY the import of PyAutoGUI raised KeyError: 'DISPLAY'. Nobody saw this screen: a virtual display is a local stand-in, and a real screen with a real browser, which the practice program needs, was never used. The corpus program ocrscreenOnXvfb_v1_0_0.py ran on the same virtual display and is not shown, because its lines are wider than a slide.",
+   "take": "A screenshot is just another image; the crop decides what is read.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Nine configurations, 22 statements",
+   "sub": "Recorded: how many printed statements of the chapter match the book, by environment",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 9.0,
+     "colW": [
+      0.9,
+      0.9,
+      1.15,
+      1.0,
+      2.9,
+      2.15
+     ],
+     "fs": 8,
+     "rowH": 0.24,
+     "rows": [
+      [
+       "row",
+       "Python",
+       "pytesseract",
+       "Pillow",
+       "Tesseract, data",
+       "statements = book"
+      ],
+      [
+       "newest",
+       "3.14.6",
+       "0.3.13",
+       "12.3.0",
+       "apt 5.3.4, fast",
+       "18 of 22"
+      ],
+      [
+       "newest",
+       "3.14.6",
+       "0.3.13",
+       "12.3.0",
+       "5.5.3, fast",
+       "20 of 22"
+      ],
+      [
+       "newest",
+       "3.14.6",
+       "0.3.13",
+       "12.3.0",
+       "5.5.3, best",
+       "18 of 22"
+      ],
+      [
+       "newest",
+       "3.14.6",
+       "0.3.13",
+       "12.3.0",
+       "4.1.1, fast",
+       "20 of 22"
+      ],
+      [
+       "newest",
+       "3.14.6",
+       "0.3.13",
+       "12.3.0",
+       "apt 5.3.4, all packs",
+       "19 of 22"
+      ],
+      [
+       "newest",
+       "3.14.6",
+       "0.3.13",
+       "12.3.0",
+       "5.5.3, all packs",
+       "21 of 22"
+      ],
+      [
+       "pins",
+       "3.13.14",
+       "0.3.10",
+       "10.4.0",
+       "apt 5.3.4, fast",
+       "18 of 22"
+      ],
+      [
+       "pins",
+       "3.14.6",
+       "0.3.10",
+       "10.4.0",
+       "apt 5.3.4, fast",
+       "8 of 22"
+      ],
+      [
+       "empty",
+       "3.14.6",
+       "-",
+       "-",
+       "apt 5.3.4, fast",
+       "0 of 22"
+      ]
+     ]
+    },
+    {
+     "t": "card",
+     "head": "Recorded 13 Oct 2026",
+     "body": "One program of 19 items printed the same under 11 interpreters, 3.11.17 to 3.15.0b4, and 9 items the same under 14 Pillow releases, 9.5.0 to 12.3.0.",
+     "x": 0.5,
+     "y": 3.82,
+     "w": 4.4,
+     "h": 1.15,
+     "fs": 8.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "Python 3.15 final, pytesseract 0.3.4, 0.3.7 and 0.3.8 (source only), a scanner, Windows and macOS.",
+     "x": 5.1,
+     "y": 3.82,
+     "w": 4.4,
+     "h": 1.15,
+     "fs": 8.5,
+     "accent": "orange"
+    }
+   ],
+   "notes": "The table is the research's record of the chapter's 22 statements replayed as printed in nine configurations, and the deck check computes every cell again from the record. With the newest packages on Python 3.14.6 the apt Tesseract 5.3.4 with the fast data matched the book in 18 of 22 statements, 5.5.3 with the fast data in 20, 5.5.3 with the best data in 18, 4.1.1 with the fast data in 20, 5.3.4 with all the apt languages in 19 and 5.5.3 with all languages in 21. With the book's pins, Pillow 10.4.0 and pytesseract 0.3.10, 18 matched on Python 3.13.14, 8 on Python 3.14.6 and none in an empty Python. The statements that differ are get_languages(), the first word Iv, the Japanese heading and the English gibberish. The research also ran one program of 19 items under 11 interpreters, Python 3.11.17 to 3.15.0b4, and 9 items under 14 Pillow releases, 9.5.0 to 12.3.0, and the outputs were the same; between pytesseract 0.3.9, 0.3.10 and 0.3.13 the confidence changed from a str to an int. What the research could not run is marked: Python 3.15 was a beta only, pytesseract 0.3.4, 0.3.7 and 0.3.8 install only from source and did not run, and there was no scanner, no Windows and no macOS. The photograph of the stories was not fetched either, because the single request to Wikimedia Commons answered 429.",
+   "take": "The same book gives 8 to 21 matching statements, by environment.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in one map",
+   "sub": "Six branches; the slides of each branch hold the examples",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.0,
+       "y": 2.425,
+       "w": 2.0,
+       "h": 1.15,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A program reads the text of a picture with Tesseract and pytesseract",
+       "x": 4.08,
+       "y": 2.62,
+       "w": 1.84,
+       "h": 0.759,
+       "fs": 11,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 1.91,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Installing the tools",
+       "x": 0.6,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "pytesseract 0.3.10 stops on Python 3.14\nThe engine is a separate program\nThe data folder holds the languages",
+       "x": 0.6,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 3.0,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Reading an image",
+       "x": 0.6,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "image_to_string() returns a str\nThe first word varies with the engine\nHyphens at line ends stay in the text",
+       "x": 0.6,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 4.09,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Accuracy and preprocessing",
+       "x": 0.6,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "Small text and skew raise the error rate\nEnlarging helps nine pixel text\npsm 7 reads a single line",
+       "x": 0.6,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 1.91,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Languages and data",
+       "x": 6.5,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The code is the data file name\nThe fast set holds 126 languages\nBest data is larger than fast data",
+       "x": 6.5,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 3.0,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Searchable PDFs",
+       "x": 6.5,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "NAPS2 refuses to overwrite without -f\nOCRmyPDF needs a dpi for an image\nPillow makes a PDF with no text",
+       "x": 6.5,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 4.09,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The book and practice",
+       "x": 6.5,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The shipped script calls undefined names\nThe preprocessing link is a placeholder\nThe screen scraper needs a display",
+       "x": 6.5,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      }
+     ],
+     "did": "RecognizingTextInImagesAtAGlance"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram RecognizingTextInImagesAtAGlance - TopicAndParts pattern, 91 of 97 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "These six branches are the route of the deck. Installing the tools: pytesseract 0.3.10 stops on Python 3.14, the engine is a separate program and the data folder holds the languages. Reading an image: image_to_string() returns a str, the first word varies with the engine, and hyphens at line ends stay in the text. Accuracy and preprocessing: small text and skew raise the error rate, enlarging helps nine-pixel text, and --psm 7 reads a single line. Languages and data: the code is the data file name, the fast set holds 126 languages and the best data is larger than the fast data. Searchable PDFs: NAPS2 refuses to overwrite without -f, ocrmypdf needs a dpi for an image and Pillow makes a PDF with no text. The book and practice: the shipped script calls undefined names, the preprocessing link is a placeholder, and the screen scraper needs a display. Together they answer the first question of the chapter, what can be shown to work on a machine with no scanner and no screen and what can only be shown to fail, and the slides that say where a printed line differs answer the second. The map is drawn from the same specification as the interactive page.",
+   "take": "If a branch feels unproven, its slides hold the example.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Every link was opened on the day this deck was made",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.55,
+     "fs": 9,
+     "groups": [
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, chapter 22 - free online",
+         "https://automatetheboringstuff.com/3e/chapter22.html"
+        ],
+        [
+         "Appendix A: installing third-party modules",
+         "https://automatetheboringstuff.com/3e/appendixa.html"
+        ],
+        [
+         "Online materials of the 3rd edition (zip)",
+         "https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "Tesseract: improving the quality of the output",
+         "https://tesseract-ocr.github.io/tessdoc/ImproveQuality.html"
+        ],
+        [
+         "Tesseract: data files",
+         "https://tesseract-ocr.github.io/tessdoc/Data-Files.html"
+        ],
+        [
+         "NAPS2 command line documentation",
+         "https://www.naps2.com/doc/command-line"
+        ],
+        [
+         "OCRmyPDF documentation",
+         "https://ocrmypdf.readthedocs.io/en/latest/"
+        ]
+       ]
+      },
+      {
+       "head": "Stories",
+       "rows": [
+        [
+         "Optical character recognition (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Optical_character_recognition"
+        ],
+        [
+         "Tesseract (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Tesseract_(software)"
+        ],
+        [
+         "ReCAPTCHA (Wikipedia)",
+         "https://en.wikipedia.org/wiki/ReCAPTCHA"
+        ],
+        [
+         "Frankenstein (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Frankenstein"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every listing of the chapter; the online materials are the zip of 91 files that the programs of this deck download and check by SHA-256, and Appendix A is where the book pins pytesseract 0.3.10 and Pillow 10.4.0. The reference links are the Tesseract documentation on improving the quality of the output and on the data files, the NAPS2 command line documentation and the OCRmyPDF documentation. Four of the six stories of the chapter are on slides with their own link, on the slide itself: Hyman Goldberg's patent of 1915, Mary Shelley's Frankenstein of 1831, Hewlett-Packard's Tesseract of 1985 and reCAPTCHA of 2009, and their pages are the last group. The other two, Emanuel Goldberg's Statistical Machine of 1931 and Kurzweil's reading machine of 1976, are told in the notes, and their pages are in the research package. The rest of the fifty-three sources of the research, among them the Tesseract manual page, the PyPI metadata, the ISO 639 code tables and Ray Smith's overview of the engine, are in the research package. No photograph of a person is used in the deck.",
+   "take": "Textbook, documentation, and history, all opened today.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What you should now be able to say",
+   "sub": "Four claims, each carried by a result you saw printed",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 1.5,
+     "w": 8.8,
+     "h": 2.4,
+     "fs": 15,
+     "items": [
+      "image_to_string() returns a str; the first word depends on the engine and its data.",
+      "Small, tilted or noisy text raises the error rate; enlarge, straighten, filter, add a border.",
+      "The language code is a file name; NAPS2 needs -f and a check of the result.",
+      "Appendix A's pytesseract does not import on Python 3.14; nothing ran on Windows or macOS."
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.6,
+     "y": 4.1,
+     "w": 8.8,
+     "h": 0.6,
+     "fs": 10,
+     "big": false,
+     "items": [
+      "13 console rows",
+      "28 programs run",
+      "8 diagrams",
+      "14 pictures"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The programs need Pillow, pytesseract and the tesseract program, and some need NumPy, OpenCV, poppler, NAPS2, ocrmypdf and an X display; the console rows need pytesseract, Pillow and, for the pins, packaging. The rows were run again under Python 3.14.6 each time the deck was built, and the programs, and with them the fourteen pictures, were run again by the check that compares the slides with the recording. What was not run is marked on its slide: Windows and macOS, the Flatpak of NAPS2, a scanner, the large language model, a real screen, Python 3.15 final and the three pytesseract releases that install only from source. The licence of the book's scans was not checked. Nothing was ever shown to a person on a screen by the screen program. Every accuracy figure in this deck is a single measured run with the Tesseract version named, and not a benchmark. The next chapter of the book moves on, and what this chapter taught about checking what a program returns, and about reading a printed output with care, carries over.",
+   "take": "Questions are welcome; bring a picture to read.",
+   "bg": "light"
+  }
+ ]
+}
