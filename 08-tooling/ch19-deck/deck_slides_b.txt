@@ -1,0 +1,160 @@
+
+# ---- 16 run and Popen ---------------------------------------------------------------------------------------------------------------------------------
+dg, dcap = diagram("ChoosingHowToLaunchAProgram", "activity", (0.5, 1.4, 4.4, 3.2),
+                   grid={"list": (0, 0), "wait": (0, 1), "run": (0, 2), "capture": (0, 3), "check": (0, 4), "popen": (1, 2), "poll": (1, 3)},
+                   cols=[(0.0, 2.1), (2.3, 2.1)], rows_n=6, starts=(1, 0), ends={"type": "dot", "col": 0, "row": 5},
+                   routes={("start", "list"): "h", ("wait", "popen"): "hv", ("poll", "end"): "vh"}, fs=8, nh=0.42, dh=0.5)
+pn = "runCut_v1_0_0.py"
+a16, b16 = span(pn, "r = subprocess.run(['sleep'")
+f16 = bestfs(pn, (a16, b16), 4.4, 3.2)
+p16, bot16 = prog(pn, 5.1, 1.55, pw(pn, (a16, b16), True, f16), fs=f16, lines=(a16, b16), show_out=True)
+content("Launching a program: run() or Popen()", "A list of strings starts the program; run() waits for it and Popen() does not",
+        [dg, dcap, p16, foot(hidden(pn, a16), 5.1, round(bot16 + 0.08, 2), 4.4, fs=8.5)],
+        "The flow chart is the choice the chapter walks through: put the program and its arguments in a list of strings, then decide whether the program should wait for the process to end. If it should, call subprocess.run() with the list, "
+        "pass capture_output=True and text=True to get the output, and check=True and a timeout to raise on a failure; if it should not, call subprocess.Popen() and use poll(), which returns None while the process runs. "
+        "The program runs both on this machine. run(['sleep', '0.3']) returned a CompletedProcess with returncode 0 after the child ended. With capture_output=True the output is bytes, b'out\\n' and b'err\\n', and the child's standard error is "
+        "captured separately; with text=True the same output is a str. Popen returned at once: poll() gave None while the child slept, then wait() blocked and returned 0, and poll() gave 0. The chapter opens the calculator six times with "
+        "Popen on Windows, and Figure 19-1 is a screenshot of the six windows; calc.exe, notepad and mspaint were NOT EXECUTED, because the machine is Linux, and the picture is not reproduced here. The alt text of the opening picture of the chapter is empty "
+        "and the alt text of Figure 19-1 describes a Windows desktop with six overlapping calculator programs.",
+        "run() waits for the program; Popen() returns at once.")
+
+# ---- 17 Popen, poll, wait -----------------------------------------------------------------------------------------------------------------------------------
+dg, dcap = diagram("ARunningAChildProcess", "sequence", (0.5, 1.45, 3.9, 3.15), fs=8, head_w=1.05)
+pn = "popenCut_v1_0_0.py"
+a17, b17 = span(pn, "for call in")
+f17 = bestfs(pn, (a17, b17), 5.0, 3.2)
+p17, bot17 = prog(pn, 4.5, 1.55, pw(pn, (a17, b17), True, f17), fs=f17, lines=(a17, b17), show_out=True)
+content("Popen: poll, wait, check, timeout", "A failing program raises, a hung one times out, a list passes arguments untouched",
+        [dg, dcap, p17, foot(hidden(pn, a17), 4.5, round(bot17 + 0.08, 2), 5.0, fs=8.5)],
+        "The sequence diagram follows the exchange between the program, the Popen object and the process: the program calls Popen() with a list, the object starts the process and returns at once, poll() returns None while the process runs, "
+        "wait() blocks until the process ends with an exit code, and the object returns the code. The program on the slide shows what the chapter does not. check=True turns a non-zero exit status into CalledProcessError: false exits 1, and the "
+        "message says so. A timeout turns a program that hangs into TimeoutExpired, and run() kills the child before it raises; the message names the command and the time, and its wording of the time depends on the release, which the research "
+        "found by running eleven interpreters. A program that does not exist raises FileNotFoundError, not a non-zero exit code. The last lines show that a list passes the arguments untouched: 'my file.txt' stays one argument, and '*.txt' is not "
+        "expanded, because no shell is involved. That is the reason to prefer a list over a string for a program you know. The chapter's example passes the name of a file to notepad on Windows as the second item of the list; that program was NOT EXECUTED here.",
+        "Check the exit status, give a timeout, and pass a list, not a string.")
+
+# ---- 18 exit codes, signals, life of a process ---------------------------------------------------------------------------------------------------------
+dg, dcap = diagram("ALaunchedProcessFromStartToExit", "lifecycle_branch", (0.5, 1.4, 9.0, 2.0), fs=8)
+pn = "exitsCut_v1_0_0.py"
+a18, b18 = span(pn, "run = lambda")
+f18 = bestfs(pn, (a18, b18), 9.0, 1.05, hi=7.5)
+w18 = pw(pn, (a18, b18), True, f18)
+y18 = 3.9
+p18, bot18 = prog(pn, 0.5, y18, w18, fs=f18, lines=(a18, b18), show_out=True)
+content("A process from start to exit", "Exit code 0 is success; a negative code is the signal that ended the child",
+        [dg, dcap, p18,
+         foot(hidden(pn, a18), round(0.5 + w18 + 0.15, 2), y18, round(9.5 - 0.5 - w18 - 0.15, 2), fs=8.5)],
+        "The state diagram follows a launched process: Popen starts it, it runs while poll() gives None, and it ends either with an exit code or by a signal. The program runs five children and prints their return codes: a program that does "
+        "nothing returns 0, sys.exit(3) returns 3, an uncaught exception returns 1, and a child that was killed by SIGKILL has the return code -9 and one ended by SIGTERM -15, the negative of the signal number. The corpus program of the research "
+        "ran the rest: sys.exit('msg') also returns 1, os._exit(256 + 7) returns 7 because an exit status holds eight bits, terminate() on a child with a SIGTERM handler printed asked to stop, saving work and returned 0, kill() returned -9 and "
+        "printed nothing, and trying to handle SIGKILL raised OSError with errno 22. The chapter mentions none of this; it has no exit codes, no terminate() and no kill(). A timeout in run() kills the child with SIGKILL, which is the last transition "
+        "of the diagram. On Windows the same words exist, terminate() and kill() both call TerminateProcess, but Windows was NOT EXECUTED, so the slide claims nothing about it.",
+        "A process ends with a return code; a negative one is a signal.")
+
+# ---- 19 shell, arguments, opening files -----------------------------------------------------------------------------------------------------------------------
+pn = "shellCut_v1_0_0.py"
+a19, b19 = span(pn, "import shutil")
+f19 = bestfs(pn, (a19, b19), 5.9, 3.1)
+w19 = pw(pn, (a19, b19), True, f19)
+p19, bot19 = prog(pn, 0.5, 1.55, w19, fs=f19, lines=(a19, b19), show_out=True)
+x19 = round(0.5 + w19 + 0.2, 2)
+content("The shell, and opening files", "shell=True with a list runs only the first item; start and open are not on Linux",
+        [p19,
+         card("NOT EXECUTED here", "start, notepad and calc.exe (Windows), open for an application (macOS) and a desktop that xdg-open could use were not run.",
+              x19, 1.5, round(9.5 - x19, 2), 1.9, fs=9.5, accent="orange"),
+         card("What Linux does", "open exists only because xdg-utils registers it as an alternative of xdg-open; start does not exist.",
+              x19, 3.5, round(9.5 - x19, 2), 1.4, fs=9.5, accent="slate"),
+         foot(hidden(pn, a19), 0.5, round(bot19 + 0.08, 2), w19, fs=8.5)],
+        "The chapter opens a file with the default application by running start on Windows and open on macOS and Linux. The program asks what a Linux machine does. A list with shell=True runs only its first item: echo ran with no arguments and "
+        "printed an empty line, and the second item became the zero argument of the shell, which is why the failing start printed hello.txt: 1: start: not found and returned 127. A string with shell=True works. A command built from a file name is "
+        "the danger: the file name x; echo INJECTED ran a second command, shlex.quote() prevented it, and so did a list with no shell. open exists here as /usr/bin/open only because the xdg-utils package registers it as an alternative of xdg-open; "
+        "start does not exist, and os.startfile, the Windows way, is absent. webbrowser.open() returned False with no browser to open, and pyperclip, which the chapter introduces in Chapter 8, raised an error with no clipboard program. All of the "
+        "following were NOT EXECUTED: the commands of Windows and macOS, and any program that needs a desktop. The research ran xdg-open on a file that did not exist, which exited 2 and said so, and that is all it can say about it here.",
+        "Never build a shell string from a file name; pass a list.", notexec=True)
+
+# ---- 20 schedulers inside a process ---------------------------------------------------------------------------------------------------------------------------------
+dg, dcap = diagram("WhatAProgramCanDoToRunALaterJob", "usecases", (0.5, 1.45, 3.6, 3.15), fs=8)
+pn = "schedCut_v1_0_0.py"
+a20, b20 = span(pn, "now, log")
+f20 = bestfs(pn, (a20, b20), 5.2, 3.05)
+w20 = pw(pn, (a20, b20), True, f20)
+p20, bot20 = prog(pn, 4.3, 1.55, w20, fs=f20, lines=(a20, b20), show_out=True)
+barepk = EX["_bare"]["transcript"].split("\n")[0]
+content("Running a job later", "Timer, sched and call_later run inside a live process; cron and launchd outside it",
+        [dg, dcap, p20,
+         foot("EMULATED: sched runs on a clock the program moves. " + hidden(pn, a20),
+              4.3, round(bot20 + 0.08, 2), w20, fs=8.5)],
+        "The use-case diagram lists what a program can do to run a job later: write a cron entry with five time fields, call a function once after a delay with Timer, order events by time and priority with sched, call a function later with "
+        "asyncio's call_later, run jobs every day with the schedule package, describe a job in a launchd property list, and normalise a systemd calendar expression. The chapter gives the operating system schedulers one paragraph, Task Scheduler, launchd "
+        "and cron, and its Summary points to the book's page at No Starch Press for instructions that the page does not hold. The program runs the three that live inside a process. sched ran its events in order of time and then priority on a "
+        "clock the program moves, so it says EMULATED: now at 0, two at 2, five first at 5 with priority 0 and five at 5 with priority 1, and the clock ended at 5.0. threading.Timer returns at once, so the list was still empty after start() and held "
+        "fired after join(). call_later ran soon first, then the 0.1 callback, then the 0.2 one. The schedule package, version 1.2.2, the newest release on 13 October 2026, uploaded on 25 May 2024, computed its first run at 10:30 for a job set "
+        "every day at that time; in a Python with only the standard library, importing it raised ModuleNotFoundError. All four need a process that stays alive; if the machine restarts, they are gone, which is the reason for an operating system scheduler.",
+        "Timer, sched and call_later run inside a process that stays alive.", emulated=True)
+
+# ---- 21 cron -----------------------------------------------------------------------------------------------------------------------------------------------------------
+pn = "cronCut_v1_0_0.py"
+a21, b21 = span(pn, "def nxt")
+c21, t21, bot = pair(pn, (a21, b21), 0.5, 1.55, 9.0, 2.6, gap=0.2)
+xr = t21["x"]
+wr = round(9.5 - xr, 2)
+ytr = round(t21["y"] + t21["h"] + 0.1, 2)
+content("Cron: five fields and a small world", "Both day fields restricted means either matches; the job runs in cron's environment",
+        [c21, t21,
+         foot("Lines 1 to 12 (imports, a comment and field(), which turns one time field into its set of numbers) are not shown.", 0.5, round(bot + 0.06, 2), 4.7, fs=8.5),
+         card("Real cron, recorded 13 Oct 2026", "Ubuntu 24.04, cron 3.0pl1. The job saw PATH=/usr/bin:/bin, /root, no terminal, parent sh. A TZ line reached it; CRON_TZ did not move the schedule.",
+              xr, ytr, wr, 1.3, fs=8.5, accent="slate"),
+         card("NOT EXECUTED here", "Task Scheduler (schtasks) and launchd (the plist only written and read back) and a systemd timer (OnCalendar only normalised).",
+              xr, round(ytr + 1.35, 2), wr, round(4.97 - ytr - 1.35, 2), fs=8.5, accent="orange")],
+        "A crontab line has five time fields, minute, hour, day of the month, month and day of the week, and then the command. The matcher on the slide is the study's own function, written to the rule of the Debian manual page. "
+        "The manual page says that when both day fields are restricted a command runs when either matches, so 0 0 13 * 5 is not Friday the 13th: it fires on every 13th and on every Friday, and the next run after 9:30 on Tuesday 13 October 2026 "
+        "is the Friday 16 October. The other lines show 9:30 on weekdays, every 15 minutes, and 29 February, which waits until 2028. The research then ran cron for real on this machine, cron 3.0pl1-184 on Ubuntu 24.04, and these are records of 13 October 2026, "
+        "not results the deck recomputes. A Python job started by cron two seconds after the turn of the minute saw PATH=/usr/bin:/bin, the working directory /root, no terminal and sh as its parent, and its local clock read 22:36:01 UTC while the shell "
+        "showed 01:36:01 +03. A TZ=Asia/Kolkata line in the crontab reached the job and set its clock to IST; a minute of 61 was refused by crontab with exit code 1 and the message bad minute. The schedule follows the zone of the cron daemon: started from a "
+        "shell whose TZ was Europe/Istanbul, an entry written on the Istanbul clock fired at the target moment and the entry for the same moment on the UTC clock did not, while a CRON_TZ=Asia/Kolkata line was passed to the job as a variable but did not move the "
+        "schedule, and the Debian manual page does not mention CRON_TZ. Task Scheduler, launchd and a systemd timer were NOT EXECUTED: a launchd property list for 04:00 daily was written and read back with plistlib, 501 bytes and equal, and systemd-analyze "
+        "only normalised Mon..Fri 09:00 to Mon..Fri *-*-* 09:00:00. " + story_notes("CronPurdue1977"),
+        "Cron runs the job in its own small world, in the zone of its daemon.", notexec=True)
+
+# ---- 22 Project 15 and the Prettified Stopwatch ---------------------------------------------------------------------------------------------------------------------
+pn1, pn2 = "countdownCut_v1_0_0.py", "prettyCut_v1_0_0.py"
+a22, b22 = span(pn1, "now = [0.0]")
+a22b, b22b = span(pn2, "rows = ")
+f22 = bestfs(pn1, (a22, b22), 5.9, 1.6)
+p22, bot22 = prog(pn1, 0.5, 1.55, pw(pn1, (a22, b22), True, f22), fs=f22, lines=(a22, b22), show_out=True)
+f22b = bestfs(pn2, (a22b, b22b), 5.9, 1.6)
+p22b, bot22b = prog(pn2, 0.5, round(bot22 + 0.3, 2), pw(pn2, (a22b, b22b), True, f22b), fs=f22b, lines=(a22b, b22b), show_out=True)
+x22 = round(0.5 + max(p22["w"], p22b["w"]) + 0.2, 2)
+pins = EX["_pins"]["transcript"].split("\n")
+content("Project 15 and the Prettified Stopwatch", "A countdown is a loop that sleeps; rjust() lines the laps up in columns",
+        [p22, p22b,
+         card("NOT EXECUTED here", "No sound was played: the machine has no sound card. alarm.wav is not in the online materials; autbor.com/alarm.wav redirects (HTTP 302) to a 582,952-byte file.",
+              x22, 1.5, round(9.5 - x22, 2), 1.55, fs=9, accent="orange"),
+         card("Pinned and newest", "Appendix A pins playsound3 2.4.0. Recorded in the pins environment: %s." % pins[0].replace(" | ", ", "),
+              x22, 3.1, round(9.5 - x22, 2), 1.2, fs=9, accent="slate"),
+         foot("EMULATED: a number stands in for the clock time.sleep(1) would move; the chapter counts from 60. " + hidden(pn1, a22),
+              x22, 4.28, round(9.5 - x22, 2), fs=8)],
+        "Project 15, the Simple Countdown, counts down from 60 with time.sleep(1) between the numbers and then plays a sound file with playsound3. The loop on the slide is the same loop with 5 in place of 60, and it says EMULATED: a number "
+        "that the loop increases stands in for the clock that time.sleep(1) would move, so it prints 5 4 3 2 1 and counts 5.0 seconds of fake time without waiting. The sound was NOT EXECUTED: the machine has no sound card, the online materials do not "
+        "hold alarm.wav, and autbor.com/alarm.wav redirects with HTTP 302 to a file of 582,952 bytes and 3.30 seconds on the book's own site. The shipped simplecountdown.py matches the printed listing apart from spacing, but the copy served at autbor.com differs: "
+        "it sets timeLeft to 2, uses camel case and has the Windows start line uncommented. Appendix A pins playsound3 2.4.0; the newest release on 13 October 2026 is 3.3.2, uploaded on 18 July 2026, and the pins environment of the research holds 2.4.0. "
+        "The second program is the first practice program, the Prettified Stopwatch: rjust() pads the lap number to 2, and the times to 6, so the columns line up, where the chapter's Project 14 printed them without padding. The numbers come from the "
+        "laps of the stopwatch slide.",
+        "A countdown is a loop that sleeps; rjust() lines columns up.", emulated=True, notexec=True)
+
+# ---- 23 Friday the 13th ---------------------------------------------------------------------------------------------------------------------------------------------------
+pn = "fridayCut_v1_0_0.py"
+a23, b23 = span(pn, "import collections")
+c23, t23, bot = pair(pn, (a23, b23), 0.5, 1.55, 9.0, 2.85, gap=0.2)
+xr = t23["x"]
+ch = EX["_charts"]["thirteenths"]
+ych = round(t23["y"] + t23["h"] + 0.05, 2)
+chart = {"t": "chart", "ctype": "bar", "x": xr, "y": ych, "w": round(9.5 - xr, 2), "h": round(4.38 - ych, 2), "labels": ch["labels"],
+         "title": "13ths by weekday, 400 years", "series": [{"name": "13ths", "data": ch["values"]}], "dataLabels": True, "dlFs": 9}
+content("Friday the 13th, forward and backward", "Python's dates run back to the year 1; the 13th is a Friday 688 times in 400 years",
+        [c23, t23, chart, factrow("Gregorian1582")],
+        story_notes("Gregorian1582") + " The second practice program of the chapter finds the next ten Friday the 13ths from a date. From a fixed day, 13 October 2026, the first is 13 November 2026 and the tenth 13 August 2032. "
+        "The research also walked backward day by day until Python stopped it: 3,485 such dates down to 13 April of the year 1, and then OverflowError: date value out of range at 1 January of the year 1. The chart is computed: over 400 years from 2000, "
+        "the 13th falls on a Friday 688 times, the most of any weekday, and on a Thursday 684 times, because the Gregorian calendar repeats every 146,097 days, which is exactly 20,871 weeks. Every year from 1 to 9999 has at least one Friday the 13th, "
+        "which the corpus program of the research checked. The chapter's two practice programs are not in the online materials: the zip holds no prettifiedStopwatch.py and no fridayThirteenth.py, so this deck's programs are written from the chapter's description.",
+        "The 13th is a Friday 688 times in 400 years; Python dates reach year 1.")

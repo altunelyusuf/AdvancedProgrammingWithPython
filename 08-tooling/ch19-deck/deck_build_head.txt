@@ -1,0 +1,247 @@
+import json
+import os
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import diagram_shapes_v1_0_0 as DS
+
+
+def load(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+ST = load("stories19", os.path.join(HERE, "..", "sen0414_ch19_stories_v1_0_0.py"))
+if ST.run_checks():
+    raise SystemExit("REFUSED: the story companion fails its own checks")
+STORY = {x["id"]: x for x in ST.STORIES}
+DG = load("diagrams19", os.path.join(HERE, "..", "sen0414_ch19_diagrams_v1_0_0.py"))
+NODES = DG.nodes_from_ttl(os.path.join(HERE, "..", ".."))
+_bad = DG.run_checks(NODES)
+if _bad:
+    raise SystemExit("REFUSED: the diagrams fail their own checks: %r" % _bad[:3])
+DIAG = {d["id"]: d for d in DG.DIAGRAMS}
+RD = load("rdodi19", os.path.join(HERE, "..", "sen0414_ch19_rdodi_data_v1_0_5.py"))
+EX = json.load(open(os.path.join(HERE, "examples_out_v1_0_0.json")))
+PYV = EX["_python"]
+CAP = "run under Python %s, tzdata %s; no row reads the clock" % (PYV, EX["_packages"].split(" | ")[1].split()[1])
+G = {k: [[s, (o or "")] for s, o in v] for k, v in EX.items() if not k.startswith("_")}
+PROGS = EX["_programs"]
+CQ1, CQ2 = RD.CQS
+CW = 0.0088  # inches per character per point of Courier New, as the shared fit check measures it
+
+# the honesty lines (honesty_check_v1_0_0.py requires 'EMULATED' on every slide that shows an emulation, 'single run' on every slide that
+# shows a measured time and 'NOT EXECUTED' on every slide the plan lists, and on no other)
+L_NOTEXEC = "NOT EXECUTED"
+L_ONCE = "single run"
+L_EMU = "EMULATED"
+
+
+def lines_of(rows):
+    return sum(1 + (1 if out.strip() else 0) for _, out in rows)
+
+
+def con(group, x, y, w, fs=11, label=None, cap=True, rows=None):
+    """A console panel sized from its rows; returns (item, bottom y)."""
+    rr = rows if rows is not None else G[group]
+    maxlen = max(max(len(st) + 4, len(out)) for st, out in rr)
+    fs = min(fs, round((w - 0.4) / (maxlen * CW), 1))
+    if fs < 7:
+        raise SystemExit("REFUSED: console %s cannot fit unwrapped in %.1f in (fs %.1f)" % (group, w, fs))
+    L = lines_of(rr)
+    h = round(L * fs * 1.23 / 72.0 + 0.36 + 0.02 * max(0, L - 1), 2)
+    it = {"t": "code", "x": x, "y": y, "w": w, "h": h, "rows": rr, "fs": fs}
+    if cap:
+        it["cap"] = CAP
+    if label:
+        if len(label) > (w - 0.1) / 0.0725:
+            raise SystemExit("REFUSED: label %r is too long for a %.1f in panel" % (label, w))
+        it["label"] = label
+    return it, round(y + h + (0.26 if cap else 0), 2)
+
+
+def span(pname, first, last=None, after=None):
+    """1-based line numbers (a, b) of the program lines from the first containing `first` to the first containing `last`."""
+    ls = PROGS[pname]["code"].rstrip("\n").split("\n")
+    a = next(i for i, l in enumerate(ls, 1) if first in l)
+    b = len(ls) if last is None else next(i for i, l in enumerate(ls, 1) if i >= a and last in l)
+    return a, b
+
+
+def pw(pname, lines=None, out=True, fs=7.0):
+    """The panel width a program excerpt (and, when asked, its transcript inside the panel) needs at fs points."""
+    pr = PROGS[pname]
+    L = pr["code"].rstrip("\n").split("\n")
+    a, b = (1, len(L)) if lines is None else lines
+    ws = [len(l) for l in L[a - 1:b]]
+    if out and pr["transcript"]:
+        t = pr["transcript"].split("\n")
+        ws += [len(t[0]) + 7] + [len(x) for x in t[1:]]
+    return round(max(ws) * CW * fs + 0.4, 2)
+
+
+def bestfs(pname, lines, wmax, hmax, out=True, lo=7.0, hi=9.5):
+    """The largest font size (a multiple of 0.5 between lo and hi) at which an excerpt and its transcript fit unwrapped in wmax inches
+    and hmax inches; the slide then uses it, so that a program is as large as its slide allows."""
+    pr = PROGS[pname]
+    L = pr["code"].rstrip("\n").split("\n")
+    a, b = lines
+    n = (b - a + 1) + (pr["transcript"].count("\n") + 1 if out and pr["transcript"] else 0)
+    fs = hi
+    while fs >= lo:
+        if pw(pname, lines, out, fs) <= wmax and n * (fs * 1.22 / 72.0 + 0.02) + 0.30 <= hmax:
+            return fs
+        fs -= 0.5
+    raise SystemExit("REFUSED: %s lines %d-%d do not fit %.2f x %.2f in at %.1f pt" % (pname, a, b, wmax, hmax, lo))
+
+
+def prog(pname, x, y, w, fs=7.0, lines=None, show_out=True):
+    """A chapter program (or an honest excerpt) with its transcript, sized from its text; returns (item, bottom y).
+    The excerpt is a verbatim slice and the label above the panel names it ('program <name>, lines a to b of n'), as
+    program_check_v1_0_0.py verifies. The transcript, when shown, sits in the same panel."""
+    pr = PROGS[pname]
+    all_lines = pr["code"].rstrip("\n").split("\n")
+    a, b = (1, len(all_lines)) if lines is None else lines
+    shown = all_lines[a - 1:b]
+    out = pr["transcript"] if show_out else ""
+    outlines = (out.count("\n") + 1) if out else 0
+    need = pw(pname, (a, b), show_out, fs)
+    if need > w + 0.005:
+        raise SystemExit("REFUSED: program %s lines %d-%d cannot fit unwrapped in %.2f in at %.1f pt (needs %.2f)" % (pname, a, b, w, fs, need))
+    L = len(shown) + outlines
+    h = round(L * (fs * 1.22 / 72.0 + 0.02) + 0.30, 2)
+    label = "program %s, lines %d to %d of %d" % (pname, a, b, len(all_lines))
+    if len(label) > (w - 0.1) / 0.0725:
+        raise SystemExit("REFUSED: caption %r is too long for a %.2f in panel" % (label, w))
+    it = {"t": "prog", "x": x, "y": y, "w": w, "h": h, "lines": shown, "fs": fs, "compact": bool(out),
+          "out": out if out else None, "outLabel": "prints", "label": label}
+    return it, round(y + h, 2)
+
+
+def transcript(pname, x, y, w, fs=7.0, label=None, aligned=False):
+    """The transcript of a program in a panel of its own. With a label of the form 'transcript of program <name>' the panel is
+    re-run by program_check and must equal the recording."""
+    label = label or "transcript of program %s" % pname
+    out = PROGS[pname]["transcript"]
+    t = out.split("\n")
+    need = round(max([len(t[0]) + 7] + [len(z) for z in t[1:]]) * CW * fs + 0.4, 2)
+    if need > w + 0.005:
+        raise SystemExit("REFUSED: transcript of %s cannot fit unwrapped in %.2f in at %.1f pt (needs %.2f)" % (pname, w, fs, need))
+    if len(label) > (w - 0.1) / 0.0725:
+        raise SystemExit("REFUSED: label %r is too long for a %.2f in panel" % (label, w))
+    L = len(t) + (1 if aligned else 0)
+    h = round(L * (fs * 1.22 / 72.0 + 0.02) + 0.30, 2)
+    # aligned: the word 'prints' stands on a line of its own, so that the columns of the transcript line up from its first line on
+    return {"t": "prog", "x": x, "y": y, "w": w, "h": h, "lines": [], "fs": fs, "compact": True, "out": ("\n" + out) if aligned else out,
+            "outLabel": "prints", "label": label}
+
+
+def factrow(sid, x=0.5, y=4.42, w=9.0):
+    st = STORY[sid]
+    host = st["link"].split("//")[1].split("/")[0].replace("www.", "")
+    return {"t": "factrow", "x": x, "y": y, "w": w, "who": st["who"], "where": st["where"],
+            "when": st["when"], "link": st["link"], "linkText": host}
+
+
+def story_notes(sid):
+    st = STORY[sid]
+    return st["story"] + " The account rests on these sources. " + st["source"]
+
+
+def card(head, body, x, y, w, h, fs=11.5, accent=None):
+    if len(head) > (w - 0.4) / 0.112:
+        raise SystemExit("REFUSED: card heading %r does not fit one line of a %.2f in card" % (head, w))
+    it = {"t": "card", "head": head, "body": body, "x": x, "y": y, "w": w, "h": h, "fs": fs}
+    if accent:
+        it["accent"] = accent
+    return it
+
+
+def foot(body, x, y, w, fs=9.5):
+    h = round(DS.need_h(body, w, fs) + 0.04, 2)
+    return {"t": "foot", "x": x, "y": y, "w": w, "h": h, "fs": fs, "body": body}
+
+
+def diagram(did, kind, box, **kw):
+    """The shapes item of a narrative diagram and its caption (which names the diagram and its measured grounding)."""
+    d = DIAG[did]
+    fn = {"activity": DS.activity, "sequence": DS.sequence, "states": DS.states5, "lifecycle": DS.lifecycle_col, "lifecycle_skip": DS.lifecycle_skip, "lifecycle_branch": DS.lifecycle_branch, "usecases": DS.usecases, "mindmap": DS.mindmap}[kind]
+    it = fn(d["data"], box, **kw)
+    h, n = d["grounding"]
+    body = "diagram %s - %s pattern, %d of %d words grounded in the chapter's text" % (did, d["pattern"], h, n)
+    cap = {"t": "foot", "x": box[0], "y": round(box[1] + box[3] + 0.03, 2), "w": box[2], "h": round(DS.need_h(body, box[2], 8.5) + 0.04, 2), "fs": 8.5,
+           "body": body}
+    it["did"] = did
+    return it, cap
+
+
+
+
+
+def pair(pname, lines, x, y, wtot, hmax, gap=0.2, lo=7.0, hi=9.0, label=None):
+    """A program excerpt (no transcript inside) with its transcript in a panel beside it, at the largest font size at which both fit
+    unwrapped in wtot inches and hmax inches; returns (code item, transcript item, bottom y)."""
+    pr = PROGS[pname]
+    a, b = lines
+    t = pr["transcript"].split("\n")
+    fs = hi
+    while fs >= lo:
+        wc = pw(pname, lines, False, fs)
+        wc = max(wc, round(len('program %s, lines %d to %d of %d' % (pname, a, b, len(pr['code'].rstrip().split('\n')))) * 0.0725 + 0.12, 2))
+        wt = round(max([len(t[0]) + 7] + [len(z) for z in t[1:]]) * CW * fs + 0.4, 2)
+        hc = (b - a + 1) * (fs * 1.22 / 72.0 + 0.02) + 0.30
+        ht = len(t) * (fs * 1.22 / 72.0 + 0.02) + 0.30
+        if wc + gap + wt <= wtot and max(hc, ht) <= hmax:
+            c, bot = prog(pname, x, y, wc, fs=fs, lines=lines, show_out=False)
+            tr = transcript(pname, round(x + wc + gap, 2), y, wt, fs=fs)
+            return c, tr, max(bot, round(y + tr["h"], 2))
+        fs -= 0.5
+    raise SystemExit("REFUSED: %s lines %d-%d and their transcript do not fit %.2f x %.2f in side by side at %.1f pt" % (pname, a, b, wtot, hmax, lo))
+
+S = []
+SHOWN = {}  # diagram id -> slide number
+NOTEXEC = []  # slide numbers that carry the words NOT EXECUTED
+MEASURED = []  # slide numbers that show a measured time (and say 'single run')
+EMULATED = []  # slide numbers that show an emulation (a Python object standing in for Windows) and say EMULATED
+
+
+def content(title, sub, items, notes, take, lede=None, notexec=False, measured=False, emulated=False):
+    if lede and len(lede.split()) > 34:
+        raise SystemExit("REFUSED: lede on %r runs past the gate" % title)
+    if len(take.split()) > 24 or not take.endswith("."):
+        raise SystemExit("REFUSED: takeaway %r is not a short full sentence" % take)
+    if len(title) > 44:
+        raise SystemExit("REFUSED: title %r is longer than the 44 characters one line of it holds" % title)
+    if len(sub) > 86:
+        raise SystemExit("REFUSED: subtitle %r is longer than the 86 characters one line of it holds" % sub)
+    for it in items:
+        if it["t"] in ("code", "prog", "shapes", "card", "boxes", "chips", "stat", "beats", "factrow", "numlist", "bullets", "links", "foot", "text", "img", "table", "chart"):
+            if it["y"] + it.get("h", 0.4) + (0.26 if it.get("cap") and it["t"] == "code" else 0) > 5.0 or it["x"] + it["w"] > 9.56:
+                raise SystemExit("REFUSED: item %s on %r reaches y %.2f / x %.2f" % (it["t"], title, it["y"] + it.get("h", 0.4), it["x"] + it["w"]))
+        if it["t"] == "shapes":
+            SHOWN[it["did"]] = len(S) + 1
+    blob = json.dumps(items)
+    if notexec:
+        NOTEXEC.append(len(S) + 1)
+        if L_NOTEXEC not in blob:
+            raise SystemExit("REFUSED: slide %r is declared NOT EXECUTED but says nothing of it" % title)
+    if emulated:
+        EMULATED.append(len(S) + 1)
+        if L_EMU not in blob:
+            raise SystemExit("REFUSED: slide %r is declared EMULATED but says nothing of it" % title)
+    if measured:
+        MEASURED.append(len(S) + 1)
+        if L_ONCE not in blob.lower():
+            raise SystemExit("REFUSED: slide %r shows a measured time but does not say 'single run'" % title)
+    sl = {"kind": "content", "title": title, "sub": sub, "items": items, "notes": notes, "take": take, "bg": "light"}
+    if lede:
+        sl["lede"] = lede
+    S.append(sl)
+
+
+def hidden(pname, a):
+    """The words that say where the lines before the excerpt are: lines 1 to a-1 of the program, the corpus HEAD and a comment."""
+    return "Lines 1 to %d (imports, a temporary folder and a comment) are not shown." % (a - 1)
