@@ -1,0 +1,189 @@
+{
+ "_version": "1.0.0",
+ "_deck": "1.0.0",
+ "_python": "3.14.6",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 23: Controlling the Keyboard and Mouse",
+   "say": "Chapter 22 taught a program to read pictures. Chapter 23 teaches a program to act on the screen: PyAutoGUI sends the movements of the mouse and the keys of the keyboard that a person would send, and it can take a screenshot and look for a picture in it. The chapter has 25 listings, 6 figures and 1 table, and ends with 13 practice questions and 3 practice programs. This deck follows the chapter in its own order: the fail-safes, the mouse, the screen and images, the keyboard, and the message boxes, and it adds what the research found when the chapter's 80 printed statements were run again. Every program of the deck runs on a virtual X display, Xvfb, with real X clients such as a Tk window, xdotool, xclip and xterm, so what a program prints is what those windows received. Nobody looks at that screen, which is why the deck calls it a virtual display, not a real screen. Every output on the slides was printed by Python 3.14.6 with PyAutoGUI 0.9.54, PyScreeze 1.0.1, PyMsgBox 2.0.1 and Pillow 12.3.0, the versions the console above prints. Windows and macOS were never used, and neither were a real Wayland session, a second monitor or a high-resolution screen. What could not be run is marked on its slide, and what the research measured and this deck does not run again is marked Recorded.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "Today's route",
+   "say": "The route has six parts. It starts with what a script can do: the eight uses of PyAutoGUI, the packages and the display they need, and how a click reaches a window through the X server. Then the pauses and fail-safes: the pause after each call and the four corners. The third part is the mouse: moving it, clicking, dragging in a spiral, scrolling, and the MouseInfo application, which breaks under Tk 9. The fourth is the screen and images: screenshots and pixel colors, finding a button, exact matches and the releases that changed them, and the window objects that exist for Windows only. The fifth is the keyboard and the message boxes: typing into the right window, key names, hotkeys and the clipboard, message boxes, looking busy, and the chapter replayed in five environments. The last part is a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. All six stories are on slides, each with a link; the eight narrative diagrams of the chapter are drawn from the same specifications as the interactive page. Every output was printed by Python 3.14.6 with PyAutoGUI 0.9.54 and PyScreeze 1.0.1, the programs ran on a virtual display, and what could not be run is marked on its slide.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "The questions this chapter answers",
+   "say": "The first question is the spine of the chapter, and the deck answers it slide by slide. On a machine with no real screen, a program can move a pointer, press buttons and keys, scroll, take a screenshot, find a picture in it and show a message box, and every one of those can be observed because X windows report what they receive. What cannot be shown to work is the part that needs a person's machine: Windows, macOS, a real Wayland compositor, a second monitor, a high-resolution screen and the games and chat programs the chapter mentions. The second question is the watch-out. The chapter's 25 listings hold 80 statements, and the research ran them as printed. With Python 3.14.6 and the newest packages 40 of the 80 matched the book's output, 52 ran without an exception and 28 raised; without OpenCV 40 matched, with PyScreeze 0.1.28 41 matched, under Python 3.12.3 with Tk 8.6.14 40 matched and 53 ran, and in an empty environment 1 matched. The statements that differ are the pointer positions, the pixel((50, 200)) call, the Box values, the window objects, mouseInfo() and the spiralDraw.py listing. Each slide says where a printed line differs and on what evidence.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "What a script can do with PyAutoGUI",
+   "say": "Wikipedia's article on the computer mouse says that on 14 November 1963 Douglas Engelbart first recorded in his notebook a pointing device he called a \"bug\", and that Bill English helped him build the first prototype in 1964. On 9 December 1968 Engelbart publicly demonstrated the mouse at what came to be known as The Mother of All Demos. In this study a script that called pyautogui.click(10, 5) on a virtual display made the window under the pointer receive a ButtonPress and a ButtonRelease of button 1 at (10, 5), and position() returned a Point with the integer fields x and y. The account rests on these sources. Wikipedia, 'Mouse (computing)' (Engelbart's notebook of 14 November 1963, the prototype of 1964, the demonstration of 9 December 1968), read 2026-10-13; this study's leaves PositionTuple and ClickSequence. The use-case diagram lists what a script can do through PyAutoGUI: move the mouse with moveTo(), click with click(), drag with drag(), scroll with scroll(), take a screenshot, find an image with locateOnScreen(), type text with write() and show a message box with confirm(). They are independent calls to one library, which is why the picture is a set of uses and not a sequence. The console runs under the interpreter of the deck: the installed PyAutoGUI is older than 1.0.0 and the installed PyScreeze, which does the locating, is 1.0.0 or newer, and importing pyautogui in a process with no DISPLAY raises KeyError: 'DISPLAY', which shows that the import reads the DISPLAY variable. The card records what the research found on 13 October 2026 and this deck does not run again: the chapter's page returned 200 with 103,072 bytes and holds 25 listings, 6 figures and 1 table; the online materials are a zip of 91 files, 72 of them Python, and none of them is pyautogui.py, submit.png, screenshot.png or mouseInfoLog.txt, which the chapter names; PyScreeze has 29 releases and its 1.0.0 and 1.0.1 are of 20 August 2024. The installed set was PyAutoGUI 0.9.54, PyScreeze 1.0.1, PyMsgBox 2.0.1, PyTweening 1.2.0, PyGetWindow 0.0.9, MouseInfo 0.1.3 and python3-xlib 0.15.",
+   "concept": "NoVersionOne",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "Packages, display and session",
+   "say": "Wikipedia's article on the X Window System reproduces the email in which Robert W. Scheifler wrote on 19 June 1984 that he had spent a couple of weeks writing a window system for the VS100, taken a fair amount of code from W, given it an asynchronous interface and called it X. He wrote that its performance appeared to be about twice that of W. In this study PyAutoGUI sent its keys to a window of that system through the XTEST extension and the window saw send_event as False, while a key sent with a SendEvent request arrived with send_event as True. The account rests on these sources. Wikipedia, 'X Window System' (the email of 19 June 1984 of Robert W. Scheifler), read 2026-10-13; this study's leaves XTestEvents and SyntheticVersusReal. The table runs one probe in five interpreters while the deck is checked: Python 3.14.6 with the newest packages, without OpenCV, with PyScreeze 0.1.28, Python 3.12.3 with Tk 8.6, and an empty Python 3.14.6. The probe imports pyautogui and calls size() on a virtual display, so every row with the packages answers 1920x1080, and the empty Python raises ModuleNotFoundError. The program starts three children on its own display. Without DISPLAY the import raises KeyError: 'DISPLAY'. With XDG_SESSION_TYPE set to wayland a screenshot raises PyScreezeException, while moveTo(300, 200) still works; the two results differ and the slide reports them as observed. That is a result of one program on one display and not a statement about a real Wayland compositor, which was never used; the Remote Desktop portal of XDG Desktop Portal and the Wayland protocol are documented in the research package. The research recorded that Windows documents SendInput as subject to UIPI and that macOS asks for the accessibility permission; none of those paths was run.",
+   "concept": "WaylandSession",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "How a click reaches a window",
+   "say": "The sequence diagram follows one click(10, 5): the script calls PyAutoGUI, PyAutoGUI sends XTestFakeInput to the X server for the motion and for the press and release of the button, and the X server delivers the events to the window, which receives them as if from the real mouse. The program asks the question with real windows: the display has the XTEST extension, a click and a key press of PyAutoGUI reach the Tk window with send_event False, and the letter q sent with XSendEvent, the older way to put an event in a window, arrives with send_event True; both reached the entry. The line under the program records the finding about xterm: it discarded the 2 keystrokes ab sent with XSendEvent, received cd from PyAutoGUI and received ab only with allowSendEvents true, because a terminal may ignore events marked as sent unless that resource is true. That is why a program that fakes keys in an application may see them ignored, and why the XTEST route is the one PyAutoGUI uses. The Windows and macOS paths are named in the documentation and were never run.",
+   "concept": "XTestEvents",
+   "visual": ""
+  },
+  {
+   "n": 7,
+   "title": "Pauses and fail-safes",
+   "say": "Wikipedia's article on the dead man's switch says it is designed to be activated or deactivated if the human operator becomes incapacitated, and that it is a form of fail-safe that stops a machine with no operator. It says the Malbone Street Wreck on the Brooklyn Rapid Transit system in 1918, though not caused by driver incapacitation, did spur the need for universal deployment of such devices to halt trains in the event of the operator's disability. In this study PyAutoGUI raised FailSafeException for a pointer in each of the four corners of a 1920 by 1080 screen and not at (1, 1), the one-pixel inset that is no corner. The account rests on these sources. Wikipedia, 'Dead man's switch' (the definition, the use as a fail-safe, the Malbone Street Wreck of 1918), read 2026-10-13; this study's leaves FailsafeCorners and FailsafeFires. The flow chart is the fail-safe of the chapter: after a call, PyAutoGUI waits for the pause, then asks whether the cursor is in a corner of the screen; if it is, the next call raises the exception and the program stops, and if not the program goes on. The program sets PAUSE to 0.3 and times five calls. In the research PAUSE is 0.1 and 15 action functions pause after the call, 14 of them once and rightClick twice, while position, size, screenshot, pixel, onScreen and sleep do not. The program prints only whether a call waited longer than 0.25 seconds, because a duration changes from run to run and a boolean does not. The fail-safe is not a promise that the program stops by itself at once: the call that moves the pointer to a corner returns, and it is the next call that raises FailSafeException.",
+   "concept": "PauseDefault",
+   "visual": ""
+  },
+  {
+   "n": 8,
+   "title": "Corners and the fail-safe points",
+   "say": "Only the four corners of the screen are fail-safe points, so a pointer at (1, 1) raises nothing, as the program prints. The points are computed when the module is imported: after the framebuffer was resized with xrandr from 1920 by 1080 to 1280 by 720, the process that was running kept the old corners and a new process saw (1279, 719). A script that runs for hours on a screen whose size can change must therefore be restarted, or must set its own points. The documentation says that only the primary monitor is handled, which fits what the research saw with two virtual monitors added: three monitors listed and a size that did not change. The chapter's hotkey('ctrl', 'alt', 'delete') was sent to a window of the virtual display, where the three keys arrived and were released in reverse order and nobody was logged out; what a real desktop does with them was never run.",
+   "concept": "FailsafeCorners",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "Moving the mouse and where it is",
+   "say": "A move without a duration is one jump, and a move with a longer duration is a series of small steps: the chart is the count of motion events the observer window received for the same move at five durations, and a duration of 0 and of 0.1 both gave a single event. In the research a duration of 0.25 made 6 events and 1.0 made 21; the numbers on the slide are this deck's own run of the same program. The steps follow the tweening function, a straight line unless a different one is passed. Points outside the screen do not raise an error: with the fail-safe off, (-50, -50) ended at (0, 0) and (5000, 5000) at the last pixel, because the X server clamps them. The program turns the fail-safe off for those two calls, which are on the screen's edge, and the point of the lines is that position() tells where the pointer really is, not where the script asked it to be.",
+   "concept": "DurationSteps",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "Clicking",
+   "say": "Each call is shown with the button presses that the observer window received. click() sends one left button press and release, button='middle' and rightClick() change the button to 2 and 3, and doubleClick() and tripleClick() send two and three presses in quick succession, which the Tk window reports as a Press followed by a DoubleClick, and by a DoubleClick and a TripleClick. click(clicks=2, interval=0.6) sends two clicks with a pause between them, and the window reports two single presses. Whether presses are a double click is decided by the window and its timing, not by PyAutoGUI, which only sends presses at the pointer. The call moves the pointer first when it is given coordinates, and clicks where it is when it is not, which is why the program moves to (700, 400) once and then calls click() with no arguments.",
+   "concept": "DoubleAndTriple",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "Dragging: the spiral",
+   "say": "The state diagram follows one drag: the cursor is at its place, drag() pushes the button down, the cursor moves in steps for the duration, and the button is released at the new location. The loop is the chapter's spiral: four drags per turn, each a little shorter than the one before, in a window that paints where the button is held; the program makes 32 calls and the picture is what the window painted, saved by the program. The press and release counts of the observer are 30 and 30, not 32, because the last two calls ask for a distance of zero and PyAutoGUI returns at once without pressing anything. The research recorded the first five calls, (300, 0), (0, 280), (-280, 0), (0, -260) and (260, 0), and a box of ink that is the same for the chapter's loop and for the shipped spiralDraw.py. That file has 580 bytes and 15 lines; it calls dragRel, waits with time.sleep(5) and uses a duration of 0.1 where the chapter prints 0.2, and the listing as printed in the chapter raises IndentationError.",
+   "concept": "DragEvents",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "Scrolling",
+   "say": "scroll(n) sends n wheel clicks, up for a positive number and down for a negative one, and what a click means is the toolkit's business: the same four calls moved a text widget by different numbers of lines under Tk 9.0.3 and under Tk 8.6.14. The program scrolls to the top before every call and prints how many lines the first visible line moved, and the chart plots the eight numbers it printed. The research found 1, 3, 5 and 19 lines under Tk 9.0.3 and 2, 5, 8 and 29 under Tk 8.6.14; the chart is this deck's own run. The chapter advises to experiment with the numbers, and the result agrees. The research also saw, on the X wire, that scroll sends the buttons 4 and 5 and hscroll the buttons 6 and 7, which is the card on the slide.",
+   "concept": "ScrollUnits",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "MouseInfo breaks under Tk 9",
+   "say": "MouseInfo is the small application that the chapter uses to read the position and the color under the pointer. pyautogui.mouseInfo() ends with TclError: bad option 'variable' under Tk 9.0.3, which comes with Python 3.13.14 up to 3.15.0b4, because MouseInfo 0.1.3 uses the old trace variable command and Tcl 9 documents trace add variable. The program starts it in two interpreters on its own display. The Python 3.14.6 process ended with the error and had no window; the Python 3.12.3 process with Tk 8.6.14 kept running and had a window, and the picture is that window. The caret that blinks in a field would make the picture differ from run to run, so the program moves the focus to a button before it crops the window. The delay card is the research's reading of the F6 key: the key logs the position at the end of the delay, not where the pointer was when it was pressed.",
+   "concept": "MouseInfoTk9",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "Screenshots and pixel colors",
+   "say": "Wikipedia's article on CAPTCHA says it is a challenge-response Turing test used in computing to determine whether the user is human in order to deter bot attacks and spam. The term was coined in 2003 by Luis von Ahn, Manuel Blum, Nicholas J. Hopper and John Langford, as a contrived acronym for Completely Automated Public Turing test to tell Computers and Humans Apart. In this study PyAutoGUI had no function with captcha or solve in its name, and screenshot() returned a 1920 by 1080 RGB image of a virtual display, so what a script reads from a screen is a picture. The account rests on these sources. Wikipedia, 'CAPTCHA' (the term coined in 2003 by von Ahn, Blum, Hopper and Langford; the 1997 form), read 2026-10-13; this study's leaves CaptchaEthics (the ethics part is not run) and ScreenshotImage. The program draws a window with one gray button on a display of depth 24 and takes the screenshot: the image has the size of the screen, 1920 by 1080, and the pixel inside the window is (176, 176, 175) while the pixel outside it is black. pixelMatchesColor() is True for the exact color, False when one channel is off, and True again with tolerance=1. The call pixel(210, 160) returns RGB(red=176, green=176, blue=175), a named tuple, and the second form the chapter prints, pixel((50, 200)) with a tuple, raises TypeError: pixel() missing 1 required positional argument: 'y'. A display of depth 16 stores fewer bits for each color, so the same gray comes back a little different and an exact match fails; the research saw that on its own, and this deck does not run it. The picture is the screenshot reduced to 480 by 270 pixels. A real screen with scaling, and several monitors, change the size and the coordinates, and neither was available.",
+   "concept": "Screenshots",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "Finding a button on the screen",
+   "say": "The flow chart is the pattern of every script that clicks a button it can see: take a screenshot, call locateOnScreen() with the image of the button, and, if it is found, click the center of the box; if it is not, the call raises ImageNotFoundException. The program draws a window with two identical buttons, cuts one button out of the screenshot and saves it as submit.png, and asks for it on the screen. locateOnScreen() returns the first box, locateAllOnScreen() both, and click() accepts the file name or a box and presses the button it finds. A Box holds the numbers as np.int64 when OpenCV is installed and as int without it, which the research saw, so the program converts them with int() before it prints them. The picture shows the screenshot with the found box in red. The research found its button at (400, 300, 84, 35), and saw locateOnScreen() raise at once when the button was not there and, with minSearchTime=5, keep looking and find a button that appeared 1.2 seconds later; in this deck's run the window is placed differently and the box is the one the transcript prints.",
+   "concept": "LocateBox",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "Exact matches, OpenCV and missing images",
+   "say": "The chapter says that a match must be exact, and the program shows it. A button cut from the screen is found; the same image with one pixel changed to black raises ImageNotFoundException with OpenCV and without; grayscale=True does not help; and confidence=0.9 finds the damaged image only when OpenCV is installed, and raises NotImplementedError otherwise. With PyScreeze 0.1.28 the missing image does not raise at all, the call returns None, so click('submit.png') raises a confusing TypeError further on. The table is the research's record of the release matrix, 14 combinations of PyAutoGUI and PyScreeze on Python 3.12 and 3.14.6, of which 4 do not import, and the deck check computes every cell again from the record. The program prints, for the exact image, the image with one pixel off, the same with confidence=0.9 and with grayscale=True, what each call returned in three environments; the slide leaves out the imports, the private display and the window with a button. The result is the advice to pin the two packages together, and to check for None or for the exception on the version in use. The release dates of PyScreeze 1.0.0 and 1.0.1 are the same day, 20 August 2024. The research also saw that the same button at a larger font, 109 by 45 pixels instead of 84 by 35, was not found, so a picture must come from the same screen settings as the screen it is searched in.",
+   "concept": "ExactMatchAndConfidence",
+   "visual": ""
+  },
+  {
+   "n": 17,
+   "title": "Window objects: Windows only",
+   "say": "The chapter teaches six window functions, getActiveWindow, getAllWindows, getWindowsAt, getWindowsWithTitle, getAllTitles and getActiveWindowTitle, and says they work on Windows only as of PyAutoGUI 1.0.0. On Linux the program finds none of them in pyautogui and importing pygetwindow raises NotImplementedError, so the chapter's three listings on window objects raise at the first call. What the program can show about windows on Linux is what the window manager and xdotool do: a Tk window placed at x 120 and y 80 has its client area at (121, 100), inside the frame that the openbox window manager adds, and after xdotool moves it to (300, 200) and resizes it to 640 by 360 the client area is at (301, 220), below the title bar. The picture is the window with that frame. The Windows window objects, with their left, top, width and height and their activate() and move calls, were not run.",
+   "concept": "WindowFunctionsLinux",
+   "visual": ""
+  },
+  {
+   "n": 18,
+   "title": "Typing into the right window",
+   "say": "The flow chart is the order that makes typing reliable: wait a few seconds with sleep(), click the window to make it active, call write() to type the string, call hotkey() to press the shortcut, and the focused window receives the typing. The program clicks the text field first and then types: write('Hello, world!') arrives as the same string, with the Shift key pressed for the capital H and the exclamation mark, and a list of key names, with left arrows in it, edits the text in place. keyDown('shift'), press('4') and keyUp('shift') type a dollar sign, and hotkey('ctrl', 'a') followed by delete empties the field. The picture is the field after the program typed the sentence again. Without the click the keys go to whichever window has the focus, and that is the mistake the chapter warns about. Appendix B has typing mistakes of its own, which the research found: the answer to question 6 types Hello world! without the comma of the question, and the answer to question 13 misspells pyautogui as pyatuogui, a NameError.",
+   "concept": "WriteString",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "Key names: mistakes are silent",
+   "say": "Wikipedia's article on QWERTY says the layout was devised in the early 1870s by Christopher Latham Sholes, that the manufacturing rights of the Sholes and Glidden Type-Writer were sold to E. Remington and Sons in 1873, and that the QWERTY design is based on the layout of the Sholes and Glidden typewriter sold by Remington from 1874. It became popular with the Remington No. 2 of 1878 and is still a de facto standard on computers. In this study write('zqay;') produced the same five characters under the us, de, tr and fr layouts of setxkbmap, and the table of key names held 194 entries. The account rests on these sources. Wikipedia, 'QWERTY' (Sholes, the sale to Remington in 1873, the typewriter sold from 1874, the Remington No. 2 of 1878), read 2026-10-13; this study's leaves KeyboardLayout and KeyTable. The program types into a text field and prints what arrived. press('nokey'), press('SHIFT') and keyDown('nokey') raise nothing and type nothing, because the key names are lower case and an unknown name is ignored; write(['a', 'nokey', 'b']) typed ab and write('caf\u00e9') typed caf, because the letter with the accent is not on the list, and the capital A is not in the list either, since a capital is typed with the Shift key. The consequence is that a script cannot tell a typo from a success, and the habit is to print the text that arrived, as the program does. The table of the chapter, Table 23-1, lists the key names, and every one of its 41 names is in KEYBOARD_KEYS.",
+   "concept": "BadKeyName",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "Hotkeys and the clipboard",
+   "say": "Wikipedia's article on cut, copy and paste says Larry Tesler proposed the names cut and copy for the first step and paste for the second, and that beginning in 1974 he and colleagues at Xerox PARC implemented several text editors that used the commands. Apple Computer popularized the paradigm with its Lisa in 1983 and Macintosh in 1984, mapping the functions to key combinations. In this study a script pressed ctrl and a, then ctrl and c, in a window and pyperclip.paste() returned the two lines 'Hello, world!' and 'second line' through xclip. The account rests on these sources. Wikipedia, 'Cut, copy, and paste' (Tesler and Xerox PARC from 1974; Apple Lisa 1983 and Macintosh 1984), read 2026-10-13; this study's leaves ClipboardRoundTrip and HotkeyOrder. The sequence diagram is the round trip of the chapter: the script presses ctrl and a to select the text, ctrl and c to copy it, the window stores the text on the clipboard, the script calls pyperclip.paste(), and the clipboard returns the text of the window. The program shows two things. The keys of hotkey('ctrl', 'alt', 'shift', 's') went down in the order given and came up in the reverse order, which the window recorded as events. And the text of the field, selected and copied with the two shortcuts, came back from pyperclip.paste() and pasted again with ctrl and v. The program waits a second between the copy and the paste, because the copy is made by another process and the clipboard is not filled at once; the corpus programs that read the clipboard right away sometimes got an empty string, so their values are not quoted. The five files of the online materials that import pyperclip are alternatingText.py, ccwd.py, cliprec.py, phoneAndEmail.py and showmap.py.",
+   "concept": "ClipboardRoundTrip",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "Message boxes",
+   "say": "The message boxes of PyAutoGUI come from PyMsgBox: alert(), confirm(), prompt() and password(). The program starts each box in a child process on its own display, answers it with xdotool keys and prints what the call returned. Return on confirm returns 'OK' and Escape returns 'Cancel'; prompt returns an empty string for Return alone and None for Escape; password returns what was typed; and confirm with timeout=1500 returned 'Timeout' after about one and a half seconds, which the program prints as a boolean. A script that needs an answer must handle both the empty string and None. The installed PyMsgBox reports a version older than its release, which the research saw and which is only a label.",
+   "concept": "MessageBoxResults",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "Looking busy and the idle clock",
+   "say": "A script that moves the pointer one pixel left and right keeps a screen from going idle, and the program shows the mechanism with the idle clock of the X server: the x positions are 799, 800, 799, 800, 799 and 800, and the script ends where it began. The idle time is reset by move(1, 0) and by press('shift') and not by position() or size(), so a script that only reads the screen does not look busy. The numbers are printed as booleans, because the idle time itself changes from run to run. The chapter's examples that use these ideas, a bot for a game, an instant messenger and a captcha, need a real screen and a real service and were not run; the repository of the game bot could not be fetched from the proxy of the study.",
+   "concept": "LookingBusy",
+   "visual": ""
+  },
+  {
+   "n": 23,
+   "title": "The chapter replayed in five environments",
+   "say": "The table is the research's record of the chapter's 80 statements replayed as printed, and the deck check computes every cell again from the record. With Python 3.14.6 and the newest packages 40 matched the book and 52 ran without an exception; without OpenCV the numbers were the same; with PyScreeze 0.1.28 41 matched; under Python 3.12.3 with Tk 8.6.14 40 matched and 53 ran; and in an empty environment 1 matched and 1 ran. The statements that differ are the pointer positions, the pixel((50, 200)) call, the Box values, the window objects, mouseInfo() and the listing of spiralDraw.py. Across the 14 combinations of PyAutoGUI and PyScreeze, 7 of the 27 items differed, across 7 releases of Pillow, 9.5.0 to 12.3.0, 3 items differed only by a DeprecationWarning in 12.3.0, and across 3 releases of PyMsgBox the signatures differed. The photograph of the stories was not fetched, because the single request to Wikimedia Commons answered 429.",
+   "concept": "Interpreters",
+   "visual": ""
+  },
+  {
+   "n": 24,
+   "title": "The chapter in one map",
+   "say": "These six branches are the route of the deck. Installing and sending input: PyAutoGUI sends events through XTEST on Linux, a Wayland session does not accept them, and the window functions exist only on Windows; on slide 5 the session variable alone made the screenshot fail while the move still worked through X. Staying on track: the pause after each call is 0.1 seconds, a corner of the screen raises the fail-safe, and the exception stops the program. Mouse control: the origin (0, 0) is the top left corner, click() presses and releases the button, and drag() holds the button down. Screen and images: screenshot() returns an image, locateOnScreen() returns a box, and a missing image raises ImageNotFoundException with a recent PyScreeze. Windows and keyboard: write() types a string, an unknown key name is ignored and the focused window receives the typing. Scripts and practice: confirm() returns the button clicked, Looking Busy moves the cursor by one pixel, and Tk 9 breaks MouseInfo. Together they answer the first question of the chapter, what can be shown to work on a machine with no real screen and what can only be shown to fail, and the slides that say where a printed line differs answer the second. The map is drawn from the same specification as the interactive page.",
+   "concept": "InstallingAndSendingInput",
+   "visual": ""
+  },
+  {
+   "n": 25,
+   "title": "Where to go from here",
+   "say": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every listing of the chapter; the online materials are the zip of 91 files, and Appendix A is where the book installs third-party packages. The reference links are the PyAutoGUI documentation and its pages on the mouse and keyboard functions, and the MouseInfo documentation. The six stories of the chapter are on slides with their own link, and their pages are the last group. The research package holds 56 sources in all, among them the X.Org protocol documents, the manual page of xterm, the Microsoft documentation of SendInput, the PyPI metadata of the packages and the Tcl 9.0 manual. The research opened the chapter's own 13 external links too: 7 answered 200, 3 answered 302, youtu.be answered 303 and then 429, the game bot's repository answered 403 through the proxy of the study, and sumopaint.com was unreachable. No photograph of a person is used in the deck.",
+   "concept": "PracticeProblems",
+   "visual": ""
+  },
+  {
+   "n": 26,
+   "title": "What you should now be able to say",
+   "say": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The programs need PyAutoGUI, PyScreeze, Pillow, PyMsgBox, pyperclip, python3-xlib and a Tk, and the deck's own programs run on a virtual X display with Xvfb, openbox, xdotool, xclip, xterm and scrot. The rows were run again under Python 3.14.6 each time the deck was built, and the programs, and with them the pictures, were run again by the check that compares the slides with the recording. What was not run is marked on its slide: Windows and macOS, a real Wayland compositor, real or multiple monitors, HiDPI scaling, a real screen, the Sushi Go Round game, a captcha, a real instant messenger and Python 3.15 final. Nothing was ever shown to a person on a screen. Every count in this deck from a single run is a single run, and not a benchmark. The next chapter of the book moves on, and what this chapter taught about checking what a program receives carries over.",
+   "concept": "",
+   "visual": ""
+  }
+ ]
+}

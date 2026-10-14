@@ -1,0 +1,4433 @@
+{
+ "meta": {
+  "title": "Ch. 23: Keyboard and Mouse",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "1.0.0",
+  "python": "3.14.6",
+  "total": 26,
+  "diagrams": {
+   "WhatAScriptCanDoWithPyAutoGUI": 4,
+   "ScriptToXServer": 6,
+   "ACallWithTheFailSafeOn": 7,
+   "TheLifeOfADrag": 11,
+   "FindingAndClickingAButton": 15,
+   "TypingIntoTheRightWindow": 18,
+   "CopyingTextWithTheClipboard": 20,
+   "ControllingTheKeyboardAndMouseAtAGlance": 24
+  },
+  "notExecuted": [
+   5,
+   8,
+   14,
+   17,
+   22,
+   23
+  ],
+  "recorded": [
+   4,
+   5,
+   6,
+   8,
+   9,
+   12,
+   13,
+   14,
+   16,
+   17,
+   19,
+   21,
+   22,
+   23
+  ],
+  "standin": {
+   "5": [
+    "waylandCut_v1_0_0.py"
+   ],
+   "6": [
+    "xtestCut_v1_0_0.py"
+   ],
+   "7": [
+    "pauseCut_v1_0_0.py"
+   ],
+   "8": [
+    "cornersCut_v1_0_0.py"
+   ],
+   "9": [
+    "moveCut_v1_0_0.py"
+   ],
+   "10": [
+    "clickCut_v1_0_0.py"
+   ],
+   "11": [
+    "dragCut_v1_0_0.py"
+   ],
+   "12": [
+    "scrollCut_v1_0_0.py"
+   ],
+   "13": [
+    "mouseinfoCut_v1_0_0.py"
+   ],
+   "14": [
+    "shotCut_v1_0_0.py"
+   ],
+   "15": [
+    "locateCut_v1_0_0.py"
+   ],
+   "16": [
+    "matchCut_v1_0_0.py"
+   ],
+   "17": [
+    "windowCut_v1_0_0.py"
+   ],
+   "18": [
+    "typeCut_v1_0_0.py"
+   ],
+   "19": [
+    "keysCut_v1_0_0.py"
+   ],
+   "20": [
+    "clipCut_v1_0_0.py"
+   ],
+   "21": [
+    "boxCut_v1_0_0.py"
+   ],
+   "22": [
+    "busyCut_v1_0_0.py"
+   ]
+  }
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Ch. 23: Keyboard and Mouse",
+   "sub": "Controlling the keyboard and mouse with PyAutoGUI: fail-safes, clicks, screenshots, typing and message boxes",
+   "items": [
+    {
+     "t": "code",
+     "x": 5.0,
+     "y": 0.25,
+     "w": 4.5,
+     "h": 2.06,
+     "rows": [
+      [
+       "import platform, importlib.metadata as m",
+       ""
+      ],
+      [
+       "platform.python_version()",
+       "'3.14.6'"
+      ],
+      [
+       "m.version('pyautogui')",
+       "'0.9.54'"
+      ],
+      [
+       "m.version('pyscreeze')",
+       "'1.0.1'"
+      ],
+      [
+       "m.version('pillow')",
+       "'12.3.0'"
+      ],
+      [
+       "m.version('pymsgbox')",
+       "'2.0.1'"
+      ]
+     ],
+     "fs": 8
+    },
+    {
+     "t": "foot",
+     "x": 0.6,
+     "y": 3.85,
+     "w": 8.8,
+     "h": 0.59,
+     "fs": 11,
+     "body": "Every output on these slides was printed by the Python above when the deck was made, and every picture was saved by a program that is run again to check it. Windows, macOS and a real screen were never used: every program ran on a virtual display, and what could not be run is marked on its slide."
+    }
+   ],
+   "notes": "Chapter 22 taught a program to read pictures. Chapter 23 teaches a program to act on the screen: PyAutoGUI sends the movements of the mouse and the keys of the keyboard that a person would send, and it can take a screenshot and look for a picture in it. The chapter has 25 listings, 6 figures and 1 table, and ends with 13 practice questions and 3 practice programs. This deck follows the chapter in its own order: the fail-safes, the mouse, the screen and images, the keyboard, and the message boxes, and it adds what the research found when the chapter's 80 printed statements were run again. Every program of the deck runs on a virtual X display, Xvfb, with real X clients such as a Tk window, xdotool, xclip and xterm, so what a program prints is what those windows received. Nobody looks at that screen, which is why the deck calls it a virtual display, not a real screen. Every output on the slides was printed by Python 3.14.6 with PyAutoGUI 0.9.54, PyScreeze 1.0.1, PyMsgBox 2.0.1 and Pillow 12.3.0, the versions the console above prints. Windows and macOS were never used, and neither were a real Wayland session, a second monitor or a high-resolution screen. What could not be run is marked on its slide, and what the research measured and this deck does not run again is marked Recorded.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Six parts; every range is a run of slides you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 6.3,
+     "h": 3.55,
+     "fs": 11.5,
+     "items": [
+      "What a script can do (slides 4-6)",
+      "Pauses and fail-safes (slides 7-8)",
+      "The mouse (slides 9-13)",
+      "The screen and images (slides 14-17)",
+      "The keyboard and message boxes (slides 18-23)",
+      "Summary and resources (slides 24-25)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "26",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "6 + 0",
+       "label": "true stories: 6 on slides, 0 in the notes"
+      },
+      {
+       "n": "6",
+       "label": "pictures, each saved by a program that is run again"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has six parts. It starts with what a script can do: the eight uses of PyAutoGUI, the packages and the display they need, and how a click reaches a window through the X server. Then the pauses and fail-safes: the pause after each call and the four corners. The third part is the mouse: moving it, clicking, dragging in a spiral, scrolling, and the MouseInfo application, which breaks under Tk 9. The fourth is the screen and images: screenshots and pixel colors, finding a button, exact matches and the releases that changed them, and the window objects that exist for Windows only. The fifth is the keyboard and the message boxes: typing into the right window, key names, hotkeys and the clipboard, message boxes, looking busy, and the chapter replayed in five environments. The last part is a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. All six stories are on slides, each with a link; the eight narrative diagrams of the chapter are drawn from the same specifications as the interactive page. Every output was printed by Python 3.14.6 with PyAutoGUI 0.9.54 and PyScreeze 1.0.1, the programs ran on a virtual display, and what could not be run is marked on its slide.",
+   "take": "Six parts, from what a script can do to a map.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "The chapter's own competency questions; the summary comes back to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 2.3,
+     "fs": 11,
+     "items": [
+      "Which parts of a program that moves the mouse, types and finds images on the screen can be shown to work, and which can only be shown to fail or be read from documentation, on a machine that has no real screen, no Windows or macOS and no second monitor, and how large is the spread between interpreter, Tk and package releases?",
+      "Which printed outputs, programs, version numbers and statements of the chapter differ in current releases of Python, PyAutoGUI, PyScreeze, Pillow, PyMsgBox and Tk, with or without OpenCV, or in the files and pages it points to, and on what source?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 3.8,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 10,
+     "items": [
+      "6 branches",
+      "104 topics",
+      "13 console rows",
+      "30 programs run",
+      "8 diagrams",
+      "6 pictures",
+      "Python 3.14.6"
+     ]
+    }
+   ],
+   "notes": "The first question is the spine of the chapter, and the deck answers it slide by slide. On a machine with no real screen, a program can move a pointer, press buttons and keys, scroll, take a screenshot, find a picture in it and show a message box, and every one of those can be observed because X windows report what they receive. What cannot be shown to work is the part that needs a person's machine: Windows, macOS, a real Wayland compositor, a second monitor, a high-resolution screen and the games and chat programs the chapter mentions. The second question is the watch-out. The chapter's 25 listings hold 80 statements, and the research ran them as printed. With Python 3.14.6 and the newest packages 40 of the 80 matched the book's output, 52 ran without an exception and 28 raised; without OpenCV 40 matched, with PyScreeze 0.1.28 41 matched, under Python 3.12.3 with Tk 8.6.14 40 matched and 53 ran, and in an empty environment 1 matched. The statements that differ are the pointer positions, the pixel((50, 200)) call, the Box values, the window objects, mouseInfo() and the spiralDraw.py listing. Each slide says where a printed line differs and on what evidence.",
+   "take": "Know what can be shown to work and what can only be shown to fail.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What a script can do with PyAutoGUI",
+   "sub": "Eight uses; the chapter mentions release 1.0.0, which PyPI does not list",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.6,
+     "h": 2.75,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 1.3,
+       "y": 1.68,
+       "w": 3.8,
+       "h": 2.47,
+       "fill": "FBF8F2",
+       "line": "6E655C",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "PYAUTOGUI",
+       "x": 1.38,
+       "y": 1.42,
+       "w": 3.65,
+       "h": 0.24,
+       "fs": 8.5,
+       "color": "6E655C",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 1.79,
+       "w": 3.5,
+       "h": 0.239,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Move the mouse with moveTo()",
+       "x": 1.73,
+       "y": 1.832,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.089,
+       "w": 3.5,
+       "h": 0.239,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Click a button with click()",
+       "x": 1.73,
+       "y": 2.131,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.387,
+       "w": 3.5,
+       "h": 0.239,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Drag the mouse with drag()",
+       "x": 1.73,
+       "y": 2.43,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.686,
+       "w": 3.5,
+       "h": 0.239,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Scroll with scroll()",
+       "x": 1.73,
+       "y": 2.728,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.985,
+       "w": 3.5,
+       "h": 0.239,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Take a screenshot",
+       "x": 1.73,
+       "y": 3.027,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.284,
+       "w": 3.5,
+       "h": 0.239,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Find an image with locateOnScreen()",
+       "x": 1.73,
+       "y": 3.326,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.582,
+       "w": 3.5,
+       "h": 0.239,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Type text with write()",
+       "x": 1.73,
+       "y": 3.625,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.881,
+       "w": 3.5,
+       "h": 0.239,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Show a message box with confirm()",
+       "x": 1.73,
+       "y": 3.923,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 0.74,
+       "y": 2.075,
+       "w": 0.22,
+       "h": 0.22,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 1.5
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.295,
+       "x2": 0.85,
+       "y2": 2.675,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.65,
+       "y1": 2.395,
+       "x2": 1.05,
+       "y2": 2.395,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.675,
+       "x2": 0.69,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.675,
+       "x2": 1.01,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A script",
+       "x": 0.5,
+       "y": 2.975,
+       "w": 0.8,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 1.909,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 2.208,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 2.507,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 2.806,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 3.104,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 3.403,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 3.702,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 4.001,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      }
+     ],
+     "did": "WhatAScriptCanDoWithPyAutoGUI"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.18,
+     "w": 4.6,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WhatAScriptCanDoWithPyAutoGUI - SetOfUses pattern, 25 of 25 words grounded in the chapter's text"
+    },
+    {
+     "t": "code",
+     "x": 5.3,
+     "y": 1.45,
+     "w": 4.2,
+     "h": 2.06,
+     "rows": [
+      [
+       "import importlib.metadata as m, sys",
+       ""
+      ],
+      [
+       "sys.version_info[:2]",
+       "(3, 14)"
+      ],
+      [
+       "m.version('pyautogui') < '1.0.0'",
+       "True"
+      ],
+      [
+       "m.version('pyscreeze') >= '1.0.0'",
+       "True"
+      ],
+      [
+       "import os",
+       ""
+      ],
+      [
+       "_ = os.environ.pop('DISPLAY', None)",
+       ""
+      ],
+      [
+       "import pyautogui",
+       "KeyError: 'DISPLAY'"
+      ]
+     ],
+     "fs": 8,
+     "cap": "run under Python 3.14.6; no row reads the clock or the network"
+    },
+    {
+     "t": "foot",
+     "x": 5.3,
+     "y": 3.85,
+     "w": 4.2,
+     "h": 0.49,
+     "fs": 9,
+     "body": "Recorded 13 Oct 2026: PyPI lists 50 releases of PyAutoGUI, 0.9.54 the newest and none numbered 1.0.0; the chapter mentions 1.0.0 in 3 passages."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "Douglas Engelbart of the Stanford Research Institute, with Bill English, who helped build the first prototype in 1964",
+     "where": "SRI's Augmentation Research Center; the public demonstration was The Mother of All Demos",
+     "when": "1968",
+     "link": "https://en.wikipedia.org/wiki/Mouse_(computing)",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on the computer mouse says that on 14 November 1963 Douglas Engelbart first recorded in his notebook a pointing device he called a \"bug\", and that Bill English helped him build the first prototype in 1964. On 9 December 1968 Engelbart publicly demonstrated the mouse at what came to be known as The Mother of All Demos. In this study a script that called pyautogui.click(10, 5) on a virtual display made the window under the pointer receive a ButtonPress and a ButtonRelease of button 1 at (10, 5), and position() returned a Point with the integer fields x and y. The account rests on these sources. Wikipedia, 'Mouse (computing)' (Engelbart's notebook of 14 November 1963, the prototype of 1964, the demonstration of 9 December 1968), read 2026-10-13; this study's leaves PositionTuple and ClickSequence. The use-case diagram lists what a script can do through PyAutoGUI: move the mouse with moveTo(), click with click(), drag with drag(), scroll with scroll(), take a screenshot, find an image with locateOnScreen(), type text with write() and show a message box with confirm(). They are independent calls to one library, which is why the picture is a set of uses and not a sequence. The console runs under the interpreter of the deck: the installed PyAutoGUI is older than 1.0.0 and the installed PyScreeze, which does the locating, is 1.0.0 or newer, and importing pyautogui in a process with no DISPLAY raises KeyError: 'DISPLAY', which shows that the import reads the DISPLAY variable. The card records what the research found on 13 October 2026 and this deck does not run again: the chapter's page returned 200 with 103,072 bytes and holds 25 listings, 6 figures and 1 table; the online materials are a zip of 91 files, 72 of them Python, and none of them is pyautogui.py, submit.png, screenshot.png or mouseInfoLog.txt, which the chapter names; PyScreeze has 29 releases and its 1.0.0 and 1.0.1 are of 20 August 2024. The installed set was PyAutoGUI 0.9.54, PyScreeze 1.0.1, PyMsgBox 2.0.1, PyTweening 1.2.0, PyGetWindow 0.0.9, MouseInfo 0.1.3 and python3-xlib 0.15.",
+   "take": "A script can do with code what a hand does with a mouse.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Packages, display and session",
+   "sub": "No DISPLAY, no import; under Wayland a screenshot fails while moveTo still works",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 3.9,
+     "colW": [
+      0.8,
+      0.55,
+      0.55,
+      0.55,
+      0.55,
+      0.9
+     ],
+     "fs": 7,
+     "rowH": 0.22,
+     "cellMargin": [
+      0.02,
+      0.04,
+      0.02,
+      0.04
+     ],
+     "rows": [
+      [
+       "check",
+       "3.14.6 newest",
+       "3.14.6 no OpenCV",
+       "3.14.6 PyScreeze 0.1.28",
+       "3.12.3 Tk 8.6",
+       "3.14.6 empty"
+      ],
+      [
+       "Python",
+       "3.14.6",
+       "3.14.6",
+       "3.14.6",
+       "3.12.3",
+       "3.14.6"
+      ],
+      [
+       "PyAutoGUI",
+       "0.9.54",
+       "0.9.54",
+       "0.9.54",
+       "0.9.54",
+       "none"
+      ],
+      [
+       "PyScreeze",
+       "1.0.1",
+       "1.0.1",
+       "0.1.28",
+       "1.0.1",
+       "none"
+      ],
+      [
+       "OpenCV",
+       "5.0.0.93",
+       "none",
+       "none",
+       "none",
+       "none"
+      ],
+      [
+       "Tk",
+       "9.0.3",
+       "9.0.3",
+       "9.0.3",
+       "8.6.14",
+       "9.0.3"
+      ],
+      [
+       "import pyautogui",
+       "ok",
+       "ok",
+       "ok",
+       "ok",
+       "ModuleNotFound"
+      ],
+      [
+       "size()",
+       "1920x1080",
+       "1920x1080",
+       "1920x1080",
+       "1920x1080",
+       "-"
+      ]
+     ]
+    },
+    {
+     "t": "prog",
+     "x": 4.48,
+     "y": 1.55,
+     "w": 5.02,
+     "h": 2.38,
+     "lines": [
+      "with Desk(wm=False) as d:",
+      "    print(VD, '| three children')",
+      "    env = dict(d.env); env.pop('DISPLAY')",
+      "    print('no DISPLAY    :', child('import pyautogui', env=env)[2])",
+      "    env = dict(d.env, XDG_SESSION_TYPE='wayland')",
+      "    shot = 'import pyautogui; pyautogui.screenshot()'",
+      "    move = 'import pyautogui as p; p.moveTo(300, 200); print(p.position())'",
+      "    rc, out, err = child(shot, env=env)",
+      "    print('wayland screenshot(): exit', rc, '|', err.split(':')[0])",
+      "    rc, out, err = child(move, env=env)",
+      "    print('wayland moveTo(300, 200): exit', rc, '| position', out[0])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen | three children\nno DISPLAY    : KeyError: 'DISPLAY'\nwayland screenshot(): exit 1 | pyscreeze.PyScreezeException\nwayland moveTo(300, 200): exit 0 | position Point(x=300, y=200)",
+     "outLabel": "prints",
+     "label": "program waylandCut_v1_0_0.py, lines 168 to 178 of 178"
+    },
+    {
+     "t": "foot",
+     "x": 4.48,
+     "y": 3.98,
+     "w": 5.02,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it. Lines 1 to 167 (imports, the private display and the helpers that start child programs) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.6,
+     "w": 3.9,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: the three backends are SendInput, mouse_event and keybd_event on Windows, CGEventPost and Quartz on macOS, and fake_input of the XTEST extension on Linux."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.09,
+     "w": 3.9,
+     "h": 0.44,
+     "fs": 8,
+     "body": "NOT EXECUTED here: Windows, macOS, the accessibility permission of macOS and a real Wayland compositor; only the Linux path through X ran."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "Robert W. Scheifler of the MIT Laboratory for Computer Science, writing to the Project Athena community",
+     "where": "MIT; the message was sent to window@athena on Tuesday 19 June 1984",
+     "when": "1984",
+     "link": "https://en.wikipedia.org/wiki/X_Window_System",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on the X Window System reproduces the email in which Robert W. Scheifler wrote on 19 June 1984 that he had spent a couple of weeks writing a window system for the VS100, taken a fair amount of code from W, given it an asynchronous interface and called it X. He wrote that its performance appeared to be about twice that of W. In this study PyAutoGUI sent its keys to a window of that system through the XTEST extension and the window saw send_event as False, while a key sent with a SendEvent request arrived with send_event as True. The account rests on these sources. Wikipedia, 'X Window System' (the email of 19 June 1984 of Robert W. Scheifler), read 2026-10-13; this study's leaves XTestEvents and SyntheticVersusReal. The table runs one probe in five interpreters while the deck is checked: Python 3.14.6 with the newest packages, without OpenCV, with PyScreeze 0.1.28, Python 3.12.3 with Tk 8.6, and an empty Python 3.14.6. The probe imports pyautogui and calls size() on a virtual display, so every row with the packages answers 1920x1080, and the empty Python raises ModuleNotFoundError. The program starts three children on its own display. Without DISPLAY the import raises KeyError: 'DISPLAY'. With XDG_SESSION_TYPE set to wayland a screenshot raises PyScreezeException, while moveTo(300, 200) still works; the two results differ and the slide reports them as observed. That is a result of one program on one display and not a statement about a real Wayland compositor, which was never used; the Remote Desktop portal of XDG Desktop Portal and the Wayland protocol are documented in the research package. The research recorded that Windows documents SendInput as subject to UIPI and that macOS asks for the accessibility permission; none of those paths was run.",
+   "take": "The library needs an X display; nothing here ran on Windows or macOS.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "How a click reaches a window",
+   "sub": "PyAutoGUI asks the X server to fake the input; the window cannot tell it from a mouse",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.7,
+     "h": 3.5,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.4,
+       "w": 0.9,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The script",
+       "x": 0.61,
+       "y": 1.516,
+       "w": 0.78,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.0,
+       "y1": 1.82,
+       "x2": 1.0,
+       "y2": 4.9,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.783,
+       "y": 1.4,
+       "w": 0.9,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "PyAutoGUI",
+       "x": 1.843,
+       "y": 1.516,
+       "w": 0.78,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.233,
+       "y1": 1.82,
+       "x2": 2.233,
+       "y2": 4.9,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.017,
+       "y": 1.4,
+       "w": 0.9,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The X server",
+       "x": 3.077,
+       "y": 1.432,
+       "w": 0.78,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.467,
+       "y1": 1.82,
+       "x2": 3.467,
+       "y2": 4.9,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.25,
+       "y": 1.4,
+       "w": 0.9,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The window",
+       "x": 4.31,
+       "y": 1.516,
+       "w": 0.78,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.7,
+       "y1": 1.82,
+       "x2": 4.7,
+       "y2": 4.9,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.0,
+       "y1": 2.264,
+       "x2": 2.233,
+       "y2": 2.264,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls click(10, 5)",
+       "x": 1.1,
+       "y": 1.925,
+       "w": 1.033,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.233,
+       "y1": 2.88,
+       "x2": 3.467,
+       "y2": 2.88,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Sends XTestFakeInput for the motion",
+       "x": 2.333,
+       "y": 2.406,
+       "w": 1.033,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.233,
+       "y1": 3.496,
+       "x2": 3.467,
+       "y2": 3.496,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Sends XTestFakeInput for the button press and release",
+       "x": 2.333,
+       "y": 2.888,
+       "w": 1.033,
+       "h": 0.558,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.467,
+       "y1": 4.112,
+       "x2": 4.7,
+       "y2": 4.112,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Delivers the events of the button",
+       "x": 3.567,
+       "y": 3.638,
+       "w": 1.033,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.7,
+       "y1": 4.728,
+       "x2": 3.467,
+       "y2": 4.728,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Receives the events as if from the real mouse",
+       "x": 3.567,
+       "y": 4.254,
+       "w": 1.033,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "ScriptToXServer"
+    },
+    {
+     "t": "prog",
+     "x": 5.28,
+     "y": 1.55,
+     "w": 4.22,
+     "h": 2.52,
+     "lines": [
+      "with Desk() as d:",
+      "    import pyautogui; pyautogui.PAUSE = 0",
+      "    print(VD, '| XTEST:', 'XTEST' in d.sh('xdpyinfo'))",
+      "    o = d.observer(); st = o.state()",
+      "    pyautogui.click(st['rootx'] + 50, st['rooty'] + 10)",
+      "    print('click :', btns(o))",
+      "    o.clear(); pyautogui.press('w')",
+      "    print('PyAutoGUI w :', keys(o))",
+      "    o.clear(); sendkey(d, 'observer', 'q')",
+      "    print('SendEvent q :', keys(o))",
+      "    print('both reached the entry:', repr(o.entry()))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen | XTEST: True\nclick : [('Press', 1, False), ('Release', 1, False)]\nPyAutoGUI w : [('Press', 'w', False), ('Release', 'w', False)]\nSendEvent q : [('Press', 'q', True), ('Release', 'q', True)]\nboth reached the entry: 'wq'",
+     "outLabel": "prints",
+     "label": "program xtestCut_v1_0_0.py, lines 168 to 178 of 178"
+    },
+    {
+     "t": "foot",
+     "x": 5.28,
+     "y": 4.12,
+     "w": 4.22,
+     "h": 0.71,
+     "fs": 8,
+     "body": "diagram ScriptToXServer - Interaction pattern, 23 of 23 words grounded in the chapter's text. Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it. Recorded 13 Oct 2026: xterm discarded the 2 keystrokes ab sent with XSendEvent and took them only with allowSendEvents true."
+    }
+   ],
+   "notes": "The sequence diagram follows one click(10, 5): the script calls PyAutoGUI, PyAutoGUI sends XTestFakeInput to the X server for the motion and for the press and release of the button, and the X server delivers the events to the window, which receives them as if from the real mouse. The program asks the question with real windows: the display has the XTEST extension, a click and a key press of PyAutoGUI reach the Tk window with send_event False, and the letter q sent with XSendEvent, the older way to put an event in a window, arrives with send_event True; both reached the entry. The line under the program records the finding about xterm: it discarded the 2 keystrokes ab sent with XSendEvent, received cd from PyAutoGUI and received ab only with allowSendEvents true, because a terminal may ignore events marked as sent unless that resource is true. That is why a program that fakes keys in an application may see them ignored, and why the XTEST route is the one PyAutoGUI uses. The Windows and macOS paths are named in the documentation and were never run.",
+   "take": "XTEST input looks like a real mouse to the window.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Pauses and fail-safes",
+   "sub": "A pause of 0.1 s follows each action call; a corner of the screen stops the program",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 3.6,
+     "h": 2.6,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.505,
+       "w": 1.6,
+       "h": 0.44,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The script calls a PyAutoGUI function",
+       "x": 0.62,
+       "y": 1.581,
+       "w": 1.46,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 2.155,
+       "w": 1.6,
+       "h": 0.44,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "PyAutoGUI waits for the pause after the call",
+       "x": 0.62,
+       "y": 2.231,
+       "w": 1.46,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.55,
+       "y": 2.775,
+       "w": 1.6,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the cursor in a corner of the screen?",
+       "x": 0.72,
+       "y": 2.881,
+       "w": 1.26,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 3.455,
+       "w": 1.6,
+       "h": 0.44,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "PyAutoGUI raises the exception and the program stops",
+       "x": 0.62,
+       "y": 3.463,
+       "w": 1.46,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.5,
+       "y": 2.805,
+       "w": 1.6,
+       "h": 0.44,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The program goes on to the next function call",
+       "x": 2.57,
+       "y": 2.881,
+       "w": 1.46,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.2,
+       "y": 1.625,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.16,
+       "y": 3.535,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.22,
+       "y": 3.595,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.2,
+       "y1": 1.725,
+       "x2": 2.15,
+       "y2": 1.725,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.35,
+       "y1": 1.945,
+       "x2": 1.35,
+       "y2": 2.155,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.35,
+       "y1": 2.595,
+       "x2": 1.35,
+       "y2": 2.775,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.35,
+       "y1": 3.275,
+       "x2": 1.35,
+       "y2": 3.455,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 1.41,
+       "y": 3.275,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 3.025,
+       "x2": 2.5,
+       "y2": 3.025,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.2,
+       "y": 2.825,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.15,
+       "y1": 3.675,
+       "x2": 3.16,
+       "y2": 3.675,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.3,
+       "y1": 3.245,
+       "x2": 3.3,
+       "y2": 3.535,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "ACallWithTheFailSafeOn"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.03,
+     "w": 3.6,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ACallWithTheFailSafeOn - Workflow pattern, 20 of 22 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.42,
+     "y": 1.55,
+     "w": 5.08,
+     "h": 2.66,
+     "lines": [
+      "with Desk(wm=False) as d:",
+      "    import pyautogui",
+      "    print(VD, '| PAUSE', pyautogui.PAUSE, '| FAILSAFE', pyautogui.FAILSAFE)",
+      "    pyautogui.PAUSE = 0.3",
+      "    def waits(f, *a):",
+      "        t = time.perf_counter(); f(*a)",
+      "        return time.perf_counter() - t > 0.25",
+      "    for f, a in ((pyautogui.moveTo, (50, 60)), (pyautogui.click, ()),",
+      "                 (pyautogui.press, ('shift',)), (pyautogui.position, ()),",
+      "                 (pyautogui.onScreen, (5, 5))):",
+      "        print('%-9s waits after the call:' % f.__name__, waits(f, *a))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen | PAUSE 0.1 | FAILSAFE True\nmoveTo    waits after the call: True\nclick     waits after the call: True\npress     waits after the call: True\nposition  waits after the call: False\nonScreen  waits after the call: False",
+     "outLabel": "prints",
+     "label": "program pauseCut_v1_0_0.py, lines 168 to 178 of 178"
+    },
+    {
+     "t": "foot",
+     "x": 4.42,
+     "y": 4.25,
+     "w": 5.08,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "The Brooklyn Rapid Transit system, whose train was wrecked at Malbone Street, and the operators of the New York City Subway",
+     "where": "Brooklyn, New York City, on the Malbone Street line",
+     "when": "1918",
+     "link": "https://en.wikipedia.org/wiki/Dead_man%27s_switch",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on the dead man's switch says it is designed to be activated or deactivated if the human operator becomes incapacitated, and that it is a form of fail-safe that stops a machine with no operator. It says the Malbone Street Wreck on the Brooklyn Rapid Transit system in 1918, though not caused by driver incapacitation, did spur the need for universal deployment of such devices to halt trains in the event of the operator's disability. In this study PyAutoGUI raised FailSafeException for a pointer in each of the four corners of a 1920 by 1080 screen and not at (1, 1), the one-pixel inset that is no corner. The account rests on these sources. Wikipedia, 'Dead man's switch' (the definition, the use as a fail-safe, the Malbone Street Wreck of 1918), read 2026-10-13; this study's leaves FailsafeCorners and FailsafeFires. The flow chart is the fail-safe of the chapter: after a call, PyAutoGUI waits for the pause, then asks whether the cursor is in a corner of the screen; if it is, the next call raises the exception and the program stops, and if not the program goes on. The program sets PAUSE to 0.3 and times five calls. In the research PAUSE is 0.1 and 15 action functions pause after the call, 14 of them once and rightClick twice, while position, size, screenshot, pixel, onScreen and sleep do not. The program prints only whether a call waited longer than 0.25 seconds, because a duration changes from run to run and a boolean does not. The fail-safe is not a promise that the program stops by itself at once: the call that moves the pointer to a corner returns, and it is the next call that raises FailSafeException.",
+   "take": "Leave the fail-safe on; it is the way out of a runaway script.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Corners and the fail-safe points",
+   "sub": "Four corners raise FailSafeException; the points are fixed when pyautogui is imported",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.64,
+     "h": 3.35,
+     "lines": [
+      "with Desk(wm=False) as d:",
+      "    import pyautogui; pyautogui.PAUSE = 0",
+      "    print(VD, '| size', tuple(pyautogui.size()))",
+      "    print('FAILSAFE_POINTS', sorted(pyautogui.FAILSAFE_POINTS))",
+      "    def fires(x, y):",
+      "        pyautogui.FAILSAFE = False; pyautogui.moveTo(x, y); pyautogui.FAILSAFE = True",
+      "        try: pyautogui.moveTo(500, 500)",
+      "        except pyautogui.FailSafeException: return True",
+      "        return False",
+      "    for xy in ((0, 0), (1919, 1079), (1, 1)): print(xy, 'raises:', fires(*xy))",
+      "    d.sh('xrandr', '--fb', '1280x720'); time.sleep(0.3)",
+      "    code = 'import pyautogui as p; print(tuple(p.size()), max(p.FAILSAFE_POINTS))'",
+      "    here = (tuple(pyautogui.size()), max(pyautogui.FAILSAFE_POINTS))",
+      "    print('after xrandr --fb 1280x720: this process', here)",
+      "    print('a new process', child(code, env=d.env)[1][0])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen | size (1920, 1080)\nFAILSAFE_POINTS [(0, 0), (0, 1079), (1919, 0), (1919, 1079)]\n(0, 0) raises: True\n(1919, 1079) raises: True\n(1, 1) raises: False\nafter xrandr --fb 1280x720: this process ((1920, 1080), (1919, 1079))\na new process (1280, 720) (1279, 719)",
+     "outLabel": "prints",
+     "label": "program cornersCut_v1_0_0.py, lines 168 to 182 of 182"
+    },
+    {
+     "t": "foot",
+     "x": 6.34,
+     "y": 1.5,
+     "w": 3.16,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it."
+    },
+    {
+     "t": "foot",
+     "x": 6.34,
+     "y": 2.0,
+     "w": 3.16,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 167 (imports, the private display and the helpers that start child programs) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 6.34,
+     "y": 2.37,
+     "w": 3.16,
+     "h": 0.71,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: the corners (0, 0), (1919, 0), (0, 1079) and (1919, 1079) made the next call raise FailSafeException, moveTo(0, 0) itself returned, and afterwards position, size and screenshot still ran while click, write and moveTo raised."
+    },
+    {
+     "t": "foot",
+     "x": 6.34,
+     "y": 3.14,
+     "w": 3.16,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: with 2 virtual monitors xrandr listed 3 monitors and size() still said (1920, 1080)."
+    },
+    {
+     "t": "foot",
+     "x": 6.34,
+     "y": 3.51,
+     "w": 3.16,
+     "h": 0.58,
+     "fs": 8,
+     "body": "NOT EXECUTED here: a real second monitor, and what a real desktop does with hotkey('ctrl', 'alt', 'delete'); on the virtual display it only reached a window as three key presses."
+    }
+   ],
+   "notes": "Only the four corners of the screen are fail-safe points, so a pointer at (1, 1) raises nothing, as the program prints. The points are computed when the module is imported: after the framebuffer was resized with xrandr from 1920 by 1080 to 1280 by 720, the process that was running kept the old corners and a new process saw (1279, 719). A script that runs for hours on a screen whose size can change must therefore be restarted, or must set its own points. The documentation says that only the primary monitor is handled, which fits what the research saw with two virtual monitors added: three monitors listed and a size that did not change. The chapter's hotkey('ctrl', 'alt', 'delete') was sent to a window of the virtual display, where the three keys arrived and were released in reverse order and nobody was logged out; what a real desktop does with them was never run.",
+   "take": "Four corners stop the program, and the list is fixed at import.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Moving the mouse and where it is",
+   "sub": "A longer duration means more small steps; points outside the screen are clamped",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.08,
+     "h": 3.07,
+     "lines": [
+      "with Desk(wm=False) as d:",
+      "    import pyautogui; pyautogui.PAUSE = 0",
+      "    o = d.observer(geometry='1920x1080+0+0', mode='paint', w=1900, h=1000)",
+      "    print(VD)",
+      "    for dur in (0, 0.1, 0.25, 0.5, 1.0):",
+      "        pyautogui.moveTo(500, 500); time.sleep(0.3); o.clear()",
+      "        pyautogui.moveTo(900, 700, duration=dur)",
+      "        n = sum(e['type'] == 'Motion' for e in o.events())",
+      "        print('moveTo(900, 700, duration=%s): %2d motion events' % (dur, n))",
+      "    for x, y in ((-50, -50), (5000, 5000)):",
+      "        pyautogui.FAILSAFE = False; pyautogui.moveTo(x, y)",
+      "        print('moveTo(%s, %s) ->' % (x, y), tuple(pyautogui.position()))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen\nmoveTo(900, 700, duration=0):  1 motion events\nmoveTo(900, 700, duration=0.1):  1 motion events\nmoveTo(900, 700, duration=0.25):  6 motion events\nmoveTo(900, 700, duration=0.5): 11 motion events\nmoveTo(900, 700, duration=1.0): 21 motion events\nmoveTo(-50, -50) -> (0, 0)\nmoveTo(5000, 5000) -> (1919, 1079)",
+     "outLabel": "prints",
+     "label": "program moveCut_v1_0_0.py, lines 168 to 179 of 179"
+    },
+    {
+     "t": "chart",
+     "ctype": "bar",
+     "x": 5.78,
+     "y": 1.4,
+     "w": 3.72,
+     "h": 1.9,
+     "labels": [
+      "0 s",
+      "0.1 s",
+      "0.25 s",
+      "0.5 s",
+      "1.0 s"
+     ],
+     "title": "Motion events by duration",
+     "series": [
+      {
+       "name": "motion events",
+       "data": [
+        1.0,
+        1.0,
+        6.0,
+        11.0,
+        21.0
+       ]
+      }
+     ],
+     "dataLabels": true,
+     "dlFs": 9
+    },
+    {
+     "t": "foot",
+     "x": 5.78,
+     "y": 3.4,
+     "w": 3.72,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it."
+    },
+    {
+     "t": "foot",
+     "x": 5.78,
+     "y": 3.76,
+     "w": 3.72,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 167 (imports, the private display and the window that counts the motion events) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 5.78,
+     "y": 4.12,
+     "w": 3.72,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: moveTo(40000, 500) raised struct.error, so the clamping stops at the limits of the X protocol."
+    }
+   ],
+   "notes": "A move without a duration is one jump, and a move with a longer duration is a series of small steps: the chart is the count of motion events the observer window received for the same move at five durations, and a duration of 0 and of 0.1 both gave a single event. In the research a duration of 0.25 made 6 events and 1.0 made 21; the numbers on the slide are this deck's own run of the same program. The steps follow the tweening function, a straight line unless a different one is passed. Points outside the screen do not raise an error: with the fail-safe off, (-50, -50) ended at (0, 0) and (5000, 5000) at the last pixel, because the X server clamps them. The program turns the fail-safe off for those two calls, which are on the screen's edge, and the point of the lines is that position() tells where the pointer really is, not where the script asked it to be.",
+   "take": "Time a move with duration; the pointer never leaves the screen.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Clicking",
+   "sub": "Which button, how many clicks, how far apart; the window names a double click",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.64,
+     "h": 2.38,
+     "lines": [
+      "with Desk(wm=False) as d:",
+      "    import pyautogui; pyautogui.PAUSE = 0",
+      "    o = d.observer(geometry='1920x1080+0+0', mode='paint', w=1900, h=1000)",
+      "    pyautogui.moveTo(700, 400); time.sleep(0.3); print(VD)",
+      "    for call in (\"click()\", \"click(button='middle')\", \"rightClick()\",",
+      "                 \"doubleClick()\", \"tripleClick()\", \"click(clicks=2, interval=0.6)\"):",
+      "        time.sleep(0.7); o.clear(); eval('pyautogui.' + call)",
+      "        print('%-30s' % call, presses(o))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen\nclick()                        [('Press', 1)]\nclick(button='middle')         [('Press', 2)]\nrightClick()                   [('Press', 3)]\ndoubleClick()                  [('Press', 1), ('DoubleClick', 1)]\ntripleClick()                  [('Press', 1), ('DoubleClick', 1), ('TripleClick', 1)]\nclick(clicks=2, interval=0.6)  [('Press', 1), ('Press', 1)]",
+     "outLabel": "prints",
+     "label": "program clickCut_v1_0_0.py, lines 168 to 175 of 175"
+    },
+    {
+     "t": "foot",
+     "x": 6.34,
+     "y": 1.5,
+     "w": 3.16,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it."
+    },
+    {
+     "t": "foot",
+     "x": 6.34,
+     "y": 1.99,
+     "w": 3.16,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Lines 1 to 167 (imports, the private display and the window that records the buttons it receives) are not shown."
+    }
+   ],
+   "notes": "Each call is shown with the button presses that the observer window received. click() sends one left button press and release, button='middle' and rightClick() change the button to 2 and 3, and doubleClick() and tripleClick() send two and three presses in quick succession, which the Tk window reports as a Press followed by a DoubleClick, and by a DoubleClick and a TripleClick. click(clicks=2, interval=0.6) sends two clicks with a pause between them, and the window reports two single presses. Whether presses are a double click is decided by the window and its timing, not by PyAutoGUI, which only sends presses at the pointer. The call moves the pointer first when it is given coordinates, and clicks where it is when it is not, which is why the program moves to (700, 400) once and then calls click() with no arguments.",
+   "take": "A click is a press at the pointer; the window decides the rest.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Dragging: the spiral",
+   "sub": "drag() holds the button down while the pointer moves; the loop draws a square spiral",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 3.0,
+     "h": 2.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 1.7,
+       "w": 1.4,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The cursor is at its place",
+       "x": 0.66,
+       "y": 1.736,
+       "w": 1.28,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 2.213,
+       "w": 1.4,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The button is held down",
+       "x": 0.66,
+       "y": 2.249,
+       "w": 1.28,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 2.727,
+       "w": 1.4,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The cursor moves in steps",
+       "x": 0.66,
+       "y": 2.762,
+       "w": 1.28,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 3.24,
+       "w": 1.4,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The button is released",
+       "x": 0.66,
+       "y": 3.343,
+       "w": 1.28,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.21,
+       "y": 1.42,
+       "w": 0.18,
+       "h": 0.18,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 1.3,
+       "y1": 1.6,
+       "x2": 1.3,
+       "y2": 1.7,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.3,
+       "y1": 2.06,
+       "x2": 1.3,
+       "y2": 2.213,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.32,
+       "y1": 2.137,
+       "x2": 2.26,
+       "y2": 2.137,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "drag() pushes the button down",
+       "x": 2.3,
+       "y": 1.992,
+       "w": 1.5,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.3,
+       "y1": 2.573,
+       "x2": 1.3,
+       "y2": 2.727,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.32,
+       "y1": 2.65,
+       "x2": 2.26,
+       "y2": 2.65,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "The cursor moves for the duration",
+       "x": 2.3,
+       "y": 2.506,
+       "w": 1.5,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.3,
+       "y1": 3.087,
+       "x2": 1.3,
+       "y2": 3.24,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.32,
+       "y1": 3.163,
+       "x2": 2.26,
+       "y2": 3.163,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "The button is released at the new location",
+       "x": 2.3,
+       "y": 3.019,
+       "w": 1.5,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.0,
+       "y1": 3.42,
+       "x2": 2.4,
+       "y2": 3.42,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.4,
+       "y": 3.28,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.46,
+       "y": 3.34,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      }
+     ],
+     "did": "TheLifeOfADrag"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.63,
+     "w": 3.0,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram TheLifeOfADrag - LifeCycle pattern, 19 of 21 words grounded in the chapter's text"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch23-deck/images/spiral.png",
+     "x": 0.5,
+     "y": 4.02,
+     "w": 1.33,
+     "h": 0.95
+    },
+    {
+     "t": "foot",
+     "x": 1.93,
+     "y": 4.02,
+     "w": 1.57,
+     "h": 0.31,
+     "fs": 8,
+     "body": "image spiral.png made by dragCut_v1_0_0.py"
+    },
+    {
+     "t": "prog",
+     "x": 3.8,
+     "y": 1.55,
+     "w": 5.7,
+     "h": 2.52,
+     "lines": [
+      "    distance, change = 300, 20",
+      "    while distance > 0:",
+      "        pyautogui.drag(distance, 0, duration=0.05); distance -= change",
+      "        pyautogui.drag(0, distance, duration=0.05)",
+      "        pyautogui.drag(-distance, 0, duration=0.05); distance -= change",
+      "        pyautogui.drag(0, -distance, duration=0.05); n += 4",
+      "    im = pyautogui.screenshot().crop((0, 0, 700, 500)).convert('L')",
+      "    box = im.point(lambda v: 255 * (v < 128)).getbbox()",
+      "    print(VD); print('spiral:', n, 'drag calls, ink inside the box', box)",
+      "    ev = [e['type'] for e in o.events()]",
+      "    print('presses', ev.count('ButtonPress'), '| releases', ev.count('ButtonRelease'))",
+      "    im.convert('RGB').save('spiral.png'); done('spiral.png')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen\nspiral: 32 drag calls, ink inside the box (200, 159, 501, 441)\npresses 30 | releases 30\nsaved spiral.png: 2522 bytes, sha256 b43a86af4546",
+     "outLabel": "prints",
+     "label": "program dragCut_v1_0_0.py, lines 172 to 183 of 183"
+    },
+    {
+     "t": "foot",
+     "x": 3.8,
+     "y": 4.12,
+     "w": 5.7,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it. Lines 1 to 171 (imports, the private display, the window that paints where the button is held and the first move) are not shown."
+    }
+   ],
+   "notes": "The state diagram follows one drag: the cursor is at its place, drag() pushes the button down, the cursor moves in steps for the duration, and the button is released at the new location. The loop is the chapter's spiral: four drags per turn, each a little shorter than the one before, in a window that paints where the button is held; the program makes 32 calls and the picture is what the window painted, saved by the program. The press and release counts of the observer are 30 and 30, not 32, because the last two calls ask for a distance of zero and PyAutoGUI returns at once without pressing anything. The research recorded the first five calls, (300, 0), (0, 280), (-280, 0), (0, -260) and (260, 0), and a box of ink that is the same for the chapter's loop and for the shipped spiralDraw.py. That file has 580 bytes and 15 lines; it calls dragRel, waits with time.sleep(5) and uses a duration of 0.1 where the chapter prints 0.2, and the listing as printed in the chapter raises IndentationError.",
+   "take": "A drag is a press, a series of moves and a release.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Scrolling",
+   "sub": "scroll(n) counts wheel clicks; a Tk 9 window moves fewer lines than a Tk 8.6 window",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.33,
+     "h": 2.24,
+     "lines": [
+      "with Desk() as d:",
+      "    import pyautogui; pyautogui.PAUSE = 0",
+      "    print(VD)",
+      "    for name, py in (('Tk 9', LATEST), ('Tk 8.6', TK86)):",
+      "        o = d.observer(mode='text', focus='text', fill=300, lines=12, py=py)",
+      "        st = o.state(); top = lambda: int(o.state()['top'].split('.')[0])",
+      "        pyautogui.moveTo(st['rootx'] + 100, st['rooty'] + 150); row = {}",
+      "        for n in (-1, -2, -3, -10):",
+      "            pyautogui.scroll(60); time.sleep(0.4); b = top()",
+      "            pyautogui.scroll(n); o.settle(); time.sleep(0.4); row[n] = top() - b",
+      "        print('lines moved, %s %s:' % (name, st['tk']), row); o.close()"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen\nlines moved, Tk 9 9.0.3: {-1: 1, -2: 3, -3: 5, -10: 19}\nlines moved, Tk 8.6 8.6.14: {-1: 2, -2: 5, -3: 8, -10: 29}",
+     "outLabel": "prints",
+     "label": "program scrollCut_v1_0_0.py, lines 168 to 178 of 178"
+    },
+    {
+     "t": "chart",
+     "ctype": "bar",
+     "x": 6.03,
+     "y": 1.4,
+     "w": 3.47,
+     "h": 2.0,
+     "labels": [
+      "Tk 9, -1",
+      "Tk 9, -2",
+      "Tk 9, -3",
+      "Tk 9, -10",
+      "Tk 8.6, -1",
+      "Tk 8.6, -2",
+      "Tk 8.6, -3",
+      "Tk 8.6, -10"
+     ],
+     "title": "Lines moved by scroll(n)",
+     "series": [
+      {
+       "name": "lines",
+       "data": [
+        1.0,
+        3.0,
+        5.0,
+        19.0,
+        2.0,
+        5.0,
+        8.0,
+        29.0
+       ]
+      }
+     ],
+     "dataLabels": true,
+     "dlFs": 8
+    },
+    {
+     "t": "foot",
+     "x": 6.03,
+     "y": 3.5,
+     "w": 3.47,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it."
+    },
+    {
+     "t": "foot",
+     "x": 6.03,
+     "y": 3.86,
+     "w": 3.47,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 167 (imports, the private display and the text window that reports its first visible line) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 6.03,
+     "y": 4.22,
+     "w": 3.47,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: scroll(3) sent 3 presses of button 4, scroll(-2) 2 of button 5, hscroll(2) 2 of button 7 and hscroll(-1) 1 of button 6."
+    }
+   ],
+   "notes": "scroll(n) sends n wheel clicks, up for a positive number and down for a negative one, and what a click means is the toolkit's business: the same four calls moved a text widget by different numbers of lines under Tk 9.0.3 and under Tk 8.6.14. The program scrolls to the top before every call and prints how many lines the first visible line moved, and the chart plots the eight numbers it printed. The research found 1, 3, 5 and 19 lines under Tk 9.0.3 and 2, 5, 8 and 29 under Tk 8.6.14; the chart is this deck's own run. The chapter advises to experiment with the numbers, and the result agrees. The research also saw, on the X wire, that scroll sends the buttons 4 and 5 and hscroll the buttons 6 and 7, which is the card on the slide.",
+   "take": "Scroll units belong to the window, so test them where you run.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "MouseInfo breaks under Tk 9",
+   "sub": "mouseInfo() is the chapter's tool for reading the pointer; it needs Tk 8.6",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.82,
+     "h": 2.79,
+     "lines": [
+      "with Desk() as d:",
+      "    print(VD, '| mouseInfo() in two interpreters')",
+      "    cmd = 'import pyautogui; pyautogui.mouseInfo()'",
+      "    for name, py in (('Tk 9.0.3, Python 3.14.6', LATEST),",
+      "                     ('Tk 8.6.14, Python 3.12.3', TK86)):",
+      "        p = d.start([py, '-W', 'ignore', '-c', cmd], 'mi'); time.sleep(4)",
+      "        win = d.sh('xdotool', 'search', '--name', 'MouseInfo').split()",
+      "        err = d.out('mi').strip().splitlines()[-1] if p.poll() else ''",
+      "        err = err.split(': must')[0].replace('_tkinter.', '')",
+      "        print('%-25s' % name, 'running:', p.poll() is None, '| window:', bool(win), err)",
+      "        if win:",
+      "            for _ in range(4): d.sh('xdotool', 'key', 'Tab'); time.sleep(0.2)",
+      "            grab(d, win[0], 'mouseInfo.png', hmax=250)",
+      "        if p.poll() is None: os.killpg(p.pid, signal.SIGTERM)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen | mouseInfo() in two interpreters\nTk 9.0.3, Python 3.14.6   running: False | window: False TclError: bad option \"variable\"\nTk 8.6.14, Python 3.12.3  running: True | window: True \nsaved mouseInfo.png: 24632 bytes, sha256 4ad268b86567",
+     "outLabel": "prints",
+     "label": "program mouseinfoCut_v1_0_0.py, lines 168 to 181 of 181"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch23-deck/images/mouseInfo.png",
+     "x": 6.52,
+     "y": 1.5,
+     "w": 2.98,
+     "h": 1.41
+    },
+    {
+     "t": "foot",
+     "x": 6.52,
+     "y": 2.93,
+     "w": 2.98,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image mouseInfo.png made by mouseinfoCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 6.52,
+     "y": 3.26,
+     "w": 2.98,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it."
+    },
+    {
+     "t": "foot",
+     "x": 6.52,
+     "y": 3.75,
+     "w": 2.98,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 167 (imports and the private display) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 6.52,
+     "y": 4.11,
+     "w": 2.98,
+     "h": 0.85,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: under Tk 8.6.14 F6 with the 3 Sec. Button Delay on logged 1600,850 after the pointer had moved from 1500,800, and with the delay off it logged 1500,800, 1600,850 and 1700,900; the Tcl 9.0 manual documents trace add variable and not the old trace variable."
+    }
+   ],
+   "notes": "MouseInfo is the small application that the chapter uses to read the position and the color under the pointer. pyautogui.mouseInfo() ends with TclError: bad option 'variable' under Tk 9.0.3, which comes with Python 3.13.14 up to 3.15.0b4, because MouseInfo 0.1.3 uses the old trace variable command and Tcl 9 documents trace add variable. The program starts it in two interpreters on its own display. The Python 3.14.6 process ended with the error and had no window; the Python 3.12.3 process with Tk 8.6.14 kept running and had a window, and the picture is that window. The caret that blinks in a field would make the picture differ from run to run, so the program moves the focus to a button before it crops the window. The delay card is the research's reading of the F6 key: the key logs the position at the end of the delay, not where the pointer was when it was pressed.",
+   "take": "mouseInfo() needs Tk 8.6; under Tk 9 it ends in an error.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Screenshots and pixel colors",
+   "sub": "screenshot() returns an image of the whole screen; pixel() reads one point of it",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.94,
+     "h": 2.79,
+     "lines": [
+      "with Desk(wm=False) as d:",
+      "    import pyautogui; pyautogui.PAUSE = 0",
+      "    d.observer(mode='button', geometry='400x300+200+150', bg='#b0b0af',",
+      "               buttons=[[100, 100]]); time.sleep(0.5)",
+      "    im = pyautogui.screenshot(); inside = (210, 160)",
+      "    print(VD, '|', type(im).__name__, im.size, im.mode)",
+      "    cases = (((176, 176, 175), 0), ((177, 176, 175), 0), ((177, 176, 175), 1))",
+      "    ok = [pyautogui.pixelMatchesColor(*inside, c, tolerance=t) for c, t in cases]",
+      "    print('pixelMatchesColor ->', ok)",
+      "    print('pixel(210, 160) ->', pyautogui.pixel(*inside), '| (5, 5)', im.getpixel((5, 5)))",
+      "    try: pyautogui.pixel(inside)",
+      "    except TypeError as e: print('pixel((210, 160)) raises TypeError:', e)",
+      "    im.resize((480, 270)).save('screen.png'); done('screen.png')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen | PngImageFile (1920, 1080) RGB\npixelMatchesColor -> [True, False, True]\npixel(210, 160) -> RGB(red=176, green=176, blue=175) | (5, 5) (0, 0, 0)\npixel((210, 160)) raises TypeError: pixel() missing 1 required positional argument: 'y'\nsaved screen.png: 1232 bytes, sha256 3603fed9a35b",
+     "outLabel": "prints",
+     "label": "program shotCut_v1_0_0.py, lines 168 to 180 of 180"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch23-deck/images/screen.png",
+     "x": 6.64,
+     "y": 1.5,
+     "w": 2.31,
+     "h": 1.3
+    },
+    {
+     "t": "foot",
+     "x": 6.64,
+     "y": 2.82,
+     "w": 2.86,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image screen.png made by shotCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 6.64,
+     "y": 3.1,
+     "w": 2.86,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it."
+    },
+    {
+     "t": "foot",
+     "x": 6.64,
+     "y": 3.58,
+     "w": 2.86,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: a display of depth 16 returned (172, 174, 172) for a background of (176, 176, 175) and failed the match."
+    },
+    {
+     "t": "foot",
+     "x": 6.64,
+     "y": 4.06,
+     "w": 2.86,
+     "h": 0.31,
+     "fs": 8,
+     "body": "NOT EXECUTED here: HiDPI scaling and real or multiple monitors."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "Luis von Ahn, Manuel Blum, Nicholas J. Hopper and John Langford",
+     "where": "The term appeared in computing in 2003; the form with distorted letters was invented in 1997 by two groups working in parallel",
+     "when": "2003",
+     "link": "https://en.wikipedia.org/wiki/CAPTCHA",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on CAPTCHA says it is a challenge-response Turing test used in computing to determine whether the user is human in order to deter bot attacks and spam. The term was coined in 2003 by Luis von Ahn, Manuel Blum, Nicholas J. Hopper and John Langford, as a contrived acronym for Completely Automated Public Turing test to tell Computers and Humans Apart. In this study PyAutoGUI had no function with captcha or solve in its name, and screenshot() returned a 1920 by 1080 RGB image of a virtual display, so what a script reads from a screen is a picture. The account rests on these sources. Wikipedia, 'CAPTCHA' (the term coined in 2003 by von Ahn, Blum, Hopper and Langford; the 1997 form), read 2026-10-13; this study's leaves CaptchaEthics (the ethics part is not run) and ScreenshotImage. The program draws a window with one gray button on a display of depth 24 and takes the screenshot: the image has the size of the screen, 1920 by 1080, and the pixel inside the window is (176, 176, 175) while the pixel outside it is black. pixelMatchesColor() is True for the exact color, False when one channel is off, and True again with tolerance=1. The call pixel(210, 160) returns RGB(red=176, green=176, blue=175), a named tuple, and the second form the chapter prints, pixel((50, 200)) with a tuple, raises TypeError: pixel() missing 1 required positional argument: 'y'. A display of depth 16 stores fewer bits for each color, so the same gray comes back a little different and an exact match fails; the research saw that on its own, and this deck does not run it. The picture is the screenshot reduced to 480 by 270 pixels. A real screen with scaling, and several monitors, change the size and the coordinates, and neither was available.",
+   "take": "Compare colors with a tolerance, and read a pixel with two numbers.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Finding a button on the screen",
+   "sub": "locateOnScreen() returns the box where the picture is; click() takes a box",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 3.1,
+     "h": 2.4,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.45,
+       "w": 1.45,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Take a screenshot of the screen",
+       "x": 0.62,
+       "y": 1.556,
+       "w": 1.31,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 2.05,
+       "w": 1.45,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call locateOnScreen() with the image of the button",
+       "x": 0.62,
+       "y": 2.088,
+       "w": 1.31,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.55,
+       "y": 2.69,
+       "w": 1.45,
+       "h": 0.42,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the image found?",
+       "x": 0.72,
+       "y": 2.823,
+       "w": 1.11,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 3.25,
+       "w": 1.45,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Click the center of the box",
+       "x": 0.62,
+       "y": 3.356,
+       "w": 1.31,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.3,
+       "y": 2.65,
+       "w": 1.3,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The call raises ImageNotFoundException",
+       "x": 2.37,
+       "y": 2.756,
+       "w": 1.16,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.85,
+       "y": 1.6,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.81,
+       "y": 3.36,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.87,
+       "y": 3.42,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 2.85,
+       "y1": 1.7,
+       "x2": 2.0,
+       "y2": 1.7,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.275,
+       "y1": 1.95,
+       "x2": 1.275,
+       "y2": 2.05,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.275,
+       "y1": 2.55,
+       "x2": 1.275,
+       "y2": 2.69,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.275,
+       "y1": 3.11,
+       "x2": 1.275,
+       "y2": 3.25,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 1.335,
+       "y": 3.09,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.0,
+       "y1": 2.9,
+       "x2": 2.3,
+       "y2": 2.9,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.05,
+       "y": 2.7,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.0,
+       "y1": 3.5,
+       "x2": 2.81,
+       "y2": 3.5,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.95,
+       "y1": 3.15,
+       "x2": 2.95,
+       "y2": 3.36,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "FindingAndClickingAButton"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch23-deck/images/located.png",
+     "x": 0.5,
+     "y": 3.88,
+     "w": 1.31,
+     "h": 0.95
+    },
+    {
+     "t": "foot",
+     "x": 1.91,
+     "y": 3.88,
+     "w": 1.51,
+     "h": 0.31,
+     "fs": 8,
+     "body": "image located.png made by locateCut_v1_0_0.py"
+    },
+    {
+     "t": "prog",
+     "x": 3.62,
+     "y": 1.55,
+     "w": 5.88,
+     "h": 2.52,
+     "lines": [
+      "with Desk(wm=False) as d:",
+      "    import pyautogui; pyautogui.PAUSE = 0",
+      "    o = d.observer(mode='button', geometry='400x300+200+150', bg='#00aa00',",
+      "                   buttons=[[100, 100], [100, 180]]); time.sleep(0.5)",
+      "    shot = pyautogui.screenshot(); bx, by, bw, bh = o.state()['buttons'][0]",
+      "    shot.crop((bx, by, bx + bw, by + bh)).save('submit.png')",
+      "    box = pyautogui.locateOnScreen('submit.png')",
+      "    boxes = list(pyautogui.locateAllOnScreen('submit.png'))",
+      "    print(VD, '| found', ints(box))",
+      "    print('locateAll', [ints(b) for b in boxes], '| center', ints(pyautogui.center(box)))",
+      "    o.clear(); pyautogui.click(boxes[1]); time.sleep(0.4)",
+      "    print('click(boxes[1]) pressed button', cmds(o)); mark(shot, box, 'located.png')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen | found (300, 250, 84, 35)\nlocateAll [(300, 250, 84, 35), (300, 330, 84, 35)] | center (342, 267)\nclick(boxes[1]) pressed button [1]\nsaved located.png: 1647 bytes, sha256 057d56940153",
+     "outLabel": "prints",
+     "label": "program locateCut_v1_0_0.py, lines 168 to 179 of 179"
+    },
+    {
+     "t": "foot",
+     "x": 3.62,
+     "y": 4.12,
+     "w": 5.88,
+     "h": 0.44,
+     "fs": 8,
+     "body": "diagram FindingAndClickingAButton - Workflow pattern, 14 of 15 words grounded in the chapter's text. Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it. Lines 1 to 167 (imports, the private display and the window with two buttons) are not shown."
+    }
+   ],
+   "notes": "The flow chart is the pattern of every script that clicks a button it can see: take a screenshot, call locateOnScreen() with the image of the button, and, if it is found, click the center of the box; if it is not, the call raises ImageNotFoundException. The program draws a window with two identical buttons, cuts one button out of the screenshot and saves it as submit.png, and asks for it on the screen. locateOnScreen() returns the first box, locateAllOnScreen() both, and click() accepts the file name or a box and presses the button it finds. A Box holds the numbers as np.int64 when OpenCV is installed and as int without it, which the research saw, so the program converts them with int() before it prints them. The picture shows the screenshot with the found box in red. The research found its button at (400, 300, 84, 35), and saw locateOnScreen() raise at once when the button was not there and, with minSearchTime=5, keep looking and find a button that appeared 1.2 seconds later; in this deck's run the window is placed differently and the box is the one the transcript prints.",
+   "take": "Cut the button out of a screenshot, then look for it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Exact matches, OpenCV and missing images",
+   "sub": "One pixel off is no match; confidence needs OpenCV; a missing image changed at 0.1.30",
+   "items": [
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 1.42,
+     "w": 3.5,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: the release matrix; 4 of its 14 combinations do not import."
+    },
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.7,
+     "w": 3.5,
+     "colW": [
+      0.62,
+      0.62,
+      0.4,
+      1.86
+     ],
+     "fs": 7,
+     "rowH": 0.19,
+     "cellMargin": [
+      0.01,
+      0.04,
+      0.01,
+      0.04
+     ],
+     "rows": [
+      [
+       "PyAutoGUI",
+       "PyScreeze",
+       "Python",
+       "click, image one pixel off"
+      ],
+      [
+       "0.9.40",
+       "0.1.28",
+       "3.12",
+       "does not import"
+      ],
+      [
+       "0.9.40",
+       "1.0.1",
+       "3.12",
+       "does not import"
+      ],
+      [
+       "0.9.41",
+       "0.1.28",
+       "3.12",
+       "TypeError: None is not subscriptable"
+      ],
+      [
+       "0.9.41",
+       "1.0.1",
+       "3.12",
+       "does not import"
+      ],
+      [
+       "0.9.50",
+       "0.1.28",
+       "3.12",
+       "TypeError: cannot unpack None"
+      ],
+      [
+       "0.9.50",
+       "1.0.1",
+       "3.12",
+       "does not import"
+      ],
+      [
+       "0.9.54",
+       "0.1.28",
+       "3.12",
+       "TypeError: cannot unpack None"
+      ],
+      [
+       "0.9.54",
+       "1.0.1",
+       "3.12",
+       "ImageNotFoundException"
+      ],
+      [
+       "0.9.54",
+       "0.1.27",
+       "3.14.6",
+       "TypeError: cannot unpack None"
+      ],
+      [
+       "0.9.54",
+       "0.1.28",
+       "3.14.6",
+       "TypeError: cannot unpack None"
+      ],
+      [
+       "0.9.54",
+       "0.1.29",
+       "3.14.6",
+       "TypeError: cannot unpack None"
+      ],
+      [
+       "0.9.54",
+       "0.1.30",
+       "3.14.6",
+       "ImageNotFoundException"
+      ],
+      [
+       "0.9.54",
+       "1.0.0",
+       "3.14.6",
+       "ImageNotFoundException"
+      ],
+      [
+       "0.9.54",
+       "1.0.1",
+       "3.14.6",
+       "ImageNotFoundException"
+      ]
+     ]
+    },
+    {
+     "t": "prog",
+     "x": 4.17,
+     "y": 1.55,
+     "w": 5.33,
+     "h": 3.21,
+     "lines": [
+      "with Desk(wm=False) as d:",
+      "    import pyautogui; pyautogui.PAUSE = 0",
+      "    o = d.observer(mode='button', geometry='400x300+200+150', bg='#00aa00',",
+      "                   buttons=[[100, 100]]); time.sleep(0.5)",
+      "    bx, by, bw, bh = o.state()['buttons'][0]",
+      "    btn = pyautogui.screenshot().crop((bx, by, bx + bw, by + bh))",
+      "    btn.save('exact.png'); btn.putpixel((5, 5), (0, 0, 0)); btn.save('off.png')",
+      "    calls = (\"'exact.png'\", \"'off.png'\", \"'off.png', confidence=0.9\",",
+      "             \"'off.png', grayscale=True\")",
+      "    probe = (\"import pyautogui as p\\n\"",
+      "             \"try: print(type(p.locateOnScreen(%s)).__name__)\\n\"",
+      "             \"except Exception as e: print(type(e).__name__)\")",
+      "    print(VD, '| exact, off, off 0.9, off gray')",
+      "    for name, py in (('OpenCV', LATEST), ('no OpenCV', NOCV),",
+      "                     ('PyScreeze 0.1.28', OLDSCREEZE)):",
+      "        r = [child(probe % c, py=py, env=d.env)[1][0] for c in calls]",
+      "        print('%-17s' % name, [short(x) for x in r])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen | exact, off, off 0.9, off gray\nOpenCV            ['Box', 'ImageNotFound', 'Box', 'ImageNotFound']\nno OpenCV         ['Box', 'ImageNotFound', 'NotImplemented', 'ImageNotFound']\nPyScreeze 0.1.28  ['Box', 'NoneType', 'NotImplemented', 'NoneType']",
+     "outLabel": "prints",
+     "label": "program matchCut_v1_0_0.py, lines 168 to 184 of 184"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.64,
+     "w": 3.5,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it."
+    }
+   ],
+   "notes": "The chapter says that a match must be exact, and the program shows it. A button cut from the screen is found; the same image with one pixel changed to black raises ImageNotFoundException with OpenCV and without; grayscale=True does not help; and confidence=0.9 finds the damaged image only when OpenCV is installed, and raises NotImplementedError otherwise. With PyScreeze 0.1.28 the missing image does not raise at all, the call returns None, so click('submit.png') raises a confusing TypeError further on. The table is the research's record of the release matrix, 14 combinations of PyAutoGUI and PyScreeze on Python 3.12 and 3.14.6, of which 4 do not import, and the deck check computes every cell again from the record. The program prints, for the exact image, the image with one pixel off, the same with confidence=0.9 and with grayscale=True, what each call returned in three environments; the slide leaves out the imports, the private display and the window with a button. The result is the advice to pin the two packages together, and to check for None or for the exception on the version in use. The release dates of PyScreeze 1.0.0 and 1.0.1 are the same day, 20 August 2024. The research also saw that the same button at a larger font, 109 by 45 pixels instead of 84 by 35, was not found, so a picture must come from the same screen settings as the screen it is searched in.",
+   "take": "Pin PyAutoGUI and PyScreeze together; a missing image acts differently.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Window objects: Windows only",
+   "sub": "On Linux none of the six window functions exists and pygetwindow does not import",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 6.01,
+     "h": 3.35,
+     "lines": [
+      "with Desk() as d:",
+      "    import pyautogui",
+      "    names = ('getActiveWindow', 'getAllWindows', 'getWindowsAt',",
+      "             'getWindowsWithTitle', 'getAllTitles', 'getActiveWindowTitle')",
+      "    have = [n for n in names if hasattr(pyautogui, n)]",
+      "    print(VD, '| window functions in pyautogui:', have)",
+      "    err = child('import pygetwindow', env=d.env)[2]",
+      "    print('import pygetwindow ->', err.split(':')[0])",
+      "    o = d.observer(mode='events', geometry='500x300+120+80', title='demo'); time.sleep(0.5)",
+      "    wid = d.sh('xdotool', 'search', '--name', 'demo').split()[0]",
+      "    print('Tk client area x, y, w, h', xywh(o))",
+      "    d.sh('xdotool', 'windowmove', wid, '300', '200')",
+      "    d.sh('xdotool', 'windowsize', wid, '640', '360'); time.sleep(0.5)",
+      "    print('after windowmove 300 200 and windowsize 640 360', xywh(o))",
+      "    print('openbox adds a title bar, so client y is below 200:', xywh(o)[1] > 200)",
+      "    grab(d, wid, 'frame.png')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen | window functions in pyautogui: []\nimport pygetwindow -> NotImplementedError\nTk client area x, y, w, h (121, 100, 500, 300)\nafter windowmove 300 200 and windowsize 640 360 (301, 220, 640, 360)\nopenbox adds a title bar, so client y is below 200: True\nsaved frame.png: 2995 bytes, sha256 ece710819262",
+     "outLabel": "prints",
+     "label": "program windowCut_v1_0_0.py, lines 168 to 183 of 183"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch23-deck/images/frame.png",
+     "x": 6.71,
+     "y": 1.5,
+     "w": 2.47,
+     "h": 1.5
+    },
+    {
+     "t": "foot",
+     "x": 6.71,
+     "y": 3.02,
+     "w": 2.79,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image frame.png made by windowCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 6.71,
+     "y": 3.3,
+     "w": 2.79,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it."
+    },
+    {
+     "t": "foot",
+     "x": 6.71,
+     "y": 3.78,
+     "w": 2.79,
+     "h": 0.71,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: pygetwindow 0.0.9 raises NotImplementedError: PyGetWindow currently does not support Linux; PyAutoGUI 0.9.40 does not import at all, and the chapter's listings 17, 18 and 19 raise at their first getActiveWindow call."
+    },
+    {
+     "t": "foot",
+     "x": 6.71,
+     "y": 4.53,
+     "w": 2.79,
+     "h": 0.44,
+     "fs": 8,
+     "body": "NOT EXECUTED here: Windows and macOS: getActiveWindow(), the Window objects and their move, resize and activate calls were never run."
+    }
+   ],
+   "notes": "The chapter teaches six window functions, getActiveWindow, getAllWindows, getWindowsAt, getWindowsWithTitle, getAllTitles and getActiveWindowTitle, and says they work on Windows only as of PyAutoGUI 1.0.0. On Linux the program finds none of them in pyautogui and importing pygetwindow raises NotImplementedError, so the chapter's three listings on window objects raise at the first call. What the program can show about windows on Linux is what the window manager and xdotool do: a Tk window placed at x 120 and y 80 has its client area at (121, 100), inside the frame that the openbox window manager adds, and after xdotool moves it to (300, 200) and resizes it to 640 by 360 the client area is at (301, 220), below the title bar. The picture is the window with that frame. The Windows window objects, with their left, top, width and height and their activate() and move calls, were not run.",
+   "take": "Window objects are for Windows; on Linux ask the window manager.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Typing into the right window",
+   "sub": "Click the window first; write() types each character, hotkey() presses a shortcut",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 2.9,
+     "h": 1.9,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.45,
+       "w": 2.35,
+       "h": 0.28,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Wait a few seconds with sleep()",
+       "x": 0.62,
+       "y": 1.513,
+       "w": 2.21,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.83,
+       "w": 2.35,
+       "h": 0.28,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Click the window to make it active",
+       "x": 0.62,
+       "y": 1.893,
+       "w": 2.21,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 2.21,
+       "w": 2.35,
+       "h": 0.28,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call write() to type the string",
+       "x": 0.62,
+       "y": 2.273,
+       "w": 2.21,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 2.59,
+       "w": 2.35,
+       "h": 0.28,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call hotkey() to press the shortcut",
+       "x": 0.62,
+       "y": 2.653,
+       "w": 2.21,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 2.97,
+       "w": 2.35,
+       "h": 0.28,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The focused window receives the typing",
+       "x": 0.62,
+       "y": 3.033,
+       "w": 2.21,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.075,
+       "y": 1.49,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.035,
+       "y": 2.97,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.095,
+       "y": 3.03,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.075,
+       "y1": 1.59,
+       "x2": 2.9,
+       "y2": 1.59,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.725,
+       "y1": 1.73,
+       "x2": 1.725,
+       "y2": 1.83,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.725,
+       "y1": 2.11,
+       "x2": 1.725,
+       "y2": 2.21,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.725,
+       "y1": 2.49,
+       "x2": 1.725,
+       "y2": 2.59,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.725,
+       "y1": 2.87,
+       "x2": 1.725,
+       "y2": 2.97,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.9,
+       "y1": 3.11,
+       "x2": 3.035,
+       "y2": 3.11,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "TypingIntoTheRightWindow"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.33,
+     "w": 2.9,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "diagram TypingIntoTheRightWindow - Workflow pattern, 17 of 20 words grounded in the chapter's text"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch23-deck/images/typed.png",
+     "x": 0.5,
+     "y": 3.86,
+     "w": 2.9,
+     "h": 0.58
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.46,
+     "w": 2.9,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image typed.png made by typeCut_v1_0_0.py"
+    },
+    {
+     "t": "prog",
+     "x": 3.75,
+     "y": 1.55,
+     "w": 5.75,
+     "h": 3.09,
+     "lines": [
+      "with Desk() as d:",
+      "    import pyautogui; pyautogui.PAUSE = 0",
+      "    o = d.observer(mode='text', geometry='600x300+100+100', focus='text')",
+      "    time.sleep(0.5); pyautogui.click(300, 250); time.sleep(0.3)",
+      "    print(VD); pyautogui.write('Hello, world!'); print(repr(o.text()))",
+      "    pyautogui.write(['a', 'b', 'left', 'left', 'X', 'Y'])",
+      "    print('write([a, b, left, left, X, Y]) ->', repr(o.text()))",
+      "    pyautogui.keyDown('shift'); pyautogui.press('4'); pyautogui.keyUp('shift')",
+      "    print('shift down, 4, shift up ->', repr(o.text()[-3:]))",
+      "    pyautogui.hotkey('ctrl', 'a'); pyautogui.press('delete')",
+      "    print('hotkey(ctrl, a), delete ->', repr(o.text()))",
+      "    pyautogui.write('Hello, world!'); pyautogui.click(1000, 800); time.sleep(0.6)",
+      "    shotof(o, 'typed.png', 120)"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen\n'Hello, world!'\nwrite([a, b, left, left, X, Y]) -> 'Hello, world!XYab'\nshift down, 4, shift up -> '$ab'\nhotkey(ctrl, a), delete -> ''\nsaved typed.png: 837 bytes, sha256 9f109b7f4fda",
+     "outLabel": "prints",
+     "label": "program typeCut_v1_0_0.py, lines 168 to 180 of 180"
+    },
+    {
+     "t": "foot",
+     "x": 3.75,
+     "y": 4.69,
+     "w": 5.75,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it. Lines 1 to 167 (imports, the private display and the window with a text field) are not shown."
+    }
+   ],
+   "notes": "The flow chart is the order that makes typing reliable: wait a few seconds with sleep(), click the window to make it active, call write() to type the string, call hotkey() to press the shortcut, and the focused window receives the typing. The program clicks the text field first and then types: write('Hello, world!') arrives as the same string, with the Shift key pressed for the capital H and the exclamation mark, and a list of key names, with left arrows in it, edits the text in place. keyDown('shift'), press('4') and keyUp('shift') type a dollar sign, and hotkey('ctrl', 'a') followed by delete empties the field. The picture is the field after the program typed the sentence again. Without the click the keys go to whichever window has the focus, and that is the mistake the chapter warns about. Appendix B has typing mistakes of its own, which the research found: the answer to question 6 types Hello world! without the comma of the question, and the answer to question 13 misspells pyautogui as pyatuogui, a NameError.",
+   "take": "Click first so the keys go where you mean.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Key names: mistakes are silent",
+   "sub": "A wrong key name raises nothing and types nothing; a character off the list vanishes",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.35,
+     "h": 2.95,
+     "lines": [
+      "with Desk() as d:",
+      "    import pyautogui; pyautogui.PAUSE = 0",
+      "    o = d.observer(mode='text', geometry='600x300+100+100', focus='text')",
+      "    time.sleep(0.5); pyautogui.click(300, 250); time.sleep(0.3)",
+      "    print(VD, '| KEYBOARD_KEYS:', len(pyautogui.KEYBOARD_KEYS), 'names')",
+      "    for call in (\"press('nokey')\", \"press('SHIFT')\", \"keyDown('nokey')\"):",
+      "        try: eval('pyautogui.' + call); r = 'raised nothing'",
+      "        except Exception as e: r = type(e).__name__",
+      "        print('%-18s' % call, r, '| typed', repr(o.text()))",
+      "    pyautogui.write(['a', 'nokey', 'b']); pyautogui.write('caf\u00e9')",
+      "    print('write a, nokey, b, then caf\u00e9 typed', repr(o.text()))",
+      "    print('A in the list:', 'A' in pyautogui.KEYBOARD_KEYS)"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen | KEYBOARD_KEYS: 194 names\npress('nokey')     raised nothing | typed ''\npress('SHIFT')     raised nothing | typed ''\nkeyDown('nokey')   raised nothing | typed ''\nwrite a, nokey, b, then caf\u00e9 typed 'abcaf'\nA in the list: False",
+     "outLabel": "prints",
+     "label": "program keysCut_v1_0_0.py, lines 168 to 179 of 179"
+    },
+    {
+     "t": "foot",
+     "x": 6.05,
+     "y": 1.5,
+     "w": 3.45,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it."
+    },
+    {
+     "t": "foot",
+     "x": 6.05,
+     "y": 1.86,
+     "w": 3.45,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 167 (imports, the private display and the window with a text field) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 6.05,
+     "y": 2.22,
+     "w": 3.45,
+     "h": 0.71,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: hotkey('ctrl', 'nokey') raised nothing; an emoji vanished and write(12) raised TypeError; KEYBOARD_KEYS holds 194 names, every one of the 41 names of Table 23-1 and its text is in it, f13 and f24 exist, and the roadmap lists a strict mode as a plan."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "Christopher Latham Sholes, a newspaper editor and printer in Kenosha, Wisconsin, with Carlos Glidden, and E. Remington and Sons",
+     "where": "Kenosha, Wisconsin, and the factory of E. Remington and Sons, which bought the manufacturing rights in 1873",
+     "when": "1874",
+     "link": "https://en.wikipedia.org/wiki/QWERTY",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on QWERTY says the layout was devised in the early 1870s by Christopher Latham Sholes, that the manufacturing rights of the Sholes and Glidden Type-Writer were sold to E. Remington and Sons in 1873, and that the QWERTY design is based on the layout of the Sholes and Glidden typewriter sold by Remington from 1874. It became popular with the Remington No. 2 of 1878 and is still a de facto standard on computers. In this study write('zqay;') produced the same five characters under the us, de, tr and fr layouts of setxkbmap, and the table of key names held 194 entries. The account rests on these sources. Wikipedia, 'QWERTY' (Sholes, the sale to Remington in 1873, the typewriter sold from 1874, the Remington No. 2 of 1878), read 2026-10-13; this study's leaves KeyboardLayout and KeyTable. The program types into a text field and prints what arrived. press('nokey'), press('SHIFT') and keyDown('nokey') raise nothing and type nothing, because the key names are lower case and an unknown name is ignored; write(['a', 'nokey', 'b']) typed ab and write('caf\u00e9') typed caf, because the letter with the accent is not on the list, and the capital A is not in the list either, since a capital is typed with the Shift key. The consequence is that a script cannot tell a typo from a success, and the habit is to print the text that arrived, as the program does. The table of the chapter, Table 23-1, lists the key names, and every one of its 41 names is in KEYBOARD_KEYS.",
+   "take": "A wrong key name fails silently; print what arrived.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Hotkeys and the clipboard",
+   "sub": "hotkey() presses keys in order and releases them in reverse; pyperclip reads the copy",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.2,
+     "h": 2.5,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.4,
+       "w": 0.95,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The script",
+       "x": 0.61,
+       "y": 1.516,
+       "w": 0.83,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.025,
+       "y1": 1.82,
+       "x2": 1.025,
+       "y2": 3.9,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.125,
+       "y": 1.4,
+       "w": 0.95,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The window",
+       "x": 2.185,
+       "y": 1.516,
+       "w": 0.83,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.6,
+       "y1": 1.82,
+       "x2": 2.6,
+       "y2": 3.9,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.7,
+       "y": 1.4,
+       "w": 0.95,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The clipboard",
+       "x": 3.76,
+       "y": 1.432,
+       "w": 0.83,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.175,
+       "y1": 1.82,
+       "x2": 4.175,
+       "y2": 3.9,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.025,
+       "y1": 2.205,
+       "x2": 2.6,
+       "y2": 2.205,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls hotkey('ctrl', 'a') to select the text",
+       "x": 1.125,
+       "y": 1.866,
+       "w": 1.375,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.025,
+       "y1": 2.601,
+       "x2": 2.6,
+       "y2": 2.601,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls hotkey('ctrl', 'c') to copy the text",
+       "x": 1.125,
+       "y": 2.262,
+       "w": 1.375,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.6,
+       "y1": 2.997,
+       "x2": 4.175,
+       "y2": 2.997,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Stores the text on the clipboard",
+       "x": 2.7,
+       "y": 2.658,
+       "w": 1.375,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.025,
+       "y1": 3.393,
+       "x2": 4.175,
+       "y2": 3.393,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls pyperclip.paste()",
+       "x": 1.125,
+       "y": 3.189,
+       "w": 2.95,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.175,
+       "y1": 3.789,
+       "x2": 1.025,
+       "y2": 3.789,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns the text of the window",
+       "x": 1.125,
+       "y": 3.585,
+       "w": 2.95,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "CopyingTextWithTheClipboard"
+    },
+    {
+     "t": "prog",
+     "x": 4.97,
+     "y": 1.55,
+     "w": 4.53,
+     "h": 2.93,
+     "lines": [
+      "with Desk() as d:",
+      "    import pyautogui, pyperclip; pyautogui.PAUSE = 0",
+      "    o = d.observer(mode='text', focus='text',",
+      "                   geometry='600x300+100+100')",
+      "    time.sleep(0.5); pyautogui.click(300, 250); time.sleep(0.3)",
+      "    print(VD, '| pyperclip', md.version('pyperclip'))",
+      "    pyautogui.write('Hello, world!\\nsecond line')",
+      "    o.clear(); pyautogui.hotkey('ctrl', 'alt', 'shift', 's')",
+      "    ks = [k.split('_')[0] for t, k, s in keys(o)]",
+      "    print('down, then up:', *ks)",
+      "    pyautogui.hotkey('ctrl', 'a'); pyautogui.hotkey('ctrl', 'c')",
+      "    time.sleep(1); text = pyperclip.paste()",
+      "    print('paste():', repr(text))",
+      "    pyautogui.press('end'); pyautogui.hotkey('ctrl', 'v')",
+      "    print('ctrl+v pasted it again:', o.text() == text * 2)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen | pyperclip 1.11.0\ndown, then up: Control Alt Shift S S Shift Alt Control\npaste(): 'Hello, world!\\nsecond line'\nctrl+v pasted it again: True",
+     "outLabel": "prints",
+     "label": "program clipCut_v1_0_0.py, lines 168 to 182 of 182"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.93,
+     "w": 4.2,
+     "h": 0.44,
+     "fs": 8,
+     "body": "diagram CopyingTextWithTheClipboard - Interaction pattern, 22 of 24 words grounded in the chapter's text. Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "Lawrence G. Tesler and colleagues at Xerox PARC, and Apple Computer, which popularized the commands",
+     "where": "Xerox PARC from 1974; the Apple Lisa of 1983 and the Macintosh of 1984",
+     "when": "1974",
+     "link": "https://en.wikipedia.org/wiki/Cut,_copy,_and_paste",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on cut, copy and paste says Larry Tesler proposed the names cut and copy for the first step and paste for the second, and that beginning in 1974 he and colleagues at Xerox PARC implemented several text editors that used the commands. Apple Computer popularized the paradigm with its Lisa in 1983 and Macintosh in 1984, mapping the functions to key combinations. In this study a script pressed ctrl and a, then ctrl and c, in a window and pyperclip.paste() returned the two lines 'Hello, world!' and 'second line' through xclip. The account rests on these sources. Wikipedia, 'Cut, copy, and paste' (Tesler and Xerox PARC from 1974; Apple Lisa 1983 and Macintosh 1984), read 2026-10-13; this study's leaves ClipboardRoundTrip and HotkeyOrder. The sequence diagram is the round trip of the chapter: the script presses ctrl and a to select the text, ctrl and c to copy it, the window stores the text on the clipboard, the script calls pyperclip.paste(), and the clipboard returns the text of the window. The program shows two things. The keys of hotkey('ctrl', 'alt', 'shift', 's') went down in the order given and came up in the reverse order, which the window recorded as events. And the text of the field, selected and copied with the two shortcuts, came back from pyperclip.paste() and pasted again with ctrl and v. The program waits a second between the copy and the paste, because the copy is made by another process and the clipboard is not filled at once; the corpus programs that read the clipboard right away sometimes got an empty string, so their values are not quoted. The five files of the online materials that import pyperclip are alternatingText.py, ccwd.py, cliprec.py, phoneAndEmail.py and showmap.py.",
+   "take": "hotkey() is a chord; the clipboard is another process.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Message boxes",
+   "sub": "A box returns a button's text, '' or None; an unanswered box returns 'Timeout'",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 6.01,
+     "h": 2.66,
+     "lines": [
+      "with Desk() as d:",
+      "    print(VD, '| message boxes answered with the keyboard')",
+      "    print('confirm + Return   ->', ask(d, \"confirm('Go?', 'Q')\", ['Return']))",
+      "    print('confirm + Escape   ->', ask(d, \"confirm('Go?', 'Q')\", ['Escape']))",
+      "    print('prompt + Return    ->', ask(d, \"prompt('Name?', 'Q')\", ['Return']))",
+      "    print('prompt + Escape    ->', ask(d, \"prompt('Name?', 'Q')\", ['Escape']))",
+      "    print('password + typing  ->', ask(d, \"password('Pass?', 'Q')\", ['Return'], 's3cret'))",
+      "    t = time.perf_counter(); r = ask(d, \"confirm('Go?', 'Q', timeout=1500)\", [])",
+      "    took = time.perf_counter() - t - 0.5",
+      "    print('confirm(timeout=1500) ->', r, '| about 1.5 s:', 1.2 < took < 3.0)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen | message boxes answered with the keyboard\nconfirm + Return   -> 'OK'\nconfirm + Escape   -> 'Cancel'\nprompt + Return    -> ''\nprompt + Escape    -> None\npassword + typing  -> 's3cret'\nconfirm(timeout=1500) -> 'Timeout' | about 1.5 s: True",
+     "outLabel": "prints",
+     "label": "program boxCut_v1_0_0.py, lines 168 to 177 of 177"
+    },
+    {
+     "t": "foot",
+     "x": 6.71,
+     "y": 1.5,
+     "w": 2.79,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it."
+    },
+    {
+     "t": "foot",
+     "x": 6.71,
+     "y": 1.99,
+     "w": 2.79,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Lines 1 to 167 (imports, the private display and the helper that starts a box and answers it with the keyboard) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 6.71,
+     "y": 2.48,
+     "w": 2.79,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: the installed PyMsgBox 2.0.1 says __version__ 1.0.9, and its signatures carry type hints that 1.0.9 lacks."
+    }
+   ],
+   "notes": "The message boxes of PyAutoGUI come from PyMsgBox: alert(), confirm(), prompt() and password(). The program starts each box in a child process on its own display, answers it with xdotool keys and prints what the call returned. Return on confirm returns 'OK' and Escape returns 'Cancel'; prompt returns an empty string for Return alone and None for Escape; password returns what was typed; and confirm with timeout=1500 returned 'Timeout' after about one and a half seconds, which the program prints as a boolean. A script that needs an answer must handle both the empty string and None. The installed PyMsgBox reports a version older than its release, which the research saw and which is only a label.",
+   "take": "Check for '' and None; a timeout is a string.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Looking busy and the idle clock",
+   "sub": "Moving the pointer one pixel resets the idle time; reading the position does not",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.45,
+     "h": 3.21,
+     "lines": [
+      "with Desk(wm=False) as d:",
+      "    import pyautogui; pyautogui.PAUSE = 0",
+      "    idle = lambda: int(d.sh('xprintidle'))",
+      "    pyautogui.moveTo(800, 500); xs = []",
+      "    print(VD, '| looking busy')",
+      "    for _ in range(3):",
+      "        pyautogui.move(-1, 0); xs.append(pyautogui.position().x)",
+      "        pyautogui.move(1, 0); xs.append(pyautogui.position().x)",
+      "    print('x after each move:', xs, '| ends at', tuple(pyautogui.position()))",
+      "    time.sleep(1.2); print('idle after a wait:', idle() > 1000)",
+      "    pyautogui.position(); pyautogui.size()",
+      "    print('after position() and size(): still idle:', idle() > 1000)",
+      "    pyautogui.move(1, 0); print('after move(1, 0): idle was reset:', idle() < 400)",
+      "    time.sleep(1.2); pyautogui.press('shift')",
+      "    print('after press(shift): idle was reset:', idle() < 400)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "virtual display (Xvfb), not a real screen | looking busy\nx after each move: [799, 800, 799, 800, 799, 800] | ends at (800, 500)\nidle after a wait: True\nafter position() and size(): still idle: True\nafter move(1, 0): idle was reset: True\nafter press(shift): idle was reset: True",
+     "outLabel": "prints",
+     "label": "program busyCut_v1_0_0.py, lines 168 to 182 of 182"
+    },
+    {
+     "t": "foot",
+     "x": 6.15,
+     "y": 1.5,
+     "w": 3.35,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Virtual display: Xvfb with real X clients, a local stand-in for a screen, not a real screen; nobody sees it."
+    },
+    {
+     "t": "foot",
+     "x": 6.15,
+     "y": 1.86,
+     "w": 3.35,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 167 (imports and the private display) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 6.15,
+     "y": 2.22,
+     "w": 3.35,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: the sushigoroundbot repository answered 403 through the proxy of the study, and sumopaint.com was unreachable with an SSLError."
+    },
+    {
+     "t": "foot",
+     "x": 6.15,
+     "y": 2.71,
+     "w": 3.35,
+     "h": 0.31,
+     "fs": 8,
+     "body": "NOT EXECUTED here: the Sushi Go Round game (no Flash player is installed here), a captcha and a real instant messenger."
+    }
+   ],
+   "notes": "A script that moves the pointer one pixel left and right keeps a screen from going idle, and the program shows the mechanism with the idle clock of the X server: the x positions are 799, 800, 799, 800, 799 and 800, and the script ends where it began. The idle time is reset by move(1, 0) and by press('shift') and not by position() or size(), so a script that only reads the screen does not look busy. The numbers are printed as booleans, because the idle time itself changes from run to run. The chapter's examples that use these ideas, a bot for a game, an instant messenger and a captcha, need a real screen and a real service and were not run; the repository of the game bot could not be fetched from the proxy of the study.",
+   "take": "Moving the pointer resets the idle clock; reading it does not.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter replayed in five environments",
+   "sub": "Recorded: how many of the 80 printed statements match the book, by environment",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 9.0,
+     "colW": [
+      1.9,
+      0.9,
+      1.15,
+      1.15,
+      0.9,
+      1.7,
+      1.3
+     ],
+     "fs": 8,
+     "rowH": 0.26,
+     "rows": [
+      [
+       "row",
+       "Python",
+       "PyAutoGUI",
+       "PyScreeze",
+       "Tk",
+       "ran without an exception",
+       "statements = book"
+      ],
+      [
+       "newest",
+       "3.14.6",
+       "0.9.54",
+       "1.0.1",
+       "9.0.3",
+       "52",
+       "40 of 80"
+      ],
+      [
+       "no OpenCV",
+       "3.14.6",
+       "0.9.54",
+       "1.0.1",
+       "9.0.3",
+       "52",
+       "40 of 80"
+      ],
+      [
+       "PyScreeze 0.1.28",
+       "3.14.6",
+       "0.9.54",
+       "0.1.28",
+       "9.0.3",
+       "52",
+       "41 of 80"
+      ],
+      [
+       "Python 3.12.3, Tk 8.6",
+       "3.12.3",
+       "0.9.54",
+       "1.0.1",
+       "8.6.14",
+       "53",
+       "40 of 80"
+      ],
+      [
+       "empty",
+       "3.14.6",
+       "-",
+       "-",
+       "9.0.3",
+       "1",
+       "1 of 80"
+      ]
+     ]
+    },
+    {
+     "t": "card",
+     "head": "Recorded 13 Oct 2026",
+     "body": "One program of 27 items ran under 12 interpreter rows: 3.12.3, 3.13.14, 3.14.2 to 3.14.6, 3.15.0b4 and 3.14.6 with OpenCV ran every item; 3.14.0 and 3.14.1 raised TclError: Can't find a usable init.tcl, and 3.11.17 had no tkinter. 14 of the 27 items differed between some pair of rows.",
+     "x": 0.5,
+     "y": 3.4,
+     "w": 4.4,
+     "h": 1.5,
+     "fs": 8.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "Windows, macOS, the accessibility permission, a real Wayland compositor, real or multiple monitors, HiDPI scaling, a real screen, the Sushi Go Round bot, a captcha, a real instant messenger and Python 3.15 final, which was only the beta 3.15.0b4.",
+     "x": 5.1,
+     "y": 3.4,
+     "w": 4.4,
+     "h": 1.5,
+     "fs": 8.5,
+     "accent": "orange"
+    }
+   ],
+   "notes": "The table is the research's record of the chapter's 80 statements replayed as printed, and the deck check computes every cell again from the record. With Python 3.14.6 and the newest packages 40 matched the book and 52 ran without an exception; without OpenCV the numbers were the same; with PyScreeze 0.1.28 41 matched; under Python 3.12.3 with Tk 8.6.14 40 matched and 53 ran; and in an empty environment 1 matched and 1 ran. The statements that differ are the pointer positions, the pixel((50, 200)) call, the Box values, the window objects, mouseInfo() and the listing of spiralDraw.py. Across the 14 combinations of PyAutoGUI and PyScreeze, 7 of the 27 items differed, across 7 releases of Pillow, 9.5.0 to 12.3.0, 3 items differed only by a DeprecationWarning in 12.3.0, and across 3 releases of PyMsgBox the signatures differed. The photograph of the stories was not fetched, because the single request to Wikimedia Commons answered 429.",
+   "take": "The same book gives 1 to 41 matching statements, by environment.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in one map",
+   "sub": "Six branches; the slides of each branch hold the examples",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.0,
+       "y": 2.425,
+       "w": 2.0,
+       "h": 1.15,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A script controls the mouse and keyboard through synthetic input",
+       "x": 4.08,
+       "y": 2.713,
+       "w": 1.84,
+       "h": 0.575,
+       "fs": 11,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 1.91,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Installing and sending input",
+       "x": 0.6,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "PyAutoGUI sends events through XTEST on Linux\nA Wayland session does not accept them\nWindow functions exist only on Windows",
+       "x": 0.6,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 3.0,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Staying on track",
+       "x": 0.6,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The pause after each call is 0.1 seconds\nA corner of the screen raises the fail-safe\nThe exception stops the program",
+       "x": 0.6,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 4.09,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Mouse control",
+       "x": 0.6,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The origin (0, 0) is the top left corner\nclick() presses and releases the button\ndrag() holds the button down",
+       "x": 0.6,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 1.91,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Screen and images",
+       "x": 6.5,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "screenshot() returns an image\nlocateOnScreen() returns a box\nA missing image raises ImageNotFoundException",
+       "x": 6.5,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 3.0,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Windows and keyboard",
+       "x": 6.5,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "write() types a string\nAn unknown key name is ignored\nThe focused window receives the typing",
+       "x": 6.5,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 4.09,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Scripts and practice",
+       "x": 6.5,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "confirm() returns the button clicked\nLooking Busy moves the cursor by one pixel\nTk 9 breaks MouseInfo",
+       "x": 6.5,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      }
+     ],
+     "did": "ControllingTheKeyboardAndMouseAtAGlance"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram ControllingTheKeyboardAndMouseAtAGlance - TopicAndParts pattern, 90 of 93 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "These six branches are the route of the deck. Installing and sending input: PyAutoGUI sends events through XTEST on Linux, a Wayland session does not accept them, and the window functions exist only on Windows; on slide 5 the session variable alone made the screenshot fail while the move still worked through X. Staying on track: the pause after each call is 0.1 seconds, a corner of the screen raises the fail-safe, and the exception stops the program. Mouse control: the origin (0, 0) is the top left corner, click() presses and releases the button, and drag() holds the button down. Screen and images: screenshot() returns an image, locateOnScreen() returns a box, and a missing image raises ImageNotFoundException with a recent PyScreeze. Windows and keyboard: write() types a string, an unknown key name is ignored and the focused window receives the typing. Scripts and practice: confirm() returns the button clicked, Looking Busy moves the cursor by one pixel, and Tk 9 breaks MouseInfo. Together they answer the first question of the chapter, what can be shown to work on a machine with no real screen and what can only be shown to fail, and the slides that say where a printed line differs answer the second. The map is drawn from the same specification as the interactive page.",
+   "take": "If a branch feels unproven, its slides hold the example.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Every link was opened on the day this deck was made",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.55,
+     "fs": 9,
+     "groups": [
+      {
+       "head": "Stories",
+       "rows": [
+        [
+         "Computer mouse (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Mouse_(computing)"
+        ],
+        [
+         "X Window System (Wikipedia)",
+         "https://en.wikipedia.org/wiki/X_Window_System"
+        ],
+        [
+         "QWERTY (Wikipedia)",
+         "https://en.wikipedia.org/wiki/QWERTY"
+        ],
+        [
+         "CAPTCHA (Wikipedia)",
+         "https://en.wikipedia.org/wiki/CAPTCHA"
+        ],
+        [
+         "Dead man's switch (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Dead_man%27s_switch"
+        ],
+        [
+         "Cut, copy, and paste (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Cut,_copy,_and_paste"
+        ]
+       ]
+      },
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, chapter 23 - free online",
+         "https://automatetheboringstuff.com/3e/chapter23.html"
+        ],
+        [
+         "Appendix A: installing third-party modules",
+         "https://automatetheboringstuff.com/3e/appendixa.html"
+        ],
+        [
+         "Online materials of the 3rd edition (zip)",
+         "https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "PyAutoGUI documentation",
+         "https://pyautogui.readthedocs.io/en/latest/"
+        ],
+        [
+         "PyAutoGUI: mouse control functions",
+         "https://pyautogui.readthedocs.io/en/latest/mouse.html"
+        ],
+        [
+         "PyAutoGUI: keyboard control functions",
+         "https://pyautogui.readthedocs.io/en/latest/keyboard.html"
+        ],
+        [
+         "MouseInfo documentation",
+         "https://mouseinfo.readthedocs.io/en/latest/"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every listing of the chapter; the online materials are the zip of 91 files, and Appendix A is where the book installs third-party packages. The reference links are the PyAutoGUI documentation and its pages on the mouse and keyboard functions, and the MouseInfo documentation. The six stories of the chapter are on slides with their own link, and their pages are the last group. The research package holds 56 sources in all, among them the X.Org protocol documents, the manual page of xterm, the Microsoft documentation of SendInput, the PyPI metadata of the packages and the Tcl 9.0 manual. The research opened the chapter's own 13 external links too: 7 answered 200, 3 answered 302, youtu.be answered 303 and then 429, the game bot's repository answered 403 through the proxy of the study, and sumopaint.com was unreachable. No photograph of a person is used in the deck.",
+   "take": "Textbook, documentation, and history, all opened today.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What you should now be able to say",
+   "sub": "Four claims, each carried by a result you saw printed",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 1.5,
+     "w": 8.8,
+     "h": 2.4,
+     "fs": 15,
+     "items": [
+      "PyAutoGUI sends real input through the X server, and the window cannot tell it from a mouse.",
+      "Leave the fail-safe on; a wrong key name or a missing image fails quietly.",
+      "Pin PyAutoGUI and PyScreeze together, and test scroll units and Tk where you run.",
+      "MouseInfo needs Tk 8.6, window objects are for Windows, and nothing ran on a real screen."
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.6,
+     "y": 4.1,
+     "w": 8.8,
+     "h": 0.6,
+     "fs": 10,
+     "big": false,
+     "items": [
+      "13 console rows",
+      "30 programs run",
+      "8 diagrams",
+      "6 pictures"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The programs need PyAutoGUI, PyScreeze, Pillow, PyMsgBox, pyperclip, python3-xlib and a Tk, and the deck's own programs run on a virtual X display with Xvfb, openbox, xdotool, xclip, xterm and scrot. The rows were run again under Python 3.14.6 each time the deck was built, and the programs, and with them the pictures, were run again by the check that compares the slides with the recording. What was not run is marked on its slide: Windows and macOS, a real Wayland compositor, real or multiple monitors, HiDPI scaling, a real screen, the Sushi Go Round game, a captcha, a real instant messenger and Python 3.15 final. Nothing was ever shown to a person on a screen. Every count in this deck from a single run is a single run, and not a benchmark. The next chapter of the book moves on, and what this chapter taught about checking what a program receives carries over.",
+   "take": "Questions are welcome; bring a script to try.",
+   "bg": "light"
+  }
+ ]
+}
