@@ -1,0 +1,514 @@
+{
+ "_version": "1.0.0",
+ "_python": "3.14.6",
+ "_packages": "requests 2.34.2 | beautifulsoup4 4.15.0",
+ "title": [
+  [
+   "import platform, sys, threading",
+   ""
+  ],
+  [
+   "platform.python_version()",
+   "'3.14.6'"
+  ],
+  [
+   "sys._is_gil_enabled()",
+   "True"
+  ],
+  [
+   "threading.current_thread().name",
+   "'MainThread'"
+  ],
+  [
+   "threading.active_count()",
+   "1"
+  ]
+ ],
+ "inc": [
+  [
+   "import dis",
+   ""
+  ],
+  [
+   "def inc(): global c; c += 1",
+   ""
+  ],
+  [
+   "ops = [i.opname for i in dis.get_instructions(inc)][1:-1]",
+   ""
+  ],
+  [
+   "len(ops)",
+   "5"
+  ],
+  [
+   "ops[:4]",
+   "['LOAD_GLOBAL', 'LOAD_SMALL_INT', 'BINARY_OP', 'STORE_GLOBAL']"
+  ]
+ ],
+ "locals": [
+  [
+   "import threading",
+   ""
+  ],
+  [
+   "tl = threading.local()",
+   ""
+  ],
+  [
+   "def put(): tl.x = 1",
+   ""
+  ],
+  [
+   "t = threading.Thread(target=put); t.start(); t.join()",
+   ""
+  ],
+  [
+   "hasattr(tl, 'x')",
+   "False"
+  ]
+ ],
+ "pins": [
+  [
+   "import os, sys, sysconfig",
+   ""
+  ],
+  [
+   "sys._is_gil_enabled()",
+   "True"
+  ],
+  [
+   "sysconfig.get_config_var('Py_GIL_DISABLED')",
+   "0"
+  ],
+  [
+   "os.cpu_count()",
+   "2"
+  ]
+ ],
+ "_programs": {
+  "startCut_v1_0_0.py": {
+   "code": "import threading, time\nprint('Start of program.')\ndef takeANap():\n    time.sleep(0.5)\n    print('Wake up!')\nthreadObj = threading.Thread(target=takeANap)\nthreadObj.start()\nprint('End of program.')\nthreadObj.join()\nbox = []\ndef f():\n    me = threading.current_thread()\n    box.append((me.name, threading.active_count()))\nt = threading.Thread(target=f); t.start(); t.join()\nmain = threading.current_thread()\nprint(main.name, main is threading.main_thread(), box[0])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Start of program.\nEnd of program.\nWake up!\nMainThread True ('Thread-2 (f)', 2)",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "argsCut_v1_0_0.py": {
+   "code": "import threading\ndef go(sep):\n    t = threading.Thread(target=print, kwargs={'sep': sep},\n                         args=['Cats', 'Dogs', 'Frogs'])\n    t.start(); t.join()\ngo(' & ')\ngo('& ')\nt = threading.Thread(target=print('Now', 'not later'))\nt.start(); t.join()\nprint('the thread had a target to run:', t.is_alive())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Cats & Dogs & Frogs\nCats& Dogs& Frogs\nNow not later\nthe thread had a target to run: False",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "lifeCut_v1_0_0.py": {
+   "code": "import threading\ndef f(): pass\na = threading.Thread(target=f)\nb = threading.Thread(target=f)\nc = threading.Thread(target=f, name='copier')\nprint(a.name, '|', b.name, '|', c.name)\na.start(); a.join()\ntry:\n    a.start()\nexcept RuntimeError as e:\n    print('RuntimeError:', e)\ndef boom():\n    raise ValueError('boom')\nthreading.excepthook = lambda a: print('hook:', repr(a.exc_value))\nt = threading.Thread(target=boom); t.start(); t.join()\nprint('main continues')\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "Thread-1 (f) | Thread-2 (f) | copier\nRuntimeError: threads can only be started once\nhook: ValueError('boom')\nmain continues",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "joinCut_v1_0_0.py": {
+   "code": "import threading, time\nt = threading.Thread(target=time.sleep, args=[0.6]); t.start()\nr = t.join(0.1)\nprint('join(0.1) returned', r, '| alive:', t.is_alive())\nt.join()\nprint('join() waited | alive:', t.is_alive())\nu = threading.Thread(target=print)\ntry:\n    u.join()\nexcept RuntimeError as e:\n    print('RuntimeError:', e)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "join(0.1) returned None | alive: True\njoin() waited | alive: False\nRuntimeError: cannot join thread before it is started",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "daemonCut_v1_0_0.py": {
+   "code": "import subprocess, sys, threading, time\ntmpl = '''import threading, time\ndef f():\n    time.sleep(0.5); print('late')\nthreading.Thread(target=f, daemon=%s).start()\nprint('end')'''\nfor flag in (True, False):\n    r = subprocess.run([sys.executable, '-c', tmpl % flag],\n                       capture_output=True, text=True)\n    print('daemon=%s prints' % flag, r.stdout.split())\nt = threading.Thread(target=time.sleep, args=[0.2]); t.start()\ntry:\n    t.daemon = True\nexcept RuntimeError as e:\n    print('RuntimeError:', e)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "daemon=True prints ['end']\ndaemon=False prints ['end', 'late']\nRuntimeError: cannot set daemon status of active thread",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "printedCut_v1_0_0.py": {
+   "code": "import os, struct, subprocess, sys, tempfile, threading, zlib, http.server\nhits = []\nclass H(http.server.BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def do_GET(self):\n        hits.append(self.path)\n        if self.path.startswith('/img/'): body, ct = b'x' * 100, 'image/png'\n        else:\n            n = self.path.strip('/')\n            body = ('<div id=\"comic\"><img src=\"http://127.0.0.1:%d/img/%s.png\"></div>'\n                    % (self.server.server_port, n)).encode(); ct = 'text/html'\n        self.send_response(200); self.send_header('Content-Type', ct)\n        self.send_header('Content-Length', str(len(body))); self.end_headers()\n        self.wfile.write(body)\nsrv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H); srv.daemon_threads = True\nthreading.Thread(target=srv.serve_forever, daemon=True).start()\nLISTING = '''\nimport requests, os, bs4, threading, sys\nBASE = sys.argv[1]\nos.makedirs('xkcd', exist_ok=True)\ndef downloadXkcd(startComic, endComic):\n    for urlNumber in range(startComic, endComic):\n        res = requests.get(BASE + '/%s' % (urlNumber))\n        res.raise_for_status()\n        soup = bs4.BeautifulSoup(res.text, 'html.parser')\n        comicElem = soup.select('#comic img')\n        if comicElem == []:\n            print('Could not find comic image.')\n        else:\n            comicUrl = comicElem[0].get('src')\n            res = requests.get(comicUrl)\n            res.raise_for_status()\n            imageFile = open(os.path.join('xkcd', os.path.basename(comicUrl)), 'wb')\n            for chunk in res.iter_content(100000):\n                imageFile.write(chunk)\n            imageFile.close()\ndownloadThreads = []\nfor i in range(0, 140, 10):\n    start = i\n    end = i + 9\n    if start == 0:\n        start = 1\n    downloadThread = threading.Thread(target=downloadXkcd, args=(start, end))\n    downloadThreads.append(downloadThread)\nfor downloadThread in downloadThreads:\n    downloadThread.join()\nprint('Done.')\n'''\nfolder = tempfile.mkdtemp()\nr = subprocess.run([sys.executable, '-c', LISTING, 'http://127.0.0.1:%d' % srv.server_port],\n                   capture_output=True, text=True, cwd=folder)\npages = sorted(int(p.strip('/')) for p in hits if not p.startswith('/img/'))\nsaved = len(os.listdir(folder + '/xkcd')) if os.path.isdir(folder + '/xkcd') else 0\nprint('comic pages requested:', len(pages), '| files saved:', saved)\nprint('return code:', r.returncode)\nprint(r.stderr.strip().splitlines()[-1])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "comic pages requested: 0 | files saved: 0\nreturn code: 1\nRuntimeError: cannot join thread before it is started",
+   "live": true,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "127.0.0.1",
+    "xkcd.com is never contacted"
+   ],
+   "corpus": false
+  },
+  "fixedCut_v1_0_0.py": {
+   "code": "import os, struct, subprocess, sys, tempfile, threading, zlib, http.server\nhits = []\nclass H(http.server.BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def do_GET(self):\n        hits.append(self.path)\n        if self.path.startswith('/img/'): body, ct = b'x' * 100, 'image/png'\n        else:\n            n = self.path.strip('/')\n            body = ('<div id=\"comic\"><img src=\"http://127.0.0.1:%d/img/%s.png\"></div>'\n                    % (self.server.server_port, n)).encode(); ct = 'text/html'\n        self.send_response(200); self.send_header('Content-Type', ct)\n        self.send_header('Content-Length', str(len(body))); self.end_headers()\n        self.wfile.write(body)\nsrv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H); srv.daemon_threads = True\nthreading.Thread(target=srv.serve_forever, daemon=True).start()\nimport hashlib\ndef done(name, rows):\n    def chunk(t, d): return struct.pack('>I', len(d)) + t + d + struct.pack('>I', zlib.crc32(t + d))\n    raw = b''.join(b'\\x00' + bytes(c for px in row for c in px) for row in rows)\n    data = (b'\\x89PNG\\r\\n\\x1a\\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', len(rows[0]), len(rows), 8, 2, 0, 0, 0))\n            + chunk(b'IDAT', zlib.compress(raw, 9)) + chunk(b'IEND', b''))\n    open(name, 'wb').write(data)\n    k = os.environ.get('CH25_KEEP')\n    if k: open(os.path.join(k, name), 'wb').write(data)\n    print('saved %s: %d bytes, sha256 %s' % (name, len(data), hashlib.sha256(data).hexdigest()[:12]))\nLISTING = '''\nimport requests, os, bs4, threading, sys\nBASE = sys.argv[1]\nos.makedirs('xkcd', exist_ok=True)\ndef downloadXkcd(startComic, endComic):\n    for urlNumber in range(startComic, endComic):\n        res = requests.get(BASE + '/%s' % (urlNumber))\n        res.raise_for_status()\n        soup = bs4.BeautifulSoup(res.text, 'html.parser')\n        comicElem = soup.select('#comic img')\n        if comicElem == []:\n            print('Could not find comic image.')\n        else:\n            comicUrl = comicElem[0].get('src')\n            res = requests.get(comicUrl)\n            res.raise_for_status()\n            imageFile = open(os.path.join('xkcd', os.path.basename(comicUrl)), 'wb')\n            for chunk in res.iter_content(100000):\n                imageFile.write(chunk)\n            imageFile.close()\ndownloadThreads = []\nfor i in range(0, 140, 10):\n    start = i\n    end = i + 9\n    if start == 0:\n        start = 1\n    downloadThread = threading.Thread(target=downloadXkcd, args=(start, end))\n    downloadThreads.append(downloadThread)\n    downloadThread.start()\nfor downloadThread in downloadThreads:\n    downloadThread.join()\nprint('Done.')\n'''\nfolder = tempfile.mkdtemp()\nr = subprocess.run([sys.executable, '-c', LISTING, 'http://127.0.0.1:%d' % srv.server_port],\n                   capture_output=True, text=True, cwd=folder)\npages = sorted(int(p.strip('/')) for p in hits if not p.startswith('/img/'))\nsaved = len(os.listdir(folder + '/xkcd')) if os.path.isdir(folder + '/xkcd') else 0\nprint('comic pages requested:', len(pages), '| files saved:', saved)\nmiss = [n for n in range(1, 140) if n not in pages]\nprint('never requested:', len(miss), 'numbers, from', miss[0], 'to', miss[-1])\nink = {True: (47, 109, 98), False: (217, 122, 20)}\ncell, rows = 22, []\nfor row in range(14):\n    line = []\n    for col in range(10):\n        n = row * 10 + col\n        c = (223, 214, 199) if n == 0 else ink[n in pages]\n        line += [c] * (cell - 2) + [(250, 246, 239)] * 2\n    rows += [line] * (cell - 2) + [[(250, 246, 239)] * len(line)] * 2\ndone('skipped.png', rows)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "comic pages requested: 125 | files saved: 125\nnever requested: 14 numbers, from 9 to 139\nsaved skipped.png: 1086 bytes, sha256 92c1cf3faef8",
+   "live": true,
+   "kind": "standin",
+   "exit": 0,
+   "standkey": [
+    "127.0.0.1",
+    "xkcd.com is never contacted"
+   ],
+   "corpus": false
+  },
+  "lostCut_v1_0_0.py": {
+   "code": "import threading, time\ndef trial(use_lock):\n    box = [0]; lk = threading.Lock()\n    def f():\n        if use_lock: lk.acquire()\n        v = box[0]; time.sleep(0.05); box[0] = v + 1\n        if use_lock: lk.release()\n    ts = [threading.Thread(target=f) for _ in range(2)]\n    [t.start() for t in ts]; [t.join() for t in ts]\n    return box[0]\nprint('two threads, no lock  :', [trial(False) for _ in range(3)])\nprint('two threads, with lock:', [trial(True) for _ in range(3)])\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "two threads, no lock  : [1, 1, 1]\ntwo threads, with lock: [2, 2, 2]",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "lockCut_v1_0_0.py": {
+   "code": "import threading\nbox = [0]; lk = threading.Lock()\ndef f():\n    for _ in range(100000):\n        with lk: box[0] += 1\nts = [threading.Thread(target=f) for _ in range(4)]\n[t.start() for t in ts]; [t.join() for t in ts]\nprint('4 threads x 100000 with a lock:', box[0])\ntry:\n    with lk: raise ValueError\nexcept ValueError: pass\nprint('locked after an error in the with block:', lk.locked())\nrk = threading.RLock(); lk.acquire(); rk.acquire()\nprint('second acquire of a Lock, 0.2 s:', lk.acquire(timeout=0.2))\nprint('second acquire of an RLock     :', rk.acquire(timeout=0.2))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "4 threads x 100000 with a lock: 400000\nlocked after an error in the with block: False\nsecond acquire of a Lock, 0.2 s: False\nsecond acquire of an RLock     : True",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "deadCut_v1_0_0.py": {
+   "code": "import threading, time\na, b = threading.Lock(), threading.Lock()\ndef f(x, y):\n    with x:\n        time.sleep(0.1)\n        with y: pass\nt1 = threading.Thread(target=f, args=(a, b), daemon=True)\nt2 = threading.Thread(target=f, args=(b, a), daemon=True)\nt1.start(); t2.start(); t1.join(0.5); t2.join(0.5)\nprint('alive after 0.5 s:', t1.is_alive(), t2.is_alive())\nev, got = threading.Event(), []\ndef wait():\n    ev.wait(); got.append('woke')\nw = threading.Thread(target=wait)\nw.start(); time.sleep(0.2)\nprint('before set():', got); ev.set(); w.join()\nprint('after set()  :', got)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "alive after 0.5 s: True True\nbefore set(): []\nafter set()  : ['woke']",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "semCut_v1_0_0.py": {
+   "code": "import threading, time\ndef trial(limit):\n    cur, top, lk = [0], [0], threading.Lock()\n    sem = threading.BoundedSemaphore(limit)\n    def f():\n        with sem:\n            with lk:\n                cur[0] += 1; top[0] = max(top[0], cur[0])\n            time.sleep(0.1)\n            with lk: cur[0] -= 1\n    ts = [threading.Thread(target=f) for _ in range(6)]\n    [t.start() for t in ts]; [t.join() for t in ts]\n    return top[0]\nprint('most threads inside, Semaphore(2):', trial(2))\nprint('most threads inside, Semaphore(6):', trial(6))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "most threads inside, Semaphore(2): 2\nmost threads inside, Semaphore(6): 6",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "queueCut_v1_0_0.py": {
+   "code": "import threading, queue\nq, got = queue.Queue(), []\ndef consumer():\n    while (x := q.get()) is not None:\n        got.append(x); q.task_done()\n    q.task_done()\nt = threading.Thread(target=consumer); t.start()\nfor i in range(5): q.put(i)\nq.put(None); q.join(); t.join()\nprint('consumer received', got)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "consumer received [0, 1, 2, 3, 4]",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "poolCut_v1_0_0.py": {
+   "code": "import os, time, threading\nfrom concurrent.futures import ThreadPoolExecutor, as_completed\ndef f(n):\n    time.sleep(0.1 * (3 - n)); return n\nwith ThreadPoolExecutor(3) as ex:\n    print('map          :', list(ex.map(f, [0, 1, 2])))\n    fs = [ex.submit(f, n) for n in [0, 1, 2]]\n    done = [fu.result() for fu in as_completed(fs)]\n    print('as_completed :', done)\ndef name(i):\n    time.sleep(0.05); return threading.current_thread().name\nwith ThreadPoolExecutor(2, thread_name_prefix='dl') as ex:\n    print('worker names :', sorted(set(ex.map(name, range(4)))))\nwith ThreadPoolExecutor() as ex:\n    n = ex._max_workers\n    print('default max_workers on', os.cpu_count(), 'CPUs:', n)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "map          : [0, 1, 2]\nas_completed : [2, 1, 0]\nworker names : ['dl_0', 'dl_1']\ndefault max_workers on 2 CPUs: 6",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "poolerrCut_v1_0_0.py": {
+   "code": "import time, concurrent.futures as cf\ndef bad(): raise ValueError('boom')\nwith cf.ThreadPoolExecutor(1) as ex:\n    fu = ex.submit(bad); time.sleep(0.1)\n    print('exception():', repr(fu.exception()))\n    try: fu.result()\n    except ValueError as e: print('result() raises:', e)\n    slow = ex.submit(time.sleep, 0.5)\n    try: slow.result(timeout=0.1)\n    except TimeoutError:\n        print('timeout=0.1: TimeoutError | done:', slow.done())\nex = cf.ThreadPoolExecutor(1)\nfs = [ex.submit(time.sleep, 0.2) for _ in range(5)]\ntime.sleep(0.05)\nex.shutdown(wait=True, cancel_futures=True)\ngone = sum(f.cancelled() for f in fs)\nprint('cancelled', gone, 'of 5 | ran', 5 - gone)\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "exception(): ValueError('boom')\nresult() raises: boom\ntimeout=0.1: TimeoutError | done: False\ncancelled 4 of 5 | ran 1",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "gilCut_v1_0_0.py": {
+   "code": "import os, subprocess, sys, sysconfig\nFT = os.environ.get('CH25_FT', '/root/.local/share/uv/python/cpython-3.14.6+freethreaded-linux-x86_64-gnu/bin/python3.14t')\nask = ('import sys, sysconfig; print(sys._is_gil_enabled(), '\n       'sysconfig.get_config_var(\"Py_GIL_DISABLED\"))')\ndef run(exe, *flags, **env):\n    e = dict(os.environ, **env)\n    r = subprocess.run([exe, *flags, '-c', ask], text=True,\n                       capture_output=True, env=e)\n    return r.stdout.strip()\nflag = sysconfig.get_config_var('Py_GIL_DISABLED')\nstd = (sys._is_gil_enabled(), flag)\nprint('GIL on?, Py_GIL_DISABLED')\nprint('standard build      :', *std)\nprint('free-threaded build :', run(FT))\nprint('  with PYTHON_GIL=1 :', run(FT, PYTHON_GIL='1'))\nprint('  with -X gil=1     :', run(FT, '-X', 'gil=1'))\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "GIL on?, Py_GIL_DISABLED\nstandard build      : True 0\nfree-threaded build : False 1\n  with PYTHON_GIL=1 : True 1\n  with -X gil=1     : True 1",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "procCut_v1_0_0.py": {
+   "code": "import multiprocessing as mp, threading, subprocess, sys, time\nif __name__ == '__main__':\n    d = {'n': 0}\n    p = mp.Process(target=d.update, args=({'n': 99},))\n    p.start(); p.join()\n    print('a child process changed its copy :', d)\n    t = threading.Thread(target=d.update, args=({'n': 99},))\n    t.start(); t.join()\n    print('a thread changed the same object :', d)\n    print('default start method             :',\n          mp.get_start_method())\n    nap = 'import time; time.sleep(1)'\n    t0 = time.time()\n    k = subprocess.Popen([sys.executable, '-c', nap])\n    back = time.time() - t0 < 0.5\n    print('Popen came back at once          :', back)\n    print('poll() while the child sleeps    :', k.poll())\n    print('wait() returns the return code   :', k.wait())\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "a child process changed its copy : {'n': 0}\na thread changed the same object : {'n': 99}\ndefault start method             : forkserver\nPopen came back at once          : True\npoll() while the child sleeps    : None\nwait() returns the return code   : 0",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  },
+  "asyncCut_v1_0_0.py": {
+   "code": "import asyncio, threading, time\nasync def nap(): await asyncio.sleep(0.3)\nasync def block(): time.sleep(0.2)\ndef took(f, n):\n    async def together():\n        await asyncio.gather(*[f() for _ in range(n)])\n    t0 = time.time(); asyncio.run(together())\n    return time.time() - t0\nprint('10 awaits of 0.3 s, under 0.6 s:', took(nap, 10) < 0.6)\nprint('5 blocking 0.2 s calls, over 1 s  :', took(block, 5) >= 1.0)\ndef work():\n    time.sleep(0.2); return threading.current_thread().name\nasync def bridge():\n    return await asyncio.gather(*map(asyncio.to_thread, [work]*5))\nt0 = time.time(); names = asyncio.run(bridge())\nprint('same 5 on threads, under 0.6 s :', time.time() - t0 < 0.6)\nprint('worker names start with', {n[:7] for n in names})\n",
+   "inputs": [],
+   "needs": [],
+   "transcript": "10 awaits of 0.3 s, under 0.6 s: True\n5 blocking 0.2 s calls, over 1 s  : True\nsame 5 on threads, under 0.6 s : True\nworker names start with {'asyncio'}",
+   "live": true,
+   "kind": "plain",
+   "exit": 0,
+   "standkey": [],
+   "corpus": false
+  }
+ },
+ "_images": {
+  "skipped.png": {
+   "program": "fixedCut_v1_0_0.py",
+   "bytes": 1086,
+   "sha256": "92c1cf3faef8820be0a058293250ecada3d46d2d67f82572be8f4e0860d8b783"
+  }
+ },
+ "_charts": {
+  "cpuRatio": {
+   "setup": "import json, os\nR = json.load(open(os.path.join(HERE, '..', 'ch25-page', 'timing_record_v1_0_0.json')))['runs']\nBUILDS = [('3.14.6', 'standard 3.14.6'), ('3.14.6t', 'free-threaded 3.14.6'), ('3.13.14', '3.13.14'), ('3.12.13', '3.12.13'), ('3.11.15', '3.11.15')]\nROWS = [(lab, round(R['cpu_' + k]['result']['threads_4'] / R['cpu_' + k]['result']['serial_4_tasks'], 2)) for k, lab in BUILDS]\n",
+   "expr": "ROWS",
+   "labels": [
+    "standard 3.14.6",
+    "free-threaded 3.14.6",
+    "3.13.14",
+    "3.12.13",
+    "3.11.15"
+   ],
+   "values": [
+    1.13,
+    0.4,
+    1.16,
+    1.19,
+    0.94
+   ]
+  },
+  "waitingRecord": {
+   "setup": "import json, os\nR = json.load(open(os.path.join(HERE, '..', 'ch25-page', 'timing_record_v1_0_0.json')))['runs']\nBUILDS = [('3.14.6', 'standard 3.14.6'), ('3.14.6t', 'free-threaded 3.14.6'), ('3.13.14', '3.13.14'), ('3.12.13', '3.12.13'), ('3.11.15', '3.11.15')]\nr = R['io_3.14.6']['result']\nROWS = [('one after another', r['serial_8_sleeps']), ('8 threads', r['threads']), ('a pool', r['pool']), ('asyncio', r['asyncio'])]\n",
+   "expr": "ROWS",
+   "labels": [
+    "one after another",
+    "8 threads",
+    "a pool",
+    "asyncio"
+   ],
+   "values": [
+    4.001,
+    0.502,
+    0.502,
+    0.503
+   ]
+  }
+ },
+ "_tables": {
+  "environments": {
+   "setup": "import json, subprocess\nPROBE = \"\\nimport json, sys, sysconfig, threading, concurrent.futures as cf, multiprocessing as mp\\ndef f(): pass\\nr = {'Python': sys.version.split()[0]}\\nr['GIL on'] = str(sys._is_gil_enabled()) if hasattr(sys, '_is_gil_enabled') else 'no such call'\\nr['Py_GIL_DISABLED'] = str(sysconfig.get_config_var('Py_GIL_DISABLED'))\\nr['thread name'] = threading.Thread(target=f).name\\nwith cf.ThreadPoolExecutor(2) as ex: r['pool map'] = str(list(ex.map(abs, [-1, -2])))\\nr['InterpreterPool'] = str(hasattr(cf, 'InterpreterPoolExecutor'))\\nr['start method'] = mp.get_start_method()\\nprint(json.dumps(r))\\n\"\nINTERPS = [('3.11.15', '/root/.local/share/uv/python/cpython-3.11-linux-x86_64-gnu/bin/python3.11'), ('3.12.13', '/root/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/bin/python3.12'), ('3.13.14', '/root/.local/share/uv/python/cpython-3.13-linux-x86_64-gnu/bin/python3.13'), ('3.14.6', '/home/claude/venv314_ch25_latest/bin/python'), ('3.14.6 free-threaded', '/root/.local/share/uv/python/cpython-3.14.6+freethreaded-linux-x86_64-gnu/bin/python3.14t')]\nres = []\nfor v, p in INTERPS:\n    r = subprocess.run([p, '-W', 'ignore', '-c', PROBE], capture_output=True, text=True, stdin=subprocess.DEVNULL)\n    assert r.returncode == 0, (v, r.stderr[-300:])\n    res.append(json.loads(r.stdout.strip().splitlines()[-1]))\nROWS = ['Python', 'GIL on', 'Py_GIL_DISABLED', 'thread name', 'pool map', 'InterpreterPool', 'start method']\n",
+   "expr": "[['check'] + [v for v, p in INTERPS]] + [[k] + [x[k] for x in res] for k in ROWS]",
+   "rows": [
+    [
+     "check",
+     "3.11.15",
+     "3.12.13",
+     "3.13.14",
+     "3.14.6",
+     "3.14.6 free-threaded"
+    ],
+    [
+     "Python",
+     "3.11.15",
+     "3.12.13",
+     "3.13.14",
+     "3.14.6",
+     "3.14.6"
+    ],
+    [
+     "GIL on",
+     "no such call",
+     "no such call",
+     "True",
+     "True",
+     "False"
+    ],
+    [
+     "Py_GIL_DISABLED",
+     "None",
+     "None",
+     "0",
+     "0",
+     "1"
+    ],
+    [
+     "thread name",
+     "Thread-1 (f)",
+     "Thread-1 (f)",
+     "Thread-1 (f)",
+     "Thread-1 (f)",
+     "Thread-1 (f)"
+    ],
+    [
+     "pool map",
+     "[1, 2]",
+     "[1, 2]",
+     "[1, 2]",
+     "[1, 2]",
+     "[1, 2]"
+    ],
+    [
+     "InterpreterPool",
+     "False",
+     "False",
+     "False",
+     "True",
+     "True"
+    ],
+    [
+     "start method",
+     "fork",
+     "fork",
+     "fork",
+     "forkserver",
+     "forkserver"
+    ]
+   ]
+  },
+  "raceRecord": {
+   "setup": "import json, os\nR = json.load(open(os.path.join(HERE, '..', 'ch25-page', 'timing_record_v1_0_0.json')))['runs']\nBUILDS = [('3.14.6', 'standard 3.14.6'), ('3.14.6t', 'free-threaded 3.14.6'), ('3.13.14', '3.13.14'), ('3.12.13', '3.12.13'), ('3.11.15', '3.11.15')]\ndef lost(k, i): return format(R['race_%s_run%d' % (k, i)]['result']['lost'], ',')\n",
+   "expr": "[['build', 'run 1', 'run 2', 'run 3']] + [[lab] + [lost(k, i) for i in (1, 2, 3)] for k, lab in BUILDS]",
+   "rows": [
+    [
+     "build",
+     "run 1",
+     "run 2",
+     "run 3"
+    ],
+    [
+     "standard 3.14.6",
+     "0",
+     "0",
+     "0"
+    ],
+    [
+     "free-threaded 3.14.6",
+     "2,844,845",
+     "2,500,522",
+     "2,913,206"
+    ],
+    [
+     "3.13.14",
+     "0",
+     "0",
+     "0"
+    ],
+    [
+     "3.12.13",
+     "0",
+     "0",
+     "0"
+    ],
+    [
+     "3.11.15",
+     "0",
+     "0",
+     "0"
+    ]
+   ]
+  },
+  "cpuRecord": {
+   "setup": "import json, os\nR = json.load(open(os.path.join(HERE, '..', 'ch25-page', 'timing_record_v1_0_0.json')))['runs']\nBUILDS = [('3.14.6', 'standard 3.14.6'), ('3.14.6t', 'free-threaded 3.14.6'), ('3.13.14', '3.13.14'), ('3.12.13', '3.12.13'), ('3.11.15', '3.11.15')]\ndef s(k, n): return '%.3f' % R['cpu_' + k]['result'][n]\n",
+   "expr": "[['build', 'serial', '2 threads', '4 threads']] + [[lab, s(k, 'serial_4_tasks'), s(k, 'threads_2'), s(k, 'threads_4')] for k, lab in BUILDS]",
+   "rows": [
+    [
+     "build",
+     "serial",
+     "2 threads",
+     "4 threads"
+    ],
+    [
+     "standard 3.14.6",
+     "0.890",
+     "1.003",
+     "1.003"
+    ],
+    [
+     "free-threaded 3.14.6",
+     "1.292",
+     "0.553",
+     "0.522"
+    ],
+    [
+     "3.13.14",
+     "0.912",
+     "1.090",
+     "1.060"
+    ],
+    [
+     "3.12.13",
+     "0.873",
+     "1.096",
+     "1.041"
+    ],
+    [
+     "3.11.15",
+     "1.125",
+     "1.226",
+     "1.062"
+    ]
+   ]
+  },
+  "processRecord": {
+   "setup": "import json, os\nR = json.load(open(os.path.join(HERE, '..', 'ch25-page', 'timing_record_v1_0_0.json')))['runs']\nBUILDS = [('3.14.6', 'standard 3.14.6'), ('3.14.6t', 'free-threaded 3.14.6'), ('3.13.14', '3.13.14'), ('3.12.13', '3.12.13'), ('3.11.15', '3.11.15')]\nm = R['multiprocessing_3.14.6']['result']; a = R['start_3.14.6']['result']; b = R['start_3.14.6t']['result']\n",
+   "expr": "[['recorded run', 'standard 3.14.6', 'free-threaded 3.14.6'], ['4 CPU tasks, serial', '%.3f s' % m['serial_4_tasks'], '-'], ['4 CPU tasks, pool of 2 processes', '%.3f s' % m['pool_2_processes'], '-'], ['one thread started', '%d us' % a['per_thread_us'], '%d us' % b['per_thread_us']], ['one process started', '%.1f ms' % a['per_process_ms'], '%.1f ms' % b['per_process_ms']]]",
+   "rows": [
+    [
+     "recorded run",
+     "standard 3.14.6",
+     "free-threaded 3.14.6"
+    ],
+    [
+     "4 CPU tasks, serial",
+     "0.963 s",
+     "-"
+    ],
+    [
+     "4 CPU tasks, pool of 2 processes",
+     "0.667 s",
+     "-"
+    ],
+    [
+     "one thread started",
+     "112 us",
+     "382 us"
+    ],
+    [
+     "one process started",
+     "5.4 ms",
+     "8.6 ms"
+    ]
+   ]
+  }
+ }
+}

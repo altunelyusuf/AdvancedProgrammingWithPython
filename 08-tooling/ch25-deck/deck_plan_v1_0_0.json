@@ -1,0 +1,4112 @@
+{
+ "meta": {
+  "title": "Ch. 25: Threads",
+  "sub": "SEN0414, second-edition chapter 17 material",
+  "version": "1.0.0",
+  "python": "3.14.6",
+  "total": 26,
+  "diagrams": {
+   "WhatAProgramCanDoWithThreads": 4,
+   "TheLifeOfAThread": 7,
+   "StartingAndJoiningAThread": 8,
+   "TwoThreadsAndALock": 13,
+   "TheProducerAndTheConsumer": 16,
+   "ChoosingBetweenTheTools": 22,
+   "ThreadsAtAGlance": 24
+  },
+  "notExecuted": [
+   11,
+   18,
+   20,
+   23
+  ],
+  "recorded": [
+   4,
+   9,
+   18,
+   19,
+   20,
+   21,
+   23
+  ],
+  "standin": {
+   "10": [
+    "printedCut_v1_0_0.py"
+   ],
+   "11": [
+    "fixedCut_v1_0_0.py"
+   ]
+  }
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Ch. 25: Threads",
+   "sub": "Threads, locks, pools and the GIL: the multithreading the 3rd edition dropped",
+   "items": [
+    {
+     "t": "code",
+     "x": 5.0,
+     "y": 0.25,
+     "w": 4.5,
+     "h": 1.75,
+     "rows": [
+      [
+       "import platform, sys, threading",
+       ""
+      ],
+      [
+       "platform.python_version()",
+       "'3.14.6'"
+      ],
+      [
+       "sys._is_gil_enabled()",
+       "True"
+      ],
+      [
+       "threading.current_thread().name",
+       "'MainThread'"
+      ],
+      [
+       "threading.active_count()",
+       "1"
+      ]
+     ],
+     "fs": 8
+    },
+    {
+     "t": "foot",
+     "x": 0.6,
+     "y": 3.85,
+     "w": 8.8,
+     "h": 0.78,
+     "fs": 11,
+     "body": "Every output on these slides was printed by the Python above when the deck was made, and every picture was either saved by a program that is run again to check it or is a credited file of Wikimedia Commons. Windows, macOS, more than 2 CPUs and the real xkcd.com were never used: the downloaders ask a local stand-in, and what could not be run is marked on its slide."
+    }
+   ],
+   "notes": "Chapter 25 of this course is the Threads subject. It takes the multithreading material of chapter 17 of the 2nd edition of Automate the Boring Stuff with Python, which the 3rd edition dropped, and teaches it with Python 3.14.6, where threads, executors, the global interpreter lock and the free-threaded build have all moved on. The number 25 is the slot of this subject in the course and not a chapter number of either edition. The 2nd edition chapter was read on 14 October 2026. The research ran every listing that works offline, found three places where the chapter's prose or listing differs from what Python does, and added what the chapter leaves out: locks, events, semaphores, queues, pools, the global interpreter lock, processes and asyncio. Every output on the slides was printed by Python 3.14.6 with requests 2.34.2 and beautifulsoup4 4.15.0, the interpreter the console above reports. The programs that wait print only lists, names, errors and booleans and never a duration, because the machine had 2 CPUs and a duration measured again would be another number. The timings that the research measured once, on a quiet machine, are on slides marked Recorded. What could not be run is marked NOT EXECUTED on its slide: the free-threaded build of Python 3.13, a C extension that switches the lock back on, Windows and macOS, more than 2 CPUs and the real xkcd.com, which no program here ever contacted.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Six parts; every range is a run of slides you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 6.3,
+     "h": 3.55,
+     "fs": 11.5,
+     "items": [
+      "Starting and joining threads (slides 4-9)",
+      "The XKCD downloader (slides 10-11)",
+      "Shared data, locks and queues (slides 12-16)",
+      "Pools, the GIL and the race (slides 17-19)",
+      "Speed, processes and asyncio (slides 20-23)",
+      "Summary and resources (slides 24-25)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "26",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "4 + 0",
+       "label": "true stories: 4 on slides, 0 in the notes"
+      },
+      {
+       "n": "5",
+       "label": "pictures: 4 credited photos, 1 saved by a program"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has six parts. It starts with starting and joining threads: the seven uses of threads, starting a thread, the arguments of the target, the life of a Thread object, join and daemon threads. Then the XKCD downloader: the listing as printed, which never calls start(), and the listing with the line added, which skips every tenth comic. The third part is shared data, locks and queues: the lost update, locks, deadlock and events, semaphores, queues and thread-local data. The fourth is pools, the GIL and the race: results, errors and cancelling in an executor, the lock on and off, and the race with and without it. The fifth is speed, processes and asyncio: CPU-bound work on threads, waiting and starting a process, asyncio and the choice of a tool, and five interpreters with what did not run. The last part is a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. All four stories are on slides, each with a link; the seven narrative diagrams of the chapter are drawn from the same specifications as the interactive page. Every output was printed by Python 3.14.6, the downloader ran against a local stand-in server, and what could not be run is marked on its slide.",
+   "take": "Six parts, from starting a thread to a map.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "The chapter's own competency questions; the summary comes back to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 2.3,
+     "fs": 11,
+     "items": [
+      "Which parts of the 2nd edition's multithreading chapter can be shown to work, fail or differ from its prose on a 2-CPU machine with Python 3.14.6, and which statements about the GIL, the free-threaded build and other platforms can only be read from documentation?",
+      "How large are the differences in speed and in lost updates between the GIL build and the free-threaded build, between threads, processes and asyncio, and between Python 3.11 and 3.14, and on what recorded run and source?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 3.8,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 10,
+     "items": [
+      "7 branches",
+      "91 topics",
+      "19 console rows",
+      "17 programs run",
+      "7 diagrams",
+      "5 pictures",
+      "Python 3.14.6"
+     ]
+    }
+   ],
+   "notes": "The first question is the spine of the chapter, and the deck answers it slide by slide. The listings that run offline print what the chapter says: a second thread prints its line last, the arguments of the target arrive through args and kwargs, and join() waits. Three things differ from the text. The chapter's prose writes the keyword dictionary with one space fewer than its listing and prints Cats& Dogs& Frogs. The downloader as printed never calls start(), so no request is made and join() raises RuntimeError. And with the missing line added, the downloader requests 125 of the 139 comic numbers its loop covers and never asks for 9, 19, 29 and every tenth number up to 139. What could only be read is the part that needs another machine: the free-threaded build of Python 3.13, a C extension that switches the global interpreter lock back on, Windows and macOS, more than 2 CPUs and the real xkcd.com. The second question is about size, and every size comes from a single run. Four threads that each ran counter += 1 one million times lost between 2,500,522 and 2,913,206 of 4,000,000 updates in each of 3 runs on the free-threaded 3.14.6 and none in 12 runs on the builds with the lock. Four CPU-bound tasks took 0.89 s one after another and 1.003 s on 4 threads on the standard build, and 1.292 s against 0.522 s on the free-threaded build; a pool of 2 processes took 0.667 s where one process took 0.963 s; starting a thread took 112 microseconds and starting a process 5.4 milliseconds. Each slide says where its figure comes from.",
+   "take": "Know what ran, what only failed, and what was only read.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What a program can do with threads",
+   "sub": "Seven uses; the 2nd edition taught threads, the 3rd edition dropped them",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.6,
+     "h": 2.75,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 1.3,
+       "y": 1.68,
+       "w": 3.8,
+       "h": 2.47,
+       "fill": "FBF8F2",
+       "line": "6E655C",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "THREADS",
+       "x": 1.38,
+       "y": 1.42,
+       "w": 3.65,
+       "h": 0.24,
+       "fs": 8.5,
+       "color": "6E655C",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 1.79,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Start a thread with a target",
+       "x": 1.73,
+       "y": 1.853,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.131,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Pass args and kwargs to the target",
+       "x": 1.73,
+       "y": 2.195,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.473,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Wait for a thread with join()",
+       "x": 1.73,
+       "y": 2.536,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.814,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Guard a counter with a lock",
+       "x": 1.73,
+       "y": 2.878,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.156,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Hand items over with a queue",
+       "x": 1.73,
+       "y": 3.219,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.497,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Run functions on a pool with map()",
+       "x": 1.73,
+       "y": 3.561,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.839,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Overlap waiting with asyncio.gather()",
+       "x": 1.73,
+       "y": 3.902,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 0.74,
+       "y": 2.075,
+       "w": 0.22,
+       "h": 0.22,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 1.5
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.295,
+       "x2": 0.85,
+       "y2": 2.675,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.65,
+       "y1": 2.395,
+       "x2": 1.05,
+       "y2": 2.395,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.675,
+       "x2": 0.69,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.675,
+       "x2": 1.01,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A program",
+       "x": 0.5,
+       "y": 2.975,
+       "w": 0.8,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 1.931,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 2.272,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 2.614,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 2.955,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 3.296,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 3.638,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 3.979,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      }
+     ],
+     "did": "WhatAProgramCanDoWithThreads"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.18,
+     "w": 4.6,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WhatAProgramCanDoWithThreads - SetOfUses pattern, 25 of 27 words grounded in the chapter's text"
+    },
+    {
+     "t": "code",
+     "x": 5.3,
+     "y": 1.45,
+     "w": 4.2,
+     "h": 1.44,
+     "rows": [
+      [
+       "import os, sys, sysconfig",
+       ""
+      ],
+      [
+       "sys._is_gil_enabled()",
+       "True"
+      ],
+      [
+       "sysconfig.get_config_var('Py_GIL_DISABLED')",
+       "0"
+      ],
+      [
+       "os.cpu_count()",
+       "2"
+      ]
+     ],
+     "fs": 8,
+     "cap": "run under Python 3.14.6; no row reads the clock or the network"
+    },
+    {
+     "t": "foot",
+     "x": 5.3,
+     "y": 3.23,
+     "w": 4.2,
+     "h": 0.65,
+     "fs": 9,
+     "body": "Recorded 14 Oct 2026: the 2nd edition's chapter 17 page (200, 103,558 bytes) holds 9 code paragraphs on multithreading, and the 3rd edition's chapter 19, with the same title, has 0 occurrences of the word thread."
+    },
+    {
+     "t": "foot",
+     "x": 5.3,
+     "y": 4.13,
+     "w": 4.2,
+     "h": 0.34,
+     "fs": 9,
+     "body": "The chapter teaches a Thread with a target, start(), args and kwargs, join(), and the XKCD downloader."
+    }
+   ],
+   "notes": "The use-case diagram lists what a program can ask of threads in this chapter: start a thread with a target, pass args and kwargs, wait with join(), guard a counter with a lock, hand items over with a queue, run functions on a pool with map(), and overlap waiting with asyncio.gather(). They are independent calls to the standard library, which is why the picture is a set of uses and not a sequence. The console runs under the interpreter of the deck: the global interpreter lock is on in this standard build, the build variable Py_GIL_DISABLED is 0, and the machine reports 2 CPUs, a number that the later slides rely on because every speed figure was taken on 2 CPUs. The card records what the research found on 14 October 2026 and this deck does not read again: the 2nd edition's chapter 17 page answered 200 with 103,558 bytes and its multithreading section holds 9 code paragraphs, and the page of the 3rd edition's chapter 19, which has the same title, answered 200 with no occurrence of the word thread while it still teaches the subprocess module. The chapter ends with practice questions 7 and 8 on threads. The number 25 of this deck is the slot of the subject in the course and not a chapter number of either edition.",
+   "take": "Threads let one program do several things at once.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Starting a thread",
+   "sub": "The new thread's line comes last, although start() was called before the main line",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.41,
+     "h": 3.41,
+     "lines": [
+      "import threading, time",
+      "print('Start of program.')",
+      "def takeANap():",
+      "    time.sleep(0.5)",
+      "    print('Wake up!')",
+      "threadObj = threading.Thread(target=takeANap)",
+      "threadObj.start()",
+      "print('End of program.')",
+      "threadObj.join()",
+      "box = []",
+      "def f():",
+      "    me = threading.current_thread()",
+      "    box.append((me.name, threading.active_count()))",
+      "t = threading.Thread(target=f); t.start(); t.join()",
+      "main = threading.current_thread()",
+      "print(main.name, main is threading.main_thread(), box[0])"
+     ],
+     "fs": 8.0,
+     "compact": true,
+     "out": "Start of program.\nEnd of program.\nWake up!\nMainThread True ('Thread-2 (f)', 2)",
+     "outLabel": "prints",
+     "label": "program startCut_v1_0_0.py, lines 1 to 16 of 16"
+    },
+    {
+     "t": "foot",
+     "x": 5.11,
+     "y": 1.5,
+     "w": 4.39,
+     "h": 0.34,
+     "fs": 9,
+     "body": "start() returns at once: the line Wake up! came after the line End of program, although the thread was started first."
+    },
+    {
+     "t": "foot",
+     "x": 5.11,
+     "y": 1.91,
+     "w": 4.39,
+     "h": 0.34,
+     "fs": 9,
+     "body": "The main program is itself a thread, MainThread; each start() adds one more."
+    },
+    {
+     "t": "foot",
+     "x": 5.11,
+     "y": 2.32,
+     "w": 4.39,
+     "h": 0.34,
+     "fs": 9,
+     "body": "While the new thread ran, 2 Thread objects were alive: the main thread and itself."
+    },
+    {
+     "t": "foot",
+     "x": 5.11,
+     "y": 2.73,
+     "w": 4.39,
+     "h": 0.34,
+     "fs": 9,
+     "body": "The program ended only after the last thread did; join() made the main thread wait."
+    }
+   ],
+   "notes": "The program is the chapter's threadDemo.py with the nap shortened to half a second. The main thread prints Start of program., creates a Thread whose target is takeANap, calls start() and prints End of program.; the new thread sleeps and prints Wake up! last, which is the order the transcript shows, and it shows that two flows of control run at once. The second half of the program asks who is who: the main program runs in a thread named MainThread, a thread created later is named Thread-2 (f), because the number counts every thread made so far and the function name is added in brackets, and while it ran the program had 2 thread objects alive. A learner should predict the order of the three lines before running it. The research also timed a process of the same shape: it ended with return code 0 and lasted at least the nap of its second thread although the main thread had printed its last line within 0.2 s, so a Python program does not end until its last non-daemon thread has ended. That is the rule behind the join loop of the chapter's downloader and behind the daemon flag, which later slides take up.",
+   "take": "start() returns at once; the new thread runs beside the main one.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The arguments of the target",
+   "sub": "args is a list, kwargs a dictionary; the chapter's prose and listing differ",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.07,
+     "h": 2.71,
+     "lines": [
+      "import threading",
+      "def go(sep):",
+      "    t = threading.Thread(target=print, kwargs={'sep': sep},",
+      "                         args=['Cats', 'Dogs', 'Frogs'])",
+      "    t.start(); t.join()",
+      "go(' & ')",
+      "go('& ')",
+      "t = threading.Thread(target=print('Now', 'not later'))",
+      "t.start(); t.join()",
+      "print('the thread had a target to run:', t.is_alive())"
+     ],
+     "fs": 9.0,
+     "compact": true,
+     "out": "Cats & Dogs & Frogs\nCats& Dogs& Frogs\nNow not later\nthe thread had a target to run: False",
+     "outLabel": "prints",
+     "label": "program argsCut_v1_0_0.py, lines 1 to 10 of 10"
+    },
+    {
+     "t": "foot",
+     "x": 5.77,
+     "y": 1.5,
+     "w": 3.73,
+     "h": 0.49,
+     "fs": 9,
+     "body": "The list becomes the positional arguments of the target and the dictionary its keyword arguments, as in an ordinary call."
+    },
+    {
+     "t": "foot",
+     "x": 5.77,
+     "y": 2.07,
+     "w": 3.73,
+     "h": 0.49,
+     "fs": 9,
+     "body": "The chapter's listing has {'sep': ' & '} and prints Cats & Dogs & Frogs; its prose writes {'sep': '& '}, which prints Cats& Dogs& Frogs."
+    },
+    {
+     "t": "foot",
+     "x": 5.77,
+     "y": 2.64,
+     "w": 3.73,
+     "h": 0.49,
+     "fs": 9,
+     "body": "target=print('Now', 'not later') calls print at once, in the main thread, and hands the thread None: there was nothing for it to run."
+    }
+   ],
+   "notes": "Passing arguments to a thread is the same idea as calling a function: args is a list of positional arguments and kwargs a dictionary of keyword arguments, and the program shows both with print as the target. The first call uses the separator of the chapter's listing, a space, an ampersand and a space, and prints Cats & Dogs & Frogs. The second call uses the separator as the chapter's explanation writes it, an ampersand and a space, and prints Cats& Dogs& Frogs. The prose and the listing of the chapter differ by one character, which is a small case of why a course should run the text it teaches. The third call is the mistake the chapter warns about: writing target=print('Now', 'not later') calls print at once and passes its return value, None, as the target. The line appears from the main thread, nothing runs in a second thread, and the thread is not alive afterwards. The error is silent, since nothing fails, and only the place where the output appears gives it away.",
+   "take": "Pass the function itself, with args and kwargs; never its call.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The life of a Thread object",
+   "sub": "Created, started once, finished; a name follows it and an error stays in it",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 3.0,
+     "h": 2.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 1.7,
+       "w": 1.4,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The thread object is created",
+       "x": 0.66,
+       "y": 1.736,
+       "w": 1.28,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 2.47,
+       "w": 1.4,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The thread is running its target",
+       "x": 0.66,
+       "y": 2.506,
+       "w": 1.28,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 3.24,
+       "w": 1.4,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The thread has finished",
+       "x": 0.66,
+       "y": 3.276,
+       "w": 1.28,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.21,
+       "y": 1.42,
+       "w": 0.18,
+       "h": 0.18,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 1.3,
+       "y1": 1.6,
+       "x2": 1.3,
+       "y2": 1.7,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.3,
+       "y1": 2.06,
+       "x2": 1.3,
+       "y2": 2.47,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.32,
+       "y1": 2.265,
+       "x2": 2.26,
+       "y2": 2.265,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "start() runs the target in a new thread",
+       "x": 2.3,
+       "y": 2.121,
+       "w": 1.5,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.3,
+       "y1": 2.83,
+       "x2": 1.3,
+       "y2": 3.24,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.32,
+       "y1": 3.035,
+       "x2": 2.26,
+       "y2": 3.035,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "The target returns",
+       "x": 2.3,
+       "y": 2.958,
+       "w": 1.5,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.0,
+       "y1": 3.42,
+       "x2": 2.4,
+       "y2": 3.42,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.4,
+       "y": 3.28,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.46,
+       "y": 3.34,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      }
+     ],
+     "did": "TheLifeOfAThread"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.63,
+     "w": 3.0,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram TheLifeOfAThread - LifeCycle pattern, 15 of 16 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.74,
+     "y": 1.55,
+     "w": 4.76,
+     "h": 3.24,
+     "lines": [
+      "import threading",
+      "def f(): pass",
+      "a = threading.Thread(target=f)",
+      "b = threading.Thread(target=f)",
+      "c = threading.Thread(target=f, name='copier')",
+      "print(a.name, '|', b.name, '|', c.name)",
+      "a.start(); a.join()",
+      "try:",
+      "    a.start()",
+      "except RuntimeError as e:",
+      "    print('RuntimeError:', e)",
+      "def boom():",
+      "    raise ValueError('boom')",
+      "threading.excepthook = lambda a: print('hook:', repr(a.exc_value))",
+      "t = threading.Thread(target=boom); t.start(); t.join()",
+      "print('main continues')"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "Thread-1 (f) | Thread-2 (f) | copier\nRuntimeError: threads can only be started once\nhook: ValueError('boom')\nmain continues",
+     "outLabel": "prints",
+     "label": "program lifeCut_v1_0_0.py, lines 1 to 16 of 16"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.06,
+     "w": 3.0,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Names count every thread made so far, Thread-1 (f), Thread-2 (f); name= chooses one."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.44,
+     "w": 3.0,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "start() works once: a second call raised RuntimeError."
+    }
+   ],
+   "notes": "The state diagram follows one Thread object: it is created, start() runs the target in a new thread, and it has finished when the target returns. The program shows what follows from that. The default names are Thread-1 (f) and Thread-2 (f), and a thread given name='copier' keeps its name. A thread object is single use, so the second start() raised RuntimeError: threads can only be started once, which is why the chapter's loop makes a new Thread for each range. An exception raised in a thread does not reach the main thread. By default it is printed on standard error and the main thread goes on and ends with return code 0, which the research saw; here threading.excepthook is replaced so that the program can print what the hook received, ValueError('boom'), and the main thread printed main continues. A thread therefore needs its own try and except, or a Future that carries the error, which the pool slides show.",
+   "take": "A Thread object starts once; its errors stay in its own thread.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "join(): waiting for a thread",
+   "sub": "join() waits; join(0.1) only asks, and a thread never started cannot be joined",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 3.7,
+     "h": 3.05,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.505,
+       "w": 1.55,
+       "h": 0.4,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Create a Thread object with a target",
+       "x": 0.62,
+       "y": 1.561,
+       "w": 1.41,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 2.115,
+       "w": 1.55,
+       "h": 0.4,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call start() on the thread",
+       "x": 0.62,
+       "y": 2.171,
+       "w": 1.41,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 2.725,
+       "w": 1.55,
+       "h": 0.4,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The main thread goes on",
+       "x": 0.62,
+       "y": 2.848,
+       "w": 1.41,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.55,
+       "y": 3.275,
+       "w": 1.55,
+       "h": 0.52,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Was start() called before join()?",
+       "x": 0.72,
+       "y": 3.391,
+       "w": 1.21,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 3.945,
+       "w": 1.55,
+       "h": 0.4,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "join() raises RuntimeError",
+       "x": 0.62,
+       "y": 4.001,
+       "w": 1.41,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.6,
+       "y": 3.335,
+       "w": 1.55,
+       "h": 0.4,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "join() waits until the thread has finished",
+       "x": 2.67,
+       "y": 3.391,
+       "w": 1.41,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.275,
+       "y": 1.605,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.235,
+       "y": 4.005,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.295,
+       "y": 4.065,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.275,
+       "y1": 1.705,
+       "x2": 2.1,
+       "y2": 1.705,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.325,
+       "y1": 1.905,
+       "x2": 1.325,
+       "y2": 2.115,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.325,
+       "y1": 2.515,
+       "x2": 1.325,
+       "y2": 2.725,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.325,
+       "y1": 3.125,
+       "x2": 1.325,
+       "y2": 3.275,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.1,
+       "y1": 3.535,
+       "x2": 2.6,
+       "y2": 3.535,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.15,
+       "y": 3.335,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.325,
+       "y1": 3.795,
+       "x2": 1.325,
+       "y2": 3.945,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 1.385,
+       "y": 3.78,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 3.375,
+       "y1": 3.735,
+       "x2": 3.375,
+       "y2": 4.005,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.1,
+       "y1": 4.145,
+       "x2": 3.235,
+       "y2": 4.145,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "StartingAndJoiningAThread"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.48,
+     "w": 3.7,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram StartingAndJoiningAThread - Workflow pattern, 23 of 24 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.74,
+     "y": 1.55,
+     "w": 4.76,
+     "h": 2.48,
+     "lines": [
+      "import threading, time",
+      "t = threading.Thread(target=time.sleep, args=[0.6]); t.start()",
+      "r = t.join(0.1)",
+      "print('join(0.1) returned', r, '| alive:', t.is_alive())",
+      "t.join()",
+      "print('join() waited | alive:', t.is_alive())",
+      "u = threading.Thread(target=print)",
+      "try:",
+      "    u.join()",
+      "except RuntimeError as e:",
+      "    print('RuntimeError:', e)"
+     ],
+     "fs": 8.0,
+     "compact": true,
+     "out": "join(0.1) returned None | alive: True\njoin() waited | alive: False\nRuntimeError: cannot join thread before it is started",
+     "outLabel": "prints",
+     "label": "program joinCut_v1_0_0.py, lines 1 to 11 of 11"
+    },
+    {
+     "t": "foot",
+     "x": 4.74,
+     "y": 4.13,
+     "w": 4.76,
+     "h": 0.34,
+     "fs": 9,
+     "body": "join(timeout) always returns None: only is_alive() tells whether the thread has finished."
+    },
+    {
+     "t": "foot",
+     "x": 4.74,
+     "y": 4.54,
+     "w": 4.76,
+     "h": 0.34,
+     "fs": 9,
+     "body": "join() on a Thread that was never started raises RuntimeError, the error the chapter's printed downloader meets."
+    }
+   ],
+   "notes": "The flow chart is the chapter's rule in a picture: create a Thread with a target, call start(), let the main thread go on, and call join() to wait for the thread; if start() was never called before join(), join() raises RuntimeError instead. The program shows three behaviours. join(0.1) on a thread that sleeps 0.6 s returns after about 0.1 s with the value None and the thread still alive, so the caller must test is_alive() to know whether the thread finished; a join() with no timeout waits for the end, after which the thread is no longer alive; and join() on a thread that was never started raises RuntimeError: cannot join thread before it is started. The last message is the one the chapter's printed downloader produces, which the next slide shows. A join with a timeout turns the wait into a poll, which the chapter does not mention.",
+   "take": "join() waits; with a timeout it only asks, and is_alive() answers.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Daemon threads",
+   "sub": "A daemon thread does not keep the program alive; the flag is fixed at start()",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.49,
+     "h": 2.95,
+     "lines": [
+      "import subprocess, sys, threading, time",
+      "tmpl = '''import threading, time",
+      "def f():",
+      "    time.sleep(0.5); print('late')",
+      "threading.Thread(target=f, daemon=%s).start()",
+      "print('end')'''",
+      "for flag in (True, False):",
+      "    r = subprocess.run([sys.executable, '-c', tmpl % flag],",
+      "                       capture_output=True, text=True)",
+      "    print('daemon=%s prints' % flag, r.stdout.split())",
+      "t = threading.Thread(target=time.sleep, args=[0.2]); t.start()",
+      "try:",
+      "    t.daemon = True",
+      "except RuntimeError as e:",
+      "    print('RuntimeError:', e)"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "daemon=True prints ['end']\ndaemon=False prints ['end', 'late']\nRuntimeError: cannot set daemon status of active thread",
+     "outLabel": "prints",
+     "label": "program daemonCut_v1_0_0.py, lines 1 to 15 of 15"
+    },
+    {
+     "t": "foot",
+     "x": 5.19,
+     "y": 1.5,
+     "w": 4.31,
+     "h": 0.34,
+     "fs": 9,
+     "body": "With daemon=True the late line was never printed, because the program ended first; with daemon=False it was printed."
+    },
+    {
+     "t": "foot",
+     "x": 5.19,
+     "y": 1.92,
+     "w": 4.31,
+     "h": 0.34,
+     "fs": 9,
+     "body": "Setting the flag after start() raised RuntimeError: the flag is fixed when the thread starts."
+    },
+    {
+     "t": "foot",
+     "x": 5.19,
+     "y": 2.34,
+     "w": 4.31,
+     "h": 0.49,
+     "fs": 9,
+     "body": "Recorded 14 Oct 2026: a thread inherited the daemon flag of the thread that created it (True), and an exception in a thread went to standard error while the main thread ended with return code 0."
+    }
+   ],
+   "notes": "A daemon thread is one the program does not wait for. The program runs the same small script twice in a new Python, once with daemon=True and once with daemon=False, and prints what each run printed: the daemon thread's late line never appeared, because the program ended when the main thread did, while the non-daemon thread kept the program alive until it printed. The threading documentation says that daemon threads are stopped abruptly at shutdown, so a daemon thread must not hold a file or a lock that needs a clean close. The last lines show that the flag is fixed when the thread starts: setting t.daemon after start() raised RuntimeError: cannot set daemon status of active thread. The card holds two findings of the research that this deck does not run again: a thread created by a daemon thread inherited the flag, and an exception in a thread went to standard error while the main thread ended with return code 0.",
+   "take": "A daemon thread dies with the program; set the flag before start().",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The downloader as printed",
+   "sub": "The listing never calls start(): no request is made and join() raises",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.14,
+     "h": 2.24,
+     "lines": [
+      "downloadThreads = []",
+      "for i in range(0, 140, 10):",
+      "    start = i",
+      "    end = i + 9",
+      "    if start == 0:",
+      "        start = 1",
+      "    downloadThread = threading.Thread(target=downloadXkcd, args=(start, end))",
+      "    downloadThreads.append(downloadThread)",
+      "for downloadThread in downloadThreads:",
+      "    downloadThread.join()",
+      "print('Done.')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "comic pages requested: 0 | files saved: 0\nreturn code: 1\nRuntimeError: cannot join thread before it is started",
+     "outLabel": "prints",
+     "label": "program printedCut_v1_0_0.py, lines 37 to 47 of 56"
+    },
+    {
+     "t": "foot",
+     "x": 5.84,
+     "y": 1.5,
+     "w": 3.66,
+     "h": 0.75,
+     "fs": 8.5,
+     "body": "Stand-in: the downloader asks a local stand-in, an HTTP server of this program on 127.0.0.1; xkcd.com is never contacted. Lines 1 to 36 (imports, the server and the folder) are not shown. Lines 48 to 56 (the run and the report) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 5.84,
+     "y": 2.32,
+     "w": 3.66,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "The loop of the chapter's Step 2 appends 14 Thread objects and nothing starts them; the prose says the loop calls start()."
+    },
+    {
+     "t": "foot",
+     "x": 5.84,
+     "y": 2.86,
+     "w": 3.66,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Step 3 then calls join() on a thread that was never started, and the program ends with return code 1."
+    }
+   ],
+   "notes": "This is the chapter's multithreaded XKCD downloader, Step 2 and Step 3, run exactly as it is printed. The research ran the program against a local stand-in, an HTTP server on 127.0.0.1 that answers a page for every comic number with one image, so xkcd.com was never contacted. The program of this slide starts that server, writes the printed listing into a Python of its own, runs it in an empty folder and reports what the server saw: no comic page was requested, no file was saved, and the run ended with return code 1 and RuntimeError: cannot join thread before it is started. The loop of the printed listing creates a Thread for each block of comic numbers and appends it to a list, but nothing calls start(), and the prose of the chapter says that the loop does. The join loop that follows then meets a thread that was never started. The lines before the listing, the server and the folder, are not shown, nor are the lines that run it and report the result, because they are the machinery of the experiment and not the chapter's code. The fix is one line, and the next slide shows what it uncovers.",
+   "take": "The listing as printed never starts a thread; join() raises.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The downloader skips every tenth comic",
+   "sub": "With start() added it asks for 125 of 139 numbers; 9, 19, 29 on are never asked for",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.14,
+     "h": 2.38,
+     "lines": [
+      "downloadThreads = []",
+      "for i in range(0, 140, 10):",
+      "    start = i",
+      "    end = i + 9",
+      "    if start == 0:",
+      "        start = 1",
+      "    downloadThread = threading.Thread(target=downloadXkcd, args=(start, end))",
+      "    downloadThreads.append(downloadThread)",
+      "    downloadThread.start()",
+      "for downloadThread in downloadThreads:",
+      "    downloadThread.join()",
+      "print('Done.')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "comic pages requested: 125 | files saved: 125\nnever requested: 14 numbers, from 9 to 139\nsaved skipped.png: 1086 bytes, sha256 92c1cf3faef8",
+     "outLabel": "prints",
+     "label": "program fixedCut_v1_0_0.py, lines 47 to 58 of 77"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch25-deck/images/skipped.png",
+     "x": 5.79,
+     "y": 1.5,
+     "w": 1.45,
+     "h": 2.03
+    },
+    {
+     "t": "foot",
+     "x": 5.79,
+     "y": 3.56,
+     "w": 3.71,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image skipped.png made by fixedCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 7.36,
+     "y": 1.5,
+     "w": 2.14,
+     "h": 1.12,
+     "fs": 8,
+     "body": "Stand-in: the downloader asks a local stand-in, an HTTP server of this program on 127.0.0.1; xkcd.com is never contacted. Lines 1 to 46 (imports, the server and the picture writer) are not shown. Lines 59 to 77 (the run and the report) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 7.36,
+     "y": 2.68,
+     "w": 2.14,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Each thread runs range(start, end), and end is the last number of its block, so that number is skipped."
+    },
+    {
+     "t": "foot",
+     "x": 7.36,
+     "y": 3.18,
+     "w": 2.14,
+     "h": 0.31,
+     "fs": 8,
+     "body": "NOT EXECUTED here: the real xkcd.com, which no program here contacted."
+    }
+   ],
+   "notes": "With the missing line added under the append, every thread starts and the program finishes, but the stand-in server saw 125 comic pages requested and 125 files saved, and 14 numbers never requested: 9, 19, 29 and so on up to 139. The cause is in the loop: each thread runs range(start, end) where end is the last number of its block, i + 9, and range stops one short, so every block of ten loses its last number. The first thread covers 1 to 8, because its start is moved from 0 to 1, and the other thirteen cover nine numbers each, which is 8 plus 13 times 9, 125. The picture is drawn by the program from the list of numbers the server saw: each row is one thread's block of ten numbers, teal marks a number that was requested, orange one that was not, and the grey cell at the top left is the number 0, which is not a comic. The orange column is the finding of the research that the printed listing skips every tenth comic. The program counts no clock and prints no duration. The research measured the speed of the repaired downloader against one thread doing the same 250 requests and found it at least 5 times faster when each request waits 0.05 s, which is the waiting that threads overlap and which the later slides record as numbers. The real xkcd.com was never contacted, which is why the card says NOT EXECUTED.",
+   "take": "Range stops one short: every tenth comic is never requested.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Lost updates",
+   "sub": "Two threads read 0 and both write 1; a counter += 1 is five steps, not one",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.47,
+     "h": 2.24,
+     "lines": [
+      "import threading, time",
+      "def trial(use_lock):",
+      "    box = [0]; lk = threading.Lock()",
+      "    def f():",
+      "        if use_lock: lk.acquire()",
+      "        v = box[0]; time.sleep(0.05); box[0] = v + 1",
+      "        if use_lock: lk.release()",
+      "    ts = [threading.Thread(target=f) for _ in range(2)]",
+      "    [t.start() for t in ts]; [t.join() for t in ts]",
+      "    return box[0]",
+      "print('two threads, no lock  :', [trial(False) for _ in range(3)])",
+      "print('two threads, with lock:', [trial(True) for _ in range(3)])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "two threads, no lock  : [1, 1, 1]\ntwo threads, with lock: [2, 2, 2]",
+     "outLabel": "prints",
+     "label": "program lostCut_v1_0_0.py, lines 1 to 12 of 12"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch25-deck/photos/therac.png",
+     "x": 5.2,
+     "y": 1.48,
+     "w": 1.04,
+     "h": 1.4
+    },
+    {
+     "t": "foot",
+     "x": 6.36,
+     "y": 1.48,
+     "w": 3.14,
+     "h": 0.67,
+     "fs": 7.5,
+     "body": "photo therac.png: Therac 25, Unknown author (newspaper photograph), Public domain (as stated on Commons), Wikimedia Commons. A Therac-25 machine as it stood in use. Reduced copy: flattened on white, resized to 300 x 402 pixels."
+    },
+    {
+     "t": "code",
+     "x": 5.2,
+     "y": 3.0,
+     "w": 4.3,
+     "h": 1.33,
+     "rows": [
+      [
+       "import dis",
+       ""
+      ],
+      [
+       "def inc(): global c; c += 1",
+       ""
+      ],
+      [
+       "ops = [i.opname for i in dis.get_instructions(inc)][1:-1]",
+       ""
+      ],
+      [
+       "len(ops)",
+       "5"
+      ],
+      [
+       "ops[:4]",
+       "['LOAD_GLOBAL', 'LOAD_SMALL_INT', 'BINARY_OP', 'STORE_GLOBAL']"
+      ]
+     ],
+     "fs": 7.1
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.87,
+     "w": 4.5,
+     "h": 0.34,
+     "fs": 9,
+     "body": "In all 3 runs the counter ended at 1 without a lock and at 2 with one, because both threads read 0 before either wrote."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "Atomic Energy of Canada Limited, which produced the Therac-25 in 1982, and the patients of the clinics that used it",
+     "where": "Cancer centres in Georgia, Ontario, Washington and Texas, among them Kennestone Regional Oncology Center and the East Texas Cancer Center",
+     "when": "1985 to 1987",
+     "link": "https://en.wikipedia.org/wiki/Therac-25",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on the Therac-25 says the computer-controlled radiation therapy machine was produced by Atomic Energy of Canada Limited in 1982 and was involved in at least six overdoses of radiation between 1985 and 1987. It says that concurrent programming errors, also known as race conditions, sometimes gave patients doses up to 250 times higher than normal, resulting in death or serious injury. A race is a result that depends on the order in which two flows of control reach a shared value. In this study two threads that read a shared counter, waited 0.05 s and wrote back the value plus one left it at 1 instead of 2 in all 3 runs, and with a lock around the read and the write it ended at 2. The account rests on these sources. Wikipedia, 'Therac-25' (Atomic Energy of Canada Limited, 1982, at least six overdoses 1985 to 1987, race conditions), read 2026-10-14; this study's leaves ForcedLostUpdate and LockFixesCounter. The program forces the race: each thread reads the counter, waits 0.05 s and writes back the value plus one, so both read 0 before either writes and the counter ends at 1 in all 3 runs; with a lock around the read and the write it ends at 2. The console shows why a race needs no pause to exist: counter += 1 in a function compiled to 5 steps on Python 3.14.6, a load of the global, a load of the small integer 1, the addition, the store of the global and, as the fifth, the load of None that the function returns, so a thread can be stopped between the read and the write. On the standard build the interpreter considers switching threads every 0.005 s by default, which is why such a race is rare there and why the research forced it with a pause. The photograph is a Therac-25 as it stood in use, a public domain file of Wikimedia Commons whose author is unknown.",
+   "take": "Two threads, one counter, no lock: an update disappears.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Locks",
+   "sub": "A lock makes the read and the write one step; the with statement always releases it",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.47,
+     "h": 2.93,
+     "lines": [
+      "import threading",
+      "box = [0]; lk = threading.Lock()",
+      "def f():",
+      "    for _ in range(100000):",
+      "        with lk: box[0] += 1",
+      "ts = [threading.Thread(target=f) for _ in range(4)]",
+      "[t.start() for t in ts]; [t.join() for t in ts]",
+      "print('4 threads x 100000 with a lock:', box[0])",
+      "try:",
+      "    with lk: raise ValueError",
+      "except ValueError: pass",
+      "print('locked after an error in the with block:', lk.locked())",
+      "rk = threading.RLock(); lk.acquire(); rk.acquire()",
+      "print('second acquire of a Lock, 0.2 s:', lk.acquire(timeout=0.2))",
+      "print('second acquire of an RLock     :', rk.acquire(timeout=0.2))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "4 threads x 100000 with a lock: 400000\nlocked after an error in the with block: False\nsecond acquire of a Lock, 0.2 s: False\nsecond acquire of an RLock     : True",
+     "outLabel": "prints",
+     "label": "program lockCut_v1_0_0.py, lines 1 to 15 of 15"
+    },
+    {
+     "t": "shapes",
+     "x": 5.1,
+     "y": 1.4,
+     "w": 4.4,
+     "h": 2.55,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 5.15,
+       "y": 1.4,
+       "w": 0.95,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Thread A",
+       "x": 5.21,
+       "y": 1.516,
+       "w": 0.83,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 5.625,
+       "y1": 1.82,
+       "x2": 5.625,
+       "y2": 3.95,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.825,
+       "y": 1.4,
+       "w": 0.95,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The lock",
+       "x": 6.885,
+       "y": 1.516,
+       "w": 0.83,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 7.3,
+       "y1": 1.82,
+       "x2": 7.3,
+       "y2": 3.95,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 8.5,
+       "y": 1.4,
+       "w": 0.95,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Thread B",
+       "x": 8.56,
+       "y": 1.516,
+       "w": 0.83,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.975,
+       "y1": 1.82,
+       "x2": 8.975,
+       "y2": 3.95,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 5.625,
+       "y1": 2.212,
+       "x2": 7.3,
+       "y2": 2.212,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Acquires the lock",
+       "x": 5.725,
+       "y": 2.008,
+       "w": 1.475,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 5.745,
+       "y": 2.376,
+       "w": 1.8,
+       "h": 0.349,
+       "fill": "FFF4E0",
+       "line": "D97A14",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "Reads, adds one and writes the counter",
+       "x": 5.815,
+       "y": 2.416,
+       "w": 1.66,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.975,
+       "y1": 3.024,
+       "x2": 7.3,
+       "y2": 3.024,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Waits for the lock",
+       "x": 7.4,
+       "y": 2.82,
+       "w": 1.475,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 5.625,
+       "y1": 3.43,
+       "x2": 7.3,
+       "y2": 3.43,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Releases the lock",
+       "x": 5.725,
+       "y": 3.226,
+       "w": 1.475,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 7.3,
+       "y1": 3.836,
+       "x2": 8.975,
+       "y2": 3.836,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Lets thread B read the value",
+       "x": 7.4,
+       "y": 3.497,
+       "w": 1.475,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "TwoThreadsAndALock"
+    },
+    {
+     "t": "foot",
+     "x": 5.1,
+     "y": 3.98,
+     "w": 4.4,
+     "h": 0.44,
+     "fs": 8,
+     "body": "diagram TwoThreadsAndALock - Interaction pattern, 16 of 17 words grounded in the chapter's text. A plain Lock cannot be taken twice by the same thread; an RLock can."
+    },
+    {
+     "t": "foot",
+     "x": 5.1,
+     "y": 4.55,
+     "w": 4.4,
+     "h": 0.34,
+     "fs": 9,
+     "body": "Four threads with a lock reached the exact 400000; the lock was free again after an error in the with block."
+    }
+   ],
+   "notes": "The sequence diagram is the lock protecting the counter: thread A acquires the lock, reads, adds one and writes the counter, thread B waits for the lock, A releases it, and the lock lets B read the value. The program shows four threads that each add 1 to a shared counter 100,000 times inside a with-lock block and end at exactly 400000, the total that a loop without a lock cannot promise. The with statement releases the lock even when the block raises, which the second line shows: after a ValueError inside the block the lock was free again. The last two lines show the difference between a plain Lock and an RLock: a thread that already holds a Lock and asks for it again with a 0.2 s timeout gets False, and without the timeout it would wait forever, while the same request on an RLock gets True. A function that takes a lock and calls another that takes the same lock needs an RLock or a redesign.",
+   "take": "A lock makes read and write one step for every thread that uses it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Deadlock and events",
+   "sub": "Two locks taken in opposite orders leave both threads waiting; an Event says go",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.16,
+     "h": 3.24,
+     "lines": [
+      "import threading, time",
+      "a, b = threading.Lock(), threading.Lock()",
+      "def f(x, y):",
+      "    with x:",
+      "        time.sleep(0.1)",
+      "        with y: pass",
+      "t1 = threading.Thread(target=f, args=(a, b), daemon=True)",
+      "t2 = threading.Thread(target=f, args=(b, a), daemon=True)",
+      "t1.start(); t2.start(); t1.join(0.5); t2.join(0.5)",
+      "print('alive after 0.5 s:', t1.is_alive(), t2.is_alive())",
+      "ev, got = threading.Event(), []",
+      "def wait():",
+      "    ev.wait(); got.append('woke')",
+      "w = threading.Thread(target=wait)",
+      "w.start(); time.sleep(0.2)",
+      "print('before set():', got); ev.set(); w.join()",
+      "print('after set()  :', got)"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "alive after 0.5 s: True True\nbefore set(): []\nafter set()  : ['woke']",
+     "outLabel": "prints",
+     "label": "program deadCut_v1_0_0.py, lines 1 to 17 of 17"
+    },
+    {
+     "t": "foot",
+     "x": 4.91,
+     "y": 1.5,
+     "w": 4.59,
+     "h": 0.38,
+     "fs": 10,
+     "body": "Each thread took one lock, paused 0.1 s and asked for the other: after join(0.5) both were still alive, a deadlock."
+    },
+    {
+     "t": "foot",
+     "x": 4.91,
+     "y": 2.0,
+     "w": 4.59,
+     "h": 0.21,
+     "fs": 10,
+     "body": "The usual remedy is one agreed order for taking locks."
+    },
+    {
+     "t": "foot",
+     "x": 4.91,
+     "y": 2.33,
+     "w": 4.59,
+     "h": 0.54,
+     "fs": 10,
+     "body": "A thread waiting on an Event stayed blocked until set() was called and then went on: the list was empty before and held 'woke' after."
+    }
+   ],
+   "notes": "The two daemon threads of the program take the same two locks in opposite orders with a pause between the two acquisitions, so each holds one lock and waits for the other. After join(0.5) on both, both were still alive, which is the deadlock that Wikipedia describes as each member of a group waiting for another to release a resource, and the dining philosophers problem is its classic example. The threads are daemons so that the program can end, and a real program in this state would hang. The usual remedy is one global order for taking locks. The second half of the program is the simplest way for one thread to tell another that it may go on. An Event is a flag: the worker waits on it, the list of results is empty before set() is called, and it holds the worker's word right after, with nothing timed. A thread waiting without a timeout blocks until the flag is set, which is why the Event is the tool for wait until another thread says go.",
+   "take": "Locks taken in opposite orders deadlock; an Event says go.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Semaphores",
+   "sub": "A Semaphore of 2 let at most 2 of 6 threads into the block at once",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.16,
+     "h": 2.8,
+     "lines": [
+      "import threading, time",
+      "def trial(limit):",
+      "    cur, top, lk = [0], [0], threading.Lock()",
+      "    sem = threading.BoundedSemaphore(limit)",
+      "    def f():",
+      "        with sem:",
+      "            with lk:",
+      "                cur[0] += 1; top[0] = max(top[0], cur[0])",
+      "            time.sleep(0.1)",
+      "            with lk: cur[0] -= 1",
+      "    ts = [threading.Thread(target=f) for _ in range(6)]",
+      "    [t.start() for t in ts]; [t.join() for t in ts]",
+      "    return top[0]",
+      "print('most threads inside, Semaphore(2):', trial(2))",
+      "print('most threads inside, Semaphore(6):', trial(6))"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "most threads inside, Semaphore(2): 2\nmost threads inside, Semaphore(6): 6",
+     "outLabel": "prints",
+     "label": "program semCut_v1_0_0.py, lines 1 to 15 of 15"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch25-deck/photos/dijkstra.jpg",
+     "x": 5.5,
+     "y": 1.48,
+     "w": 1.2,
+     "h": 1.6
+    },
+    {
+     "t": "foot",
+     "x": 6.82,
+     "y": 1.48,
+     "w": 2.68,
+     "h": 0.67,
+     "fs": 7.5,
+     "body": "photo dijkstra.jpg: Edsger Wybe Dijkstra, Hamilton Richards, CC BY-SA 3.0, Wikimedia Commons. Edsger Dijkstra. Reduced copy: flattened on white, resized to 300 x 400 pixels, saved as JPEG at quality 88."
+    },
+    {
+     "t": "foot",
+     "x": 5.5,
+     "y": 3.18,
+     "w": 4.0,
+     "h": 0.34,
+     "fs": 9,
+     "body": "Six threads each held the block for 0.1 s: at most 2 were inside with Semaphore(2), and all 6 with Semaphore(6)."
+    },
+    {
+     "t": "foot",
+     "x": 5.5,
+     "y": 3.58,
+     "w": 4.0,
+     "h": 0.34,
+     "fs": 9,
+     "body": "A semaphore limits how many threads work at once, for example how many connections a downloader opens."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "Edsger Dijkstra, a Dutch computer scientist, and his team",
+     "where": "The team developing the THE multiprogramming system for the Electrologica X8",
+     "when": "1962 or 1963",
+     "link": "https://en.wikipedia.org/wiki/Semaphore_(programming)",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on the semaphore says the concept was invented by the Dutch computer scientist Edsger Dijkstra in 1962 or 1963, when he and his team were developing an operating system for the Electrologica X8, which became known as the THE multiprogramming system. A semaphore is a counter that lets a fixed number of flows of control pass at once. In this study six threads that each held a Semaphore of 2 for 0.1 s were inside the guarded block at most 2 at a time, against 6 without it, and a queue.Queue handed 5 numbers in order from a producer thread to a consumer thread. The account rests on these sources. Wikipedia, 'Semaphore (programming)' (Dijkstra, 1962 or 1963, THE multiprogramming system, Electrologica X8), read 2026-10-14; this study's leaves SemaphoreLimits and QueueHandsOver. The program counts how many of six threads are inside a guarded block at the same moment, and prints the largest number it saw: with a BoundedSemaphore of 2 it was 2, and with one of 6, which lets all of them in, it was 6. The counter that records the number inside is itself protected by a lock, because the demonstration must not suffer the race the previous slides show. A semaphore is a counter that lets a fixed number of threads pass at once, and a lock is the semaphore of 1. The research measured the same thing against no semaphore at all and found 6 inside. The photograph is a portrait of Edsger Dijkstra by Hamilton Richards, licensed CC BY-SA 3.0 on Wikimedia Commons and reduced for this slide.",
+   "take": "A semaphore limits how many threads work at once.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Queues and thread-local data",
+   "sub": "A queue hands items over in order; a threading.local value stays in its thread",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.5,
+     "h": 2.7,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.4,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The producer thread",
+       "x": 0.61,
+       "y": 1.432,
+       "w": 0.98,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 1.82,
+       "x2": 1.1,
+       "y2": 4.1,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.2,
+       "y": 1.4,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The queue",
+       "x": 2.26,
+       "y": 1.516,
+       "w": 0.98,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.75,
+       "y1": 1.82,
+       "x2": 2.75,
+       "y2": 4.1,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.85,
+       "y": 1.4,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The consumer thread",
+       "x": 3.91,
+       "y": 1.432,
+       "w": 0.98,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.4,
+       "y1": 1.82,
+       "x2": 4.4,
+       "y2": 4.1,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 2.234,
+       "x2": 2.75,
+       "y2": 2.234,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Puts the numbers into the queue",
+       "x": 1.2,
+       "y": 1.895,
+       "w": 1.45,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 2.67,
+       "x2": 2.75,
+       "y2": 2.67,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Puts the marker None into the queue",
+       "x": 1.2,
+       "y": 2.331,
+       "w": 1.45,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.4,
+       "y1": 3.106,
+       "x2": 2.75,
+       "y2": 3.106,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Takes the items in order",
+       "x": 2.85,
+       "y": 2.901,
+       "w": 1.45,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.75,
+       "y1": 3.542,
+       "x2": 4.4,
+       "y2": 3.542,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Hands over each item",
+       "x": 2.85,
+       "y": 3.337,
+       "w": 1.45,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.4,
+       "y1": 3.978,
+       "x2": 2.75,
+       "y2": 3.978,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls task_done() for each item",
+       "x": 2.85,
+       "y": 3.639,
+       "w": 1.45,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "TheProducerAndTheConsumer"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.13,
+     "w": 4.5,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram TheProducerAndTheConsumer - Interaction pattern, 22 of 26 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 5.2,
+     "y": 1.55,
+     "w": 3.53,
+     "h": 1.82,
+     "lines": [
+      "import threading, queue",
+      "q, got = queue.Queue(), []",
+      "def consumer():",
+      "    while (x := q.get()) is not None:",
+      "        got.append(x); q.task_done()",
+      "    q.task_done()",
+      "t = threading.Thread(target=consumer); t.start()",
+      "for i in range(5): q.put(i)",
+      "q.put(None); q.join(); t.join()",
+      "print('consumer received', got)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "consumer received [0, 1, 2, 3, 4]",
+     "outLabel": "prints",
+     "label": "program queueCut_v1_0_0.py, lines 1 to 10 of 10"
+    },
+    {
+     "t": "code",
+     "x": 5.2,
+     "y": 3.47,
+     "w": 4.3,
+     "h": 1.26,
+     "rows": [
+      [
+       "import threading",
+       ""
+      ],
+      [
+       "tl = threading.local()",
+       ""
+      ],
+      [
+       "def put(): tl.x = 1",
+       ""
+      ],
+      [
+       "t = threading.Thread(target=put); t.start(); t.join()",
+       ""
+      ],
+      [
+       "hasattr(tl, 'x')",
+       "False"
+      ]
+     ],
+     "fs": 7.8
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.55,
+     "w": 4.5,
+     "h": 0.34,
+     "fs": 9,
+     "body": "The consumer received [0, 1, 2, 3, 4] in order and stopped at the marker None: items are handed over, not shared."
+    }
+   ],
+   "notes": "The sequence diagram is the producer-consumer pattern: the producer puts the numbers into the queue and then the marker None, the consumer takes the items in order, the queue hands over each item, and the consumer calls task_done() for each. The program's producer is the main thread and the consumer a thread of its own: the consumer received [0, 1, 2, 3, 4], in order, and stopped at the marker; the queue does its own locking, so no lock is written, and join() returns after 6 task_done() calls, 5 items and the marker. The queue removes the shared variable that the chapter warns about, because items are handed over and not shared. The chapter's own advice is to use only local variables in the target function. The console shows the other half of that advice: a value set on a threading.local() in one thread is absent in the main thread. The research also ran four threads that each summed their own list into a local variable and got the four expected totals, 0, 45, 190 and 435.",
+   "take": "A queue hands items over, so nothing is shared.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Pools: results, errors, cancelling",
+   "sub": "map keeps the order of the inputs; a Future carries its error to result()",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.34,
+     "h": 3.07,
+     "lines": [
+      "import os, time, threading",
+      "from concurrent.futures import ThreadPoolExecutor, as_completed",
+      "def f(n):",
+      "    time.sleep(0.1 * (3 - n)); return n",
+      "with ThreadPoolExecutor(3) as ex:",
+      "    print('map          :', list(ex.map(f, [0, 1, 2])))",
+      "    fs = [ex.submit(f, n) for n in [0, 1, 2]]",
+      "    done = [fu.result() for fu in as_completed(fs)]",
+      "    print('as_completed :', done)",
+      "def name(i):",
+      "    time.sleep(0.05); return threading.current_thread().name",
+      "with ThreadPoolExecutor(2, thread_name_prefix='dl') as ex:",
+      "    print('worker names :', sorted(set(ex.map(name, range(4)))))",
+      "with ThreadPoolExecutor() as ex:",
+      "    n = ex._max_workers",
+      "    print('default max_workers on', os.cpu_count(), 'CPUs:', n)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "map          : [0, 1, 2]\nas_completed : [2, 1, 0]\nworker names : ['dl_0', 'dl_1']\ndefault max_workers on 2 CPUs: 6",
+     "outLabel": "prints",
+     "label": "program poolCut_v1_0_0.py, lines 1 to 16 of 16"
+    },
+    {
+     "t": "prog",
+     "x": 5.22,
+     "y": 1.55,
+     "w": 4.28,
+     "h": 3.21,
+     "lines": [
+      "import time, concurrent.futures as cf",
+      "def bad(): raise ValueError('boom')",
+      "with cf.ThreadPoolExecutor(1) as ex:",
+      "    fu = ex.submit(bad); time.sleep(0.1)",
+      "    print('exception():', repr(fu.exception()))",
+      "    try: fu.result()",
+      "    except ValueError as e: print('result() raises:', e)",
+      "    slow = ex.submit(time.sleep, 0.5)",
+      "    try: slow.result(timeout=0.1)",
+      "    except TimeoutError:",
+      "        print('timeout=0.1: TimeoutError | done:', slow.done())",
+      "ex = cf.ThreadPoolExecutor(1)",
+      "fs = [ex.submit(time.sleep, 0.2) for _ in range(5)]",
+      "time.sleep(0.05)",
+      "ex.shutdown(wait=True, cancel_futures=True)",
+      "gone = sum(f.cancelled() for f in fs)",
+      "print('cancelled', gone, 'of 5 | ran', 5 - gone)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "exception(): ValueError('boom')\nresult() raises: boom\ntimeout=0.1: TimeoutError | done: False\ncancelled 4 of 5 | ran 1",
+     "outLabel": "prints",
+     "label": "program poolerrCut_v1_0_0.py, lines 1 to 17 of 17"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.66,
+     "w": 4.4,
+     "h": 0.17,
+     "fs": 8,
+     "body": "map kept the input order; as_completed yielded [2, 1, 0]."
+    },
+    {
+     "t": "foot",
+     "x": 5.0,
+     "y": 4.8,
+     "w": 4.5,
+     "h": 0.17,
+     "fs": 8,
+     "body": "cancel_futures=True cancelled 4 of 5 queued tasks."
+    }
+   ],
+   "notes": "A pool starts a fixed number of worker threads and runs submitted functions on them, returning Future objects. The left program runs three tasks that finish in the reverse order of their inputs: map returned [0, 1, 2], the order of the inputs, while as_completed yielded the results as they finished, [2, 1, 0]. A pool created with thread_name_prefix='dl' named its workers dl_0 and dl_1, which makes a log readable, and a pool created without max_workers had 6 workers on this machine of 2 CPUs; the documented rule since Python 3.13 is the smaller of 32 and the number of CPUs plus 4, and the program reads the private attribute _max_workers to print it. The right program shows how errors and waiting are carried by the Future: an exception raised in a task stays in its Future until result() is called, result(timeout=0.1) raised TimeoutError while the task was still not done, and shutdown(cancel_futures=True) cancelled the 4 queued tasks that had not started and let the one running finish, since a task that started cannot be cancelled. The with block of an executor waits for every task before it ends, which the research also confirmed.",
+   "take": "map keeps input order; a Future carries its error to result().",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The GIL on, and off",
+   "sub": "The standard build has the lock; the free-threaded build can switch it off",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.16,
+     "h": 2.93,
+     "lines": [
+      "ask = ('import sys, sysconfig; print(sys._is_gil_enabled(), '",
+      "       'sysconfig.get_config_var(\"Py_GIL_DISABLED\"))')",
+      "def run(exe, *flags, **env):",
+      "    e = dict(os.environ, **env)",
+      "    r = subprocess.run([exe, *flags, '-c', ask], text=True,",
+      "                       capture_output=True, env=e)",
+      "    return r.stdout.strip()",
+      "flag = sysconfig.get_config_var('Py_GIL_DISABLED')",
+      "std = (sys._is_gil_enabled(), flag)",
+      "print('GIL on?, Py_GIL_DISABLED')",
+      "print('standard build      :', *std)",
+      "print('free-threaded build :', run(FT))",
+      "print('  with PYTHON_GIL=1 :', run(FT, PYTHON_GIL='1'))",
+      "print('  with -X gil=1     :', run(FT, '-X', 'gil=1'))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "GIL on?, Py_GIL_DISABLED\nstandard build      : True 0\nfree-threaded build : False 1\n  with PYTHON_GIL=1 : True 1\n  with -X gil=1     : True 1",
+     "outLabel": "prints",
+     "label": "program gilCut_v1_0_0.py, lines 3 to 16 of 16"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch25-deck/photos/threads.png",
+     "x": 4.86,
+     "y": 1.48,
+     "w": 1.3,
+     "h": 1.23
+    },
+    {
+     "t": "foot",
+     "x": 6.26,
+     "y": 1.48,
+     "w": 3.24,
+     "h": 0.42,
+     "fs": 7.5,
+     "body": "photo threads.png: Multithreaded process, Cburnett, CC BY-SA 3.0, Wikimedia Commons. A process with two threads. Reduced copy: flattened on white, resized to 300 x 284 pixels."
+    },
+    {
+     "t": "foot",
+     "x": 4.86,
+     "y": 2.79,
+     "w": 4.64,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 2 (imports and the path of the free-threaded interpreter) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 4.86,
+     "y": 3.18,
+     "w": 4.64,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Recorded 14 Oct 2026: the free-threading guide says a package with an extension module that does not declare support re-enables the lock."
+    },
+    {
+     "t": "foot",
+     "x": 4.86,
+     "y": 3.57,
+     "w": 4.64,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "NOT EXECUTED here: the free-threaded build of Python 3.13, and a C extension that re-enables the lock: the second is only what the documentation says."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "Sam Gross, the author of PEP 703, and the Python Steering Council",
+     "where": "The Python Enhancement Proposals process; the target was Python 3.13",
+     "when": "9 January 2023 to 24 October 2023",
+     "link": "https://peps.python.org/pep-0703/",
+     "linkText": "peps.python.org"
+    }
+   ],
+   "notes": "PEP 703 was written by Sam Gross, created on 9 January 2023 for Python 3.13, and resolved on 24 October 2023. The Steering Council accepted it with the proviso that the rollout be gradual and break as little as possible, and that the changes could be rolled back. The global interpreter lock lets one thread at a time run Python code, and the PEP made it optional. In this study the free-threaded 3.14.6 installed with uv reported the lock as off, and four CPU-bound tasks took 1.292 s serially and 0.522 s on 4 threads on 2 CPUs, while the standard build took 0.89 s serially and 1.003 s on 4 threads. The account rests on these sources. PEP 703 (Sam Gross; created 9 January 2023; resolution 24 October 2023), read 2026-10-14; this study's leaves FreeThreadedBuildRuns and FreeBuildScalesWithCores. The program asks the standard build and the free-threaded build the same question, sys._is_gil_enabled() and the build variable Py_GIL_DISABLED. The standard Python 3.14.6 answered True and 0, the free-threaded 3.14.6 installed with uv answered False and 1, and the environment variable PYTHON_GIL=1 and the option -X gil=1 both turned the lock on again, so one build can be run either way. The free-threaded build of Python 3.13, the first and experimental one, was not installed and was not run, and the study states its behaviour only from the documentation; the 3.13 build with the lock answered True. A C extension that does not declare support for free-threading makes the free-threaded build switch the lock back on, according to the free-threading guide; no such extension was built, so that behaviour is only read, and the card says both. The picture is a multithreaded process by Cburnett, licensed CC BY-SA 3.0 on Wikimedia Commons: two threads inside one process, sharing it.",
+   "take": "The lock is on by default; the free-threaded build turns it off.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The race with and without the lock",
+   "sub": "Updates lost out of 4,000,000, three runs per build; none was lost with the GIL",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 5.0,
+     "colW": [
+      1.7,
+      1.1,
+      1.1,
+      1.1
+     ],
+     "fs": 9,
+     "rowH": 0.3,
+     "rows": [
+      [
+       "build",
+       "run 1",
+       "run 2",
+       "run 3"
+      ],
+      [
+       "standard 3.14.6",
+       "0",
+       "0",
+       "0"
+      ],
+      [
+       "free-threaded 3.14.6",
+       "2,844,845",
+       "2,500,522",
+       "2,913,206"
+      ],
+      [
+       "3.13.14",
+       "0",
+       "0",
+       "0"
+      ],
+      [
+       "3.12.13",
+       "0",
+       "0",
+       "0"
+      ],
+      [
+       "3.11.15",
+       "0",
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch25-deck/photos/blackout.png",
+     "x": 6.2,
+     "y": 1.48,
+     "w": 1.29,
+     "h": 1.5
+    },
+    {
+     "t": "foot",
+     "x": 7.59,
+     "y": 1.48,
+     "w": 1.91,
+     "h": 0.92,
+     "fs": 7.5,
+     "body": "photo blackout.png: Map of North America, blackout 2003, Lokal_Profil, CC BY-SA 2.5, Wikimedia Commons. The region of the 2003 blackout in red. Reduced copy: flattened on white, resized to 300 x 349 pixels."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.3,
+     "w": 5.4,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Recorded 14 Oct 2026: four threads each ran counter += 1 one million times; the table counts the updates lost in each of 3 runs, one run each on 2 CPUs, a load average of 0.75."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.68,
+     "w": 5.4,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "None was lost in 12 runs on the four builds with the lock; 2,500,522 to 2,913,206 were lost in 3 runs on the free-threaded build."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.06,
+     "w": 5.4,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "A run without a loss proves nothing: the lock only makes the race rare."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "FirstEnergy's control room operators, using General Electric Energy's XA/21 energy management system",
+     "where": "The northeastern United States and Ontario, Canada",
+     "when": "14 August 2003",
+     "link": "https://en.wikipedia.org/wiki/Northeast_blackout_of_2003",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on the Northeast blackout of 2003 says the blackout began on 14 August 2003 and affected 55 million people. It says a software bug known as a race condition existed in General Electric Energy's Unix-based XA/21 energy management system and, once triggered, stalled the alarm system of FirstEnergy's control room for over an hour. A race that needs a rare timing is hard to see in tests. In this study four threads that each ran counter += 1 one million times lost no update in 12 runs on the GIL builds, but lost between 2,500,522 and 2,913,206 of 4,000,000 updates in each of 3 runs on the free-threaded build. The account rests on these sources. Wikipedia, 'Northeast blackout of 2003' (14 August 2003, 55 million people, a race condition in the XA/21 system), read 2026-10-14; this study's leaf RaceInTheRecord and ch25-page/timing_record_v1_0_0.json. The table is the research's record of a race that needs no pause. Four threads each ran counter += 1 one million times, so 4,000,000 was the expected total, and the table gives the updates lost in each of 3 runs: none on Python 3.14.6 with the lock, 3.13.14, 3.12.13 and 3.11.15, and 2,844,845, 2,500,522 and 2,913,206 on the free-threaded 3.14.6. The deck check computes every cell again from the record, and every figure is a single run on the machine of 2 CPUs on 14 October 2026, with the load average at 0.75. The lesson is the one of the story: a race that never shows can still be there, and a program that passes its tests on the builds with the lock can lose updates on the free-threaded build. The program is not run again on this slide, because a race of this kind depends on timing and the machine had another job running beside the deck. The map is the region of the 2003 blackout by Lokal_Profil, licensed CC BY-SA 2.5 on Wikimedia Commons.",
+   "take": "No lost update in a run proves nothing; lock anyway.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "CPU-bound work on threads",
+   "sub": "Only the free-threaded build was faster on 4 threads; below 1 means faster than serial",
+   "items": [
+    {
+     "t": "chart",
+     "ctype": "bar",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.4,
+     "h": 2.7,
+     "labels": [
+      "standard 3.14.6",
+      "free-threaded 3.14.6",
+      "3.13.14",
+      "3.12.13",
+      "3.11.15"
+     ],
+     "title": "4 threads as a multiple of the serial time",
+     "series": [
+      {
+       "name": "ratio",
+       "data": [
+        1.13,
+        0.4,
+        1.16,
+        1.19,
+        0.94
+       ]
+      }
+     ],
+     "dataLabels": true,
+     "dlFs": 9
+    },
+    {
+     "t": "table",
+     "x": 5.1,
+     "y": 1.45,
+     "w": 4.4,
+     "colW": [
+      1.6,
+      0.9,
+      0.95,
+      0.95
+     ],
+     "fs": 8.5,
+     "rowH": 0.3,
+     "rows": [
+      [
+       "build",
+       "serial",
+       "2 threads",
+       "4 threads"
+      ],
+      [
+       "standard 3.14.6",
+       "0.890",
+       "1.003",
+       "1.003"
+      ],
+      [
+       "free-threaded 3.14.6",
+       "1.292",
+       "0.553",
+       "0.522"
+      ],
+      [
+       "3.13.14",
+       "0.912",
+       "1.090",
+       "1.060"
+      ],
+      [
+       "3.12.13",
+       "0.873",
+       "1.096",
+       "1.041"
+      ],
+      [
+       "3.11.15",
+       "1.125",
+       "1.226",
+       "1.062"
+      ]
+     ]
+    },
+    {
+     "t": "foot",
+     "x": 5.1,
+     "y": 3.35,
+     "w": 4.4,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "Recorded 14 Oct 2026: four CPU-bound tasks, one after another and on 2 and 4 threads, in seconds; one run each, 2 CPUs, a load average below 1.0 when it started."
+    },
+    {
+     "t": "foot",
+     "x": 5.1,
+     "y": 3.88,
+     "w": 4.4,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "On the standard 3.14.6 and on 3.13, 3.12 and 3.11 the 4 threads took at least 0.8 of the serial time, 0.94 to 1.19; the free-threaded 3.14.6 took 0.40."
+    },
+    {
+     "t": "foot",
+     "x": 5.1,
+     "y": 4.41,
+     "w": 4.4,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "The free-threaded serial run (1.292 s) was slower than the standard one (0.89 s): the single-thread cost of the build."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.2,
+     "w": 4.4,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "NOT EXECUTED here: more than 2 CPUs and a run under load; the speed-up of the free-threaded build was measured on 2 CPUs only."
+    }
+   ],
+   "notes": "The chart divides the time of 4 threads by the time of the same 4 tasks run one after another, for each interpreter of the research, and the table beside it gives the seconds. On the standard Python 3.14.6 the serial run took 0.89 s and 4 threads took 1.003 s, a ratio of 1.13, because the global interpreter lock lets one thread run Python code at a time and the threads only add the cost of switching; on 3.13.14, 3.12.13 and 3.11.15 the 4 threads took at least 0.8 of the serial time, a ratio from 0.94 to 1.19, the same picture. On the free-threaded 3.14.6 the serial run took 1.292 s and 2 threads 0.553 s and 4 threads 0.522 s, a ratio of 0.40, so the work ran in parallel on the 2 CPUs. The free-threaded serial run was slower than the standard one, 1.292 s against 0.89 s, which is the single-thread cost of the build. Every figure is one run taken after the research waited for the one-minute load average to fall below 1.0, and the deck does not time the loop again. More than 2 CPUs and a run under load were not executed, so the slide makes no claim about how the speed-up grows with more cores.",
+   "take": "Only the free-threaded build sped up four CPU-bound tasks on 2 CPUs.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Waiting, processes and starting cost",
+   "sub": "Threads overlap waiting; a process does not share variables and costs more to start",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.1,
+     "h": 3.35,
+     "lines": [
+      "    d = {'n': 0}",
+      "    p = mp.Process(target=d.update, args=({'n': 99},))",
+      "    p.start(); p.join()",
+      "    print('a child process changed its copy :', d)",
+      "    t = threading.Thread(target=d.update, args=({'n': 99},))",
+      "    t.start(); t.join()",
+      "    print('a thread changed the same object :', d)",
+      "    print('default start method             :',",
+      "          mp.get_start_method())",
+      "    nap = 'import time; time.sleep(1)'",
+      "    t0 = time.time()",
+      "    k = subprocess.Popen([sys.executable, '-c', nap])",
+      "    back = time.time() - t0 < 0.5",
+      "    print('Popen came back at once          :', back)",
+      "    print('poll() while the child sleeps    :', k.poll())",
+      "    print('wait() returns the return code   :', k.wait())"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "a child process changed its copy : {'n': 0}\na thread changed the same object : {'n': 99}\ndefault start method             : forkserver\nPopen came back at once          : True\npoll() while the child sleeps    : None\nwait() returns the return code   : 0",
+     "outLabel": "prints",
+     "label": "program procCut_v1_0_0.py, lines 3 to 18 of 18"
+    },
+    {
+     "t": "chart",
+     "ctype": "bar",
+     "x": 4.8,
+     "y": 1.35,
+     "w": 4.7,
+     "h": 1.5,
+     "labels": [
+      "one after another",
+      "8 threads",
+      "a pool",
+      "asyncio"
+     ],
+     "title": "8 sleeps of 0.5 s, seconds",
+     "series": [
+      {
+       "name": "seconds",
+       "data": [
+        4.001,
+        0.502,
+        0.502,
+        0.503
+       ]
+      }
+     ],
+     "dataLabels": true,
+     "dlFs": 9
+    },
+    {
+     "t": "table",
+     "x": 4.8,
+     "y": 2.95,
+     "w": 4.7,
+     "colW": [
+      1.9,
+      1.0,
+      1.8
+     ],
+     "fs": 8,
+     "rowH": 0.26,
+     "cellMargin": [
+      0.02,
+      0.04,
+      0.02,
+      0.04
+     ],
+     "rows": [
+      [
+       "recorded run",
+       "standard 3.14.6",
+       "free-threaded 3.14.6"
+      ],
+      [
+       "4 CPU tasks, serial",
+       "0.963 s",
+       "-"
+      ],
+      [
+       "4 CPU tasks, pool of 2 processes",
+       "0.667 s",
+       "-"
+      ],
+      [
+       "one thread started",
+       "112 us",
+       "382 us"
+      ],
+      [
+       "one process started",
+       "5.4 ms",
+       "8.6 ms"
+      ]
+     ]
+    },
+    {
+     "t": "foot",
+     "x": 4.8,
+     "y": 4.33,
+     "w": 4.7,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Lines 1 to 2 (imports and the main guard) are not shown. Recorded 14 Oct 2026: single runs of 2026-10-14 on 2 CPUs; the chart is the standard 3.14.6, whose waiting threads, pool and asyncio all took about 0.5 s."
+    }
+   ],
+   "notes": "The program shows what a process does not share. A child process that updated its copy of a dictionary left the parent's dictionary at {'n': 0}, while a thread that updated the same dictionary changed it to {'n': 99}; the research saw the same with a module variable. The default start method of multiprocessing on Linux was forkserver on Python 3.14.6, which the documentation says replaced fork in 3.14, and subprocess.Popen came back at once, before the child that slept a second had ended, with poll() still None, and wait() then returned the return code 0. The chart and the table are the research's record and are not measured again. Eight sleeps of 0.5 s took 4.001 s one after another and 0.502 s on 8 threads, 0.502 s in a pool and 0.503 s with asyncio on the standard build, and 0.503 s on 8 threads on the free-threaded build, so waiting overlaps on either build. Four CPU-bound tasks took 0.963 s one after another and 0.667 s on a pool of 2 processes, and starting a thread cost 112 microseconds against 5.4 milliseconds for a process on the standard build, and 382 microseconds against 8.6 milliseconds on the free-threaded build. A process therefore escapes the lock, at the price of memory that is not shared and a start that costs about 50 times more.",
+   "take": "Waiting overlaps in threads; a process costs far more to start.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "asyncio, and choosing a tool",
+   "sub": "asyncio overlaps waiting on one thread; a blocking call stalls every task on it",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.53,
+     "h": 3.21,
+     "lines": [
+      "import asyncio, threading, time",
+      "async def nap(): await asyncio.sleep(0.3)",
+      "async def block(): time.sleep(0.2)",
+      "def took(f, n):",
+      "    async def together():",
+      "        await asyncio.gather(*[f() for _ in range(n)])",
+      "    t0 = time.time(); asyncio.run(together())",
+      "    return time.time() - t0",
+      "print('10 awaits of 0.3 s, under 0.6 s:', took(nap, 10) < 0.6)",
+      "print('5 blocking 0.2 s calls, over 1 s  :', took(block, 5) >= 1.0)",
+      "def work():",
+      "    time.sleep(0.2); return threading.current_thread().name",
+      "async def bridge():",
+      "    return await asyncio.gather(*map(asyncio.to_thread, [work]*5))",
+      "t0 = time.time(); names = asyncio.run(bridge())",
+      "print('same 5 on threads, under 0.6 s :', time.time() - t0 < 0.6)",
+      "print('worker names start with', {n[:7] for n in names})"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "10 awaits of 0.3 s, under 0.6 s: True\n5 blocking 0.2 s calls, over 1 s  : True\nsame 5 on threads, under 0.6 s : True\nworker names start with {'asyncio'}",
+     "outLabel": "prints",
+     "label": "program asyncCut_v1_0_0.py, lines 1 to 17 of 17"
+    },
+    {
+     "t": "shapes",
+     "x": 5.1,
+     "y": 1.4,
+     "w": 4.4,
+     "h": 2.85,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 5.1,
+       "y": 2.169,
+       "w": 1.45,
+       "h": 0.6,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the work waiting or computing?",
+       "x": 5.27,
+       "y": 2.324,
+       "w": 1.11,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 8.3,
+       "y": 2.189,
+       "w": 1.2,
+       "h": 0.56,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Threads, a pool or asyncio overlap the waiting",
+       "x": 8.37,
+       "y": 2.257,
+       "w": 1.06,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 5.1,
+       "y": 2.881,
+       "w": 1.45,
+       "h": 0.6,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the free-threaded build running?",
+       "x": 5.27,
+       "y": 2.97,
+       "w": 1.11,
+       "h": 0.423,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.9,
+       "y": 2.901,
+       "w": 1.3,
+       "h": 0.56,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A pool of processes computes in parallel",
+       "x": 6.97,
+       "y": 3.037,
+       "w": 1.16,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 5.1,
+       "y": 3.614,
+       "w": 1.45,
+       "h": 0.56,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Threads run in parallel on the free-threaded build",
+       "x": 5.17,
+       "y": 3.682,
+       "w": 1.31,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 5.725,
+       "y": 1.656,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 8.76,
+       "y": 3.754,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 8.82,
+       "y": 3.814,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 5.825,
+       "y1": 1.856,
+       "x2": 5.825,
+       "y2": 2.169,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.55,
+       "y1": 2.469,
+       "x2": 8.3,
+       "y2": 2.469,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "waits",
+       "x": 6.6,
+       "y": 2.269,
+       "w": 0.378,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 5.825,
+       "y1": 2.769,
+       "x2": 5.825,
+       "y2": 2.881,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "computes",
+       "x": 5.885,
+       "y": 2.735,
+       "w": 0.544,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 5.825,
+       "y1": 3.481,
+       "x2": 5.825,
+       "y2": 3.614,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 5.885,
+       "y": 3.458,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 6.55,
+       "y1": 3.181,
+       "x2": 6.9,
+       "y2": 3.181,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 6.6,
+       "y": 2.981,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 8.9,
+       "y1": 2.749,
+       "x2": 8.9,
+       "y2": 3.754,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 6.55,
+       "y1": 3.894,
+       "x2": 8.76,
+       "y2": 3.894,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 7.55,
+       "y1": 3.461,
+       "x2": 7.55,
+       "y2": 3.894,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 7.55,
+       "y1": 3.894,
+       "x2": 8.76,
+       "y2": 3.894,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "ChoosingBetweenTheTools"
+    },
+    {
+     "t": "foot",
+     "x": 5.1,
+     "y": 4.28,
+     "w": 4.4,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ChoosingBetweenTheTools - Workflow pattern, 20 of 22 words grounded in the chapter's text"
+    },
+    {
+     "t": "foot",
+     "x": 5.1,
+     "y": 4.62,
+     "w": 4.4,
+     "h": 0.31,
+     "fs": 8,
+     "body": "A blocking time.sleep in a coroutine stops the whole loop; asyncio.to_thread runs it in a worker."
+    }
+   ],
+   "notes": "asyncio overlaps waiting on one thread by switching at every await. The program shows three things with times that are printed only as booleans: ten coroutines that each awaited asyncio.sleep(0.3) finished together in under 0.6 s on one thread; five coroutines that each called the blocking time.sleep(0.2) took at least 1 s, because one blocking call stops every other task on the loop; and asyncio.to_thread ran five such blocking calls in worker threads in under 0.6 s, with workers whose names begin asyncio while the loop itself stayed in MainThread. The flow chart is the choice that the whole chapter prepares: if the work waits, threads, a pool or asyncio overlap the waiting, and the timer could not tell them apart; if it computes, the free-threaded build runs threads in parallel and otherwise a pool of processes computes in parallel. The chart of the earlier slides recorded the times behind that choice, and the research also read the Rust and Go documents that frame the same choice in other languages.",
+   "take": "asyncio overlaps waiting on one thread; a blocking call stalls it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Five interpreters, and what did not run",
+   "sub": "Recorded: one probe under five interpreters; below it, what was not run",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 9.0,
+     "colW": [
+      1.8,
+      1.3,
+      1.3,
+      1.3,
+      1.3,
+      2.0
+     ],
+     "fs": 8,
+     "rowH": 0.26,
+     "rows": [
+      [
+       "check",
+       "3.11.15",
+       "3.12.13",
+       "3.13.14",
+       "3.14.6",
+       "3.14.6 free-threaded"
+      ],
+      [
+       "Python",
+       "3.11.15",
+       "3.12.13",
+       "3.13.14",
+       "3.14.6",
+       "3.14.6"
+      ],
+      [
+       "GIL on",
+       "no such call",
+       "no such call",
+       "True",
+       "True",
+       "False"
+      ],
+      [
+       "Py_GIL_DISABLED",
+       "None",
+       "None",
+       "0",
+       "0",
+       "1"
+      ],
+      [
+       "thread name",
+       "Thread-1 (f)",
+       "Thread-1 (f)",
+       "Thread-1 (f)",
+       "Thread-1 (f)",
+       "Thread-1 (f)"
+      ],
+      [
+       "pool map",
+       "[1, 2]",
+       "[1, 2]",
+       "[1, 2]",
+       "[1, 2]",
+       "[1, 2]"
+      ],
+      [
+       "InterpreterPool",
+       "False",
+       "False",
+       "False",
+       "True",
+       "True"
+      ],
+      [
+       "start method",
+       "fork",
+       "fork",
+       "fork",
+       "forkserver",
+       "forkserver"
+      ]
+     ]
+    },
+    {
+     "t": "card",
+     "head": "Recorded 14 Oct 2026",
+     "body": "The research package holds 74 sources, 25 findings, 64 executed leaves, 4 stories and 7 diagrams. Every figure of a timing is one run on 2 CPUs; the probe above ran the same program under five interpreters.",
+     "x": 0.5,
+     "y": 3.7,
+     "w": 4.4,
+     "h": 1.25,
+     "fs": 8.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "The free-threaded build of Python 3.13, a C extension that re-enables the lock, Windows and macOS, more than 2 CPUs, runs under load and the real xkcd.com (a local stand-in server was used).",
+     "x": 5.1,
+     "y": 3.7,
+     "w": 4.4,
+     "h": 1.25,
+     "fs": 8.5,
+     "accent": "orange"
+    }
+   ],
+   "notes": "The table is the same probe run under five interpreters of the research, and the deck check runs it again and compares every cell. The GIL answer is True on 3.13.14 and 3.14.6 and False on the free-threaded 3.14.6, and the older 3.11.15 and 3.12.13 have no sys._is_gil_enabled() at all. Py_GIL_DISABLED is 1 only on the free-threaded build. The thread name is Thread-1 (f) on all five, a pool's map returns [1, 2] on all five, InterpreterPool exists from 3.14, and the default start method of multiprocessing is fork up to 3.13.14 and forkserver from 3.14. The card on the left counts the research: 74 sources, 25 findings, 64 executed leaves, 4 stories and 7 diagrams. The card on the right lists what was not run. The free-threaded build of Python 3.13 was not installed, only the free-threaded 3.14.6 was, so what the study says of 3.13 comes from the documentation. A C extension that re-enables the lock was not built, Windows and macOS were not available, the machine has 2 CPUs, no run was made under load, and the real xkcd.com was never contacted: a local stand-in server answered the downloader. Every timing of the deck is one run and not a benchmark.",
+   "take": "Five interpreters agree on most rows; the rest was not run.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in one map",
+   "sub": "Seven branches; the slides of each branch hold the examples",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.0,
+       "y": 2.425,
+       "w": 2.0,
+       "h": 1.15,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A program runs several threads at once",
+       "x": 4.08,
+       "y": 2.805,
+       "w": 1.84,
+       "h": 0.39,
+       "fs": 11,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 0.748,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 1.774,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Thread basics",
+       "x": 0.6,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "start() runs the target in a new thread\nargs and kwargs pass the arguments\nThe printed listing never starts its threads",
+       "x": 0.6,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.218,
+       "w": 3.1,
+       "h": 0.748,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 2.591,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Join and daemon",
+       "x": 0.6,
+       "y": 2.268,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "join() waits for a thread\nA daemon thread dies with the program\nThe downloader skips every tenth comic",
+       "x": 0.6,
+       "y": 2.466,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.035,
+       "w": 3.1,
+       "h": 0.748,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 3.409,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Shared data and locks",
+       "x": 0.6,
+       "y": 3.085,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "A lost update happens without a lock\nA lock makes the update one step\nA queue hands items over",
+       "x": 0.6,
+       "y": 3.283,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.853,
+       "w": 3.1,
+       "h": 0.748,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 4.226,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Executors and pools",
+       "x": 0.6,
+       "y": 3.903,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "map() keeps the order of the inputs\nAn exception waits in the Future\nThe default workers depend on the CPUs",
+       "x": 0.6,
+       "y": 4.101,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 0.748,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 1.774,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "GIL and free threading",
+       "x": 6.5,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The standard build keeps the lock on\nWaiting threads overlap on both builds\nThe free-threaded build scales with cores",
+       "x": 6.5,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 2.218,
+       "w": 3.1,
+       "h": 0.748,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 2.591,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Threads versus other tools",
+       "x": 6.5,
+       "y": 2.268,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "A process does not share variables\nasyncio overlaps waiting on one thread\nThe default start method is forkserver",
+       "x": 6.5,
+       "y": 2.466,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 3.035,
+       "w": 3.1,
+       "h": 0.748,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 3.409,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Environment and evidence",
+       "x": 6.5,
+       "y": 3.085,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The study ran Python 3.14.6\nEvery timing is a single run\nWindows and macOS were not executed",
+       "x": 6.5,
+       "y": 3.283,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      }
+     ],
+     "did": "ThreadsAtAGlance"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram ThreadsAtAGlance - TopicAndParts pattern, 105 of 108 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "These seven branches are the route of the deck. Thread basics: start() runs the target in a new thread, args and kwargs pass the arguments, and the printed listing of the downloader never starts its threads. Join and daemon: join() waits for a thread, a daemon thread dies with the program, and the downloader with start() added skips every tenth comic. Shared data and locks: a lost update happens without a lock, a lock makes the update one step, and a queue hands items over. Executors and pools: map() keeps the order of the inputs, an exception waits in the Future until result() is called, and the default number of workers depends on the CPUs. GIL and free threading: the standard build keeps the lock on, waiting threads overlap on both builds, and the free-threaded build scaled with the cores in the one measurement on 2 CPUs. Threads versus other tools: a process does not share variables, asyncio overlaps waiting on one thread, and the default start method of multiprocessing is forkserver on Python 3.14.6. Environment and evidence: the study ran Python 3.14.6, every timing is a single run, and Windows and macOS were not executed. Together they answer the two questions of the chapter, what the threads of a program do and how much they cost, and the slides that say where the printed chapter differs from what ran answer the rest. The map is drawn from the same specification as the interactive page.",
+   "take": "If a branch feels unproven, its slides hold the example.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Every link was opened on the day this deck was made",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.55,
+     "fs": 9,
+     "groups": [
+      {
+       "head": "Stories",
+       "rows": [
+        [
+         "Therac-25 (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Therac-25"
+        ],
+        [
+         "Semaphore (programming) (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Semaphore_(programming)"
+        ],
+        [
+         "Northeast blackout of 2003 (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Northeast_blackout_of_2003"
+        ],
+        [
+         "PEP 703: making the GIL optional",
+         "https://peps.python.org/pep-0703/"
+        ]
+       ]
+      },
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, 2nd edition, chapter 17 - free online",
+         "https://automatetheboringstuff.com/2e/chapter17/"
+        ],
+        [
+         "The 3rd edition: table of contents",
+         "https://automatetheboringstuff.com/3e/"
+        ],
+        [
+         "Appendix A: installing third-party modules",
+         "https://automatetheboringstuff.com/2e/appendixa/"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "threading (Python 3.14 documentation)",
+         "https://docs.python.org/3.14/library/threading.html"
+        ],
+        [
+         "concurrent.futures (Python 3.14 documentation)",
+         "https://docs.python.org/3.14/library/concurrent.futures.html"
+        ],
+        [
+         "asyncio (Python 3.14 documentation)",
+         "https://docs.python.org/3.14/library/asyncio.html"
+        ],
+        [
+         "Python support for free threading (HOWTO)",
+         "https://docs.python.org/3.14/howto/free-threading-python.html"
+        ],
+        [
+         "Python Free-Threading Guide",
+         "https://py-free-threading.github.io/"
+        ],
+        [
+         "Edsger W. Dijkstra (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Edsger_W._Dijkstra"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every listing of this deck; the 3rd edition no longer has the chapter, and Appendix A is where the book installs third-party modules. The reference links are the documentation of threading, concurrent.futures and asyncio, the Python HOWTO on free threading and the community guide to free-threading. The four stories of the chapter are on slides with their own link, and their pages are the first group together with Dijkstra's page. The research package holds 74 sources in all. No photograph of a living person is used in the deck, and the four pictures of the stories are files of Wikimedia Commons with their credit under them.",
+   "take": "Textbook, documentation, and history, all opened today.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What you should now be able to say",
+   "sub": "Four claims, each carried by a result you saw printed",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 1.5,
+     "w": 8.8,
+     "h": 2.4,
+     "fs": 15,
+     "items": [
+      "A thread runs only after start(), and join() waits for it; the printed downloader never calls start().",
+      "A shared counter needs a lock; with the GIL a race is rare, not impossible.",
+      "Threads overlap waiting; only the free-threaded build sped up CPU-bound work.",
+      "Every timing here is one run on 2 CPUs; Windows and macOS did not run."
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.6,
+     "y": 4.1,
+     "w": 8.8,
+     "h": 0.6,
+     "fs": 10,
+     "big": false,
+     "items": [
+      "19 console rows",
+      "17 programs run",
+      "7 diagrams",
+      "5 pictures"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The programs of the deck need only Python and its standard library, and the downloader runs against an HTTP server of the program on 127.0.0.1. The rows were run again under Python 3.14.6 each time the deck was built, and the programs, and with them the picture they save, were run again by the check that compares the slides with the recording. What was not run is marked on its slide: the free-threaded build of Python 3.13, a C extension that re-enables the lock, Windows and macOS, more than 2 CPUs, runs under load and the real xkcd.com. The timings are Recorded, single runs of 14 October 2026 on a machine of 2 CPUs, and not benchmarks. What this chapter taught about checking what a program really does, rather than what its listing says, carries over to the rest of the course.",
+   "take": "Questions are welcome; bring a thread to try.",
+   "bg": "light"
+  }
+ ]
+}

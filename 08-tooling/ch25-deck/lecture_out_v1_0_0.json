@@ -1,0 +1,189 @@
+{
+ "_version": "1.0.0",
+ "_deck": "1.0.0",
+ "_python": "3.14.6",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 25: Threads",
+   "say": "Chapter 25 of this course is the Threads subject. It takes the multithreading material of chapter 17 of the 2nd edition of Automate the Boring Stuff with Python, which the 3rd edition dropped, and teaches it with Python 3.14.6, where threads, executors, the global interpreter lock and the free-threaded build have all moved on. The number 25 is the slot of this subject in the course and not a chapter number of either edition. The 2nd edition chapter was read on 14 October 2026. The research ran every listing that works offline, found three places where the chapter's prose or listing differs from what Python does, and added what the chapter leaves out: locks, events, semaphores, queues, pools, the global interpreter lock, processes and asyncio. Every output on the slides was printed by Python 3.14.6 with requests 2.34.2 and beautifulsoup4 4.15.0, the interpreter the console above reports. The programs that wait print only lists, names, errors and booleans and never a duration, because the machine had 2 CPUs and a duration measured again would be another number. The timings that the research measured once, on a quiet machine, are on slides marked Recorded. What could not be run is marked NOT EXECUTED on its slide: the free-threaded build of Python 3.13, a C extension that switches the lock back on, Windows and macOS, more than 2 CPUs and the real xkcd.com, which no program here ever contacted.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "Today's route",
+   "say": "The route has six parts. It starts with starting and joining threads: the seven uses of threads, starting a thread, the arguments of the target, the life of a Thread object, join and daemon threads. Then the XKCD downloader: the listing as printed, which never calls start(), and the listing with the line added, which skips every tenth comic. The third part is shared data, locks and queues: the lost update, locks, deadlock and events, semaphores, queues and thread-local data. The fourth is pools, the GIL and the race: results, errors and cancelling in an executor, the lock on and off, and the race with and without it. The fifth is speed, processes and asyncio: CPU-bound work on threads, waiting and starting a process, asyncio and the choice of a tool, and five interpreters with what did not run. The last part is a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. All four stories are on slides, each with a link; the seven narrative diagrams of the chapter are drawn from the same specifications as the interactive page. Every output was printed by Python 3.14.6, the downloader ran against a local stand-in server, and what could not be run is marked on its slide.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "The questions this chapter answers",
+   "say": "The first question is the spine of the chapter, and the deck answers it slide by slide. The listings that run offline print what the chapter says: a second thread prints its line last, the arguments of the target arrive through args and kwargs, and join() waits. Three things differ from the text. The chapter's prose writes the keyword dictionary with one space fewer than its listing and prints Cats& Dogs& Frogs. The downloader as printed never calls start(), so no request is made and join() raises RuntimeError. And with the missing line added, the downloader requests 125 of the 139 comic numbers its loop covers and never asks for 9, 19, 29 and every tenth number up to 139. What could only be read is the part that needs another machine: the free-threaded build of Python 3.13, a C extension that switches the global interpreter lock back on, Windows and macOS, more than 2 CPUs and the real xkcd.com. The second question is about size, and every size comes from a single run. Four threads that each ran counter += 1 one million times lost between 2,500,522 and 2,913,206 of 4,000,000 updates in each of 3 runs on the free-threaded 3.14.6 and none in 12 runs on the builds with the lock. Four CPU-bound tasks took 0.89 s one after another and 1.003 s on 4 threads on the standard build, and 1.292 s against 0.522 s on the free-threaded build; a pool of 2 processes took 0.667 s where one process took 0.963 s; starting a thread took 112 microseconds and starting a process 5.4 milliseconds. Each slide says where its figure comes from.",
+   "concept": "ChapterDigest",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "What a program can do with threads",
+   "say": "The use-case diagram lists what a program can ask of threads in this chapter: start a thread with a target, pass args and kwargs, wait with join(), guard a counter with a lock, hand items over with a queue, run functions on a pool with map(), and overlap waiting with asyncio.gather(). They are independent calls to the standard library, which is why the picture is a set of uses and not a sequence. The console runs under the interpreter of the deck: the global interpreter lock is on in this standard build, the build variable Py_GIL_DISABLED is 0, and the machine reports 2 CPUs, a number that the later slides rely on because every speed figure was taken on 2 CPUs. The card records what the research found on 14 October 2026 and this deck does not read again: the 2nd edition's chapter 17 page answered 200 with 103,558 bytes and its multithreading section holds 9 code paragraphs, and the page of the 3rd edition's chapter 19, which has the same title, answered 200 with no occurrence of the word thread while it still teaches the subprocess module. The chapter ends with practice questions 7 and 8 on threads. The number 25 of this deck is the slot of the subject in the course and not a chapter number of either edition.",
+   "concept": "ThreadBasics",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "Starting a thread",
+   "say": "The program is the chapter's threadDemo.py with the nap shortened to half a second. The main thread prints Start of program., creates a Thread whose target is takeANap, calls start() and prints End of program.; the new thread sleeps and prints Wake up! last, which is the order the transcript shows, and it shows that two flows of control run at once. The second half of the program asks who is who: the main program runs in a thread named MainThread, a thread created later is named Thread-2 (f), because the number counts every thread made so far and the function name is added in brackets, and while it ran the program had 2 thread objects alive. A learner should predict the order of the three lines before running it. The research also timed a process of the same shape: it ended with return code 0 and lasted at least the nap of its second thread although the main thread had printed its last line within 0.2 s, so a Python program does not end until its last non-daemon thread has ended. That is the rule behind the join loop of the chapter's downloader and behind the daemon flag, which later slides take up.",
+   "concept": "StartAThread",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "The arguments of the target",
+   "say": "Passing arguments to a thread is the same idea as calling a function: args is a list of positional arguments and kwargs a dictionary of keyword arguments, and the program shows both with print as the target. The first call uses the separator of the chapter's listing, a space, an ampersand and a space, and prints Cats & Dogs & Frogs. The second call uses the separator as the chapter's explanation writes it, an ampersand and a space, and prints Cats& Dogs& Frogs. The prose and the listing of the chapter differ by one character, which is a small case of why a course should run the text it teaches. The third call is the mistake the chapter warns about: writing target=print('Now', 'not later') calls print at once and passes its return value, None, as the target. The line appears from the main thread, nothing runs in a second thread, and the thread is not alive afterwards. The error is silent, since nothing fails, and only the place where the output appears gives it away.",
+   "concept": "ArgsAndKwargs",
+   "visual": ""
+  },
+  {
+   "n": 7,
+   "title": "The life of a Thread object",
+   "say": "The state diagram follows one Thread object: it is created, start() runs the target in a new thread, and it has finished when the target returns. The program shows what follows from that. The default names are Thread-1 (f) and Thread-2 (f), and a thread given name='copier' keeps its name. A thread object is single use, so the second start() raised RuntimeError: threads can only be started once, which is why the chapter's loop makes a new Thread for each range. An exception raised in a thread does not reach the main thread. By default it is printed on standard error and the main thread goes on and ends with return code 0, which the research saw; here threading.excepthook is replaced so that the program can print what the hook received, ValueError('boom'), and the main thread printed main continues. A thread therefore needs its own try and except, or a Future that carries the error, which the pool slides show.",
+   "concept": "ThreadObjectsInfo",
+   "visual": ""
+  },
+  {
+   "n": 8,
+   "title": "join(): waiting for a thread",
+   "say": "The flow chart is the chapter's rule in a picture: create a Thread with a target, call start(), let the main thread go on, and call join() to wait for the thread; if start() was never called before join(), join() raises RuntimeError instead. The program shows three behaviours. join(0.1) on a thread that sleeps 0.6 s returns after about 0.1 s with the value None and the thread still alive, so the caller must test is_alive() to know whether the thread finished; a join() with no timeout waits for the end, after which the thread is no longer alive; and join() on a thread that was never started raises RuntimeError: cannot join thread before it is started. The last message is the one the chapter's printed downloader produces, which the next slide shows. A join with a timeout turns the wait into a poll, which the chapter does not mention.",
+   "concept": "JoinWaits",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "Daemon threads",
+   "say": "A daemon thread is one the program does not wait for. The program runs the same small script twice in a new Python, once with daemon=True and once with daemon=False, and prints what each run printed: the daemon thread's late line never appeared, because the program ended when the main thread did, while the non-daemon thread kept the program alive until it printed. The threading documentation says that daemon threads are stopped abruptly at shutdown, so a daemon thread must not hold a file or a lock that needs a clean close. The last lines show that the flag is fixed when the thread starts: setting t.daemon after start() raised RuntimeError: cannot set daemon status of active thread. The card holds two findings of the research that this deck does not run again: a thread created by a daemon thread inherited the flag, and an exception in a thread went to standard error while the main thread ended with return code 0.",
+   "concept": "DaemonDiesWithProgram",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "The downloader as printed",
+   "say": "This is the chapter's multithreaded XKCD downloader, Step 2 and Step 3, run exactly as it is printed. The research ran the program against a local stand-in, an HTTP server on 127.0.0.1 that answers a page for every comic number with one image, so xkcd.com was never contacted. The program of this slide starts that server, writes the printed listing into a Python of its own, runs it in an empty folder and reports what the server saw: no comic page was requested, no file was saved, and the run ended with return code 1 and RuntimeError: cannot join thread before it is started. The loop of the printed listing creates a Thread for each block of comic numbers and appends it to a list, but nothing calls start(), and the prose of the chapter says that the loop does. The join loop that follows then meets a thread that was never started. The lines before the listing, the server and the folder, are not shown, nor are the lines that run it and report the result, because they are the machinery of the experiment and not the chapter's code. The fix is one line, and the next slide shows what it uncovers.",
+   "concept": "PrintedListingJoinFails",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "The downloader skips every tenth comic",
+   "say": "With the missing line added under the append, every thread starts and the program finishes, but the stand-in server saw 125 comic pages requested and 125 files saved, and 14 numbers never requested: 9, 19, 29 and so on up to 139. The cause is in the loop: each thread runs range(start, end) where end is the last number of its block, i + 9, and range stops one short, so every block of ten loses its last number. The first thread covers 1 to 8, because its start is moved from 0 to 1, and the other thirteen cover nine numbers each, which is 8 plus 13 times 9, 125. The picture is drawn by the program from the list of numbers the server saw: each row is one thread's block of ten numbers, teal marks a number that was requested, orange one that was not, and the grey cell at the top left is the number 0, which is not a comic. The orange column is the finding of the research that the printed listing skips every tenth comic. The program counts no clock and prints no duration. The research measured the speed of the repaired downloader against one thread doing the same 250 requests and found it at least 5 times faster when each request waits 0.05 s, which is the waiting that threads overlap and which the later slides record as numbers. The real xkcd.com was never contacted, which is why the card says NOT EXECUTED.",
+   "concept": "FixedListingSkipsComics",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "Lost updates",
+   "say": "Wikipedia's article on the Therac-25 says the computer-controlled radiation therapy machine was produced by Atomic Energy of Canada Limited in 1982 and was involved in at least six overdoses of radiation between 1985 and 1987. It says that concurrent programming errors, also known as race conditions, sometimes gave patients doses up to 250 times higher than normal, resulting in death or serious injury. A race is a result that depends on the order in which two flows of control reach a shared value. In this study two threads that read a shared counter, waited 0.05 s and wrote back the value plus one left it at 1 instead of 2 in all 3 runs, and with a lock around the read and the write it ended at 2. The account rests on these sources. Wikipedia, 'Therac-25' (Atomic Energy of Canada Limited, 1982, at least six overdoses 1985 to 1987, race conditions), read 2026-10-14; this study's leaves ForcedLostUpdate and LockFixesCounter. The program forces the race: each thread reads the counter, waits 0.05 s and writes back the value plus one, so both read 0 before either writes and the counter ends at 1 in all 3 runs; with a lock around the read and the write it ends at 2. The console shows why a race needs no pause to exist: counter += 1 in a function compiled to 5 steps on Python 3.14.6, a load of the global, a load of the small integer 1, the addition, the store of the global and, as the fifth, the load of None that the function returns, so a thread can be stopped between the read and the write. On the standard build the interpreter considers switching threads every 0.005 s by default, which is why such a race is rare there and why the research forced it with a pause. The photograph is a Therac-25 as it stood in use, a public domain file of Wikimedia Commons whose author is unknown.",
+   "concept": "LostUpdates",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "Locks",
+   "say": "The sequence diagram is the lock protecting the counter: thread A acquires the lock, reads, adds one and writes the counter, thread B waits for the lock, A releases it, and the lock lets B read the value. The program shows four threads that each add 1 to a shared counter 100,000 times inside a with-lock block and end at exactly 400000, the total that a loop without a lock cannot promise. The with statement releases the lock even when the block raises, which the second line shows: after a ValueError inside the block the lock was free again. The last two lines show the difference between a plain Lock and an RLock: a thread that already holds a Lock and asks for it again with a 0.2 s timeout gets False, and without the timeout it would wait forever, while the same request on an RLock gets True. A function that takes a lock and calls another that takes the same lock needs an RLock or a redesign.",
+   "concept": "LockFixesCounter",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "Deadlock and events",
+   "say": "The two daemon threads of the program take the same two locks in opposite orders with a pause between the two acquisitions, so each holds one lock and waits for the other. After join(0.5) on both, both were still alive, which is the deadlock that Wikipedia describes as each member of a group waiting for another to release a resource, and the dining philosophers problem is its classic example. The threads are daemons so that the program can end, and a real program in this state would hang. The usual remedy is one global order for taking locks. The second half of the program is the simplest way for one thread to tell another that it may go on. An Event is a flag: the worker waits on it, the list of results is empty before set() is called, and it holds the worker's word right after, with nothing timed. A thread waiting without a timeout blocks until the flag is set, which is why the Event is the tool for wait until another thread says go.",
+   "concept": "DeadlockWithTwoLocks",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "Semaphores",
+   "say": "Wikipedia's article on the semaphore says the concept was invented by the Dutch computer scientist Edsger Dijkstra in 1962 or 1963, when he and his team were developing an operating system for the Electrologica X8, which became known as the THE multiprogramming system. A semaphore is a counter that lets a fixed number of flows of control pass at once. In this study six threads that each held a Semaphore of 2 for 0.1 s were inside the guarded block at most 2 at a time, against 6 without it, and a queue.Queue handed 5 numbers in order from a producer thread to a consumer thread. The account rests on these sources. Wikipedia, 'Semaphore (programming)' (Dijkstra, 1962 or 1963, THE multiprogramming system, Electrologica X8), read 2026-10-14; this study's leaves SemaphoreLimits and QueueHandsOver. The program counts how many of six threads are inside a guarded block at the same moment, and prints the largest number it saw: with a BoundedSemaphore of 2 it was 2, and with one of 6, which lets all of them in, it was 6. The counter that records the number inside is itself protected by a lock, because the demonstration must not suffer the race the previous slides show. A semaphore is a counter that lets a fixed number of threads pass at once, and a lock is the semaphore of 1. The research measured the same thing against no semaphore at all and found 6 inside. The photograph is a portrait of Edsger Dijkstra by Hamilton Richards, licensed CC BY-SA 3.0 on Wikimedia Commons and reduced for this slide.",
+   "concept": "SemaphoreLimits",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "Queues and thread-local data",
+   "say": "The sequence diagram is the producer-consumer pattern: the producer puts the numbers into the queue and then the marker None, the consumer takes the items in order, the queue hands over each item, and the consumer calls task_done() for each. The program's producer is the main thread and the consumer a thread of its own: the consumer received [0, 1, 2, 3, 4], in order, and stopped at the marker; the queue does its own locking, so no lock is written, and join() returns after 6 task_done() calls, 5 items and the marker. The queue removes the shared variable that the chapter warns about, because items are handed over and not shared. The chapter's own advice is to use only local variables in the target function. The console shows the other half of that advice: a value set on a threading.local() in one thread is absent in the main thread. The research also ran four threads that each summed their own list into a local variable and got the four expected totals, 0, 45, 190 and 435.",
+   "concept": "QueueHandsOver",
+   "visual": ""
+  },
+  {
+   "n": 17,
+   "title": "Pools: results, errors, cancelling",
+   "say": "A pool starts a fixed number of worker threads and runs submitted functions on them, returning Future objects. The left program runs three tasks that finish in the reverse order of their inputs: map returned [0, 1, 2], the order of the inputs, while as_completed yielded the results as they finished, [2, 1, 0]. A pool created with thread_name_prefix='dl' named its workers dl_0 and dl_1, which makes a log readable, and a pool created without max_workers had 6 workers on this machine of 2 CPUs; the documented rule since Python 3.13 is the smaller of 32 and the number of CPUs plus 4, and the program reads the private attribute _max_workers to print it. The right program shows how errors and waiting are carried by the Future: an exception raised in a task stays in its Future until result() is called, result(timeout=0.1) raised TimeoutError while the task was still not done, and shutdown(cancel_futures=True) cancelled the 4 queued tasks that had not started and let the one running finish, since a task that started cannot be cancelled. The with block of an executor waits for every task before it ends, which the research also confirmed.",
+   "concept": "MapKeepsOrder",
+   "visual": ""
+  },
+  {
+   "n": 18,
+   "title": "The GIL on, and off",
+   "say": "PEP 703 was written by Sam Gross, created on 9 January 2023 for Python 3.13, and resolved on 24 October 2023. The Steering Council accepted it with the proviso that the rollout be gradual and break as little as possible, and that the changes could be rolled back. The global interpreter lock lets one thread at a time run Python code, and the PEP made it optional. In this study the free-threaded 3.14.6 installed with uv reported the lock as off, and four CPU-bound tasks took 1.292 s serially and 0.522 s on 4 threads on 2 CPUs, while the standard build took 0.89 s serially and 1.003 s on 4 threads. The account rests on these sources. PEP 703 (Sam Gross; created 9 January 2023; resolution 24 October 2023), read 2026-10-14; this study's leaves FreeThreadedBuildRuns and FreeBuildScalesWithCores. The program asks the standard build and the free-threaded build the same question, sys._is_gil_enabled() and the build variable Py_GIL_DISABLED. The standard Python 3.14.6 answered True and 0, the free-threaded 3.14.6 installed with uv answered False and 1, and the environment variable PYTHON_GIL=1 and the option -X gil=1 both turned the lock on again, so one build can be run either way. The free-threaded build of Python 3.13, the first and experimental one, was not installed and was not run, and the study states its behaviour only from the documentation; the 3.13 build with the lock answered True. A C extension that does not declare support for free-threading makes the free-threaded build switch the lock back on, according to the free-threading guide; no such extension was built, so that behaviour is only read, and the card says both. The picture is a multithreaded process by Cburnett, licensed CC BY-SA 3.0 on Wikimedia Commons: two threads inside one process, sharing it.",
+   "concept": "GilStatus",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "The race with and without the lock",
+   "say": "Wikipedia's article on the Northeast blackout of 2003 says the blackout began on 14 August 2003 and affected 55 million people. It says a software bug known as a race condition existed in General Electric Energy's Unix-based XA/21 energy management system and, once triggered, stalled the alarm system of FirstEnergy's control room for over an hour. A race that needs a rare timing is hard to see in tests. In this study four threads that each ran counter += 1 one million times lost no update in 12 runs on the GIL builds, but lost between 2,500,522 and 2,913,206 of 4,000,000 updates in each of 3 runs on the free-threaded build. The account rests on these sources. Wikipedia, 'Northeast blackout of 2003' (14 August 2003, 55 million people, a race condition in the XA/21 system), read 2026-10-14; this study's leaf RaceInTheRecord and ch25-page/timing_record_v1_0_0.json. The table is the research's record of a race that needs no pause. Four threads each ran counter += 1 one million times, so 4,000,000 was the expected total, and the table gives the updates lost in each of 3 runs: none on Python 3.14.6 with the lock, 3.13.14, 3.12.13 and 3.11.15, and 2,844,845, 2,500,522 and 2,913,206 on the free-threaded 3.14.6. The deck check computes every cell again from the record, and every figure is a single run on the machine of 2 CPUs on 14 October 2026, with the load average at 0.75. The lesson is the one of the story: a race that never shows can still be there, and a program that passes its tests on the builds with the lock can lose updates on the free-threaded build. The program is not run again on this slide, because a race of this kind depends on timing and the machine had another job running beside the deck. The map is the region of the 2003 blackout by Lokal_Profil, licensed CC BY-SA 2.5 on Wikimedia Commons.",
+   "concept": "RaceInTheRecord",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "CPU-bound work on threads",
+   "say": "The chart divides the time of 4 threads by the time of the same 4 tasks run one after another, for each interpreter of the research, and the table beside it gives the seconds. On the standard Python 3.14.6 the serial run took 0.89 s and 4 threads took 1.003 s, a ratio of 1.13, because the global interpreter lock lets one thread run Python code at a time and the threads only add the cost of switching; on 3.13.14, 3.12.13 and 3.11.15 the 4 threads took at least 0.8 of the serial time, a ratio from 0.94 to 1.19, the same picture. On the free-threaded 3.14.6 the serial run took 1.292 s and 2 threads 0.553 s and 4 threads 0.522 s, a ratio of 0.40, so the work ran in parallel on the 2 CPUs. The free-threaded serial run was slower than the standard one, 1.292 s against 0.89 s, which is the single-thread cost of the build. Every figure is one run taken after the research waited for the one-minute load average to fall below 1.0, and the deck does not time the loop again. More than 2 CPUs and a run under load were not executed, so the slide makes no claim about how the speed-up grows with more cores.",
+   "concept": "GilBuildGivesNoSpeedup",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "Waiting, processes and starting cost",
+   "say": "The program shows what a process does not share. A child process that updated its copy of a dictionary left the parent's dictionary at {'n': 0}, while a thread that updated the same dictionary changed it to {'n': 99}; the research saw the same with a module variable. The default start method of multiprocessing on Linux was forkserver on Python 3.14.6, which the documentation says replaced fork in 3.14, and subprocess.Popen came back at once, before the child that slept a second had ended, with poll() still None, and wait() then returned the return code 0. The chart and the table are the research's record and are not measured again. Eight sleeps of 0.5 s took 4.001 s one after another and 0.502 s on 8 threads, 0.502 s in a pool and 0.503 s with asyncio on the standard build, and 0.503 s on 8 threads on the free-threaded build, so waiting overlaps on either build. Four CPU-bound tasks took 0.963 s one after another and 0.667 s on a pool of 2 processes, and starting a thread cost 112 microseconds against 5.4 milliseconds for a process on the standard build, and 382 microseconds against 8.6 milliseconds on the free-threaded build. A process therefore escapes the lock, at the price of memory that is not shared and a start that costs about 50 times more.",
+   "concept": "ProcessesDoNotShareVariables",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "asyncio, and choosing a tool",
+   "say": "asyncio overlaps waiting on one thread by switching at every await. The program shows three things with times that are printed only as booleans: ten coroutines that each awaited asyncio.sleep(0.3) finished together in under 0.6 s on one thread; five coroutines that each called the blocking time.sleep(0.2) took at least 1 s, because one blocking call stops every other task on the loop; and asyncio.to_thread ran five such blocking calls in worker threads in under 0.6 s, with workers whose names begin asyncio while the loop itself stayed in MainThread. The flow chart is the choice that the whole chapter prepares: if the work waits, threads, a pool or asyncio overlap the waiting, and the timer could not tell them apart; if it computes, the free-threaded build runs threads in parallel and otherwise a pool of processes computes in parallel. The chart of the earlier slides recorded the times behind that choice, and the research also read the Rust and Go documents that frame the same choice in other languages.",
+   "concept": "BlockingCallStallsLoop",
+   "visual": ""
+  },
+  {
+   "n": 23,
+   "title": "Five interpreters, and what did not run",
+   "say": "The table is the same probe run under five interpreters of the research, and the deck check runs it again and compares every cell. The GIL answer is True on 3.13.14 and 3.14.6 and False on the free-threaded 3.14.6, and the older 3.11.15 and 3.12.13 have no sys._is_gil_enabled() at all. Py_GIL_DISABLED is 1 only on the free-threaded build. The thread name is Thread-1 (f) on all five, a pool's map returns [1, 2] on all five, InterpreterPool exists from 3.14, and the default start method of multiprocessing is fork up to 3.13.14 and forkserver from 3.14. The card on the left counts the research: 74 sources, 25 findings, 64 executed leaves, 4 stories and 7 diagrams. The card on the right lists what was not run. The free-threaded build of Python 3.13 was not installed, only the free-threaded 3.14.6 was, so what the study says of 3.13 comes from the documentation. A C extension that re-enables the lock was not built, Windows and macOS were not available, the machine has 2 CPUs, no run was made under load, and the real xkcd.com was never contacted: a local stand-in server answered the downloader. Every timing of the deck is one run and not a benchmark.",
+   "concept": "Interpreters",
+   "visual": ""
+  },
+  {
+   "n": 24,
+   "title": "The chapter in one map",
+   "say": "These seven branches are the route of the deck. Thread basics: start() runs the target in a new thread, args and kwargs pass the arguments, and the printed listing of the downloader never starts its threads. Join and daemon: join() waits for a thread, a daemon thread dies with the program, and the downloader with start() added skips every tenth comic. Shared data and locks: a lost update happens without a lock, a lock makes the update one step, and a queue hands items over. Executors and pools: map() keeps the order of the inputs, an exception waits in the Future until result() is called, and the default number of workers depends on the CPUs. GIL and free threading: the standard build keeps the lock on, waiting threads overlap on both builds, and the free-threaded build scaled with the cores in the one measurement on 2 CPUs. Threads versus other tools: a process does not share variables, asyncio overlaps waiting on one thread, and the default start method of multiprocessing is forkserver on Python 3.14.6. Environment and evidence: the study ran Python 3.14.6, every timing is a single run, and Windows and macOS were not executed. Together they answer the two questions of the chapter, what the threads of a program do and how much they cost, and the slides that say where the printed chapter differs from what ran answer the rest. The map is drawn from the same specification as the interactive page.",
+   "concept": "ChapterDigest",
+   "visual": ""
+  },
+  {
+   "n": 25,
+   "title": "Where to go from here",
+   "say": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every listing of this deck; the 3rd edition no longer has the chapter, and Appendix A is where the book installs third-party modules. The reference links are the documentation of threading, concurrent.futures and asyncio, the Python HOWTO on free threading and the community guide to free-threading. The four stories of the chapter are on slides with their own link, and their pages are the first group together with Dijkstra's page. The research package holds 74 sources in all. No photograph of a living person is used in the deck, and the four pictures of the stories are files of Wikimedia Commons with their credit under them.",
+   "concept": "DroppedFromThirdEdition",
+   "visual": ""
+  },
+  {
+   "n": 26,
+   "title": "What you should now be able to say",
+   "say": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The programs of the deck need only Python and its standard library, and the downloader runs against an HTTP server of the program on 127.0.0.1. The rows were run again under Python 3.14.6 each time the deck was built, and the programs, and with them the picture they save, were run again by the check that compares the slides with the recording. What was not run is marked on its slide: the free-threaded build of Python 3.13, a C extension that re-enables the lock, Windows and macOS, more than 2 CPUs, runs under load and the real xkcd.com. The timings are Recorded, single runs of 14 October 2026 on a machine of 2 CPUs, and not benchmarks. What this chapter taught about checking what a program really does, rather than what its listing says, carries over to the rest of the course.",
+   "concept": "HonestyOfTheStudy",
+   "visual": ""
+  }
+ ]
+}
