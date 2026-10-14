@@ -1,0 +1,4235 @@
+{
+ "meta": {
+  "title": "Ch. 24: Speech Engines",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "1.0.0",
+  "python": "3.14.6",
+  "total": 26,
+  "diagrams": {
+   "WhatYouCanDoWithTheEngines": 4,
+   "ThePinnedReleaseAndTheNewest": 6,
+   "TheLifeOfAnUtterance": 7,
+   "SpeakingAndSavingASentence": 11,
+   "FromAudioToSubtitles": 14,
+   "TheLoopOfTheTranscriber": 22,
+   "TextToSpeechAndSpeechRecognitionAtAGlance": 24
+  },
+  "notExecuted": [
+   5,
+   8,
+   12,
+   19,
+   23
+  ],
+  "recorded": [
+   4,
+   5,
+   6,
+   7,
+   8,
+   11,
+   12,
+   15,
+   18,
+   19,
+   20,
+   23
+  ],
+  "standin": {
+   "6": [
+    "pinCut_v1_0_0.py"
+   ],
+   "7": [
+    "sayCut_v1_0_0.py"
+   ],
+   "8": [
+    "voicesCut_v1_0_0.py"
+   ],
+   "9": [
+    "rateCut_v1_0_0.py"
+   ],
+   "10": [
+    "wavCut_v1_0_0.py"
+   ],
+   "11": [
+    "raceCut_v1_0_0.py"
+   ],
+   "13": [
+    "transcribeCut_v1_0_0.py"
+   ],
+   "14": [
+    "ffmpegCut_v1_0_0.py"
+   ],
+   "15": [
+    "langCut_v1_0_0.py",
+    "langCut_v1_0_0.py"
+   ],
+   "17": [
+    "optionsCut_v1_0_0.py",
+    "optionsCut_v1_0_0.py"
+   ],
+   "18": [
+    "ytMetaCut_v1_0_0.py"
+   ],
+   "19": [
+    "ytDownCut_v1_0_0.py"
+   ],
+   "20": [
+    "guessCut_v1_0_0.py",
+    "guessCut_v1_0_0.py"
+   ],
+   "21": [
+    "songCut_v1_0_0.py",
+    "songCut_v1_0_0.py"
+   ],
+   "22": [
+    "loopCut_v1_0_0.py"
+   ]
+  }
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Ch. 24: Speech Engines",
+   "sub": "Speech synthesis with pyttsx3, recognition with Whisper, subtitles and downloads with yt-dlp",
+   "items": [
+    {
+     "t": "code",
+     "x": 5.0,
+     "y": 0.25,
+     "w": 4.5,
+     "h": 2.06,
+     "rows": [
+      [
+       "import platform, importlib.metadata as m",
+       ""
+      ],
+      [
+       "platform.python_version()",
+       "'3.14.6'"
+      ],
+      [
+       "m.version('pyttsx3')",
+       "'2.99'"
+      ],
+      [
+       "m.version('openai-whisper')",
+       "'20250625'"
+      ],
+      [
+       "m.version('yt-dlp')",
+       "'2026.8.19'"
+      ],
+      [
+       "m.version('numpy')",
+       "'2.5.4'"
+      ]
+     ],
+     "fs": 8
+    },
+    {
+     "t": "foot",
+     "x": 0.6,
+     "y": 3.75,
+     "w": 8.8,
+     "h": 0.75,
+     "fs": 10.5,
+     "body": "Every output on these slides was printed by the Python above when the deck was made, and every picture was saved by a program that is run again to check it. Nothing is heard: the machine has no sound card, so the speech goes to WAV files. Windows, macOS, a microphone, a GPU, a cloud key and YouTube were never used; what could not be run is marked on its slide."
+    }
+   ],
+   "notes": "Chapter 23 taught a program to act on the screen. Chapter 24 teaches a program to speak and to listen: pyttsx3 turns text into speech, Whisper turns speech into text, the writers of whisper.utils turn the text into subtitle files, and yt-dlp downloads the audio of a video. The chapter has 17 listings and 1 table, and ends with 7 practice questions and 3 practice programs. This deck follows the chapter in its own order: the engine and its settings, saving speech as a WAV file, the Whisper models and what they hear, the subtitle files, the downloader, and the three practice programs, and it adds what the research found when the chapter's 46 printed statements were replayed. Nothing in the deck is heard. The machine has no sound card, so the console above shows that /dev/snd does not exist, and every program writes its speech to a WAV file that it deletes afterwards. Every output on the slides was printed by Python 3.14.6 with pyttsx3 2.99, openai-whisper 20250625, yt-dlp 2026.8.19 and NumPy 2.5.4, the versions the console above prints, with eSpeak NG 1.51 and ffmpeg 6.1.1 on the path. Windows, macOS, a microphone, a GPU, a cloud key and any download from YouTube were never used. What could not be run is marked NOT EXECUTED on its slide, and what the research measured and this deck does not run again is marked Recorded. Every count and time from one run is a single run on a machine with two cores, and not a benchmark.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Six parts; every range is a run of slides you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 6.3,
+     "h": 3.55,
+     "fs": 11.5,
+     "items": [
+      "What a script can do (slides 4-6)",
+      "Speaking text (slides 7-11)",
+      "Recognising speech (slides 12-15)",
+      "Subtitles and downloading (slides 16-19)",
+      "Practice and the replay (slides 20-23)",
+      "Summary and resources (slides 24-25)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "26",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "4 + 2",
+       "label": "true stories: 4 on slides, 2 in the notes"
+      },
+      {
+       "n": "5",
+       "label": "pictures, each saved by a program that is run again"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has six parts. It starts with what a script can do: the seven uses of the engines, the packages and tools they need, and the pinned release of pyttsx3 against the newest. Then speaking text: say() only queues, the voices, the rate and the volume, the WAV file, and the calls that never return. The third part is recognising speech: the Whisper models and Table 24-1, transcribing a sentence, ffmpeg, and the languages Whisper hears. The fourth is subtitles and downloading: the SRT, VTT and TSV files, the writer options and the time grid, the metadata of a video and the download of its audio. The fifth is practice and the replay: the guessing game that speaks, the 99 bottles of beer, the transcriber loop, and the chapter replayed in four environments. The last part is a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. Four of the six stories are on slides and two are told in the notes, each with a link; the seven narrative diagrams of the chapter are drawn from the same specifications as the interactive page. Every output was printed by Python 3.14.6 with pyttsx3 2.99, openai-whisper 20250625 and yt-dlp 2026.8.19, nothing is heard, and what could not be run is marked on its slide.",
+   "take": "Six parts, from what a script can do to a map.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "The research's two competency questions; the summary comes back to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.35,
+     "w": 9.0,
+     "h": 2.5,
+     "fs": 10,
+     "items": [
+      "Which parts of a program that speaks text, saves it as audio, recognises it and writes subtitles can be shown to work, and which can only be shown to fail or be read from documentation, on a machine that has no sound card, no microphone, no GPU, no Windows or macOS and no way to download from YouTube, and how large is the spread between interpreter, model and package releases?",
+      "Which printed outputs, programs, version numbers and statements of the chapter differ in current releases of Python, pyttsx3, openai-whisper and yt-dlp, with or without ffmpeg and eSpeak, or in the files and pages it points to, and on what source?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 3.95,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 10,
+     "items": [
+      "6 branches",
+      "104 topics",
+      "12 console rows",
+      "17 programs run",
+      "7 diagrams",
+      "5 pictures",
+      "Python 3.14.6"
+     ]
+    }
+   ],
+   "notes": "The first question is the spine of the chapter, and the deck answers it slide by slide. On a machine with no sound card, no microphone and no GPU, a program can still list the voices of the engine, change the rate and the volume, save speech as a WAV file, transcribe that file with Whisper, write subtitle files and ask yt-dlp for the metadata of a video, and every one of those can be checked because the result is a file or a number. What cannot be shown to work is the part that needs a person or a service: the sound itself, a microphone, a GPU, Windows and macOS, the cloud services, and any download from YouTube, whose Terms of Service do not allow it. The second question is the watch-out. The chapter's 17 listings hold 45 statements, 46 with the one that was substituted, and the research replayed them as printed. With Python 3.14.6 and the newest packages 34 of the 46 matched the book's output, 42 ran without an exception, 1 raised and 3 were not executed; the pinned set gave 35, 42, 1 and 3, the empty environment 8, 8, 35 and 3, and the set without ffmpeg 32, 38, 5 and 3. The statements that differ are the Voice objects and names, the line Audio saved to that the driver prints, the transcription of hello.wav, the TSV listing and the call of speak(), which no listing defines. Each slide says where a printed line differs and on what evidence. The spread between releases is large too: of the 22 releases of pyttsx3, 8 ran and 9 crashed with a segmentation fault, and Appendix A pins a pyttsx3 that saves a truncated file.",
+   "take": "Know what can be shown to work and what can only be shown to fail.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What a script can do with the engines",
+   "sub": "Seven uses of the engines; the console shows the tools of this machine",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.6,
+     "h": 2.75,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 1.3,
+       "y": 1.68,
+       "w": 3.8,
+       "h": 2.47,
+       "fill": "FBF8F2",
+       "line": "6E655C",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "THEENGINES",
+       "x": 1.38,
+       "y": 1.42,
+       "w": 3.65,
+       "h": 0.24,
+       "fs": 8.5,
+       "color": "6E655C",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 1.79,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "List the voices of the engine",
+       "x": 1.73,
+       "y": 1.853,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.131,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Change the rate of the speech",
+       "x": 1.73,
+       "y": 2.195,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.473,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Save speech as a WAV file",
+       "x": 1.73,
+       "y": 2.536,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.814,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Transcribe audio with transcribe()",
+       "x": 1.73,
+       "y": 2.878,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.156,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Write a subtitle file",
+       "x": 1.73,
+       "y": 3.219,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.497,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the metadata of a video",
+       "x": 1.73,
+       "y": 3.561,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.839,
+       "w": 3.5,
+       "h": 0.281,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Download audio with download()",
+       "x": 1.73,
+       "y": 3.902,
+       "w": 2.94,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 0.74,
+       "y": 2.075,
+       "w": 0.22,
+       "h": 0.22,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 1.5
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.295,
+       "x2": 0.85,
+       "y2": 2.675,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.65,
+       "y1": 2.395,
+       "x2": 1.05,
+       "y2": 2.395,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.675,
+       "x2": 0.69,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.675,
+       "x2": 1.01,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A script",
+       "x": 0.5,
+       "y": 2.975,
+       "w": 0.8,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 1.931,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 2.272,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 2.614,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 2.955,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 3.296,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 3.638,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.475,
+       "x2": 1.45,
+       "y2": 3.979,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      }
+     ],
+     "did": "WhatYouCanDoWithTheEngines"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.18,
+     "w": 4.6,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WhatYouCanDoWithTheEngines - SetOfUses pattern, 22 of 24 words grounded in the chapter's text"
+    },
+    {
+     "t": "code",
+     "x": 5.3,
+     "y": 1.45,
+     "w": 4.2,
+     "h": 2.06,
+     "rows": [
+      [
+       "import shutil, os, importlib.util as u",
+       ""
+      ],
+      [
+       "shutil.which('ffmpeg')",
+       "'/usr/bin/ffmpeg'"
+      ],
+      [
+       "shutil.which('espeak-ng')",
+       "'/usr/bin/espeak-ng'"
+      ],
+      [
+       "os.path.exists('/dev/snd')",
+       "False"
+      ],
+      [
+       "u.find_spec('audioop') is None",
+       "True"
+      ],
+      [
+       "u.find_spec('wave') is None",
+       "False"
+      ]
+     ],
+     "fs": 8,
+     "cap": "run under Python 3.14.6; no row reads the clock or the network"
+    },
+    {
+     "t": "foot",
+     "x": 5.3,
+     "y": 3.81,
+     "w": 4.2,
+     "h": 0.31,
+     "fs": 8,
+     "body": "os.path.exists('/dev/snd') is False: no sound card, no microphone and no GPU, so nothing in this deck is heard."
+    },
+    {
+     "t": "foot",
+     "x": 5.3,
+     "y": 4.13,
+     "w": 4.2,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Recorded 14 Oct 2026: the chapter page (200, 44,667 bytes) holds 17 listings and 1 table; the online materials (91 files) hold hello_tts.py as the only file of the chapter."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "Homer Dudley of Bell Labs, who developed the Voder after his work on the vocoder",
+     "where": "The 1939 New York World's Fair",
+     "when": "1939",
+     "link": "https://en.wikipedia.org/wiki/Speech_synthesis",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on speech synthesis says that Homer Dudley developed, after his work on the vocoder, a keyboard-operated voice synthesizer called the Voder (Voice Demonstrator), which he exhibited at the 1939 New York World's Fair. A person played it with keys; nothing in it read text. In this study pyttsx3 2.99 with eSpeak NG 1.51 listed 131 voices, each a Voice object with a name, a gender, an age and a list of languages, and all 131 said Male with the age None, so a voice is a language and a set of rules, not a person. The account rests on these sources. Wikipedia, 'Speech synthesis' (Homer Dudley, the Voder, the 1939 New York World's Fair), read 2026-10-14; this study's leaves VoiceObjects and PersistentVoice. The use-case diagram lists what a script can do with the engines of the chapter: list the voices of the engine, change the rate of the speech, save speech as a WAV file, transcribe audio with transcribe(), write a subtitle file, read the metadata of a video and download audio with download(). They are independent calls into three libraries, which is why the picture is a set of uses and not a sequence. The console runs under the interpreter of the deck. ffmpeg and espeak-ng are on the path, /dev/snd does not exist, audioop is gone from this Python and wave is not: PEP 594 removed audioop, aifc, sunau, chunk and sndhdr in Python 3.13, and the wave module that pyttsx3 uses stayed. The card records what the research found on 14 October 2026 and this deck does not run again: the chapter page returned 200 with 44,667 bytes and its sha256 equals the digest in the book's own chapter ontology; the online materials are a zip of 91 files, 72 of them Python, and none of them imports whisper or yt_dlp or holds hello.wav, audio.srt or metadata.json. The publisher's book page names the chapter once and Whisper, pyttsx3 and yt-dlp not at all.",
+   "take": "A script can speak, listen and write subtitles with a few calls.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Packages and the tools they need",
+   "sub": "pyttsx3 needs eSpeak NG and Whisper needs ffmpeg, which the chapter never installs",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 4.3,
+     "colW": [
+      0.95,
+      0.75,
+      0.8,
+      0.8,
+      1.0
+     ],
+     "fs": 8,
+     "rowH": 0.26,
+     "cellMargin": [
+      0.02,
+      0.04,
+      0.02,
+      0.04
+     ],
+     "rows": [
+      [
+       "check",
+       "newest",
+       "pinned",
+       "no ffmpeg",
+       "empty"
+      ],
+      [
+       "Python",
+       "3.14.6",
+       "3.12.3",
+       "3.14.6",
+       "3.14.6"
+      ],
+      [
+       "pyttsx3",
+       "2.99",
+       "2.98",
+       "2.99",
+       "none"
+      ],
+      [
+       "openai-whisper",
+       "20250625",
+       "20231117",
+       "20250625",
+       "none"
+      ],
+      [
+       "yt-dlp",
+       "2026.8.19",
+       "2026.8.19",
+       "2026.8.19",
+       "none"
+      ],
+      [
+       "NumPy",
+       "2.5.4",
+       "1.26.4",
+       "2.5.4",
+       "none"
+      ],
+      [
+       "ffmpeg",
+       "found",
+       "found",
+       "none",
+       "found"
+      ],
+      [
+       "pyttsx3.init()",
+       "Engine",
+       "Engine",
+       "Engine",
+       "ModuleNotFound"
+      ],
+      [
+       "whisper found",
+       "found",
+       "found",
+       "found",
+       "none"
+      ]
+     ]
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.9,
+     "w": 4.3,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "One probe, four interpreters, run when the deck is checked: it imports the packages, looks for ffmpeg and calls pyttsx3.init()."
+    },
+    {
+     "t": "foot",
+     "x": 5.0,
+     "y": 1.45,
+     "w": 4.5,
+     "h": 0.61,
+     "fs": 8.5,
+     "body": "Recorded 14 Oct 2026: Appendix A pins pyttsx3==2.98 and openai-whisper==20231117, advises numpy below 2 and names neither ffmpeg nor espeak; PyPI lists 22 releases of pyttsx3 (2.99 the newest), 13 of openai-whisper (20250625) and 641 of yt-dlp (2026.8.19)."
+    },
+    {
+     "t": "foot",
+     "x": 5.0,
+     "y": 2.13,
+     "w": 4.5,
+     "h": 0.61,
+     "fs": 8.5,
+     "body": "Recorded 14 Oct 2026: the chapter's command sudo apt install espeak: with neither package pyttsx3 2.99 raised RuntimeError, with only espeak 1.48.15 it raised ValueError (SetVoiceByName failed for gmw/en) and with espeak-ng 1.51 it worked."
+    },
+    {
+     "t": "foot",
+     "x": 5.0,
+     "y": 2.81,
+     "w": 4.5,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "NOT EXECUTED here: SAPI5 on Windows, NSSpeechSynthesizer and AVSpeech on macOS, a microphone, a GPU and the cloud services of OpenAI, Google and Microsoft; only the eSpeak NG driver on Linux ran."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "Jonathan Duddington, who released Speak in 1995; later the eSpeak NG developers",
+     "where": "RISC OS computers in 1995; Linux with Speak 1.05 under the GPLv2 on 17 February 2006",
+     "when": "1995",
+     "link": "https://en.wikipedia.org/wiki/ESpeak",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on eSpeak says that in 1995 Jonathan Duddington released the Speak speech synthesizer for RISC OS computers supporting British English, and that on 17 February 2006 Speak 1.05 was released under the GPLv2 license, initially for Linux. Development continued until it was renamed eSpeak, and eSpeak NG continues it. In this study pyttsx3 2.99 started with eSpeak NG 1.51 and saved a WAV, but with only the package the chapter names (espeak 1.48.15) its init raised ValueError for the voice gmw/en, and with neither it raised RuntimeError. The account rests on these sources. Wikipedia, 'ESpeak' (Speak of 1995 for RISC OS, Speak 1.05 under the GPLv2 on 17 February 2006), read 2026-10-14; this study's leaves EspeakDependency and LinuxEspeak. The table runs one probe in four interpreters while the deck is checked: Python 3.14.6 with the newest packages, Python 3.12.3 with the pinned pyttsx3 2.98 and openai-whisper 20231117 and NumPy 1.26.4, Python 3.14.6 with ffmpeg taken off the path, and an empty Python 3.14.6. The probe imports the packages, looks for ffmpeg and calls pyttsx3.init(); every row with the packages starts an Engine, the empty Python raises ModuleNotFoundError, and the row without ffmpeg shows the only difference that the probe can see. The chapter's Linux command installs espeak, the old package, and pyttsx3 2.99 needs espeak-ng: the research tried the four combinations on Ubuntu 24.04 and only the two that include espeak-ng started, with 131 voices, a saved WAV file and the library libespeak-ng.so.1. Appendix A pins the 2.98 release of pyttsx3, advises numpy below 2 and the CUDA 11.8 wheels of PyTorch, and says that the automateboringstuff3 package always installs the newest yt-dlp. It names neither ffmpeg nor espeak, and the next slides show what each one is needed for. SAPI5, NSSpeechSynthesizer, AVSpeech, the microphone, the GPU and the cloud services were read from their documentation and never run.",
+   "take": "Install eSpeak NG and ffmpeg first; the Python packages are not enough.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The pinned release and the newest",
+   "sub": "Appendix A pins pyttsx3 2.98, which saves 0.6 s of audio where 2.99 saves 1.54 s",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.1,
+     "h": 2.05,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.4,
+       "w": 0.9,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The reader",
+       "x": 0.61,
+       "y": 1.516,
+       "w": 0.78,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.0,
+       "y1": 1.82,
+       "x2": 1.0,
+       "y2": 3.45,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.1,
+       "y": 1.4,
+       "w": 0.9,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "PyPI",
+       "x": 2.16,
+       "y": 1.516,
+       "w": 0.78,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.55,
+       "y1": 1.82,
+       "x2": 2.55,
+       "y2": 3.45,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.65,
+       "y": 1.4,
+       "w": 0.9,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The engine",
+       "x": 3.71,
+       "y": 1.516,
+       "w": 0.78,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.1,
+       "y1": 1.82,
+       "x2": 4.1,
+       "y2": 3.45,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.0,
+       "y1": 2.312,
+       "x2": 2.55,
+       "y2": 2.312,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Installs the pinned release of pyttsx3",
+       "x": 1.1,
+       "y": 1.973,
+       "w": 1.35,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.55,
+       "y1": 2.578,
+       "x2": 1.0,
+       "y2": 2.578,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Delivers pyttsx3 2.98",
+       "x": 1.1,
+       "y": 2.373,
+       "w": 1.35,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.0,
+       "y1": 2.844,
+       "x2": 4.1,
+       "y2": 2.844,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Saves the sentence Hello. How are you doing?",
+       "x": 1.1,
+       "y": 2.639,
+       "w": 2.9,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.1,
+       "y1": 3.11,
+       "x2": 1.0,
+       "y2": 3.11,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Truncates the file",
+       "x": 1.1,
+       "y": 2.905,
+       "w": 2.9,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.0,
+       "y1": 3.376,
+       "x2": 2.55,
+       "y2": 3.376,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Installs pyttsx3 2.99",
+       "x": 1.1,
+       "y": 3.171,
+       "w": 1.35,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "ThePinnedReleaseAndTheNewest"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.48,
+     "w": 4.1,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ThePinnedReleaseAndTheNewest - Interaction pattern, 20 of 21 words grounded in the chapter's text"
+    },
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 3.95,
+     "w": 4.1,
+     "colW": [
+      1.0,
+      0.45,
+      0.6,
+      0.35,
+      1.7
+     ],
+     "fs": 7,
+     "rowH": 0.2,
+     "cellMargin": [
+      0.02,
+      0.04,
+      0.02,
+      0.04
+     ],
+     "rows": [
+      [
+       "package",
+       "Python",
+       "releases",
+       "ran",
+       "the others"
+      ],
+      [
+       "pyttsx3",
+       "3.14.6",
+       "22",
+       "8",
+       "5 macOS only, 9 segfault"
+      ],
+      [
+       "openai-whisper",
+       "3.12.3",
+       "13",
+       "6",
+       "1 import err, 6 no install"
+      ],
+      [
+       "yt-dlp (stable)",
+       "3.14.6",
+       "6",
+       "5",
+       "1 no imghdr"
+      ]
+     ]
+    },
+    {
+     "t": "prog",
+     "x": 4.97,
+     "y": 1.55,
+     "w": 4.53,
+     "h": 2.79,
+     "lines": [
+      "SAY = '''import pyttsx3, sys, time, wave",
+      "e = pyttsx3.init(); e.save_to_file(sys.argv[1], 'a.wav')",
+      "e.runAndWait(); time.sleep(1); w = wave.open('a.wav')",
+      "print(round(w.getnframes() / w.getframerate(), 2))'''",
+      "VER = 'import importlib.metadata as m; print(m.version(\"pyttsx3\"))'",
+      "def run(py, *code):",
+      "    args = [py, '-W', 'ignore', '-c', *code]",
+      "    done = subprocess.run(args, capture_output=True, text=True)",
+      "    return done.stdout",
+      "for label, py in (('pinned', PINS), ('newest', LATEST)):",
+      "    v = run(py, VER).strip()",
+      "    for text in ('Hello. How are you doing?', 'One. Two. Three.'):",
+      "        seconds = run(py, SAY, text).split()[-1]",
+      "        print('%s %-4s %-27r -> %s s' % (label, v, text, seconds))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "pinned 2.98 'Hello. How are you doing?' -> 0.6 s\npinned 2.98 'One. Two. Three.'          -> 0.51 s\nnewest 2.99 'Hello. How are you doing?' -> 1.54 s\nnewest 2.99 'One. Two. Three.'          -> 1.55 s",
+     "outLabel": "prints",
+     "label": "program pinCut_v1_0_0.py, lines 105 to 118 of 118"
+    },
+    {
+     "t": "foot",
+     "x": 4.97,
+     "y": 4.38,
+     "w": 4.53,
+     "h": 0.29,
+     "fs": 7.5,
+     "body": "No sound card: nothing is heard, the speech goes to WAV files - a local stand-in for a loudspeaker. Lines 1 to 104 (imports and helpers) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.8,
+     "w": 4.1,
+     "h": 0.17,
+     "fs": 7.5,
+     "body": "Recorded 14 Oct 2026: the table counts the releases tried on one machine."
+    }
+   ],
+   "notes": "The sequence diagram is the story of the pin: the reader installs the pinned release of pyttsx3 from PyPI, PyPI delivers pyttsx3 2.98, the reader saves the sentence Hello. How are you doing?, and the engine truncates the file; with pyttsx3 2.99 the same sentence is saved whole. The program runs the same few lines in two interpreters, Python 3.12.3 with pyttsx3 2.98 and Python 3.14.6 with 2.99, and prints the length of the file each wrote: 0.6 and 0.51 seconds for the pinned release, 1.54 and 1.55 for the newest. The sentences are Hello. How are you doing? and One. Two. Three. The research found the cause in the driver: 2.98 writes the file at the first end-of-sentence event, before it adds the samples of that event, and it hands the file to ffmpeg, so a name ending in .mp3 gave a real MP3 file, .ogg a real Ogg file, and with no ffmpeg on the path no file at all, while 2.99 writes a WAV file through the wave module whatever the extension says. The table is the research's record of the releases it tried: of 22 releases of pyttsx3, 8 ran on Python 3.14.6, 9 (2.71 to 2.95) crashed with a segmentation fault and 5 needed macOS; of 13 releases of openai-whisper, 6 ran on Python 3.12.3, 1 had an import error and 6, 20230307 to 20231106, could not be installed there because they require triton 2.0.0; of the 6 last stable yt-dlp releases of 2021 to 2026, 5 ran and 2021.12.27 stopped on the missing imghdr module that Python 3.13 removed. Pinning is not safe by itself: the pinned openai-whisper also needed setuptools below 81 and no build isolation before it would install.",
+   "take": "A pinned release can be older than the book's own output.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "say() only queues the text",
+   "sub": "Nothing is spoken until runAndWait(); a property set before it is not applied yet",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 3.5,
+     "h": 2.1,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 1.7,
+       "w": 1.5,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The text is in the queue",
+       "x": 0.66,
+       "y": 1.803,
+       "w": 1.38,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 2.42,
+       "w": 1.5,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The utterance has started",
+       "x": 0.66,
+       "y": 2.456,
+       "w": 1.38,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.6,
+       "y": 3.14,
+       "w": 1.5,
+       "h": 0.36,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The utterance has finished",
+       "x": 0.66,
+       "y": 3.176,
+       "w": 1.38,
+       "h": 0.289,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.26,
+       "y": 1.42,
+       "w": 0.18,
+       "h": 0.18,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 1.35,
+       "y1": 1.6,
+       "x2": 1.35,
+       "y2": 1.7,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.35,
+       "y1": 2.06,
+       "x2": 1.35,
+       "y2": 2.42,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.37,
+       "y1": 2.24,
+       "x2": 2.36,
+       "y2": 2.24,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "runAndWait() fires started-utterance",
+       "x": 2.4,
+       "y": 2.096,
+       "w": 1.6,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.35,
+       "y1": 2.78,
+       "x2": 1.35,
+       "y2": 3.14,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.37,
+       "y1": 2.96,
+       "x2": 2.36,
+       "y2": 2.96,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "The engine fires finished-utterance",
+       "x": 2.4,
+       "y": 2.816,
+       "w": 1.6,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.1,
+       "y1": 3.32,
+       "x2": 2.5,
+       "y2": 3.32,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.5,
+       "y": 3.18,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.56,
+       "y": 3.24,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      }
+     ],
+     "did": "TheLifeOfAnUtterance"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.53,
+     "w": 3.5,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram TheLifeOfAnUtterance - LifeCycle pattern, 14 of 14 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.3,
+     "y": 1.55,
+     "w": 5.2,
+     "h": 2.79,
+     "lines": [
+      "import pyttsx3",
+      "events = []",
+      "engine = pyttsx3.init()",
+      "for topic in ('started-utterance', 'finished-utterance'):",
+      "    engine.connect(topic, lambda topic=topic, **kw: events.append(topic))",
+      "r = engine.say('Hello. How are you doing?')",
+      "print('say() returned', r, '| events', len(events), '| busy', engine.isBusy())",
+      "engine.setProperty('rate', 300)",
+      "print('rate before runAndWait:', engine.getProperty('rate'))",
+      "engine.runAndWait()",
+      "print('events:', events)",
+      "print('rate after runAndWait:', engine.getProperty('rate'))",
+      "print('say(\"\"):', repr(engine.say('')))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "say() returned None | events 0 | busy True\nrate before runAndWait: 200\nevents: ['started-utterance', 'finished-utterance']\nrate after runAndWait: 300\nsay(\"\"): \"Argument value can't be None or empty\"",
+     "outLabel": "prints",
+     "label": "program sayCut_v1_0_0.py, lines 105 to 117 of 117"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.96,
+     "w": 3.5,
+     "h": 0.31,
+     "fs": 8,
+     "body": "No sound card: nothing is heard, the speech goes to WAV files - a local stand-in for a loudspeaker."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.31,
+     "w": 3.5,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 104 (imports, helpers and the work folder) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 4.3,
+     "y": 4.4,
+     "w": 5.2,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Recorded 14 Oct 2026: with no sound card runAndWait() returned with exit code 0 although aplay printed an audio open error; save_to_file('') raised AssertionError."
+    }
+   ],
+   "notes": "The life of an utterance has three states. The text is in the queue after say(); the utterance has started when runAndWait() fires started-utterance; and it has finished when the engine fires finished-utterance. The program connects both events to a list and shows the three moments. say() returns None at once, no event has fired and isBusy() already reports True, because the text is only in the queue. After setProperty('rate', 300) the rate still reads 200, since a property is applied when runAndWait() processes the queue, and it reads 300 after the call. The events list ends with started-utterance and finished-utterance, in that order. say('') does not raise an error: it returns the text Argument value can't be None or empty. The research also saw that save_to_file('') raised AssertionError, and that with no sound card, which is the case here, runAndWait() returned with exit code 0 although aplay printed an audio open error, so a program that speaks to nobody does not fail. The program of the slide never plays a sound: the engine is asked to speak, the audio device is absent and nothing is heard, which is the local stand-in the slide names.",
+   "take": "A call that speaks does nothing until runAndWait() runs.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The voices of the engine",
+   "sub": "131 voices, 8 of them English; the engine starts with gmw/en and voices[1] is Amharic",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.27,
+     "h": 3.35,
+     "lines": [
+      "import pyttsx3",
+      "engine = pyttsx3.init()",
+      "voices = engine.getProperty('voices')",
+      "first = voices[0]",
+      "print('voices:', len(voices), '| first:', first.name, first.gender, first.age)",
+      "print('  its languages:', first.languages)",
+      "print('genders:', {v.gender for v in voices}, 'ages:', {v.age for v in voices})",
+      "print('English voices:', sum(v.languages[0].startswith('en') for v in voices))",
+      "print('the engine starts with:', engine.getProperty('voice'))",
+      "print('voices[1]:', voices[1].id, '|', voices[1].name, voices[1].languages)",
+      "engine.setProperty('voice', voices[1].id)",
+      "engine.save_to_file('Hello. How are you doing?', 'hello.wav')",
+      "engine.runAndWait(); wait_file('hello.wav')",
+      "print('hello.wav with it:', wavinfo('hello.wav')['seconds'], 's')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "voices: 131 | first: Afrikaans Male None\n  its languages: ['af']\ngenders: {'Male'} ages: {None}\nEnglish voices: 8\nthe engine starts with: gmw/en\nvoices[1]: sem/am | Amharic ['am']\nAudio saved to hello.wav\nhello.wav with it: 1.48 s",
+     "outLabel": "prints",
+     "label": "program voicesCut_v1_0_0.py, lines 105 to 118 of 118"
+    },
+    {
+     "t": "foot",
+     "x": 5.97,
+     "y": 1.5,
+     "w": 3.53,
+     "h": 0.31,
+     "fs": 8,
+     "body": "No sound card: nothing is heard, the speech goes to WAV files - a local stand-in for a loudspeaker."
+    },
+    {
+     "t": "foot",
+     "x": 5.97,
+     "y": 1.87,
+     "w": 3.53,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 104 (imports, helpers and the work folder) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 5.97,
+     "y": 2.24,
+     "w": 3.53,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Recorded 14 Oct 2026: the research's hello.wav with voices[1] lasted 0.89 s where this deck's run prints 1.48 s; both are single runs, and the default voice gives 1.54 s."
+    },
+    {
+     "t": "foot",
+     "x": 5.97,
+     "y": 2.74,
+     "w": 3.53,
+     "h": 0.58,
+     "fs": 8,
+     "body": "NOT EXECUTED here: SAPI5 on Windows and NSSpeechSynthesizer on macOS: the Voice names David and Zira that the chapter prints could not be listed here, and no name of the 131 contains them."
+    }
+   ],
+   "notes": "The program lists the voices of eSpeak NG through pyttsx3 2.99: 131 Voice objects, the first of them Afrikaans with the gender Male, the age None and the languages ['af']. All 131 say Male, none has an age, and 8 are English. The voice the engine starts with is gmw/en. The chapter's listing 4 prints the names of Windows voices, David and Zira; no voice here has those names, and the research confirmed that none of the 131 names contains them. The chapter then sets the voice to voices[1].id, which on this engine is sem/am, Amharic, so the program speaks the same sentence with it and saves hello.wav. The research measured 0.89 seconds for that file and 1.54 seconds for the default voice; this deck's own run of the program prints 1.48 seconds for voices[1], and the difference is one more reason to treat a time as a single run. A Voice object is not a string: printing a list of voices shows addresses, one of the statements of the chapter that cannot match its book. SAPI5 and NSSpeechSynthesizer, the drivers of Windows and macOS, were read from their sources and documentation, and were not executed.",
+   "take": "The voices depend on the engine and the operating system.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Rate and volume",
+   "sub": "Seven rates turn 6.46 s of speech into 1.26 s; volume 5 clips at 32768",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 3.35,
+     "lines": [
+      "FOX = 'The quick brown fox jumps over the yellow lazy dog.'",
+      "print('rate -> seconds of audio (a fresh process each)')",
+      "for rate in (50, 100, 150, 200, 250, 300, 400):",
+      "    audio, seconds, peak = measure('rate', rate, FOX)",
+      "    print('  %3d -> %.2f s' % (rate, seconds))",
+      "volumes = (1.0, 0.75, 0.5, 0.1, 0.0, 5)",
+      "peaks = [measure('volume', v, FOX)[2] for v in volumes]",
+      "print('volume', volumes)",
+      "print('peak  ', peaks)",
+      "slow, fast = measure('rate', 100, FOX), measure('rate', 300, FOX)",
+      "strips('waves.png', [(slow[0], slow[1]), (fast[0], fast[1])])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "rate -> seconds of audio (a fresh process each)\n   50 -> 6.46 s\n  100 -> 5.44 s\n  150 -> 3.62 s\n  200 -> 2.70 s\n  250 -> 2.16 s\n  300 -> 1.76 s\n  400 -> 1.26 s\nvolume (1.0, 0.75, 0.5, 0.1, 0.0, 5)\npeak   [26394, 19622, 13024, 2222, 0, 32768]\nsaved waves.png: 1956 bytes, sha256 70eaf43fc97f",
+     "outLabel": "prints",
+     "label": "program rateCut_v1_0_0.py, lines 105 to 115 of 115"
+    },
+    {
+     "t": "chart",
+     "ctype": "bar",
+     "x": 5.1,
+     "y": 1.4,
+     "w": 4.4,
+     "h": 1.6,
+     "labels": [
+      "rate 50",
+      "rate 100",
+      "rate 150",
+      "rate 200",
+      "rate 250",
+      "rate 300",
+      "rate 400"
+     ],
+     "title": "Seconds of audio by rate",
+     "series": [
+      {
+       "name": "seconds",
+       "data": [
+        6.46,
+        5.44,
+        3.62,
+        2.7,
+        2.16,
+        1.76,
+        1.26
+       ]
+      }
+     ],
+     "dataLabels": true,
+     "dlFs": 8
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch24-deck/images/waves.png",
+     "x": 5.1,
+     "y": 3.05,
+     "w": 3.0,
+     "h": 0.8
+    },
+    {
+     "t": "foot",
+     "x": 5.1,
+     "y": 3.87,
+     "w": 4.4,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image waves.png made by rateCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 5.1,
+     "y": 4.15,
+     "w": 4.4,
+     "h": 0.31,
+     "fs": 8,
+     "body": "No sound card: nothing is heard, the speech goes to WAV files - a local stand-in for a loudspeaker."
+    },
+    {
+     "t": "foot",
+     "x": 5.1,
+     "y": 4.49,
+     "w": 4.4,
+     "h": 0.17,
+     "fs": 8,
+     "body": "Lines 1 to 104 (imports, helpers and the work folder) are not shown."
+    }
+   ],
+   "notes": "The chart is the length in seconds of the same ten-word sentence, The quick brown fox jumps over the yellow lazy dog, at seven rates, each set in a fresh process: 6.46 seconds at rate 50, 5.44 at 100, 3.62 at 150, 2.70 at 200, which is the default, 2.16 at 250, 1.76 at 300 and 1.26 at 400. The rate is the speed in words per minute that the engine is asked for, and the measured speed at the default is about 222 words per minute. The volume is a number from 0 to 1 that scales the samples: the largest sample is 26394 at volume 1.0, 19622 at 0.75, 13024 at 0.5, 2222 at 0.1 and 0 at 0.0, and volume 5 gives 32768, the end of what 16 bits hold, so the sound is clipped and the chapter's advice to keep the volume at or below 1 is not a matter of taste. The picture shows the two files at a common time scale: the slow one, rate 100, is longer than the fast one, rate 300. Each value comes from a separate process because the rate set with setProperty() is only applied when runAndWait() runs, as the previous slide showed. The research set the rate before each of seven files in one process and got the same seven lengths in its run. All of these are single runs.",
+   "take": "The rate sets the speed, and a volume above 1 only clips.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Saving speech as a WAV file",
+   "sub": "save_to_file() writes 22,050 Hz mono samples, whatever the extension says",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.02,
+     "h": 3.35,
+     "lines": [
+      "import pyttsx3",
+      "engine = pyttsx3.init()",
+      "engine.save_to_file('Hello. How are you doing?', 'hello.wav')",
+      "print('before runAndWait the file exists:', os.path.exists('hello.wav'))",
+      "engine.runAndWait(); wait_file('hello.wav')",
+      "w = wave.open('hello.wav')",
+      "print('channels', w.getnchannels(), '| bytes per sample', w.getsampwidth())",
+      "print('rate', w.getframerate(), '| frames', w.getnframes())",
+      "print('seconds', round(w.getnframes() / w.getframerate(), 2))",
+      "engine.save_to_file('Hello.', 'hello.mp3'); engine.runAndWait()",
+      "wait_file('hello.mp3'); head = open('hello.mp3', 'rb').read(12)",
+      "print('hello.mp3 begins with', head[:4], 'and', head[8:])",
+      "a, rate = samples('hello.wav')",
+      "strips('hello.png', [(a, len(a) / rate)])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "before runAndWait the file exists: False\nAudio saved to hello.wav\nchannels 1 | bytes per sample 2\nrate 22050 | frames 33948\nseconds 1.54\nAudio saved to hello.mp3\nhello.mp3 begins with b'RIFF' and b'WAVE'\nsaved hello.png: 979 bytes, sha256 69fca8bc2ecf",
+     "outLabel": "prints",
+     "label": "program wavCut_v1_0_0.py, lines 105 to 118 of 118"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch24-deck/images/hello.png",
+     "x": 5.72,
+     "y": 1.5,
+     "w": 3.78,
+     "h": 0.5
+    },
+    {
+     "t": "foot",
+     "x": 5.72,
+     "y": 2.02,
+     "w": 3.78,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image hello.png made by wavCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 5.72,
+     "y": 2.35,
+     "w": 3.78,
+     "h": 0.31,
+     "fs": 8,
+     "body": "No sound card: nothing is heard, the speech goes to WAV files - a local stand-in for a loudspeaker."
+    },
+    {
+     "t": "foot",
+     "x": 5.72,
+     "y": 2.7,
+     "w": 3.78,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 104 (imports, helpers and the work folder) are not shown."
+    }
+   ],
+   "notes": "save_to_file() does not write anything when it is called: the program prints that hello.wav does not exist before runAndWait(), and the file appears when the queue is processed. The file for Hello. How are you doing? has 1 channel, 2 bytes per sample, a rate of 22,050 Hz and 33,948 frames, which is 1.54 seconds and 67,940 bytes, and it is written with the wave module. The chapter says the file can have another extension; pyttsx3 2.99 writes a WAV whatever the name says, so the file hello.mp3 begins with RIFF and WAVE, and the research found that ffprobe called it a wav file. The pinned 2.98, by contrast, handed the file to ffmpeg. The picture is the waveform of hello.wav, saved by the same program: the greater the amplitude the taller the strip, and the pauses between the words are the flat parts. Because the file can be incomplete when runAndWait() returns, the program calls a small helper that waits until the size of the file has not changed for a moment; the next slide shows why. In the research 1,800 words of Alice's Adventures in Wonderland became 450.2 seconds, 7.5 minutes, of audio in about 3 seconds of work, where the chapter says 10 minutes in about 2 seconds; that is one run on this machine.",
+   "take": "The file is a WAV, and it exists only after runAndWait().",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A call that never returns",
+   "sub": "runAndWait() hangs on a second call and on a missing folder; wait for the file",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.2,
+     "h": 2.55,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.8,
+       "y": 1.425,
+       "w": 1.7,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call pyttsx3.init() to start the engine",
+       "x": 0.87,
+       "y": 1.511,
+       "w": 1.56,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.8,
+       "y": 1.935,
+       "w": 1.7,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call save_to_file() with the text and the file name",
+       "x": 0.87,
+       "y": 2.021,
+       "w": 1.56,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.8,
+       "y": 2.445,
+       "w": 1.7,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call runAndWait() to process the queue",
+       "x": 0.87,
+       "y": 2.531,
+       "w": 1.56,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.8,
+       "y": 2.955,
+       "w": 1.7,
+       "h": 0.46,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the file complete?",
+       "x": 0.97,
+       "y": 3.108,
+       "w": 1.36,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.8,
+       "y": 3.465,
+       "w": 1.7,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Wait until the size of the file is stable",
+       "x": 0.87,
+       "y": 3.551,
+       "w": 1.56,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.0,
+       "y": 2.955,
+       "w": 1.6,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Open the WAV file with the wave module",
+       "x": 3.07,
+       "y": 3.041,
+       "w": 1.46,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.7,
+       "y": 1.555,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.66,
+       "y": 3.555,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.72,
+       "y": 3.615,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.7,
+       "y1": 1.655,
+       "x2": 2.5,
+       "y2": 1.655,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 1.885,
+       "x2": 1.65,
+       "y2": 1.935,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 2.395,
+       "x2": 1.65,
+       "y2": 2.445,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 2.905,
+       "x2": 1.65,
+       "y2": 2.955,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.5,
+       "y1": 3.185,
+       "x2": 3.0,
+       "y2": 3.185,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.55,
+       "y": 2.985,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.65,
+       "y1": 3.415,
+       "x2": 1.65,
+       "y2": 3.465,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 1.71,
+       "y": 3.35,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 0.8,
+       "y1": 3.695,
+       "x2": 0.58,
+       "y2": 3.695,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.58,
+       "y1": 3.695,
+       "x2": 0.58,
+       "y2": 3.185,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.58,
+       "y1": 3.185,
+       "x2": 0.8,
+       "y2": 3.185,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.8,
+       "y1": 3.415,
+       "x2": 3.8,
+       "y2": 3.555,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "SpeakingAndSavingASentence"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.98,
+     "w": 4.2,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram SpeakingAndSavingASentence - Workflow pattern, 25 of 27 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.91,
+     "y": 1.55,
+     "w": 4.59,
+     "h": 3.07,
+     "lines": [
+      "def child(code, limit=5):",
+      "    try:",
+      "        args = [LATEST, '-W', 'ignore', '-c', code]",
+      "        r = subprocess.run(args, capture_output=True, timeout=limit)",
+      "        return 'returned, exit %d' % r.returncode",
+      "    except subprocess.TimeoutExpired:",
+      "        return 'not back after %d seconds' % limit",
+      "INIT = 'import pyttsx3; e = pyttsx3.init(); '",
+      "RATE = 'e.setProperty(\"rate\", 150); e.runAndWait(); '",
+      "AGAIN = INIT + RATE + 'e.runAndWait()'",
+      "print('property change, runAndWait once:', child(INIT + RATE))",
+      "print('and a second runAndWait():', child(AGAIN))",
+      "FIRST = 'e.save_to_file(\"Hello.\", \"a.wav\"); e.runAndWait(); '",
+      "MISSING = 'e.save_to_file(\"Hi\", \"/no/x.wav\"); e.runAndWait()'",
+      "print('missing folder, first call:', child(INIT + MISSING))",
+      "print('missing folder after speech:', child(INIT + FIRST + MISSING))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "property change, runAndWait once: returned, exit 0\nand a second runAndWait(): not back after 5 seconds\nmissing folder, first call: returned, exit 0\nmissing folder after speech: not back after 5 seconds",
+     "outLabel": "prints",
+     "label": "program raceCut_v1_0_0.py, lines 105 to 120 of 120"
+    },
+    {
+     "t": "foot",
+     "x": 4.91,
+     "y": 4.66,
+     "w": 4.59,
+     "h": 0.29,
+     "fs": 7.5,
+     "body": "No sound card: nothing is heard, the speech goes to WAV files - a local stand-in for a loudspeaker. Lines 1 to 104 (imports and helpers) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.36,
+     "w": 4.2,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Recorded 14 Oct 2026: in 12 fresh processes a 33-word text was not yet a complete file when the first runAndWait() returned in 8, and a 5-word text in none."
+    }
+   ],
+   "notes": "The activity diagram is the safe way to save a sentence: initialise the engine, call save_to_file() with the text and the file name, call runAndWait() to process the queue, and then ask whether the file is complete; if it is, open it with the wave module, and if not, wait until the size of the file is stable and ask again. The program shows the two ways a call does not come back, each in a child process that is given 5 seconds. A runAndWait() with nothing to say, after a property was changed, returns the first time and does not return the second time; and a save_to_file() into a folder that does not exist returns as the first call of a process and does not return after an utterance. The research killed both after 15 seconds. It also found that the file is not always complete when the first runAndWait() returns: in 12 fresh processes that was so in 8 for a text of 33 words and in none for a text of 5 words. A program that opens the file straight away may read half of it, which is why the helper waits for the size to settle. The hanging calls are written here as a warning, and the safest habit is one runAndWait() after all the calls, and a folder that exists.",
+   "take": "Wait for the file, and never call runAndWait() twice with nothing queued.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The Whisper models",
+   "sub": "Table 24-1 against this machine: medium and turbo were killed, large-v3 does not load",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 5.9,
+     "colW": [
+      0.7,
+      0.9,
+      1.15,
+      0.9,
+      1.15,
+      1.1
+     ],
+     "fs": 7.5,
+     "rowH": 0.24,
+     "cellMargin": [
+      0.02,
+      0.04,
+      0.02,
+      0.04
+     ],
+     "rows": [
+      [
+       "model",
+       "file (book)",
+       "10 words (book)",
+       "file (here)",
+       "10 words (here)",
+       "memory (here)"
+      ],
+      [
+       "tiny",
+       "74MB",
+       "1.9s",
+       "75.6 MB",
+       "1.0 s",
+       "972 MiB"
+      ],
+      [
+       "base",
+       "142MB",
+       "3.0s",
+       "145.3 MB",
+       "1.6 s",
+       "1082 MiB"
+      ],
+      [
+       "small",
+       "472MB",
+       "9.6s",
+       "483.6 MB",
+       "5.1 s",
+       "2645 MiB"
+      ],
+      [
+       "medium",
+       "1.5GB",
+       "28.6s",
+       "-",
+       "-",
+       "killed (-9)"
+      ],
+      [
+       "large-v3",
+       "3GB",
+       "51.9s",
+       "3087.4 MB",
+       "-",
+       "does not load"
+      ]
+     ]
+    },
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 3.15,
+     "w": 4.9,
+     "h": 1.82,
+     "lines": [
+      "import torch, whisper",
+      "names = whisper.available_models()",
+      "print('whisper', md.version('openai-whisper'), '| models:', len(names))",
+      "for name in ('tiny', 'base', 'small'):",
+      "    model = whisper.load_model(name)",
+      "    millions = sum(p.numel() for p in model.parameters()) / 1e6",
+      "    size = os.path.getsize(HOME + '/.cache/whisper/%s.pt' % name)",
+      "    print('%-5s %5.1f M parameters, %d bytes' % (name, millions, size))",
+      "print('cuda available:', torch.cuda.is_available(), '| on', model.device)",
+      "cuda = lambda: whisper.load_model('tiny', device='cuda')",
+      "print('device=\"cuda\":', err(cuda, 0))"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program modelsCut_v1_0_0.py, lines 105 to 115 of 115"
+    },
+    {
+     "t": "prog",
+     "x": 5.6,
+     "y": 3.15,
+     "w": 3.9,
+     "h": 1.13,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "whisper 20250625 | models: 14\ntiny   37.2 M parameters, 75572083 bytes\nbase   71.8 M parameters, 145262807 bytes\nsmall 240.6 M parameters, 483617219 bytes\ncuda available: False | on cpu\ndevice=\"cuda\": RuntimeError",
+     "outLabel": "prints",
+     "label": "transcript of program modelsCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 5.6,
+     "y": 4.33,
+     "w": 3.9,
+     "h": 0.17,
+     "fs": 8,
+     "body": "Lines 1 to 104 (imports, helpers and the work folder) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 6.6,
+     "y": 1.45,
+     "w": 2.9,
+     "h": 0.58,
+     "fs": 8,
+     "body": "Recorded 14 Oct 2026: the columns 'here' are the research's runs on two CPU cores (single runs): 10 words took 1.0, 1.6 and 5.1 s, and 1,800 words (13 minutes) took 40.0, 98.9 and 197.5 s."
+    },
+    {
+     "t": "foot",
+     "x": 6.6,
+     "y": 2.09,
+     "w": 2.9,
+     "h": 0.58,
+     "fs": 8,
+     "body": "NOT EXECUTED here: transcription with medium and turbo (killed at about 6 GB of memory), with large-v3 (3,087,371,615 bytes, does not load) and on a GPU: findings, not successes."
+    }
+   ],
+   "notes": "Table 24-1 of the chapter lists five models with a file size, the time to transcribe 10 words and the time for 15 minutes: tiny 74MB, 1.9 s and 1m 20s; base 142MB, 3.0 s and 2m 34s; small 472MB, 9.6 s and 6m 37s; medium 1.5GB, 28.6 s and 20m 17s; large-v3 3GB, 51.9 s and 32m 58s. The table of the slide sets the book beside this machine. The files have 75,572,083 bytes for tiny, 145,262,807 for base, 483,617,219 for small and 3,087,371,615 for large-v3, so the book's sizes are rounded down; the program counts the parameters of the three models that load, 37.2, 71.8 and 240.6 million, and reads the sizes of their files. On two CPU cores the research measured 1.0, 1.6 and 5.1 seconds for the ten words where the table says 1.9, 3.0 and 9.6, and the memory of the process peaked at 972, 1,082 and 2,645 MiB. These are single runs on one machine, not the author's laptop. Loading medium and turbo ended with the kernel's out-of-memory killer, return code -9, on a machine with 8,029 MiB of memory; the README of Whisper lists about 6 GB for turbo and about 10 GB for large. large-v3 could not be loaded under a 6.5 GB address-space limit. These are findings, not successes. The package knows 14 model names, turbo among them. The program asks for device='cuda' and gets RuntimeError, because torch.cuda.is_available() is False; no GPU was used for anything in this deck.",
+   "take": "Pick the model that fits the memory you have, not the one the table praises.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Transcribing a sentence",
+   "sub": "tiny, base and small make word error rates of 0.3, 0.2 and 0.1 on ten words",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.08,
+     "h": 2.38,
+     "lines": [
+      "import pyttsx3, whisper",
+      "FOX = 'The quick brown fox jumps over the yellow lazy dog.'",
+      "engine = pyttsx3.init()",
+      "say_to(engine, FOX, 'fox.wav')",
+      "for name in ('tiny', 'base', 'small'):",
+      "    result = whisper.load_model(name).transcribe('fox.wav')",
+      "    text = result['text']",
+      "    print('%-5s %r WER %.1f' % (name, text, wer(FOX, text)))",
+      "print('result keys:', list(result))",
+      "print('segment keys:', list(result['segments'][0])[:6])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "tiny  ' the quick brown fog stump over the yellow laser dog.' WER 0.3\nbase  ' the quick round fox dumps over the yellow lazy dog.' WER 0.2\nsmall ' The quick brown fox dumps over the yellow lazy dog.' WER 0.1\nresult keys: ['text', 'segments', 'language']\nsegment keys: ['id', 'seek', 'start', 'end', 'text', 'tokens']",
+     "outLabel": "prints",
+     "label": "program transcribeCut_v1_0_0.py, lines 105 to 114 of 114"
+    },
+    {
+     "t": "chart",
+     "ctype": "bar",
+     "x": 5.78,
+     "y": 1.4,
+     "w": 3.72,
+     "h": 1.9,
+     "labels": [
+      "tiny",
+      "base",
+      "small"
+     ],
+     "title": "Word error rate, ten words",
+     "series": [
+      {
+       "name": "word error rate",
+       "data": [
+        0.3,
+        0.2,
+        0.1
+       ]
+      }
+     ],
+     "dataLabels": true,
+     "dlFs": 9
+    },
+    {
+     "t": "foot",
+     "x": 5.78,
+     "y": 3.4,
+     "w": 3.72,
+     "h": 0.31,
+     "fs": 8,
+     "body": "No sound card: nothing is heard, the speech goes to WAV files - a local stand-in for a loudspeaker."
+    },
+    {
+     "t": "foot",
+     "x": 5.78,
+     "y": 3.75,
+     "w": 3.72,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 104 (imports, helpers and the work folder) are not shown."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "OpenAI, which trained Whisper on 680,000 hours of labelled audio-transcript pairs",
+     "where": "Released as open-source software in September 2022; the training data held 117,000 hours in 96 non-English languages",
+     "when": "2022",
+     "link": "https://en.wikipedia.org/wiki/Whisper_(speech_recognition_system)",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on Whisper says it was created by OpenAI and first released as open-source software in September 2022, and that its training dataset consists of 680,000 hours of labeled audio-transcript pairs sourced from the internet, including 117,000 hours in 96 non-English languages. The weights are files that the package downloads on first use. In this study the file of the tiny model had 75,572,083 bytes and that of the base model 145,262,807 bytes, where the chapter's table says 74MB and 142MB, and the large-v3 file had 3,087,371,615 bytes. The account rests on these sources. Wikipedia, 'Whisper (speech recognition system)' (released in September 2022; 680,000 hours; 117,000 hours in 96 non-English languages), read 2026-10-14; this study's leaves ModelFiles and WhisperPackage. The program speaks the ten-word sentence of the chapter, The quick brown fox jumps over the yellow lazy dog, into fox.wav and transcribes the file with the three models. tiny hears the quick brown fog stump over the yellow laser dog, base the quick round fox dumps over the yellow lazy dog, and small the quick brown fox dumps over the yellow lazy dog. The word error rate, the number of words to change divided by the number of words said, is 0.3, 0.2 and 0.1, which the chart draws. The result is a dictionary with the keys text, segments and language, and each segment has the keys id, seek, start, end, text and tokens. The default of transcribe() may retry with a random temperature, which is why the programs of this deck pass temperature=0.0 wherever the text is printed: the same file gives the same text twice. A word error rate of one sentence is only a count. The research measured 0.1919, 0.1079 and 0.0345 on the 1,800 words read by eSpeak NG, between 0.1636 and 0.3123 for tiny, 0.1524 and 0.2565 for base and 0.0186 and 0.2416 for small on four LibriVox readings of the Gettysburg Address, and it saw tiny transcribe ten seconds of digital silence as the word You. Speech made by a synthesiser is easy and a human voice is not; a transcript is the text of a model and not a copy of what was said.",
+   "take": "Larger models make fewer mistakes, and every transcript is a model's guess.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Whisper needs ffmpeg",
+   "sub": "load_audio() starts ffmpeg for every file; without it the call raises an error",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 3.6,
+     "h": 2.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.445,
+       "w": 1.7,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call whisper.load_model() to load a model",
+       "x": 0.62,
+       "y": 1.531,
+       "w": 1.56,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.55,
+       "y": 1.975,
+       "w": 1.7,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is ffmpeg on the PATH?",
+       "x": 0.72,
+       "y": 2.148,
+       "w": 1.36,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 2.545,
+       "w": 1.7,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call transcribe() on the audio file",
+       "x": 0.62,
+       "y": 2.631,
+       "w": 1.56,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 3.095,
+       "w": 1.7,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call get_writer() to write the subtitle file",
+       "x": 0.62,
+       "y": 3.181,
+       "w": 1.56,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.55,
+       "y": 1.995,
+       "w": 1.5,
+       "h": 0.46,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The call raises FileNotFoundError",
+       "x": 2.62,
+       "y": 2.081,
+       "w": 1.36,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.2,
+       "y": 1.575,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.16,
+       "y": 3.185,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.22,
+       "y": 3.245,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.2,
+       "y1": 1.675,
+       "x2": 2.25,
+       "y2": 1.675,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.4,
+       "y1": 1.905,
+       "x2": 1.4,
+       "y2": 1.975,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.4,
+       "y1": 2.475,
+       "x2": 1.4,
+       "y2": 2.545,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 1.46,
+       "y": 2.42,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.25,
+       "y1": 2.225,
+       "x2": 2.55,
+       "y2": 2.225,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 2.3,
+       "y": 2.025,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.4,
+       "y1": 3.005,
+       "x2": 1.4,
+       "y2": 3.095,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.25,
+       "y1": 3.325,
+       "x2": 3.16,
+       "y2": 3.325,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.3,
+       "y1": 2.455,
+       "x2": 3.3,
+       "y2": 3.185,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "FromAudioToSubtitles"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.63,
+     "w": 3.6,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram FromAudioToSubtitles - Workflow pattern, 21 of 21 words grounded in the chapter's text"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch24-deck/images/audio16k.png",
+     "x": 0.5,
+     "y": 4.0,
+     "w": 3.6,
+     "h": 0.48
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.5,
+     "w": 3.6,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image audio16k.png made by ffmpegCut_v1_0_0.py"
+    },
+    {
+     "t": "prog",
+     "x": 4.42,
+     "y": 1.55,
+     "w": 5.08,
+     "h": 2.93,
+     "lines": [
+      "import pyttsx3, whisper",
+      "FOX = 'The quick brown fox jumps over the yellow lazy dog.'",
+      "engine = pyttsx3.init()",
+      "say_to(engine, FOX, 'fox.wav')",
+      "print('ffmpeg on the PATH:', shutil.which('ffmpeg'))",
+      "audio = whisper.load_audio('fox.wav')",
+      "print('load_audio ->', type(audio).__name__, audio.dtype, audio.shape)",
+      "path = os.environ['PATH']; os.environ['PATH'] = '/nonexistent'",
+      "print('no ffmpeg:', err(lambda: whisper.load_audio('fox.wav')))",
+      "tiny = whisper.load_model('tiny')",
+      "print('transcribe:', err(lambda: tiny.transcribe('fox.wav')))",
+      "os.environ['PATH'] = path",
+      "a = [int(v * 32767) for v in audio]",
+      "strips('audio16k.png', [(a, len(a) / 16000)])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "ffmpeg on the PATH: /usr/bin/ffmpeg\nload_audio -> ndarray float32 (43129,)\nno ffmpeg: FileNotFoundError: [Errno 2] No such file or directory: 'ffmpeg'\ntranscribe: FileNotFoundError: [Errno 2] No such file or directory: 'ffmpeg'\nsaved audio16k.png: 1270 bytes, sha256 1dc386524d4d",
+     "outLabel": "prints",
+     "label": "program ffmpegCut_v1_0_0.py, lines 105 to 118 of 118"
+    },
+    {
+     "t": "foot",
+     "x": 4.42,
+     "y": 4.52,
+     "w": 5.08,
+     "h": 0.29,
+     "fs": 7.5,
+     "body": "No sound card: nothing is heard, the speech goes to WAV files - a local stand-in for a loudspeaker. Lines 1 to 104 (imports and helpers) are not shown."
+    }
+   ],
+   "notes": "The flow chart is the first half of every transcription: load a model, ask whether ffmpeg is on the path, and, if it is, call transcribe() and then get_writer() to write the subtitle file; if it is not, the call raises FileNotFoundError and the chain ends. The chapter names ffmpeg only inside a comment of the yt-dlp listing, and Appendix A never names it, yet whisper.load_audio() starts ffmpeg for every file. With it on the path a WAV file becomes a float32 array of 43,129 samples at 16,000 Hz, the rate Whisper wants whatever the rate of the file was. The program empties the path for two calls and both raise FileNotFoundError: load_audio() itself and transcribe(), which calls it. The picture is the signal after the conversion, the same speech at 16 kHz. The research found the same for yt-dlp: without ffmpeg, extracting audio raised DownloadError, ffprobe and ffmpeg not found, and left downloaded_content.mp3 instead of the m4a that listing 13 looks for, so a missing tool shows up far from where it is needed. The package manager of the system, not pip, installs ffmpeg, which is why the probe of slide 5 looks for it.",
+   "take": "Install ffmpeg before you install Whisper.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Languages and what Whisper hears",
+   "sub": "tiny named 3 of 6 languages and base 4; Turkish was heard as Thai; klingon raises",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.9,
+     "h": 3.35,
+     "lines": [
+      "import pyttsx3, whisper",
+      "SAY = {'tr': 'Merhaba, bug\u00fcn hava \u00e7ok g\u00fczel.',",
+      "       'de': 'Guten Morgen, wie geht es Ihnen heute?',",
+      "       'fr': \"Bonjour, comment allez-vous aujourd'hui ?\",",
+      "       'es': 'Buenos d\u00edas, \u00bfc\u00f3mo est\u00e1 usted hoy?',",
+      "       'it': 'Buongiorno, come sta oggi?',",
+      "       'en-us': 'Good morning, how are you today?'}",
+      "engine = pyttsx3.init()",
+      "ids = {v.languages[0]: v.id for v in engine.getProperty('voices')}",
+      "models = {n: whisper.load_model(n) for n in ('tiny', 'base')}",
+      "hit = dict.fromkeys(models, 0)",
+      "for code, text in SAY.items():",
+      "    engine.setProperty('voice', ids.get(code, code))",
+      "    say_to(engine, text, code + '.wav'); row = {}",
+      "    for n, m in models.items():",
+      "        row[n] = m.transcribe(code + '.wav', temperature=0.0)['language']",
+      "        hit[n] += row[n] == code[:2]",
+      "    print('%-5s heard as %s' % (code, row))",
+      "print('right of %d:' % len(SAY), hit)",
+      "print('languages Whisper knows:', len(whisper.tokenizer.LANGUAGES))",
+      "bad = lambda: models['tiny'].transcribe('tr.wav', language='klingon')",
+      "print('klingon:', err(bad, 0))"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program langCut_v1_0_0.py, lines 105 to 126 of 126"
+    },
+    {
+     "t": "prog",
+     "x": 5.6,
+     "y": 1.55,
+     "w": 3.9,
+     "h": 1.55,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "tr    heard as {'tiny': 'th', 'base': 'th'}\nde    heard as {'tiny': 'da', 'base': 'de'}\nfr    heard as {'tiny': 'fr', 'base': 'fr'}\nes    heard as {'tiny': 'es', 'base': 'es'}\nit    heard as {'tiny': 'ko', 'base': 'es'}\nen-us heard as {'tiny': 'en', 'base': 'en'}\nright of 6: {'tiny': 3, 'base': 4}\nlanguages Whisper knows: 100\nklingon: ValueError",
+     "outLabel": "prints",
+     "label": "transcript of program langCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 5.6,
+     "y": 3.18,
+     "w": 3.9,
+     "h": 0.31,
+     "fs": 8,
+     "body": "No sound card: nothing is heard, the speech goes to WAV files - a local stand-in for a loudspeaker."
+    },
+    {
+     "t": "foot",
+     "x": 5.6,
+     "y": 3.54,
+     "w": 3.9,
+     "h": 0.17,
+     "fs": 8,
+     "body": "Lines 1 to 104 (imports, helpers and the work folder) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 5.6,
+     "y": 3.76,
+     "w": 3.9,
+     "h": 0.58,
+     "fs": 8,
+     "body": "Recorded 14 Oct 2026: tiny and base wrote 'Hello, how are you doing?' for the sentence the book prints as 'Hello. How are you doing?'; the word error rate on 1,800 words read by eSpeak NG was 0.1919, 0.1079 and 0.0345."
+    }
+   ],
+   "notes": "Wikipedia's article on speech recognition says that in 1952 Bell Labs researchers Stephen Balashek, R. Biddulph and K. H. Davis built Audrey for single-speaker digit recognition, and that the system located the formants in the power spectrum of each utterance. It knew one speaker and the ten digits. In this study Whisper tiny named the language of the same eSpeak sentence correctly for 3 of 6 languages and base for 4 of 6, and heard the ten-word fox sentence with a word error rate of 0.3 (tiny), 0.2 (base) and 0.1 (small). The account rests on these sources. Wikipedia, 'Speech recognition' (Audrey, 1952; Balashek, Biddulph and Davis), read 2026-10-14; this study's leaves LanguagesAndDetection and ModelWerTable. The program speaks one sentence in each of six languages with the voices of eSpeak NG, Turkish, German, French, Spanish, Italian and English, and asks tiny and base which language they hear. tiny named the language right for 3 of the 6 and base for 4: the Turkish sentence was heard as Thai by both, German as Danish by tiny, and Italian as Korean by tiny and as Spanish by base; the research, which used a Chinese sentence where this deck uses Italian, got the same totals, 3 and 4. Whisper 20250625 knows 100 languages, and asking for a language it does not know, here klingon, raises ValueError, Unsupported language. A transcript is a model's text: tiny and base wrote Hello, how are you doing for the sentence the book prints as Hello. How are you doing?, so a program that compares a transcript with the text it spoke has to normalise case and punctuation first, as the word error rate of the previous slide does. The synthesised speech is clean and unnatural, and the numbers say nothing about a human voice, an accent or noise.",
+   "take": "Name the language yourself; do not let a small model guess.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Subtitle files: SRT, VTT and TSV",
+   "sub": "SRT, VTT and TSV: 223, 215 and 190 bytes for the book's two segments",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.02,
+     "h": 2.38,
+     "lines": [
+      "import whisper",
+      "from whisper.utils import get_writer",
+      "segs = [{'id': 0, 'start': 0.0, 'end': 5.64, 'text': A},",
+      "        {'id': 1, 'start': 5.64, 'end': 14.96, 'text': B}]",
+      "book = {'text': A + B, 'language': 'en', 'segments': segs}",
+      "for fmt in ('srt', 'vtt', 'tsv'):",
+      "    get_writer(fmt, '.')(book, 'audio')",
+      "    got = open('audio.' + fmt, encoding='utf-8').read()",
+      "    same = got.strip() == CHAPTER[fmt].strip()",
+      "    print('%s %4d bytes, same as the book: %s' % (fmt, len(got), same))",
+      "print('SRT time:', open('audio.srt').read().splitlines()[1])",
+      "print('VTT time:', open('audio.vtt').read().splitlines()[2])",
+      "print('TSV columns:', open('audio.tsv').read().splitlines()[0].split('\\t'))",
+      "print('docx writer:', err(lambda: get_writer('docx', '.')))",
+      "cues_picture(segs)"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program cuesCut_v1_0_0.py, lines 105 to 119 of 119"
+    },
+    {
+     "t": "prog",
+     "x": 5.72,
+     "y": 1.55,
+     "w": 3.78,
+     "h": 1.41,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "srt  223 bytes, same as the book: True\nvtt  215 bytes, same as the book: True\ntsv  190 bytes, same as the book: True\nSRT time: 00:00:00,000 --> 00:00:05,640\nVTT time: 00:00.000 --> 00:05.640\nTSV columns: ['start', 'end', 'text']\ndocx writer: KeyError: 'docx'\nsaved cues.png: 331 bytes, sha256 1b11c4e92953",
+     "outLabel": "prints",
+     "label": "transcript of program cuesCut_v1_0_0.py"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch24-deck/images/cues.png",
+     "x": 0.5,
+     "y": 3.98,
+     "w": 4.0,
+     "h": 0.5
+    },
+    {
+     "t": "foot",
+     "x": 5.72,
+     "y": 3.01,
+     "w": 3.78,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image cues.png made by cuesCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 5.72,
+     "y": 3.22,
+     "w": 3.78,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 104 (imports, helpers and the work folder, where A and B are the two sentences of the book's listing) are not shown."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.58,
+     "w": 9.0,
+     "who": "Brain and Zuggy, the developers of SubRip",
+     "where": "Microsoft Windows; SubRip was released on 3 March 2000 and its text format uses the extension .srt",
+     "when": "2000",
+     "link": "https://en.wikipedia.org/wiki/SubRip",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on SubRip says the program, developed by Brain and Zuggy for Microsoft Windows, was released on 3 March 2000, and that the SubRip Text file format has the filename extension .srt and the internet media type application/x-subrip. Its blocks are a number, a time range and text. In this study Whisper's SRT writer produced the chapter's 223-byte listing exactly for the two segments the book prints, wrote times with a comma before the milliseconds (01:00:01,500), and its WebVTT writer used a full stop (01:00:01.500). The account rests on these sources. Wikipedia, 'SubRip' (Brain and Zuggy, released 3 March 2000, the extension .srt), read 2026-10-14; this study's leaves SrtListing and ReadBackCues. The program gives the writers of whisper.utils the two segments the chapter prints, a first cue from 0.0 to 5.64 seconds and a second from 5.64 to 14.96, and writes them in three formats. The SRT file has 223 bytes, the WebVTT file 215 and the TSV file 190, and the SRT and VTT files equal the chapter's listings 7 and 8, the research found them equal under the pinned release too. They differ in the shape of the time: SRT counts hours, minutes, seconds and milliseconds with a comma, 00:00:05,640, WebVTT drops the hours and uses a point, 00:05.640, and the TSV file has the columns start, end and text, separated by tabs and counted in milliseconds, where the chapter's listing 9 shows spaces. get_writer() accepts srt, vtt, tsv, txt and json; asking for docx raises KeyError. The picture draws the two cues on a time axis, one bar for each. The W3C specification of WebVTT and the SubRip format are in the resources.",
+   "take": "One result, three file formats; the writer decides the clock.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Writer options and the time grid",
+   "sub": "Options turn 26 subtitle blocks into 31; every time is a multiple of 0.02 s",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.02,
+     "h": 2.79,
+     "lines": [
+      "import whisper",
+      "from whisper.utils import get_writer",
+      "audio = fetch('gettysburg_shurtagal.mp3')",
+      "model = whisper.load_model('tiny')",
+      "r = model.transcribe(audio, language='en')",
+      "get_writer('srt', '.')(r, 'plain')",
+      "n = len(open('plain.srt').read().strip().split('\\n\\n'))",
+      "times = [t for s in r['segments'] for t in (s['start'], s['end'])]",
+      "print('segments', len(r['segments']), '| blocks', n, '| times', len(times))",
+      "grid = sum(abs(t / 0.02 - round(t / 0.02)) < 1e-6 for t in times)",
+      "print('times that are multiples of 0.02 s:', grid, 'of', len(times))",
+      "w = model.transcribe(audio, language='en', word_timestamps=True)",
+      "print('words with times in segment 1:', len(w['segments'][0]['words']))",
+      "opts = {'max_line_width': 30, 'max_line_count': 2}",
+      "get_writer('srt', '.')(w, 'wide', opts)",
+      "blocks = open('wide.srt').read().strip().split('\\n\\n')",
+      "print('max_line_width=30:', len(blocks), 'blocks; the first:')",
+      "print(blocks[0])"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program optionsCut_v1_0_0.py, lines 105 to 122 of 122"
+    },
+    {
+     "t": "prog",
+     "x": 5.72,
+     "y": 1.55,
+     "w": 3.78,
+     "h": 1.41,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "segments 26 | blocks 26 | times 52\ntimes that are multiples of 0.02 s: 52 of 52\nwords with times in segment 1: 14\nmax_line_width=30: 31 blocks; the first:\n1\n00:00:00,000 --> 00:00:02,300\nThis is the Liberal Vox\nRecording, all the Vox",
+     "outLabel": "prints",
+     "label": "transcript of program optionsCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 5.72,
+     "y": 3.04,
+     "w": 3.78,
+     "h": 0.31,
+     "fs": 8,
+     "body": "archive.org public-domain audio stands in for YouTube, which this deck never used."
+    },
+    {
+     "t": "foot",
+     "x": 5.72,
+     "y": 3.39,
+     "w": 3.78,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 104 (imports, helpers and the work folder) are not shown."
+    }
+   ],
+   "notes": "The program transcribes the Gettysburg Address, a public-domain LibriVox reading hosted by the Internet Archive, with tiny: 26 segments, written as 26 SRT blocks, and 52 times, a start and an end for each segment. Of the 52, all 52 are multiples of 0.02 seconds, which is the resolution of Whisper's timestamps and the reason a subtitle time never shows a finer step. With word_timestamps=True the first segment holds 14 words with a time each, and with the writer options max_line_width=30 and max_line_count=2 the same text is cut into 31 blocks with lines of at most 30 characters; the first block shows how a long cue is wrapped. The options are keyword arguments of the writer, not of transcribe(), and the word-level times are only produced when transcribe() was asked for them. The archive.org file stands in for YouTube: the deck never used YouTube, and the file is checked against its SHA-256 before use.",
+   "take": "Ask for word times, then let the writer cut the lines.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "yt-dlp: the metadata of a video",
+   "sub": "extract_info() returns a dictionary; here 7 of the book's 13 keys, for this site",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.94,
+     "h": 3.24,
+     "lines": [
+      "import yt_dlp",
+      "URL = 'https://archive.org/details/gettysburg_shurtagal_librivox'",
+      "with yt_dlp.YoutubeDL({'quiet': True, 'skip_download': True}) as ydl:",
+      "    info = ydl.extract_info(URL, download=False)",
+      "    print('title:', info['title'], '| extractor:', info['extractor'])",
+      "    print('formats:', len(info['formats']), '| keys:', len(info))",
+      "    have = [k for k in CHAPTER_KEYS if k in info]",
+      "    print('of the 13 keys the chapter prints, here:', len(have))",
+      "    print('  missing:', ', '.join(k for k in CHAPTER_KEYS if k not in info))",
+      "    print('YoutubeDL has sanitize_info:', hasattr(ydl, 'sanitize_info'),",
+      "          '| sanitize:', hasattr(ydl, 'sanitize'))",
+      "    open('metadata.json', 'w').write(json.dumps(ydl.sanitize_info(info)))",
+      "kept = len(json.load(open('metadata.json')))",
+      "print('metadata.json holds', kept, 'keys, as JSON')"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "title: The Gettysburg Address | extractor: archive.org\nformats: 3 | keys: 53\nof the 13 keys the chapter prints, here: 7\n  missing: thumbnail, channel_id, channel_url, view_count, average_rating, age_limit\nYoutubeDL has sanitize_info: True | sanitize: False\nmetadata.json holds 55 keys, as JSON",
+     "outLabel": "prints",
+     "label": "program ytMetaCut_v1_0_0.py, lines 105 to 118 of 118"
+    },
+    {
+     "t": "foot",
+     "x": 6.64,
+     "y": 1.5,
+     "w": 2.86,
+     "h": 0.31,
+     "fs": 8,
+     "body": "archive.org public-domain audio stands in for YouTube, which this deck never used."
+    },
+    {
+     "t": "foot",
+     "x": 6.64,
+     "y": 1.87,
+     "w": 2.86,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 104 (imports, helpers and the work folder) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 6.64,
+     "y": 2.24,
+     "w": 2.86,
+     "h": 0.85,
+     "fs": 8,
+     "body": "Recorded 14 Oct 2026: for the chapter's YouTube video yt-dlp 2026.8.19 returned 76 keys (16 formats, 565 s) with all 13 keys of the book in its order; one request failed with 'Sign in to confirm you're not a bot' and a later one succeeded."
+    }
+   ],
+   "notes": "extract_info(url, download=False) returns a dictionary and downloads nothing. The program asks for the metadata of the Gettysburg reading on archive.org, which stands in for YouTube: 53 keys, 3 formats, the extractor archive.org and the title The Gettysburg Address. Of the 13 keys the chapter prints, id, title, formats, thumbnails, description, duration and webpage_url are here and 6 are missing: thumbnail, channel_id, channel_url, view_count, average_rating and age_limit belong to a video site. The prose of the chapter says that YoutubeDL has a sanitize() method; it has sanitize_info() and no sanitize, and the program shows both attributes. sanitize_info() makes the dictionary JSON-serializable, as the yt-dlp README says, and writing the result gives a metadata.json of 55 keys. For the chapter's own video, Beyond the Basic Stuff with Python by Al Sweigart, the research recorded 76 keys, 16 formats and 565 seconds; on the same day one request failed with a request to sign in to confirm you're not a bot and a later one succeeded, so a result from YouTube is not repeatable.",
+   "take": "Ask for the metadata first; the keys depend on the site.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Downloading audio",
+   "sub": "download() takes a list; the audio is converted to m4a with ffmpeg",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.27,
+     "h": 3.21,
+     "lines": [
+      "import yt_dlp",
+      "URL = 'https://archive.org/details/gettysburg_shurtagal_librivox'",
+      "options = {'quiet': True, 'no_warnings': True, 'noprogress': True,",
+      "           'outtmpl': 'downloaded_content.%(ext)s',",
+      "           'format': 'm4a/bestaudio/best',",
+      "           'postprocessors': [{'key': 'FFmpegExtractAudio',",
+      "                               'preferredcodec': 'm4a'}]}",
+      "with yt_dlp.YoutubeDL(options) as ydl:",
+      "    print('download() returned', ydl.download([URL]))",
+      "print('files:', sorted(os.listdir('.')))",
+      "codec, seconds = probe_audio('downloaded_content.m4a')",
+      "print('codec', codec, '| seconds', seconds)",
+      "NOWHERE = ['https://archive.org/details/no_such_item_ch24_zz']",
+      "with yt_dlp.YoutubeDL(dict(options, outtmpl='again.%(ext)s')) as ydl:",
+      "    print('a string instead of a list:', err(lambda: ydl.download(URL)))",
+      "    print('an address that is nowhere:', err(lambda: ydl.download(NOWHERE), 0))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "download() returned 0\nfiles: ['downloaded_content.m4a']\ncodec aac | seconds 100.3\na string instead of a list: ok\nan address that is nowhere: DownloadError",
+     "outLabel": "prints",
+     "label": "program ytDownCut_v1_0_0.py, lines 105 to 120 of 120"
+    },
+    {
+     "t": "foot",
+     "x": 5.97,
+     "y": 1.5,
+     "w": 3.53,
+     "h": 0.31,
+     "fs": 8,
+     "body": "archive.org public-domain audio stands in for YouTube, which this deck never used."
+    },
+    {
+     "t": "foot",
+     "x": 5.97,
+     "y": 1.87,
+     "w": 3.53,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Lines 1 to 104 (imports, helpers and the work folder) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 5.97,
+     "y": 2.24,
+     "w": 3.53,
+     "h": 0.44,
+     "fs": 8,
+     "body": "NOT EXECUTED here: a download from YouTube, whose Terms of Service do not allow downloading any part of the Service or its Content except as expressly authorized."
+    },
+    {
+     "t": "foot",
+     "x": 5.97,
+     "y": 2.74,
+     "w": 3.53,
+     "h": 0.58,
+     "fs": 8,
+     "body": "Recorded 14 Oct 2026: yt-dlp without ffmpeg raised DownloadError (ffprobe and ffmpeg not found) and left downloaded_content.mp3 instead of the m4a that listing 13 looks for."
+    }
+   ],
+   "notes": "The chapter downloads the audio of a YouTube video. This deck cannot do that for a reason that is not technical: the Terms of Service of YouTube do not allow downloading any part of the service or its content except as expressly authorized, so the study downloaded a public-domain LibriVox reading from the Internet Archive instead, and this deck does the same. download() returned 0 and left downloaded_content.m4a, an AAC stream of 100.3 seconds, converted by ffmpeg from a 64 kbit/s mp3 of 100.4 seconds. A string in place of a list was accepted, as the research found, which is a leniency and not a promise; an address that is nowhere raised DownloadError with HTTP Error 404. The options dictionary names the output template, the format and a postprocessor that extracts the audio as m4a, so the conversion needs ffmpeg, the tool of slide 14. The YouTube download itself, and every other site the supported-sites list names, was NOT EXECUTED, and the research recorded what happens without ffmpeg.",
+   "take": "Download only what you are allowed to, and keep ffmpeg installed.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "A guessing game that speaks",
+   "sub": "The engine is passed in, so a test can use a recorder and the game can write WAV files",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.96,
+     "h": 3.35,
+     "lines": [
+      "import pyttsx3",
+      "class Recorder:                       # a stand-in engine for tests",
+      "    def __init__(self): self.said = []",
+      "    def say(self, text): self.said.append(text)",
+      "    def runAndWait(self): pass",
+      "def make_speak(engine):",
+      "    def speak(text):                  # to the screen, then aloud",
+      "        print(text); engine.say(text); engine.runAndWait()",
+      "    return speak",
+      "def game(speak, guesses, secret):",
+      "    speak('I am thinking of a number between 1 and 20.')",
+      "    for n, g in enumerate(guesses, 1):",
+      "        if g == secret: return speak('Good job! You won in %d.' % n)",
+      "        speak('%d is too %s.' % (g, 'low' if g < secret else 'high'))",
+      "rec = Recorder(); game(make_speak(rec), [10, 15, 12], 12)",
+      "print('Recorder:', len(rec.said), 'lines;', rec.said[1])",
+      "engine = pyttsx3.init(); lines = itertools.count(1)",
+      "class Writer:                         # the real engine",
+      "    def say(self, text): say_to(engine, text, 'line%d.wav' % next(lines))",
+      "    def runAndWait(self): pass",
+      "game(make_speak(Writer()), [5, 18, 12], 12)",
+      "print('secs', [wavinfo('line%d.wav' % k)['seconds'] for k in range(1, 5)])"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program guessCut_v1_0_0.py, lines 105 to 126 of 126"
+    },
+    {
+     "t": "prog",
+     "x": 5.66,
+     "y": 1.55,
+     "w": 3.84,
+     "h": 1.69,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "I am thinking of a number between 1 and 20.\n10 is too low.\n15 is too high.\nGood job! You won in 3.\nRecorder: 4 lines; 10 is too low.\nI am thinking of a number between 1 and 20.\n5 is too low.\n18 is too high.\nGood job! You won in 3.\nsecs [2.56, 1.08, 1.09, 1.68]",
+     "outLabel": "prints",
+     "label": "transcript of program guessCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 5.66,
+     "y": 3.32,
+     "w": 3.84,
+     "h": 0.31,
+     "fs": 8,
+     "body": "No sound card: nothing is heard, the speech goes to WAV files - a local stand-in for a loudspeaker."
+    },
+    {
+     "t": "foot",
+     "x": 5.66,
+     "y": 3.68,
+     "w": 3.84,
+     "h": 0.17,
+     "fs": 8,
+     "body": "Lines 1 to 104 (imports, helpers and the work folder) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 5.66,
+     "y": 3.9,
+     "w": 3.84,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Recorded 14 Oct 2026: listing 16 of the chapter calls speak(), which no listing defines, and raised NameError in every row; a guessing game with its own speak() said 4 lines in 3 guesses."
+    }
+   ],
+   "notes": "The first practice program of the chapter asks for a guessing game that speaks. The chapter's listing 16 calls speak(), which no listing defines, and it raised NameError in every environment the research tried, so the program of the slide defines its own. The idea is to pass the engine into the game. make_speak() builds a speak() that prints the text and then says it, and game() takes speak as a parameter, so a test can pass a Recorder, a stand-in engine that only keeps the lines, and the real game can pass a Writer, an engine whose say() saves each line to a WAV file. With the Recorder the game said 4 lines in 3 guesses and the second line was 10 is too low; with the Writer the same 4 lines were written to line1.wav to line4.wav. The lengths of the four files depend on the text: with the longer sentences of the research they were 2.56, 1.94, 1.95 and 2.5 seconds, and the shorter sentences of this program give the lengths the transcript prints. Nothing is spoken aloud, and the point of the exercise is that a program which takes its engine as an argument can be tested without a loudspeaker.",
+   "take": "Pass the engine in; a test needs no loudspeaker.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "99 bottles of beer",
+   "sub": "99 verses make 396 lines, 2,377 words and 11.7 minutes of audio (30.8 MB)",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.9,
+     "h": 3.21,
+     "lines": [
+      "import pyttsx3",
+      "def bottles(k):",
+      "    if k == 0: return 'No more bottles'",
+      "    return '1 bottle' if k == 1 else '%d bottles' % k",
+      "def verse(n):",
+      "    this, nxt = bottles(n), bottles(n - 1)",
+      "    return '\\n'.join([this + ' of beer on the wall,', this + ' of beer,',",
+      "                      'Take one down, pass it around,',",
+      "                      nxt + ' of beer on the wall.'])",
+      "print(verse(2)); print(verse(1))",
+      "song = '\\n\\n'.join(verse(n) for n in range(99, 0, -1))",
+      "lines = [l for l in song.splitlines() if l]",
+      "print('99 verses:', len(lines), 'lines,', len(song.split()), 'words')",
+      "print('and', len(song), 'characters')",
+      "engine = pyttsx3.init()",
+      "for n in (3, 99):",
+      "    name = 'song%d.wav' % n",
+      "    say_to(engine, '\\n\\n'.join(verse(k) for k in range(n, 0, -1)), name)",
+      "    s = wavinfo(name)['seconds']",
+      "    size = os.path.getsize(name) / 1e6",
+      "    print('%2d verses: %.1f s, %.1f min, %.1f MB' % (n, s, s / 60, size))"
+     ],
+     "fs": 7.0,
+     "compact": false,
+     "out": null,
+     "outLabel": "prints",
+     "label": "program songCut_v1_0_0.py, lines 105 to 125 of 126"
+    },
+    {
+     "t": "prog",
+     "x": 5.6,
+     "y": 1.55,
+     "w": 3.9,
+     "h": 2.1,
+     "lines": [],
+     "fs": 7.0,
+     "compact": true,
+     "out": "2 bottles of beer on the wall,\n2 bottles of beer,\nTake one down, pass it around,\n1 bottle of beer on the wall.\n1 bottle of beer on the wall,\n1 bottle of beer,\nTake one down, pass it around,\nNo more bottles of beer on the wall.\n99 verses: 396 lines, 2377 words\nand 11457 characters\n 3 verses: 18.3 s, 0.3 min, 0.8 MB\n99 verses: 699.3 s, 11.7 min, 30.8 MB\nsaved song.png: 1800 bytes, sha256 a3a069ff32dc",
+     "outLabel": "prints",
+     "label": "transcript of program songCut_v1_0_0.py"
+    },
+    {
+     "t": "img",
+     "path": "/home/claude/AdvancedProgrammingWithPython/08-tooling/ch24-deck/images/song.png",
+     "x": 5.6,
+     "y": 3.7,
+     "w": 3.38,
+     "h": 0.45
+    },
+    {
+     "t": "foot",
+     "x": 5.6,
+     "y": 4.17,
+     "w": 3.9,
+     "h": 0.17,
+     "fs": 8,
+     "body": "image song.png made by songCut_v1_0_0.py"
+    },
+    {
+     "t": "foot",
+     "x": 5.6,
+     "y": 4.41,
+     "w": 3.9,
+     "h": 0.58,
+     "fs": 8,
+     "body": "No sound card: nothing is heard, the speech goes to WAV files - a local stand-in for a loudspeaker. Lines 1 to 104 (imports, helpers and the work folder) are not shown. Line 126 (the picture) is not shown."
+    }
+   ],
+   "notes": "Wikipedia's article on Daisy Bell says that in 1961 an IBM 7090 at Bell Labs was programmed to sing the song, one of the earliest demonstrations of computer speech synthesis. Arthur C. Clarke saw a demonstration at Bell Labs in 1962 and referred to it in the 1968 novel and film 2001: A Space Odyssey, in which the HAL 9000 computer sings it during its gradual deactivation. In this study the chapter's song program for 99 bottles of beer made 396 lines and 2,377 words, and pyttsx3 wrote them as 699.3 seconds of audio in 7.5 seconds of work, without a note of music. The account rests on these sources. Wikipedia, 'Daisy Bell' (the IBM 7090 of 1961, Clarke in 1962, HAL 9000), read 2026-10-14; this study's leaves SongLyrics and SongAudio. The second practice program asks for the song of 99 bottles of beer, sung by the engine. bottles() and verse() write the verse for a number, with 1 bottle in the singular and No more bottles at the end, and the program prints the verses for 2 and for 1. The whole song is 99 verses, 396 lines, 2,377 words and 11,457 characters. The engine writes the first 3 verses as 18.3 seconds of audio and the 99 verses as 699.3 seconds, 11.7 minutes, and 30.8 MB of WAV; in the research the same 99 verses took 7.5 seconds of work. The picture is the waveform of the 3-verse file. The research also asked tiny to transcribe the 3 verses and got a word error rate of 0.9589, nearly every word wrong. The sentence of the chapter, that the program takes a long time, is true of the audio and not of the work: the audio is 11.7 minutes long and it is made in seconds. All of these are single runs.",
+   "take": "A song is just text; the engine turns 99 verses into 11.7 minutes.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The transcriber loop",
+   "sub": "One function downloads, transcribes and writes subtitles; a bad address stops the list",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.96,
+     "h": 3.35,
+     "lines": [
+      "import glob, yt_dlp, whisper",
+      "from whisper.utils import get_writer",
+      "def transcribe_urls(urls, formats=('srt',), model_name='tiny'):",
+      "    model = whisper.load_model(model_name); results = []",
+      "    for k, url in enumerate(urls):",
+      "        stem = 'video%d' % k",
+      "        with yt_dlp.YoutubeDL(audio_opts(stem)) as ydl:",
+      "            ydl.download([url])",
+      "        audio = glob.glob(stem + '.*')[0]",
+      "        result = model.transcribe(audio, language='en', temperature=0.0)",
+      "        for f in formats: get_writer(f, '.')(result, stem)",
+      "        results.append((audio, result))",
+      "    return results",
+      "URLS = ['https://archive.org/details/gettysburg_shurtagal_librivox',",
+      "        'https://archive.org/details/gettysburg_johng_librivox']",
+      "for audio, r in transcribe_urls(URLS, formats=('srt', 'vtt', 'txt')):",
+      "    print(len(r['segments']), 'segments', len(r['text'].split()), 'words')",
+      "BAD = ['https://archive.org/details/no_such_item_ch24_zz']",
+      "print('one bad address:', err(lambda: transcribe_urls(BAD), 0))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "26 segments 312 words\n17 segments 304 words\none bad address: DownloadError",
+     "outLabel": "prints",
+     "label": "program loopCut_v1_0_0.py, lines 105 to 123 of 123"
+    },
+    {
+     "t": "shapes",
+     "x": 5.66,
+     "y": 1.4,
+     "w": 3.84,
+     "h": 2.5,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 5.71,
+       "y": 1.4,
+       "w": 0.85,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The script",
+       "x": 5.77,
+       "y": 1.533,
+       "w": 0.73,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 6.135,
+       "y1": 1.82,
+       "x2": 6.135,
+       "y2": 3.9,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.673,
+       "y": 1.4,
+       "w": 0.85,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "yt-dlp",
+       "x": 6.733,
+       "y": 1.533,
+       "w": 0.73,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 7.098,
+       "y1": 1.82,
+       "x2": 7.098,
+       "y2": 3.9,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 7.637,
+       "y": 1.4,
+       "w": 0.85,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Whisper",
+       "x": 7.697,
+       "y": 1.533,
+       "w": 0.73,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.062,
+       "y1": 1.82,
+       "x2": 8.062,
+       "y2": 3.9,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 8.6,
+       "y": 1.4,
+       "w": 0.85,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The writers",
+       "x": 8.66,
+       "y": 1.533,
+       "w": 0.73,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 9.025,
+       "y1": 1.82,
+       "x2": 9.025,
+       "y2": 3.9,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 6.135,
+       "y1": 2.376,
+       "x2": 7.098,
+       "y2": 2.376,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls download() with the address",
+       "x": 6.235,
+       "y": 1.769,
+       "w": 0.763,
+       "h": 0.558,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 7.098,
+       "y1": 2.732,
+       "x2": 6.135,
+       "y2": 2.732,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns the audio file",
+       "x": 6.235,
+       "y": 2.393,
+       "w": 0.763,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 6.135,
+       "y1": 3.088,
+       "x2": 8.062,
+       "y2": 3.088,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls transcribe() on the audio",
+       "x": 6.235,
+       "y": 2.749,
+       "w": 1.727,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 8.062,
+       "y1": 3.444,
+       "x2": 6.135,
+       "y2": 3.444,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns the result",
+       "x": 6.235,
+       "y": 3.24,
+       "w": 1.727,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 6.135,
+       "y1": 3.8,
+       "x2": 9.025,
+       "y2": 3.8,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Writes an SRT, a VTT and a TXT file",
+       "x": 6.235,
+       "y": 3.596,
+       "w": 2.69,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "TheLoopOfTheTranscriber"
+    },
+    {
+     "t": "foot",
+     "x": 5.66,
+     "y": 3.93,
+     "w": 3.84,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram TheLoopOfTheTranscriber - Interaction pattern, 20 of 20 words grounded in the chapter's text"
+    },
+    {
+     "t": "foot",
+     "x": 5.66,
+     "y": 4.32,
+     "w": 3.84,
+     "h": 0.42,
+     "fs": 7.5,
+     "body": "archive.org public-domain audio stands in for YouTube, which this deck never used. Lines 1 to 104 (imports and helpers, among them audio_opts, the options of slide 19) are not shown."
+    }
+   ],
+   "notes": "The third practice program asks for a function that takes a list of addresses, downloads the audio of each, transcribes it and writes subtitle files. The sequence diagram is that loop: the script calls download() with the address, yt-dlp returns the audio file, the script calls transcribe() on it, Whisper returns the result, and the writers write an SRT, a VTT and a TXT file. The program runs it on two public-domain LibriVox readings of the Gettysburg Address on archive.org, which stand in for YouTube: the first gave 26 segments and 312 words, the second 17 segments and 304 words, and each left an m4a, an SRT, a VTT and a TXT file. The research timed the loop at 47.8 seconds for the two readings. The last lines pass an address that is nowhere: the function raises DownloadError, and since nothing in the loop catches it, one bad address stops the whole list. A version that caught the error and went on to the next address is the obvious improvement. The options dictionary of slide 19 is held in a helper here so that the function fits the slide, and the hidden lines say so.",
+   "take": "One bad address stops the loop unless the loop catches it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter replayed in four environments",
+   "sub": "Recorded: how many of the 46 printed statements match the book, by environment",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 9.0,
+     "colW": [
+      1.2,
+      0.9,
+      0.9,
+      1.4,
+      0.8,
+      2.2,
+      1.6
+     ],
+     "fs": 8,
+     "rowH": 0.26,
+     "rows": [
+      [
+       "row",
+       "Python",
+       "pyttsx3",
+       "openai-whisper",
+       "ffmpeg",
+       "ran without an exception",
+       "statements = book"
+      ],
+      [
+       "newest",
+       "3.14.6",
+       "2.99",
+       "20250625",
+       "yes",
+       "42",
+       "34 of 46"
+      ],
+      [
+       "pinned",
+       "3.12.3",
+       "2.98",
+       "20231117",
+       "yes",
+       "42",
+       "35 of 46"
+      ],
+      [
+       "empty",
+       "3.14.6",
+       "-",
+       "-",
+       "yes",
+       "8",
+       "8 of 46"
+      ],
+      [
+       "no ffmpeg",
+       "3.14.6",
+       "2.99",
+       "20250625",
+       "no",
+       "38",
+       "32 of 46"
+      ]
+     ]
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 2.9,
+     "w": 9.0,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Each cell counts the 46 statements of the chapter's 17 listings; the 3 statements that were not executed (the two downloads from YouTube and the lyrics) are in neither count."
+    },
+    {
+     "t": "card",
+     "head": "Recorded 14 Oct 2026",
+     "body": "The 17 listings were parsed into 45 statements, 46 with the one that was substituted, and replayed as printed. What differs is the Voice objects and names, the Audio saved to line, the transcription of hello.wav, the TSV listing and the call of speak. One program ran under 11 interpreters, 3.11 to 3.15.0b4, and compared 14 items: only 2 differed, the modules PEP 594 removed.",
+     "x": 0.5,
+     "y": 3.3,
+     "w": 4.4,
+     "h": 1.65,
+     "fs": 8.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "SAPI5, NSSpeechSynthesizer and AVSpeech; a microphone; a GPU; the OpenAI, Google Cloud and Azure speech services; faster-whisper, whisper.cpp, SpeechRecognition, gTTS and Vosk (their pages were read); Whisper medium, turbo and large-v3; and any download from YouTube.",
+     "x": 5.1,
+     "y": 3.3,
+     "w": 4.4,
+     "h": 1.65,
+     "fs": 8.5,
+     "accent": "orange"
+    }
+   ],
+   "notes": "The table is the research's record of the chapter's statements replayed as printed, and the deck check computes every cell again from the record. With Python 3.14.6 and the newest packages 34 of the 46 matched the book and 42 ran without an exception; the pinned set, Python 3.12.3 with pyttsx3 2.98 and openai-whisper 20231117, gave 35 and 42; in the empty environment 8 matched and 8 ran; without ffmpeg 32 matched and 38 ran. The statements that differ are the Voice objects and names, the line Audio saved to that the driver prints, the transcription of hello.wav, the TSV listing and the call of speak. One program that saves speech, lists voices and asks yt-dlp questions ran under 11 interpreters, 3.11, 3.12, 3.13, 3.14.0 to 3.14.6 and 3.15.0b4, and compared 14 items. Only 2 differed, both about aifc, audioop, sunau, chunk and sndhdr, which import under 3.11 and 3.12 and fail from 3.13, while wave, which pyttsx3 uses, stayed; the Whisper version compared 16 items and 2 differed, only in the printed form of a type. Appendix B of the book gives 7 answers for the chapter. The research confirmed that pyttsx3 and Whisper need no internet once the tiny model is on disk, and found that answer 5 is wrong about the default model: load_model has no default for the name, and the whisper command defaults to turbo in 20250625 and to small in 20231117. The photograph of the stories was not fetched, because the request to Wikimedia answered 429.",
+   "take": "The same book gives 8 to 35 matching statements, by environment.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in one map",
+   "sub": "Six branches; the slides of each branch hold the examples",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.0,
+       "y": 2.425,
+       "w": 2.0,
+       "h": 1.15,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A script turns text into speech and speech into text",
+       "x": 4.08,
+       "y": 2.713,
+       "w": 1.84,
+       "h": 0.575,
+       "fs": 11,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 1.91,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Text-to-speech engine",
+       "x": 0.6,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "pyttsx3 queues text with say()\nrunAndWait() processes the queue\nThe rate and the volume are properties",
+       "x": 0.6,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 3.0,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Saved speech and recognition",
+       "x": 0.6,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "save_to_file() writes a WAV file\nWhisper needs ffmpeg\nThe models differ in size and time",
+       "x": 0.6,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 4.09,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Subtitle files",
+       "x": 0.6,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The writers make SRT, VTT and TSV files\nThe times are on a grid\nThe word error rate measures accuracy",
+       "x": 0.6,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 1.91,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Downloading videos",
+       "x": 6.5,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "yt-dlp downloads audio\nThe terms of the site limit downloading\nDownloaders change with the releases",
+       "x": 6.5,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 3.0,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Practice programs",
+       "x": 6.5,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The guessing game speaks\nThe song has 99 verses\nThe transcriber loop stops at a bad address",
+       "x": 6.5,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 4.09,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Environment and evidence",
+       "x": 6.5,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The study ran Python 3.14.6\nWindows and macOS were not executed\nEvery number is from a single run",
+       "x": 6.5,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      }
+     ],
+     "did": "TextToSpeechAndSpeechRecognitionAtAGlance"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram TextToSpeechAndSpeechRecognitionAtAGlance - TopicAndParts pattern, 82 of 89 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "These six branches are the route of the deck. The text-to-speech engine: pyttsx3 queues text with say(), runAndWait() processes the queue, and the rate and the volume are properties; on slide 7 the rate still read 200 after it was set to 300 until runAndWait() had run. Saved speech and recognition: save_to_file() writes a WAV file, Whisper needs ffmpeg, and the models differ in size and time; slide 12 sets the book's table beside this machine. Subtitle files: the writers make SRT, VTT and TSV files, the times are on a grid of 0.02 seconds, and the word error rate measures accuracy. Downloading videos: yt-dlp downloads audio, the terms of the site limit downloading, and downloaders change with the releases, so 5 of 6 recent yt-dlp releases ran. Practice programs: the guessing game speaks, the song has 99 verses, and the transcriber loop stops at a bad address. Environment and evidence: the study ran Python 3.14.6, Windows and macOS were not executed, and every number is from a single run. Together they answer the first question of the chapter, what can be shown to work without a sound card, a microphone or a GPU and what can only be shown to fail, and the slides that say where a printed line differs answer the second. The map is drawn from the same specification as the interactive page.",
+   "take": "If a branch feels unproven, its slides hold the example.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Every link was opened on the day this deck was made",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.55,
+     "fs": 9,
+     "groups": [
+      {
+       "head": "Stories",
+       "rows": [
+        [
+         "Speech synthesis (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Speech_synthesis"
+        ],
+        [
+         "Speech recognition (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Speech_recognition"
+        ],
+        [
+         "Daisy Bell (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Daisy_Bell"
+        ],
+        [
+         "eSpeak (Wikipedia)",
+         "https://en.wikipedia.org/wiki/ESpeak"
+        ],
+        [
+         "SubRip (Wikipedia)",
+         "https://en.wikipedia.org/wiki/SubRip"
+        ],
+        [
+         "Whisper, the speech recognition system (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Whisper_(speech_recognition_system)"
+        ]
+       ]
+      },
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, chapter 24 - free online",
+         "https://automatetheboringstuff.com/3e/chapter24.html"
+        ],
+        [
+         "Appendix A: installing third-party modules",
+         "https://automatetheboringstuff.com/3e/appendixa.html"
+        ],
+        [
+         "Online materials of the 3rd edition (zip)",
+         "https://nostarch.com/download/code/Automate_the_Boring_Stuff_3e_onlinematerials.zip"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "pyttsx3 on PyPI",
+         "https://pypi.org/project/pyttsx3/"
+        ],
+        [
+         "Whisper README (OpenAI)",
+         "https://raw.githubusercontent.com/openai/whisper/main/README.md"
+        ],
+        [
+         "yt-dlp: README, with embedding in Python",
+         "https://raw.githubusercontent.com/yt-dlp/yt-dlp/master/README.md"
+        ],
+        [
+         "WebVTT: the Web Video Text Tracks Format (W3C)",
+         "https://www.w3.org/TR/webvtt1/"
+        ],
+        [
+         "wave: the WAV module, Python 3.14 documentation",
+         "https://docs.python.org/3.14/library/wave.html"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every listing of the chapter; the online materials are the zip of 91 files, and Appendix A is where the book installs third-party packages. The reference links are the PyPI page of pyttsx3, the README of Whisper, the README of yt-dlp with its section on embedding the downloader in Python, the specification of WebVTT and the documentation of the wave module. The six stories of the chapter have their own link, and their pages are the first group. The research package holds 69 sources in all, among them the source of the eSpeak driver of pyttsx3, the PyPI metadata of the three packages, the paper Robust Speech Recognition via Large-Scale Weak Supervision, the supported-sites list of yt-dlp and the Terms of Service of YouTube. The book recommends Make Python Talk by Liu for more on speech. No photograph of a person is used in the deck.",
+   "take": "Textbook, documentation, and history, all opened today.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What you should now be able to say",
+   "sub": "Four claims, each carried by a result you saw printed",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 1.5,
+     "w": 8.8,
+     "h": 2.4,
+     "fs": 15,
+     "items": [
+      "say() only queues; runAndWait() speaks, and the file is complete only after you wait for it.",
+      "Appendix A's pinned pyttsx3 saves 0.6 s where the newest saves 1.54 s; test the pin.",
+      "Whisper needs ffmpeg, and its models above small did not run here.",
+      "A download from YouTube is not allowed, so a public-domain reading stood in for it."
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.6,
+     "y": 4.1,
+     "w": 8.8,
+     "h": 0.6,
+     "fs": 10,
+     "big": false,
+     "items": [
+      "12 console rows",
+      "17 programs run",
+      "7 diagrams",
+      "5 pictures"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The programs need pyttsx3, openai-whisper and yt-dlp, with eSpeak NG and ffmpeg installed by the package manager of the system, and a work folder they can fill with WAV files. The rows were run again under Python 3.14.6 each time the deck was built, and the programs, and with them the pictures, were run again by the check that compares the slides with the recording. What was not run is marked on its slide: SAPI5, NSSpeechSynthesizer and AVSpeech, a microphone, a GPU, the cloud services, a download from YouTube, and the Whisper models medium, turbo and large-v3. Nothing was ever heard. Every count and time in this deck from a single run is a single run, and not a benchmark. The next chapter of the book moves on, and what this chapter taught about checking what a program writes carries over.",
+   "take": "Questions are welcome; bring a script to try.",
+   "bg": "light"
+  }
+ ]
+}
