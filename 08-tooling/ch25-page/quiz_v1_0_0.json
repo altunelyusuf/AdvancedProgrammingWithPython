@@ -1,0 +1,229 @@
+{
+ "_version": "1.0.0",
+ "items": [
+  {
+   "q": "What happens when start() is called a second time on the same Thread object?",
+   "options": [
+    "It runs the target again in a new thread",
+    "It raises RuntimeError: threads can only be started once",
+    "It is ignored without a message"
+   ],
+   "answer": 1,
+   "level": "Remember",
+   "objective": "CO1",
+   "rationales": [
+    "It does not start another run; a Thread object can be started once.",
+    "",
+    "There is no silent form; the second call raises an error."
+   ]
+  },
+  {
+   "q": "Thread(target=print('Cats', 'Dogs')) is started. What happens?",
+   "options": [
+    "The thread prints Cats Dogs",
+    "print runs at once in the main thread and the thread is given None as its target",
+    "Python raises TypeError at the Thread call"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO1",
+   "rationales": [
+    "The call print(...) has already run, in the main thread, before Thread was created.",
+    "",
+    "Thread accepts target=None, so no error is raised; the thread then does nothing."
+   ]
+  },
+  {
+   "q": "join(0.1) is called on a thread that needs 0.6 s. How do you tell that the timeout happened?",
+   "options": [
+    "join() returns False",
+    "The thread's is_alive() is still True",
+    "join() raises TimeoutError"
+   ],
+   "answer": 1,
+   "level": "Understand",
+   "objective": "CO1",
+   "rationales": [
+    "join(timeout) always returns None, whatever happened.",
+    "",
+    "No exception is raised; the caller must test is_alive()."
+   ]
+  },
+  {
+   "q": "The main thread ends while a daemon thread is still sleeping before a print. What happens to it?",
+   "options": [
+    "The program waits for it and the print happens",
+    "It is stopped abruptly at shutdown and never prints",
+    "It becomes a normal thread"
+   ],
+   "answer": 1,
+   "level": "Understand",
+   "objective": "CO1",
+   "rationales": [
+    "Only non-daemon threads keep the program alive.",
+    "",
+    "A daemon flag does not change when the thread is stopped at shutdown."
+   ]
+  },
+  {
+   "q": "Why can two threads that both run counter += 1 on a shared counter lose an update?",
+   "options": [
+    "The statement compiles to several bytecode steps (read, add, store) and a switch can fall between them",
+    "Python forbids two threads from reading one variable",
+    "The second thread always gets a copy of the counter"
+   ],
+   "answer": 0,
+   "level": "Understand",
+   "objective": "CO2",
+   "rationales": [
+    "",
+    "Threads may read the same variable; the problem is the steps between read and store.",
+    "They share the variable, not a copy; that is the reason the update is lost."
+   ]
+  },
+  {
+   "q": "A thread holds a plain threading.Lock and asks for the same lock again with a timeout of 0.2 s. What does acquire return, and what would an RLock give?",
+   "options": [
+    "False for the Lock and True for the RLock",
+    "True for both",
+    "False for both"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO2",
+   "rationales": [
+    "",
+    "A Lock is not reentrant: the second request waits and times out, while an RLock lets its owner in.",
+    "An RLock lets the thread that holds it acquire it again."
+   ]
+  },
+  {
+   "q": "Two threads each take two locks, one in the order A then B and the other B then A, with a pause between the two takes. After join(1.0) both are still alive. What is this?",
+   "options": [
+    "A deadlock: each waits for the lock the other holds",
+    "A lost update",
+    "A daemon thread that was stopped"
+   ],
+   "answer": 0,
+   "level": "Analyze",
+   "objective": "CO2",
+   "rationales": [
+    "",
+    "Nothing was lost: both threads are blocked, not computing.",
+    "Neither thread is a daemon; they are waiting for each other."
+   ]
+  },
+  {
+   "q": "ThreadPoolExecutor.map runs three tasks that finish in reverse order. In what order are its results?",
+   "options": [
+    "The order of the inputs: [0, 1, 2]",
+    "The order in which the tasks finished: [2, 1, 0]",
+    "An arbitrary order"
+   ],
+   "answer": 0,
+   "level": "Understand",
+   "objective": "CO3",
+   "rationales": [
+    "",
+    "That is the order of as_completed, not of map.",
+    "map returns the results in the order of the inputs."
+   ]
+  },
+  {
+   "q": "A task submitted to a pool raises ValueError('boom'). When does the main program notice?",
+   "options": [
+    "At once, as a traceback in the main thread",
+    "Only when result() is called on its Future, which raises it again",
+    "Never; pool tasks cannot raise"
+   ],
+   "answer": 1,
+   "level": "Apply",
+   "objective": "CO3",
+   "rationales": [
+    "The exception stays in the Future and is silent until it is asked for.",
+    "",
+    "It is stored: result() raises it and exception() returns it."
+   ]
+  },
+  {
+   "q": "A pool has one worker and five queued 0.2 s tasks. The first has started. How many tasks does shutdown(cancel_futures=True) cancel?",
+   "options": [
+    "4: the ones that had not started",
+    "5: all of them",
+    "0: a pool cannot cancel tasks"
+   ],
+   "answer": 0,
+   "level": "Apply",
+   "objective": "CO3",
+   "rationales": [
+    "",
+    "A task that has started cannot be cancelled, so the first one finishes.",
+    "cancel_futures=True cancels the pending futures, which here are four."
+   ]
+  },
+  {
+   "q": "Four CPU-bound tasks take 0.89 s one after another on the standard Python 3.14.6 build. About how long do they take on 4 threads?",
+   "options": [
+    "About 0.2 s, a quarter of the time",
+    "About 1.0 s, no faster than one after another",
+    "About 3.5 s, four times slower"
+   ],
+   "answer": 1,
+   "level": "Analyze",
+   "objective": "CO4",
+   "rationales": [
+    "That would need four cores running Python code at once, which the global interpreter lock does not allow.",
+    "",
+    "The recorded run took 1.003 s: no speed-up and a little overhead."
+   ]
+  },
+  {
+   "q": "Eight sleeps of 0.5 s took 4.001 s one after another. Why do 8 threads take about 0.5 s?",
+   "options": [
+    "The lock is released while a thread waits, so the waits overlap",
+    "Each thread sleeps for one eighth of the time",
+    "The sleeps are skipped when threads are used"
+   ],
+   "answer": 0,
+   "level": "Understand",
+   "objective": "CO4",
+   "rationales": [
+    "",
+    "Each thread still waits the full 0.5 s; the waits happen together.",
+    "Nothing is skipped; the waits overlap."
+   ]
+  },
+  {
+   "q": "Which setting turns the global interpreter lock on again for the free-threaded build?",
+   "options": [
+    "PYTHON_GIL=1 (or the option -X gil=1)",
+    "PYTHON_GIL=0",
+    "sys.setswitchinterval(0.0001)"
+   ],
+   "answer": 0,
+   "level": "Remember",
+   "objective": "CO4",
+   "rationales": [
+    "",
+    "PYTHON_GIL=0 leaves it off.",
+    "The switch interval only changes how often threads that hold the lock may switch."
+   ]
+  },
+  {
+   "q": "The study did not run the free-threaded build of Python 3.13. What may this page say about it?",
+   "options": [
+    "Only what the documentation says, marked NOT EXECUTED",
+    "That it behaves like the free-threaded 3.14.6 build",
+    "Nothing; it is never mentioned"
+   ],
+   "answer": 0,
+   "level": "Evaluate",
+   "objective": "CO5",
+   "rationales": [
+    "",
+    "The 3.14.6 result must not be carried over to a build that was not run.",
+    "The study names what it did not run, so that a reader does not mistake documentation for a result."
+   ]
+  }
+ ]
+}
