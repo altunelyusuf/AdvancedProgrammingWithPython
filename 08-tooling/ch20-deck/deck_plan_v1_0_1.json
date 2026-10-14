@@ -1,0 +1,4669 @@
+{
+ "meta": {
+  "title": "Ch. 20: Email, Texts, and Push",
+  "sub": "SEN0414, third-edition redesign",
+  "version": "1.0.1",
+  "python": "3.14.6",
+  "total": 26,
+  "diagrams": {
+   "WhatAProgramCanDoWithEzgmail": 4,
+   "SendingAMailWithEzgmail": 5,
+   "ASmtpSessionWithStarttls": 12,
+   "AMessageInAnImapMailbox": 14,
+   "PostingAPushNotification": 18,
+   "ReadingMessagesFromANtfyTopic": 20,
+   "ControllingAComputerByEmail": 23,
+   "SendingEmailTextsAndPushesAtAGlance": 24
+  },
+  "notExecuted": [
+   5,
+   6,
+   8,
+   14,
+   15,
+   16,
+   17,
+   18,
+   20,
+   23
+  ],
+  "recorded": [
+   4,
+   14,
+   16,
+   19,
+   20,
+   22
+  ],
+  "standin": {
+   "6": [
+    "sendCut_v1_0_0.py"
+   ],
+   "7": [
+    "readCut_v1_0_0.py"
+   ],
+   "8": [
+    "replyCut_v1_0_0.py",
+    "downloadCut_v1_0_0.py"
+   ],
+   "12": [
+    "starttlsCut_v1_0_0.py"
+   ],
+   "13": [
+    "refusalsCut_v1_0_0.py",
+    "envelopeCut_v1_0_0.py"
+   ],
+   "18": [
+    "ntfyPubCut_v1_0_0.py"
+   ],
+   "19": [
+    "ntfyHdrCut_v1_0_0.py"
+   ],
+   "20": [
+    "ntfyPollCut_v1_0_0.py"
+   ],
+   "22": [
+    "unsubCut_v1_0_0.py",
+    "umbrellaCut_v1_0_0.py"
+   ],
+   "23": [
+    "controlCut_v1_0_0.py"
+   ]
+  }
+ },
+ "slides": [
+  {
+   "kind": "title",
+   "title": "Ch. 20: Email, Texts, and Push",
+   "sub": "Sending email, texts, and push notifications: EZGmail, smtplib, SMS gateways, and ntfy",
+   "items": [
+    {
+     "t": "code",
+     "x": 5.0,
+     "y": 0.4,
+     "w": 4.5,
+     "h": 1.68,
+     "rows": [
+      [
+       "import platform, importlib.metadata as m",
+       ""
+      ],
+      [
+       "platform.python_version()",
+       "'3.14.6'"
+      ],
+      [
+       "m.version('ezgmail')",
+       "'2026.4.28'"
+      ],
+      [
+       "m.version('requests')",
+       "'2.34.2'"
+      ]
+     ],
+     "fs": 10
+    },
+    {
+     "t": "foot",
+     "x": 0.6,
+     "y": 3.85,
+     "w": 8.8,
+     "h": 0.59,
+     "fs": 11,
+     "body": "Every output on these slides was printed by the Python above when the deck was made. Gmail, a phone and ntfy were never reached, and nothing was sent to anyone: where a program needed a server it ran against a local stand-in on this machine, and its slide says so. What could not be run is marked on its slide."
+    }
+   ],
+   "notes": "Chapter 19 taught a program to start and schedule other programs. Chapter 20 teaches a program to reach a person: by email through the Gmail API and the EZGmail module, by text through the SMS email gateways of a table, and by push notification through ntfy and the Requests library. It ends with five practice questions and three practice programs, Umbrella Reminder, Auto Unsubscriber and Email-Based Computer Control. This deck follows the chapter in its own order: setting up, sending, reading, searching and downloading with EZGmail; the gateway table and the length of a text; sending and receiving with ntfy; and the practice programs. It adds what the chapter leaves out and what the research found when every printed output was run again: the standard library's email, smtplib and imaplib modules, which the chapter names only to say EZGmail is better; STARTTLS and certificate checks; the difference between the envelope and the header; two gateways that are gone or going; the byte limit of ntfy; and what changed between Python 3.11 and 3.15. Nothing here reached a real service. No Gmail account, no Gmail server, no phone number, no carrier, no Twilio account and no ntfy server was used, and nothing was sent to a person. Every output on these slides was printed by Python 3.14.6, installed with uv, with ezgmail 2026.4.28, requests 2.34.2 and aiosmtpd 1.4.6. A program that needed a server ran against a local stand-in on this machine: aiosmtpd with a self-signed certificate for SMTP, the real ezgmail library on a replacement of the HTTP layer of Google's client library whose replies were written by the research for Gmail, and a recorder for ntfy. Each slide that shows such output says so. What could not be run, a Google account and its OAuth steps, Gmail's servers, a text through a carrier or Twilio, publishing to ntfy, Windows and macOS, and Python 3.14.7 and later with the final 3.15.0, is marked NOT EXECUTED on its slide.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Today's route",
+   "sub": "Six parts; every range is a run of slides you can jump to",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 6.3,
+     "h": 3.55,
+     "fs": 11.5,
+     "items": [
+      "The Gmail API through EZGmail (slides 4-8)",
+      "The standard library: messages, SMTP, IMAP (slides 9-15)",
+      "Texts through SMS email gateways (slides 16-17)",
+      "Push notifications with ntfy (slides 18-21)",
+      "Trust and the practice programs (slides 22-23)",
+      "Summary and resources (slides 24-25)"
+     ]
+    },
+    {
+     "t": "stat",
+     "x": 7.05,
+     "y": 1.5,
+     "w": 2.45,
+     "h": 3.4,
+     "vert": true,
+     "items": [
+      {
+       "n": "26",
+       "label": "slides, numbered bottom-right"
+      },
+      {
+       "n": "2 + 4",
+       "label": "true stories: 2 on slides, 4 in the notes"
+      },
+      {
+       "n": "23",
+       "label": "consoles and programs, all run before they were shown"
+      }
+     ]
+    }
+   ],
+   "notes": "The route has six parts. It starts with the Gmail API through EZGmail: what a program can do with one account, the setup with a credentials file and a token file, sending with attachments, cc and bcc, reading threads and messages, and replies, search, quoted text and downloads. Then the standard library, which the chapter names only to say EZGmail is better: the story of the @ sign, building a message, headers and addresses, SMTP with STARTTLS, refused recipients and the envelope, reading mail with IMAP, and what changed in Python's mail modules between 3.11 and 3.15. The third part is texts: the gateway table and the end of one gateway, and how long a text can be. The fourth is push notifications with ntfy: publishing, headers and bytes, receiving by polling, and the topic name that is the password. The fifth is trust and the practice programs: Umbrella Reminder, Auto Unsubscriber and Email-Based Computer Control. The last part is a one-map summary and the resources. The ranges name the exact slides, so you can return to the part you need. Two of the slides are true stories and four more are told in the notes; the eight narrative diagrams of the chapter are drawn from the same specifications as the interactive page. Every output was printed by Python 3.14.6 with ezgmail 2026.4.28, requests 2.34.2 and aiosmtpd 1.4.6, a server was always a local stand-in, and what could not be run is marked on its slide.",
+   "take": "Six parts, from an account to a command sent by email.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The questions this chapter answers",
+   "sub": "The chapter's own competency questions; the summary comes back to each",
+   "items": [
+    {
+     "t": "numlist",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 2.2,
+     "fs": 13,
+     "items": [
+      "Which parts of a program that sends or reads email, sends a text or pushes a notification can be shown to work, and which can only be shown to fail, on a machine that has no Gmail account, no phone number and no push service?",
+      "Which printed outputs, programs, numbers and statements of the chapter differ in current releases of Python and of the packages it uses, in the zone of the reader, in the services it names or in the files and pages it points to, and on what source?"
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.5,
+     "y": 3.8,
+     "w": 9.0,
+     "h": 0.5,
+     "fs": 10,
+     "items": [
+      "6 branches",
+      "91 topics",
+      "22 console rows",
+      "31 programs run",
+      "8 diagrams",
+      "Python 3.14.6"
+     ]
+    }
+   ],
+   "notes": "The first question is the spine of the chapter, and the deck answers it slide by slide. On a machine with no Gmail account, no phone number and no push service, a program that builds a message, parses an address, speaks SMTP to a server, reads a poll answer or checks a password can be shown to work, provided the server is a stand-in on the same machine. A program that logs in to Google, delivers a text or reaches ntfy.sh can only be shown to fail, with the error a reader sees before the setup is done, and the deck says NOT EXECUTED wherever a success would have to be claimed. The second question is the watch-out of the deck. The chapter has 15 listings with 48 statements. They were replayed as printed in three environments. With ezgmail installed and no credentials, which is where a reader stands before the Google Cloud steps, 19 of the 48 matched the book; with no packages at all, 3 matched. On a stand-in for Google's server, 42 of 46 matched in the zone America/Los_Angeles and 38 of 46 in Europe/Istanbul, because dates and a timestamp depend on the zone of the computer. Four never match: two statements whose quoted strings the web page breaks across lines, the printed text of a thread, and a Windows path that Linux cannot start. The online materials of the book, 91 files, hold no file for this chapter. Each slide says where a printed line differs and on what evidence.",
+   "take": "Know what can be shown to work and what can only be shown to fail.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What a program can do with Gmail",
+   "sub": "Seven things through one module; the chapter replaced smtplib with the Gmail API",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 4.0,
+     "h": 3.15,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "rect",
+       "x": 1.3,
+       "y": 1.73,
+       "w": 3.2,
+       "h": 2.87,
+       "fill": "FBF8F2",
+       "line": "6E655C",
+       "lw": 1
+      },
+      {
+       "k": "text",
+       "t": "THE GMAIL API THROUGH EZGMAIL",
+       "x": 1.38,
+       "y": 1.47,
+       "w": 3.05,
+       "h": 0.24,
+       "fs": 8.5,
+       "color": "6E655C",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 1.84,
+       "w": 2.9,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Send an email with ezgmail.send()",
+       "x": 1.73,
+       "y": 1.932,
+       "w": 2.34,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.239,
+       "w": 2.9,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Attach files to an email",
+       "x": 1.73,
+       "y": 2.331,
+       "w": 2.34,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 2.637,
+       "w": 2.9,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "List unread threads with unread()",
+       "x": 1.73,
+       "y": 2.729,
+       "w": 2.34,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.036,
+       "w": 2.9,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Search with the operators of the Gmail search box",
+       "x": 1.73,
+       "y": 3.061,
+       "w": 2.34,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.434,
+       "w": 2.9,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the messages of a thread",
+       "x": 1.73,
+       "y": 3.526,
+       "w": 2.34,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 3.833,
+       "w": 2.9,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Download the attachments of a message",
+       "x": 1.73,
+       "y": 3.925,
+       "w": 2.34,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.45,
+       "y": 4.231,
+       "w": 2.9,
+       "h": 0.339,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Reply to a message in its thread",
+       "x": 1.73,
+       "y": 4.323,
+       "w": 2.34,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 0.74,
+       "y": 2.325,
+       "w": 0.22,
+       "h": 0.22,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 1.5
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.545,
+       "x2": 0.85,
+       "y2": 2.925,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.65,
+       "y1": 2.645,
+       "x2": 1.05,
+       "y2": 2.645,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.925,
+       "x2": 0.69,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.85,
+       "y1": 2.925,
+       "x2": 1.01,
+       "y2": 3.175,
+       "color": "2B2622",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A program",
+       "x": 0.5,
+       "y": 3.225,
+       "w": 0.8,
+       "h": 0.163,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.009,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.408,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 2.806,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 3.205,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 3.604,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 4.002,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.05,
+       "y1": 2.725,
+       "x2": 1.45,
+       "y2": 4.401,
+       "color": "6E655C",
+       "w": 1.0,
+       "arrow": false,
+       "dash": false
+      }
+     ],
+     "did": "WhatAProgramCanDoWithEzgmail"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.0,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram WhatAProgramCanDoWithEzgmail - SetOfUses pattern, 30 of 30 words grounded in the chapter's text"
+    },
+    {
+     "t": "card",
+     "head": "Three ways to reach a person",
+     "body": "The Gmail API through EZGmail for email, SMS email gateways for texts, and ntfy for push notifications; Twilio is named as the reliable way to text.",
+     "x": 4.75,
+     "y": 1.5,
+     "w": 4.75,
+     "h": 1.55,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "Recorded 13 Oct 2026",
+     "body": "The book's page has 15 listings. The online materials hold 91 files and none for this chapter, and the book page it names for an example implementation holds none.",
+     "x": 4.75,
+     "y": 3.15,
+     "w": 4.75,
+     "h": 1.75,
+     "fs": 9.5,
+     "accent": "orange"
+    }
+   ],
+   "notes": "The use-case diagram lists what the chapter does with one Gmail account through one module: send an email, attach files, list unread email, search with the operators of the Gmail search box, read the messages of a thread, download attachments, and reply to a message in its thread. They are independent uses of the same module and not a sequence, which is why the picture is a set of uses. The chapter teaches three ways for a program to reach a person: the Gmail API through the EZGmail module, with a credentials file and a token file; texts through the SMS email gateways of Table 20-1, with Twilio named as the reliable alternative; and push notifications through ntfy, with a POST to a topic and a poll with /json?poll=1. It ends with five practice questions and three practice programs. The second edition of the book taught smtplib and imapclient in its chapter 18, mentioning smtplib 21 times and Twilio 31; the third edition's chapter names smtplib and imaplib only to say that EZGmail is better. The card records what the research found on 13 October 2026 and this deck does not run again: the chapter's page returned 200 with 53,147 bytes, the online materials of the third edition, a zip of 91 files of which 72 are Python, hold no program that names ezgmail, ntfy, smtplib, imaplib, Twilio or weather.gov, and the book page at No Starch Press that the chapter's last sentence names for an example implementation of the last practice program has none. The practice programs of this deck are therefore written from the chapter's own text.",
+   "take": "One account, seven things a program can do with it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Setup: credentials, token and init()",
+   "sub": "A missing credentials.json fails at the first call; token.json is a password",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.35,
+     "h": 2.9,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.432,
+       "w": 2.4,
+       "h": 0.42,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Keep credentials.json and token.json in the working directory",
+       "x": 0.57,
+       "y": 1.497,
+       "w": 2.26,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.915,
+       "w": 2.4,
+       "h": 0.42,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call ezgmail.init()",
+       "x": 0.57,
+       "y": 2.048,
+       "w": 2.26,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.5,
+       "y": 2.388,
+       "w": 2.4,
+       "h": 0.44,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Does init() raise an error?",
+       "x": 0.67,
+       "y": 2.531,
+       "w": 2.06,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.882,
+       "w": 2.4,
+       "h": 0.42,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call ezgmail.send() with the recipient, the subject and the body",
+       "x": 0.57,
+       "y": 2.947,
+       "w": 2.26,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.365,
+       "w": 2.4,
+       "h": 0.42,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Pass a list of attachments",
+       "x": 0.57,
+       "y": 3.498,
+       "w": 2.26,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.848,
+       "w": 2.4,
+       "h": 0.42,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Pass the keyword arguments cc and bcc",
+       "x": 0.57,
+       "y": 3.981,
+       "w": 2.26,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.05,
+       "y": 1.915,
+       "w": 1.8,
+       "h": 0.42,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Do the steps of the Google Cloud console again",
+       "x": 3.12,
+       "y": 1.981,
+       "w": 1.66,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.85,
+       "y": 1.542,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.81,
+       "y": 3.918,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.87,
+       "y": 3.978,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.85,
+       "y1": 1.642,
+       "x2": 2.9,
+       "y2": 1.642,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.7,
+       "y1": 1.852,
+       "x2": 1.7,
+       "y2": 1.915,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.7,
+       "y1": 2.335,
+       "x2": 1.7,
+       "y2": 2.388,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.9,
+       "y1": 2.608,
+       "x2": 3.95,
+       "y2": 2.608,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.95,
+       "y1": 2.608,
+       "x2": 3.95,
+       "y2": 2.335,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.95,
+       "y": 2.408,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 3.05,
+       "y1": 2.125,
+       "x2": 2.9,
+       "y2": 2.125,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.7,
+       "y1": 2.828,
+       "x2": 1.7,
+       "y2": 2.882,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 1.76,
+       "y": 2.765,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.7,
+       "y1": 3.302,
+       "x2": 1.7,
+       "y2": 3.365,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.7,
+       "y1": 3.785,
+       "x2": 1.7,
+       "y2": 3.848,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.9,
+       "y1": 4.058,
+       "x2": 3.81,
+       "y2": 4.058,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "SendingAMailWithEzgmail"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.33,
+     "w": 4.35,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram SendingAMailWithEzgmail - Workflow pattern, 32 of 34 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.85,
+     "y": 1.55,
+     "w": 4.59,
+     "h": 2.79,
+     "lines": [
+      "d = wd()",
+      "try:",
+      "    ezgmail.init()",
+      "except ezgmail.EZGmailException as e:",
+      "    print('init():', str(e).split(' You can')[0].replace(d, '.'))",
+      "print('LOGGED_IN', ezgmail.LOGGED_IN, ezgmail.SCOPES)",
+      "print(inspect.getsource(ezgmail).splitlines()[-1])",
+      "from oauth2client import client, file",
+      "c = client.OAuth2Credentials('tok','id','sec','ref',None,'u','ua')",
+      "file.Storage('token.json').put(c)",
+      "t = json.load(open('token.json'))",
+      "print(len(t), 'keys, mode', oct(os.stat('token.json').st_mode)[-3:])",
+      "print('in the file:', t['refresh_token'], t['client_secret'])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "init(): Can't find credentials file at ./credentials.json.\nLOGGED_IN False https://mail.google.com/\ninit(_raiseException=False)\n16 keys, mode 600\nin the file: ref sec",
+     "outLabel": "prints",
+     "label": "program setupCut_v1_0_0.py, lines 30 to 42 of 42"
+    },
+    {
+     "t": "foot",
+     "x": 4.85,
+     "y": 4.38,
+     "w": 4.65,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Made-up values. Lines 1 to 29 (imports, the Gmail stand-in and a comment) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.7,
+     "w": 4.3,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "NOT EXECUTED: Google Cloud console steps, consent screen, token refresh."
+    }
+   ],
+   "notes": "The activity diagram is the chapter's setup: keep the credentials file and the token file in the working directory, call ezgmail.init(), and if it raises no error go on to send(); if it does, do the steps of the Google Cloud console again. The program shows what a reader sees before those steps are done. The last line of the ezgmail module calls init(_raiseException=False), so a failed login is hidden when the module is imported and the first call to init() raises EZGmailException with the message Can't find credentials file, and ezgmail.LOGGED_IN stays False. The library asks for the scope https://mail.google.com/, which is the whole mailbox. The chapter never writes the file name credentials.json, although Appendix B does, and it never uses the word refresh. The second half of the program makes a token.json with the oauth2client package that ezgmail uses, from made-up values: it is plain JSON of 16 keys, written with the file mode 0o600, and it holds the client secret and the refresh token, so the chapter's advice to treat it like a password is right. ezgmail 2026.4.28 requires google-api-python-client and oauth2client; oauth2client 4.1.3 was uploaded on 7 September 2018 and PyPI classifies it as inactive, so the login of the chapter's library stands on a package that has not changed in eight years. Google's OAuth page says that a project whose consent screen is external and in the status Testing is issued a refresh token that expires in 7 days; that was read and not run, because it needs a Google account and a week. Wikipedia's article on Gmail says it was launched on 1 April 2004 with one gigabyte of storage space, a significantly higher amount than competitors offered at the time, and that Paul Buchheit developed the idea several years before it was announced. The article says the project was known by the code name Caribou. Chapter 20 of the 3rd edition tells the reader to use the Gmail API through the EZGmail module instead of smtplib and imaplib. In this study the library asked for the scope https://mail.google.com/ and, with no credentials file, raised EZGmailException. The account rests on these sources. Wikipedia, 'Gmail' (launched 1 April 2004 with one gigabyte; Paul Buchheit; code name Caribou), read 2026-10-13; chapter 20 of the 3rd edition; this study's leaves CredentialsAndToken and GmailEndpoints.",
+   "take": "init() fails without credentials; token.json is a password.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Sending: attachments, cc and bcc",
+   "sub": "One POST of a base64 message; the library does not look at what it attaches",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.81,
+     "h": 2.65,
+     "lines": [
+      "d = wd()",
+      "for n in ('a.jpg', 'b.mp3', 'setup.exe'): open(n, 'wb').write(b'0' * 9)",
+      "h = gm({}, {}, {}, {})",
+      "ezgmail.send('r@example.com', 'Subject line', 'Body of the email')",
+      "m = raw_of(h, 0)",
+      "print('POST', h.log[0][1], '| body keys', list(json.loads(h.log[0][2])))",
+      "print('headers:', [k for k in m.keys() if k in ('to', 'from', 'subject')])",
+      "ezgmail.send('r@example.com', 'S', 'B', ['a.jpg', 'b.mp3', 'setup.exe'])",
+      "print('attachments:', [a.get_filename() for a in raw_of(h, 1).iter_attachments()])",
+      "ezgmail.send('r@example.com', 'S', 'B', cc='f@example.com', bcc='o@example.com')",
+      "m = raw_of(h, 2)",
+      "print('cc:', m['cc'], '| Bcc header in the message:', m['bcc'])"
+     ],
+     "fs": 7.5,
+     "compact": true,
+     "out": "POST users/me/messages/send?alt=json | body keys ['raw']\nheaders: ['to', 'from', 'subject']\nattachments: ['a.jpg', 'b.mp3', 'setup.exe']\ncc: f@example.com | Bcc header in the message: o@example.com",
+     "outLabel": "prints",
+     "label": "program sendCut_v1_0_0.py, lines 34 to 45 of 45"
+    },
+    {
+     "t": "card",
+     "head": "Bcc is in the text",
+     "body": "ezgmail writes the bcc argument into the message as a Bcc header, because the API takes the whole message.",
+     "x": 6.56,
+     "y": 1.5,
+     "w": 2.94,
+     "h": 1.85,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "Whether Gmail accepts setup.exe or a .zip, and what it does with that Bcc header, were not run: no Gmail account was used.",
+     "x": 6.56,
+     "y": 3.45,
+     "w": 2.94,
+     "h": 1.5,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.26,
+     "w": 5.81,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "Stand-in for Gmail: the real ezgmail on a local stand-in for Google's server, replies written by this study; Gmail was never reached. Lines 1 to 33 (imports, the Gmail stand-in and a comment) are not shown."
+    }
+   ],
+   "notes": "ezgmail.send() makes one POST to users/me/messages/send whose JSON body has a single key, raw, the whole message in base64. The program shows what the library puts in it. With three arguments the message has the headers to, from and subject. With a list of file names it builds a multipart/mixed message with one part for each file; the library did not refuse setup.exe, although Gmail's help page, which the research read and did not test, names the types Gmail blocks. The cc and bcc arguments become the Cc and Bcc headers of the message, and the Bcc address is written into the text that is posted; whether Gmail removes that header from the copies it delivers was not run, so the slide says NOT EXECUTED. In a longer run of the same stand-in, program ezgmailSendWithStandIn, which is not on the slide, a Turkish body was sent as charset utf-8 and a Turkish subject as an encoded word, and both came back unchanged; the research read the RFCs for both. A subject with a line break raised HeaderParseError, because ezgmail builds the message with the legacy MIMEText class, and the research found that no request was made. Everything on the slide came from the real ezgmail library running against a stand-in for Google's server: the Google client library's HTTP layer was replaced by an object that records each request and answers with a reply written by the research. The chapter says that Gmail has security and anti-spam measures that might not send repeated emails with the exact same text. Wikipedia's article on email spam says that at the beginning of the Internet, in the ARPANET, sending commercial email was prohibited. Gary Thuerk sent the first known spam email in 1978, advertising a DEC product presentation, to 600 addresses, and he was reprimanded and told not to do it again. The article adds that the ARPANET had 2600 users at the time and that, because of software limitations, only slightly more than half of the intended recipients received the message. That history is why Gmail, as chapter 20 says, has security and anti-spam measures that might not send repeated emails with the exact same text. The account rests on these sources. Wikipedia, 'Email spam' (Gary Thuerk, 1978, 600 addresses, a DEC product presentation, 2600 users on the ARPANET); chapter 20 of the 3rd edition (Gmail might not send repeated emails with the exact same text), read 2026-10-13; this study's leaves AutoUnsubscriber and DmarcRecordParse.",
+   "take": "send() takes a list of files; the library does not vet them.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Reading: threads, messages and the zone",
+   "sub": "Printing a thread fetches its messages; a timestamp is read in the computer's zone",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.14,
+     "h": 2.93,
+     "lines": [
+      "th = ezgmail.GmailThread({'id': 'T1', 'snippet': 'Do you want to watch?',",
+      "                          'historyId': '9'})",
+      "h = gm({'id': 'T1', 'messages': [one(), one('Re: RoboCop')]})",
+      "text = str(th)",
+      "print('requests made by str(thread):', len(h.log))",
+      "print(text)",
+      "for z in ('UTC', 'America/Chicago', 'Europe/Istanbul'):",
+      "    os.environ['TZ'] = z; time.tzset()",
+      "    print(z.ljust(16), ezgmail.GmailMessage(one()).timestamp)",
+      "nm = one()",
+      "hs = nm['payload']['headers']",
+      "nm['payload']['headers'] = [x for x in hs if x['name'] != 'Subject']",
+      "print('no Subject header:', err(lambda: ezgmail.GmailMessage(nm).subject)[0])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "requests made by str(thread): 1\n<GmailThread numMessages=2 snippet='Do you want to watch?'>\nUTC              2026-12-11 14:48:48\nAmerica/Chicago  2026-12-11 08:48:48\nEurope/Istanbul  2026-12-11 17:48:48\nno Subject header: AttributeError",
+     "outLabel": "prints",
+     "label": "program readCut_v1_0_0.py, lines 34 to 46 of 46"
+    },
+    {
+     "t": "card",
+     "head": "The book prints another",
+     "body": "The chapter shows a GmailThread with len=2 and a snippet with no opening quote; ezgmail 2026.4.28 prints numMessages=2 and quotes the snippet.",
+     "x": 5.89,
+     "y": 1.4,
+     "w": 3.61,
+     "h": 1.6,
+     "fs": 9,
+     "accent": "orange"
+    },
+    {
+     "t": "card",
+     "head": "A timestamp has no zone",
+     "body": "ezgmail builds it as a naive datetime from internalDate, so the same message reads three ways. The book's 2026-12-20 21:28:32 holds only at UTC-6.",
+     "x": 5.89,
+     "y": 3.05,
+     "w": 3.61,
+     "h": 1.3,
+     "fs": 9,
+     "accent": "slate"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.54,
+     "w": 9.0,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Stand-in for Gmail: the real ezgmail on a local stand-in for Google's server, replies written by this study; Gmail was never reached. Lines 1 to 33 (imports, the Gmail stand-in and a comment) are not shown."
+    }
+   ],
+   "notes": "A GmailThread holds an id, a snippet and a history id, and it fetches its GmailMessage objects the first time messages is read; printing the thread reads messages, so the program shows one request to the API made by str(thread), which the chapter does not say. The chapter prints the text <GmailThread len=2 snippet= Do you want to watch RoboCop this weekend?'> with no opening quote; ezgmail 2026.4.28 prints <GmailThread numMessages=2 snippet='...'>. The timestamp of a message is built from the internalDate that the API returns, in milliseconds, as a naive datetime in the zone of the computer that runs the program: the program sets the zone of its own process three times and the same message, 1797000528 seconds since the epoch, reads 14:48:48 in UTC, 08:48:48 in America/Chicago and 17:48:48 in Europe/Istanbul. The chapter never says that its reading depends on the zone; its example fromtimestamp(1797823712), printed as 2026-12-20 21:28:32, is right only in a zone at UTC-6, and in UTC it is 2026-12-21 03:28:32, a Monday, as the slide on receiving shows. A message with no Subject header raised AttributeError, both on .subject and on printing it. All of this came from the real library against a stand-in for Google's server whose replies were written by the research.",
+   "take": "Reading a thread costs a request; a timestamp depends on the zone.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Replies, search, quoted text, downloads",
+   "sub": "A reply keeps the thread id only; one quoting form is cut; a file name can be a path",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.53,
+     "h": 2.93,
+     "lines": [
+      "src = ezgmail.GmailMessage(one()); h = gm({}, {}, {}, {})",
+      "src.reply('Yes, Saturday works.')",
+      "body = json.loads(h.log[0][2]); m = raw_of(h, 0)",
+      "print(list(body), body['threadId'], m['subject'], m['in-reply-to'])",
+      "print('replyAll:', src.replyAll('x'), len(h.log))",
+      "ezgmail.unread(); ezgmail.recent()",
+      "ezgmail.search('has:attachment')",
+      "for r in h.log[1:]:",
+      "    print(r[1].split('?')[1].replace('&alt=json', ''))",
+      "q1 = 'Ok.\\n\\nOn Sun, Jan 1, 2018 at 12:00 PM Al <a@b.c> wrote:'",
+      "q2 = 'Ok.\\n\\nOn Sun, 1 Jan 2018 at 12:00, Al <a@b.c> wrote:'",
+      "rq = ezgmail.removeQuotedParts",
+      "print(repr(rq(q1)), 'day-month form uncut:', rq(q2) == q2)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "['raw', 'threadId'] T1 RoboCop None\nreplyAll: None 1\nq=label%3AUNREAD&maxResults=25\nq=label%3AINBOX&maxResults=25\nq=has%3Aattachment&maxResults=25\n'Ok.\\n\\n' day-month form uncut: True",
+     "outLabel": "prints",
+     "label": "program replyCut_v1_0_0.py, lines 34 to 46 of 46"
+    },
+    {
+     "t": "prog",
+     "x": 5.05,
+     "y": 1.55,
+     "w": 4.34,
+     "h": 2.66,
+     "lines": [
+      "d = wd(); os.mkdir('inbox')",
+      "ps = [BODY, part('../evil.txt', 'A9')]",
+      "m = ezgmail.GmailMessage(one(parts=ps))",
+      "gm({'data': b64(b'PWNED'), 'size': 5})",
+      "print(m.downloadAllAttachments(downloadFolder='inbox'))",
+      "print(os.listdir('inbox'), sorted(os.listdir('.')))",
+      "open('tulips.jpg', 'wb').write(b'MINE')",
+      "ps = [BODY, part('tulips.jpg')]",
+      "m = ezgmail.GmailMessage(one(parts=ps))",
+      "gm({'data': b64(b'AAAA'), 'size': 4})",
+      "m.downloadAttachment('tulips.jpg')",
+      "print('tulips.jpg is now', open('tulips.jpg', 'rb').read())",
+      "print('no.jpg:', err(lambda: m.downloadAttachment('no.jpg'))[0])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "['../evil.txt']\n[] ['evil.txt', 'inbox']\ntulips.jpg is now b'AAAA'\nno.jpg: AttributeError",
+     "outLabel": "prints",
+     "label": "program downloadCut_v1_0_0.py, lines 34 to 46 of 46"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.52,
+     "w": 9.0,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Stand-in for Gmail: the real ezgmail on a local stand-in for Google's server, replies written by this study; Gmail was never reached. Lines 1 to 33 (imports, the Gmail stand-in and a comment) are not shown. NOT EXECUTED: Gmail threading the reply; any real download."
+    }
+   ],
+   "notes": "reply() posted a message with the threadId of the original and the original sender as the recipient, but with the subject unchanged, RoboCop and not Re: RoboCop, and without In-Reply-To or References. Google's sending guide names a matching Subject and those headers, with the threadId, as what makes a message join a thread, so whether Gmail threads these replies was not run and the slide says NOT EXECUTED. replyAll() made no API call and returned None. The queries of the three listing functions are visible in the requests: unread() asks for the label UNREAD, recent() for INBOX and search('has:attachment') passes the text to the API, which is Appendix B's answer to its third question, with 25 results by default. removeQuotedParts() cut only the English form On Sun, Jan 1, 2018 at 12:00 PM ... wrote: and left the replies of the form On Sun, 1 Jan 2018 at 12:00, a Turkish line and the English line with U+202F before PM. On the right, downloadAllAttachments() with an attachment named ../evil.txt wrote the file one level above the download folder, so a name that comes from a stranger's email is a path; the chapter says that downloadAttachment() overwrites an existing file, and it did: MINE became AAAA. A name that is not in the message raised AttributeError. Both programs ran the real library against a stand-in for Google's server.",
+   "take": "A reply keeps the thread id; a name with a path escapes the folder.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "An @ between the user and the machine",
+   "sub": "1971, on the ARPANET",
+   "items": [
+    {
+     "t": "text",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.7,
+     "h": 0.5,
+     "fs": 11,
+     "body": "Before 1971, mail reached only users of the same computer."
+    },
+    {
+     "t": "code",
+     "x": 0.5,
+     "y": 1.95,
+     "w": 4.7,
+     "h": 1.97,
+     "rows": [
+      [
+       "from email.utils import parseaddr, formataddr",
+       ""
+      ],
+      [
+       "parseaddr('Al Sweigart <al@inventwithpython.com>')",
+       "('Al Sweigart', 'al@inventwithpython.com')"
+      ],
+      [
+       "'al@inventwithpython.com'.partition('@')",
+       "('al', '@', 'inventwithpython.com')"
+      ],
+      [
+       "formataddr(('Jon Doe', 'jon@example.org'))",
+       "'Jon Doe <jon@example.org>'"
+      ],
+      [
+       "parseaddr('real@example.com, evil@example.net')",
+       "('', '')"
+      ],
+      [
+       "parseaddr('real@example.com, evil@example.net', strict=False)",
+       "('', 'real@example.com')"
+      ]
+     ],
+     "fs": 7.5,
+     "cap": "run under Python 3.14.6; no row reads the clock or the network"
+    },
+    {
+     "t": "beats",
+     "x": 5.5,
+     "y": 1.5,
+     "w": 4.0,
+     "h": 2.6,
+     "fs": 12,
+     "items": [
+      "1971: SNDMSG adapted for TENEX",
+      "The @ separates user and machine",
+      "Chosen: it was in no user name",
+      "Today: parseaddr splits at it"
+     ]
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.5,
+     "w": 9.0,
+     "who": "Ray Tomlinson, a programmer at Bolt, Beranek and Newman (BBN)",
+     "where": "BBN, on the ARPANET, adapting the program SNDMSG for the TENEX operating system",
+     "when": "1971, on the ARPANET",
+     "link": "https://en.wikipedia.org/wiki/Ray_Tomlinson",
+     "linkText": "en.wikipedia.org"
+    }
+   ],
+   "notes": "Wikipedia's article on Ray Tomlinson says he invented the first email program on the ARPANET in 1971, the first system able to send mail between users on different hosts. Before that, mail could be sent only to others who used the same computer. He was asked to adapt SNDMSG, which let users leave messages for others on the same time-sharing computer, so that it could run on TENEX, and he built in code from his file-transfer program CPYNET. To separate the user name from the name of the machine he used the @ sign, because it was not used in user names or in TENEX programming. In this study email.utils.parseaddr split 'Al Sweigart <al@inventwithpython.com>' into the name and the address at that sign. The account rests on these sources. Wikipedia, 'Ray Tomlinson' (the first email program on the ARPANET in 1971; SNDMSG adapted for TENEX; the @ sign chosen because it was not used in user names), read 2026-10-13; this study's leaves EmailMessageBuild and AddressParsing. The console on the slide uses only the email package of the standard library, so each row can be typed into any Python: parseaddr() splits the sender of the chapter's example into a name and an address, partition('@') splits the address at Tomlinson's sign, and formataddr() puts a name and an address back together. The last two rows show a trap that the research found in every interpreter it ran: parseaddr() given two addresses in one string returns two empty strings, the answer of a parser that rejects malformed input, and strict=False returns the first address. The strict argument is documented as new in Python 3.13, yet it was accepted by the 3.11.17 and 3.12.3 packages of the machine, which carry the security fix; the table on a later slide shows it.",
+   "take": "Every address your program builds still has Tomlinson's @ in it.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Building a message: EmailMessage",
+   "sub": "Headers, a body, a MIME tree and the bytes that are sent; CRLF only with policy.SMTP",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.51,
+     "h": 3.21,
+     "lines": [
+      "m = mk()",
+      "raw = m.as_bytes()",
+      "smtp = m.as_bytes(policy=policy.SMTP)",
+      "print('CRLF:', raw.count(b'\\r\\n'), '| with policy.SMTP:', smtp.count(b'\\r\\n'))",
+      "print(len(m.keys()), 'headers;', m['Content-Type'], m['Content-Transfer-Encoding'])",
+      "m.add_alternative('<p>Watch <b>RoboCop</b>?</p>', subtype='html')",
+      "m.add_attachment(b'\\0\\1\\2', maintype='application', subtype='octet-stream',",
+      "                 filename='poster.bin')",
+      "for p in m.walk():",
+      "    print(p.get_content_type())",
+      "print([a.get_filename() for a in m.iter_attachments()])",
+      "print(m.get_body(preferencelist=('html', 'plain')).get_content_type())"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "CRLF: 0 | with policy.SMTP: 10\n8 headers; text/plain; charset=\"utf-8\" 7bit\nmultipart/mixed\nmultipart/alternative\ntext/plain\ntext/html\napplication/octet-stream\n['poster.bin']\ntext/html",
+     "outLabel": "prints",
+     "label": "program buildCut_v1_0_0.py, lines 19 to 30 of 30"
+    },
+    {
+     "t": "card",
+     "head": "What EZGmail hides",
+     "body": "ezgmail builds a MIME message and posts it in base64. The chapter shows neither the message nor the standard library that can build one.",
+     "x": 6.26,
+     "y": 1.4,
+     "w": 3.24,
+     "h": 1.5,
+     "fs": 9,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "Line ends",
+     "body": "as_bytes() ends lines with LF; policy.SMTP ends them with CRLF as the protocol wants: 0 against 10 here.",
+     "x": 6.26,
+     "y": 2.95,
+     "w": 3.24,
+     "h": 1.3,
+     "fs": 9,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 6.26,
+     "y": 4.3,
+     "w": 3.24,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Lines 1 to 18 (imports, a helper that builds the message and a comment) are not shown. The date and Message-ID are fixed so the text is the same on every run."
+    }
+   ],
+   "notes": "The standard library builds a message with EmailMessage, which the chapter does not use; EZGmail does the equivalent for the reader. The program makes a plain message with set_content() and counts its headers, eight once the body is set, with Content-Type text/plain, charset utf-8, and a transfer encoding of 7bit. Lines end with a line feed in as_bytes() and with a carriage return and a line feed under policy.SMTP, which counted 0 and 10, because the protocol of RFC 5321 ends lines with CRLF. add_alternative() turns the message into multipart/alternative with a text part and an html part, and add_attachment() wraps it in multipart/mixed with the attachment, so walk() lists the tree: multipart/mixed, multipart/alternative, text/plain, text/html and application/octet-stream. iter_attachments() lists the file name, and get_body() with the preference html, plain returns the html part. The date is set with formatdate() from a number and the Message-ID is fixed, so that the printed text is the same on every run. The program imports only the email package and its policy module and opens no connection; whether it runs in a Python in a browser was not tested.",
+   "take": "EmailMessage builds the message; policy.SMTP gives the CRLF line ends.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Headers, addresses and line breaks",
+   "sub": "A Turkish subject is an encoded word; two addresses in one string parse to nothing",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.08,
+     "h": 3.21,
+     "lines": [
+      "m = EmailMessage(); m['Subject'] = 'Yedekleme bitti \u015f\u011f\u0131'",
+      "print(line := m.as_bytes().decode().splitlines()[0])",
+      "print(str(make_header(decode_header(line.split(': ', 1)[1]))))",
+      "s = '\"Doe, Jon\" <jon@example.org>, Al Sweigart <al@example.com>'",
+      "print(eu.getaddresses([s]))",
+      "print(eu.getaddresses([s.replace('\"Doe, Jon\"', 'Doe, Jon')]))",
+      "two = 'real@example.com, evil@example.net'",
+      "print(eu.parseaddr(two), eu.parseaddr(two, strict=False))",
+      "bad = 'hi\\r\\nBcc: evil@example.net'",
+      "try: EmailMessage()['Subject'] = bad",
+      "except ValueError: print('EmailMessage: ValueError at once')",
+      "t = MIMEText('x'); t['Subject'] = bad",
+      "try: t.as_string()",
+      "except Exception as ex: print('MIMEText, when written:', type(ex).__name__)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "Subject: Yedekleme bitti =?utf-8?b?xZ/En8Sx?=\nYedekleme bitti \u015f\u011f\u0131\n[('Doe, Jon', 'jon@example.org'), ('Al Sweigart', 'al@example.com')]\n[('', 'Doe'), ('Jon', 'jon@example.org'), ('Al Sweigart', 'al@example.com')]\n('', '') ('', 'real@example.com')\nEmailMessage: ValueError at once\nMIMEText, when written: HeaderParseError",
+     "outLabel": "prints",
+     "label": "program headersCut_v1_0_0.py, lines 15 to 28 of 28"
+    },
+    {
+     "t": "card",
+     "head": "Header injection",
+     "body": "A line break in a header would let text add a Bcc header. EmailMessage refuses it at once; MIMEText, which EZGmail uses, refuses it when the message is written.",
+     "x": 5.78,
+     "y": 1.4,
+     "w": 3.72,
+     "h": 1.7,
+     "fs": 9,
+     "accent": "orange"
+    },
+    {
+     "t": "card",
+     "head": "Quote the name",
+     "body": "A comma in a name needs quotes, or one person becomes two.",
+     "x": 5.78,
+     "y": 3.2,
+     "w": 3.72,
+     "h": 1.0,
+     "fs": 9,
+     "accent": "slate"
+    },
+    {
+     "t": "foot",
+     "x": 5.78,
+     "y": 4.25,
+     "w": 3.72,
+     "h": 0.17,
+     "fs": 8,
+     "body": "Lines 1 to 14 (imports, a helper and a comment) are not shown."
+    }
+   ],
+   "notes": "A header may hold only ASCII, so a subject with Turkish letters is written as an encoded word, =?utf-8?b?...?=, and decoded back by decode_header() and make_header(); the printed Subject line shows the encoded part and the next line the decoded text. An address list is split by getaddresses(): with the quotes around Doe, Jon the name stays one name, and without them the comma splits one person into two entries, the first with no address. parseaddr() given two addresses in one string returns two empty strings, and with strict=False it returns the first address; the research saw the empty answer in all eleven interpreters it ran. The last lines are the defence against header injection. EmailMessage raises ValueError at once for a value with a line break, and the legacy MIMEText accepts it and raises HeaderParseError when the message is written; ezgmail uses MIMEText, which is why a subject with a line break raised before any request was made. Without the check, text after the line break would be read as a new header, such as a Bcc to a stranger. This program uses only the standard library.",
+   "take": "Encode the header, quote the name, and refuse the line break.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "SMTP with STARTTLS",
+   "sub": "Upgrade the connection, verify the certificate, and only then log in",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.45,
+     "w": 4.1,
+     "h": 3.15,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.45,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The client program",
+       "x": 0.61,
+       "y": 1.482,
+       "w": 0.98,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 1.87,
+       "x2": 1.1,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.45,
+       "y": 1.45,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The SMTP server",
+       "x": 3.51,
+       "y": 1.482,
+       "w": 0.98,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.0,
+       "y1": 1.87,
+       "x2": 4.0,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 2.343,
+       "x2": 4.0,
+       "y2": 2.343,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls ehlo() after connecting",
+       "x": 1.2,
+       "y": 2.139,
+       "w": 2.7,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.0,
+       "y1": 2.653,
+       "x2": 1.1,
+       "y2": 2.653,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Advertises STARTTLS",
+       "x": 1.2,
+       "y": 2.449,
+       "w": 2.7,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 2.963,
+       "x2": 4.0,
+       "y2": 2.963,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls starttls() with a context",
+       "x": 1.2,
+       "y": 2.759,
+       "w": 2.7,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.0,
+       "y1": 3.273,
+       "x2": 1.1,
+       "y2": 3.273,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Answers 220 and the session uses TLS",
+       "x": 1.2,
+       "y": 3.069,
+       "w": 2.7,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 3.583,
+       "x2": 4.0,
+       "y2": 3.583,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls login() with the user and the password",
+       "x": 1.2,
+       "y": 3.379,
+       "w": 2.7,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.0,
+       "y1": 3.893,
+       "x2": 1.1,
+       "y2": 3.893,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Answers 235 Authentication successful",
+       "x": 1.2,
+       "y": 3.689,
+       "w": 2.7,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 4.203,
+       "x2": 4.0,
+       "y2": 4.203,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls send_message() for the recipients",
+       "x": 1.2,
+       "y": 3.999,
+       "w": 2.7,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.0,
+       "y1": 4.513,
+       "x2": 1.1,
+       "y2": 4.513,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Answers 250 for the message",
+       "x": 1.2,
+       "y": 4.309,
+       "w": 2.7,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "ASmtpSessionWithStarttls"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.1,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ASmtpSessionWithStarttls - Interaction pattern, 30 of 33 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.8,
+     "y": 1.55,
+     "w": 4.4,
+     "h": 2.52,
+     "lines": [
+      "s = conn(); print('before:', ehlo(s))",
+      "s.starttls(context=ctx); print('after:', ehlo(s))",
+      "s.send_message(mk()); print('TLS seen:', box[0]['tls']); s.quit()",
+      "s = conn()",
+      "try: s.starttls(context=ssl.create_default_context())",
+      "except ssl.SSLCertVerificationError as e: print(e.verify_message)",
+      "s = conn(); print('no context:', s.starttls()[0])",
+      "s = conn(); s.starttls(context=ctx); s.ehlo()",
+      "print('login after:', s.login('user', 'secret')[0])",
+      "s.quit()"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "before: ['STARTTLS']\nafter: ['AUTH LOGIN PLAIN']\nTLS seen: True\nself-signed certificate\nno context: 220\nlogin after: 235",
+     "outLabel": "prints",
+     "label": "program starttlsCut_v1_0_0.py, lines 53 to 62 of 62"
+    },
+    {
+     "t": "foot",
+     "x": 4.8,
+     "y": 4.11,
+     "w": 4.7,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Stand-in for an SMTP server: aiosmtpd on 127.0.0.1, a local stand-in; Gmail's servers were never reached. Lines 1 to 52 (imports, helpers, the stand-in server and a comment) are not shown."
+    }
+   ],
+   "notes": "The sequence diagram is the order of an SMTP session with STARTTLS: the client connects and calls ehlo(), the server advertises STARTTLS, the client calls starttls() with a context, the server answers 220 and the session uses TLS, the client logs in and sends the message, and the server answers 250. The chapter does not use smtplib, and its page never writes the words STARTTLS, TLS or SSL. The program ran the real smtplib against a local stand-in for an SMTP server, aiosmtpd on 127.0.0.1 with a self-signed certificate, so no Gmail server was reached; imap.gmail.com and smtp.gmail.com timed out from this machine. Before STARTTLS the server advertised STARTTLS and no AUTH; after it, AUTH LOGIN PLAIN, and the server saw TLS. With the default context the self-signed certificate was refused with SSLCertVerificationError; starttls() with no context at all returned 220, an encrypted connection that is not authenticated, because no certificate was checked. In a longer run of the same local stand-in, program smtpLocalStarttls, which is not on the slide, login() before STARTTLS raised SMTPNotSupportedError, because the server offers AUTH only after TLS; on the slide, after STARTTLS with a context that trusts the certificate, the login returned 235. The RFC Editor's page for RFC 821, Simple Mail Transfer Protocol, by Jonathan B. Postel, is dated August 1982 and names the Information Sciences Institute of the University of Southern California in Marina del Rey. The same page now says that the RFC is obsolete and points to RFC 2821, which RFC 5321 of October 2008 by J. Klensin in turn obsoleted. Python's smtplib still opens a conversation with EHLO, the extended greeting that RFC 821's HELO grew into, and sends MAIL FROM and RCPT TO commands. In this study a local aiosmtpd server received exactly those commands, and the message header's From was not the MAIL FROM of the envelope. The account rests on these sources. RFC Editor, RFC 821 (Postel, August 1982; this RFC is now obsolete, see RFC 2821) and RFC 5321 (Klensin, October 2008, obsoletes 2821), read 2026-10-13; this study's leaves StarttlsSession and EnvelopeVersusHeader.",
+   "take": "Upgrade with STARTTLS, verify the certificate, then log in.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Refused recipients and the envelope",
+   "sub": "A Bcc recipient is in the envelope, not in the text; the From header can say anything",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.22,
+     "h": 3.07,
+     "lines": [
+      "s = conn()",
+      "r = s.send_message(mk(to='ok@example.org, x@refused.example'))",
+      "print(r)",
+      "print('stored for', box[0]['to'])",
+      "try: s.send_message(mk(to='x@refused.example'))",
+      "except smtplib.SMTPRecipientsRefused:",
+      "    print('raised; stored:', len(box))",
+      "s.quit()",
+      "s = conn(); s.starttls(context=ctx); s.ehlo()",
+      "try: s.login('user', 'wrong')",
+      "except smtplib.SMTPAuthenticationError as e:",
+      "    print('password:', e.smtp_code)",
+      "s.close()",
+      "try: smtplib.SMTP('127.0.0.1', 1, timeout=3)",
+      "except OSError as e: print('closed port:', type(e).__name__)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "{'x@refused.example': (550, b'5.1.1 no such mailbox')}\nstored for ['ok@example.org']\nraised; stored: 1\npassword: 535\nclosed port: ConnectionRefusedError",
+     "outLabel": "prints",
+     "label": "program refusalsCut_v1_0_0.py, lines 51 to 65 of 65"
+    },
+    {
+     "t": "prog",
+     "x": 5.05,
+     "y": 1.55,
+     "w": 4.47,
+     "h": 2.24,
+     "lines": [
+      "s.send_message(mk(extra={'Cc': 'cc@x.org', 'Bcc': 'bcc@x.org'}))",
+      "h = parse(0)",
+      "print(box[0]['from'], box[0]['to'])",
+      "print('header Bcc:', h['Bcc'], '| Cc:', h['Cc'])",
+      "print('bcc@x.org in text:', b'bcc@x.org' in box[0]['data'])",
+      "s.sendmail('bounces@mallory.example', ['jon@example.org'],",
+      "           mk(frm='CEO <ceo@bank.example>').as_bytes())",
+      "h = parse(1)",
+      "print(box[1]['from'], '|', h['From'], '| login:', box[1]['auth'])",
+      "s.quit()"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "al@example.com ['jon@example.org', 'bcc@x.org', 'cc@x.org']\nheader Bcc: None | Cc: cc@x.org\nbcc@x.org in text: False\nbounces@mallory.example | CEO <ceo@bank.example> | login: False",
+     "outLabel": "prints",
+     "label": "program envelopeCut_v1_0_0.py, lines 51 to 60 of 60"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.65,
+     "w": 9.0,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Stand-in for an SMTP server: aiosmtpd on 127.0.0.1, a local stand-in; Gmail's servers were never reached. Lines 1 to 50 (imports, helpers, the stand-in server and a comment) are not shown."
+    }
+   ],
+   "notes": "On the left, one of two recipients is refused with 550. send_message() does not raise: it returns a dict of the refused address and the answer, and the message was still stored for the other, so a program that ignores the return value loses a recipient without a sound. When every recipient is refused it raises SMTPRecipientsRefused. A wrong password raised SMTPAuthenticationError with the code 535, and a closed port raised ConnectionRefusedError, an OSError. On the right, the envelope is separate from the header. send_message() sent RCPT TO for the To, the Bcc and the Cc addresses, and the Bcc header was not in the text, as the documentation of send_message says; the address of the Bcc recipient appears nowhere in the message. sendmail() was given an envelope sender, bounces@mallory.example, that matches neither the From header, CEO <ceo@bank.example>, nor any login, and the server accepted it without asking for a login. The chapter says it is fairly trivial for hackers to fake a from address; this is the demonstration, and it is why a program should not trust a From line. The chapter never uses the words SPF, DKIM or DMARC, the standards that let a receiving server check the sender. The research recorded that gmail.com publishes the SPF record v=spf1 redirect=_spf.google.com and the DMARC record v=DMARC1; p=none; sp=quarantine, and that Google's guidelines require authentication from senders of more than 5,000 messages a day. Both programs ran the real smtplib against the local stand-in server.",
+   "take": "The envelope decides who gets the mail; the From header decides nothing.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Reading mail with IMAP",
+   "sub": "A message is unseen, seen, marked Deleted, then expunged; Python 3.14 adds IDLE",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.85,
+     "h": 2.85,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.9,
+       "y": 1.7,
+       "w": 1.5,
+       "h": 0.4,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "An unseen message in the INBOX",
+       "x": 1.96,
+       "y": 1.747,
+       "w": 1.38,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.9,
+       "y": 2.417,
+       "w": 1.5,
+       "h": 0.4,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A message with the Seen flag",
+       "x": 1.96,
+       "y": 2.464,
+       "w": 1.38,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.9,
+       "y": 3.133,
+       "w": 1.5,
+       "h": 0.4,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A message with the Deleted flag",
+       "x": 1.96,
+       "y": 3.18,
+       "w": 1.38,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 1.9,
+       "y": 3.85,
+       "w": 1.5,
+       "h": 0.4,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A message that EXPUNGE removed",
+       "x": 1.96,
+       "y": 3.897,
+       "w": 1.38,
+       "h": 0.306,
+       "fs": 8.5,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.56,
+       "y": 1.42,
+       "w": 0.18,
+       "h": 0.18,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 2.65,
+       "y1": 1.6,
+       "x2": 2.65,
+       "y2": 1.7,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.65,
+       "y1": 2.1,
+       "x2": 2.65,
+       "y2": 2.417,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.67,
+       "y1": 2.258,
+       "x2": 3.66,
+       "y2": 2.258,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "A fetch of RFC822 sets the Seen flag",
+       "x": 3.7,
+       "y": 2.114,
+       "w": 1.75,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.65,
+       "y1": 2.817,
+       "x2": 2.65,
+       "y2": 3.133,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.67,
+       "y1": 2.975,
+       "x2": 3.66,
+       "y2": 2.975,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "STORE adds the Deleted flag",
+       "x": 3.7,
+       "y": 2.898,
+       "w": 1.75,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.65,
+       "y1": 3.533,
+       "x2": 2.65,
+       "y2": 3.85,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.67,
+       "y1": 3.692,
+       "x2": 3.66,
+       "y2": 3.692,
+       "color": "C9BFAE",
+       "w": 0.75,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "EXPUNGE leaves the INBOX empty",
+       "x": 3.7,
+       "y": 3.614,
+       "w": 1.75,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.4,
+       "y1": 1.81,
+       "x2": 3.66,
+       "y2": 1.81,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.66,
+       "y1": 1.81,
+       "x2": 3.66,
+       "y2": 1.99,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.66,
+       "y1": 1.99,
+       "x2": 3.4,
+       "y2": 1.99,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "A fetch with BODY.PEEK leaves the message unseen",
+       "x": 3.7,
+       "y": 1.756,
+       "w": 1.75,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.9,
+       "y1": 1.9,
+       "x2": 1.78,
+       "y2": 1.9,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.78,
+       "y1": 1.9,
+       "x2": 1.78,
+       "y2": 3.333,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.78,
+       "y1": 3.333,
+       "x2": 1.9,
+       "y2": 3.333,
+       "color": "2F6D62",
+       "w": 1.5,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "STORE adds the Deleted flag",
+       "x": 0.5,
+       "y": 2.472,
+       "w": 1.18,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "right",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 3.4,
+       "y1": 4.05,
+       "x2": 3.8,
+       "y2": 4.05,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.8,
+       "y": 3.91,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.86,
+       "y": 3.97,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      }
+     ],
+     "did": "AMessageInAnImapMailbox"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.28,
+     "w": 4.85,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram AMessageInAnImapMailbox - LifeCycle pattern, 34 of 35 words grounded in the chapter's text"
+    },
+    {
+     "t": "code",
+     "x": 5.5,
+     "y": 1.4,
+     "w": 4.0,
+     "h": 2.54,
+     "rows": [
+      [
+       "import imaplib, smtplib",
+       ""
+      ],
+      [
+       "smtplib.SMTP_PORT, smtplib.SMTP_SSL_PORT",
+       "(25, 465)"
+      ],
+      [
+       "imaplib.IMAP4_PORT, imaplib.IMAP4_SSL_PORT",
+       "(143, 993)"
+      ],
+      [
+       "hasattr(imaplib.IMAP4, 'idle')",
+       "True"
+      ],
+      [
+       "imaplib.Commands['IDLE']",
+       "('AUTH', 'SELECTED')"
+      ],
+      [
+       "imaplib.ParseFlags(b'1 (FLAGS (\\\\Seen))')",
+       "(b'\\\\Seen',)"
+      ],
+      [
+       "from datetime import datetime as dt, timezone as tz",
+       ""
+      ],
+      [
+       "d = dt(2026, 12, 9, 13, 28, 48, tzinfo=tz.utc)",
+       ""
+      ],
+      [
+       "imaplib.Time2Internaldate(d)",
+       "'\"09-Dec-2026 13:28:48 +0000\"'"
+      ]
+     ],
+     "fs": 7.4,
+     "cap": "run under Python 3.14.6; no row reads the clock or the network"
+    },
+    {
+     "t": "foot",
+     "x": 5.5,
+     "y": 4.26,
+     "w": 4.0,
+     "h": 0.61,
+     "fs": 8.5,
+     "body": "Recorded 13 Oct 2026, not run again here: dovecot 2.3.21 on 127.0.0.1, a local stand-in for imap.gmail.com. SEARCH UNSEEN found the message, BODY.PEEK kept it unseen, RFC822 set Seen, STORE and EXPUNGE emptied the INBOX, and idle() saw EXISTS."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.65,
+     "w": 4.85,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "NOT EXECUTED: any connection to imap.gmail.com or smtp.gmail.com; a TCP connect to each timed out from this machine and nothing was sent."
+    }
+   ],
+   "notes": "The state diagram follows one message through the INBOX of an IMAP server: it arrives unseen; a fetch with BODY.PEEK leaves it unseen, a fetch of RFC822 sets the Seen flag, STORE adds the Deleted flag from either state, and EXPUNGE removes it. This is the delete step of the Email-Based Computer Control program. The chapter does not use imaplib, which the standard library has and which the chapter names only to say EZGmail is better. The console on the right uses only the standard library: the ports 25, 465, 143 and 993; the fact that imaplib.IMAP4.idle exists in Python 3.14, where the IDLE command of RFC 2177 was added; and the parsers ParseFlags() and Time2Internaldate(). The session itself is a record of 13 October 2026 and this deck does not run it again: the research ran dovecot 2.3.21 on 127.0.0.1, with a self-signed certificate and one user, as a local stand-in for Gmail's IMAP server, and read it with imaplib over STARTTLS. SEARCH UNSEEN found the message; a FETCH with BODY.PEEK left the flags alone; a FETCH of RFC822 set Seen; STORE with the Deleted flag and EXPUNGE left the INBOX empty; and idle() in Python 3.14.6 reported EXISTS when a message arrived a second later. A wrong password raised error AUTHENTICATIONFAILED. imapclient 4.1.0, the library the second edition used, did the same against dovecot. Gmail's own servers were NOT EXECUTED: a TCP connection to imap.gmail.com on 993 and to smtp.gmail.com on 587 and 465 timed out after ten seconds, with nothing sent.",
+   "take": "A message is unseen, seen, marked, then expunged.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What changed in Python's mail modules",
+   "sub": "The same probe under five interpreters; every cell is run again by the check",
+   "items": [
+    {
+     "t": "table",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "colW": [
+      3.3,
+      1.14,
+      1.14,
+      1.14,
+      1.14,
+      1.14
+     ],
+     "fs": 8.5,
+     "rowH": 0.255,
+     "rows": [
+      [
+       "check",
+       "3.11.17",
+       "3.12.3",
+       "3.13.16",
+       "3.14.6",
+       "3.15.0b4"
+      ],
+      [
+       "IMAP4.idle() exists",
+       "no",
+       "no",
+       "no",
+       "yes",
+       "yes"
+      ],
+      [
+       "starttls(keyfile=...) accepted",
+       "yes",
+       "no",
+       "no",
+       "no",
+       "no"
+      ],
+      [
+       "import smtpd",
+       "yes",
+       "gone",
+       "gone",
+       "gone",
+       "gone"
+      ],
+      [
+       "import telnetlib",
+       "yes",
+       "yes",
+       "gone",
+       "gone",
+       "gone"
+      ],
+      [
+       "default context: STRICT + PARTIAL_CHAIN",
+       "no",
+       "no",
+       "yes",
+       "yes",
+       "yes"
+      ],
+      [
+       "default context: lowest TLS version",
+       "TLS 1.2",
+       "lowest",
+       "TLS 1.2",
+       "TLS 1.2",
+       "TLS 1.2"
+      ],
+      [
+       "parseaddr(strict=...) accepted",
+       "yes",
+       "yes",
+       "yes",
+       "yes",
+       "yes"
+      ],
+      [
+       "localtime(isdst=0)",
+       "yes",
+       "yes",
+       "yes",
+       "TypeError",
+       "TypeError"
+      ],
+      [
+       "smtplib writes",
+       "mail FROM",
+       "mail FROM",
+       "mail from",
+       "mail from",
+       "mail from"
+      ]
+     ]
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.07,
+     "w": 9.0,
+     "h": 0.49,
+     "fs": 9,
+     "body": "Correction to the research text (finding F13): it puts a minimum of TLS 1.2 in create_default_context() from 3.13. Run here, 3.11.17 already shows TLS 1.2, and the documentation dates it to 3.10; what 3.13 added is the two verify flags. The 3.12.3 package shows the lowest version, a setting of that build."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.59,
+     "w": 9.0,
+     "h": 0.34,
+     "fs": 9,
+     "body": "NOT EXECUTED: Python 3.14.7 and later and the final 3.15.0; 3.15.0b4 is a beta. 3.11, 3.12 and 3.13 are the Ubuntu packages of this machine, 3.14.6 and 3.15.0b4 come from uv."
+    }
+   ],
+   "notes": "The table is the same probe run under five interpreters, and the deck check runs all five again every time it checks the deck. IMAP4.idle() exists from Python 3.14. The keyfile and certfile arguments of starttls() and of the SSL classes of smtplib and imaplib are gone from 3.12; the documentation of 3.14 says so, although the body text of starttls() still describes them. smtpd, asyncore and asynchat were removed in 3.12, and cgi, imghdr, sndhdr, nntplib and telnetlib in 3.13; PEP 594 is the list. ssl.create_default_context() adds the verify flags VERIFY_X509_STRICT and VERIFY_X509_PARTIAL_CHAIN from 3.13, as the documentation says, so a certificate that an older context accepted, one that does not follow RFC 5280, may now be refused. smtplib writes its commands in lower case from 3.13, mail from: and rcpt to:, where 3.12 wrote mail FROM:; this was seen on the wire and is not in the documentation. email.utils.localtime() lost its isdst argument in 3.14, after a deprecation in 3.12. The research text, finding F13, says the minimum TLS version of create_default_context() became 1.2 in 3.13. Run here it is TLS 1.2 already in 3.11.17, the documentation puts it in 3.10, and the 3.12.3 package of Ubuntu reports the lowest supported version, which is a setting of that build; so that clause of F13 is wrong, and the table shows the evidence. The same finding says that parseaddr()'s strict argument came in 3.13; the documentation says so, but the 3.11.17 and 3.12.3 packages accept it, because the security fix was backported. The research ran eleven interpreters, 3.11 to 3.15.0b4, and found 19 of 48 compared items different between releases; five are here. Python 3.14.7 and later and the final 3.15.0 were NOT EXECUTED, because uv offered only 3.14.6 and 3.15.0b4 on the day.",
+   "take": "Mail modules changed between 3.11 and 3.15; check the release.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "SMS email gateways, and the end of one",
+   "sub": "17 June 2025",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.02,
+     "h": 2.38,
+     "lines": [
+      "print(len(T), 'providers; SMS', addr('2125551234', 'Verizon'))",
+      "print('MMS', addr('2125551234', 'Verizon', True))",
+      "print('Boost MMS:', addr('5555550100', 'Boost Mobile', True))",
+      "print('vtext.com:', [c for c, v in T.items() if v[0] == 'vtext.com'])",
+      "print('distinct SMS domains:', len(set(v[0] for v in T.values())))",
+      "today = D(2026, 10, 13)",
+      "print('AT&T off', (today - D(2025, 6, 17)).days, 'days before', today)",
+      "print('Verizon ends in', (D(2027, 3, 31) - today).days, 'days from', today)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "12 providers; SMS 2125551234@vtext.com\nMMS 2125551234@vzwpix.com\nBoost MMS: 5555550100@sms.myboostmobile.com\nvtext.com: ['Verizon', 'Xfinity Mobile']\ndistinct SMS domains: 11\nAT&T off 483 days before 2026-10-13\nVerizon ends in 169 days from 2026-10-13",
+     "outLabel": "prints",
+     "label": "program gatewayCut_v1_0_0.py, lines 19 to 26 of 26"
+    },
+    {
+     "t": "card",
+     "head": "Recorded 13 Oct 2026",
+     "body": "A DNS query for the mail exchangers of the 18 gateway domains found none for txt.att.net, mms.att.net and sms.cricketwireless.net, NXDOMAIN for both of Sprint's and SERVFAIL for sms.myboostmobile.com; 12 of 18 had one. A missing record is a symptom, not proof.",
+     "x": 5.77,
+     "y": 1.4,
+     "w": 3.73,
+     "h": 1.7,
+     "fs": 9,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "No text was sent or delivered through a gateway or Twilio. Twilio's API answered a request without credentials with HTTP 401, and nothing more.",
+     "x": 5.77,
+     "y": 3.15,
+     "w": 3.73,
+     "h": 1.3,
+     "fs": 9,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.99,
+     "w": 5.02,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 18 (imports and the 12 rows of Table 20-1, typed from the chapter) are not shown. Pure arithmetic; no message is sent."
+    },
+    {
+     "t": "factrow",
+     "x": 0.5,
+     "y": 4.55,
+     "w": 9.0,
+     "who": "AT&T Wireless, which told its customers they could no longer send or receive texts using email",
+     "where": "AT&T's support page, article KM1061254; the gateways txt.att.net and mms.att.net of Table 20-1",
+     "when": "17 June 2025",
+     "link": "https://www.att.com/support/article/wireless/KM1061254/",
+     "linkText": "att.com"
+    }
+   ],
+   "notes": "AT&T's own support page says that effective 17 June 2025 you can no longer send or receive texts using email, and that on that day its email-to-text and text-to-email service was shut down. Table 20-1 of chapter 20 still lists AT&T first, with the gateways txt.att.net and mms.att.net, and the chapter itself warns that the fact that a gateway delivers a text today does not mean it will work tomorrow. In this study a DNS query for the mail exchangers of txt.att.net and mms.att.net came back without any, while 12 of the other 16 gateway domains of the table had them (sprint's two answered NXDOMAIN and boost's SERVFAIL). Verizon's page says its shutdown of vtext.com and vzwpix.com is expected to be complete by 31 March 2027. The account rests on these sources. AT&T support article KM1061254 (shut down on June 17, 2025); Verizon, 'Shutdown of email to Vtext and VZWPix' (03/31/2027); chapter 20 of the 3rd edition (Table 20-1 and the list of disadvantages), read 2026-10-13; this study's live observation of MX records and its leaves AttNotice and GatewayAddress. Table 20-1 of the chapter lists 12 providers, each with an SMS domain and some with a different MMS domain. An address is the number, an @ and the domain: 2125551234@vtext.com is the chapter's own example, and 2125551234@vzwpix.com is its MMS address. Verizon and Xfinity Mobile share the SMS domain vtext.com, so the 12 rows hold 11 distinct SMS domains. The program counts the days from the notices to the date of this study: 483 days after AT&T's shutdown on a Tuesday, and 169 days before the end that Verizon expects by 31 March 2027, a Wednesday, with some senders losing access earlier. The DNS queries went over HTTPS to dns.google on 13 October 2026; of the 18 gateway domains 12 had mail exchangers; txt.att.net, mms.att.net and sms.cricketwireless.net had none (the answer for the last one holds names without an MX priority, so it is not a mail exchanger), the two Sprint domains answered NXDOMAIN and sms.myboostmobile.com answered SERVFAIL. That is 12 of 18, and 12 of the 16 domains other than the two of AT&T, as the story text and the research (finding F9, version 1.0.2) say. Version 1.0.0 of this deck said 13 of 18 because it counted the non-empty answer of sms.cricketwireless.net as a mail exchanger; 1.0.1 corrects it. The chapter's own list of disadvantages is that a gateway is not guaranteed to work, does not say whether the message was delivered, and may stop working; the notices are the proof. Delivery through any gateway and anything about Twilio beyond one unauthenticated request were NOT EXECUTED.",
+   "take": "A gateway the carrier owns can be switched off without asking you.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "How long a text can be",
+   "sub": "160 characters in GSM-7, 70 in UCS-2; one stray character changes the count",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.27,
+     "h": 2.1,
+     "lines": [
+      "print('140 * 8 // 7 =', 140 * 8 // 7, '| 140 // 2 =', 140 // 2)",
+      "for t in ('Hello, world!', 'a' * 160, 'a' * 161, '{x}', 'Yedekleme tamamlandi',",
+      "          'Yedekleme tamamland\u0131', '\u015f' * 70, '\u015f' * 71):",
+      "    print(t[:20].ljust(21), str(len(t)).rjust(3), segments(t))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "140 * 8 // 7 = 160 | 140 // 2 = 70\nHello, world!          13 ('GSM-7', 13, 1)\naaaaaaaaaaaaaaaaaaaa  160 ('GSM-7', 160, 1)\naaaaaaaaaaaaaaaaaaaa  161 ('GSM-7', 161, 2)\n{x}                     3 ('GSM-7', 5, 1)\nYedekleme tamamlandi   20 ('GSM-7', 20, 1)\nYedekleme tamamland\u0131   20 ('UCS-2', 20, 1)\n\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f   70 ('UCS-2', 70, 1)\n\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f\u015f   71 ('UCS-2', 71, 2)",
+     "outLabel": "prints",
+     "label": "program segmentsCut_v1_0_0.py, lines 24 to 27 of 27"
+    },
+    {
+     "t": "card",
+     "head": "The phone's coding",
+     "body": "140 bytes of 8 bits hold 160 characters of 7 bits; { costs two. One dotless i makes the text UCS-2 at 16 bits, so 70 fit.",
+     "x": 6.02,
+     "y": 1.5,
+     "w": 3.48,
+     "h": 1.95,
+     "fs": 9.5,
+     "accent": "slate"
+    },
+    {
+     "t": "card",
+     "head": "NOT EXECUTED here",
+     "body": "The 153 and 67 characters of each part of a longer text come from a 6-byte header, (140 - 6) * 8 // 7 and (140 - 6) // 2; no page opened by this study confirms them.",
+     "x": 6.02,
+     "y": 3.55,
+     "w": 3.48,
+     "h": 1.4,
+     "fs": 9,
+     "accent": "orange"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 3.71,
+     "w": 5.27,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 23 (imports and the GSM-7 table written for this study) are not shown. No message is sent and no carrier is asked."
+    }
+   ],
+   "notes": "The chapter says an SMS gateway limits a message to 160 characters. Twilio's page explains the arithmetic: a message carries 140 bytes of 8 bits, which hold 160 characters of 7 bits, and a character such as { needs an escape and counts as two. The program counts with a GSM-7 table written for this study: 160 characters of the basic set fit one message and 161 need two, and {x} costs 5. One character outside the table, the dotless i of Yedekleme tamamland\u0131, turns the whole text into UCS-2 at 16 bits a character, so 70 characters fit one message and 71 need two; the same text written without the dotless i is GSM-7 and counts 20. The segment sizes for longer texts, 153 and 67 characters, follow from a six-byte header on each part; they are arithmetic and were not found on a page opened by this study, so the slide says NOT EXECUTED and does not print a row that depends on them. The segments of the program use them only for texts longer than 160 or 70, which no row of the slide has. Wikipedia's article on SMS says the first SMS message was sent on 3 December 1992 over the Vodafone GSM network in the United Kingdom, when Neil Papworth of Sema Group sent 'Merry Christmas' from a personal computer to Richard Jarvis's Orbitel 901 phone. The service allows messages of up to 160 characters, and the article says the length was limited to 128 bytes, later improved to 160 seven-bit characters, so that messages fit into the existing signalling formats. In this study 140 bytes of 8 bits hold 160 characters of 7 bits, a text of 161 ASCII characters needed 2 messages, and 'Yedekleme tamamland\u0131' with its dotless i needed the 16-bit coding that holds only 70 characters in one message. The account rests on these sources. Wikipedia, 'SMS' (the first SMS on 3 December 1992, Neil Papworth, Richard Jarvis, Orbitel 901; 160 seven-bit characters), read 2026-10-13; this study's leaves Gsm7Length and Ucs2Length.",
+   "take": "Count the characters in the coding the phone uses, not in Python.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Publishing a push notification",
+   "sub": "A post is an HTTP request: the body is the message, the headers add title and priority",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.4,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.55,
+       "y": 1.4,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The program",
+       "x": 0.61,
+       "y": 1.516,
+       "w": 0.98,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 1.82,
+       "x2": 1.1,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 2.15,
+       "y": 1.4,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "The ntfy service",
+       "x": 2.21,
+       "y": 1.432,
+       "w": 0.98,
+       "h": 0.356,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 1.82,
+       "x2": 2.7,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.75,
+       "y": 1.4,
+       "w": 1.1,
+       "h": 0.42,
+       "fill": "2F6D62",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A subscriber",
+       "x": 3.81,
+       "y": 1.516,
+       "w": 0.98,
+       "h": 0.188,
+       "fs": 10,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.3,
+       "y1": 1.82,
+       "x2": 4.3,
+       "y2": 4.6,
+       "color": "DFD6C7",
+       "w": 1.5,
+       "arrow": false,
+       "dash": true
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 2.374,
+       "x2": 2.7,
+       "y2": 2.374,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls requests.post() with the topic URL and the text",
+       "x": 1.2,
+       "y": 1.9,
+       "w": 1.4,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 2.795,
+       "x2": 1.1,
+       "y2": 2.795,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns a Response with the status 200",
+       "x": 1.2,
+       "y": 2.456,
+       "w": 1.4,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 4.3,
+       "y1": 3.217,
+       "x2": 2.7,
+       "y2": 3.217,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Checks the topic for messages",
+       "x": 2.8,
+       "y": 2.878,
+       "w": 1.4,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 3.639,
+       "x2": 4.3,
+       "y2": 3.639,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns the message of the topic",
+       "x": 2.8,
+       "y": 3.3,
+       "w": 1.4,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 1.1,
+       "y1": 4.06,
+       "x2": 2.7,
+       "y2": 4.06,
+       "color": "D97A14",
+       "w": 1.75,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Calls requests.get() with the topic URL and poll",
+       "x": 1.2,
+       "y": 3.587,
+       "w": 1.4,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 4.482,
+       "x2": 1.1,
+       "y2": 4.482,
+       "color": "6E655C",
+       "w": 1.75,
+       "arrow": true,
+       "dash": true
+      },
+      {
+       "k": "text",
+       "t": "Returns one JSON object on each line",
+       "x": 1.2,
+       "y": 4.143,
+       "w": 1.4,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": true,
+       "align": "center",
+       "valign": "bottom",
+       "fill": null
+      }
+     ],
+     "did": "PostingAPushNotification"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.4,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram PostingAPushNotification - Interaction pattern, 28 of 31 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 5.0,
+     "y": 1.55,
+     "w": 4.53,
+     "h": 2.52,
+     "lines": [
+      "srv, log, base = recorder(200, '{}')",
+      "r = requests.post(base + '/AlSweigartZPgxBQ42', 'Hello, world!')",
+      "q = log[0]; h = q['headers']",
+      "print(r.status_code, q['method'], q['path'], q['body'])",
+      "print('length', h['Content-Length'], 'type', h.get('Content-Type'))",
+      "hd = {'Title': 'Important: Read this!',",
+      "      'Tags': 'warning,neutral_face', 'Priority': '5'}",
+      "requests.post(base + '/t', 'The rent is too high!', headers=hd)",
+      "for k in hd:",
+      "    print(k.ljust(9), log[1]['headers'][k])",
+      "srv.shutdown()"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "200 POST /AlSweigartZPgxBQ42 b'Hello, world!'\nlength 13 type None\nTitle     Important: Read this!\nTags      warning,neutral_face\nPriority  5",
+     "outLabel": "prints",
+     "label": "program ntfyPubCut_v1_0_0.py, lines 26 to 36 of 36"
+    },
+    {
+     "t": "foot",
+     "x": 5.0,
+     "y": 4.11,
+     "w": 4.5,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Stand-in for ntfy: a recorder on 127.0.0.1, a local stand-in; it is not ntfy and says nothing about ntfy.sh. Lines 1 to 25 (imports, the recorder and a comment) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 5.0,
+     "y": 4.61,
+     "w": 4.5,
+     "h": 0.17,
+     "fs": 8,
+     "body": "NOT EXECUTED: nothing was published to ntfy.sh, the ntfy app or any subscriber."
+    }
+   ],
+   "notes": "The sequence diagram is the exchange of the chapter: the program calls requests.post() with the topic URL and the text, the service answers with a Response with status 200, a subscriber checks the topic and receives the message, and the program can poll the same topic with requests.get(). The program ran requests against a recorder on 127.0.0.1 that logs what it receives; it is not ntfy and says nothing about what ntfy.sh does. The post arrived as POST /AlSweigartZPgxBQ42 with the body b'Hello, world!', a Content-Length of 13 and no Content-Type. The headers Title, Tags and Priority of the chapter's second example arrived unchanged, each as a header of the request. The research asked ntfy.sh only twice, with GET: its health endpoint answered 200 with healthy true, and a poll of a random unused topic answered 200 with an empty body, so nothing was published. The real ntfy server could not be downloaded, because github.com answered 403, and the app, the delivery to a phone and a subscriber were NOT EXECUTED. The service is documented to allow 250 messages a day on ntfy.sh without an account, and the chapter says so.",
+   "take": "A post is a request; the headers carry the title, tags and priority.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Headers, bytes and a refused post",
+   "sub": "A Turkish word in a header fails; a body is UTF-8; a 429 does not raise",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 5.76,
+     "h": 2.66,
+     "lines": [
+      "srv, log, base = recorder(200, '{}')",
+      "for hd in ({'Priority': 5}, {'Title': 'Yedekleme tamamland\u0131'}):",
+      "    try: requests.post(base + '/t', 'x', headers=hd)",
+      "    except Exception as e: print(hd, '->', type(e).__name__)",
+      "t = 'Yedekleme tamamland\u0131'",
+      "requests.post(base + '/t', t); b = log[-1]",
+      "print('wire:', b['body'], '| bytes', b['headers']['Content-Length'], '| chars', len(t))",
+      "srv, log, base = recorder(429, '{\"code\":42908,\"http\":429,\"error\":\"limit reached\"}')",
+      "r = requests.post(base + '/t', 'Hello, world!')",
+      "print('refused post: ok', r.ok, '| nothing raised')",
+      "try: r.raise_for_status()",
+      "except requests.HTTPError as e: print('raise_for_status ->', type(e).__name__)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "{'Priority': 5} -> InvalidHeader\n{'Title': 'Yedekleme tamamland\u0131'} -> UnicodeEncodeError\nwire: b'Yedekleme tamamland\\xc4\\xb1' | bytes 21 | chars 20\nrefused post: ok False | nothing raised\nraise_for_status -> HTTPError",
+     "outLabel": "prints",
+     "label": "program ntfyHdrCut_v1_0_0.py, lines 26 to 37 of 37"
+    },
+    {
+     "t": "card",
+     "head": "A header is latin-1",
+     "body": "Requests encodes header values as latin-1, so a Title with the dotless i fails with UnicodeEncodeError, and the integer 5 for Priority with InvalidHeader.",
+     "x": 6.51,
+     "y": 1.5,
+     "w": 2.99,
+     "h": 1.7,
+     "fs": 9.5,
+     "accent": "orange"
+    },
+    {
+     "t": "card",
+     "head": "Recorded, pinned",
+     "body": "Appendix A pins requests 2.32.3. In that environment: requests 2.32.3, ezgmail 2026.4.28; Priority 5 gives InvalidHeader.",
+     "x": 6.51,
+     "y": 3.3,
+     "w": 2.99,
+     "h": 1.6,
+     "fs": 9,
+     "accent": "slate"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.27,
+     "w": 5.76,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Stand-in for ntfy: a recorder on 127.0.0.1, a local stand-in; it is not ntfy and says nothing about ntfy.sh. Lines 1 to 25 (imports, the recorder and a comment) are not shown."
+    }
+   ],
+   "notes": "A header value must be latin-1 and a string. The program shows two ways it fails: Priority given as the integer 5 raised InvalidHeader, and a Title with the dotless i of Yedekleme tamamland\u0131 raised UnicodeEncodeError before any request was sent, so a Title in Turkish fails while the book's English Title and its Priority written as a string work. A body given as a string is sent as UTF-8: the 20 characters of Yedekleme tamamland\u0131 were 21 bytes on the wire, b'Yedekleme tamamland\\xc4\\xb1', with a Content-Length of 21; the body of 13 characters on the previous slide went with no Content-Type, and the pinned Requests of the card sent none either, so the receiver has to assume the charset. The limit of ntfy is 4,096 bytes, not characters, as a later slide shows, and the documentation says a longer message is treated as an attachment, which the chapter does not say. The second half of the program has the recorder answer 429 with the JSON body of a limit reached: post() returned a Response whose ok was False and raised nothing, so a program that notifies about a long job fails silently when a limit is reached; only raise_for_status() raised HTTPError.. The card records what the research found with the Requests 2.32.3 that Appendix A of the book pins, in an environment of its own: the same prepared body and the same InvalidHeader as the newest requests, 2.34.2.",
+   "take": "Send bytes you can name: a UTF-8 body and latin-1 headers.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Receiving: poll, lines and JSON",
+   "sub": "A poll answer is one JSON object on each line; json.loads of the whole text fails",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 4.1,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.417,
+       "w": 2.2,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Call requests.get() with the topic URL that ends in /json?poll=1",
+       "x": 0.57,
+       "y": 1.522,
+       "w": 2.06,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.95,
+       "w": 2.2,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Add since to get the messages of the last minutes",
+       "x": 0.57,
+       "y": 2.056,
+       "w": 2.06,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.483,
+       "w": 2.2,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Split the text of the answer into lines with splitlines()",
+       "x": 0.57,
+       "y": 2.589,
+       "w": 2.06,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.017,
+       "w": 2.2,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Parse each line with json.loads()",
+       "x": 0.57,
+       "y": 3.189,
+       "w": 2.06,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.5,
+       "y": 3.55,
+       "w": 2.2,
+       "h": 0.5,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the event a message?",
+       "x": 0.67,
+       "y": 3.723,
+       "w": 1.86,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 4.083,
+       "w": 2.2,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Wait a minute, then the program polls again",
+       "x": 0.57,
+       "y": 4.189,
+       "w": 2.06,
+       "h": 0.289,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 3.05,
+       "y": 3.55,
+       "w": 1.55,
+       "h": 0.5,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Read the message, the title, the priority and the tags",
+       "x": 3.12,
+       "y": 3.588,
+       "w": 1.41,
+       "h": 0.423,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.725,
+       "y": 1.567,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.685,
+       "y": 4.193,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.745,
+       "y": 4.253,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.725,
+       "y1": 1.667,
+       "x2": 2.7,
+       "y2": 1.667,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.6,
+       "y1": 1.917,
+       "x2": 1.6,
+       "y2": 1.95,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.6,
+       "y1": 2.45,
+       "x2": 1.6,
+       "y2": 2.483,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.6,
+       "y1": 2.983,
+       "x2": 1.6,
+       "y2": 3.017,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 1.6,
+       "y1": 3.517,
+       "x2": 1.6,
+       "y2": 3.55,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 3.8,
+       "x2": 3.05,
+       "y2": 3.8,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.75,
+       "y": 3.6,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 1.6,
+       "y1": 4.05,
+       "x2": 1.6,
+       "y2": 4.083,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 1.66,
+       "y": 3.977,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 3.825,
+       "y1": 4.05,
+       "x2": 3.825,
+       "y2": 4.333,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.825,
+       "y1": 4.333,
+       "x2": 2.7,
+       "y2": 4.333,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.5,
+       "y1": 4.333,
+       "x2": 0.28,
+       "y2": 4.333,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.28,
+       "y1": 4.333,
+       "x2": 0.28,
+       "y2": 1.667,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.28,
+       "y1": 1.667,
+       "x2": 0.5,
+       "y2": 1.667,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.7,
+       "y1": 4.333,
+       "x2": 3.685,
+       "y2": 4.333,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "ReadingMessagesFromANtfyTopic"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 4.1,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ReadingMessagesFromANtfyTopic - Workflow pattern, 35 of 37 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.75,
+     "y": 1.55,
+     "w": 4.53,
+     "h": 2.38,
+     "lines": [
+      "srv, log, base = recorder(200, TXT)",
+      "resp = requests.get(base + '/AlSweigartZPgxBQ42/json?poll=1')",
+      "try: json.loads(resp.text)",
+      "except json.JSONDecodeError as e: print('whole text:', e.msg)",
+      "n = [json.loads(x) for x in resp.text.splitlines()]",
+      "print(len(n), [x['message'] for x in n])",
+      "print(sorted(set(n[1]) - set(n[0])))",
+      "for z in ('America/Chicago', 'UTC'):",
+      "    print(z.ljust(16), DT.fromtimestamp(n[1]['time'], ZoneInfo(z)))",
+      "srv.shutdown()"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "whole text: Extra data\n2 ['Hello, world!', 'The rent is too high!']\n['priority', 'tags', 'title']\nAmerica/Chicago  2026-12-20 21:28:32-06:00\nUTC              2026-12-21 03:28:32+00:00",
+     "outLabel": "prints",
+     "label": "program ntfyPollCut_v1_0_0.py, lines 28 to 37 of 37"
+    },
+    {
+     "t": "foot",
+     "x": 4.75,
+     "y": 3.97,
+     "w": 4.75,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Stand-in for ntfy: a recorder on 127.0.0.1, a local stand-in; it is not ntfy and says nothing about ntfy.sh. Lines 1 to 27 (imports, the recorder and a comment) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 4.75,
+     "y": 4.45,
+     "w": 4.75,
+     "h": 0.31,
+     "fs": 8,
+     "body": "Recorded 13 Oct 2026: ntfy.sh/v1/health answered 200. NOT EXECUTED: any message sent to or received from ntfy.sh."
+    }
+   ],
+   "notes": "The flow chart is the polling loop of the chapter: call requests.get() with the topic URL that ends in /json?poll=1, add since to get the messages of the last minutes, split the text of the answer into lines, parse each line with json.loads(), and ask whether the event is a message; if it is, read the message, the title, the priority and the tags, and in either case wait before the next poll. The chapter says to poll once a minute or every few minutes. The recorder answered with the two lines the book prints, and the program shows what the book does not: json.loads() of the whole text raised JSONDecodeError, Extra data, because it is not one JSON document; splitlines() and json.loads() on each line worked; the second object has the keys priority, tags and title that the first lacks, so a program must allow for keys that are absent; and, in the longer run of the recorder, program ntfyPollParse, expires minus time is 43,200 seconds, twelve hours. In that longer run the documentation listed event types that the book does not, message_delete and message_clear. The timestamp 1797823712 is 21:28:32 in America/Chicago and 03:28:32 on the next day in UTC, which is why the book's printed date holds only at UTC-6. In a longer run of the same recorder, program ntfyPollParse, which is not on the slide, a blank line, which a stream sends as a keepalive and which a trailing newline also makes, raised JSONDecodeError again, so a program that splits lines should skip empty ones. The research asked ntfy.sh only with GET; the health endpoint answered 200 and a poll of an unused topic answered 200 with an empty body, and no message was published or received, which the slide marks NOT EXECUTED.",
+   "take": "A poll answer is one JSON object on each line.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The topic name is the password",
+   "sub": "Anyone who knows the name can read and post; the limit is 4,096 bytes, not characters",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.77,
+     "h": 2.52,
+     "lines": [
+      "book = 'AlSweigartZPgxBQ42'; rnd = book[len('AlSweigart'):]",
+      "bits = round(len(rnd) * math.log2(62), 1)",
+      "print(rnd, len(rnd), 'chars of 62 ->', bits, 'bits')",
+      "t = secrets.token_urlsafe(16)",
+      "print('token_urlsafe(16):', len(t), 'characters, 128 bits')",
+      "print('the topic is in the URL path: https://ntfy.sh/' + book)",
+      "ok, tr = 'a' * 4096, '\u0131' * 2049",
+      "print(len(ok.encode()), 'bytes for 4096 characters')",
+      "print(len(tr), 'dotless i:', len(tr.encode()), 'bytes, over the limit')",
+      "print('250 messages of 4096 bytes =', 250 * 4096, 'bytes a day')"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "ZPgxBQ42 8 chars of 62 -> 47.6 bits\ntoken_urlsafe(16): 22 characters, 128 bits\nthe topic is in the URL path: https://ntfy.sh/AlSweigartZPgxBQ42\n4096 bytes for 4096 characters\n2049 dotless i: 4098 bytes, over the limit\n250 messages of 4096 bytes = 1024000 bytes a day",
+     "outLabel": "prints",
+     "label": "program secrecyCut_v1_0_0.py, lines 14 to 23 of 23"
+    },
+    {
+     "t": "chart",
+     "ctype": "bar",
+     "x": 5.52,
+     "y": 1.45,
+     "w": 3.98,
+     "h": 2.55,
+     "labels": [
+      "book: 8 of 62",
+      "urlsafe(16)",
+      "urlsafe(32)"
+     ],
+     "title": "Bits in a topic name",
+     "series": [
+      {
+       "name": "bits",
+       "data": [
+        47.6,
+        128.0,
+        256.0
+       ]
+      }
+     ],
+     "dataLabels": true,
+     "dlFs": 10
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.13,
+     "w": 4.77,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "Lines 1 to 13 (imports and a comment) are not shown. Arithmetic only; nothing is published."
+    },
+    {
+     "t": "foot",
+     "x": 5.52,
+     "y": 4.1,
+     "w": 3.98,
+     "h": 0.68,
+     "fs": 9.5,
+     "body": "ntfy's FAQ says that without access control the topic name is the password, and the chapter says to treat it like one. The name of the book's example is half the author's name and half 8 random characters."
+    }
+   ],
+   "notes": "The topic name is part of the URL, https://ntfy.sh/ and the name, so it appears in logs, proxies and browser history, and ntfy's FAQ says that without access control the topic name is the password. The random part of the book's example, ZPgxBQ42, is 8 characters of 62, which is 47.6 bits; the other half of the name is the author's name, which is guessable. secrets.token_urlsafe(16) gives 22 characters and 128 bits, and token_urlsafe(32) 256, as the chart shows; the bars are computed from 8 times log2(62) and from the byte counts, and the deck check computes them again. The chapter says that anyone can post to a topic and that there is no way to know who posted a message, so the sender has to be written inside the text. The limit of 4,096 bytes is bytes: 4096 ASCII characters are 4096 bytes, and 2049 dotless i characters are 4098 bytes, over the limit. At 250 messages of 4096 bytes a day, a program that notifies about a long job stays inside the limits of the service; the service allows 250 messages a day, one every 345.6 seconds on average. None of this published anything to ntfy.sh. The program is arithmetic and uses only the standard library.",
+   "take": "The topic name is the only secret, so make it random.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Umbrella Reminder and Auto Unsubscriber",
+   "sub": "Compare a number, not a word; read the header, not the HTML",
+   "items": [
+    {
+     "t": "prog",
+     "x": 0.5,
+     "y": 1.55,
+     "w": 4.84,
+     "h": 2.52,
+     "lines": [
+      "p = P(); p.feed(HTML)",
+      "print('links whose text says unsubscribe:', p.found)",
+      "m = EmailMessage()",
+      "a = '<mailto:unsub@example.com?subject=unsubscribe>'",
+      "m['List-Unsubscribe'] = a + ', <https://example.com/u?id=1>'",
+      "lu = [x.strip('<>') for x in m['List-Unsubscribe'].split(', ')]",
+      "print(f'List-Unsubscribe gives {len(lu)} addresses:', *lu, sep='\\n  ')",
+      "opened = []",
+      "webbrowser.open = lambda u: opened.append(u) or True",
+      "for u in p.found: webbrowser.open(u)",
+      "print('the recorder was asked to open', opened)"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "links whose text says unsubscribe: ['https://example.com/u?id=1']\nList-Unsubscribe gives 2 addresses:\n  mailto:unsub@example.com?subject=unsubscribe\n  https://example.com/u?id=1\nthe recorder was asked to open ['https://example.com/u?id=1']",
+     "outLabel": "prints",
+     "label": "program unsubCut_v1_0_0.py, lines 28 to 38 of 38"
+    },
+    {
+     "t": "prog",
+     "x": 5.54,
+     "y": 1.55,
+     "w": 3.85,
+     "h": 1.13,
+     "lines": [
+      "print('text has rain:', ['rain' in words(p) for p in P])",
+      "print('limit 40:', [(chance(p) or 0) >= 40 for p in P])",
+      "print('chances:', [chance(p) for p in P])"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "text has rain: [False, False]\nlimit 40: [True, False]\nchances: [60, None]",
+     "outLabel": "prints",
+     "label": "program umbrellaCut_v1_0_0.py, lines 20 to 22 of 22"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.1,
+     "w": 4.84,
+     "h": 0.44,
+     "fs": 8,
+     "body": "Stand-in for the browser: webbrowser.open is replaced by a local stand-in that records the address; no page was opened. Lines 1 to 27 (imports, the parser class and the sample HTML) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 5.54,
+     "y": 2.74,
+     "w": 3.96,
+     "h": 0.61,
+     "fs": 8.5,
+     "body": "Sample forecast data: two periods written for this study in the shape of api.weather.gov, a local stand-in; no network. Lines 1 to 19 (imports, the two sample periods and two helpers) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 5.54,
+     "y": 3.39,
+     "w": 3.96,
+     "h": 0.47,
+     "fs": 8.5,
+     "body": "Recorded 13 Oct 2026: api.weather.gov answered the point lookup for Chicago and its forecast with 14 periods, each with a probabilityOfPrecipitation; this deck does not run that again."
+    }
+   ],
+   "notes": "Two of the chapter's practice programs, with the weakness each has. Umbrella Reminder scrapes the text of a forecast for the word rain. Searching the text of two sample periods found it in neither, so it missed the period with a chance of precipitation of 60 that a comparison of the number with a limit of 40 flagged; the periods on the slide are sample data written in the shape of the answer of api.weather.gov, not forecasts. The research asked api.weather.gov for a point in Chicago on 13 October 2026 and its forecast came back with 14 periods, each with a probabilityOfPrecipitation number, a number to compare where the chapter's scraping gives text; that record is not run again. Auto Unsubscriber finds links whose text says unsubscribe. The parser found 1 of 4 links, because an image link and the text opt out are missed. The List-Unsubscribe header of RFC 2369, with List-Unsubscribe-Post of RFC 8058, gives a mailto: and an https: address without parsing any HTML. The browser is a stand-in: webbrowser.open was replaced by a recorder, because opening a link from an unknown sender with a browser confirms to the sender that the address is read. The book suggests Beautiful Soup, which Appendix A pins at 4.12.3; this program uses html.parser from the standard library. The chapter's two programs are not in the online materials. Wikipedia's article on email spam says that at the beginning of the Internet, in the ARPANET, sending commercial email was prohibited. Gary Thuerk sent the first known spam email in 1978, advertising a DEC product presentation, to 600 addresses, and he was reprimanded and told not to do it again. The article adds that the ARPANET had 2600 users at the time and that, because of software limitations, only slightly more than half of the intended recipients received the message. That history is why Gmail, as chapter 20 says, has security and anti-spam measures that might not send repeated emails with the exact same text. The account rests on these sources. Wikipedia, 'Email spam' (Gary Thuerk, 1978, 600 addresses, a DEC product presentation, 2600 users on the ARPANET); chapter 20 of the 3rd edition (Gmail might not send repeated emails with the exact same text), read 2026-10-13; this study's leaves AutoUnsubscriber and DmarcRecordParse.",
+   "take": "Compare a number, not a word; read the header, not the HTML.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Email-Based Computer Control",
+   "sub": "Check the password, run only an allow-list, never pass the subject to a shell",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 3.7,
+     "h": 2.8,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.75,
+       "y": 1.435,
+       "w": 2.75,
+       "h": 0.28,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Check the mail for instructions",
+       "x": 0.82,
+       "y": 1.498,
+       "w": 2.61,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.75,
+       "y": 1.76,
+       "w": 2.75,
+       "h": 0.33,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the password in the message?",
+       "x": 0.92,
+       "y": 1.848,
+       "w": 2.41,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "hex",
+       "x": 0.75,
+       "y": 2.11,
+       "w": 2.75,
+       "h": 0.33,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Is the command on the allow-list?",
+       "x": 0.92,
+       "y": 2.198,
+       "w": 2.41,
+       "h": 0.154,
+       "fs": 8,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.75,
+       "y": 2.485,
+       "w": 2.75,
+       "h": 0.28,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Launch the program with Popen",
+       "x": 0.82,
+       "y": 2.548,
+       "w": 2.61,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.75,
+       "y": 2.835,
+       "w": 2.75,
+       "h": 0.28,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Wait for the program with wait()",
+       "x": 0.82,
+       "y": 2.898,
+       "w": 2.61,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.75,
+       "y": 3.185,
+       "w": 2.75,
+       "h": 0.28,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Delete the emails the loop handled",
+       "x": 0.82,
+       "y": 3.248,
+       "w": 2.61,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.75,
+       "y": 3.535,
+       "w": 2.75,
+       "h": 0.28,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "Wait 15 minutes",
+       "x": 0.82,
+       "y": 3.598,
+       "w": 2.61,
+       "h": 0.154,
+       "fs": 8,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 3.85,
+       "y": 1.475,
+       "w": 0.2,
+       "h": 0.2,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 1.985,
+       "y": 3.885,
+       "w": 0.28,
+       "h": 0.28,
+       "fill": "FFFFFF",
+       "line": "2B2622",
+       "lw": 2
+      },
+      {
+       "k": "box",
+       "shape": "oval",
+       "x": 2.045,
+       "y": 3.945,
+       "w": 0.16,
+       "h": 0.16,
+       "fill": "2B2622",
+       "line": "2B2622",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.85,
+       "y1": 1.575,
+       "x2": 3.5,
+       "y2": 1.575,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.125,
+       "y1": 1.715,
+       "x2": 2.125,
+       "y2": 1.76,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.125,
+       "y1": 2.09,
+       "x2": 2.125,
+       "y2": 2.11,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.185,
+       "y": 2.01,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 3.5,
+       "y1": 1.925,
+       "x2": 3.72,
+       "y2": 1.925,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.72,
+       "y1": 1.925,
+       "x2": 3.72,
+       "y2": 3.325,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.72,
+       "y1": 3.325,
+       "x2": 3.5,
+       "y2": 3.325,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 3.54,
+       "y": 1.955,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.125,
+       "y1": 2.44,
+       "x2": 2.125,
+       "y2": 2.485,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "yes",
+       "x": 2.185,
+       "y": 2.372,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 3.5,
+       "y1": 2.275,
+       "x2": 3.72,
+       "y2": 2.275,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.72,
+       "y1": 2.275,
+       "x2": 3.72,
+       "y2": 3.325,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 3.72,
+       "y1": 3.325,
+       "x2": 3.5,
+       "y2": 3.325,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "no",
+       "x": 3.54,
+       "y": 2.305,
+       "w": 0.34,
+       "h": 0.18,
+       "fs": 8,
+       "color": "6E655C",
+       "bold": false,
+       "italic": true,
+       "align": "left",
+       "valign": "middle",
+       "fill": "FAF6EF"
+      },
+      {
+       "k": "line",
+       "x1": 2.125,
+       "y1": 2.765,
+       "x2": 2.125,
+       "y2": 2.835,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.125,
+       "y1": 3.115,
+       "x2": 2.125,
+       "y2": 3.185,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.125,
+       "y1": 3.465,
+       "x2": 2.125,
+       "y2": 3.535,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.75,
+       "y1": 3.675,
+       "x2": 0.53,
+       "y2": 3.675,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.53,
+       "y1": 3.675,
+       "x2": 0.53,
+       "y2": 1.575,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 0.53,
+       "y1": 1.575,
+       "x2": 0.75,
+       "y2": 1.575,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      },
+      {
+       "k": "line",
+       "x1": 2.125,
+       "y1": 3.815,
+       "x2": 2.125,
+       "y2": 3.885,
+       "color": "6E655C",
+       "w": 1.25,
+       "arrow": true,
+       "dash": false
+      }
+     ],
+     "did": "ControllingAComputerByEmail"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.23,
+     "w": 3.7,
+     "h": 0.33,
+     "fs": 8.5,
+     "body": "diagram ControllingAComputerByEmail - Workflow pattern, 20 of 20 words grounded in the chapter's text"
+    },
+    {
+     "t": "prog",
+     "x": 4.3,
+     "y": 1.55,
+     "w": 4.16,
+     "h": 2.1,
+     "lines": [
+      "SECRET = 'correct horse'",
+      "ALLOW = {'noop': [sys.executable, '-c', 'pass']}",
+      "def handle(frm, body):",
+      "    pw, _, cmd = body.partition(':')",
+      "    if not hmac.compare_digest(pw.encode(), SECRET.encode()):",
+      "        return (frm, 'bad password')",
+      "    if cmd not in ALLOW:",
+      "        return (frm, 'refused ' + cmd)",
+      "    return (frm, cmd, subprocess.Popen(ALLOW[cmd]).wait())",
+      "for m in inbox: print(handle(*m))"
+     ],
+     "fs": 7.0,
+     "compact": true,
+     "out": "('me@a.org', 'noop', 0)\n('x@b.net', 'bad password')\n('me@a.org', 'refused rm')",
+     "outLabel": "prints",
+     "label": "program controlCut_v1_0_0.py, lines 16 to 25 of 25"
+    },
+    {
+     "t": "code",
+     "x": 4.3,
+     "y": 3.7,
+     "w": 5.2,
+     "h": 1.08,
+     "rows": [
+      [
+       "import subprocess as sp",
+       ""
+      ],
+      [
+       "sp.run('echo a; echo PWNED', shell=True, capture_output=True).stdout",
+       "b'a\\nPWNED\\n'"
+      ],
+      [
+       "sp.run(['echo', 'a; echo PWNED'], capture_output=True).stdout",
+       "b'a; echo PWNED\\n'"
+      ]
+     ],
+     "fs": 7.5
+    },
+    {
+     "t": "foot",
+     "x": 4.3,
+     "y": 4.78,
+     "w": 5.2,
+     "h": 0.17,
+     "fs": 8,
+     "body": "Stand-in mailbox: a list, a local stand-in. Lines 1 to 15 (imports, mailbox) are not shown."
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.6,
+     "w": 3.7,
+     "h": 0.31,
+     "fs": 8,
+     "body": "NOT EXECUTED: the Popen of qBittorrent on Windows or macOS; Linux raised FileNotFoundError."
+    }
+   ],
+   "notes": "The flow chart is one pass of the loop of the chapter's last practice program: check the mail for instructions, ask whether the password is in the message, run the program with Popen, wait for it with wait(), delete the emails the loop handled, and wait fifteen minutes. The diagram adds the test the chapter lacks, whether the command is on an allow-list. The program takes the mailbox as a list in memory, a stand-in for IMAP; the IMAP version, with three messages arriving by SMTP and read, deleted and expunged against dovecot, is a record of the research and is not run again. The password is compared with hmac.compare_digest(), which refuses a str that is not ASCII with TypeError, so the program compares bytes. A wrong password answered bad password, a command not on the allow-list, rm, was refused, and an allowed one ran and returned its exit code. The console below the program shows why the command must never be built from the text of an email: run through a shell, the subject status; echo PWNED ran two commands, and as a list the same text was one argument. The chapter's own example starts qBittorrent with a Windows path, which raised FileNotFoundError on Linux; Windows and macOS were NOT EXECUTED. The chapter also asks for a password in the email; a password in an email travels in clear text through every server unless every hop uses TLS, which is the reason for the STARTTLS slide. The chapter's last sentence sends a stuck reader to the book page for an example implementation, and that page holds none.",
+   "take": "Run only an allow-list, check the password, never use a shell.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "The chapter in one map",
+   "sub": "Six branches; the slides of each branch hold the examples",
+   "items": [
+    {
+     "t": "shapes",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.2,
+     "shapes": [
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 4.0,
+       "y": 2.425,
+       "w": 2.0,
+       "h": 1.15,
+       "fill": "D97A14",
+       "line": "D97A14",
+       "lw": 1.25
+      },
+      {
+       "k": "text",
+       "t": "A program reaches a person by email, text or push notification",
+       "x": 4.08,
+       "y": 2.713,
+       "w": 1.84,
+       "h": 0.575,
+       "fs": 11,
+       "color": "FFFFFF",
+       "bold": true,
+       "italic": false,
+       "align": "center",
+       "valign": "middle",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 1.91,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The Gmail API",
+       "x": 0.6,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The token file is a password\nA reply keeps the thread id only\nA name with a path is written outside",
+       "x": 0.6,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 3.0,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The standard library",
+       "x": 0.6,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "STARTTLS comes before the login\nA Bcc recipient is in the envelope\nIDLE is new in Python 3.14",
+       "x": 0.6,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 0.5,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 3.6,
+       "y1": 4.09,
+       "x2": 4.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "SMS email gateways",
+       "x": 0.6,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "ATT ended its gateway in 2025\nVerizon ends its gateway in 2027\n160 characters in GSM-7, 70 in UCS-2",
+       "x": 0.6,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 1.4,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 1.91,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "ntfy",
+       "x": 6.5,
+       "y": 1.45,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The topic name is the password\nThe limit is 4096 bytes\nThe answer is one JSON object on each line",
+       "x": 6.5,
+       "y": 1.648,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 2.49,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 3.0,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "Trust in an email",
+       "x": 6.5,
+       "y": 2.54,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The envelope and the From header differ\nA line break in a header is refused\nA command in a subject needs an allow-list",
+       "x": 6.5,
+       "y": 2.738,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "box",
+       "shape": "round",
+       "x": 6.4,
+       "y": 3.58,
+       "w": 3.1,
+       "h": 1.02,
+       "fill": "F2ECE1",
+       "line": "2F6D62",
+       "lw": 1.25
+      },
+      {
+       "k": "line",
+       "x1": 6.4,
+       "y1": 4.09,
+       "x2": 6.0,
+       "y2": 3.0,
+       "color": "C9BFAE",
+       "w": 1.25,
+       "arrow": false,
+       "dash": false
+      },
+      {
+       "k": "text",
+       "t": "The book and practice",
+       "x": 6.5,
+       "y": 3.63,
+       "w": 2.9,
+       "h": 0.188,
+       "fs": 10,
+       "color": "2F6D62",
+       "bold": true,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      },
+      {
+       "k": "text",
+       "t": "The online materials hold no file\nThe 2nd edition taught smtplib\nThe forecast has a chance of precipitation",
+       "x": 6.5,
+       "y": 3.828,
+       "w": 2.9,
+       "h": 0.489,
+       "fs": 8.5,
+       "color": "2B2622",
+       "bold": false,
+       "italic": false,
+       "align": "left",
+       "valign": "top",
+       "fill": null
+      }
+     ],
+     "did": "SendingEmailTextsAndPushesAtAGlance"
+    },
+    {
+     "t": "foot",
+     "x": 0.5,
+     "y": 4.63,
+     "w": 9.0,
+     "h": 0.18,
+     "fs": 8.5,
+     "body": "diagram SendingEmailTextsAndPushesAtAGlance - TopicAndParts pattern, 86 of 89 words grounded in the chapter's text"
+    }
+   ],
+   "notes": "These six branches are the route of the deck. The Gmail API: the token file is a password, a reply keeps the thread id only, and a file name with a path is written outside the folder. The standard library: STARTTLS comes before the login, a Bcc recipient is in the envelope, and IDLE is new in Python 3.14. SMS email gateways: AT&T ended its gateway in 2025, Verizon ends its gateway in 2027, and a text holds 160 characters in GSM-7 and 70 in UCS-2. ntfy: the topic name is the password, the limit is 4,096 bytes, and the answer to a poll is one JSON object on each line. Trust in an email: the envelope and the From header differ, a line break in a header is refused, and a command in a subject needs an allow-list. The book and its practice: the online materials hold no file for the chapter, the second edition taught smtplib, and the forecast has a chance of precipitation that the chapter's search for the word rain misses. Together they answer the first question of the chapter, which parts of a program that reaches a person can be shown to work and which can only be shown to fail, and the slides that say where a printed line differs answer the second. The map is drawn from the same specification as the interactive page.",
+   "take": "If a branch feels unproven, its slides hold the example.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "Where to go from here",
+   "sub": "Every link was opened on the day this deck was made",
+   "items": [
+    {
+     "t": "links",
+     "x": 0.5,
+     "y": 1.4,
+     "w": 9.0,
+     "h": 3.55,
+     "fs": 9.5,
+     "groups": [
+      {
+       "head": "Read",
+       "rows": [
+        [
+         "The textbook, chapter 20 - free online",
+         "https://automatetheboringstuff.com/3e/chapter20.html"
+        ],
+        [
+         "email.message documentation",
+         "https://docs.python.org/3.14/library/email.message.html"
+        ],
+        [
+         "smtplib documentation",
+         "https://docs.python.org/3.14/library/smtplib.html"
+        ]
+       ]
+      },
+      {
+       "head": "Reference",
+       "rows": [
+        [
+         "Gmail API: sending email",
+         "https://developers.google.com/workspace/gmail/api/guides/sending"
+        ],
+        [
+         "ntfy: publishing",
+         "https://docs.ntfy.sh/publish/"
+        ],
+        [
+         "ntfy: subscribe through the API",
+         "https://docs.ntfy.sh/subscribe/api/"
+        ]
+       ]
+      },
+      {
+       "head": "History and standards",
+       "rows": [
+        [
+         "Ray Tomlinson (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Ray_Tomlinson"
+        ],
+        [
+         "Email spam (Wikipedia)",
+         "https://en.wikipedia.org/wiki/Email_spam"
+        ],
+        [
+         "SMS (Wikipedia)",
+         "https://en.wikipedia.org/wiki/SMS"
+        ],
+        [
+         "AT&T ends email-to-text",
+         "https://www.att.com/support/article/wireless/KM1061254/"
+        ]
+       ]
+      },
+      {
+       "head": "The two packages",
+       "rows": [
+        [
+         "ezgmail on PyPI",
+         "https://pypi.org/pypi/ezgmail/json"
+        ],
+        [
+         "requests on PyPI",
+         "https://pypi.org/pypi/requests/json"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Every link on this slide was opened on the day the deck was made, and the build records the status each answered. The textbook chapter is free to read online and holds every listing of the chapter; the documentation of email.message and smtplib describes the standard library that the chapter names only to say EZGmail is better, and imaplib has its own page that is not linked here. The reference links are the Gmail API's guide to sending and the two pages of the ntfy documentation that the chapter relies on; the RFC that defines SMTP is told in the notes of the slide about SMTP. The history links are the sources behind four of the six stories of the chapter: Ray Tomlinson and the @ sign, the first spam, the first text message, and AT&T switching off email-to-text. The other two, the launch of Gmail and RFC 821, are told in the notes of the slide of the setup and of the slide of SMTP without a link here. The two packages whose versions the deck records are ezgmail and requests. The rest of the seventy-odd sources of the research, among them the RFCs, the pages of the Gmail API, the notices of the carriers and the manual pages of the Python modules, are in the research package.",
+   "take": "Textbook, documentation, notices and history, all opened today.",
+   "bg": "light"
+  },
+  {
+   "kind": "content",
+   "title": "What you should now be able to say",
+   "sub": "Four claims, each carried by a result you saw printed",
+   "items": [
+    {
+     "t": "bullets",
+     "x": 0.6,
+     "y": 1.5,
+     "w": 8.8,
+     "h": 2.4,
+     "fs": 15,
+     "items": [
+      "EZGmail needs credentials and a token; the token is a password, and a reply keeps only the thread id.",
+      "Use STARTTLS and a verified context; the envelope decides who gets the mail, not the From line.",
+      "A gateway can be switched off; count a text in the phone's coding, and a topic name is a password.",
+      "Check the password, run an allow-list, and never pass the text of an email to a shell."
+     ]
+    },
+    {
+     "t": "chips",
+     "x": 0.6,
+     "y": 4.1,
+     "w": 8.8,
+     "h": 0.6,
+     "fs": 13,
+     "big": true,
+     "items": [
+      "22 console rows",
+      "31 programs run",
+      "8 diagrams"
+     ]
+    }
+   ],
+   "notes": "Four claims, each carried by a result you saw printed. If you can say them in your own words and run the examples yourself, you have the chapter. The console rows use only the standard library and no clock, so they can be typed into any Python and give the same text on any day; the email package, json, hmac, html.parser and secrets also run in a Python in a browser, while the programs that need a server, smtplib against aiosmtpd, ezgmail, requests against a recorder and subprocess, need a computer. The rows were run again under Python 3.14.6 each time the deck was built, and the programs were run again by the check that compares the slides with the recording. What was not run is marked on its slide: a Google account, Gmail's servers, a text through a carrier or Twilio, ntfy.sh, Windows and macOS, and Python 3.14.7 and later with the final 3.15.0. Nothing was ever sent to a person. The next chapter of the book makes graphs and manipulates images, and what this chapter taught about checking what a program sends and trusting what it receives carries over.",
+   "take": "Questions are welcome; bring an email problem to run.",
+   "bg": "light"
+  }
+ ]
+}
