@@ -1,0 +1,296 @@
+{
+ "chapter": 7,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch07/SEN0414_Ch07_Dictionaries_3e_v2_0_0.pptx",
+ "about": "The code examples of the chapter 7 deck, in the order of the code slides (order = slide order). The page's chapter-code tab lists them by NAME in this order; the code runs in the page with the Python standard library only; every example is self-contained; the expected result is what the run printed.",
+ "executed_with": {
+  "python": "3.14.6",
+  "library": null
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "page_requirements": [
+   "the Python standard library: collections (Counter, defaultdict), copy, json, pprint, typing (TypedDict), types (MappingProxyType)",
+   "the match statement (Python 3.10 or later) and the assignment expression (3.8 or later)",
+   "no keyboard input: birthdays.py is scripted with an iterator"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "dict_basics",
+   "name": "A dictionary holds key-value pairs",
+   "slide": 5,
+   "concepts": [
+    "dictionary",
+    "key",
+    "value",
+    "key-value pair"
+   ],
+   "code": "my_cat = {'size': 'fat', 'color': 'gray', 'age': 8}\nprint(my_cat['size'])\nprint('My cat has ' + my_cat['color'] + ' fur.')\nprint(len(my_cat))",
+   "expected": "fat\nMy cat has gray fur.\n3\n"
+  },
+  {
+   "order": 2,
+   "id": "dict_vs_list",
+   "name": "Dictionaries versus lists",
+   "slide": 6,
+   "concepts": [
+    "Comparing Dictionaries and Lists"
+   ],
+   "code": "spam = ['cats', 'dogs', 'moose']\nbacon = ['moose', 'dogs', 'cats']\nprint(spam == bacon)\neggs = {'name': 'Zophie', 'age': 8, 'species': 'cat'}\nham = {'age': 8, 'species': 'cat', 'name': 'Zophie'}\nprint(eggs == ham)\nprint(list(ham))",
+   "expected": "False\nTrue\n['age', 'species', 'name']\n"
+  },
+  {
+   "order": 3,
+   "id": "insertion_order",
+   "name": "Dictionaries remember insertion order",
+   "slide": 7,
+   "concepts": [
+    "dictionary"
+   ],
+   "code": "d = {}\nd['pear'] = 3\nd['apple'] = 5\nd['fig'] = 1\nprint(list(d))\nprint(d == {'fig': 1, 'pear': 3, 'apple': 5})\ndel d['pear']\nd['pear'] = 9\nprint(list(d))",
+   "expected": "['pear', 'apple', 'fig']\nTrue\n['apple', 'fig', 'pear']\n"
+  },
+  {
+   "order": 4,
+   "id": "hashable_keys",
+   "name": "Keys must be hashable",
+   "slide": 9,
+   "concepts": [
+    "unhashable type",
+    "key"
+   ],
+   "code": "d = {}\nd[(1, 2)] = 'a tuple works'\nprint(d)\ntry:\n    d[[1, 2]] = 'a list fails'\nexcept TypeError as e:\n    print(type(e).__name__)\nprint({1: 'int', 1.0: 'float', True: 'bool'})",
+   "expected": "{(1, 2): 'a tuple works'}\nTypeError\n{1: 'bool'}\n"
+  },
+  {
+   "order": 5,
+   "id": "keys_values_items",
+   "name": "Reading keys, values and items",
+   "slide": 12,
+   "concepts": [
+    "keys",
+    "values",
+    "items",
+    "Returning Keys and Values"
+   ],
+   "code": "spam = {'color': 'red', 'age': 42}\nprint(list(spam.keys()))\nprint(list(spam.values()))\nfor k, v in spam.items():\n    print(k, '->', v)\nprint(list(spam.items()))",
+   "expected": "['color', 'age']\n['red', 42]\ncolor -> red\nage -> 42\n[('color', 'red'), ('age', 42)]\n"
+  },
+  {
+   "order": 6,
+   "id": "key_exists",
+   "name": "Checking whether a key exists",
+   "slide": 13,
+   "concepts": [
+    "Checking Whether a Key Exists",
+    "get"
+   ],
+   "code": "picnic = {'apples': 5, 'cups': 2}\nprint('cups' in picnic)\nprint('eggs' not in picnic)\nprint(picnic.get('eggs', 0))\nprint(picnic.get('cups', 0))\ntry:\n    picnic['eggs']\nexcept KeyError as e:\n    print('KeyError', e)",
+   "expected": "True\nTrue\n0\n2\nKeyError 'eggs'\n"
+  },
+  {
+   "order": 7,
+   "id": "setdefault",
+   "name": "Setting default values with setdefault",
+   "slide": 14,
+   "concepts": [
+    "Setting Default Values",
+    "setdefault"
+   ],
+   "code": "picnic = {'apples': 5, 'cups': 2}\nprint(picnic.setdefault('eggs', 12))\nprint(picnic.setdefault('eggs', 99))\nprint(picnic)",
+   "expected": "12\n12\n{'apples': 5, 'cups': 2, 'eggs': 12}\n"
+  },
+  {
+   "order": 8,
+   "id": "change_pairs",
+   "name": "Adding, removing and merging pairs",
+   "slide": 15,
+   "concepts": [
+    "del"
+   ],
+   "code": "spam = {'color': 'red', 'age': 42}\nspam['name'] = 'Pooka'\ndel spam['age']\nprint(spam.pop('color'))\nprint(spam)\nprint(spam | {'name': 'Rex', 'legs': 4})\nprint(spam)",
+   "expected": "red\n{'name': 'Pooka'}\n{'name': 'Rex', 'legs': 4}\n{'name': 'Pooka'}\n"
+  },
+  {
+   "order": 9,
+   "id": "views_follow",
+   "name": "Views follow the dictionary",
+   "slide": 16,
+   "concepts": [
+    "list()"
+   ],
+   "code": "stock = {'pear': 3, 'apple': 5}\nks = stock.keys()\nfrozen = list(stock)\nstock['fig'] = 1\nprint(list(ks))\nprint(frozen)\nprint(sorted(stock))\nprint(list(reversed(stock)))",
+   "expected": "['pear', 'apple', 'fig']\n['pear', 'apple']\n['apple', 'fig', 'pear']\n['fig', 'apple', 'pear']\n"
+  },
+  {
+   "order": 10,
+   "id": "birthdays",
+   "name": "birthdays.py with the typing scripted",
+   "slide": 20,
+   "concepts": [
+    "birthdays.py",
+    "input()",
+    "sys.exit()"
+   ],
+   "code": "birthdays = {'Alice': 'Apr 1', 'Bob': 'Dec 12'}\ntyped = iter(['Alice', 'Eve', 'Dec 5', 'Eve', ''])\nwhile (name := next(typed)) != '':\n    if name in birthdays:\n        print(name, 'has birthday', birthdays[name])\n    else:\n        birthdays[name] = next(typed)\n        print('Learned', name, birthdays[name])",
+   "expected": "Alice has birthday Apr 1\nLearned Eve Dec 5\nEve has birthday Dec 5\n"
+  },
+  {
+   "order": 11,
+   "id": "char_count",
+   "name": "characterCount.py counts every character",
+   "slide": 21,
+   "concepts": [
+    "characterCount.py"
+   ],
+   "code": "message = ('It was a bright cold day in April, '\n           'and the clocks were striking thirteen.')\ncount = {}\nfor ch in message:\n    count.setdefault(ch, 0)\n    count[ch] += 1\ntop = sorted(count.items(), key=lambda kv: -kv[1])[:8]\nprint(top)\nprint(sum(count.values()), len(count))",
+   "expected": "[(' ', 13), ('t', 6), ('i', 6), ('r', 5), ('e', 5), ('a', 4), ('n', 4), ('s', 3)]\n73 23\n"
+  },
+  {
+   "order": 12,
+   "id": "counter",
+   "name": "Counter does the counting",
+   "slide": 23,
+   "concepts": [],
+   "code": "from collections import Counter\nc = Counter('abracadabra')\nprint(c.most_common(2))\nprint(c['a'], c['z'])\nprint(sum(c.values()))\nprint(dict(c))",
+   "expected": "[('a', 5), ('b', 2)]\n5 0\n11\n{'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1}\n"
+  },
+  {
+   "order": 13,
+   "id": "grouping",
+   "name": "Grouping with setdefault and defaultdict",
+   "slide": 24,
+   "concepts": [
+    "setdefault"
+   ],
+   "code": "words = ['ant', 'ape', 'bee', 'bat', 'cat']\ngroups = {}\nfor w in words:\n    groups.setdefault(w[0], []).append(w)\nprint(groups)\nfrom collections import defaultdict\ng2 = defaultdict(list)\nfor w in words:\n    g2[w[0]].append(w)\nprint(g2 == groups)",
+   "expected": "{'a': ['ant', 'ape'], 'b': ['bee', 'bat'], 'c': ['cat']}\nTrue\n"
+  },
+  {
+   "order": 14,
+   "id": "board_model",
+   "name": "Modelling a chessboard",
+   "slide": 27,
+   "concepts": [
+    "data structure",
+    "data model",
+    "Model Real-World Things Using Data Structures"
+   ],
+   "code": "board = {'h1': 'bK', 'c6': 'wQ', 'g2': 'bB',\n         'h5': 'bQ', 'e3': 'wK'}\nprint('c6' in board, board.get('a1', 'empty'))\nprint(sorted(board), len(board))",
+   "expected": "True empty\n['c6', 'e3', 'g2', 'h1', 'h5'] 5\n"
+  },
+  {
+   "order": 15,
+   "id": "board_print",
+   "name": "Printing the board from the dictionary",
+   "slide": 29,
+   "concepts": [
+    "chessboard.py"
+   ],
+   "code": "board = {'a1': 'wR', 'e1': 'wK', 'e8': 'bK'}\nfiles = 'abcdefgh'\nfor r in range(8, 0, -1):\n    row = [board.get(f + str(r), '..') for f in files]\n    print(r, ' '.join(row))",
+   "expected": "8 .. .. .. .. bK .. .. ..\n7 .. .. .. .. .. .. .. ..\n6 .. .. .. .. .. .. .. ..\n5 .. .. .. .. .. .. .. ..\n4 .. .. .. .. .. .. .. ..\n3 .. .. .. .. .. .. .. ..\n2 .. .. .. .. .. .. .. ..\n1 wR .. .. .. wK .. .. ..\n"
+  },
+  {
+   "order": 16,
+   "id": "chess_moves",
+   "name": "Chess commands are dictionary operations",
+   "slide": 30,
+   "concepts": [
+    "Project 1: Interactive Chessboard Simulator",
+    "copy.copy()",
+    "format"
+   ],
+   "code": "import copy\nSTART = {'a1': 'wR', 'e1': 'wK', 'e2': 'wP'}\nboard = copy.copy(START)\nboard['e4'] = board['e2']\ndel board['e2']\nprint('{} moves {} to {}'.format('wP', 'e2', 'e4'))\nprint(sorted(board))\nprint(sorted(START))",
+   "expected": "wP moves e2 to e4\n['a1', 'e1', 'e4']\n['a1', 'e1', 'e2']\n"
+  },
+  {
+   "order": 17,
+   "id": "validator",
+   "name": "A chess dictionary validator",
+   "slide": 31,
+   "concepts": [
+    "Chess Dictionary Validator"
+   ],
+   "code": "squares = {f + r for f in 'abcdefgh'\n           for r in '12345678'}\nboard = {'e1': 'wK', 'e8': 'bK', 'z9': 'wQ'}\nbad = [s for s in board if s not in squares]\nkings = sorted(p for p in board.values() if p[1] == 'K')\nprint(bad, kings, kings == ['bK', 'wK'])",
+   "expected": "['z9'] ['bK', 'wK'] True\n"
+  },
+  {
+   "order": 18,
+   "id": "picnic_nested",
+   "name": "Nested dictionaries: the picnic",
+   "slide": 32,
+   "concepts": [
+    "Nested Dictionaries and Lists",
+    "guestpicnic.py"
+   ],
+   "code": "guests = {'Alice': {'apples': 5, 'pretzels': 12},\n          'Bob': {'apples': 2, 'ham sandwiches': 3}}\ndef total(item):\n    return sum(v.get(item, 0) for v in guests.values())\nprint(total('apples'), total('cups'))\nprint(guests['Alice']['pretzels'])",
+   "expected": "7 0\n12\n"
+  },
+  {
+   "order": 19,
+   "id": "inventory",
+   "name": "Fantasy game inventory",
+   "slide": 33,
+   "concepts": [
+    "Fantasy Game Inventory"
+   ],
+   "code": "stuff = {'rope': 1, 'torch': 6, 'gold coin': 42}\ntotal = 0\nfor k, v in stuff.items():\n    print(str(v) + ' ' + k)\n    total += v\nprint('Total number of items:', total)",
+   "expected": "1 rope\n6 torch\n42 gold coin\nTotal number of items: 49\n"
+  },
+  {
+   "order": 20,
+   "id": "loot",
+   "name": "List-to-dictionary loot conversion",
+   "slide": 34,
+   "concepts": [
+    "List-to-Dictionary Loot Conversion"
+   ],
+   "code": "loot = ['gold coin', 'dagger', 'gold coin', 'ruby']\ninv = {'gold coin': 42, 'rope': 1}\nfor item in loot:\n    inv[item] = inv.get(item, 0) + 1\nprint(inv)\nprint(sum(inv.values()))",
+   "expected": "{'gold coin': 44, 'rope': 1, 'dagger': 1, 'ruby': 1}\n47\n"
+  },
+  {
+   "order": 21,
+   "id": "copies",
+   "name": "Alias, shallow copy and deep copy",
+   "slide": 38,
+   "concepts": [
+    "copy.copy()"
+   ],
+   "code": "import copy\noriginal = {'Alice': {'apples': 5}}\nalias = original\nshallow = copy.copy(original)\ndeep = copy.deepcopy(original)\noriginal['Alice']['apples'] = 99\napples = lambda c: c['Alice']['apples']\nprint(apples(alias), apples(shallow), apples(deep))\nprint(alias is original, shallow is original)\nprint(shallow['Alice'] is original['Alice'])",
+   "expected": "99 99 5\nTrue False\nTrue\n"
+  },
+  {
+   "order": 22,
+   "id": "json_pprint",
+   "name": "Writing data down with json and pprint",
+   "slide": 39,
+   "concepts": [],
+   "code": "import json, pprint\ncat = {'name': 'Zophie', 'toys': ['ball', 'mouse']}\ntext = json.dumps(cat)\nprint(text)\nprint(json.loads(text) == cat)\npprint.pprint({'b': [1, 2], 'a': {'x': 1}}, width=20)",
+   "expected": "{\"name\": \"Zophie\", \"toys\": [\"ball\", \"mouse\"]}\nTrue\n{'a': {'x': 1},\n 'b': [1, 2]}\n"
+  },
+  {
+   "order": 23,
+   "id": "typed_records",
+   "name": "Typed records and read-only views",
+   "slide": 41,
+   "concepts": [],
+   "code": "from typing import TypedDict\nclass Cat(TypedDict):\n    name: str\n    age: int\nc = Cat(name='Zophie', age=8)\nprint(type(c).__name__, c['age'])\nfrom types import MappingProxyType\nro = MappingProxyType(c)\nprint(ro['age'], len(ro))",
+   "expected": "dict 8\n8 2\n"
+  },
+  {
+   "order": 24,
+   "id": "match_dict",
+   "name": "Matching the shape of a dictionary",
+   "slide": 42,
+   "concepts": [],
+   "code": "cat = {'name': 'Zophie', 'age': 8}\nmatch cat:\n    case {'name': n, 'age': a} if a > 5:\n        print(n, 'is a senior cat of', a)\n    case {'name': n}:\n        print(n, 'is a cat')",
+   "expected": "Zophie is a senior cat of 8\n"
+  }
+ ]
+}
