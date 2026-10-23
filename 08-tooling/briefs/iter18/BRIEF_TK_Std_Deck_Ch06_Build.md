@@ -1,6 +1,6 @@
 # Brief for the executor session SEN0414-I18-deck-ch06
 
-Generated from the register sen0414_slides_lineage_v2_153_0.ttl. Task TK_Std_Deck_Ch06_Build (state in the register: Ready). Parallel group: B chapter 6.
+Generated from the register sen0414_slides_lineage_v2_157_0.ttl. Task TK_Std_Deck_Ch06_Build (state in the register: Ready). Parallel group: B chapter 6.
 Executor session name: **SEN0414-I18-deck-ch06**. The register's note on 'work begun' for this task names this session.
 
 ## Why this work exists (the owner's request)
