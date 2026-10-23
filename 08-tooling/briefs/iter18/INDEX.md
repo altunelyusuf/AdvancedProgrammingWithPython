@@ -1,4 +1,4 @@
-# Executor briefs of Iteration 18: the chapter 6, 7 and 8 decks and pages to the written standard (generated from sen0414_slides_lineage_v2_163_0.ttl)
+# Executor briefs of Iteration 18: the chapter 6, 7 and 8 decks and pages to the written standard (generated from sen0414_slides_lineage_v2_168_0.ttl)
 
 The Verify and Regress tasks have no executor: the lineage agent controls them (re-runs the checks, renders every slide, runs the evidence bridge) after the executors report. Briefs are passed to the executors unedited.
 
@@ -13,5 +13,7 @@ The Verify and Regress tasks have no executor: the lineage agent controls them (
 | TK_Std_Page_Ch06_Build | SEN0414-I18-page-ch06 | C chapter 6 page | no, after TK_Std_Regress, TK_Std_Runner_Verify, TK_Std_TemplateFix_Verify |
 | TK_Std_Page_Ch07_Build | SEN0414-I18-page-ch07 | C chapter 7 page | no, after TK_Std_Regress, TK_Std_Runner_Verify, TK_Std_TemplateFix_Verify |
 | TK_Std_Page_Ch08_Build | SEN0414-I18-page-ch08 | C chapter 8 page | no, after TK_Std_Regress, TK_Std_Runner_Verify, TK_Std_TemplateFix_Verify |
+| TK_Std_Deck_Ch09_Build | SEN0414-I18-deck-ch09 | B chapter 9 | yes, now |
+| TK_Std_Page_Ch09_Build | SEN0414-I18-page-ch09 | C chapter 9 page | no, after TK_Std_Deck_Ch09_Verify, TK_Std_Regress, TK_Std_Runner_Verify, TK_Std_TemplateFix_Verify |
 | TK_Std_Template_R2 | SEN0414-I18-template-r2 | D repair: template | yes, now |
 | TK_Std_Runner | SEN0414-I18-runner | D repair: runner | yes, now |

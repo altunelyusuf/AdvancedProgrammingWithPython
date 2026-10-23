@@ -1,6 +1,6 @@
 # Brief for the executor session SEN0414-I18-deck-ch08
 
-Generated from the register sen0414_slides_lineage_v2_163_0.ttl. Task TK_Std_Deck_Ch08_Build (state in the register: Done). Parallel group: B chapter 8.
+Generated from the register sen0414_slides_lineage_v2_168_0.ttl. Task TK_Std_Deck_Ch08_Build (state in the register: Done). Parallel group: B chapter 8.
 Executor session name: **SEN0414-I18-deck-ch08**. The register's note on 'work begun' for this task names this session.
 
 ## Why this work exists (the owner's request)
@@ -37,7 +37,7 @@ Measured with (register, G136): sen0414_lineage_chapter_check_v1_1_0.py (TS2_Cha
 
 ## What the scope excludes, and what is lifted for this work
 - **No deck, research or page is built or rebuilt in this lineage**: Any change to the decks, research runs or pages of chapters 7 to 12: they enter this register exactly as they stand in the course repository.
-  Notes: Lifted on 2026-10-23, for the owner's request of Friday 2026-10-23 08:57 Istanbul (05:57 UTC) (ex:CR2_Standard) and ONLY for the NEW files of the decks and pages of chapters 6, 7 and 8 and of the tools named in ex:Del2_StdTools: no existing deck, research run or page is changed, and chapters 9 to 12 stay excluded. The rationale above is history and stays: a record that changed its subject would not be evidence of it, so the new files are new stories beside the Done ones.
+  Notes: Lifted on 2026-10-23, for the owner's request of Friday 2026-10-23 08:57 Istanbul (05:57 UTC) (ex:CR2_Standard) and ONLY for the NEW files of the decks and pages of chapters 6, 7 and 8 and of the tools named in ex:Del2_StdTools: no existing deck, research run or page is changed, and chapters 9 to 12 stay excluded. The rationale above is history and stays: a record that changed its subject would not be evidence of it, so the new files are new stories beside the Done ones. | Lifted on Friday 2026-10-23 16:06 Istanbul (13:06 UTC) for chapter 9, ONLY for the NEW files of its deck, chapter-code manifest and page (ex:CR2_Priority3, the owner decision): no existing deck, research run or page of chapter 9 is changed. The follow-on retrofit and build stories are PLANNED, NOT STARTED: this note lifts nothing for them; each is lifted by its own record when the chapter is planned into an iteration.
 
 ## Tools and gates, by version
 - Sibling course tools to port (READ-ONLY sources, never edited): `/home/claude/sen0401/08-tooling/` - sen0401_deck_standard_check_v1_0_0.py, deck_overlap_check_v1_0_0.py, sen0401_page_test_v9_36_0.py, course_page_template_v9_52_1.html, sen0401_page_build_v4_15_0.py, sen0401_page_data_v2_24_0.py; the chapter-code manifest of the sibling's chapter 5 is /home/claude/sen0401/03-materials/ch05/page/chapter_code_ch05_v1_1_0.json (the shape to follow)
