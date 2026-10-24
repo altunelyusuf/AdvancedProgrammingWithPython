@@ -1601,7 +1601,7 @@ with sync_playwright() as p:
                         res = pg.evaluate("()=>{const r=document.querySelector('[data-cc-result]');return {t:r.textContent.trim().slice(0,160),v:!!r.querySelector('svg,canvas,img,table,meter,progress,[data-vis],.vis,.viz,.bar')}}")
                         ran += 1
                         _em = _re9.search(r"Traceback|NameError|Error:", res["t"]); _exp = EXPECTED.get(CCI[i]["order"], "")
-                        if _em: _tok = _re9.search(r"\w*" + _re9.escape(_em.group(0)), res["t"][:_em.end()]).group(0)
+                        if _em: _tok = _re9.search(r"[A-Za-z_]*" + _re9.escape(_em.group(0)), res["t"][:_em.end()]).group(0)
                         if _em and _tok not in _exp: bad.append("%d %s: %s" % (i + 1, CCI[i]["name"], res["t"][:70]))
                         elif not res["v"]: bad.append("%d %s: result is text, not a visualisation" % (i + 1, CCI[i]["name"]))
                     except Exception as ex_: bad.append("%d %s: %s" % (i + 1, CCI[i]["name"], str(ex_)[:60]))
