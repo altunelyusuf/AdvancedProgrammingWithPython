@@ -1,0 +1,310 @@
+{
+ "chapter": 9,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch09/SEN0414_Ch09_RegularExpressions_3e_v2_0_0.pptx",
+ "about": "The code examples of the chapter 9 deck, in the order of the code slides (order = slide order). The page's chapter-code tab lists them by NAME in this order; every example is self-contained and runs with the Python standard library only; the expected result is what the run printed. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed; every statement is one line.",
+ "executed_with": {
+  "python": "3.13.16",
+  "library": null
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "page_requirements": [
+   "The Python standard library module re (every example starts with import re), and the built-ins print, repr, int, all, bool, str"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "manual",
+   "name": "A phone number checked by hand",
+   "slide": 6,
+   "concepts": [
+    "Finding Text Patterns Without Regular Expressions",
+    "is_phone_number()",
+    "isdecimal()"
+   ],
+   "code": "message = 'Call me at 415-555-1011 tomorrow. 415-555-9999 is my office.'\ndigits = lambda t: (t[:3] + t[4:7] + t[8:]).isdecimal()\nis_phone_number = lambda t: len(t) == 12 and t[3] == t[7] == '-' and digits(t)\nprint(is_phone_number('415-555-4242'), is_phone_number('Moshi moshi'))\nprint([message[i:i + 12] for i in range(len(message)) if is_phone_number(message[i:i + 12])])",
+   "expected": "True False\n['415-555-1011', '415-555-9999']\n"
+  },
+  {
+   "order": 2,
+   "id": "objects",
+   "name": "compile, search and the Match object",
+   "slide": 9,
+   "concepts": [
+    "Finding Text Patterns with Regular Expressions",
+    "Regular expression",
+    "re.compile",
+    "search",
+    "Match object",
+    "group"
+   ],
+   "code": "import re\nphone = re.compile(r'\\d{3}-\\d{3}-\\d{4}')\nmo = phone.search('My number is 415-555-4242.')\nprint(mo.group(), mo.span())\nprint(phone.search('no digits here'))",
+   "expected": "415-555-4242 (13, 25)\nNone\n"
+  },
+  {
+   "order": 3,
+   "id": "matchfns",
+   "name": "match, search and fullmatch",
+   "slide": 10,
+   "concepts": [
+    "search"
+   ],
+   "code": "import re\nprint(re.match('c', 'abcdef'), re.match('a', 'abcdef').span())\nprint(re.search('c', 'abcdef').span())\nprint(re.fullmatch('p.*n', 'python').span(), re.fullmatch('abc', 'abcdef'))",
+   "expected": "None (0, 1)\n(2, 3)\n(0, 6) None\n"
+  },
+  {
+   "order": 4,
+   "id": "grouping",
+   "name": "Groups and numbers",
+   "slide": 14,
+   "concepts": [
+    "The Syntax of Regular Expressions",
+    "Groups",
+    "groups",
+    "group"
+   ],
+   "code": "import re\nmo = re.search(r'(\\d\\d\\d)-(\\d\\d\\d-\\d\\d\\d\\d)', 'My number is 415-555-4242.')\nprint(mo.group(0), mo.group(1), mo.group(2))\nprint(mo.groups())",
+   "expected": "415-555-4242 415 555-4242\n('415', '555-4242')\n"
+  },
+  {
+   "order": 5,
+   "id": "alternation",
+   "name": "The pipe: alternatives",
+   "slide": 15,
+   "concepts": [
+    "Groups"
+   ],
+   "code": "import re\nprint(re.search(r'Cat(erpillar|astrophe|ch|egory)', 'Catch me if you can.').group())\nprint(re.search(r'Cat(erpillar|astrophe|ch|egory)', 'Catch me if you can.').group(1))\nprint(re.search(r'(Cat|Dog)s?', 'Dogs bark').group())",
+   "expected": "Catch\nch\nDogs\n"
+  },
+  {
+   "order": 6,
+   "id": "named",
+   "name": "Named groups and back references",
+   "slide": 16,
+   "concepts": [
+    "Groups"
+   ],
+   "code": "import re\nmo = re.match(r'(?P<first>\\w+) (?P<last>\\w+)', 'Malcolm Reynolds')\nprint(mo.groupdict(), mo.group('last'))\nprint(re.search(r'\\b(\\w+) \\1\\b', 'this is is a typo').group())",
+   "expected": "{'first': 'Malcolm', 'last': 'Reynolds'} Reynolds\nis is\n"
+  },
+  {
+   "order": 7,
+   "id": "charsets",
+   "name": "Character sets",
+   "slide": 18,
+   "concepts": [
+    "Qualifier Syntax: What Characters to Match"
+   ],
+   "code": "import re\ntext = 'RoboCop eats BABY FOOD.'\nprint(re.findall(r'[aeiouAEIOU]', text))\nprint(''.join(re.findall(r'[^aeiouAEIOU]', text)))",
+   "expected": "['o', 'o', 'o', 'e', 'a', 'A', 'O', 'O']\nRbCp ts BBY FD.\n"
+  },
+  {
+   "order": 8,
+   "id": "shorthand",
+   "name": "Shorthand classes and the dot",
+   "slide": 19,
+   "concepts": [
+    "Qualifier Syntax: What Characters to Match"
+   ],
+   "code": "import re\nprint(re.findall(r'\\d+\\s\\w+', '12 drummers, 11 pipers, 10 lords'))\nprint(re.findall(r'.at', 'The cat in the hat sat on the flat mat.'))",
+   "expected": "['12 drummers', '11 pipers', '10 lords']\n['cat', 'hat', 'sat', 'lat', 'mat']\n"
+  },
+  {
+   "order": 9,
+   "id": "repetition",
+   "name": "Optional, star and plus",
+   "slide": 23,
+   "concepts": [
+    "Quantifier Syntax: How Many Qualifiers to Match"
+   ],
+   "code": "import re\nprint(re.search(r'42!?', '42').group(), re.search(r'42!?', '42!').group())\nprint(re.search(r'Eggs( and spam)*', 'Eggs and spam and spam').span())\nprint(re.search(r'Eggs( and spam)+', 'Eggs') is None)",
+   "expected": "42 42!\n(0, 22)\nTrue\n"
+  },
+  {
+   "order": 10,
+   "id": "counts",
+   "name": "Exact counts with curly brackets",
+   "slide": 24,
+   "concepts": [
+    "Quantifier Syntax: How Many Qualifiers to Match"
+   ],
+   "code": "import re\nprint(re.fullmatch(r'(Ha){3,5}', 'HaHaHaHa') is not None)\nprint(re.fullmatch(r'(Ha){3}', 'HaHaHaHa') is None)\nprint(re.findall(r'\\d{2,4}', '1 22 333 4444 55555'))",
+   "expected": "True\nTrue\n['22', '333', '4444', '5555']\n"
+  },
+  {
+   "order": 11,
+   "id": "greedy",
+   "name": "Greedy and non-greedy matching",
+   "slide": 25,
+   "concepts": [
+    "Greedy and Non-greedy Matching"
+   ],
+   "code": "import re\nprint(re.search(r'(Ha){3,5}', 'HaHaHaHaHa').group())\nprint(re.search(r'(Ha){3,5}?', 'HaHaHaHaHa').group())\nprint(re.search(r'<.*?>', '<To serve man> for dinner.>').group())\nprint(re.search(r'<.*>', '<To serve man> for dinner.>').group())",
+   "expected": "HaHaHaHaHa\nHaHaHa\n<To serve man>\n<To serve man> for dinner.>\n"
+  },
+  {
+   "order": 12,
+   "id": "anchors",
+   "name": "Start and end anchors",
+   "slide": 26,
+   "concepts": [
+    "Matching at the Start and End of a String"
+   ],
+   "code": "import re\nprint(re.search(r'^\\d+$', '1234567890').span())\nprint(re.search(r'^\\d+$', '12345xyz67890') is None)",
+   "expected": "(0, 10)\nTrue\n"
+  },
+  {
+   "order": 13,
+   "id": "boundaries",
+   "name": "Word boundaries",
+   "slide": 27,
+   "concepts": [
+    "Matching at the Start and End of a String"
+   ],
+   "code": "import re\nprint(re.findall(r'\\bcat\\w*', 'The cat found a catapult catalog in the catacombs.'))\nprint(re.findall(r'\\Bcat\\B', 'certificate'))",
+   "expected": "['cat', 'catapult', 'catalog', 'catacombs']\n['cat']\n"
+  },
+  {
+   "order": 14,
+   "id": "lookaround",
+   "name": "Look-ahead and look-behind",
+   "slide": 28,
+   "concepts": [
+    "Matching at the Start and End of a String"
+   ],
+   "code": "import re\nprint(re.findall(r'\\d+(?= dollars)', '5 dollars and 7 euros'))\nprint(re.findall(r'(?<=\\$)\\d+', 'cost $30 or 40'))",
+   "expected": "['5']\n['30']\n"
+  },
+  {
+   "order": 15,
+   "id": "findall",
+   "name": "findall and its shapes",
+   "slide": 31,
+   "concepts": [
+    "Finding every match",
+    "findall"
+   ],
+   "code": "import re\nprint(re.findall(r'\\d{3}-\\d{3}-\\d{4}', 'Cell: 415-555-9999 Work: 212-555-0000'))\nprint(re.findall(r'(\\w+)=(\\d+)', 'set width=20 and height=10'))\nprint(re.compile(r'\\d{3}').findall('123456'))",
+   "expected": "['415-555-9999', '212-555-0000']\n[('width', '20'), ('height', '10')]\n['123', '456']\n"
+  },
+  {
+   "order": 16,
+   "id": "finditer",
+   "name": "finditer and split",
+   "slide": 32,
+   "concepts": [
+    "Finding every match"
+   ],
+   "code": "import re\ntext = 'He was carefully disguised but captured quickly by police.'\nprint([(m.start(), m.end(), m.group()) for m in re.finditer(r'\\w+ly\\b', text)])\nprint(re.split(r',\\s*', 'a, b,c,   d'))",
+   "expected": "[(7, 16, 'carefully'), (40, 47, 'quickly')]\n['a', 'b', 'c', 'd']\n"
+  },
+  {
+   "order": 17,
+   "id": "sub",
+   "name": "Substituting with sub",
+   "slide": 33,
+   "concepts": [
+    "Substituting Strings",
+    "Substitution",
+    "sub"
+   ],
+   "code": "import re\ntext = 'Agent Alice contacted Agent Bob.'\nprint(re.sub(r'Agent \\w+', 'CENSORED', text))\nprint(re.sub(r'Agent (\\w)\\w*', r'\\1****', text))",
+   "expected": "CENSORED contacted CENSORED.\nA**** contacted B****.\n"
+  },
+  {
+   "order": 18,
+   "id": "subfunc",
+   "name": "sub with a function, escape and subn",
+   "slide": 34,
+   "concepts": [
+    "sub"
+   ],
+   "code": "import re\nprint(re.sub(r'\\d+', lambda m: str(int(m.group()) * 2), '3 cats 12 dogs'))\nprint(re.escape('a.b*c'), re.subn('a', 'b', 'banana'))",
+   "expected": "6 cats 24 dogs\na\\.b\\*c ('bbnbnb', 3)\n"
+  },
+  {
+   "order": 19,
+   "id": "flags",
+   "name": "Ignore case and DOTALL",
+   "slide": 35,
+   "concepts": [
+    "Case-Insensitive Matching"
+   ],
+   "code": "import re\nprint(re.search('robocop', 'ROBOCOP protects', re.I).group())\ntext = 'Serve the public trust.\\nProtect the innocent.'\nprint(repr(re.search('.*', text).group()))\nprint(repr(re.search('.*', text, re.DOTALL).group()))",
+   "expected": "ROBOCOP\n'Serve the public trust.'\n'Serve the public trust.\\nProtect the innocent.'\n"
+  },
+  {
+   "order": 20,
+   "id": "verbose",
+   "name": "Verbose mode",
+   "slide": 36,
+   "concepts": [
+    "Managing Complex Regexes with Verbose Mode"
+   ],
+   "code": "import re\npattern = '\\\\d{3}  # area code\\n-\\\\d{4}  # number'\nprint(re.search(pattern, '415-5551', re.VERBOSE).group())",
+   "expected": "415-5551\n"
+  },
+  {
+   "order": 21,
+   "id": "combined",
+   "name": "Combined flags",
+   "slide": 37,
+   "concepts": [
+    "Combining re.IGNORECASE, re.DOTALL, and re.VERBOSE"
+   ],
+   "code": "import re\nboth = re.I | re.S | re.X\nprint(int(both), re.search('a . b # note', 'A\\nB', both).group() == 'A\\nB')",
+   "expected": "82 True\n"
+  },
+  {
+   "order": 22,
+   "id": "phonegroups",
+   "name": "The phone pattern, group by group",
+   "slide": 40,
+   "concepts": [
+    "Project 3: Extract Contact Information from Large Documents"
+   ],
+   "code": "import re\nphone = re.compile(r'((\\d{3}|\\(\\d{3}\\))?(\\s|-|\\.)?(\\d{3})'\n                   r'(\\s|-|\\.)(\\d{4})(\\s*(ext|x|ext\\.)\\s*(\\d{2,5}))?)')\nmo = phone.search('Call 415.555.9950 ext. 123')\nprint(mo.groups())",
+   "expected": "('415.555.9950 ext. 123', '415', '.', '555', '.', '9950', ' ext. 123', 'ext.', '123')\n"
+  },
+  {
+   "order": 23,
+   "id": "project3",
+   "name": "Project 3: phone numbers and e-mails",
+   "slide": 41,
+   "concepts": [
+    "Project 3: Extract Contact Information from Large Documents"
+   ],
+   "code": "import re\nphone = re.compile(r'(\\(\\d{3}\\)|\\d{3})?[\\s.-]?(\\d{3})[\\s.-](\\d{4})(?:\\s*(?:ext|x)\\.?\\s*(\\d{2,5}))?')\nemail = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}')\ntext = ('Call 800-555-7240 or (415) 555-9900 or 415.555.9950 ext. 123. '\n        'Mail info@nostarch.com or media@nostarch.com.')\nshow = lambda g: '-'.join(g[:3]) + (' x' + g[3] if g[3] else '')\nprint([show(g) for g in phone.findall(text)])\nprint(email.findall(text))",
+   "expected": "['800-555-7240', '(415)-555-9900', '415-555-9950 x123']\n['info@nostarch.com', 'media@nostarch.com']\n"
+  },
+  {
+   "order": 24,
+   "id": "strongpw",
+   "name": "Strong-password check",
+   "slide": 42,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "code": "import re\nrules = (r'.{8}', r'[a-z]', r'[A-Z]', r'\\d')\npws = ('password1', 'PASSWORD1', 'Password', 'Sh0rt', 'Passw0rdOK')\nis_strong = lambda pw: all(re.search(rule, pw) for rule in rules)\nprint([(pw, is_strong(pw)) for pw in pws])",
+   "expected": "[('password1', False), ('PASSWORD1', False), ('Password', False), ('Sh0rt', False), ('Passw0rdOK', True)]\n"
+  },
+  {
+   "order": 25,
+   "id": "regexstrip",
+   "name": "regex_strip()",
+   "slide": 43,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "code": "import re\nedge = lambda cls: '^' + cls + '+|' + cls + '+$'\ncls = lambda c: r'\\s' if c is None else '[' + re.escape(c) + ']'\nregex_strip = lambda t, c=None: re.sub(edge(cls(c)), '', t)\nprint(repr(regex_strip('  hi there \\n')), repr(regex_strip('xyhixy', 'xy')))\nprint(repr(regex_strip('[[a]]', '[]')))",
+   "expected": "'hi there' 'hi'\n'a'\n"
+  }
+ ]
+}
