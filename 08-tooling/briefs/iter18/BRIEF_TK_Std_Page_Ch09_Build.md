@@ -1,6 +1,6 @@
 # Brief for the executor session SEN0414-I18-page-ch09
 
-Generated from the register sen0414_slides_lineage_v2_170_0.ttl. Task TK_Std_Page_Ch09_Build (state in the register: Ready). Parallel group: C chapter 9 page.
+Generated from the register sen0414_slides_lineage_v2_177_0.ttl. Task TK_Std_Page_Ch09_Build (state in the register: Ready). Parallel group: C chapter 9 page.
 Executor session name: **SEN0414-I18-page-ch09**. The register's note on 'work begun' for this task names this session.
 
 ## Why this work exists (the owner's request)
@@ -20,9 +20,6 @@ OWNER DECISION of Friday 2026-10-23 16:06 Istanbul (13:06 UTC), relayed by the c
 
 ## CORRECTION that overrides the register text quoted below (controlled 2026-10-23, register 2.170.0)
 Use page template **9.52.2** (`08-tooling/course_page_template_v9_52_2.html`), page builder **4.18.1** (`08-tooling/sen0414_page_build_v4_18_1.py`), page-data builder 2.25.0, the page test **9.36.0** and the runner **v1_1_0** (`08-tooling/sen0414_page_test_run_v1_1_0.py`). Wherever the text below says template 9.52.1, builder 4.18.0 or runner v1_0_0, it is superseded: 9.52.1 closes a comment early and shows text above the header; builder 4.18.1 refuses it. Run the page test one run at a time; a failing main-thread-budget line alone under load may be run again (keep every log); any other [FAIL] is a result.
-
-## Do not start until
-Task(s) TK_Std_Deck_Ch09_Verify are Done in the register (the lineage agent controls them and tells the coordinator).
 
 ## The task
 **Rebuild the page of chapter 9 (Regular Expressions) on the new template with the chapter-code tab**
