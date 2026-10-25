@@ -1,0 +1,318 @@
+{
+ "chapter": 13,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch13/SEN0414_Ch13_WebScraping_3e_v2_0_0.pptx",
+ "about": "The code examples of the chapter 13 deck, in the order of the code slides (order = slide order). The page's chapter-code tab lists them by NAME in this order; every example is self-contained and runs with the Python standard library only, opens no network connection, reads no keyboard and opens no window (a page in a browser cannot reach the web, so the third-party tools of the chapter are shown by their standard-library counterparts and by small stand-ins, named beside the code); the expected result is what the run printed in a fresh interpreter. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed.",
+ "executed_with": {
+  "python": "3.13.16",
+  "library": null
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "page_requirements": [
+   "The Python standard library modules urllib.parse, urllib.request (urlopen on a data: address), urllib.robotparser, http, webbrowser (the examples replace webbrowser.open by a recording function), json, os, tempfile, re, contextlib, html.parser and xml.etree.ElementTree (imported by the examples that use them), and the built-ins print, repr, len, range, enumerate, round, type, list, dict",
+   "A writable temporary folder (the chunks example); no subprocess, no keyboard input, no network, no browser window"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "url_anatomy",
+   "name": "A URL cut into its parts",
+   "slide": 6,
+   "concepts": [
+    "URL",
+    "endpoint",
+    "API"
+   ],
+   "code": "from urllib.parse import urlsplit\nurl = ('https://api.openweathermap.org/geo/1.0/direct'\n       '?q=Boston&appid=KEY#top')\nparts = urlsplit(url)\nfor name in ('scheme', 'netloc', 'path', 'query', 'fragment'):\n    print(name.ljust(8), getattr(parts, name))",
+   "expected": "scheme   https\nnetloc   api.openweathermap.org\npath     /geo/1.0/direct\nquery    q=Boston&appid=KEY\nfragment top\n"
+  },
+  {
+   "order": 2,
+   "id": "query_quote",
+   "name": "quote and parse_qs",
+   "slide": 7,
+   "concepts": [
+    "URL",
+    "endpoint"
+   ],
+   "code": "from urllib.parse import parse_qs, quote\nprint(quote('777 Valencia St, San Francisco'))\nquery = parse_qs('q=San+Francisco%2CCA&appid=KEY')\nprint(query)",
+   "expected": "777%20Valencia%20St%2C%20San%20Francisco\n{'q': ['San Francisco,CA'], 'appid': ['KEY']}\n"
+  },
+  {
+   "order": 3,
+   "id": "status_codes",
+   "name": "HTTP status codes and their classes",
+   "slide": 8,
+   "concepts": [
+    "HTTP and HTTPS",
+    "HTTPS"
+   ],
+   "code": "from http import HTTPStatus\nfor code in (200, 301, 404, 429, 500):\n    status = HTTPStatus(code)\n    print(code, status.phrase, '| class', code // 100)",
+   "expected": "200 OK | class 2\n301 Moved Permanently | class 3\n404 Not Found | class 4\n429 Too Many Requests | class 4\n500 Internal Server Error | class 5\n"
+  },
+  {
+   "order": 4,
+   "id": "user_agent",
+   "name": "The user-agent header",
+   "slide": 9,
+   "concepts": [
+    "user agent"
+   ],
+   "code": "import urllib.request\nopener = urllib.request.build_opener()\nname, value = opener.addheaders[0]\nprint(name, '->', value.split('/')[0])\nurl = 'https://example.com/'\nheaders = {'User-Agent': 'MyBot/1.0'}\nrequest = urllib.request.Request(url, headers=headers)\nprint(request.get_header('User-agent'))",
+   "expected": "User-agent -> Python-urllib\nMyBot/1.0\n"
+  },
+  {
+   "order": 5,
+   "id": "robots_rules",
+   "name": "robots.txt rules with can_fetch",
+   "slide": 10,
+   "concepts": [
+    "Fetching a page"
+   ],
+   "code": "import urllib.robotparser as rp\nrobots = rp.RobotFileParser()\nrobots.parse(['User-agent: *', 'Disallow: /simple/',\n              'Disallow: /account/'])\nfor path in ('/project/x/', '/simple/x/', '/account/login/'):\n    print(path, robots.can_fetch('*', 'https://pypi.org' + path))",
+   "expected": "/project/x/ True\n/simple/x/ False\n/account/login/ False\n"
+  },
+  {
+   "order": 6,
+   "id": "crawl_delay",
+   "name": "Crawl-delay and a polite pause",
+   "slide": 12,
+   "concepts": [
+    "Fetching a page"
+   ],
+   "code": "import urllib.robotparser as rp\nrobots = rp.RobotFileParser()\nrobots.parse(['User-agent: *', 'Crawl-delay: 2',\n              'Request-rate: 3/20'])\npause = robots.crawl_delay('*')\nrate = robots.request_rate('*')\nprint('wait', pause, 'seconds; rate', tuple(rate))\nfor page, clock in zip('abc', range(0, 6, pause)):\n    print('t =', clock, 'fetch page', page)",
+   "expected": "wait 2 seconds; rate (3, 20)\nt = 0 fetch page a\nt = 2 fetch page b\nt = 4 fetch page c\n"
+  },
+  {
+   "order": 7,
+   "id": "webbrowser_open",
+   "name": "webbrowser.open with a recording stand-in",
+   "slide": 17,
+   "concepts": [
+    "webbrowser",
+    "webbrowser.open()"
+   ],
+   "code": "import webbrowser\nopened = []\nwebbrowser.open = lambda url: opened.append(url) or True\nprint(webbrowser.open('https://inventwithpython.com/'))\nprint(opened)",
+   "expected": "True\n['https://inventwithpython.com/']\n"
+  },
+  {
+   "order": 8,
+   "id": "showmap",
+   "name": "showmap.py builds a map address",
+   "slide": 18,
+   "concepts": [
+    "Project 6: Run a Program with the webbrowser Module",
+    "URL"
+   ],
+   "code": "from urllib.parse import quote\nargv = ['showmap.py', '777', 'Valencia', 'St,',\n        'San', 'Francisco,', 'CA', '94110']\naddress = ' '.join(argv[1:])\nsearch = 'https://www.openstreetmap.org/search?query='\nurl = search + quote(address)\nprint(address)\nprint(url)",
+   "expected": "777 Valencia St, San Francisco, CA 94110\nhttps://www.openstreetmap.org/search?query=777%20Valencia%20St%2C%20San%20Francisco%2C%20CA%2094110\n"
+  },
+  {
+   "order": 9,
+   "id": "fetch_data",
+   "name": "urlopen on a data address",
+   "slide": 19,
+   "concepts": [
+    "Fetching a page",
+    "requests.get()"
+   ],
+   "code": "from urllib.request import urlopen\nreply = urlopen('data:text/plain,Romeo%20and%20Juliet')\nprint(reply.headers.get_content_type())\nbody = reply.read()\nprint(len(body), 'bytes:', body.decode('utf-8'))",
+   "expected": "text/plain\n16 bytes: Romeo and Juliet\n"
+  },
+  {
+   "order": 10,
+   "id": "raise_status",
+   "name": "A raise_for_status stand-in",
+   "slide": 21,
+   "concepts": [
+    "raise_for_status()",
+    "requests.get()"
+   ],
+   "code": "from http import HTTPStatus\ndef raise_for_status(code):\n    if code >= 400:\n        phrase = HTTPStatus(code).phrase\n        raise RuntimeError('%d %s' % (code, phrase))\nfor code in (200, 404, 500):\n    try:\n        raise_for_status(code)\n        print(code, 'fine')\n    except RuntimeError as err:\n        print(code, 'stopped:', err)",
+   "expected": "200 fine\n404 stopped: 404 Not Found\n500 stopped: 500 Internal Server Error\n"
+  },
+  {
+   "order": 11,
+   "id": "chunks",
+   "name": "iter_content writes in chunks",
+   "slide": 22,
+   "concepts": [
+    "iter_content()",
+    "Downloading Files from the Web with the requests Module"
+   ],
+   "code": "import os, tempfile\nbody = b'To be, or not to be, that is the question.'\ndef iter_content(data, size):\n    for start in range(0, len(data), size):\n        yield data[start:start + size]\nwith tempfile.TemporaryDirectory() as folder:\n    with open(os.path.join(folder, 'speech.txt'), 'wb') as file:\n        for chunk in iter_content(body, 16):\n            print(file.write(chunk))",
+   "expected": "16\n16\n10\n"
+  },
+  {
+   "order": 12,
+   "id": "json_loads",
+   "name": "json.loads reads an API reply",
+   "slide": 25,
+   "concepts": [
+    "json.loads()",
+    "API",
+    "Accessing a Weather API"
+   ],
+   "code": "import json\nreply = ('{\"name\": \"Boston\", \"main\": {\"temp\": 285.44},'\n         ' \"weather\": [{\"main\": \"Clouds\"}]}')\ndata = json.loads(reply)\nprint(data['name'], data['weather'][0]['main'])\nprint(type(data).__name__, list(data))",
+   "expected": "Boston Clouds\ndict ['name', 'main', 'weather']\n"
+  },
+  {
+   "order": 13,
+   "id": "kelvin",
+   "name": "Kelvin to Celsius and Fahrenheit",
+   "slide": 26,
+   "concepts": [
+    "Accessing a Weather API"
+   ],
+   "code": "kelvin = 285.44\ncelsius = kelvin - 273.15\nfahrenheit = celsius * 9 / 5 + 32\nprint('Result: %.1f C and %.1f F' % (celsius, fahrenheit))",
+   "expected": "Result: 12.3 C and 54.1 F\n"
+  },
+  {
+   "order": 14,
+   "id": "api_url",
+   "name": "An endpoint with an API key",
+   "slide": 27,
+   "concepts": [
+    "endpoint",
+    "API key",
+    "API"
+   ],
+   "code": "from urllib.parse import urlencode\nendpoint = 'https://api.openweathermap.org/data/2.5/forecast'\nparams = {'lat': 42.36, 'lon': -71.06, 'appid': 'KEY'}\nurl = endpoint + '?' + urlencode(params)\nprint(url)\nprint(url.replace('KEY', '***'))",
+   "expected": "https://api.openweathermap.org/data/2.5/forecast?lat=42.36&lon=-71.06&appid=KEY\nhttps://api.openweathermap.org/data/2.5/forecast?lat=42.36&lon=-71.06&appid=***\n"
+  },
+  {
+   "order": 15,
+   "id": "html_elements",
+   "name": "HTMLParser lists the tags and attributes",
+   "slide": 31,
+   "concepts": [
+    "Understanding HTML",
+    "Parsing HTML"
+   ],
+   "code": "from html.parser import HTMLParser\nclass Outline(HTMLParser):\n    def handle_starttag(self, tag, attrs):\n        print(tag, dict(attrs))\npage = ('<p id=\"a\">Hello, <b>world</b>!</p>'\n        '<a class=\"s\" href=\"/x\">link</a>')\nOutline().feed(page)",
+   "expected": "p {'id': 'a'}\nb {}\na {'class': 's', 'href': '/x'}\n"
+  },
+  {
+   "order": 16,
+   "id": "css_select",
+   "name": "select, get_text and get with ElementTree",
+   "slide": 32,
+   "concepts": [
+    "select()",
+    "get_text()",
+    "get()",
+    "CSS selector",
+    "bs4.BeautifulSoup()"
+   ],
+   "code": "import xml.etree.ElementTree as ET\npage = ('<div><p id=\"a\">Hello, <b>world</b>!</p>'\n        '<p class=\"s\"><a href=\"/x\">link</a></p></div>')\nroot = ET.fromstring(page)\nby_id = root.findall(\".//*[@id='a']\")\nprint(len(by_id), repr(''.join(by_id[0].itertext())))\nlink = root.find(\".//p[@class='s']/a\")\nprint(link.get('href'), link.attrib)\nprint(root.findall(\".//*[@class='nope']\"))",
+   "expected": "1 'Hello, world!'\n/x {'href': '/x'}\n[]\n"
+  },
+  {
+   "order": 17,
+   "id": "regex_pitfall",
+   "name": "A regular expression against a parser",
+   "slide": 34,
+   "concepts": [
+    "Parsing HTML with Beautiful Soup",
+    "Beautiful Soup (bs4)"
+   ],
+   "code": "import re\nhtml = '<a href=\"/x\">x</a> <a class=\"k\" href=\"/y\">y</a>'\nprint(re.findall('<a href=\"(.*?)\">', html))\nfrom html.parser import HTMLParser\nclass Links(HTMLParser):\n    found = []\n    def handle_starttag(self, tag, attrs):\n        if tag == 'a':\n            self.found.append(dict(attrs)['href'])\nLinks().feed(html)\nprint(Links.found)",
+   "expected": "['/x']\n['/x', '/y']\n"
+  },
+  {
+   "order": 18,
+   "id": "links_verify",
+   "name": "Resolve, defragment and de-duplicate links",
+   "slide": 35,
+   "concepts": [
+    "Practice Programs",
+    "Parsing HTML"
+   ],
+   "code": "from urllib.parse import urljoin, urldefrag\nsite = 'https://example.com'\npage = site + '/guide/index.html'\nhrefs = ['intro.html', 'intro.html#top', '/about',\n         'https://other.org/x']\nseen = []\nfor href in hrefs:\n    full, fragment = urldefrag(urljoin(page, href))\n    if full.startswith(site) and full not in seen:\n        seen.append(full)\nprint(seen)",
+   "expected": "['https://example.com/guide/intro.html', 'https://example.com/about']\n"
+  },
+  {
+   "order": 19,
+   "id": "xkcd_chain",
+   "name": "The comic image and the Prev link",
+   "slide": 36,
+   "concepts": [
+    "Project 8: Download XKCD Comics",
+    "Parsing HTML"
+   ],
+   "code": "import xml.etree.ElementTree as ET\nfrom urllib.parse import urljoin\npage = ('<body><div id=\"comic\">'\n        '<img src=\"//imgs.xkcd.com/comics/x.png\"/></div>'\n        '<a rel=\"prev\" href=\"/2/\">Prev</a></body>')\nroot = ET.fromstring(page)\nsrc = root.find(\".//*[@id='comic']/img\").get('src')\nprev = root.find(\".//a[@rel='prev']\").get('href')\nprint(urljoin('https://xkcd.com/3/', src))\nprint(urljoin('https://xkcd.com/3/', prev))",
+   "expected": "https://imgs.xkcd.com/comics/x.png\nhttps://xkcd.com/2/\n"
+  },
+  {
+   "order": 20,
+   "id": "search_results",
+   "name": "Open the first search results",
+   "slide": 37,
+   "concepts": [
+    "Project 7: Open All Search Results",
+    "webbrowser.open()"
+   ],
+   "code": "import webbrowser, xml.etree.ElementTree as ET\nopened = []\nwebbrowser.open = opened.append\npage = ('<ul><a href=\"/p/one\"/><a href=\"/p/two\"/>'\n        '<a href=\"/p/three\"/></ul>')\nlinks = ET.fromstring(page).findall('.//a')\nfor link in links[:2]:\n    webbrowser.open('https://pypi.org' + link.get('href'))\nprint(len(links), 'found;', opened)",
+   "expected": "3 found; ['https://pypi.org/p/one', 'https://pypi.org/p/two']\n"
+  },
+  {
+   "order": 21,
+   "id": "dynamic_page",
+   "name": "A page built by a script",
+   "slide": 41,
+   "concepts": [
+    "Browser automation",
+    "headless mode"
+   ],
+   "code": "import xml.etree.ElementTree as ET\nsource = ('<body><div id=\"app\"></div>'\n          '<script>show(\"Built by a script\")</script></body>')\nroot = ET.fromstring(source)\napp = root.find(\".//*[@id='app']\")\nprint('text in the source:', repr(app.text))\nscript = root.find('.//script').text\napp.text = script.split('\"')[1]\nprint('after the script ran:', repr(app.text))",
+   "expected": "text in the source: None\nafter the script ran: 'Built by a script'\n"
+  },
+  {
+   "order": 22,
+   "id": "selenium_shape",
+   "name": "find_element and find_elements",
+   "slide": 43,
+   "concepts": [
+    "webdriver.Firefox()",
+    "find_element()",
+    "find_elements()",
+    "Selenium"
+   ],
+   "code": "import xml.etree.ElementTree as ET\nroot = ET.fromstring('<body><p>one</p><p>two</p></body>')\ndef find_elements(path):\n    return root.findall(path)\ndef find_element(path):\n    return find_elements(path)[0]\nprint(len(find_elements('.//p')), find_element('.//p').text)\nprint(find_elements('.//h1'))\ntry:\n    find_element('.//h1')\nexcept IndexError:\n    print('Result: find_element fails when nothing matches')",
+   "expected": "2 one\n[]\nResult: find_element fails when nothing matches\n"
+  },
+  {
+   "order": 23,
+   "id": "playwright_shape",
+   "name": "The shape of a Playwright program",
+   "slide": 44,
+   "concepts": [
+    "sync_playwright()",
+    "new_page()",
+    "goto()",
+    "locator()",
+    "Playwright"
+   ],
+   "code": "from contextlib import nullcontext\nclass Page:\n    def goto(self, url):\n        print('visiting', url)\n    def locator(self, css):\n        return 'element ' + css\nclass Playwright:\n    def new_page(self):\n        return Page()\nwith nullcontext(Playwright()) as p:\n    page = p.new_page()\n    page.goto('https://example.com/')\n    print(page.locator('h1'))",
+   "expected": "visiting https://example.com/\nelement h1\n"
+  },
+  {
+   "order": 24,
+   "id": "auto_wait",
+   "name": "Auto-waiting for an element",
+   "slide": 46,
+   "concepts": [
+    "Interacting with a page",
+    "locator()"
+   ],
+   "code": "looks = [None, None, 'Hello']  # what each look sees\ndef locator_text(limit):\n    for look, text in enumerate(looks[:limit], 1):\n        if text is not None:\n            return 'found %r on look %d' % (text, look)\n    return 'timeout after %d looks' % limit\nprint(locator_text(5))\nprint(locator_text(2))",
+   "expected": "found 'Hello' on look 3\ntimeout after 2 looks\n"
+  }
+ ]
+}
