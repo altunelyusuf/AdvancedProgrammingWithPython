@@ -1,0 +1,118 @@
+{
+ "_version": "2.0.0",
+ "_from": "03-materials/ch11/page/chapter_code_ch11_v1_0_0.json",
+ "shutil.copy: one file": [
+  [
+   "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('a.txt').write_text('Hello')\nPath('box').mkdir()\nprint(shutil.copy('a.txt', 'box'))\nprint(shutil.copy('a.txt', 'box/b.txt'))\nprint(sorted(os.listdir('box')))",
+   ""
+  ]
+ ],
+ "shutil.copytree: a whole folder": [
+  [
+   "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('box/inner').mkdir(parents=True)\nPath('box/y.txt').write_text('y')\nprint(shutil.copytree('box', 'bak'))\ntry:\n    shutil.copytree('box', 'bak')\nexcept FileExistsError:\n    print('second copy refused: the folder exists')\nprint(shutil.copytree('box', 'bak', dirs_exist_ok=True))",
+   ""
+  ]
+ ],
+ "copy2 keeps the time stamp": [
+  [
+   "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('a.txt').write_text('Hello')\nPath('box').mkdir()\nos.utime('a.txt', (1000000000, 1000000000))\nshutil.copy2('a.txt', 'box/c.txt')\nshutil.copy('a.txt', 'box/d.txt')\nt = lambda n: int(Path(n).stat().st_mtime)\nprint('copy2 keeps the time:', t('box/c.txt'))\nprint('copy gives a new time:', t('box/d.txt') == t('a.txt'))",
+   ""
+  ]
+ ],
+ "shutil.move: move and rename": [
+  [
+   "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('spam').mkdir(); Path('spam2').mkdir()\nPath('spam/file1.txt').write_text('Hello')\nprint(shutil.move('spam/file1.txt', 'spam2'))\nprint(shutil.move('spam2/file1.txt', 'spam/new_name.txt'))\nPath('spam2/f.txt').write_text('old')\nPath('spam/f.txt').write_text('new')\nshutil.move('spam/f.txt', 'spam2/f.txt')\nprint(Path('spam2/f.txt').read_text(), Path('spam/f.txt').exists())",
+   ""
+  ]
+ ],
+ "os.unlink and os.rmdir": [
+  [
+   "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('a.txt').write_text('x')\nos.unlink('a.txt')\nprint('a.txt exists:', Path('a.txt').exists())\nPath('d').mkdir(); Path('d/f.txt').write_text('x')\ntry:\n    os.rmdir('d')\nexcept OSError:\n    print('rmdir refused: the folder d is not empty')\nos.unlink('d/f.txt'); os.rmdir('d')\nprint('d exists:', Path('d').exists())",
+   ""
+  ]
+ ],
+ "shutil.rmtree": [
+  [
+   "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('spam/eggs').mkdir(parents=True)\nPath('spam/eggs/f.txt').write_text('x')\nprint(sorted(str(p) for p in Path('spam').rglob('*')))\nshutil.rmtree('spam')\nprint('spam exists:', Path('spam').exists())\nshutil.rmtree('spam', ignore_errors=True)\nprint('a missing folder is ignored')",
+   ""
+  ]
+ ],
+ "A dry run before deleting": [
+  [
+   "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nfor n in ('a.txt', 'b.txt', 'c.rxt'):\n    Path(n).write_text(n)\nnames = sorted(p.name for p in Path('.').glob('*.rxt'))\nprint('typo *.rxt would delete:', names)\nfor p in sorted(Path('.').glob('*.txt')):\n    print('would delete', p)   # os.unlink(p)",
+   ""
+  ]
+ ],
+ "Listing one folder": [
+  [
+   "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('spam/eggs').mkdir(parents=True)\nPath('spam/b.pdf').write_text('x')\nPath('spam/file1.txt').write_text('x')\nPath('spam/eggs/f2.txt').write_text('x')\nprint(sorted(os.listdir('spam')))\nprint(sorted((p.name, p.is_dir())\n             for p in Path('spam').iterdir()))\nprint(sorted(p.name for p in Path('spam').glob('*.txt')))\nprint(sorted(p.name for p in Path('spam').rglob('*.txt')))",
+   ""
+  ]
+ ],
+ "os.walk visits every folder": [
+  [
+   "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('spam/eggs/bacon').mkdir(parents=True)\nPath('spam/eggs2').mkdir()\nPath('spam/file1.txt').write_text('x')\nPath('spam/eggs/file2.txt').write_text('x')\nfor folder, subs, files in os.walk('spam'):\n    subs.sort()\n    print(folder, subs, sorted(files))\nlast = [f for f, s, fl in os.walk('spam', topdown=False)][-1]\nprint('bottom-up ends at:', last)",
+   ""
+  ]
+ ],
+ "Folder sizes with os.walk": [
+  [
+   "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('spam/eggs').mkdir(parents=True)\nPath('spam/a.txt').write_text('x' * 300)\nPath('spam/eggs/b.txt').write_text('x' * 120)\nPath('spam/eggs/c.txt').write_text('x' * 80)\nsizes = {}\nfor folder, subs, files in os.walk('spam'):\n    sizes[folder] = sum(os.path.getsize(Path(folder, f))\n                        for f in files)\nprint(dict(sorted(sizes.items())))\nprint('total:', sum(sizes.values()))",
+   ""
+  ]
+ ],
+ "Path.mkdir with parents": [
+  [
+   "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\ntry:\n    Path('x/y').mkdir()\nexcept FileNotFoundError:\n    print('refused: the parent x is missing')\nPath('x/y').mkdir(parents=True)\nPath('x/y').mkdir(parents=True, exist_ok=True)\nprint(sorted(str(p) for p in Path('x').rglob('*')))",
+   ""
+  ]
+ ],
+ "Writing a ZIP file": [
+  [
+   "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('file1.txt').write_text('Hello' * 10000)\nwith zipfile.ZipFile('example.zip', 'w') as z:\n    z.write('file1.txt', compress_type=zipfile.ZIP_DEFLATED)\nwith zipfile.ZipFile('example.zip') as z:\n    info = z.getinfo('file1.txt')\nprint(info.filename, info.file_size)\nsmall = info.compress_size < info.file_size / 100\nprint('squeezed to under 1 percent:', small)",
+   ""
+  ]
+ ],
+ "ZIP modes: append and refuse": [
+  [
+   "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('a.txt').write_text('A')\nwith zipfile.ZipFile('x.zip', 'w') as z:\n    z.write('a.txt')\nwith zipfile.ZipFile('x.zip', 'a') as z:\n    z.writestr('two.txt', '2')\nwith zipfile.ZipFile('x.zip') as z:\n    print(sorted(z.namelist()))\ntry:\n    zipfile.ZipFile('x.zip', 'x')\nexcept FileExistsError:\n    print(\"mode 'x' refused: x.zip exists\")",
+   ""
+  ]
+ ],
+ "Extracting from a ZIP": [
+  [
+   "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nwith zipfile.ZipFile('z.zip', 'w') as z:\n    z.writestr('a.txt', 'A')\n    z.writestr('sub/b.txt', 'B')\nwith zipfile.ZipFile('z.zip') as z:\n    z.extractall('out')\nprint(sorted(str(p) for p in Path('out').rglob('*')))\nwith zipfile.ZipFile('z.zip') as z:\n    print(z.extract('a.txt', 'new/folder'))",
+   ""
+  ]
+ ],
+ "make_archive and unpack_archive": [
+  [
+   "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('spam/sub').mkdir(parents=True)\nPath('spam/a.txt').write_text('x')\nPath('spam/sub/b.txt').write_text('y')\nname = shutil.make_archive('snap', 'zip', '.', 'spam')\nprint(Path(name).name)\nwith zipfile.ZipFile(name) as z:\n    print(sorted(z.namelist()))\nshutil.unpack_archive(name, 'un')\nprint(sorted(str(p) for p in Path('un').rglob('*')))",
+   ""
+  ]
+ ],
+ "Project 5: backupToZip": [
+  [
+   "import os, tempfile, zipfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\ndef backup_to_zip(folder):\n    n = 1\n    while Path(f'{folder}_{n}.zip').exists(): n += 1\n# continued\n    with zipfile.ZipFile(f'{folder}_{n}.zip', 'w') as z:\n        for root, subs, files in os.walk(folder):\n            for f in files: z.write(Path(root, f))\n    return f'{folder}_{n}.zip'\nPath('spam/eggs').mkdir(parents=True)\nPath('spam/file1.txt').write_text('Hello')\nPath('spam/eggs/file2.txt').write_text('Hi')\nprint(backup_to_zip('spam'), backup_to_zip('spam'))\nwith zipfile.ZipFile('spam_1.zip') as z:\n    print(sorted(z.namelist()))",
+   ""
+  ]
+ ],
+ "Practice 1: copy by extension": [
+  [
+   "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nfor d in ('src/a', 'src/b', 'dest'):\n    Path(d).mkdir(parents=True)\nfiles = ('src/one.pdf', 'src/a/two.PDF',\n         'src/b/three.txt', 'src/b/four.pdf')\nfor f in files: Path(f).write_text(f)\nfor folder, subs, files in os.walk('src'):\n    for f in files:\n        if f.lower().endswith('.pdf'):\n            shutil.copy(Path(folder, f), 'dest')\nprint(sorted(os.listdir('dest')))\nprint(sorted(f for _, _, fs in os.walk('src') for f in fs))",
+   ""
+  ]
+ ],
+ "Practice 2: the big files": [
+  [
+   "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('sub').mkdir()\nsizes = {'big.bin': 3000, 'mid.bin': 1200,\n         'tiny.txt': 40, 'sub/huge.bin': 9000}\nfor name, size in sizes.items():\n    Path(name).write_bytes(b'x' * size)\nfound = {}\nfor folder, subs, files in os.walk('.'):\n    for f in files:\n        path = Path(folder, f)\n# continued\n        if os.path.getsize(path) > 1000:\n            found[str(path)] = os.path.getsize(path)\nprint(dict(sorted(found.items(), key=lambda kv: -kv[1])))",
+   ""
+  ]
+ ],
+ "Practice 3: swap day and month": [
+  [
+   "import os, re, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nnames = ('spam12-31-1900.txt', 'report01-02-2020.txt',\n         'notes.txt')\nfor name in names: Path(name).write_text('')\npattern = re.compile(r'(\\d\\d)-(\\d\\d)-(\\d\\d\\d\\d)')\nbefore = sorted(os.listdir('.'))\nfor old in before:\n    if pattern.search(old):\n        new = pattern.sub(r'\\2-\\1-\\3', old)\n        shutil.move(old, new)\nprint(sorted(os.listdir('.')))",
+   ""
+  ]
+ ]
+}
