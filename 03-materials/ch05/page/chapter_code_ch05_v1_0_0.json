@@ -1,0 +1,292 @@
+{
+ "chapter": 5,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch05/SEN0414_Ch05_Debugging_3e_v3_0_0.pptx",
+ "about": "The code examples of the chapter 5 deck, in the order of the code slides (order = slide order). The page's chapter-code tab lists them by NAME in this order; every example is self-contained and runs with the Python standard library only, reads no keyboard (input() is scripted with an iterator) and prints its result; the expected result is what the run printed in a fresh interpreter. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed. Every example that sets up logging passes force=True, so it behaves the same after another example has run on the page.",
+ "executed_with": {
+  "python": "3.13.16",
+  "library": null
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "page_requirements": [
+   "The Python standard library modules logging, traceback, sys, os, tempfile, time, random and pdb (import pdb only reads the class names), and the built-ins print, repr, int, sum, iter, next, isinstance, issubclass, hasattr, getattr, dict, type",
+   "sys.settrace for the line stepper (the stepper example), and a writable temporary folder for the log file (the filename example)"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "boxprint",
+   "name": "box_print raises exceptions",
+   "slide": 7,
+   "concepts": [
+    "Raising Exceptions",
+    "raise",
+    "box_print()",
+    "Exception() class",
+    "error message"
+   ],
+   "code": "def box_print(symbol, width, height):\n    if len(symbol) != 1:\n        raise Exception('Symbol must be a single character string.')\n    if width <= 2:\n        raise Exception('Width must be greater than 2.')\n    if height <= 2:\n        raise Exception('Height must be greater than 2.')\n    row = symbol + ' ' * (width - 2) + symbol\n    rows = [symbol * width] + [row] * (height - 2)\n    print('\\n'.join(rows + [symbol * width]))\nbox_print('*', 5, 4)",
+   "expected": "*****\n*   *\n*   *\n*****\n"
+  },
+  {
+   "order": 2,
+   "id": "exceptionobj",
+   "name": "The exception object and its message",
+   "slide": 8,
+   "concepts": [
+    "exception",
+    "Exception() class",
+    "error message"
+   ],
+   "code": "try:\n    raise Exception('custom message')\nexcept Exception as err:\n    print(type(err).__name__, err.args, str(err))\ntry:\n    raise ValueError('a more specific class')\nexcept Exception as err:\n    print(type(err).__name__, isinstance(err, Exception))",
+   "expected": "Exception ('custom message',) custom message\nValueError True\n"
+  },
+  {
+   "order": 3,
+   "id": "unwinding",
+   "name": "An exception climbs the call stack",
+   "slide": 9,
+   "concepts": [
+    "traceback",
+    "exception"
+   ],
+   "code": "import traceback\ndef read_age(text):\n    return int(text)\ndef load(record):\n    return read_age(record['age'])\ntry:\n    load({'age': 'abc'})\nexcept ValueError as e:\n    print('caught:', e)\n    frames = traceback.extract_tb(e.__traceback__)\n    print([f.name for f in frames])",
+   "expected": "caught: invalid literal for int() with base 10: 'abc'\n['<module>', 'load', 'read_age']\n"
+  },
+  {
+   "order": 4,
+   "id": "notes",
+   "name": "Notes added to an exception",
+   "slide": 10,
+   "concepts": [
+    "traceback",
+    "exception",
+    "error message"
+   ],
+   "code": "import traceback\ntry:\n    try:\n        int('x')\n    except ValueError as e:\n        e.add_note('while reading the age field')\n        raise\nexcept ValueError as e:\n    print(e.__notes__)\n    print(traceback.format_exception(e)[-1].strip())",
+   "expected": "['while reading the age field']\nwhile reading the age field\n"
+  },
+  {
+   "order": 5,
+   "id": "assertfails",
+   "name": "An assert catches a bug",
+   "slide": 13,
+   "concepts": [
+    "assert",
+    "assertion",
+    "sanity check",
+    "programmer error",
+    "sort() and the list ages"
+   ],
+   "code": "ages = [26, 57, 92, 54, 22, 15, 17, 80, 47, 73]\nages.sort()\nassert ages[0] <= ages[-1]\nprint('sorted: ok')\nages.reverse()\ntry:\n    assert ages[0] <= ages[-1]\nexcept AssertionError as e:\n    print(type(e).__name__, repr(str(e)))",
+   "expected": "sorted: ok\nAssertionError ''\n"
+  },
+  {
+   "order": 6,
+   "id": "assertmsg",
+   "name": "assert with a message, raise for users",
+   "slide": 14,
+   "concepts": [
+    "assert",
+    "raise",
+    "programmer error",
+    "error message"
+   ],
+   "code": "def average(scores):\n    if len(scores) == 0:\n        raise ValueError('give at least one score')\n    total = sum(scores)\n    assert total >= 0, f'negative total: {total}'\n    return total / len(scores)\nfor data in ([4, 6], [], [-5, 1]):\n    try:\n        print(average(data))\n    except (ValueError, AssertionError) as e:\n        print(type(e).__name__ + ':', e)",
+   "expected": "5.0\nValueError: give at least one score\nAssertionError: negative total: -4\n"
+  },
+  {
+   "order": 7,
+   "id": "optimised",
+   "name": "assert disappears under -O",
+   "slide": 15,
+   "concepts": [
+    "assert",
+    "assertion",
+    "programmer error"
+   ],
+   "code": "src = \"assert False, 'boom'\\nprint('reached')\"\ntry:\n    exec(compile(src, 'x', 'exec'))\nexcept AssertionError as e:\n    print('normal run:', e)\nexec(compile(src, 'x', 'exec', optimize=1))\nprint(__debug__)",
+   "expected": "normal run: boom\nreached\nTrue\n"
+  },
+  {
+   "order": 8,
+   "id": "levels",
+   "name": "The five logging levels",
+   "slide": 20,
+   "concepts": [
+    "Logging",
+    "logging level"
+   ],
+   "code": "import logging\nlevels = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')\nprint([(name, getattr(logging, name)) for name in levels])\nprint(logging.WARNING > logging.INFO, logging.getLevelName(30))",
+   "expected": "[('DEBUG', 10), ('INFO', 20), ('WARNING', 30), ('ERROR', 40), ('CRITICAL', 50)]\nTrue WARNING\n"
+  },
+  {
+   "order": 9,
+   "id": "threshold",
+   "name": "basicConfig sets the threshold",
+   "slide": 21,
+   "concepts": [
+    "logging.basicConfig()",
+    "logging level",
+    "log message",
+    "Logging"
+   ],
+   "code": "import logging, sys\nfmt = '%(levelname)s - %(message)s'\ncfg = dict(stream=sys.stdout, format=fmt, force=True)\nlogging.basicConfig(level=logging.INFO, **cfg)\nlogging.debug('debug message')\nlogging.info('info message')\nlogging.warning('warning message')\nlogging.error('error message')\nlogging.critical('critical message')",
+   "expected": "INFO - info message\nWARNING - warning message\nERROR - error message\nCRITICAL - critical message\n"
+  },
+  {
+   "order": 10,
+   "id": "format",
+   "name": "The format string of a log line",
+   "slide": 22,
+   "concepts": [
+    "format string with %(asctime)s",
+    "log message",
+    "logging level"
+   ],
+   "code": "import logging, time\ntext = '%(asctime)s - %(levelname)s - %(message)s'\nfmt = logging.Formatter(text, datefmt='%Y-%m-%d %H:%M')\nfmt.converter = time.gmtime\nargs = ('demo', logging.WARNING, 'app.py', 7)\nrec = logging.LogRecord(*args, 'disk is %s%% full', (91,), None)\nrec.created = 1790000000\nprint(fmt.format(rec))",
+   "expected": "2026-09-21 14:13 - WARNING - disk is 91% full\n"
+  },
+  {
+   "order": 11,
+   "id": "tofile",
+   "name": "Logging to a file",
+   "slide": 23,
+   "concepts": [
+    "named parameter filename",
+    "logging.basicConfig()",
+    "log message"
+   ],
+   "code": "import logging, os, tempfile\npath = os.path.join(tempfile.mkdtemp(), 'myProgramLog.txt')\nfmt = '%(levelname)s - %(message)s'\ncfg = dict(format=fmt, force=True)\nlogging.basicConfig(filename=path, level=logging.DEBUG, **cfg)\nlogging.debug('to the file')\nlogging.critical('also to the file')\nprint(open(path).read(), end='')",
+   "expected": "DEBUG - to the file\nCRITICAL - also to the file\n"
+  },
+  {
+   "order": 12,
+   "id": "disable",
+   "name": "Switching logging off",
+   "slide": 24,
+   "concepts": [
+    "logging.disable()",
+    "logging level"
+   ],
+   "code": "import logging, sys\nfmt = '%(levelname)s - %(message)s'\ncfg = dict(stream=sys.stdout, format=fmt, force=True)\nlogging.basicConfig(level=logging.INFO, **cfg)\nlogging.critical('before disable')\nlogging.disable(logging.CRITICAL)\nlogging.critical('after disable')\nlogging.error('after disable')\nlogging.disable(logging.NOTSET)\nlogging.error('after re-enabling')",
+   "expected": "CRITICAL - before disable\nERROR - after re-enabling\n"
+  },
+  {
+   "order": 13,
+   "id": "lazy",
+   "name": "Lazy formatting of log messages",
+   "slide": 25,
+   "concepts": [
+    "log message",
+    "logging level",
+    "Logging"
+   ],
+   "code": "import logging\nclass Loud:\n    calls = 0\n    def __str__(self):\n        Loud.calls += 1\n        return 'loud'\nlog = logging.getLogger('demo')\nlog.setLevel(logging.INFO)\nlog.addHandler(logging.NullHandler())\nlog.debug('value is %s', Loud())\nprint('lazy:', Loud.calls)\nlog.debug(f'value is {Loud()}')\nprint('f-string:', Loud.calls)",
+   "expected": "lazy: 0\nf-string: 1\n"
+  },
+  {
+   "order": 14,
+   "id": "factorialbug",
+   "name": "Factorial with the off-by-one bug",
+   "slide": 28,
+   "concepts": [
+    "range(n + 1)",
+    "total *= i",
+    "Logging",
+    "bug"
+   ],
+   "code": "import logging, sys\nfmt = '%(levelname)s - %(message)s'\ncfg = dict(stream=sys.stdout, format=fmt, force=True)\nlogging.basicConfig(level=logging.DEBUG, **cfg)\ndef factorial(n):\n    logging.debug('Start of factorial(%s)', n)\n    total = 1\n    for i in range(n + 1):\n        total *= i\n        logging.debug('i is %s, total is %s', i, total)\n    logging.debug('End of factorial(%s)', n)\n    return total\nprint(factorial(3))",
+   "expected": "DEBUG - Start of factorial(3)\nDEBUG - i is 0, total is 0\nDEBUG - i is 1, total is 0\nDEBUG - i is 2, total is 0\nDEBUG - i is 3, total is 0\nDEBUG - End of factorial(3)\n0\n"
+  },
+  {
+   "order": 15,
+   "id": "factorialfix",
+   "name": "Factorial fixed, the log as proof",
+   "slide": 29,
+   "concepts": [
+    "range(n + 1)",
+    "total *= i",
+    "Logging"
+   ],
+   "code": "import logging, sys\nfmt = '%(levelname)s - %(message)s'\ncfg = dict(stream=sys.stdout, format=fmt, force=True)\nlogging.basicConfig(level=logging.DEBUG, **cfg)\ndef factorial(n):\n    logging.debug('Start of factorial(%s)', n)\n    total = 1\n    for i in range(1, n + 1):\n        total *= i\n        logging.debug('i is %s, total is %s', i, total)\n    logging.debug('End of factorial(%s)', n)\n    return total\nprint(factorial(3))",
+   "expected": "DEBUG - Start of factorial(3)\nDEBUG - i is 1, total is 1\nDEBUG - i is 2, total is 2\nDEBUG - i is 3, total is 6\nDEBUG - End of factorial(3)\n6\n"
+  },
+  {
+   "order": 16,
+   "id": "addingbug",
+   "name": "The adding program joins strings",
+   "slide": 30,
+   "concepts": [
+    "string concatenation with +",
+    "input()",
+    "bug"
+   ],
+   "code": "first, second, third = '5', '3', '42'\nprint('The sum is ' + first + second + third)\nprint('The sum is', int(first) + int(second) + int(third))",
+   "expected": "The sum is 5342\nThe sum is 50\n"
+  },
+  {
+   "order": 17,
+   "id": "cointossbug",
+   "name": "The coin toss that never wins",
+   "slide": 31,
+   "concepts": [
+    "Practice Program: Buggy Coin Toss Game",
+    "toss == guess",
+    "random.randint()",
+    "guess not in tuple",
+    "input()"
+   ],
+   "code": "import random\nrandom.seed(7)\nguess = 'heads'    # input() always gives a str\ntoss = random.randint(0, 1)    # 0 is tails, 1 is heads\nprint(type(toss).__name__, type(guess).__name__, toss == guess)\nprint('You got it!' if toss == guess else 'Nope! Guess again!')\nfor g in ('heads', 'tails', 'maybe'):\n    print(g, 'not in tuple:', g not in ('heads', 'tails'))",
+   "expected": "int str False\nNope! Guess again!\nheads not in tuple: False\ntails not in tuple: False\nmaybe not in tuple: True\n"
+  },
+  {
+   "order": 18,
+   "id": "cointossfix",
+   "name": "The coin toss, fixed",
+   "slide": 32,
+   "concepts": [
+    "toss == guess",
+    "random.randint()",
+    "Practice Program: Buggy Coin Toss Game"
+   ],
+   "code": "import random\nrandom.seed(7)\nguess = 'heads'\nbuggy = fixed = 0\nfor _ in range(1000):\n    toss = random.randint(0, 1)\n    buggy += toss == guess\n    fixed += ('heads' if toss == 1 else 'tails') == guess\nprint('buggy wins:', buggy, 'fixed wins:', fixed)",
+   "expected": "buggy wins: 0 fixed wins: 489\n"
+  },
+  {
+   "order": 19,
+   "id": "stepper",
+   "name": "A debugger is a program that watches lines",
+   "slide": 37,
+   "concepts": [
+    "debugger",
+    "Inspector pane",
+    "Step In",
+    "Step Over",
+    "Step Out"
+   ],
+   "code": "import sys\ndef add(a, b):\n    total = a + b\n    return total\ndef main():\n    x = add(2, 3)\n    return add(x, 10)\nsteps = []\ndef watch(f, event, arg):\n    if event == 'line':\n        steps.append((f.f_code.co_name, dict(f.f_locals)))\n    return watch\nsys.settrace(watch)\nmain()\nsys.settrace(None)\nprint(*steps, sep='\\n')",
+   "expected": "('main', {})\n('add', {'a': 2, 'b': 3})\n('add', {'a': 2, 'b': 3, 'total': 5})\n('main', {'x': 5})\n('add', {'a': 5, 'b': 10})\n('add', {'a': 5, 'b': 10, 'total': 15})\n"
+  },
+  {
+   "order": 20,
+   "id": "breakpointfn",
+   "name": "breakpoint() and the pdb commands",
+   "slide": 38,
+   "concepts": [
+    "breakpoint",
+    "debugger",
+    "Continue",
+    "Stop"
+   ],
+   "code": "import pdb, sys\nsys.breakpointhook = lambda: print('the hook was called')\nbreakpoint()\nsys.breakpointhook = sys.__breakpointhook__\nprint(sys.breakpointhook.__name__)\nnames = 'step next return continue break where'.split()\nprint([n for n in names if hasattr(pdb.Pdb, 'do_' + n)])",
+   "expected": "the hook was called\nbreakpointhook\n['step', 'next', 'return', 'continue', 'break', 'where']\n"
+  }
+ ]
+}
