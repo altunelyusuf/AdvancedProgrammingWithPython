@@ -1,0 +1,389 @@
+{
+ "chapter": 16,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch16/SEN0414_Ch16_SQLiteDatabases_3e_v2_0_0.pptx",
+ "about": "The code examples of the chapter 16 deck, in the order of the code slides (order = slide order). The page's chapter-code tab lists them by NAME in this order; every example is self-contained, uses only the Python standard library (sqlite3, os, shutil, tempfile, contextlib), runs offline, reads no keyboard and opens no window. The databases live in memory or in a fresh temporary folder. The book's own database sweigartcats.db is not used: the two practice programs run on small stand-in data typed into the example, with the same kinds of columns, and each slide says so. Nothing an example prints depends on the SQLite version (a plan text is reduced to its first word, a file size to yes or no). The expected result is what the run printed under Python 3.13.16 with SQLite 3.45.1, every example in this order. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed.",
+ "executed_with": {
+  "python": "3.13.16",
+  "library": null,
+  "sqlite": "3.45.1"
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "page_requirements": [
+   "The Python standard library modules sqlite3, os, shutil, tempfile and contextlib, and the built-ins print, len, range, enumerate, sorted, list, dict, tuple, int, str, type, set, any, repr, isinstance",
+   "A writable temporary folder (the file examples); no subprocess, no keyboard input, no network, no browser window"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "connect_close",
+   "name": "Connect, ask, close",
+   "slide": 7,
+   "concepts": [
+    "Connecting to Databases",
+    "sqlite3.connect",
+    "execute",
+    "fetchone",
+    "close",
+    "In-memory database",
+    "Autocommit"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nprint('in a transaction:', conn.in_transaction)\nrow = conn.execute('SELECT 6 * 7').fetchone()\nprint('the answer row:', row)\nconn.close()\ntry:\n    conn.execute('SELECT 1')\nexcept sqlite3.ProgrammingError as e:\n    print('after close:', e)",
+   "expected": "in a transaction: False\nthe answer row: (42,)\nafter close: Cannot operate on a closed database.\n"
+  },
+  {
+   "order": 2,
+   "id": "create_table",
+   "name": "Create a table and read the schema",
+   "slide": 10,
+   "concepts": [
+    "Creating Databases and Tables",
+    "Creating Tables",
+    "CREATE TABLE",
+    "STRICT",
+    "Listing Tables and Columns",
+    "PRAGMA"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE cats (name TEXT NOT NULL,'\n             ' birthdate TEXT, fur TEXT, weight_kg REAL) STRICT')\nsql = \"SELECT name FROM sqlite_schema WHERE type = 'table'\"\nprint(conn.execute(sql).fetchall())\nfor row in conn.execute('PRAGMA table_info(cats)'):\n    print(row)",
+   "expected": "[('cats',)]\n(0, 'name', 'TEXT', 1, None, 0)\n(1, 'birthdate', 'TEXT', 0, None, 0)\n(2, 'fur', 'TEXT', 0, None, 0)\n(3, 'weight_kg', 'REAL', 0, None, 0)\n"
+  },
+  {
+   "order": 3,
+   "id": "strict_types",
+   "name": "STRICT refuses what a plain table keeps",
+   "slide": 11,
+   "concepts": [
+    "Defining Data Types",
+    "Type affinity",
+    "Storage class",
+    "STRICT"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE s (i INTEGER) STRICT')\nconn.execute('CREATE TABLE p (i INTEGER)')\nfor t in ('s', 'p'):\n    try:\n        conn.execute(f'INSERT INTO {t} VALUES (?)', ('Hello',))\n        print(t, 'stored Hello')\n    except sqlite3.IntegrityError as e:\n        print(t, 'refused:', e)\nconn.execute(\"INSERT INTO s VALUES ('42')\")\nprint(conn.execute('SELECT i, typeof(i) FROM s').fetchall())\nprint(conn.execute('SELECT i, typeof(i) FROM p').fetchall())",
+   "expected": "s refused: cannot store TEXT value in INTEGER column s.i\np stored Hello\n[(42, 'integer')]\n[('Hello', 'text')]\n"
+  },
+  {
+   "order": 4,
+   "id": "insert_read",
+   "name": "Insert rows and read them back",
+   "slide": 13,
+   "concepts": [
+    "Inserting Data into the Database",
+    "Reading Data from the Database",
+    "INSERT",
+    "SELECT",
+    "executemany",
+    "fetchall",
+    "fetchone",
+    "Parameter placeholder"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE cats (name TEXT, fur TEXT)')\nconn.execute(\"INSERT INTO cats VALUES ('Zophie', 'black')\")\nrows = [('Toby', 'black'), ('Jacob', 'orange')]\nconn.executemany('INSERT INTO cats VALUES (?, ?)', rows)\nprint(conn.execute('SELECT rowid, * FROM cats').fetchall())\nprint(conn.execute('SELECT name FROM cats').fetchone())\nprint(conn.total_changes, 'rows changed so far')",
+   "expected": "[(1, 'Zophie', 'black'), (2, 'Toby', 'black'), (3, 'Jacob', 'orange')]\n('Zophie',)\n3 rows changed so far\n"
+  },
+  {
+   "order": 5,
+   "id": "rowid_pk",
+   "name": "The rowid is not a promise",
+   "slide": 14,
+   "concepts": [
+    "Primary key and rowid",
+    "Creating Tables",
+    "DELETE",
+    "INSERT"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:', isolation_level=None)\nconn.execute('CREATE TABLE t (id INTEGER PRIMARY KEY, v TEXT)')\nconn.executemany('INSERT INTO t (v) VALUES (?)',\n                 [('a',), ('b',), ('c',)])\nprint(conn.execute('SELECT rowid, id, v FROM t').fetchall())\nconn.execute('DELETE FROM t WHERE id = 3')\nconn.execute(\"INSERT INTO t (v) VALUES ('d')\")\nprint(conn.execute('SELECT id, v FROM t').fetchall())\nlast = conn.execute('SELECT last_insert_rowid()').fetchone()\nprint('last id:', last[0])",
+   "expected": "[(1, 1, 'a'), (2, 2, 'b'), (3, 3, 'c')]\n[(1, 'a'), (2, 'b'), (3, 'd')]\nlast id: 3\n"
+  },
+  {
+   "order": 6,
+   "id": "select_filter",
+   "name": "WHERE, ORDER BY and LIMIT",
+   "slide": 17,
+   "concepts": [
+    "WHERE",
+    "ORDER BY",
+    "LIMIT",
+    "SELECT",
+    "Reading Data from the Database"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE cats (name, fur, kg)')\ndata = [('Zophie', 'black', 5.6), ('Miguel', 'siamese', 6.2),\n        ('Toby', 'black', 4.1)]\nconn.executemany('INSERT INTO cats VALUES (?, ?, ?)', data)\nq = 'SELECT name, kg FROM cats WHERE fur = ? ORDER BY kg DESC'\nprint(conn.execute(q, ('black',)).fetchall())\nq = 'SELECT name FROM cats ORDER BY kg DESC LIMIT 2'\nprint(conn.execute(q).fetchall())",
+   "expected": "[('Zophie', 5.6), ('Toby', 4.1)]\n[('Miguel',), ('Zophie',)]\n"
+  },
+  {
+   "order": 7,
+   "id": "like_glob",
+   "name": "LIKE ignores case, GLOB does not",
+   "slide": 19,
+   "concepts": [
+    "LIKE",
+    "GLOB",
+    "WHERE"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nq = lambda sql: conn.execute(sql).fetchall()\nprint(q(\"SELECT 'Zophie' LIKE 'zo%', 'Zophie' GLOB 'zo*'\"))\nprint(q(\"SELECT 'Zophie' LIKE 'Zo%', 'Zophie' GLOB 'Zo*'\"))\nprint(q(\"SELECT 'a' LIKE 'A', 'é' LIKE 'É'\"))",
+   "expected": "[(1, 0)]\n[(1, 1)]\n[(1, 0)]\n"
+  },
+  {
+   "order": 8,
+   "id": "null_logic",
+   "name": "NULL is not a value",
+   "slide": 20,
+   "concepts": [
+    "WHERE",
+    "SELECT",
+    "INSERT"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nq = lambda sql: conn.execute(sql).fetchall()\nq('CREATE TABLE c (name TEXT, fur TEXT)')\nq(\"INSERT INTO c VALUES ('Zophie', 'black'), ('Toby', 'black')\")\nq(\"INSERT INTO c VALUES ('Mandy', NULL)\")\nprint(q('SELECT count(*), count(fur) FROM c'))\nprint(q('SELECT name FROM c WHERE fur = NULL'))\nprint(q(\"SELECT name FROM c WHERE fur != 'black'\"))\nprint(q('SELECT name FROM c WHERE fur IS NULL'))",
+   "expected": "[(3, 2)]\n[]\n[]\n[('Mandy',)]\n"
+  },
+  {
+   "order": 9,
+   "id": "update_delete",
+   "name": "UPDATE, DELETE and RETURNING",
+   "slide": 22,
+   "concepts": [
+    "Updating Data in the Database",
+    "Deleting Data from the Database",
+    "UPDATE",
+    "DELETE",
+    "RETURNING",
+    "CRUD Database Operations"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:', isolation_level=None)\nconn.execute('CREATE TABLE cats (name, kg)')\nconn.executemany('INSERT INTO cats VALUES (?, ?)',\n                 [('Zophie', 5.6), ('Toby', 4.1), ('Jacob', 7.3)])\ncur = conn.execute('UPDATE cats SET kg = kg + 0.5 WHERE kg < 6')\nprint('updated rows:', cur.rowcount)\ncur = conn.execute('DELETE FROM cats WHERE kg > 7 RETURNING name')\nprint('deleted:', cur.fetchall())\nprint(conn.execute('SELECT * FROM cats').fetchall())",
+   "expected": "updated rows: 2\ndeleted: [('Jacob',)]\n[('Zophie', 6.1), ('Toby', 4.6)]\n"
+  },
+  {
+   "order": 10,
+   "id": "placeholders",
+   "name": "Placeholders by position and by name",
+   "slide": 23,
+   "concepts": [
+    "Parameter placeholder",
+    "INSERT",
+    "SELECT",
+    "execute"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE cats (name TEXT, fur TEXT)')\nconn.execute('INSERT INTO cats VALUES (?, ?)', ('Zophie', 'black'))\nconn.execute('INSERT INTO cats VALUES (:n, :f)', {'n': 'Toby', 'f': 'black'})\nsql = 'SELECT name FROM cats WHERE fur = :fur'\nprint(conn.execute(sql, {'fur': 'black'}).fetchall())",
+   "expected": "[('Zophie',), ('Toby',)]\n"
+  },
+  {
+   "order": 11,
+   "id": "injection",
+   "name": "SQL injection and the placeholder",
+   "slide": 24,
+   "concepts": [
+    "SQL injection",
+    "Parameter placeholder",
+    "execute",
+    "SELECT"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE cats (name TEXT)')\nconn.executemany('INSERT INTO cats VALUES (?)',\n                 [('Zophie',), ('Toby',)])\nattack = \"x' OR '1'='1\"\nsql = f\"SELECT * FROM cats WHERE name = '{attack}'\"\nn = len(conn.execute(sql).fetchall())\nprint('pasted into the SQL:', n, 'rows')\nsql = 'SELECT * FROM cats WHERE name = ?'\nn = len(conn.execute(sql, (attack,)).fetchall())\nprint('bound as a value:', n, 'rows')",
+   "expected": "pasted into the SQL: 2 rows\nbound as a value: 0 rows\n"
+  },
+  {
+   "order": 12,
+   "id": "commit_rollback",
+   "name": "BEGIN, commit and rollback",
+   "slide": 28,
+   "concepts": [
+    "Rolling Back Transactions",
+    "BEGIN",
+    "commit",
+    "rollback",
+    "Transaction and ACID",
+    "Autocommit"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:', isolation_level=None)\nconn.execute('CREATE TABLE t (a INTEGER NOT NULL)')\nn = lambda: conn.execute('SELECT count(*) FROM t').fetchone()[0]\nconn.execute('BEGIN')\nconn.execute('INSERT INTO t VALUES (1)')\nprint('inside:', n(), conn.in_transaction)\nconn.rollback()\nprint('after rollback:', n())\nconn.execute('BEGIN')\nconn.execute('INSERT INTO t VALUES (2)')\nconn.commit()\nprint('after commit:', n(), conn.in_transaction)",
+   "expected": "inside: 1 True\nafter rollback: 0\nafter commit: 1 False\n"
+  },
+  {
+   "order": 13,
+   "id": "atomic_stmt",
+   "name": "A failed statement changes nothing",
+   "slide": 29,
+   "concepts": [
+    "Transaction and ACID",
+    "INSERT",
+    "Rolling Back Transactions"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:', isolation_level=None)\nconn.execute('CREATE TABLE t (a INTEGER NOT NULL)')\nn = lambda: conn.execute('SELECT count(*) FROM t').fetchone()[0]\ntry:\n    conn.execute('INSERT INTO t VALUES (1), (2), (NULL)')\nexcept sqlite3.IntegrityError as e:\n    print('refused:', e)\nprint('rows after the failure:', n())\nconn.execute('INSERT INTO t VALUES (3), (4)')\nprint('rows after a good insert:', n())",
+   "expected": "refused: NOT NULL constraint failed: t.a\nrows after the failure: 0\nrows after a good insert: 2\n"
+  },
+  {
+   "order": 14,
+   "id": "context_manager",
+   "name": "with conn: commit or roll back",
+   "slide": 31,
+   "concepts": [
+    "commit",
+    "rollback",
+    "Rolling Back Transactions",
+    "Transaction and ACID"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE t (a INTEGER NOT NULL)')\nn = lambda: conn.execute('SELECT count(*) FROM t').fetchone()[0]\nwith conn:\n    conn.execute('INSERT INTO t VALUES (1)')\nprint('after the first block:', n())\ntry:\n    with conn:\n        conn.execute('INSERT INTO t VALUES (2)')\n        conn.execute('INSERT INTO t VALUES (NULL)')\nexcept sqlite3.IntegrityError:\n    print('second block failed, rows left:', n())",
+   "expected": "after the first block: 1\nsecond block failed, rows left: 1\n"
+  },
+  {
+   "order": 15,
+   "id": "with_closing",
+   "name": "with conn does not close; closing() does",
+   "slide": 32,
+   "concepts": [
+    "close",
+    "contextlib",
+    "commit"
+   ],
+   "code": "import sqlite3, contextlib\nconn = sqlite3.connect(':memory:')\nwith conn:\n    conn.execute('CREATE TABLE t (a INTEGER)')\nprint('after with conn:', conn.execute('SELECT 6 * 7').fetchone())\nwith contextlib.closing(conn):\n    conn.execute('SELECT 1')\ntry:\n    conn.execute('SELECT 2')\nexcept sqlite3.ProgrammingError as e:\n    print('after closing():', e)",
+   "expected": "after with conn: (42,)\nafter closing(): Cannot operate on a closed database.\n"
+  },
+  {
+   "order": 16,
+   "id": "alter_drop",
+   "name": "ALTER TABLE and DROP TABLE",
+   "slide": 34,
+   "concepts": [
+    "Altering and Dropping Tables",
+    "ALTER TABLE",
+    "DROP TABLE",
+    "Listing Tables and Columns"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE cats (name TEXT, fur TEXT)')\nconn.execute(\"INSERT INTO cats VALUES ('Zophie', 'black')\")\nconn.execute('ALTER TABLE cats ADD COLUMN kg REAL')\nconn.execute('ALTER TABLE cats RENAME COLUMN fur TO colour')\nprint([r[1] for r in conn.execute('PRAGMA table_info(cats)')])\nprint(conn.execute('SELECT * FROM cats').fetchall())\nconn.execute('ALTER TABLE cats DROP COLUMN kg')\nconn.execute('DROP TABLE IF EXISTS dogs')\nconn.execute('DROP TABLE cats')\nprint(conn.execute('SELECT count(*) FROM sqlite_schema').fetchone())",
+   "expected": "['name', 'colour', 'kg']\n[('Zophie', 'black', None)]\n(0,)\n"
+  },
+  {
+   "order": 17,
+   "id": "index_plan",
+   "name": "An index serves some searches",
+   "slide": 36,
+   "concepts": [
+    "CREATE INDEX",
+    "DROP INDEX",
+    "EXPLAIN QUERY PLAN",
+    "Query plan",
+    "WHERE",
+    "LIKE"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE cats (name TEXT, fur TEXT)')\nconn.execute('CREATE INDEX idx_fur ON cats (fur)')\ndef plan(sql):\n    rows = conn.execute('EXPLAIN QUERY PLAN ' + sql).fetchall()\n    return rows[0][3].split()[0]\nqueries = [\"fur = 'black'\", \"name = 'Zophie'\", \"fur LIKE '%ck'\"]\nfor w in queries:\n    print(plan('SELECT * FROM cats WHERE ' + w), '|', w)",
+   "expected": "SEARCH | fur = 'black'\nSCAN | name = 'Zophie'\nSCAN | fur LIKE '%ck'\n"
+  },
+  {
+   "order": 18,
+   "id": "file_vacuum",
+   "name": "A database file and VACUUM",
+   "slide": 37,
+   "concepts": [
+    "Creating Databases and Tables",
+    "VACUUM",
+    "sqlite3.connect",
+    "commit"
+   ],
+   "code": "import os, sqlite3, tempfile\npath = os.path.join(tempfile.mkdtemp(), 'cats.db')\nprint('file exists before connect:', os.path.exists(path))\nconn = sqlite3.connect(path)\nprint('file exists after connect:', os.path.exists(path))\nconn.execute('CREATE TABLE t (v TEXT)')\nconn.executemany('INSERT INTO t VALUES (?)', [('x' * 100,)] * 2000)\nconn.commit()\nbig = os.path.getsize(path)\nconn.execute('DELETE FROM t')\nconn.commit()\nprint('after DELETE, same size:', os.path.getsize(path) == big)\nconn.execute('VACUUM')\nprint('after VACUUM, smaller:', os.path.getsize(path) < big)",
+   "expected": "file exists before connect: False\nfile exists after connect: True\nafter DELETE, same size: True\nafter VACUUM, smaller: True\n"
+  },
+  {
+   "order": 19,
+   "id": "foreign_key",
+   "name": "A foreign key and its switch",
+   "slide": 41,
+   "concepts": [
+    "FOREIGN KEY",
+    "Joining Multiple Tables with Foreign Keys",
+    "PRAGMA",
+    "Primary key and rowid"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:', isolation_level=None)\nrow = conn.execute('PRAGMA foreign_keys').fetchone()\nprint('foreign_keys is', row[0])\nconn.execute('PRAGMA foreign_keys = ON')\nconn.execute('CREATE TABLE meals (id INTEGER PRIMARY KEY, name)')\nconn.execute('CREATE TABLE ing (meal_id REFERENCES meals, item)')\nconn.execute(\"INSERT INTO meals VALUES (1, 'Pancakes')\")\nconn.execute(\"INSERT INTO ing VALUES (1, 'flour')\")\ntry:\n    conn.execute(\"INSERT INTO ing VALUES (99, 'salt')\")\nexcept sqlite3.IntegrityError as e:\n    print('refused:', e)",
+   "expected": "foreign_keys is 0\nrefused: FOREIGN KEY constraint failed\n"
+  },
+  {
+   "order": 20,
+   "id": "inner_left_join",
+   "name": "INNER JOIN and LEFT JOIN",
+   "slide": 42,
+   "concepts": [
+    "INNER JOIN",
+    "LEFT JOIN",
+    "Joining Multiple Tables with Foreign Keys",
+    "ORDER BY"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE cats (id INTEGER PRIMARY KEY, name)')\nconn.execute('CREATE TABLE vax (cat_id INTEGER, vaccine TEXT)')\nnames = [('Zophie',), ('Toby',), ('Mandy',)]\nconn.executemany('INSERT INTO cats (name) VALUES (?)', names)\nconn.executemany('INSERT INTO vax VALUES (?, ?)',\n                 [(1, 'rabies'), (1, 'FVRCP'), (2, 'rabies')])\njoin = ('SELECT name, vaccine FROM cats {} vax'\n        ' ON cat_id = id ORDER BY 1, 2')\nprint(conn.execute(join.format('INNER JOIN')).fetchall())\nprint(conn.execute(join.format('LEFT JOIN')).fetchall())",
+   "expected": "[('Toby', 'rabies'), ('Zophie', 'FVRCP'), ('Zophie', 'rabies')]\n[('Mandy', None), ('Toby', 'rabies'), ('Zophie', 'FVRCP'), ('Zophie', 'rabies')]\n"
+  },
+  {
+   "order": 21,
+   "id": "backup_copy",
+   "name": "backup() copies a whole database",
+   "slide": 43,
+   "concepts": [
+    "backup",
+    "Backing Up Databases",
+    "In-Memory Databases and Backups",
+    "Copying Databases"
+   ],
+   "code": "import os, sqlite3, tempfile\nsrc = sqlite3.connect(':memory:')\nsrc.execute('CREATE TABLE cats (name TEXT)')\nsrc.executemany('INSERT INTO cats VALUES (?)',\n                [('Zophie',), ('Toby',)])\nsrc.commit()\npath = os.path.join(tempfile.mkdtemp(), 'copy.db')\ndst = sqlite3.connect(path)\nsrc.backup(dst)\nq = 'SELECT count(*) FROM cats'\nprint('rows in the copy:', dst.execute(q).fetchone()[0])\nsrc.execute(\"INSERT INTO cats VALUES ('Jacob')\")\nprint('copy after a later change:', dst.execute(q).fetchone()[0])",
+   "expected": "rows in the copy: 2\ncopy after a later change: 2\n"
+  },
+  {
+   "order": 22,
+   "id": "iterdump",
+   "name": "iterdump() turns a database into SQL",
+   "slide": 44,
+   "concepts": [
+    "iterdump",
+    "executescript",
+    "Copying Databases",
+    "Backing Up Databases"
+   ],
+   "code": "import sqlite3\na = sqlite3.connect(':memory:')\na.execute('CREATE TABLE cats (name TEXT, kg REAL)')\na.execute(\"INSERT INTO cats VALUES ('Zophie', 5.6)\")\na.commit()\nscript = '\\n'.join(a.iterdump())\nprint(script)\nb = sqlite3.connect(':memory:')\nb.executescript(script)\nprint(b.execute('SELECT * FROM cats').fetchall())",
+   "expected": "BEGIN TRANSACTION;\nCREATE TABLE cats (name TEXT, kg REAL);\nINSERT INTO \"cats\" VALUES('Zophie',5.6);\nCOMMIT;\n[('Zophie', 5.6)]\n"
+  },
+  {
+   "order": 23,
+   "id": "shutil_copy",
+   "name": "shutil copies a database file",
+   "slide": 45,
+   "concepts": [
+    "shutil",
+    "Copying Databases",
+    "Backing Up Databases",
+    "close",
+    "commit"
+   ],
+   "code": "import os, shutil, sqlite3, tempfile\nfolder = tempfile.mkdtemp()\npath = os.path.join(folder, 'a.db')\nconn = sqlite3.connect(path)\nconn.execute('CREATE TABLE t (v TEXT)')\nconn.execute(\"INSERT INTO t VALUES ('kept')\")\nconn.commit()\nconn.close()\nshutil.copyfile(path, os.path.join(folder, 'b.db'))\ncopy = sqlite3.connect(os.path.join(folder, 'b.db'))\nprint('copy holds:', copy.execute('SELECT v FROM t').fetchall())",
+   "expected": "copy holds: [('kept',)]\n"
+  },
+  {
+   "order": 24,
+   "id": "cat_checker",
+   "name": "Practice program: the cat vaccination checker",
+   "slide": 48,
+   "concepts": [
+    "Cat Vaccination Checker",
+    "Practice Programs",
+    "LEFT JOIN",
+    "INNER JOIN",
+    "Joining Multiple Tables with Foreign Keys"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE cats (id, name, born)')\nconn.execute('CREATE TABLE vax (cat_id, vaccine, given)')\nconn.executemany('INSERT INTO cats VALUES (?,?,?)', [\n    (1, 'Zophie', '2021-01-24'), (2, 'Toby', '2019-05-02')])\nconn.executemany('INSERT INTO vax VALUES (?,?,?)', [\n    (1, 'rabies', '2021-06-01'), (2, 'FVRCP', '2019-01-01')])\nsql = ('SELECT name, vaccine FROM vax JOIN cats'\n       ' ON cat_id = cats.id WHERE given < born')\nprint('given before birth:', conn.execute(sql).fetchall())\nsql = ('SELECT name FROM cats LEFT JOIN vax ON cat_id = cats.id'\n       ' GROUP BY cats.id HAVING count(DISTINCT vaccine) < 2')\nprint('missing a vaccine:', conn.execute(sql).fetchall())",
+   "expected": "given before birth: [('Toby', 'FVRCP')]\nmissing a vaccine: [('Zophie',), ('Toby',)]\n"
+  },
+  {
+   "order": 25,
+   "id": "meal_ingredients",
+   "name": "Practice program: the meal ingredients database",
+   "slide": 49,
+   "concepts": [
+    "Meal Ingredients Database",
+    "Practice Programs",
+    "pprint",
+    "Parameter placeholder",
+    "SQLite Apps"
+   ],
+   "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE ing (meal, item)')\nconn.executemany('INSERT INTO ing VALUES (?, ?)', [\n    ('Pancakes', 'flour'), ('Pancakes', 'milk'), ('Pancakes', 'egg'),\n    ('Omelette', 'egg'), ('Omelette', 'butter')])\nhave = ('egg', 'butter', 'milk')\nsql = ('SELECT meal FROM ing GROUP BY meal'\n       ' HAVING sum(item NOT IN (?, ?, ?)) = 0')\nprint('can cook:', conn.execute(sql, have).fetchall())",
+   "expected": "can cook: [('Omelette',)]\n"
+  }
+ ]
+}
