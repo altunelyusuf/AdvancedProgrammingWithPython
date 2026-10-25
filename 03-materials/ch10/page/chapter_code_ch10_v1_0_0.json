@@ -1,0 +1,255 @@
+{
+ "chapter": 10,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch10/SEN0414_Ch10_ReadingWritingFiles_3e_v2_0_0.pptx",
+ "about": "The code examples of the chapter 10 deck, in the order of the code slides (order = slide order). The page's chapter-code tab lists them by NAME in this order; every example is self-contained and runs with the Python standard library only; the expected result is what the run printed. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed. Examples that touch files first move into a fresh scratch folder (tempfile.mkdtemp), so no printed result holds a path.",
+ "executed_with": {
+  "python": "3.13.16",
+  "library": null
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "page_requirements": [
+   "The Python standard library modules pathlib, os, tempfile, time, shelve, json, re and random (imported by the examples that use them), and the built-ins print, open, repr, sorted, len, iter, next, enumerate, zip",
+   "A writable temporary folder (tempfile.mkdtemp) and a folder-changing os.chdir; the shelve example writes a small dbm file there"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "pathobjects",
+   "name": "Building paths with Path and /",
+   "slide": 6,
+   "concepts": [
+    "Files and Filepaths",
+    "Standardizing Path Separators",
+    "Joining Paths",
+    "Path()"
+   ],
+   "code": "from pathlib import Path, PureWindowsPath\np = Path('spam', 'bacon', 'eggs')\nprint(p)\nprint(Path('spam') / 'bacon' / 'eggs' == p)\nprint(PureWindowsPath('spam', 'bacon', 'eggs'))\ntry:\n    print('spam' / 'bacon')\nexcept TypeError:\n    print('two strings cannot use the slash')",
+   "expected": "spam/bacon/eggs\nTrue\nspam\\bacon\\eggs\ntwo strings cannot use the slash\n"
+  },
+  {
+   "order": 2,
+   "id": "locations",
+   "name": "Working directory, home, absolute and relative",
+   "slide": 9,
+   "concepts": [
+    "Accessing the Current Working Directory",
+    "Accessing the Home Directory",
+    "Specifying Absolute vs. Relative Paths",
+    "Handling Absolute and Relative Paths",
+    "Current working directory",
+    "Absolute path",
+    "Relative path",
+    "Path.cwd()",
+    "Path.home()",
+    "is_absolute",
+    "os.chdir()"
+   ],
+   "code": "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nprint(Path.cwd().is_absolute(), Path.home().is_absolute())\nprint(Path('spam/bacon/eggs').is_absolute())\nprint(Path('./spam.txt') == Path('spam.txt'))\nprint(Path('spam.txt').resolve() == Path.cwd() / 'spam.txt')",
+   "expected": "True True\nFalse\nTrue\nTrue\n"
+  },
+  {
+   "order": 3,
+   "id": "anatomy",
+   "name": "The parts of a filepath",
+   "slide": 10,
+   "concepts": [
+    "Getting the Parts of a Filepath"
+   ],
+   "code": "from pathlib import PureWindowsPath\np = PureWindowsPath('C:/Users/Al/spam.txt')\nprint(p.drive, p.name, p.stem, p.suffix)\nprint(p.parent)\nprint(p.parts)\nprint(p.parents[1])\nprint(p.with_suffix('.csv'))",
+   "expected": "C: spam.txt spam .txt\nC:\\Users\\Al\n('C:\\\\', 'Users', 'Al', 'spam.txt')\nC:\\Users\nC:\\Users\\Al\\spam.csv\n"
+  },
+  {
+   "order": 4,
+   "id": "folders",
+   "name": "Creating new folders",
+   "slide": 13,
+   "concepts": [
+    "Creating New Folders",
+    "os.makedirs()",
+    "mkdir"
+   ],
+   "code": "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nos.makedirs('delicious/walnut/waffles')\nPath('delicious/walnut/pecan').mkdir()\nPath('delicious').mkdir(exist_ok=True)\nfor p in sorted(Path('delicious').rglob('*')):\n    print(p)",
+   "expected": "delicious/walnut\ndelicious/walnut/pecan\ndelicious/walnut/waffles\n"
+  },
+  {
+   "order": 5,
+   "id": "glob",
+   "name": "Finding files with glob patterns",
+   "slide": 14,
+   "concepts": [
+    "Finding Files Using Glob Patterns",
+    "glob"
+   ],
+   "code": "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nfor name in ('project1.txt', 'project2.txt', 'project10.txt', 'notes.csv'):\n    Path(name).write_text('x')\nprint(sorted(p.name for p in Path('.').glob('project?.txt')))\nprint(sorted(p.name for p in Path('.').glob('*.txt')))\nprint(sorted(p.name for p in Path('.').glob('*')))",
+   "expected": "['project1.txt', 'project2.txt']\n['project1.txt', 'project10.txt', 'project2.txt']\n['notes.csv', 'project1.txt', 'project10.txt', 'project2.txt']\n"
+  },
+  {
+   "order": 6,
+   "id": "fileinfo",
+   "name": "Checking a path and reading file facts",
+   "slide": 15,
+   "concepts": [
+    "Checking Path Validity",
+    "exists",
+    "Finding File Sizes and Timestamps",
+    "stat"
+   ],
+   "code": "import os, tempfile, time; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nf = Path('f.txt')\nprint(f.exists())\nf.write_text('Hello, world!')\nprint(f.exists(), f.is_file(), f.is_dir(), Path('.').is_dir())\nprint(f.stat().st_size)\nos.utime('f.txt', (1712627129, 1712627129))\nprint(time.asctime(time.gmtime(f.stat().st_mtime)))",
+   "expected": "False\nTrue True False True\n13\nTue Apr  9 01:45:29 2024\n"
+  },
+  {
+   "order": 7,
+   "id": "wholefile",
+   "name": "Whole-file reading and writing",
+   "slide": 18,
+   "concepts": [
+    "The File Reading and Writing Process",
+    "Plaintext file",
+    "Binary file",
+    "read_text",
+    "write_text",
+    "Reading the Contents of Files",
+    "Writing to Files"
+   ],
+   "code": "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nspam = Path('spam.txt')\nprint(spam.write_text('Hello, world!'))\nprint(spam.read_text())\nprint(spam.write_text('café', encoding='utf-8'))\nprint(spam.stat().st_size)\nPath('b.bin').write_bytes(bytes([0, 1, 255]))\nprint(Path('b.bin').read_bytes())",
+   "expected": "13\nHello, world!\n4\n5\nb'\\x00\\x01\\xff'\n"
+  },
+  {
+   "order": 8,
+   "id": "openclose",
+   "name": "open, read and close",
+   "slide": 20,
+   "concepts": [
+    "Opening Files",
+    "open()",
+    "File object",
+    "write",
+    "close",
+    "read"
+   ],
+   "code": "import os, tempfile; os.chdir(tempfile.mkdtemp())\nbacon = open('bacon.txt', 'w', encoding='utf-8')\nprint(bacon.write('Hello, world!\\n'))\nprint(bacon.write('Bacon is not a vegetable.'))\nbacon.close()\nreader = open('bacon.txt', encoding='utf-8')\nprint(reader.read())\nreader.close()\nprint(reader.closed)",
+   "expected": "14\n25\nHello, world!\nBacon is not a vegetable.\nTrue\n"
+  },
+  {
+   "order": 9,
+   "id": "readmethods",
+   "name": "read, readline, readlines and seek",
+   "slide": 21,
+   "concepts": [
+    "readlines"
+   ],
+   "code": "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\npoem = Path('poem.txt')\npoem.write_text('roses\\nviolets\\nsugar\\n', encoding='utf-8')\nf = open(poem, encoding='utf-8')\nprint(repr(f.readline()), f.tell())\nprint(f.readlines(), f.tell())\nprint(repr(f.read()), f.tell())\nf.seek(0)\nprint(repr(f.read(5)), f.tell())\nf.close()",
+   "expected": "'roses\\n' 6\n['violets\\n', 'sugar\\n'] 20\n'' 20\n'roses' 5\n"
+  },
+  {
+   "order": 10,
+   "id": "withstatement",
+   "name": "The with statement",
+   "slide": 23,
+   "concepts": [
+    "Using with Statements",
+    "Context manager"
+   ],
+   "code": "import os, tempfile; os.chdir(tempfile.mkdtemp())\nwith open('data.txt', 'w', encoding='utf-8') as file_obj:\n    print(file_obj.write('abc'), file_obj.closed)\nprint(file_obj.closed)\ntry:\n    with open('data.txt', 'w', encoding='utf-8') as g: raise RuntimeError('boom')\nexcept RuntimeError:\n    print(g.closed)",
+   "expected": "3 False\nTrue\nTrue\n"
+  },
+  {
+   "order": 11,
+   "id": "modes",
+   "name": "Write modes w, a and x",
+   "slide": 24,
+   "concepts": [
+    "Writing to Files"
+   ],
+   "code": "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nlog = Path('log.txt')\nfor mode, text in (('w', 'A\\n'), ('a', 'B\\n'), ('a', 'C\\n'), ('w', 'D\\n')):\n    with open(log, mode, encoding='utf-8') as f:\n        f.write(text)\n    print(mode, repr(log.read_text()))\ntry: open(log, 'x')\nexcept FileExistsError: print('x refuses: the file exists')",
+   "expected": "w 'A\\n'\na 'A\\nB\\n'\na 'A\\nB\\nC\\n'\nw 'D\\n'\nx refuses: the file exists\n"
+  },
+  {
+   "order": 12,
+   "id": "encoding",
+   "name": "The encoding argument",
+   "slide": 25,
+   "concepts": [
+    "Opening Files"
+   ],
+   "code": "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nPath('a.txt').write_text('café', encoding='utf-8')\nprint(open('a.txt', encoding='utf-8').read())\nprint(open('a.txt', encoding='ascii', errors='replace').read())\ntry: print(open('a.txt', encoding='ascii').read())\nexcept UnicodeDecodeError: print('ascii cannot read the byte 0xc3')\nfor enc in ('utf-8', 'utf-16-le', 'latin-1'):\n    print(enc, len('café'.encode(enc)))",
+   "expected": "café\ncaf��\nascii cannot read the byte 0xc3\nutf-8 5\nutf-16-le 8\nlatin-1 4\n"
+  },
+  {
+   "order": 13,
+   "id": "shelve",
+   "name": "Saving variables with a shelf",
+   "slide": 28,
+   "concepts": [
+    "Saving Variables with the shelve Module",
+    "Shelf",
+    "shelve.open()"
+   ],
+   "code": "import shelve\nstore = {}\nshelf = shelve.Shelf(store)\nshelf['cats'] = ['Zophie', 'Pooka', 'Simon']\nprint(list(shelf.keys()), shelf['cats'])\nprint(type(store[b'cats']).__name__)\nshelf['cats'].append('Fat-tail')\nprint(len(shelf['cats']))\ncats = shelf['cats']\ncats.append('Fat-tail')\nshelf['cats'] = cats\nprint(len(shelf['cats']))",
+   "expected": "['cats'] ['Zophie', 'Pooka', 'Simon']\nbytes\n3\n4\n"
+  },
+  {
+   "order": 14,
+   "id": "json",
+   "name": "json as the plain alternative",
+   "slide": 30,
+   "concepts": [
+    "Saving Variables with the shelve Module"
+   ],
+   "code": "import json\ndata = {'cats': ['Zophie', 'Pooka'], 'pair': (1, 2), 5: 'five'}\ntext = json.dumps(data)\nprint(text)\nprint(json.loads(text))",
+   "expected": "{\"cats\": [\"Zophie\", \"Pooka\"], \"pair\": [1, 2], \"5\": \"five\"}\n{'cats': ['Zophie', 'Pooka'], 'pair': [1, 2], '5': 'five'}\n"
+  },
+  {
+   "order": 15,
+   "id": "madlibs",
+   "name": "Practice program: Mad Libs",
+   "slide": 34,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "code": "import os, re, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nstory = 'The ADJECTIVE panda walked to the NOUN and then VERB.'\nPath('panda.txt').write_text(story, encoding='utf-8')\nanswers = iter(['silly', 'chandelier', 'screamed'])\ntext = Path('panda.txt').read_text(encoding='utf-8')\nresult = re.sub(r'ADJECTIVE|NOUN|VERB', lambda m: next(answers), text)\nPath('panda_filled.txt').write_text(result, encoding='utf-8')\nprint(result)",
+   "expected": "The silly panda walked to the chandelier and then screamed.\n"
+  },
+  {
+   "order": 16,
+   "id": "regexsearch",
+   "name": "Practice program: Regex Search",
+   "slide": 35,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "code": "import os, re, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nput = lambda f, t: Path(f).write_text(t, encoding='utf-8')\nput('a.txt', 'spam and eggs\\nbacon alone\\nSPAM again\\n')\nput('b.txt', 'nothing here\\nspam, glorious spam\\n')\nput('notes.csv', 'spam,1\\n')\nfor p in sorted(Path('.').glob('*.txt')):\n    lines = p.read_text(encoding='utf-8').splitlines()\n    for n, line in enumerate(lines, 1):\n        if re.search('spam', line): print(f'{p.name}:{n}: {line}')",
+   "expected": "a.txt:1: spam and eggs\nb.txt:2: spam, glorious spam\n"
+  },
+  {
+   "order": 17,
+   "id": "quizquestion",
+   "name": "Project 4, step 1: one quiz question",
+   "slide": 36,
+   "concepts": [
+    "Project 4: Generate Random Quiz Files"
+   ],
+   "code": "import random\ncapitals = {'Alabama': 'Montgomery', 'Alaska': 'Juneau',\n            'Arizona': 'Phoenix', 'Arkansas': 'Little Rock',\n            'California': 'Sacramento'}\nrandom.seed(10)\nstate = random.choice(list(capitals))\nothers = [c for c in capitals.values() if c != capitals[state]]\noptions = random.sample(others, 3) + [capitals[state]]\nrandom.shuffle(options)\nprint(f'What is the capital of {state}?')\nfor letter, option in zip('ABCD', options):\n    print(f'  {letter}. {option}')",
+   "expected": "What is the capital of California?\n  A. Phoenix\n  B. Juneau\n  C. Sacramento\n  D. Montgomery\n"
+  },
+  {
+   "order": 18,
+   "id": "quizfiles",
+   "name": "Project 4, step 2: quiz and answer-key files",
+   "slide": 37,
+   "concepts": [
+    "Project 4: Generate Random Quiz Files",
+    "Summary"
+   ],
+   "code": "import os, random, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\ncaps = {'Ohio': 'Columbus', 'Utah': 'Salt Lake City',\n        'Iowa': 'Des Moines', 'Maine': 'Augusta'}\nrandom.seed(10)\nquiz, key = [], []\nfor n, state in enumerate(caps, 1):\n    others = [c for c in caps.values() if c != caps[state]]\n    options = random.sample(others, 3) + [caps[state]]\n    random.shuffle(options)\n    quiz.append(f'{n}. {state}: ' + ' / '.join(options))\n    key.append(f'{n}. {\"ABCD\"[options.index(caps[state])]}')\nfor f, rows in (('quiz1.txt', quiz), ('key1.txt', key)):\n    Path(f).write_text('\\n'.join(rows) + '\\n', encoding='utf-8')\n    print(Path(f).read_text(encoding='utf-8'), end='')",
+   "expected": "1. Ohio: Salt Lake City / Augusta / Des Moines / Columbus\n2. Utah: Des Moines / Columbus / Salt Lake City / Augusta\n3. Iowa: Augusta / Salt Lake City / Des Moines / Columbus\n4. Maine: Columbus / Augusta / Salt Lake City / Des Moines\n1. D\n2. C\n3. C\n4. B\n"
+  }
+ ]
+}
