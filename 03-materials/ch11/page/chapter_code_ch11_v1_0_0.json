@@ -1,0 +1,237 @@
+{
+ "chapter": 11,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch11/SEN0414_Ch11_OrganizingFiles_3e_v2_0_0.pptx",
+ "about": "The code examples of the chapter 11 deck, in the order of the code slides (order = slide order). The page's chapter-code tab lists them by NAME in this order; every example is self-contained, works in its own new temporary folder (tempfile.mkdtemp) and runs with the Python standard library only; the expected result is what the run printed. The code is exactly the text of the deck's code boxes with the '>>> ' (or '... ') prompt removed.",
+ "executed_with": {
+  "python": "3.13.16",
+  "library": null
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "page_requirements": [
+   "The Python standard library modules os, shutil, tempfile, zipfile, re and pathlib; every example works in its own temporary folder and writes nothing outside it"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "copy",
+   "name": "shutil.copy: one file",
+   "slide": 6,
+   "concepts": [
+    "The shutil Module",
+    "shutil.copy",
+    "Copying and moving"
+   ],
+   "code": "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('a.txt').write_text('Hello')\nPath('box').mkdir()\nprint(shutil.copy('a.txt', 'box'))\nprint(shutil.copy('a.txt', 'box/b.txt'))\nprint(sorted(os.listdir('box')))",
+   "expected": "box/a.txt\nbox/b.txt\n['a.txt', 'b.txt']\n"
+  },
+  {
+   "order": 2,
+   "id": "copytree",
+   "name": "shutil.copytree: a whole folder",
+   "slide": 7,
+   "concepts": [
+    "shutil.copytree",
+    "mkdir"
+   ],
+   "code": "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('box/inner').mkdir(parents=True)\nPath('box/y.txt').write_text('y')\nprint(shutil.copytree('box', 'bak'))\ntry:\n    shutil.copytree('box', 'bak')\nexcept FileExistsError:\n    print('second copy refused: the folder exists')\nprint(shutil.copytree('box', 'bak', dirs_exist_ok=True))",
+   "expected": "bak\nsecond copy refused: the folder exists\nbak\n"
+  },
+  {
+   "order": 3,
+   "id": "copy2",
+   "name": "copy2 keeps the time stamp",
+   "slide": 8,
+   "concepts": [
+    "shutil.copy"
+   ],
+   "code": "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('a.txt').write_text('Hello')\nPath('box').mkdir()\nos.utime('a.txt', (1000000000, 1000000000))\nshutil.copy2('a.txt', 'box/c.txt')\nshutil.copy('a.txt', 'box/d.txt')\nt = lambda n: int(Path(n).stat().st_mtime)\nprint('copy2 keeps the time:', t('box/c.txt'))\nprint('copy gives a new time:', t('box/d.txt') == t('a.txt'))",
+   "expected": "copy2 keeps the time: 1000000000\ncopy gives a new time: False\n"
+  },
+  {
+   "order": 4,
+   "id": "move",
+   "name": "shutil.move: move and rename",
+   "slide": 9,
+   "concepts": [
+    "shutil.move"
+   ],
+   "code": "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('spam').mkdir(); Path('spam2').mkdir()\nPath('spam/file1.txt').write_text('Hello')\nprint(shutil.move('spam/file1.txt', 'spam2'))\nprint(shutil.move('spam2/file1.txt', 'spam/new_name.txt'))\nPath('spam2/f.txt').write_text('old')\nPath('spam/f.txt').write_text('new')\nshutil.move('spam/f.txt', 'spam2/f.txt')\nprint(Path('spam2/f.txt').read_text(), Path('spam/f.txt').exists())",
+   "expected": "spam2/file1.txt\nspam/new_name.txt\nnew False\n"
+  },
+  {
+   "order": 5,
+   "id": "unlink",
+   "name": "os.unlink and os.rmdir",
+   "slide": 12,
+   "concepts": [
+    "unlink"
+   ],
+   "code": "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('a.txt').write_text('x')\nos.unlink('a.txt')\nprint('a.txt exists:', Path('a.txt').exists())\nPath('d').mkdir(); Path('d/f.txt').write_text('x')\ntry:\n    os.rmdir('d')\nexcept OSError:\n    print('rmdir refused: the folder d is not empty')\nos.unlink('d/f.txt'); os.rmdir('d')\nprint('d exists:', Path('d').exists())",
+   "expected": "a.txt exists: False\nrmdir refused: the folder d is not empty\nd exists: False\n"
+  },
+  {
+   "order": 6,
+   "id": "rmtree",
+   "name": "shutil.rmtree",
+   "slide": 13,
+   "concepts": [
+    "Safe deletion"
+   ],
+   "code": "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('spam/eggs').mkdir(parents=True)\nPath('spam/eggs/f.txt').write_text('x')\nprint(sorted(str(p) for p in Path('spam').rglob('*')))\nshutil.rmtree('spam')\nprint('spam exists:', Path('spam').exists())\nshutil.rmtree('spam', ignore_errors=True)\nprint('a missing folder is ignored')",
+   "expected": "['spam/eggs', 'spam/eggs/f.txt']\nspam exists: False\na missing folder is ignored\n"
+  },
+  {
+   "order": 7,
+   "id": "dryrun",
+   "name": "A dry run before deleting",
+   "slide": 14,
+   "concepts": [
+    "Safe deletion",
+    "unlink"
+   ],
+   "code": "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nfor n in ('a.txt', 'b.txt', 'c.rxt'):\n    Path(n).write_text(n)\nnames = sorted(p.name for p in Path('.').glob('*.rxt'))\nprint('typo *.rxt would delete:', names)\nfor p in sorted(Path('.').glob('*.txt')):\n    print('would delete', p)   # os.unlink(p)",
+   "expected": "typo *.rxt would delete: ['c.rxt']\nwould delete a.txt\nwould delete b.txt\n"
+  },
+  {
+   "order": 8,
+   "id": "listing",
+   "name": "Listing one folder",
+   "slide": 19,
+   "concepts": [
+    "Walking a Directory Tree"
+   ],
+   "code": "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('spam/eggs').mkdir(parents=True)\nPath('spam/b.pdf').write_text('x')\nPath('spam/file1.txt').write_text('x')\nPath('spam/eggs/f2.txt').write_text('x')\nprint(sorted(os.listdir('spam')))\nprint(sorted((p.name, p.is_dir())\n             for p in Path('spam').iterdir()))\nprint(sorted(p.name for p in Path('spam').glob('*.txt')))\nprint(sorted(p.name for p in Path('spam').rglob('*.txt')))",
+   "expected": "['b.pdf', 'eggs', 'file1.txt']\n[('b.pdf', False), ('eggs', True), ('file1.txt', False)]\n['file1.txt']\n['f2.txt', 'file1.txt']\n"
+  },
+  {
+   "order": 9,
+   "id": "walk",
+   "name": "os.walk visits every folder",
+   "slide": 20,
+   "concepts": [
+    "walk",
+    "Walking a folder tree"
+   ],
+   "code": "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('spam/eggs/bacon').mkdir(parents=True)\nPath('spam/eggs2').mkdir()\nPath('spam/file1.txt').write_text('x')\nPath('spam/eggs/file2.txt').write_text('x')\nfor folder, subs, files in os.walk('spam'):\n    subs.sort()\n    print(folder, subs, sorted(files))\nlast = [f for f, s, fl in os.walk('spam', topdown=False)][-1]\nprint('bottom-up ends at:', last)",
+   "expected": "spam ['eggs', 'eggs2'] ['file1.txt']\nspam/eggs ['bacon'] ['file2.txt']\nspam/eggs/bacon [] []\nspam/eggs2 [] []\nbottom-up ends at: spam\n"
+  },
+  {
+   "order": 10,
+   "id": "sizes",
+   "name": "Folder sizes with os.walk",
+   "slide": 21,
+   "concepts": [
+    "walk"
+   ],
+   "code": "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('spam/eggs').mkdir(parents=True)\nPath('spam/a.txt').write_text('x' * 300)\nPath('spam/eggs/b.txt').write_text('x' * 120)\nPath('spam/eggs/c.txt').write_text('x' * 80)\nsizes = {}\nfor folder, subs, files in os.walk('spam'):\n    sizes[folder] = sum(os.path.getsize(Path(folder, f))\n                        for f in files)\nprint(dict(sorted(sizes.items())))\nprint('total:', sum(sizes.values()))",
+   "expected": "{'spam': 300, 'spam/eggs': 200}\ntotal: 500\n"
+  },
+  {
+   "order": 11,
+   "id": "mkdir",
+   "name": "Path.mkdir with parents",
+   "slide": 22,
+   "concepts": [
+    "mkdir"
+   ],
+   "code": "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\ntry:\n    Path('x/y').mkdir()\nexcept FileNotFoundError:\n    print('refused: the parent x is missing')\nPath('x/y').mkdir(parents=True)\nPath('x/y').mkdir(parents=True, exist_ok=True)\nprint(sorted(str(p) for p in Path('x').rglob('*')))",
+   "expected": "refused: the parent x is missing\n['x/y']\n"
+  },
+  {
+   "order": 12,
+   "id": "zipwrite",
+   "name": "Writing a ZIP file",
+   "slide": 26,
+   "concepts": [
+    "zipfile.ZipFile",
+    "Compressing Files with the zipfile Module"
+   ],
+   "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('file1.txt').write_text('Hello' * 10000)\nwith zipfile.ZipFile('example.zip', 'w') as z:\n    z.write('file1.txt', compress_type=zipfile.ZIP_DEFLATED)\nwith zipfile.ZipFile('example.zip') as z:\n    info = z.getinfo('file1.txt')\nprint(info.filename, info.file_size)\nsmall = info.compress_size < info.file_size / 100\nprint('squeezed to under 1 percent:', small)",
+   "expected": "file1.txt 50000\nsqueezed to under 1 percent: True\n"
+  },
+  {
+   "order": 13,
+   "id": "zipmodes",
+   "name": "ZIP modes: append and refuse",
+   "slide": 27,
+   "concepts": [
+    "zipfile.ZipFile"
+   ],
+   "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('a.txt').write_text('A')\nwith zipfile.ZipFile('x.zip', 'w') as z:\n    z.write('a.txt')\nwith zipfile.ZipFile('x.zip', 'a') as z:\n    z.writestr('two.txt', '2')\nwith zipfile.ZipFile('x.zip') as z:\n    print(sorted(z.namelist()))\ntry:\n    zipfile.ZipFile('x.zip', 'x')\nexcept FileExistsError:\n    print(\"mode 'x' refused: x.zip exists\")",
+   "expected": "['a.txt', 'two.txt']\nmode 'x' refused: x.zip exists\n"
+  },
+  {
+   "order": 14,
+   "id": "extract",
+   "name": "Extracting from a ZIP",
+   "slide": 28,
+   "concepts": [
+    "extract"
+   ],
+   "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nwith zipfile.ZipFile('z.zip', 'w') as z:\n    z.writestr('a.txt', 'A')\n    z.writestr('sub/b.txt', 'B')\nwith zipfile.ZipFile('z.zip') as z:\n    z.extractall('out')\nprint(sorted(str(p) for p in Path('out').rglob('*')))\nwith zipfile.ZipFile('z.zip') as z:\n    print(z.extract('a.txt', 'new/folder'))",
+   "expected": "['out/a.txt', 'out/sub', 'out/sub/b.txt']\nnew/folder/a.txt\n"
+  },
+  {
+   "order": 15,
+   "id": "archives",
+   "name": "make_archive and unpack_archive",
+   "slide": 29,
+   "concepts": [
+    "Archives"
+   ],
+   "code": "import os, shutil, tempfile, zipfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('spam/sub').mkdir(parents=True)\nPath('spam/a.txt').write_text('x')\nPath('spam/sub/b.txt').write_text('y')\nname = shutil.make_archive('snap', 'zip', '.', 'spam')\nprint(Path(name).name)\nwith zipfile.ZipFile(name) as z:\n    print(sorted(z.namelist()))\nshutil.unpack_archive(name, 'un')\nprint(sorted(str(p) for p in Path('un').rglob('*')))",
+   "expected": "snap.zip\n['spam/', 'spam/a.txt', 'spam/sub/', 'spam/sub/b.txt']\n['un/spam', 'un/spam/a.txt', 'un/spam/sub', 'un/spam/sub/b.txt']\n"
+  },
+  {
+   "order": 16,
+   "id": "backup",
+   "name": "Project 5: backupToZip",
+   "slide": 34,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "code": "import os, tempfile, zipfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\ndef backup_to_zip(folder):\n    n = 1\n    while Path(f'{folder}_{n}.zip').exists(): n += 1\n# continued\n    with zipfile.ZipFile(f'{folder}_{n}.zip', 'w') as z:\n        for root, subs, files in os.walk(folder):\n            for f in files: z.write(Path(root, f))\n    return f'{folder}_{n}.zip'\nPath('spam/eggs').mkdir(parents=True)\nPath('spam/file1.txt').write_text('Hello')\nPath('spam/eggs/file2.txt').write_text('Hi')\nprint(backup_to_zip('spam'), backup_to_zip('spam'))\nwith zipfile.ZipFile('spam_1.zip') as z:\n    print(sorted(z.namelist()))",
+   "expected": "spam_1.zip spam_2.zip\n['spam/eggs/file2.txt', 'spam/file1.txt']\n"
+  },
+  {
+   "order": 17,
+   "id": "selective",
+   "name": "Practice 1: copy by extension",
+   "slide": 35,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "code": "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nfor d in ('src/a', 'src/b', 'dest'):\n    Path(d).mkdir(parents=True)\nfiles = ('src/one.pdf', 'src/a/two.PDF',\n         'src/b/three.txt', 'src/b/four.pdf')\nfor f in files: Path(f).write_text(f)\nfor folder, subs, files in os.walk('src'):\n    for f in files:\n        if f.lower().endswith('.pdf'):\n            shutil.copy(Path(folder, f), 'dest')\nprint(sorted(os.listdir('dest')))\nprint(sorted(f for _, _, fs in os.walk('src') for f in fs))",
+   "expected": "['four.pdf', 'one.pdf', 'two.PDF']\n['four.pdf', 'one.pdf', 'three.txt', 'two.PDF']\n"
+  },
+  {
+   "order": 18,
+   "id": "large",
+   "name": "Practice 2: the big files",
+   "slide": 36,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "code": "import os, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nPath('sub').mkdir()\nsizes = {'big.bin': 3000, 'mid.bin': 1200,\n         'tiny.txt': 40, 'sub/huge.bin': 9000}\nfor name, size in sizes.items():\n    Path(name).write_bytes(b'x' * size)\nfound = {}\nfor folder, subs, files in os.walk('.'):\n    for f in files:\n        path = Path(folder, f)\n# continued\n        if os.path.getsize(path) > 1000:\n            found[str(path)] = os.path.getsize(path)\nprint(dict(sorted(found.items(), key=lambda kv: -kv[1])))",
+   "expected": "{'sub/huge.bin': 9000, 'big.bin': 3000, 'mid.bin': 1200}\n"
+  },
+  {
+   "order": 19,
+   "id": "dates",
+   "name": "Practice 3: swap day and month",
+   "slide": 37,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "code": "import os, re, shutil, tempfile\nfrom pathlib import Path\nos.chdir(tempfile.mkdtemp())\nnames = ('spam12-31-1900.txt', 'report01-02-2020.txt',\n         'notes.txt')\nfor name in names: Path(name).write_text('')\npattern = re.compile(r'(\\d\\d)-(\\d\\d)-(\\d\\d\\d\\d)')\nbefore = sorted(os.listdir('.'))\nfor old in before:\n    if pattern.search(old):\n        new = pattern.sub(r'\\2-\\1-\\3', old)\n        shutil.move(old, new)\nprint(sorted(os.listdir('.')))",
+   "expected": "['notes.txt', 'report02-01-2020.txt', 'spam31-12-1900.txt']\n"
+  }
+ ]
+}
