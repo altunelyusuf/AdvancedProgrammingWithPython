@@ -1,0 +1,327 @@
+{
+ "chapter": 14,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch14/SEN0414_Ch14_ExcelSpreadsheets_3e_v2_0_0.pptx",
+ "about": "The code examples of the chapter 14 deck, in the order of the code slides (order = slide order). The page's chapter-code tab lists them by NAME in this order; every example is self-contained, uses openpyxl and the Python standard library only, builds its workbooks in memory (io.BytesIO) instead of in files, opens no network connection, reads no keyboard and opens no window; the chapter's three Excel files (example3.xlsx, censuspopdata.xlsx, produceSales3.xlsx) are replaced by small stand-ins with the same sheets, columns and formulas, named beside the code; the expected result is what the run printed in a fresh interpreter. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed.",
+ "executed_with": {
+  "python": "3.13.16",
+  "library": "openpyxl 3.1.5"
+ },
+ "library": {
+  "file": "03-materials/ch14/assets/openpyxl-3.1.5-py2.py3-none-any.whl",
+  "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2",
+  "data_files": [
+   "03-materials/ch14/assets/et_xmlfile-2.0.0-py3-none-any.whl"
+  ],
+  "page_requirements": [
+   "openpyxl 3.1.5 and its one dependency et_xmlfile 2.0.0, which the page embeds as wheels (08-tooling/ch14-page/pywheels_v1_0_0.json) and installs into its browser Python before the first example runs; the standard library modules io, zipfile, datetime, decimal, pprint and sys, and the built-ins print, len, range, enumerate, sorted, list, dict, int, float, type, str, bool, isinstance",
+   "No disk file, no subprocess, no keyboard input, no network, no browser window"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "xlsx_zip",
+   "name": "An .xlsx file is a zip of XML parts",
+   "slide": 6,
+   "concepts": [
+    "xlsx file",
+    "workbook",
+    "Workbook()",
+    "save()",
+    "openpyxl"
+   ],
+   "code": "import io, zipfile, openpyxl\nwb = openpyxl.Workbook()\nbuf = io.BytesIO()\nwb.save(buf)\nnames = sorted(zipfile.ZipFile(buf).namelist())\nprint(len(names), 'parts in the zip')\nfor name in names: print(name)",
+   "expected": "9 parts in the zip\n[Content_Types].xml\n_rels/.rels\ndocProps/app.xml\ndocProps/core.xml\nxl/_rels/workbook.xml.rels\nxl/styles.xml\nxl/theme/theme1.xml\nxl/workbook.xml\nxl/worksheets/sheet1.xml\n"
+  },
+  {
+   "order": 2,
+   "id": "sheets",
+   "name": "Sheets of a workbook: names, order, active",
+   "slide": 8,
+   "concepts": [
+    "worksheet",
+    "create_sheet()",
+    "active sheet",
+    "openpyxl.load_workbook()"
+   ],
+   "code": "import io, openpyxl\nwb = openpyxl.Workbook()\nwb.create_sheet('Sheet2')\nwb.create_sheet('Sheet3', 1)\nbuf = io.BytesIO(); wb.save(buf)\nwb = openpyxl.load_workbook(buf)\nprint(wb.sheetnames)\nprint(wb.active.title, wb['Sheet3'].title)",
+   "expected": "['Sheet', 'Sheet3', 'Sheet2']\nSheet Sheet3\n"
+  },
+  {
+   "order": 3,
+   "id": "cell_read",
+   "name": "Cells by name and by number",
+   "slide": 11,
+   "concepts": [
+    "cell",
+    "cell()",
+    "worksheet"
+   ],
+   "code": "import openpyxl\nws = openpyxl.Workbook().active\nfor row in [('Apples', 73), ('Cherries', 85), ('Pears', 14)]:\n    ws.append(row)\nprint(ws['A1'].value, ws.cell(row=2, column=2).value)\nprint(ws['B3'].coordinate, ws.max_row, ws.max_column)\nprint(ws['A1'])",
+   "expected": "Apples 85\nB3 3 2\n<Cell 'Sheet'.A1>\n"
+  },
+  {
+   "order": 4,
+   "id": "col_letters",
+   "name": "Column letters and numbers",
+   "slide": 13,
+   "concepts": [
+    "get_column_letter()",
+    "column_index_from_string()"
+   ],
+   "code": "from openpyxl.utils import get_column_letter, column_index_from_string\nprint([get_column_letter(n) for n in (1, 2, 27, 900)])\nprint(column_index_from_string('AA'), column_index_from_string('XFD'))\ntry:\n    get_column_letter(0)\nexcept ValueError as e:\n    print('ValueError:', e)",
+   "expected": "['A', 'B', 'AA', 'AHP']\n27 16384\nValueError: Invalid column index 0\n"
+  },
+  {
+   "order": 5,
+   "id": "slices",
+   "name": "Slices, rows and columns of cells",
+   "slide": 14,
+   "concepts": [
+    "cell",
+    "iter_rows()"
+   ],
+   "code": "import openpyxl\nws = openpyxl.Workbook().active\nfor r in [(1, 'Apples', 73), (2, 'Cherries', 85), (3, 'Pears', 14)]:\n    ws.append(r)\nblock = ws['A1':'C2']\nprint(len(block), 'rows of', len(block[0]), 'cells')\nfor row in block: print([c.value for c in row])\nprint([c.value for c in ws['B']])\nprint(type(ws.rows).__name__, type(ws.columns).__name__)",
+   "expected": "2 rows of 3 cells\n[1, 'Apples', 73]\n[2, 'Cherries', 85]\n['Apples', 'Cherries', 'Pears']\ngenerator generator\n"
+  },
+  {
+   "order": 6,
+   "id": "dates",
+   "name": "Data types of cells: numbers, text, dates",
+   "slide": 16,
+   "concepts": [
+    "cell",
+    "workbook"
+   ],
+   "code": "import datetime, openpyxl\nws = openpyxl.Workbook().active\nws['A1'] = datetime.datetime(2035, 4, 5, 13, 34, 2)\nws['B1'] = 'SEPT2'\nws['C1'] = 73\nprint(ws['A1'].value)\nfor c in ws[1]:\n    print(c.coordinate, c.data_type, type(c.value).__name__)",
+   "expected": "2035-04-05 13:34:02\nA1 d datetime\nB1 s str\nC1 n int\n"
+  },
+  {
+   "order": 7,
+   "id": "touching",
+   "name": "Looking at a cell creates it",
+   "slide": 18,
+   "concepts": [
+    "cell()",
+    "worksheet"
+   ],
+   "code": "import openpyxl\nws = openpyxl.Workbook().active\nws['A1'] = 'tall'\nprint(ws.max_row, ws.dimensions)\nws.cell(row=40, column=1)\nprint(ws.max_row, ws.dimensions)\nprint(ws['A40'].value is None)",
+   "expected": "1 A1:A1\n40 A1:A40\nTrue\n"
+  },
+  {
+   "order": 8,
+   "id": "read_only",
+   "name": "Read-only mode and iter_rows",
+   "slide": 19,
+   "concepts": [
+    "read-only mode",
+    "iter_rows()"
+   ],
+   "code": "import io, openpyxl\nws = openpyxl.Workbook().active\nfor i in range(1, 6): ws.append([i, i * 10])\nbuf = io.BytesIO(); ws.parent.save(buf)\nfast = openpyxl.load_workbook(buf, read_only=True)\nsheet = fast.active\nprint(type(sheet).__name__, sheet.max_row)\nrows = list(sheet.iter_rows(min_row=2, max_row=4, values_only=True))\nprint(rows)",
+   "expected": "ReadOnlyWorksheet 5\n[(2, 20), (3, 30), (4, 40)]\n"
+  },
+  {
+   "order": 9,
+   "id": "census_read",
+   "name": "Project 9: read the rows of the census sheet",
+   "slide": 22,
+   "concepts": [
+    "Project 9: Reading Data from a Spreadsheet",
+    "census tract"
+   ],
+   "code": "import openpyxl\nsheet = openpyxl.Workbook().active\nsheet.append(['CensusTract', 'State', 'County', 'POP2010'])\ntracts = [('02020000100', 'AK', 'Anchorage', 4115),\n          ('02020000200', 'AK', 'Anchorage', 3040),\n          ('01001020100', 'AL', 'Autauga', 1912)]\nfor tract in tracts: sheet.append(tract)\nfor row in range(2, sheet.max_row + 1):\n    print(row, [sheet[c + str(row)].value for c in 'BCD'])",
+   "expected": "2 ['AK', 'Anchorage', 4115]\n3 ['AK', 'Anchorage', 3040]\n4 ['AL', 'Autauga', 1912]\n"
+  },
+  {
+   "order": 10,
+   "id": "census_tally",
+   "name": "Project 9: tally tracts and population by county",
+   "slide": 23,
+   "concepts": [
+    "Project 9: Reading Data from a Spreadsheet",
+    "setdefault()"
+   ],
+   "code": "rows = [('AK', 'Anchorage', 4115), ('AK', 'Anchorage', 3040),\n        ('AL', 'Autauga', 1912), ('AL', 'Autauga', 2170)]\ncounty_data = {}\nfor state, county, pop in rows:\n    county_data.setdefault(state, {})\n    county_data[state].setdefault(county, {'tracts': 0, 'pop': 0})\n    county_data[state][county]['tracts'] += 1\n    county_data[state][county]['pop'] += pop\nprint(county_data)",
+   "expected": "{'AK': {'Anchorage': {'tracts': 2, 'pop': 7155}}, 'AL': {'Autauga': {'tracts': 2, 'pop': 4082}}}\n"
+  },
+  {
+   "order": 11,
+   "id": "census_file",
+   "name": "pprint.pformat writes the result as Python",
+   "slide": 24,
+   "concepts": [
+    "pprint.pformat()",
+    "Project 9: Reading Data from a Spreadsheet"
+   ],
+   "code": "import pprint\ncounty_data = {'AK': {'Anchorage': {'tracts': 2, 'pop': 7155}},\n               'AL': {'Autauga': {'tracts': 2, 'pop': 4082}}}\ntext = 'allData = ' + pprint.pformat(county_data)\nprint(text)\nns = {}\nexec(text, ns)\nprint(ns['allData']['AK']['Anchorage']['pop'])",
+   "expected": "allData = {'AK': {'Anchorage': {'pop': 7155, 'tracts': 2}},\n 'AL': {'Autauga': {'pop': 4082, 'tracts': 2}}}\n7155\n"
+  },
+  {
+   "order": 12,
+   "id": "produce_update",
+   "name": "Project 10: correct the prices",
+   "slide": 25,
+   "concepts": [
+    "Project 10: Updating a Spreadsheet",
+    "formula"
+   ],
+   "code": "import openpyxl\nws = openpyxl.Workbook().active\nws.append(['PRODUCE', 'COST PER POUND', 'POUNDS SOLD', 'TOTAL'])\nws.append(['Garlic', 1.19, 10.0, '=ROUND(B2*C2,2)'])\nws.append(['Celery', 3.07, 4.5, '=ROUND(B3*C3,2)'])\nupdates = {'Garlic': 3.07, 'Celery': 1.19}\nfor row in range(2, ws.max_row + 1):\n    name = ws.cell(row=row, column=1).value\n    if name in updates:\n        ws.cell(row=row, column=2).value = updates[name]\nprint([ws.cell(row=r, column=2).value for r in range(2, 4)])",
+   "expected": "[3.07, 1.19]\n"
+  },
+  {
+   "order": 13,
+   "id": "write_workbook",
+   "name": "Writing a workbook: sheets and save",
+   "slide": 28,
+   "concepts": [
+    "Writing Excel Documents",
+    "Workbook()",
+    "create_sheet()",
+    "save()"
+   ],
+   "code": "import io, openpyxl\nwb = openpyxl.Workbook()\nwb.active.title = 'Spam Bacon Eggs Sheet'\nwb['Spam Bacon Eggs Sheet']['A1'] = 'Hello, world!'\nwb.create_sheet(index=0, title='First Sheet')\nwb.create_sheet(index=2, title='Middle Sheet')\nwb.remove(wb['Middle Sheet'])\nprint(wb.sheetnames)\nbuf = io.BytesIO(); wb.save(buf)\ncopy = openpyxl.load_workbook(buf)\nprint(copy.sheetnames, copy['Spam Bacon Eggs Sheet']['A1'].value)",
+   "expected": "['First Sheet', 'Spam Bacon Eggs Sheet']\n['First Sheet', 'Spam Bacon Eggs Sheet'] Hello, world!\n"
+  },
+  {
+   "order": 14,
+   "id": "formula_string",
+   "name": "A formula is text; the result is cached",
+   "slide": 29,
+   "concepts": [
+    "Formulas",
+    "formula",
+    "cached result",
+    "data_only"
+   ],
+   "code": "import io, openpyxl\nws = openpyxl.Workbook().active\nws['A1'], ws['A2'] = 200, 300\nws['A3'] = '=SUM(A1:A2)'\nprint(ws['A3'].value, ws['A3'].data_type)\nbuf = io.BytesIO(); ws.parent.save(buf)\nkept = openpyxl.load_workbook(buf)['Sheet']\ncached = openpyxl.load_workbook(buf, data_only=True)['Sheet']\nprint(kept['A3'].value, '|', cached['A3'].value)",
+   "expected": "=SUM(A1:A2) f\n=SUM(A1:A2) | None\n"
+  },
+  {
+   "order": 15,
+   "id": "round_halves",
+   "name": "ROUND in a spreadsheet and round in Python",
+   "slide": 31,
+   "concepts": [
+    "formula",
+    "cached result"
+   ],
+   "code": "from decimal import Decimal, ROUND_HALF_UP\nfor text in ('0.125', '1.005', '2.675', '65.205'):\n    x = float(text)\n    up = Decimal(text).quantize(Decimal('0.01'), ROUND_HALF_UP)\n    print(text, round(x, 2), up)",
+   "expected": "0.125 0.12 0.13\n1.005 1.0 1.01\n2.675 2.67 2.68\n65.205 65.2 65.21\n"
+  },
+  {
+   "order": 16,
+   "id": "insert_rows",
+   "name": "Blank Row Inserter and insert_rows",
+   "slide": 33,
+   "concepts": [
+    "insert_rows()",
+    "sys"
+   ],
+   "code": "import sys, openpyxl\nsys.argv = ['blankRowInserter.py', '3', '2']\nws = openpyxl.Workbook().active\nfor i in range(1, 6): ws.append(['row %d' % i, i])\nws['B6'] = '=SUM(B1:B5)'\nstart, count = int(sys.argv[1]), int(sys.argv[2])\nws.insert_rows(start, count)\nprint([ws.cell(row=r, column=1).value for r in range(1, 8)])\nprint(ws['B8'].value)",
+   "expected": "['row 1', 'row 2', None, None, 'row 3', 'row 4', 'row 5']\n=SUM(B1:B5)\n"
+  },
+  {
+   "order": 17,
+   "id": "mult_table",
+   "name": "Practice Program: a multiplication table",
+   "slide": 37,
+   "concepts": [
+    "Practice Programs",
+    "Font()"
+   ],
+   "code": "import openpyxl\nfrom openpyxl.styles import Font\nN = 4\nws = openpyxl.Workbook().active\nfor i in range(1, N + 1):\n    ws.cell(row=1, column=i + 1, value=i).font = Font(bold=True)\n    ws.cell(row=i + 1, column=1, value=i).font = Font(bold=True)\n    for j in range(1, N + 1):\n        ws.cell(row=i + 1, column=j + 1, value=i * j)\nfor row in ws.iter_rows(values_only=True): print(row)",
+   "expected": "(None, 1, 2, 3, 4)\n(1, 1, 2, 3, 4)\n(2, 2, 4, 6, 8)\n(3, 3, 6, 9, 12)\n(4, 4, 8, 12, 16)\n"
+  },
+  {
+   "order": 18,
+   "id": "fonts",
+   "name": "Fonts: Font() keeps only what it is given",
+   "slide": 38,
+   "concepts": [
+    "Setting the Font Style of Cells",
+    "Font()",
+    "openpyxl.styles"
+   ],
+   "code": "import openpyxl\nfrom openpyxl.styles import Font\nws = openpyxl.Workbook().active\nws['A1'].font = Font(size=24, italic=True)\nws['B3'].font = Font(name='Times New Roman', bold=True)\nfor c in (ws['A1'], ws['B3'], ws['C5']):\n    print(c.coordinate, c.font.name, c.font.sz, c.font.b)\ntry: ws['A1'].font.bold = True\nexcept AttributeError as e: print('AttributeError:', e)",
+   "expected": "A1 None 24.0 False\nB3 Times New Roman None True\nC5 Calibri 11.0 False\nAttributeError: Style objects are immutable and cannot be changed.Reassign the style with a copy\n"
+  },
+  {
+   "order": 19,
+   "id": "dimensions",
+   "name": "Row height, column width and hidden columns",
+   "slide": 39,
+   "concepts": [
+    "Adjusting Rows and Columns",
+    "row height",
+    "column width"
+   ],
+   "code": "import openpyxl\nws = openpyxl.Workbook().active\nws['A5'], ws['B5'] = 'Tall row', 'Wide column'\nws.row_dimensions[5].height = 70\nws.column_dimensions['B'].width = 20\nws.column_dimensions['D'].hidden = True\nprint(ws.row_dimensions[5].height, ws.column_dimensions['B'].width)\nprint(ws.column_dimensions['D'].hidden)\nprint(sorted(ws.column_dimensions), sorted(ws.row_dimensions))",
+   "expected": "70.0 20.0\nTrue\n['B', 'D'] [5]\n"
+  },
+  {
+   "order": 20,
+   "id": "merge",
+   "name": "Merged cells keep one real cell",
+   "slide": 40,
+   "concepts": [
+    "merged cell"
+   ],
+   "code": "import openpyxl\nws = openpyxl.Workbook().active\nws.merge_cells('F1:I3')\nws['F1'] = 'Twelve cells merged together.'\nprint(*ws.merged_cells.ranges, type(ws['G2']).__name__)\ntry:\n    ws['G2'] = 'x'\nexcept AttributeError as e:\n    print('AttributeError:', e)\nws.unmerge_cells('F1:I3')\nprint(len(ws.merged_cells.ranges), type(ws['G2']).__name__)",
+   "expected": "F1:I3 MergedCell\nAttributeError: 'MergedCell' object attribute 'value' is read-only\n0 Cell\n"
+  },
+  {
+   "order": 21,
+   "id": "freeze",
+   "name": "Freeze panes",
+   "slide": 41,
+   "concepts": [
+    "freeze panes"
+   ],
+   "code": "import openpyxl\nfor setting in ('A2', 'B1', 'C2'):\n    ws = openpyxl.Workbook().active\n    ws.freeze_panes = setting\n    pane = ws.sheet_view.pane\n    print(setting, pane.xSplit, pane.ySplit)",
+   "expected": "A2 None 1.0\nB1 1.0 None\nC2 2.0 1.0\n"
+  },
+  {
+   "order": 22,
+   "id": "chart_build",
+   "name": "A bar chart: Reference, Series, BarChart",
+   "slide": 44,
+   "concepts": [
+    "Charts",
+    "Reference()",
+    "Series()",
+    "BarChart()",
+    "add_chart()",
+    "openpyxl.chart"
+   ],
+   "code": "import openpyxl\nfrom openpyxl.chart import BarChart, Reference, Series\nws = openpyxl.Workbook().active\nfor i in range(1, 11): ws['A%d' % i] = i * i\nref = Reference(ws, 1, 1, 1, 10)\nseries = Series(ref, title='First series')\nchart = BarChart()\nchart.title = 'My Chart'\nchart.append(series)\nws.add_chart(chart, 'C2')\nprint(ref, len(ws._charts))",
+   "expected": "'Sheet'!$A$1:$A$10 1\n"
+  },
+  {
+   "order": 23,
+   "id": "reference_order",
+   "name": "Reference takes the column first",
+   "slide": 45,
+   "concepts": [
+    "Reference()",
+    "Series()"
+   ],
+   "code": "import openpyxl\nfrom openpyxl.chart import Reference\nws = openpyxl.Workbook().active\ncolumn_b = Reference(ws, 2, 1, 2, 10)\nrow_2 = Reference(ws, 1, 2, 10, 2)\nprint(column_b)\nprint(row_2)",
+   "expected": "'Sheet'!$B$1:$B$10\n'Sheet'!$A$2:$J$2\n"
+  },
+  {
+   "order": 24,
+   "id": "chart_parts",
+   "name": "A chart is stored as XML in the zip",
+   "slide": 46,
+   "concepts": [
+    "chart",
+    "xlsx file"
+   ],
+   "code": "import io, zipfile, openpyxl\nfrom openpyxl.chart import BarChart, Reference\nws = openpyxl.Workbook().active\nfor v in (1, 4, 9): ws.append([v])\nchart = BarChart(); chart.add_data(Reference(ws, 1, 1, 1, 3))\nws.add_chart(chart, 'C2')\nbuf = io.BytesIO(); ws.parent.save(buf)\nnames = sorted(zipfile.ZipFile(buf).namelist())\nprint([n for n in names if 'chart' in n or 'drawing' in n])",
+   "expected": "['xl/charts/chart1.xml', 'xl/drawings/_rels/drawing1.xml.rels', 'xl/drawings/drawing1.xml']\n"
+  }
+ ]
+}
