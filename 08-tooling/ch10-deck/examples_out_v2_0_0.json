@@ -1,0 +1,112 @@
+{
+ "_version": "2.0.0",
+ "_from": "03-materials/ch10/page/chapter_code_ch10_v1_0_0.json",
+ "Building paths with Path and /": [
+  [
+   "from pathlib import Path, PureWindowsPath\np = Path('spam', 'bacon', 'eggs')\nprint(p)\nprint(Path('spam') / 'bacon' / 'eggs' == p)\nprint(PureWindowsPath('spam', 'bacon', 'eggs'))\ntry:\n    print('spam' / 'bacon')\nexcept TypeError:\n    print('two strings cannot use the slash')",
+   ""
+  ]
+ ],
+ "Working directory, home, absolute and relative": [
+  [
+   "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nprint(Path.cwd().is_absolute(), Path.home().is_absolute())\nprint(Path('spam/bacon/eggs').is_absolute())\nprint(Path('./spam.txt') == Path('spam.txt'))\nprint(Path('spam.txt').resolve() == Path.cwd() / 'spam.txt')",
+   ""
+  ]
+ ],
+ "The parts of a filepath": [
+  [
+   "from pathlib import PureWindowsPath\np = PureWindowsPath('C:/Users/Al/spam.txt')\nprint(p.drive, p.name, p.stem, p.suffix)\nprint(p.parent)\nprint(p.parts)\nprint(p.parents[1])\nprint(p.with_suffix('.csv'))",
+   ""
+  ]
+ ],
+ "Creating new folders": [
+  [
+   "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nos.makedirs('delicious/walnut/waffles')\nPath('delicious/walnut/pecan').mkdir()\nPath('delicious').mkdir(exist_ok=True)\nfor p in sorted(Path('delicious').rglob('*')):\n    print(p)",
+   ""
+  ]
+ ],
+ "Finding files with glob patterns": [
+  [
+   "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nfor name in ('project1.txt', 'project2.txt', 'project10.txt', 'notes.csv'):\n    Path(name).write_text('x')\nprint(sorted(p.name for p in Path('.').glob('project?.txt')))\nprint(sorted(p.name for p in Path('.').glob('*.txt')))\nprint(sorted(p.name for p in Path('.').glob('*')))",
+   ""
+  ]
+ ],
+ "Checking a path and reading file facts": [
+  [
+   "import os, tempfile, time; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nf = Path('f.txt')\nprint(f.exists())\nf.write_text('Hello, world!')\nprint(f.exists(), f.is_file(), f.is_dir(), Path('.').is_dir())\nprint(f.stat().st_size)\nos.utime('f.txt', (1712627129, 1712627129))\nprint(time.asctime(time.gmtime(f.stat().st_mtime)))",
+   ""
+  ]
+ ],
+ "Whole-file reading and writing": [
+  [
+   "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nspam = Path('spam.txt')\nprint(spam.write_text('Hello, world!'))\nprint(spam.read_text())\nprint(spam.write_text('café', encoding='utf-8'))\nprint(spam.stat().st_size)\nPath('b.bin').write_bytes(bytes([0, 1, 255]))\nprint(Path('b.bin').read_bytes())",
+   ""
+  ]
+ ],
+ "open, read and close": [
+  [
+   "import os, tempfile; os.chdir(tempfile.mkdtemp())\nbacon = open('bacon.txt', 'w', encoding='utf-8')\nprint(bacon.write('Hello, world!\\n'))\nprint(bacon.write('Bacon is not a vegetable.'))\nbacon.close()\nreader = open('bacon.txt', encoding='utf-8')\nprint(reader.read())\nreader.close()\nprint(reader.closed)",
+   ""
+  ]
+ ],
+ "read, readline, readlines and seek": [
+  [
+   "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\npoem = Path('poem.txt')\npoem.write_text('roses\\nviolets\\nsugar\\n', encoding='utf-8')\nf = open(poem, encoding='utf-8')\nprint(repr(f.readline()), f.tell())\nprint(f.readlines(), f.tell())\nprint(repr(f.read()), f.tell())\nf.seek(0)\nprint(repr(f.read(5)), f.tell())\nf.close()",
+   ""
+  ]
+ ],
+ "The with statement": [
+  [
+   "import os, tempfile; os.chdir(tempfile.mkdtemp())\nwith open('data.txt', 'w', encoding='utf-8') as file_obj:\n    print(file_obj.write('abc'), file_obj.closed)\nprint(file_obj.closed)\ntry:\n    with open('data.txt', 'w', encoding='utf-8') as g: raise RuntimeError('boom')\nexcept RuntimeError:\n    print(g.closed)",
+   ""
+  ]
+ ],
+ "Write modes w, a and x": [
+  [
+   "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nlog = Path('log.txt')\nfor mode, text in (('w', 'A\\n'), ('a', 'B\\n'), ('a', 'C\\n'), ('w', 'D\\n')):\n    with open(log, mode, encoding='utf-8') as f:\n        f.write(text)\n    print(mode, repr(log.read_text()))\ntry: open(log, 'x')\nexcept FileExistsError: print('x refuses: the file exists')",
+   ""
+  ]
+ ],
+ "The encoding argument": [
+  [
+   "import os, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nPath('a.txt').write_text('café', encoding='utf-8')\nprint(open('a.txt', encoding='utf-8').read())\nprint(open('a.txt', encoding='ascii', errors='replace').read())\ntry: print(open('a.txt', encoding='ascii').read())\nexcept UnicodeDecodeError: print('ascii cannot read the byte 0xc3')\nfor enc in ('utf-8', 'utf-16-le', 'latin-1'):\n    print(enc, len('café'.encode(enc)))",
+   ""
+  ]
+ ],
+ "Saving variables with a shelf": [
+  [
+   "import shelve\nstore = {}\nshelf = shelve.Shelf(store)\nshelf['cats'] = ['Zophie', 'Pooka', 'Simon']\nprint(list(shelf.keys()), shelf['cats'])\nprint(type(store[b'cats']).__name__)\nshelf['cats'].append('Fat-tail')\nprint(len(shelf['cats']))\ncats = shelf['cats']\ncats.append('Fat-tail')\nshelf['cats'] = cats\nprint(len(shelf['cats']))",
+   ""
+  ]
+ ],
+ "json as the plain alternative": [
+  [
+   "import json\ndata = {'cats': ['Zophie', 'Pooka'], 'pair': (1, 2), 5: 'five'}\ntext = json.dumps(data)\nprint(text)\nprint(json.loads(text))",
+   ""
+  ]
+ ],
+ "Practice program: Mad Libs": [
+  [
+   "import os, re, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nstory = 'The ADJECTIVE panda walked to the NOUN and then VERB.'\nPath('panda.txt').write_text(story, encoding='utf-8')\nanswers = iter(['silly', 'chandelier', 'screamed'])\ntext = Path('panda.txt').read_text(encoding='utf-8')\nresult = re.sub(r'ADJECTIVE|NOUN|VERB', lambda m: next(answers), text)\nPath('panda_filled.txt').write_text(result, encoding='utf-8')\nprint(result)",
+   ""
+  ]
+ ],
+ "Practice program: Regex Search": [
+  [
+   "import os, re, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\nput = lambda f, t: Path(f).write_text(t, encoding='utf-8')\nput('a.txt', 'spam and eggs\\nbacon alone\\nSPAM again\\n')\nput('b.txt', 'nothing here\\nspam, glorious spam\\n')\nput('notes.csv', 'spam,1\\n')\nfor p in sorted(Path('.').glob('*.txt')):\n    lines = p.read_text(encoding='utf-8').splitlines()\n    for n, line in enumerate(lines, 1):\n        if re.search('spam', line): print(f'{p.name}:{n}: {line}')",
+   ""
+  ]
+ ],
+ "Project 4, step 1: one quiz question": [
+  [
+   "import random\ncapitals = {'Alabama': 'Montgomery', 'Alaska': 'Juneau',\n            'Arizona': 'Phoenix', 'Arkansas': 'Little Rock',\n            'California': 'Sacramento'}\nrandom.seed(10)\nstate = random.choice(list(capitals))\nothers = [c for c in capitals.values() if c != capitals[state]]\noptions = random.sample(others, 3) + [capitals[state]]\nrandom.shuffle(options)\nprint(f'What is the capital of {state}?')\nfor letter, option in zip('ABCD', options):\n    print(f'  {letter}. {option}')",
+   ""
+  ]
+ ],
+ "Project 4, step 2: quiz and answer-key files": [
+  [
+   "import os, random, tempfile; os.chdir(tempfile.mkdtemp())\nfrom pathlib import Path\ncaps = {'Ohio': 'Columbus', 'Utah': 'Salt Lake City',\n        'Iowa': 'Des Moines', 'Maine': 'Augusta'}\nrandom.seed(10)\nquiz, key = [], []\nfor n, state in enumerate(caps, 1):\n    others = [c for c in caps.values() if c != caps[state]]\n    options = random.sample(others, 3) + [caps[state]]\n    random.shuffle(options)\n    quiz.append(f'{n}. {state}: ' + ' / '.join(options))\n    key.append(f'{n}. {\"ABCD\"[options.index(caps[state])]}')\nfor f, rows in (('quiz1.txt', quiz), ('key1.txt', key)):\n    Path(f).write_text('\\n'.join(rows) + '\\n', encoding='utf-8')\n    print(Path(f).read_text(encoding='utf-8'), end='')",
+   ""
+  ]
+ ]
+}
