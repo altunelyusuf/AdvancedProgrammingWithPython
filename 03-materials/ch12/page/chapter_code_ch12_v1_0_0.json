@@ -1,0 +1,292 @@
+{
+ "chapter": 12,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch12/SEN0414_Ch12_CommandLinePrograms_3e_v2_0_0.pptx",
+ "about": "The code examples of the chapter 12 deck, in the order of the code slides (order = slide order). The page's chapter-code tab lists them by NAME in this order; every example is self-contained and runs with the Python standard library only, reads no keyboard and starts no other program (a command line program is about how a program is started, so each mechanism is shown on text or on a throw-away folder that the example removes); the expected result is what the run printed in a fresh interpreter. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed.",
+ "executed_with": {
+  "python": "3.13.16",
+  "library": null
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "page_requirements": [
+   "The Python standard library modules os, shutil, tempfile, shlex, argparse, importlib.util, json, stat, configparser, random (imported by the examples that use them), and the built-ins print, repr, sorted, len, isinstance, chr, ord, dict, iter, next",
+   "A writable temporary folder and os.chdir (the terminal, PATH, launcher and ccwd examples); no subprocess, no keyboard input, no network"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "terminal_cd",
+   "name": "cd and pwd as os calls",
+   "slide": 7,
+   "concepts": [
+    "Using the Terminal",
+    "Command line program"
+   ],
+   "code": "import os, tempfile\nstart = os.getcwd()\nwith tempfile.TemporaryDirectory() as lab:\n    os.chdir(lab)\n    os.mkdir('Desktop')\n    os.chdir('Desktop')  # cd Desktop\n    where = os.path.basename(os.getcwd())  # pwd\n    os.chdir('..')  # cd ..\n    os.chdir(start)\nprint('pwd ->', where)",
+   "expected": "pwd -> Desktop\n"
+  },
+  {
+   "order": 2,
+   "id": "terminal_ls",
+   "name": "ls and dir as os.listdir",
+   "slide": 8,
+   "concepts": [
+    "Using the Terminal",
+    "Command line program"
+   ],
+   "code": "import os, tempfile\nwith tempfile.TemporaryDirectory() as lab:\n    for name in ('spam.exe', 'eggs.exe', 'notes.txt'):\n        open(os.path.join(lab, name), 'w').close()\n    listing = sorted(os.listdir(lab))  # ls\n    programs = [n for n in listing if n.endswith('.exe')]  # dir *.exe\nprint('ls ->', listing)\nprint('dir *.exe ->', programs)",
+   "expected": "ls -> ['eggs.exe', 'notes.txt', 'spam.exe']\ndir *.exe -> ['eggs.exe', 'spam.exe']\n"
+  },
+  {
+   "order": 3,
+   "id": "path_text",
+   "name": "PATH is a text of folders",
+   "slide": 9,
+   "concepts": [
+    "Using the Terminal"
+   ],
+   "code": "PATH = '/home/al/bin:/usr/local/bin:/usr/bin:/bin'\nfolders = PATH.split(':')\nprint(len(folders), 'folders')\nprint('/usr/bin is number', folders.index('/usr/bin') + 1)\nprint(':'.join(['/home/al/Scripts'] + folders[:2]))",
+   "expected": "4 folders\n/usr/bin is number 3\n/home/al/Scripts:/home/al/bin:/usr/local/bin\n"
+  },
+  {
+   "order": 4,
+   "id": "path_which",
+   "name": "shutil.which walks the folders",
+   "slide": 10,
+   "concepts": [
+    "Using the Terminal"
+   ],
+   "code": "import os, shutil, tempfile\nwith tempfile.TemporaryDirectory() as lab:\n    for d in ('a', 'b'):\n        os.mkdir(lab + '/' + d)\n        prog = lab + '/' + d + '/spam'\n        open(prog, 'w').close()\n        os.chmod(prog, 0o744)\n    path = lab + '/a:' + lab + '/b'\n    where = os.path.relpath(shutil.which('spam', path=path), lab)\nprint('first spam is in', where)\nprint('eggs found:', shutil.which('eggs', path=path))",
+   "expected": "first spam is in a/spam\neggs found: None\n"
+  },
+  {
+   "order": 5,
+   "id": "venv_cfg",
+   "name": "pyvenv.cfg is a settings file",
+   "slide": 13,
+   "concepts": [
+    "Virtual Environments"
+   ],
+   "code": "cfg = 'home = /usr/bin\\ninclude-system-site-packages = false'\nsettings = dict(line.split(' = ') for line in cfg.splitlines())\nprint(settings)",
+   "expected": "{'home': '/usr/bin', 'include-system-site-packages': 'false'}\n"
+  },
+  {
+   "order": 6,
+   "id": "venv_activate",
+   "name": "activate edits PATH",
+   "slide": 14,
+   "concepts": [
+    "Virtual Environments"
+   ],
+   "code": "import sys\nbin_dir = '/home/al/Scripts/.venv/bin'\nPATH = '/usr/local/bin:/usr/bin:/bin'\nprint('after activate:', bin_dir + ':' + PATH)\nprint('inside a virtual environment:', sys.prefix != sys.base_prefix)",
+   "expected": "after activate: /home/al/Scripts/.venv/bin:/usr/local/bin:/usr/bin:/bin\ninside a virtual environment: False\n"
+  },
+  {
+   "order": 7,
+   "id": "pip",
+   "name": "pip requirement and find_spec",
+   "slide": 15,
+   "concepts": [
+    "Installing Python Packages with pip"
+   ],
+   "code": "requirement = 'package_name==1.17.4'\nname, sep, version = requirement.partition('==')\nprint(name, sep, version)\nimport importlib.util, json\nprint(type(json).__name__)\nprint('pyperclip missing:', importlib.util.find_spec('pyperclip') is None)",
+   "expected": "package_name == 1.17.4\nmodule\npyperclip missing: True\n"
+  },
+  {
+   "order": 8,
+   "id": "selfaware",
+   "name": "os.name, sys.version_info and __file__",
+   "slide": 19,
+   "concepts": [
+    "Self-Aware Python Programs"
+   ],
+   "code": "import os, sys\nKINDS = {'nt': 'Windows', 'posix': 'macOS or Linux'}\nprint('os.name is', os.name, '->', KINDS[os.name])\nprint('Python 3.9 or newer:', sys.version_info >= (3, 9))\nprint('version fields:', len(sys.version_info))\nprint('started from a file:', '__file__' in globals())",
+   "expected": "os.name is posix -> macOS or Linux\nPython 3.9 or newer: True\nversion fields: 5\nstarted from a file: False\n"
+  },
+  {
+   "order": 9,
+   "id": "missingmod",
+   "name": "ModuleNotFoundError and sys.exit",
+   "slide": 20,
+   "concepts": [
+    "Self-Aware Python Programs"
+   ],
+   "code": "import sys\ntry:\n    import nonexistentModule\nexcept ModuleNotFoundError as err:\n    print('Result: no module called', err.name)\n    try:\n        sys.exit('This program needs nonexistentModule.')\n    except SystemExit as stop:\n        print('exit message:', stop.code)",
+   "expected": "Result: no module called nonexistentModule\nexit message: This program needs nonexistentModule.\n"
+  },
+  {
+   "order": 10,
+   "id": "argv",
+   "name": "sys.argv and shlex.split",
+   "slide": 21,
+   "concepts": [
+    "Command line program",
+    "Text-Based Program Design"
+   ],
+   "code": "import shlex\ntyped = ['python3 yourScript.py hello world',\n         'python3 yourScript.py \"hello world\"',\n         'python3 yourScript.py']\nfor line in typed:\n    argv = shlex.split(line)[1:]\n    print(len(argv), argv)",
+   "expected": "3 ['yourScript.py', 'hello', 'world']\n2 ['yourScript.py', 'hello world']\n1 ['yourScript.py']\n"
+  },
+  {
+   "order": 11,
+   "id": "argparse_a",
+   "name": "argparse declares the arguments",
+   "slide": 22,
+   "concepts": [
+    "Command line program",
+    "Text-Based Program Design"
+   ],
+   "code": "import argparse\np = argparse.ArgumentParser(prog='snowstorm', exit_on_error=False)\np.add_argument('density', type=int, nargs='?', default=4)\np.add_argument('-v', '--verbose', action='store_true')\nfor argv in ([], ['20', '-v']):\n    print(argv, '->', vars(p.parse_args(argv)))",
+   "expected": "[] -> {'density': 4, 'verbose': False}\n['20', '-v'] -> {'density': 20, 'verbose': True}\n"
+  },
+  {
+   "order": 12,
+   "id": "argparse_b",
+   "name": "argparse refuses a wrong word",
+   "slide": 23,
+   "concepts": [
+    "Command line program",
+    "Text-Based Program Design"
+   ],
+   "code": "import argparse\np = argparse.ArgumentParser(prog='snowstorm', exit_on_error=False)\np.add_argument('density', type=int)\ntry:\n    p.parse_args(['lots'])\nexcept argparse.ArgumentError as err:\n    print('Result: refused,', err)",
+   "expected": "Result: refused, argument density: invalid int value: 'lots'\n"
+  },
+  {
+   "order": 13,
+   "id": "quiet",
+   "name": "Quiet, default and verbose",
+   "slide": 26,
+   "concepts": [
+    "Text-Based Program Design",
+    "Command line program"
+   ],
+   "code": "import argparse\np = argparse.ArgumentParser(prog='backup', exit_on_error=False)\np.add_argument('-v', '--verbose', action='store_true')\np.add_argument('-q', '--quiet', action='store_true')\nsteps = ['reading 3 files', 'zipping', 'saved backup.zip']\nreport = lambda a: [] if a.quiet else steps if a.verbose else steps[-1:]\nfor argv in ([], ['-v'], ['-q']):\n    print(argv, '->', report(p.parse_args(argv)))",
+   "expected": "[] -> ['saved backup.zip']\n['-v'] -> ['reading 3 files', 'zipping', 'saved backup.zip']\n['-q'] -> []\n"
+  },
+  {
+   "order": 14,
+   "id": "chr",
+   "name": "chr and the clear command",
+   "slide": 29,
+   "concepts": [
+    "Terminal presentation",
+    "os.system",
+    "chr"
+   ],
+   "code": "import os\nclear_command = 'cls' if os.name == 'nt' else 'clear'\nprint('os.system would run:', clear_command)\nTOP, BOTTOM, FULL = chr(9600), chr(9604), chr(9608)\nprint([ord(c) for c in (TOP, BOTTOM, FULL)])\nprint(TOP * 10 + BOTTOM * 10 + FULL * 10)",
+   "expected": "os.system would run: clear\n[9600, 9604, 9608]\n▀▀▀▀▀▀▀▀▀▀▄▄▄▄▄▄▄▄▄▄██████████\n"
+  },
+  {
+   "order": 15,
+   "id": "colour",
+   "name": "Colour names as escape codes",
+   "slide": 30,
+   "concepts": [
+    "bext.fg",
+    "bext.bg",
+    "Terminal presentation"
+   ],
+   "code": "COLORS = ['black', 'red', 'green', 'yellow',\n          'blue', 'purple', 'cyan', 'white']\nfg = lambda name: '\\x1b[%dm' % (30 + COLORS.index(name))\nbg = lambda name: '\\x1b[%dm' % (40 + COLORS.index(name))\nprint(repr(fg('red') + bg('blue') + 'hi' + '\\x1b[0m'))\nprint([fg(c)[2:-1] for c in COLORS])",
+   "expected": "'\\x1b[31m\\x1b[44mhi\\x1b[0m'\n['30', '31', '32', '33', '34', '35', '36', '37']\n"
+  },
+  {
+   "order": 16,
+   "id": "snowstorm",
+   "name": "One snowstorm frame",
+   "slide": 32,
+   "concepts": [
+    "A Short Program: Snowstorm",
+    "Terminal presentation",
+    "chr"
+   ],
+   "code": "import random\nTOP, BOTTOM = chr(9600), chr(9604)\nargv = ['snowstorm.py', '20']\nDENSITY = int(argv[1]) if len(argv) > 1 else 4\nrandom.seed(12)\ndef cell():\n    snow = random.randint(0, 99) < DENSITY\n    return random.choice([TOP, BOTTOM]) if snow else ' '\nrows = [''.join(cell() for x in range(40)) for y in range(5)]\nprint('flakes per row:', [len(r) - r.count(' ') for r in rows])\nprint('\\n'.join(rows))",
+   "expected": "flakes per row: [12, 6, 7, 5, 8]\n      ▄▄        ▀     ▀▄  ▀▀▄ ▄▄    ▀ ▄ \n        ▀         ▄         ▄ ▀   ▄   ▀ \n▄▄      ▄                   ▄    ▀  ▄  ▀\n    ▀              ▄           ▀ ▀   ▀  \n ▄ ▄  ▄          ▀▀▄   ▄         ▀      \n"
+  },
+  {
+   "order": 17,
+   "id": "launcher_text",
+   "name": "The launcher script, line by line",
+   "slide": 36,
+   "concepts": [
+    "Deploying Python Programs",
+    "Deployment"
+   ],
+   "code": "launcher = '#!/usr/bin/env bash\\nsource ~/Scripts/.venv/bin/activate\\n'\nlauncher += 'python3 ~/Scripts/yourScript.py \"$@\"\\n'\nfor number, line in enumerate(launcher.splitlines(), 1):\n    print(number, line)\nprint('interpreter:', launcher.splitlines()[0][2:].split())",
+   "expected": "1 #!/usr/bin/env bash\n2 source ~/Scripts/.venv/bin/activate\n3 python3 ~/Scripts/yourScript.py \"$@\"\ninterpreter: ['/usr/bin/env', 'bash']\n"
+  },
+  {
+   "order": 18,
+   "id": "launcher_chmod",
+   "name": "chmod u+x makes it a command",
+   "slide": 37,
+   "concepts": [
+    "Deploying Python Programs",
+    "Deployment"
+   ],
+   "code": "import os, shutil, stat, tempfile\nfrom pathlib import Path\nwith tempfile.TemporaryDirectory() as scripts:\n    path = Path(scripts, 'yourScript')\n    path.write_text('#!/usr/bin/env bash\\n')\n    path.chmod(0o644)\n    before = stat.filemode(path.stat().st_mode)\n    path.chmod(path.stat().st_mode | stat.S_IXUSR)  # chmod u+x\n    after = stat.filemode(path.stat().st_mode)\n    on_path = shutil.which('yourScript', path=scripts) == str(path)\nprint(before, '->', after, '| found on PATH:', on_path)",
+   "expected": "-rw-r--r-- -> -rwxr--r-- | found on PATH: True\n"
+  },
+  {
+   "order": 19,
+   "id": "desktop",
+   "name": "A .desktop entry with configparser",
+   "slide": 39,
+   "concepts": [
+    "Deploying Python Programs"
+   ],
+   "code": "import configparser\nentry = ('[Desktop Entry]\\n'\n         'Name=yourScript\\n'\n         'Exec=gnome-terminal -- /home/al/Scripts/yourScript\\n'\n         'Type=Application\\n')\nc = configparser.ConfigParser()\nc.read_string(entry)\nprint(dict(c['Desktop Entry']))",
+   "expected": "{'name': 'yourScript', 'exec': 'gnome-terminal -- /home/al/Scripts/yourScript', 'type': 'Application'}\n"
+  },
+  {
+   "order": 20,
+   "id": "ccwd",
+   "name": "ccwd copies the working directory",
+   "slide": 40,
+   "concepts": [
+    "A Short Program: Copying the Current Working Directory"
+   ],
+   "code": "import os\nclipboard = []\ndef ccwd(argv):\n    if len(argv) > 1:\n        os.chdir(argv[1])\n    clipboard.append(os.getcwd())\nstart = os.getcwd()\nos.chdir('/tmp')\nterminal = os.getcwd()  # where the terminal stands\nccwd(['ccwd.py', '..'])\nprint('clipboard', clipboard[-1], '| terminal', terminal)\nos.chdir(start)",
+   "expected": "clipboard / | terminal /tmp\n"
+  },
+  {
+   "order": 21,
+   "id": "cliprec",
+   "name": "Clipboard recorder loop",
+   "slide": 41,
+   "concepts": [
+    "A Short Program: Clipboard Recorder"
+   ],
+   "code": "texts = ['ch11', 'ch11', 'ch12', 'ch12', 'ch13']\nprevious_content, recorded = '', []\ntry:\n    for content in texts:  # the book calls paste()\n        if content != previous_content:\n            print(content)\n            recorded.append(content)\n            previous_content = content\n    raise KeyboardInterrupt  # the user presses CTRL-C\nexcept KeyboardInterrupt:\n    print('Result: stopped quietly;', len(recorded), 'recorded')",
+   "expected": "ch11\nch12\nch13\nResult: stopped quietly; 3 recorded\n"
+  },
+  {
+   "order": 22,
+   "id": "pyinstaller",
+   "name": "The PyInstaller command line",
+   "slide": 42,
+   "concepts": [
+    "Compiling Python Programs with PyInstaller",
+    "Deployment"
+   ],
+   "code": "import shlex\ncommand = 'python -m PyInstaller --onefile yourScript.py'\nwords = shlex.split(command)\nprint(len(words), 'words:', words)\nroles = {'-m': 'run a module', '--onefile': 'bundle into one file'}\nprint({w: roles[w] for w in words if w in roles})\nleft = ['build/', 'dist/', 'yourScript.spec']\nprint('the build leaves:', left)",
+   "expected": "5 words: ['python', '-m', 'PyInstaller', '--onefile', 'yourScript.py']\n{'-m': 'run a module', '--onefile': 'bundle into one file'}\nthe build leaves: ['build/', 'dist/', 'yourScript.spec']\n"
+  },
+  {
+   "order": 23,
+   "id": "deployable",
+   "name": "Launchers for earlier projects",
+   "slide": 44,
+   "concepts": [
+    "Practice Program: Make Your Programs Deployable",
+    "Deployment"
+   ],
+   "code": "LINE = 'python3 ~/Scripts/{name}.py \"$@\"'  # third line of a launcher\nprojects = {'zipBackup': 11, 'extractContacts': 9, 'wikiBullets': 8, 'chessboard': 7}\nfor name, chapter in projects.items():\n    print(name.ljust(16), 'chapter', chapter, '|', LINE.format(name=name))",
+   "expected": "zipBackup        chapter 11 | python3 ~/Scripts/zipBackup.py \"$@\"\nextractContacts  chapter 9 | python3 ~/Scripts/extractContacts.py \"$@\"\nwikiBullets      chapter 8 | python3 ~/Scripts/wikiBullets.py \"$@\"\nchessboard       chapter 7 | python3 ~/Scripts/chessboard.py \"$@\"\n"
+  }
+ ]
+}
