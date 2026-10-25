@@ -1,0 +1,336 @@
+{
+ "chapter": 4,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch04/SEN0414_Ch04_Functions_3e_v3_0_0.pptx",
+ "about": "The code examples of the chapter 4 deck, in the order of the code slides (order = slide order). The page's chapter-code tab lists them by NAME in this order; every example is self-contained and runs with the Python standard library only; the expected result is what the run printed. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed, in the order of the boxes; no example reads keyboard input and none prints a Python-version-dependent message.",
+ "executed_with": {
+  "python": "3.13.16",
+  "library": null
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "page_requirements": [
+   "The Python standard library modules inspect, sys and traceback (imported by the examples that use them), and the built-ins print, len, int, str, type, isinstance, range, max, zip"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "hello",
+   "name": "def defines, a call runs",
+   "slide": 6,
+   "concepts": [
+    "Creating Functions",
+    "function",
+    "function call",
+    "def"
+   ],
+   "code": "def hello(name):\n    print('Hello, ' + name)\nhello('Alice')\nhello('Bob')",
+   "expected": "Hello, Alice\nHello, Bob\n"
+  },
+  {
+   "order": 2,
+   "id": "dedup",
+   "name": "Deduplication: one function instead of copies",
+   "slide": 7,
+   "concepts": [
+    "deduplication",
+    "Creating Functions"
+   ],
+   "code": "pasted = ['Good morning!', 'Good afternoon!', ' Good evening!']\ndef greeting(part):\n    return 'Good ' + part + '!'\nmade = [greeting(p) for p in ('morning', 'afternoon', 'evening')]\nprint(pasted == made, [a == b for a, b in zip(pasted, made)])",
+   "expected": "False [True, True, False]\n"
+  },
+  {
+   "order": 3,
+   "id": "params",
+   "name": "Arguments fill parameters in order",
+   "slide": 10,
+   "concepts": [
+    "Arguments and Parameters",
+    "argument",
+    "parameter"
+   ],
+   "code": "def describe(animal, sound):\n    return animal + ' says ' + sound\nprint(describe('cat', 'meow'))\nprint(describe('meow', 'cat'))",
+   "expected": "cat says meow\nmeow says cat\n"
+  },
+  {
+   "order": 4,
+   "id": "returns",
+   "name": "return hands a value back",
+   "slide": 11,
+   "concepts": [
+    "Return Values and return Statements",
+    "return value",
+    "return"
+   ],
+   "code": "def double(n):\n    return n * 2\nx = double(21)\nprint(x, type(x).__name__)\nprint(double(double(2)))",
+   "expected": "42 int\n8\n"
+  },
+  {
+   "order": 5,
+   "id": "none",
+   "name": "None: a function without return",
+   "slide": 12,
+   "concepts": [
+    "The None Value",
+    "None",
+    "len()",
+    "print()"
+   ],
+   "code": "def shout(word):\n    print(word.upper())\nresult = shout('hi')\nprint(result, result is None)\nprint(len('hello'), len([1, 2, 3]))",
+   "expected": "HI\nNone True\n5 3\n"
+  },
+  {
+   "order": 6,
+   "id": "named",
+   "name": "Named parameters sep and end",
+   "slide": 14,
+   "concepts": [
+    "Named Parameters",
+    "print()"
+   ],
+   "code": "print('cats', 'dogs', 'mice')\nprint('cats', 'dogs', 'mice', sep=', ')\nprint('Hello', end='')\nprint(' World')",
+   "expected": "cats dogs mice\ncats, dogs, mice\nHello World\n"
+  },
+  {
+   "order": 7,
+   "id": "defaults",
+   "name": "Default and keyword-only parameters",
+   "slide": 15,
+   "concepts": [
+    "Named Parameters",
+    "parameter"
+   ],
+   "code": "def area(width, height=1, *, unit='m'):\n    return str(width * height) + ' ' + unit\nprint(area(3), area(3, 4), area(3, unit='cm'))",
+   "expected": "3 m 12 m 3 cm\n"
+  },
+  {
+   "order": 8,
+   "id": "mutable",
+   "name": "A default value is made once",
+   "slide": 16,
+   "concepts": [
+    "parameter",
+    "Named Parameters"
+   ],
+   "code": "def add_item(item, bag=[]):\n    bag.append(item)\n    return bag\ndef add_safe(item, bag=None):\n    bag = [] if bag is None else bag\n    bag.append(item)\n    return bag\nprint(add_item('a'), add_item('b'))\nprint(add_safe('a'), add_safe('b'))",
+   "expected": "['a', 'b'] ['a', 'b']\n['a'] ['b']\n"
+  },
+  {
+   "order": 9,
+   "id": "stack",
+   "name": "The call stack counted with real frames",
+   "slide": 19,
+   "concepts": [
+    "The Call Stack",
+    "call stack"
+   ],
+   "code": "import inspect\nbase = len(inspect.stack())\ndepth = lambda: len(inspect.stack()) - base - 1\ndef c():\n    return depth()\ndef b():\n    return [depth(), c()]\ndef a():\n    return [depth(), b()]\nprint(a(), depth())",
+   "expected": "[1, [2, 3]] 0\n"
+  },
+  {
+   "order": 10,
+   "id": "frame",
+   "name": "A frame object knows its function and its caller",
+   "slide": 20,
+   "concepts": [
+    "frame object",
+    "call stack"
+   ],
+   "code": "import sys\ndef inner():\n    me, caller = sys._getframe(), sys._getframe(1)\n    return me.f_code.co_name, caller.f_code.co_name\ndef outer():\n    return inner()\nprint(outer(), inner()[0])",
+   "expected": "('inner', 'outer') inner\n"
+  },
+  {
+   "order": 11,
+   "id": "localgone",
+   "name": "A local variable disappears after the call",
+   "slide": 22,
+   "concepts": [
+    "Local and Global Scopes",
+    "local scope",
+    "global scope"
+   ],
+   "code": "def make():\n    eggs = 99\n    return eggs\nprint(make())\ntry:\n    print(eggs)\nexcept NameError as err:\n    print(type(err).__name__)",
+   "expected": "99\nNameError\n"
+  },
+  {
+   "order": 12,
+   "id": "walls",
+   "name": "Local scopes are walled off",
+   "slide": 23,
+   "concepts": [
+    "Scope Rules",
+    "local scope",
+    "global scope"
+   ],
+   "code": "x = 'global x'\ndef f():\n    y = 'local y of f'\n    return x\ndef g():\n    return y\nprint(f())\ntry:\n    g()\nexcept NameError as err:\n    print('g cannot see y:', type(err).__name__)",
+   "expected": "global x\ng cannot see y: NameError\n"
+  },
+  {
+   "order": 13,
+   "id": "samename",
+   "name": "One name, three variables",
+   "slide": 24,
+   "concepts": [
+    "Scope Rules",
+    "local scope",
+    "global scope"
+   ],
+   "code": "spam = 'global'\ndef one():\n    spam = 'one'\n    return spam\ndef two():\n    spam = 'two'\n    return spam\nprint(one(), two(), spam)",
+   "expected": "one two global\n"
+  },
+  {
+   "order": 14,
+   "id": "globalstmt",
+   "name": "The global statement",
+   "slide": 25,
+   "concepts": [
+    "The global Statement",
+    "global"
+   ],
+   "code": "eggs = 'global'\ndef with_global():\n    global eggs\n    eggs = 'changed by with_global'\ndef without_global():\n    eggs = 'local to without_global'\nwithout_global()\nprint(eggs)\nwith_global()\nprint(eggs)",
+   "expected": "global\nchanged by with_global\n"
+  },
+  {
+   "order": 15,
+   "id": "nonlocal",
+   "name": "nonlocal: between local and global",
+   "slide": 26,
+   "concepts": [
+    "Scope Rules",
+    "local scope",
+    "global scope"
+   ],
+   "code": "def counter():\n    count = 0\n    def step():\n        nonlocal count\n        count += 1\n        return count\n    return step\ntick = counter()\nprint(tick(), tick(), tick())",
+   "expected": "1 2 3\n"
+  },
+  {
+   "order": 16,
+   "id": "identify",
+   "name": "Scope identification: read or assign",
+   "slide": 27,
+   "concepts": [
+    "Scope Identification",
+    "Scope Rules"
+   ],
+   "code": "eggs = 0\ndef reads():\n    return eggs\ndef assigns():\n    eggs = 1\ndef declares():\n    global eggs\n    eggs = 2\nfor f in (reads, assigns, declares):\n    c = f.__code__\n    print(f.__name__, c.co_varnames, c.co_names)",
+   "expected": "reads () ('eggs',)\nassigns ('eggs',) ()\ndeclares () ('eggs',)\n"
+  },
+  {
+   "order": 17,
+   "id": "unbound",
+   "name": "UnboundLocalError",
+   "slide": 28,
+   "concepts": [
+    "Scope Rules",
+    "Scope Identification",
+    "local scope"
+   ],
+   "code": "eggs = 'global'\ndef broken():\n    print(eggs)\n    eggs = 'local'\ntry:\n    broken()\nexcept NameError as err:\n    kind = type(err)\n    print(kind.__name__, kind.__mro__[1].__name__)",
+   "expected": "UnboundLocalError NameError\n"
+  },
+  {
+   "order": 18,
+   "id": "tryexcept",
+   "name": "try and except",
+   "slide": 31,
+   "concepts": [
+    "Exception Handling",
+    "exception",
+    "try",
+    "except"
+   ],
+   "code": "def spam(divide_by):\n    try:\n        return 42 / divide_by\n    except ZeroDivisionError:\n        return 'error: cannot divide by zero'\nprint(spam(2), spam(12), spam(0), spam(1))",
+   "expected": "21.0 3.5 error: cannot divide by zero 42.0\n"
+  },
+  {
+   "order": 19,
+   "id": "inloop",
+   "name": "try inside the loop",
+   "slide": 32,
+   "concepts": [
+    "Exception Handling",
+    "try",
+    "except"
+   ],
+   "code": "def spam(n):\n    return 42 / n\nfor n in (2, 0, 1):\n    try:\n        print(spam(n))\n    except ZeroDivisionError:\n        print('Error: invalid argument.')",
+   "expected": "21.0\nError: invalid argument.\n42.0\n"
+  },
+  {
+   "order": 20,
+   "id": "aroundall",
+   "name": "try around all the calls",
+   "slide": 33,
+   "concepts": [
+    "Exception Handling",
+    "try",
+    "except"
+   ],
+   "code": "def spam(n):\n    return 42 / n\ntry:\n    print(spam(2))\n    print(spam(0))\n    print(spam(1))\nexcept ZeroDivisionError:\n    print('Error: invalid argument.')",
+   "expected": "21.0\nError: invalid argument.\n"
+  },
+  {
+   "order": 21,
+   "id": "several",
+   "name": "One except for several errors",
+   "slide": 34,
+   "concepts": [
+    "exception",
+    "except"
+   ],
+   "code": "def parse(text):\n    try:\n        return int(text)\n    except (ValueError, TypeError) as err:\n        return type(err).__name__\nprint(parse('12'), parse('x'), parse(None))",
+   "expected": "12 ValueError TypeError\n"
+  },
+  {
+   "order": 22,
+   "id": "traceback",
+   "name": "A traceback lists the calls to the error",
+   "slide": 35,
+   "concepts": [
+    "traceback",
+    "exception",
+    "call stack"
+   ],
+   "code": "import traceback\ndef inner():\n    return 1 / 0\ndef outer():\n    return inner()\ntry:\n    outer()\nexcept ZeroDivisionError as err:\n    tb = traceback.extract_tb(err.__traceback__)\n    print([f.name for f in tb][-2:])",
+   "expected": "['outer', 'inner']\n"
+  },
+  {
+   "order": 23,
+   "id": "zigzag",
+   "name": "Short program: Zigzag",
+   "slide": 39,
+   "concepts": [
+    "A Short Program: Zigzag"
+   ],
+   "code": "def zigzag(steps, width=20):\n    indent, move, path = 0, 1, []\n    for _ in range(steps):\n        path.append(indent)\n        indent += move\n        if indent in (0, width):\n            move = -move\n    return path\npath = zigzag(42)\nprint(path[:8], max(path), path[-2:])\nprint(' ' * path[5] + '*' * 8)",
+   "expected": "[0, 1, 2, 3, 4, 5, 6, 7] 20 [0, 1]\n     ********\n"
+  },
+  {
+   "order": 24,
+   "id": "spike",
+   "name": "Short program: Spike",
+   "slide": 40,
+   "concepts": [
+    "A Short Program: Spike"
+   ],
+   "code": "lengths = [i * i for i in range(1, 9)]\nlengths += [i * i for i in range(7, 1, -1)]\nprint(lengths, len(lengths))\nprint('-' * lengths[3])",
+   "expected": "[1, 4, 9, 16, 25, 36, 49, 64, 49, 36, 25, 16, 9, 4] 14\n----------------\n"
+  },
+  {
+   "order": 25,
+   "id": "collatz",
+   "name": "Practice program: Collatz",
+   "slide": 41,
+   "concepts": [
+    "Practice Questions",
+    "function"
+   ],
+   "code": "def collatz(n):\n    if n % 2 == 0:\n        return n // 2\n    return 3 * n + 1\nn, seq = 6, [6]\nwhile n != 1:\n    n = collatz(n)\n    seq.append(n)\nprint(seq, len(seq) - 1)",
+   "expected": "[6, 3, 10, 5, 16, 8, 4, 2, 1] 8\n"
+  }
+ ]
+}
