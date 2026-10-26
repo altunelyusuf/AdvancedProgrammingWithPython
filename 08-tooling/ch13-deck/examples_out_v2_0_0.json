@@ -1,0 +1,148 @@
+{
+ "_version": "2.0.0",
+ "_from": "03-materials/ch13/page/chapter_code_ch13_v1_0_0.json",
+ "A URL cut into its parts": [
+  [
+   "from urllib.parse import urlsplit\nurl = ('https://api.openweathermap.org/geo/1.0/direct'\n       '?q=Boston&appid=KEY#top')\nparts = urlsplit(url)\nfor name in ('scheme', 'netloc', 'path', 'query', 'fragment'):\n    print(name.ljust(8), getattr(parts, name))",
+   ""
+  ]
+ ],
+ "quote and parse_qs": [
+  [
+   "from urllib.parse import parse_qs, quote\nprint(quote('777 Valencia St, San Francisco'))\nquery = parse_qs('q=San+Francisco%2CCA&appid=KEY')\nprint(query)",
+   ""
+  ]
+ ],
+ "HTTP status codes and their classes": [
+  [
+   "from http import HTTPStatus\nfor code in (200, 301, 404, 429, 500):\n    status = HTTPStatus(code)\n    print(code, status.phrase, '| class', code // 100)",
+   ""
+  ]
+ ],
+ "The user-agent header": [
+  [
+   "import urllib.request\nopener = urllib.request.build_opener()\nname, value = opener.addheaders[0]\nprint(name, '->', value.split('/')[0])\nurl = 'https://example.com/'\nheaders = {'User-Agent': 'MyBot/1.0'}\nrequest = urllib.request.Request(url, headers=headers)\nprint(request.get_header('User-agent'))",
+   ""
+  ]
+ ],
+ "robots.txt rules with can_fetch": [
+  [
+   "import urllib.robotparser as rp\nrobots = rp.RobotFileParser()\nrobots.parse(['User-agent: *', 'Disallow: /simple/',\n              'Disallow: /account/'])\nfor path in ('/project/x/', '/simple/x/', '/account/login/'):\n    print(path, robots.can_fetch('*', 'https://pypi.org' + path))",
+   ""
+  ]
+ ],
+ "Crawl-delay and a polite pause": [
+  [
+   "import urllib.robotparser as rp\nrobots = rp.RobotFileParser()\nrobots.parse(['User-agent: *', 'Crawl-delay: 2',\n              'Request-rate: 3/20'])\npause = robots.crawl_delay('*')\nrate = robots.request_rate('*')\nprint('wait', pause, 'seconds; rate', tuple(rate))\nfor page, clock in zip('abc', range(0, 6, pause)):\n    print('t =', clock, 'fetch page', page)",
+   ""
+  ]
+ ],
+ "webbrowser.open with a recording stand-in": [
+  [
+   "import webbrowser\nopened = []\nwebbrowser.open = lambda url: opened.append(url) or True\nprint(webbrowser.open('https://inventwithpython.com/'))\nprint(opened)",
+   ""
+  ]
+ ],
+ "showmap.py builds a map address": [
+  [
+   "from urllib.parse import quote\nargv = ['showmap.py', '777', 'Valencia', 'St,',\n        'San', 'Francisco,', 'CA', '94110']\naddress = ' '.join(argv[1:])\nsearch = 'https://www.openstreetmap.org/search?query='\nurl = search + quote(address)\nprint(address)\nprint(url)",
+   ""
+  ]
+ ],
+ "urlopen on a data address": [
+  [
+   "from urllib.request import urlopen\nreply = urlopen('data:text/plain,Romeo%20and%20Juliet')\nprint(reply.headers.get_content_type())\nbody = reply.read()\nprint(len(body), 'bytes:', body.decode('utf-8'))",
+   ""
+  ]
+ ],
+ "A raise_for_status stand-in": [
+  [
+   "from http import HTTPStatus\ndef raise_for_status(code):\n    if code >= 400:\n        phrase = HTTPStatus(code).phrase\n        raise RuntimeError('%d %s' % (code, phrase))\nfor code in (200, 404, 500):\n    try:\n        raise_for_status(code)\n        print(code, 'fine')\n    except RuntimeError as err:\n        print(code, 'stopped:', err)",
+   ""
+  ]
+ ],
+ "iter_content writes in chunks": [
+  [
+   "import os, tempfile\nbody = b'To be, or not to be, that is the question.'\ndef iter_content(data, size):\n    for start in range(0, len(data), size):\n        yield data[start:start + size]\nwith tempfile.TemporaryDirectory() as folder:\n    with open(os.path.join(folder, 'speech.txt'), 'wb') as file:\n        for chunk in iter_content(body, 16):\n            print(file.write(chunk))",
+   ""
+  ]
+ ],
+ "json.loads reads an API reply": [
+  [
+   "import json\nreply = ('{\"name\": \"Boston\", \"main\": {\"temp\": 285.44},'\n         ' \"weather\": [{\"main\": \"Clouds\"}]}')\ndata = json.loads(reply)\nprint(data['name'], data['weather'][0]['main'])\nprint(type(data).__name__, list(data))",
+   ""
+  ]
+ ],
+ "Kelvin to Celsius and Fahrenheit": [
+  [
+   "kelvin = 285.44\ncelsius = kelvin - 273.15\nfahrenheit = celsius * 9 / 5 + 32\nprint('Result: %.1f C and %.1f F' % (celsius, fahrenheit))",
+   ""
+  ]
+ ],
+ "An endpoint with an API key": [
+  [
+   "from urllib.parse import urlencode\nendpoint = 'https://api.openweathermap.org/data/2.5/forecast'\nparams = {'lat': 42.36, 'lon': -71.06, 'appid': 'KEY'}\nurl = endpoint + '?' + urlencode(params)\nprint(url)\nprint(url.replace('KEY', '***'))",
+   ""
+  ]
+ ],
+ "HTMLParser lists the tags and attributes": [
+  [
+   "from html.parser import HTMLParser\nclass Outline(HTMLParser):\n    def handle_starttag(self, tag, attrs):\n        print(tag, dict(attrs))\npage = ('<p id=\"a\">Hello, <b>world</b>!</p>'\n        '<a class=\"s\" href=\"/x\">link</a>')\nOutline().feed(page)",
+   ""
+  ]
+ ],
+ "select, get_text and get with ElementTree": [
+  [
+   "import xml.etree.ElementTree as ET\npage = ('<div><p id=\"a\">Hello, <b>world</b>!</p>'\n        '<p class=\"s\"><a href=\"/x\">link</a></p></div>')\nroot = ET.fromstring(page)\nby_id = root.findall(\".//*[@id='a']\")\nprint(len(by_id), repr(''.join(by_id[0].itertext())))\nlink = root.find(\".//p[@class='s']/a\")\nprint(link.get('href'), link.attrib)\nprint(root.findall(\".//*[@class='nope']\"))",
+   ""
+  ]
+ ],
+ "A regular expression against a parser": [
+  [
+   "import re\nhtml = '<a href=\"/x\">x</a> <a class=\"k\" href=\"/y\">y</a>'\nprint(re.findall('<a href=\"(.*?)\">', html))\nfrom html.parser import HTMLParser\nclass Links(HTMLParser):\n    found = []\n    def handle_starttag(self, tag, attrs):\n        if tag == 'a':\n            self.found.append(dict(attrs)['href'])\nLinks().feed(html)\nprint(Links.found)",
+   ""
+  ]
+ ],
+ "Resolve, defragment and de-duplicate links": [
+  [
+   "from urllib.parse import urljoin, urldefrag\nsite = 'https://example.com'\npage = site + '/guide/index.html'\nhrefs = ['intro.html', 'intro.html#top', '/about',\n         'https://other.org/x']\nseen = []\nfor href in hrefs:\n    full, fragment = urldefrag(urljoin(page, href))\n    if full.startswith(site) and full not in seen:\n        seen.append(full)\nprint(seen)",
+   ""
+  ]
+ ],
+ "The comic image and the Prev link": [
+  [
+   "import xml.etree.ElementTree as ET\nfrom urllib.parse import urljoin\npage = ('<body><div id=\"comic\">'\n        '<img src=\"//imgs.xkcd.com/comics/x.png\"/></div>'\n        '<a rel=\"prev\" href=\"/2/\">Prev</a></body>')\nroot = ET.fromstring(page)\nsrc = root.find(\".//*[@id='comic']/img\").get('src')\nprev = root.find(\".//a[@rel='prev']\").get('href')\nprint(urljoin('https://xkcd.com/3/', src))\nprint(urljoin('https://xkcd.com/3/', prev))",
+   ""
+  ]
+ ],
+ "Open the first search results": [
+  [
+   "import webbrowser, xml.etree.ElementTree as ET\nopened = []\nwebbrowser.open = opened.append\npage = ('<ul><a href=\"/p/one\"/><a href=\"/p/two\"/>'\n        '<a href=\"/p/three\"/></ul>')\nlinks = ET.fromstring(page).findall('.//a')\nfor link in links[:2]:\n    webbrowser.open('https://pypi.org' + link.get('href'))\nprint(len(links), 'found;', opened)",
+   ""
+  ]
+ ],
+ "A page built by a script": [
+  [
+   "import xml.etree.ElementTree as ET\nsource = ('<body><div id=\"app\"></div>'\n          '<script>show(\"Built by a script\")</script></body>')\nroot = ET.fromstring(source)\napp = root.find(\".//*[@id='app']\")\nprint('text in the source:', repr(app.text))\nscript = root.find('.//script').text\napp.text = script.split('\"')[1]\nprint('after the script ran:', repr(app.text))",
+   ""
+  ]
+ ],
+ "find_element and find_elements": [
+  [
+   "import xml.etree.ElementTree as ET\nroot = ET.fromstring('<body><p>one</p><p>two</p></body>')\ndef find_elements(path):\n    return root.findall(path)\ndef find_element(path):\n    return find_elements(path)[0]\nprint(len(find_elements('.//p')), find_element('.//p').text)\nprint(find_elements('.//h1'))\ntry:\n    find_element('.//h1')\nexcept IndexError:\n    print('Result: find_element fails when nothing matches')",
+   ""
+  ]
+ ],
+ "The shape of a Playwright program": [
+  [
+   "from contextlib import nullcontext\nclass Page:\n    def goto(self, url):\n        print('visiting', url)\n    def locator(self, css):\n        return 'element ' + css\nclass Playwright:\n    def new_page(self):\n        return Page()\nwith nullcontext(Playwright()) as p:\n    page = p.new_page()\n    page.goto('https://example.com/')\n    print(page.locator('h1'))",
+   ""
+  ]
+ ],
+ "Auto-waiting for an element": [
+  [
+   "looks = [None, None, 'Hello']  # what each look sees\ndef locator_text(limit):\n    for look, text in enumerate(looks[:limit], 1):\n        if text is not None:\n            return 'found %r on look %d' % (text, look)\n    return 'timeout after %d looks' % limit\nprint(locator_text(5))\nprint(locator_text(2))",
+   ""
+  ]
+ ]
+}
