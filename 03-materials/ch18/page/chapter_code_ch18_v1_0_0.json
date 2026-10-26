@@ -1,0 +1,381 @@
+{
+ "chapter": 18,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch18/SEN0414_Ch18_CSVJSONXML_3e_v2_0_0.pptx",
+ "about": "The code examples of the chapter 18 deck, in the order of the code slides (order = slide order). The page's chapter-code tab lists them by NAME in this order; every example is self-contained, uses the Python standard library (csv, json, xml.etree.ElementTree, io, os, tempfile) and, in three places, xmltodict, defusedxml and openpyxl, runs offline, reads no keyboard and opens no window. The data lives in memory (io.StringIO, io.BytesIO) or in a fresh temporary folder. The book's own files (example.csv, exampleWithHeader3.csv, example3.xlsx, my_data.xml, the removeCsvHeader folder) are not used: each example builds a small stand-in, and the slide says so. The Windows line-end example is a stand-in too: an io.TextIOWrapper asked for CRLF plays Windows. What an example prints is the same under xmltodict 0.13.0 and 1.0.4 (the examples avoid what differs: entities are only parsed by defusedxml and ElementTree). The expected result is what the run printed under Python 3.13.16 with xmltodict 0.13.0, defusedxml 0.7.1 and openpyxl 3.1.5, every example in this order. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed.",
+ "executed_with": {
+  "python": "3.13.16",
+  "library": "xmltodict 0.13.0, defusedxml 0.7.1, openpyxl 3.1.5",
+  "also_checked": "xmltodict 1.0.4 (the page's version)"
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [
+   "03-materials/ch18/assets/xmltodict-1.0.4-py3-none-any.whl",
+   "03-materials/ch18/assets/defusedxml-0.7.1-py2.py3-none-any.whl",
+   "03-materials/ch18/assets/openpyxl-3.1.5-py2.py3-none-any.whl",
+   "03-materials/ch18/assets/et_xmlfile-2.0.0-py3-none-any.whl"
+  ],
+  "wheel_sha256": {
+   "xmltodict-1.0.4-py3-none-any.whl": "a4a00d300b0e1c59fc2bfccb53d7b2e88c32f200df138a0dd2229f842497026a",
+   "defusedxml-0.7.1-py2.py3-none-any.whl": "a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61",
+   "openpyxl-3.1.5-py2.py3-none-any.whl": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2",
+   "et_xmlfile-2.0.0-py3-none-any.whl": "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa"
+  },
+  "page_requirements": [
+   "xmltodict 1.0.4, defusedxml 0.7.1, openpyxl 3.1.5 and its one dependency et_xmlfile 2.0.0, the pure-Python wheels that the page embeds (03-materials/ch18/assets, 08-tooling/ch18-page/pywheels_v1_0_0.json) and installs into its browser Python before the first example runs",
+   "the standard library modules csv, json, io, os, tempfile and xml.etree.ElementTree, and the built-ins print, len, range, enumerate, sorted, list, dict, tuple, int, str, type, set, repr, hasattr, next, getattr, open",
+   "A writable temporary folder (the file examples); no subprocess, no keyboard input, no network, no browser window"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "csv_split",
+   "name": "Why not split on commas",
+   "slide": 7,
+   "concepts": [
+    "The CSV Format",
+    "csv"
+   ],
+   "code": "import csv\nline = 'Alice,30,\"San Francisco, CA\"'\nprint('split:', line.split(','))\nprint('reader:', next(csv.reader([line])))\ntext = 'spam,eggs\\r\\nbacon,ham\\r\\n'\nrows = list(csv.reader(text.splitlines()))\nprint(len(rows), 'records of', len(rows[0]), 'fields')",
+   "expected": "split: ['Alice', '30', '\"San Francisco', ' CA\"']\nreader: ['Alice', '30', 'San Francisco, CA']\n2 records of 2 fields\n"
+  },
+  {
+   "order": 2,
+   "id": "reader_list",
+   "name": "reader and list()",
+   "slide": 8,
+   "concepts": [
+    "Reading CSV Files",
+    "csv",
+    "exampleWithHeader3.csv"
+   ],
+   "code": "import csv, os, tempfile\nos.chdir(tempfile.mkdtemp())\nwith open('example.csv', 'w', newline='') as f:\n    f.write('Name,Age\\r\\nAlice,30\\r\\nBob,25\\r\\n')\nwith open('example.csv', encoding='utf-8', newline='') as f:\n    data = list(csv.reader(f))\nprint(data)\nprint(data[1][0], data[2][1])\nprint(type(data[1][1]).__name__)",
+   "expected": "[['Name', 'Age'], ['Alice', '30'], ['Bob', '25']]\nAlice 25\nstr\n"
+  },
+  {
+   "order": 3,
+   "id": "for_loop",
+   "name": "Reading in a for loop",
+   "slide": 9,
+   "concepts": [
+    "Accessing Data in a for Loop",
+    "csv"
+   ],
+   "code": "import csv, io\ntext = 'Name,Note\\r\\nAlice,\"two\\r\\nlines\"\\r\\nBob,ok\\r\\n'\nf = io.StringIO(text, newline='')\nreader = csv.reader(f)\nfor row in reader:\n    print('Row #' + str(reader.line_num), row)\nprint('second pass:', list(reader))\nprint('has len:', hasattr(reader, '__len__'))",
+   "expected": "Row #1 ['Name', 'Note']\nRow #3 ['Alice', 'two\\r\\nlines']\nRow #4 ['Bob', 'ok']\nsecond pass: []\nhas len: False\n"
+  },
+  {
+   "order": 4,
+   "id": "next_header",
+   "name": "Handling header rows",
+   "slide": 10,
+   "concepts": [
+    "Handling Header Rows",
+    "removeCsvHeader.py"
+   ],
+   "code": "import csv, io\ntext = 'Name,Age\\r\\nAlice,30\\r\\nBob,25\\r\\n'\nreader = csv.reader(io.StringIO(text, newline=''))\nheader = next(reader)\nprint('header:', header)\nprint('rest:', list(reader))\ntricky = '\"Name\\r\\n(first)\",Age\\r\\nAlice,30\\r\\n'\nreader = csv.reader(io.StringIO(tricky, newline=''))\nprint([r for r in reader if reader.line_num != 1])",
+   "expected": "header: ['Name', 'Age']\nrest: [['Alice', '30'], ['Bob', '25']]\n[['Name\\r\\n(first)', 'Age'], ['Alice', '30']]\n"
+  },
+  {
+   "order": 5,
+   "id": "writer_basics",
+   "name": "writer and writerow()",
+   "slide": 14,
+   "concepts": [
+    "Writing CSV Files",
+    "csv"
+   ],
+   "code": "import csv, io\nout = io.StringIO(newline='')\nwriter = csv.writer(out)\nprint(writer.writerow(['spam', 'eggs', 'bacon', 'ham']))\nprint(writer.writerow(['Hello, world!', 'eggs', 'bacon', 'ham']))\nprint(writer.writerow([1, 3.141592, None, '', True]))\nprint(out.getvalue().encode())",
+   "expected": "21\n32\n19\nb'spam,eggs,bacon,ham\\r\\n\"Hello, world!\",eggs,bacon,ham\\r\\n1,3.141592,,,True\\r\\n'\n"
+  },
+  {
+   "order": 6,
+   "id": "tabs",
+   "name": "Tabs instead of commas",
+   "slide": 15,
+   "concepts": [
+    "Using Tabs Instead of Commas",
+    "csv"
+   ],
+   "code": "import csv, io\nout = io.StringIO(newline='')\nw = csv.writer(out, delimiter='\\t', lineterminator='\\n')\nw.writerow(['apples', 8, 'two words'])\nw.writerows([['cats', 3, 'x'], ['dogs', 5, 'y']])\nprint(out.getvalue().encode())\nback = list(csv.reader(io.StringIO(out.getvalue()), delimiter='\\t'))\nprint(back)",
+   "expected": "b'apples\\t8\\ttwo words\\ncats\\t3\\tx\\ndogs\\t5\\ty\\n'\n[['apples', '8', 'two words'], ['cats', '3', 'x'], ['dogs', '5', 'y']]\n"
+  },
+  {
+   "order": 7,
+   "id": "newline_blank",
+   "name": "newline='' and the double-spaced file",
+   "slide": 16,
+   "concepts": [
+    "Figure 18-1: a CSV file written without newline='' opened in a spreadsheet",
+    "csv",
+    "open"
+   ],
+   "code": "import csv, io\nrows = [['a', 'b'], ['c', 'd']]\ndef write(nl):\n    buf = io.BytesIO()\n    t = io.TextIOWrapper(buf, newline=nl)\n    csv.writer(t).writerows(rows); t.flush()\n    return buf.getvalue()\nfor nl in ('', '\\r\\n'):\n    data = write(nl)\n    text = io.StringIO(data.decode(), newline='')\n    print(repr(nl), data, len(list(csv.reader(text))))",
+   "expected": "'' b'a,b\\r\\nc,d\\r\\n' 2\n'\\r\\n' b'a,b\\r\\r\\nc,d\\r\\r\\n' 4\n"
+  },
+  {
+   "order": 8,
+   "id": "quoting",
+   "name": "Quoting and the quoting constants",
+   "slide": 17,
+   "concepts": [
+    "The CSV Format",
+    "csv"
+   ],
+   "code": "import csv, io\nrow = ['a b', 'c,d', 7, None, '']\ndef line(q):\n    s = io.StringIO(newline='')\n    csv.writer(s, quoting=q, escapechar='\\\\').writerow(row)\n    return s.getvalue()\nnames = ['QUOTE_MINIMAL', 'QUOTE_ALL', 'QUOTE_NONNUMERIC',\n         'QUOTE_NONE', 'QUOTE_STRINGS', 'QUOTE_NOTNULL']\nfor q in names: print(q, repr(line(getattr(csv, q))))",
+   "expected": "QUOTE_MINIMAL 'a b,\"c,d\",7,,\\r\\n'\nQUOTE_ALL '\"a b\",\"c,d\",\"7\",\"\",\"\"\\r\\n'\nQUOTE_NONNUMERIC '\"a b\",\"c,d\",7,\"\",\"\"\\r\\n'\nQUOTE_NONE 'a b,c\\\\,d,7,,\\r\\n'\nQUOTE_STRINGS '\"a b\",\"c,d\",7,,\"\"\\r\\n'\nQUOTE_NOTNULL '\"a b\",\"c,d\",\"7\",,\"\"\\r\\n'\n"
+  },
+  {
+   "order": 9,
+   "id": "encoding_bom",
+   "name": "Encoding and the byte order mark",
+   "slide": 18,
+   "concepts": [
+    "The CSV Format",
+    "open"
+   ],
+   "code": "import csv, io\ndata = 'Name,City\\r\\nZoe,İstanbul\\r\\n'.encode('utf-8-sig')\nprint(data[:3], data[3:12])\nprint(repr(data.decode('utf-8').split('\\r\\n')[0]))\nprint(repr(data.decode('utf-8-sig').split('\\r\\n')[0]))\nrows = list(csv.DictReader(io.StringIO(data.decode('utf-8'), newline='')))\nprint(list(rows[0]))",
+   "expected": "b'\\xef\\xbb\\xbf' b'Name,City'\n'\\ufeffName,City'\n'Name,City'\n['\\ufeffName', 'City']\n"
+  },
+  {
+   "order": 10,
+   "id": "dict_rw",
+   "name": "DictReader and DictWriter",
+   "slide": 19,
+   "concepts": [
+    "Reading CSV Files",
+    "Writing CSV Files",
+    "csv"
+   ],
+   "code": "import csv, io\ntext = 'Name,Age\\r\\nAlice,30\\r\\nBob\\r\\n'\nfor row in csv.DictReader(io.StringIO(text, newline='')):\n    print(dict(row))\nout = io.StringIO(newline='')\nw = csv.DictWriter(out, ['Name', 'Age'])\nw.writeheader()\nw.writerow({'Name': 'Dave', 'Age': 5})\nw.writerow({'Name': 'Eve'})\nprint(out.getvalue().splitlines())",
+   "expected": "{'Name': 'Alice', 'Age': '30'}\n{'Name': 'Bob', 'Age': None}\n['Name,Age', 'Dave,5', 'Eve,']\n"
+  },
+  {
+   "order": 11,
+   "id": "p13_loop",
+   "name": "Project 13, step 1: loop through the files",
+   "slide": 22,
+   "concepts": [
+    "Step 1: Loop Through Each File",
+    "removeCsvHeader.py",
+    "os"
+   ],
+   "code": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nnames = ('b.csv', 'a.csv', 'notes.txt', 'C.CSV')\nfor name in names: open(name, 'w').close()\nfor csv_filename in sorted(os.listdir('.')):\n    if not csv_filename.endswith('.csv'):\n        continue\n    print('Removing header from ' + csv_filename + '...')",
+   "expected": "Removing header from a.csv...\nRemoving header from b.csv...\n"
+  },
+  {
+   "order": 12,
+   "id": "p13_read",
+   "name": "Project 13, step 2: read the file",
+   "slide": 23,
+   "concepts": [
+    "Step 2: Read the File",
+    "removeCsvHeader.py",
+    "csv"
+   ],
+   "code": "import csv, io\nfor text in ('Name,Age\\r\\nAlice,30\\r\\n', ''):\n    reader = csv.reader(io.StringIO(text, newline=''))\n    print(next(reader, None), '->', list(reader))",
+   "expected": "['Name', 'Age'] -> [['Alice', '30']]\nNone -> []\n"
+  },
+  {
+   "order": 13,
+   "id": "p13_write",
+   "name": "Project 13, step 3: write the new file",
+   "slide": 24,
+   "concepts": [
+    "Step 3: Write the New CSV File",
+    "removeCsvHeader.zip",
+    "removeCsvHeader.py",
+    "csv"
+   ],
+   "code": "import csv, os, tempfile\nos.chdir(tempfile.mkdtemp())\nsrc = {'f1.csv': 'h1,h2\\r\\n1,a\\r\\n2,b\\r\\n',\n       'f2.csv': 'h1,h2\\r\\n3,c\\r\\n'}\nfor name, text in src.items():\n    reader = csv.reader(text.splitlines())\n    next(reader, None)\n    rows = list(reader)\n    with open('new_' + name, 'w', newline='') as f_out:\n        csv.writer(f_out).writerows(rows)\n    print(name, len(rows) + 1, '->', len(rows))",
+   "expected": "f1.csv 3 -> 2\nf2.csv 2 -> 1\n"
+  },
+  {
+   "order": 14,
+   "id": "col_total",
+   "name": "Ideas for similar programs: totals",
+   "slide": 25,
+   "concepts": [
+    "Ideas for Similar Programs",
+    "csv"
+   ],
+   "code": "import csv, io\ntext = 'Region,Sales\\r\\nNorth,120\\r\\nSouth,80\\r\\nNorth,60\\r\\nEast,40\\r\\n'\ntotals = {}\nfor row in csv.DictReader(io.StringIO(text, newline='')):\n    totals[row['Region']] = totals.get(row['Region'], 0) + int(row['Sales'])\nprint(totals)",
+   "expected": "{'North': 180, 'South': 80, 'East': 40}\n"
+  },
+  {
+   "order": 15,
+   "id": "formats_compare",
+   "name": "Three plaintext formats",
+   "slide": 29,
+   "concepts": [
+    "Versatile Plaintext Formats",
+    "csv",
+    "json",
+    "xml.etree.ElementTree"
+   ],
+   "code": "import json\nrows = [('Alice', 30), ('Bob', 25)]\nas_csv = 'Name,Age\\r\\n' + ''.join('%s,%d\\r\\n' % r for r in rows)\nas_json = json.dumps([{'Name': n, 'Age': a} for n, a in rows])\nfmt = '<person><Name>%s</Name><Age>%d</Age></person>'\nas_xml = '<people>' + ''.join(fmt % r for r in rows) + '</people>'\nprint(as_json)\nprint('characters:', len(as_csv), len(as_json), len(as_xml))",
+   "expected": "[{\"Name\": \"Alice\", \"Age\": 30}, {\"Name\": \"Bob\", \"Age\": 25}]\ncharacters: 28 58 111\n"
+  },
+  {
+   "order": 16,
+   "id": "json_loads",
+   "name": "Reading JSON with loads()",
+   "slide": 30,
+   "concepts": [
+    "JSON",
+    "Reading JSON Data",
+    "json"
+   ],
+   "code": "import json\ntext = '{\"name\": \"Alice\", \"age\": 30, \"car\": null, \"ok\": true, \"tags\": [\"a\", \"b\"]}'\ndata = json.loads(text)\nprint(data)\nprint(type(data).__name__, data['car'] is None, data['ok'] is True)\nprint([type(v).__name__ for v in data.values()])",
+   "expected": "{'name': 'Alice', 'age': 30, 'car': None, 'ok': True, 'tags': ['a', 'b']}\ndict True True\n['str', 'int', 'NoneType', 'bool', 'list']\n"
+  },
+  {
+   "order": 17,
+   "id": "json_dumps",
+   "name": "Writing JSON with dumps()",
+   "slide": 31,
+   "concepts": [
+    "Writing JSON Data",
+    "json"
+   ],
+   "code": "import json\nd = {'t': (1, 2), 1: 'a', 'city': 'İstanbul', 'ok': True, 'n': None}\ns = json.dumps(d)\nprint(s)\nback = json.loads(s)\nprint(back)\nprint(back == d)\nprint(json.dumps({'a': [1, 2]}, indent=2))",
+   "expected": "{\"t\": [1, 2], \"1\": \"a\", \"city\": \"\\u0130stanbul\", \"ok\": true, \"n\": null}\n{'t': [1, 2], '1': 'a', 'city': 'İstanbul', 'ok': True, 'n': None}\nFalse\n{\n  \"a\": [\n    1,\n    2\n  ]\n}\n"
+  },
+  {
+   "order": 18,
+   "id": "json_strict",
+   "name": "What JSON refuses",
+   "slide": 32,
+   "concepts": [
+    "JSON",
+    "json"
+   ],
+   "code": "import json\ndef msg(t):\n    try: json.loads(t); return 'accepted'\n    except json.JSONDecodeError as e: return '%s (column %d)' % (e.msg, e.colno)\ntexts = ['[\"spam\", \"eggs\",]', \"{'a': 1}\", '[None]', '[NaN]', '']\nfor t in texts:\n    print(repr(t), '->', msg(t))",
+   "expected": "'[\"spam\", \"eggs\",]' -> Illegal trailing comma before end of array (column 16)\n\"{'a': 1}\" -> Expecting property name enclosed in double quotes (column 2)\n'[None]' -> Expecting value (column 2)\n'[NaN]' -> accepted\n'' -> Expecting value (column 1)\n"
+  },
+  {
+   "order": 19,
+   "id": "json_files",
+   "name": "JSON and files",
+   "slide": 33,
+   "concepts": [
+    "Writing JSON Data",
+    "Reading JSON Data",
+    "json",
+    "open"
+   ],
+   "code": "import json, os, tempfile\nos.chdir(tempfile.mkdtemp())\ndata = {'city': 'İstanbul', 'n': [1, None, True]}\nwith open('p.json', 'w', encoding='utf-8') as f:\n    json.dump(data, f, ensure_ascii=False)\nprint(open('p.json', 'rb').read())\nwith open('p.json', encoding='utf-8') as f:\n    print(json.load(f) == data)\nprint(json.loads(b'\\xef\\xbb\\xbf[1]'))\ntry: json.loads('\\ufeff[1]')\nexcept json.JSONDecodeError as e: print('str with a BOM:', e.msg)",
+   "expected": "b'{\"city\": \"\\xc4\\xb0stanbul\", \"n\": [1, null, true]}'\nTrue\n[1]\nstr with a BOM: Unexpected UTF-8 BOM (decode using utf-8-sig)\n"
+  },
+  {
+   "order": 20,
+   "id": "et_read",
+   "name": "Reading XML with ElementTree",
+   "slide": 37,
+   "concepts": [
+    "XML",
+    "Reading XML Files",
+    "xml.etree.ElementTree"
+   ],
+   "code": "import xml.etree.ElementTree as ET\ndoc = ('<person><name>Alice Doe</name><age>30</age><car/>'\n       '<phone type=\"mobile\">415</phone>'\n       '<phone type=\"work\">123</phone></person>')\nroot = ET.fromstring(doc)\nprint(root.tag, [c.tag for c in root])\nprint(root.find('name').text, repr(root.find('car').text))\nprint([p.get('type') for p in root.findall('phone')])\nage = root.find('age').text\nprint(type(age).__name__, int(age) + 1)",
+   "expected": "person ['name', 'age', 'car', 'phone', 'phone']\nAlice Doe None\n['mobile', 'work']\nstr 31\n"
+  },
+  {
+   "order": 21,
+   "id": "et_traps",
+   "name": "Whitespace and errors in ElementTree",
+   "slide": 38,
+   "concepts": [
+    "XML",
+    "xml.etree.ElementTree"
+   ],
+   "code": "import xml.etree.ElementTree as ET\na = ET.fromstring('<a>\\n  <b>x</b>\\n</a>')\nprint(repr(a.text), repr(a[0].tail), repr(a[0].text))\nfor bad in ('<a><b></a>', '<a/><b/>', '<A></a>'):\n    try: ET.fromstring(bad)\n    except ET.ParseError as e: print(bad, '->', e)",
+   "expected": "'\\n  ' '\\n' 'x'\n<a><b></a> -> mismatched tag: line 1, column 8\n<a/><b/> -> junk after document element: line 1, column 4\n<A></a> -> mismatched tag: line 1, column 5\n"
+  },
+  {
+   "order": 22,
+   "id": "et_write",
+   "name": "Writing XML with ElementTree",
+   "slide": 39,
+   "concepts": [
+    "Writing XML Files",
+    "xml.etree.ElementTree"
+   ],
+   "code": "import io, xml.etree.ElementTree as ET\np = ET.Element('person')\nET.SubElement(p, 'name').text = 'Alice Doe'\nET.SubElement(p, 'note').text = 'a < b & \"c\"'\nET.SubElement(p, 'car').set('type', 'electric')\nprint(ET.tostring(p, encoding='unicode'))\nET.indent(p)\nprint(ET.tostring(p, encoding='unicode'))\nbuf = io.BytesIO()\nET.ElementTree(p).write(buf, encoding='utf-8', xml_declaration=True)\nprint(buf.getvalue()[:38])",
+   "expected": "<person><name>Alice Doe</name><note>a &lt; b &amp; \"c\"</note><car type=\"electric\" /></person>\n<person>\n  <name>Alice Doe</name>\n  <note>a &lt; b &amp; \"c\"</note>\n  <car type=\"electric\" />\n</person>\nb\"<?xml version='1.0' encoding='utf-8'?>\"\n"
+  },
+  {
+   "order": 23,
+   "id": "et_nil",
+   "name": "Namespaces and xsi:nil",
+   "slide": 40,
+   "concepts": [
+    "XML",
+    "Writing XML Files",
+    "xml.etree.ElementTree"
+   ],
+   "code": "import xml.etree.ElementTree as ET\nXSI = 'http://www.w3.org/2001/XMLSchema-instance'\nr = ET.fromstring('<p xmlns:xsi=\"%s\"><car xsi:nil=\"true\"/></p>' % XSI)\nprint(r[0].attrib)\nprint(repr(r[0].text))\nA = 'http://example.org/a'\nn = ET.fromstring('<a:r xmlns:a=\"%s\"><a:i>1</a:i><i>2</i></a:r>' % A)\nprint(n.tag, n.find('{%s}i' % A).text, n.find('i').text)",
+   "expected": "{'{http://www.w3.org/2001/XMLSchema-instance}nil': 'true'}\nNone\n{http://example.org/a}r 1 2\n"
+  },
+  {
+   "order": 24,
+   "id": "xmltodict_rt",
+   "name": "xmltodict: XML as a dictionary",
+   "slide": 41,
+   "concepts": [
+    "xmltodict",
+    "Reading XML Files",
+    "Writing XML Files"
+   ],
+   "code": "import xmltodict\nx = ('<person><name>Alice</name><age>30</age>'\n     '<phone type=\"mobile\">415</phone></person>')\nd = xmltodict.parse(x)\nprint(d)\nprint(xmltodict.parse('<a><b>1</b></a>'))\nprint(xmltodict.parse('<a><b>1</b><b>2</b></a>'))\nprint(xmltodict.unparse(d, pretty=True))\nprint(xmltodict.parse(xmltodict.unparse(d)) == d)",
+   "expected": "{'person': {'name': 'Alice', 'age': '30', 'phone': {'@type': 'mobile', '#text': '415'}}}\n{'a': {'b': '1'}}\n{'a': {'b': ['1', '2']}}\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<person>\n\t<name>Alice</name>\n\t<age>30</age>\n\t<phone type=\"mobile\">415</phone>\n</person>\nTrue\n"
+  },
+  {
+   "order": 25,
+   "id": "xml_security",
+   "name": "XML from someone else",
+   "slide": 43,
+   "concepts": [
+    "XML",
+    "xml.etree.ElementTree"
+   ],
+   "code": "import xml.etree.ElementTree as ET\nten = '&a;' * 10\ndoc = ('<!DOCTYPE d [<!ENTITY a \"lol\">'\n       '<!ENTITY b \"%s\">]><d>&b;</d>' % ten)\nn = len(ET.fromstring(doc).text)\nprint('ElementTree expands it:', n, 'characters')\nimport defusedxml, defusedxml.ElementTree as DET\ntry: DET.fromstring(doc)\nexcept defusedxml.EntitiesForbidden:\n    print('defusedxml refuses the entities')",
+   "expected": "ElementTree expands it: 30 characters\ndefusedxml refuses the entities\n"
+  },
+  {
+   "order": 26,
+   "id": "xl_make",
+   "name": "Excel-to-CSV converter: the workbook",
+   "slide": 47,
+   "concepts": [
+    "Practice Program: Excel-to-CSV Converter",
+    "excel-to-CSV converter skeleton",
+    "openpyxl",
+    "example3.xlsx",
+    "excelSpreadsheets.zip"
+   ],
+   "code": "import io, openpyxl\nwb = openpyxl.Workbook()\nws = wb.active\nws.title = 'Sales'\nrows = [['Region', 'Units'], ['North', 120], ['South', 80]]\nfor row in rows: ws.append(row)\nwb.create_sheet('Costs').append(['Item', 'Cost'])\nbuf = io.BytesIO(); wb.save(buf)\nagain = openpyxl.load_workbook(buf)\nprint(again.sheetnames, again['Sales']['B2'].value)",
+   "expected": "['Sales', 'Costs'] 120\n"
+  },
+  {
+   "order": 27,
+   "id": "xl_convert",
+   "name": "Excel-to-CSV converter: one CSV per sheet",
+   "slide": 48,
+   "concepts": [
+    "Practice Program: Excel-to-CSV Converter",
+    "excel-to-CSV converter skeleton",
+    "openpyxl",
+    "csv",
+    "shelve"
+   ],
+   "code": "import csv, os, tempfile, openpyxl\nos.chdir(tempfile.mkdtemp())\nwb = openpyxl.Workbook(); wb.active.title = 'Sales'\nfor row in (['Region', 'Units'], ['North', 120]): wb.active.append(row)\nwb.create_sheet('Costs').append(['Item', 'Cost'])\nfor ws in wb.worksheets:\n    with open('book-%s.csv' % ws.title, 'w', newline='') as f:\n        rows = list(ws.iter_rows(values_only=True))\n        csv.writer(f).writerows(rows)\n        print(f.name, len(rows), 'rows')",
+   "expected": "book-Sales.csv 2 rows\nbook-Costs.csv 1 rows\n"
+  }
+ ]
+}

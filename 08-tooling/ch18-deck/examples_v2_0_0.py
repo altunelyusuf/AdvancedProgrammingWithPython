@@ -1,0 +1,311 @@
+"""Chapter 18 deck examples, version 2.0.0: the code examples of the chapter 18 lecture deck (CSV, JSON and XML Files).
+One example per code slide, in slide order. The `groups` are the code boxes of the slide (each with the plain-language explanation that
+stands beside it); the lines of all groups of an example, in order, are the example's code: that text is what the deck shows after the '>>> '
+prompt of each line, what the chapter-code manifest lists and what the page runs. A code box holds at most 30 words (the deck standard counts
+a code box as a text box, the '>>> ' prompt of each line included), the explanation of a group at most 30 words.
+Every example is self-contained (it imports what it uses), uses the standard library (csv, json, xml.etree.ElementTree, io, os, tempfile) and, in the
+XML-security example, defusedxml, in the xmltodict example xmltodict and in the two Excel examples openpyxl (the packages the chapter page offers), runs
+offline, reads no keyboard and opens no window, keeps its documents in memory (io.StringIO, io.BytesIO) or in a fresh temporary folder, and prints an
+ordinary line first (never an error message, so that the page can draw its result). What an example prints is the same under xmltodict 0.13.0 and 1.0.4
+and under Python 3.13.x: no example prints a memory address, a time, a size that depends on the zip library or the text of an expat message that differs
+between expat versions.
+The book's own files (example.csv, exampleWithHeader3.csv, example3.xlsx, the removeCsvHeader folder) are not used: each example builds a small stand-in
+with the same kind of content, and the slide says so.
+Nothing here carries a result; deck_build_v2_0_0.py runs the code and takes every printed result from the run."""
+__version__ = "2.0.0"
+
+EXAMPLES = [
+    # ------------------------------------------------------------ part 1: reading CSV files
+    dict(id="csv_split", name="Why not split on commas", title="The CSV format: why split(',') is not enough", part=1, visual="csv_split",
+         concepts=["The CSV Format", "csv"],
+         groups=[
+             (["import csv", "line = 'Alice,30,\"San Francisco, CA\"'"],
+              "One CSV line with three fields. The third field holds a comma, so it is wrapped in double quotes."),
+             (["print('split:', line.split(','))", "print('reader:', next(csv.reader([line])))"],
+              "split() cuts at every comma and gives four pieces. csv.reader honours the quotes and gives the three fields."),
+             (["text = 'spam,eggs\\r\\nbacon,ham\\r\\n'", "rows = list(csv.reader(text.splitlines()))", "print(len(rows), 'records of', len(rows[0]), 'fields')"],
+              "A CSV file is a list of records, one per line; a record is a list of fields."),
+         ]),
+    dict(id="reader_list", name="reader and list()", title="Reading CSV files: reader(), list() and one value", part=1, visual="reader_list",
+         concepts=["Reading CSV Files", "csv", "exampleWithHeader3.csv"],
+         groups=[
+             (["import csv, os, tempfile", "os.chdir(tempfile.mkdtemp())", "with open('example.csv', 'w', newline='') as f:",
+               "    f.write('Name,Age\\r\\nAlice,30\\r\\nBob,25\\r\\n')"],
+              "A small stand-in for the book's example file, written in a fresh temporary folder."),
+             (["with open('example.csv', encoding='utf-8', newline='') as f:", "    data = list(csv.reader(f))", "print(data)"],
+              "Open the file, pass it to csv.reader(), and turn the reader into a list of rows."),
+             (["print(data[1][0], data[2][1])", "print(type(data[1][1]).__name__)"],
+              "data[row][column] picks one value. Every value is a string, even the 30."),
+         ]),
+    dict(id="for_loop", name="Reading in a for loop", title="Accessing data in a for loop: one row at a time", part=1, visual="for_loop",
+         concepts=["Accessing Data in a for Loop", "csv"],
+         groups=[
+             (["import csv, io", "text = 'Name,Note\\r\\nAlice,\"two\\r\\nlines\"\\r\\nBob,ok\\r\\n'", "f = io.StringIO(text, newline='')"],
+              "A StringIO stands in for the open file. Alice's note has a line break inside quotes: two lines, one record."),
+             (["reader = csv.reader(f)", "for row in reader:", "    print('Row #' + str(reader.line_num), row)"],
+              "A for loop holds one row in memory. reader.line_num counts lines of the file, not records."),
+             (["print('second pass:', list(reader))", "print('has len:', hasattr(reader, '__len__'))"],
+              "A reader can be used once, and it has no length. Call list() to keep the rows."),
+         ]),
+    dict(id="next_header", name="Handling header rows", title="Handling header rows: next() and line_num", part=1, visual="next_header",
+         concepts=["Handling Header Rows", "removeCsvHeader.py"],
+         groups=[
+             (["import csv, io", "text = 'Name,Age\\r\\nAlice,30\\r\\nBob,25\\r\\n'", "reader = csv.reader(io.StringIO(text, newline=''))"],
+              "A CSV text with a header row, read through a reader."),
+             (["header = next(reader)", "print('header:', header)", "print('rest:', list(reader))"],
+              "next() takes one row off the reader. What is left is the data without the header."),
+             (["tricky = '\"Name\\r\\n(first)\",Age\\r\\nAlice,30\\r\\n'", "reader = csv.reader(io.StringIO(tricky, newline=''))",
+               "print([r for r in reader if reader.line_num != 1])"],
+              "The line_num test fails when the header itself spans two lines: its record ends on line 2 and is kept."),
+         ]),
+    # ------------------------------------------------------------ part 2: writing CSV files
+    dict(id="writer_basics", name="writer and writerow()", title="Writing CSV files: writer() and writerow()", part=2, visual="writer_basics",
+         concepts=["Writing CSV Files", "csv"],
+         groups=[
+             (["import csv, io", "out = io.StringIO(newline='')", "writer = csv.writer(out)"],
+              "A StringIO stands in for open('output.csv', 'w', newline=''). The writer wraps it."),
+             (["print(writer.writerow(['spam', 'eggs', 'bacon', 'ham']))", "print(writer.writerow(['Hello, world!', 'eggs', 'bacon', 'ham']))",
+               "print(writer.writerow([1, 3.141592, None, '', True]))"],
+              "writerow() returns how many characters it wrote. It quotes a field that holds a comma and turns numbers and None into text."),
+             (["print(out.getvalue().encode())"], "The bytes show the CRLF that ends every record."),
+         ]),
+    dict(id="tabs", name="Tabs instead of commas", title="Using tabs instead of commas: delimiter and lineterminator", part=2, visual="tabs",
+         concepts=["Using Tabs Instead of Commas", "csv"],
+         groups=[
+             (["import csv, io", "out = io.StringIO(newline='')", "w = csv.writer(out, delimiter='\\t', lineterminator='\\n')"],
+              "delimiter changes the character between fields. lineterminator changes what ends a record."),
+             (["w.writerow(['apples', 8, 'two words'])", "w.writerows([['cats', 3, 'x'], ['dogs', 5, 'y']])", "print(out.getvalue().encode())"],
+              "writerows() writes a list of rows at once. Words with spaces need no quotes when the delimiter is a tab."),
+             (["back = list(csv.reader(io.StringIO(out.getvalue()), delimiter='\\t'))", "print(back)"],
+              "Read it back with the same delimiter. The rows are the ones that were written."),
+         ]),
+    dict(id="newline_blank", name="newline='' and the double-spaced file", title="newline='' and the double-spaced file (Figure 18-1)", part=2, visual="newline_blank",
+         concepts=["Figure 18-1: a CSV file written without newline='' opened in a spreadsheet", "csv", "open"],
+         groups=[
+             (["import csv, io", "rows = [['a', 'b'], ['c', 'd']]"],
+              "Two rows to write twice: once as the book advises, once as Windows would do without newline=''."),
+             (["def write(nl):", "    buf = io.BytesIO()", "    t = io.TextIOWrapper(buf, newline=nl)", "    csv.writer(t).writerows(rows); t.flush()",
+               "    return buf.getvalue()"],
+              "A TextIOWrapper asked for CRLF stands in for Windows, which turns every line feed into CRLF. It is a stand-in, not a Windows run."),
+             (["for nl in ('', '\\r\\n'):", "    data = write(nl)", "    text = io.StringIO(data.decode(), newline='')", "    print(repr(nl), data, len(list(csv.reader(text))))"],
+              "Windows writes CR CR LF, and a reader then finds an empty record after every row: the double spacing."),
+         ]),
+    dict(id="quoting", name="Quoting and the quoting constants", title="Quoting: six constants, one row", part=2, visual="quoting",
+         concepts=["The CSV Format", "csv"],
+         groups=[
+             (["import csv, io", "row = ['a b', 'c,d', 7, None, '']"],
+              "One row to write six times: it has a space, a comma, a number, None and an empty string."),
+             (["def line(q):", "    s = io.StringIO(newline='')", "    csv.writer(s, quoting=q, escapechar='\\\\').writerow(row)", "    return s.getvalue()"],
+              "line() writes the row with one quoting constant and returns the text. The escape character matters only for QUOTE_NONE."),
+             (["names = ['QUOTE_MINIMAL', 'QUOTE_ALL', 'QUOTE_NONNUMERIC',", "         'QUOTE_NONE', 'QUOTE_STRINGS', 'QUOTE_NOTNULL']",
+               "for q in names: print(q, repr(line(getattr(csv, q))))"],
+              "The default, QUOTE_MINIMAL, quotes only what must be quoted. QUOTE_NONE escapes the comma instead of quoting it."),
+         ]),
+    dict(id="encoding_bom", name="Encoding and the byte order mark", title="The encoding the chapter never names: utf-8 and the BOM", part=2, visual="encoding_bom",
+         concepts=["The CSV Format", "open"],
+         groups=[
+             (["import csv, io", "data = 'Name,City\\r\\nZoe,İstanbul\\r\\n'.encode('utf-8-sig')", "print(data[:3], data[3:12])"],
+              "Excel's CSV UTF-8 option starts the file with three bytes, a byte order mark, before the first letter."),
+             (["print(repr(data.decode('utf-8').split('\\r\\n')[0]))", "print(repr(data.decode('utf-8-sig').split('\\r\\n')[0]))"],
+              "Decoded as utf-8 the mark stays as an invisible first character. utf-8-sig removes it."),
+             (["rows = list(csv.DictReader(io.StringIO(data.decode('utf-8'), newline='')))", "print(list(rows[0]))"],
+              "The mark ends up inside the first key, so row['Name'] would raise a KeyError. Pass encoding to open()."),
+         ]),
+    dict(id="dict_rw", name="DictReader and DictWriter", title="DictReader and DictWriter: rows as dictionaries", part=2, visual="dict_rw",
+         concepts=["Reading CSV Files", "Writing CSV Files", "csv"],
+         groups=[
+             (["import csv, io", "text = 'Name,Age\\r\\nAlice,30\\r\\nBob\\r\\n'", "for row in csv.DictReader(io.StringIO(text, newline='')):",
+               "    print(dict(row))"],
+              "DictReader uses the first row as keys. A short row gets None for the missing value."),
+             (["out = io.StringIO(newline='')", "w = csv.DictWriter(out, ['Name', 'Age'])", "w.writeheader()",
+               "w.writerow({'Name': 'Dave', 'Age': 5})", "w.writerow({'Name': 'Eve'})", "print(out.getvalue().splitlines())"],
+              "DictWriter writes the header from its field names. A missing key becomes an empty field."),
+         ]),
+    # ------------------------------------------------------------ part 3: Project 13
+    dict(id="p13_loop", name="Project 13, step 1: loop through the files", title="Project 13, step 1: loop through each file", part=3, visual="p13_loop",
+         concepts=["Step 1: Loop Through Each File", "removeCsvHeader.py", "os"],
+         groups=[
+             (["import os, tempfile", "os.chdir(tempfile.mkdtemp())", "names = ('b.csv', 'a.csv', 'notes.txt', 'C.CSV')",
+               "for name in names: open(name, 'w').close()"],
+              "Four empty files stand in for the removeCsvHeader folder. One is a text file; one has a capital extension."),
+             (["for csv_filename in sorted(os.listdir('.')):", "    if not csv_filename.endswith('.csv'):", "        continue",
+               "    print('Removing header from ' + csv_filename + '...')"],
+              "Loop over the sorted names and skip what does not end in .csv. The test is case-sensitive: C.CSV is skipped."),
+         ]),
+    dict(id="p13_read", name="Project 13, step 2: read the file", title="Project 13, step 2: read the file, skip the first row", part=3, visual="p13_read",
+         concepts=["Step 2: Read the File", "removeCsvHeader.py", "csv"],
+         groups=[
+             (["import csv, io", "for text in ('Name,Age\\r\\nAlice,30\\r\\n', ''):", "    reader = csv.reader(io.StringIO(text, newline=''))"],
+              "Two texts: a file with a header and a row, and an empty file."),
+             (["    print(next(reader, None), '->', list(reader))"],
+              "next(reader, None) skips the header, and on an empty file it returns None instead of raising StopIteration."),
+         ]),
+    dict(id="p13_write", name="Project 13, step 3: write the new file", title="Project 13, step 3: write the new CSV file", part=3, visual="p13_write",
+         concepts=["Step 3: Write the New CSV File", "removeCsvHeader.zip", "removeCsvHeader.py", "csv"],
+         groups=[
+             (["import csv, os, tempfile", "os.chdir(tempfile.mkdtemp())", "src = {'f1.csv': 'h1,h2\\r\\n1,a\\r\\n2,b\\r\\n',",
+               "       'f2.csv': 'h1,h2\\r\\n3,c\\r\\n'}"],
+              "Two small files stand in for the folder of the project: each has a header row and some data rows."),
+             (["for name, text in src.items():", "    reader = csv.reader(text.splitlines())", "    next(reader, None)", "    rows = list(reader)"],
+              "Skip the header with next(), then keep the remaining rows in a list."),
+             (["    with open('new_' + name, 'w', newline='') as f_out:", "        csv.writer(f_out).writerows(rows)", "    print(name, len(rows) + 1, '->', len(rows))"],
+              "writerows() writes every remaining row to the new file. The print shows each file's rows before and after: one row less."),
+         ]),
+    dict(id="col_total", name="Ideas for similar programs: totals", title="Ideas for similar programs: total a column", part=3, visual="col_total",
+         concepts=["Ideas for Similar Programs", "csv"],
+         groups=[
+             (["import csv, io", "text = 'Region,Sales\\r\\nNorth,120\\r\\nSouth,80\\r\\nNorth,60\\r\\nEast,40\\r\\n'", "totals = {}"],
+              "Sales rows with a region name each. The program will add up the sales of each region."),
+             (["for row in csv.DictReader(io.StringIO(text, newline='')):", "    totals[row['Region']] = totals.get(row['Region'], 0) + int(row['Sales'])",
+               "print(totals)"],
+              "The values are text, so int() converts them before adding. The dictionary keeps one running total per region."),
+         ]),
+    # ------------------------------------------------------------ part 4: JSON
+    dict(id="formats_compare", name="Three plaintext formats", title="Versatile plaintext formats: one record in CSV, JSON and XML", part=4, visual="formats_compare",
+         concepts=["Versatile Plaintext Formats", "csv", "json", "xml.etree.ElementTree"],
+         groups=[
+             (["import json", "rows = [('Alice', 30), ('Bob', 25)]", "as_csv = 'Name,Age\\r\\n' + ''.join('%s,%d\\r\\n' % r for r in rows)"],
+              "The same two people, written three ways. First CSV: a header and one line per person."),
+             (["as_json = json.dumps([{'Name': n, 'Age': a} for n, a in rows])",
+               "fmt = '<person><Name>%s</Name><Age>%d</Age></person>'",
+               "as_xml = '<people>' + ''.join(fmt % r for r in rows) + '</people>'"],
+              "JSON repeats the keys for every person. XML repeats opening and closing tags."),
+             (["print(as_json)", "print('characters:', len(as_csv), len(as_json), len(as_xml))"],
+              "CSV is the smallest because it names the columns once. JSON and XML carry their structure in every record."),
+         ]),
+    dict(id="json_loads", name="Reading JSON with loads()", title="Reading JSON data: loads() and the six value types", part=4, visual="json_loads",
+         concepts=["JSON", "Reading JSON Data", "json"],
+         groups=[
+             (["import json", "text = '{\"name\": \"Alice\", \"age\": 30, \"car\": null, \"ok\": true, \"tags\": [\"a\", \"b\"]}'",
+               "data = json.loads(text)", "print(data)"],
+              "loads() reads JSON text and returns Python values: a dictionary here, with a list inside."),
+             (["print(type(data).__name__, data['car'] is None, data['ok'] is True)", "print([type(v).__name__ for v in data.values()])"],
+              "null became None, true became True, and the numbers kept their kind. The list of types shows each value."),
+         ]),
+    dict(id="json_dumps", name="Writing JSON with dumps()", title="Writing JSON data: dumps(), keys and a round trip", part=4, visual="json_dumps",
+         concepts=["Writing JSON Data", "json"],
+         groups=[
+             (["import json", "d = {'t': (1, 2), 1: 'a', 'city': 'İstanbul', 'ok': True, 'n': None}", "s = json.dumps(d)", "print(s)"],
+              "dumps() turns a Python value into JSON text. A tuple becomes a list; a number key becomes a string; non-ASCII letters are escaped."),
+             (["back = json.loads(s)", "print(back)", "print(back == d)"],
+              "Reading it back does not give the original: the tuple is a list and the key 1 is the text '1'."),
+             (["print(json.dumps({'a': [1, 2]}, indent=2))"], "indent=2 spreads the text over several lines for people to read."),
+         ]),
+    dict(id="json_strict", name="What JSON refuses", title="JSON is strict: what json.loads() refuses", part=4, visual="json_strict",
+         concepts=["JSON", "json"],
+         groups=[
+             (["import json", "def msg(t):", "    try: json.loads(t); return 'accepted'",
+               "    except json.JSONDecodeError as e: return '%s (column %d)' % (e.msg, e.colno)"],
+              "msg() reports what json.loads() says about a text: accepted, or the error and the column."),
+             (["texts = ['[\"spam\", \"eggs\",]', \"{'a': 1}\", '[None]', '[NaN]', '']", "for t in texts:", "    print(repr(t), '->', msg(t))"],
+              "A trailing comma, single quotes, Python's None and an empty text are all refused. NaN is accepted, though JSON has no NaN."),
+         ]),
+    dict(id="json_files", name="JSON and files", title="JSON and files: dump(), load() and the byte order mark", part=4, visual="json_files",
+         concepts=["Writing JSON Data", "Reading JSON Data", "json", "open"],
+         groups=[
+             (["import json, os, tempfile", "os.chdir(tempfile.mkdtemp())", "data = {'city': 'İstanbul', 'n': [1, None, True]}",
+               "with open('p.json', 'w', encoding='utf-8') as f:", "    json.dump(data, f, ensure_ascii=False)"],
+              "dump() writes JSON to a file. ensure_ascii=False keeps the letter as it is instead of a \\u escape."),
+             (["print(open('p.json', 'rb').read())", "with open('p.json', encoding='utf-8') as f:", "    print(json.load(f) == data)"],
+              "The bytes show the file as stored. load() reads it back, and this time the value equals the original."),
+             (["print(json.loads(b'\\xef\\xbb\\xbf[1]'))", "try: json.loads('\\ufeff[1]')",
+               "except json.JSONDecodeError as e: print('str with a BOM:', e.msg)"],
+              "Bytes with a byte order mark are accepted. A string that starts with the mark is refused."),
+         ]),
+    # ------------------------------------------------------------ part 5: XML
+    dict(id="et_read", name="Reading XML with ElementTree", title="Reading XML files: root, children, text and attributes", part=5, visual="et_read",
+         concepts=["XML", "Reading XML Files", "xml.etree.ElementTree"],
+         groups=[
+             (["import xml.etree.ElementTree as ET", "doc = ('<person><name>Alice Doe</name><age>30</age><car/>'", "       '<phone type=\"mobile\">415</phone>'",
+               "       '<phone type=\"work\">123</phone></person>')"],
+              "A small XML document. The car element is empty; the two phone elements carry an attribute."),
+             (["root = ET.fromstring(doc)", "print(root.tag, [c.tag for c in root])", "print(root.find('name').text, repr(root.find('car').text))"],
+              "fromstring() returns the root element. Looping over it gives its children. An empty element has the text None."),
+             (["print([p.get('type') for p in root.findall('phone')])", "age = root.find('age').text", "print(type(age).__name__, int(age) + 1)"],
+              "get() reads an attribute and findall() collects every match. Text is always a string: convert numbers yourself."),
+         ]),
+    dict(id="et_traps", name="Whitespace and errors in ElementTree", title="ElementTree: whitespace stays, and broken XML raises ParseError", part=5, visual="et_traps",
+         concepts=["XML", "xml.etree.ElementTree"],
+         groups=[
+             (["import xml.etree.ElementTree as ET", "a = ET.fromstring('<a>\\n  <b>x</b>\\n</a>')", "print(repr(a.text), repr(a[0].tail), repr(a[0].text))"],
+              "The spaces and line breaks between tags are kept as text of the parent and tail of the child."),
+             (["for bad in ('<a><b></a>', '<a/><b/>', '<A></a>'):", "    try: ET.fromstring(bad)", "    except ET.ParseError as e: print(bad, '->', e)"],
+              "XML is strict: closing tags must match, there is one root, and capital letters count."),
+         ]),
+    dict(id="et_write", name="Writing XML with ElementTree", title="Writing XML files: Element, SubElement, tostring and indent", part=5, visual="et_write",
+         concepts=["Writing XML Files", "xml.etree.ElementTree"],
+         groups=[
+             (["import io, xml.etree.ElementTree as ET", "p = ET.Element('person')", "ET.SubElement(p, 'name').text = 'Alice Doe'",
+               "ET.SubElement(p, 'note').text = 'a < b & \"c\"'", "ET.SubElement(p, 'car').set('type', 'electric')"],
+              "Element makes the root; SubElement adds a child. The text with < and & will be escaped when written."),
+             (["print(ET.tostring(p, encoding='unicode'))", "ET.indent(p)", "print(ET.tostring(p, encoding='unicode'))"],
+              "tostring() gives one long line. indent() adds line breaks and spaces for people to read."),
+             (["buf = io.BytesIO()", "ET.ElementTree(p).write(buf, encoding='utf-8', xml_declaration=True)", "print(buf.getvalue()[:38])"],
+              "ElementTree.write() saves to a file or stream; xml_declaration=True adds the line that starts an XML file."),
+         ]),
+    dict(id="et_nil", name="Namespaces and xsi:nil", title="Namespaces and xsi:nil: names are not what they seem", part=5, visual="et_nil",
+         concepts=["XML", "Writing XML Files", "xml.etree.ElementTree"],
+         groups=[
+             (["import xml.etree.ElementTree as ET", "XSI = 'http://www.w3.org/2001/XMLSchema-instance'",
+               "r = ET.fromstring('<p xmlns:xsi=\"%s\"><car xsi:nil=\"true\"/></p>' % XSI)"],
+              "The book writes a missing value as xsi:nil. The prefix xsi stands for a web address declared in the document."),
+             (["print(r[0].attrib)", "print(repr(r[0].text))"],
+              "ElementTree shows the attribute under its full name, in braces. It does not interpret nil: the text is simply None."),
+             (["A = 'http://example.org/a'", "n = ET.fromstring('<a:r xmlns:a=\"%s\"><a:i>1</a:i><i>2</i></a:r>' % A)",
+               "print(n.tag, n.find('{%s}i' % A).text, n.find('i').text)"],
+              "A name in a namespace is written {address}name. i and a:i are different elements."),
+         ]),
+    dict(id="xmltodict_rt", name="xmltodict: XML as a dictionary", title="xmltodict: XML as a dictionary of strings", part=5, visual="xmltodict_rt",
+         concepts=["xmltodict", "Reading XML Files", "Writing XML Files"],
+         groups=[
+             (["import xmltodict", "x = ('<person><name>Alice</name><age>30</age>'", "     '<phone type=\"mobile\">415</phone></person>')", "d = xmltodict.parse(x)", "print(d)"],
+              "parse() returns a dictionary. The attribute of phone has an @ in front of its key, and its text is under #text."),
+             (["print(xmltodict.parse('<a><b>1</b></a>'))", "print(xmltodict.parse('<a><b>1</b><b>2</b></a>'))"],
+              "One b gives a string; two b elements give a list. A program must expect both."),
+             (["print(xmltodict.unparse(d, pretty=True))", "print(xmltodict.parse(xmltodict.unparse(d)) == d)"],
+              "unparse() writes the dictionary back as XML, and the round trip returns the same dictionary."),
+         ]),
+    dict(id="xml_security", name="XML from someone else", title="XML from someone else: entities and defusedxml", part=5, visual="xml_security",
+         concepts=["XML", "xml.etree.ElementTree"],
+         groups=[
+             (["import xml.etree.ElementTree as ET", "ten = '&a;' * 10", "doc = ('<!DOCTYPE d [<!ENTITY a \"lol\">'",
+               "       '<!ENTITY b \"%s\">]><d>&b;</d>' % ten)"],
+              "A tiny cousin of the billion laughs attack: entity b stands for ten copies of entity a, and a stands for lol."),
+             (["n = len(ET.fromstring(doc).text)", "print('ElementTree expands it:', n, 'characters')"],
+              "The standard parser expands the entities inside the document. Each further level multiplies the size by ten."),
+             (["import defusedxml, defusedxml.ElementTree as DET", "try: DET.fromstring(doc)", "except defusedxml.EntitiesForbidden:",
+               "    print('defusedxml refuses the entities')"],
+              "defusedxml raises an error at once for entities, so the document is never expanded."),
+         ]),
+    # ------------------------------------------------------------ part 6: practice program
+    dict(id="xl_make", name="Excel-to-CSV converter: the workbook", title="Practice program: a workbook to convert", part=6, visual="xl_make",
+         concepts=["Practice Program: Excel-to-CSV Converter", "excel-to-CSV converter skeleton", "openpyxl", "example3.xlsx", "excelSpreadsheets.zip"],
+         groups=[
+             (["import io, openpyxl", "wb = openpyxl.Workbook()", "ws = wb.active", "ws.title = 'Sales'"],
+              "A new workbook with one sheet called Sales. It stands in for the book's spreadsheet files."),
+             (["rows = [['Region', 'Units'], ['North', 120], ['South', 80]]", "for row in rows: ws.append(row)", "wb.create_sheet('Costs').append(['Item', 'Cost'])"],
+              "append() adds a row after the last one. create_sheet() adds a second sheet."),
+             (["buf = io.BytesIO(); wb.save(buf)", "again = openpyxl.load_workbook(buf)", "print(again.sheetnames, again['Sales']['B2'].value)"],
+              "Save into memory, load it again, and read a cell: the numbers stay numbers."),
+         ]),
+    dict(id="xl_convert", name="Excel-to-CSV converter: one CSV per sheet", title="Practice program: write one CSV file for each sheet", part=6, visual="xl_convert",
+         concepts=["Practice Program: Excel-to-CSV Converter", "excel-to-CSV converter skeleton", "openpyxl", "csv", "shelve"],
+         groups=[
+             (["import csv, os, tempfile, openpyxl", "os.chdir(tempfile.mkdtemp())", "wb = openpyxl.Workbook(); wb.active.title = 'Sales'",
+               "for row in (['Region', 'Units'], ['North', 120]): wb.active.append(row)", "wb.create_sheet('Costs').append(['Item', 'Cost'])"],
+              "The same kind of workbook, built in memory: a Sales sheet with two rows and a Costs sheet with one."),
+             (["for ws in wb.worksheets:", "    with open('book-%s.csv' % ws.title, 'w', newline='') as f:",
+               "        rows = list(ws.iter_rows(values_only=True))", "        csv.writer(f).writerows(rows)", "        print(f.name, len(rows), 'rows')"],
+              "Loop over the sheets. Write a file for each, named after the workbook and the sheet, with one CSV row for each row."),
+         ]),
+]
+BY_ID = {e["id"]: e for e in EXAMPLES}
+assert len(BY_ID) == len(EXAMPLES)
+
+
+def code_lines(ex):
+    return [l for g, _ in ex["groups"] for l in g]
+
+
+def code_text(ex):
+    return "\n".join(code_lines(ex))
