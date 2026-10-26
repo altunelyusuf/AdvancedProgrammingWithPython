@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+"""sen0414_lineage_ch14_repair2_control_note v1_0_0 - adds the controller's three own runs of Page/Ch14 on page v9_96_0 to the NOT MET finding of register 2.278.0. A NEW file."""
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import sen0414_lineage_standard_v1_2_0 as W
+src = W.newest(); t = open(src, encoding="utf-8").read()
+n = ("CONTROLLER'S OWN RUNS of the chapter check Page/Ch14 v1_2_0 on page v9_96_0 (three runs, serial under the page-test lock, started 14:27 UTC, ended 15:33 UTC; logs 08-tooling/control-iter20-logs/pagechk_Page_Ch14_v9_96_0_run1.log, _run2.log, _run3.log, each ending 'PAGE TESTED: v9_96_0'): all three PASSED (402 features passed, 0 failed). That is the chance the executor and the coordinator described: the failure depends on the order in which the exercise probes pick their tokens, and the two failing runs of the executor (400 passed, 2 failed) and the controller's reproduction of the leak (4 wrong real runs in 16 probe rounds on the page data, sys.path from 5 to 18 entries) stand. A check that passes by chance on a page with a measured fault does not meet the criterion: v9_96_0 stays NOT MET, the repair (template 9.52.3, page v9_97_0, brief 08-tooling/briefs/iter20/r5/BRIEF_TK_Ret_Ch14_Page_Build.md) is the first open item, and its proof asks for at least five runs of Page/Ch14 and the leak probe on the real template file. This also says that a single pass of Page/ChNN on an earlier page proves little for the leak; the leak probe on the page data is the measure for chapters 10 to 13 (0 wrong real runs).")
+t += "\nex:TK_Ret_Ch14_Page_Build backlog:hasAuditNote %s .\n" % W.lit(n)
+print(os.path.basename(W.write_new(src, t, "the controller's three runs of Page/Ch14 on v9_96_0 pass by chance, NOT MET stands")))
