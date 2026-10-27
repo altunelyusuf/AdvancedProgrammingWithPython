@@ -1,0 +1,154 @@
+{
+ "_version": "2.0.0",
+ "_note": "Made from the chapter-code manifest 03-materials/ch15/page/chapter_code_ch15_v1_0_0.json (same code, same order): one cell per manifest example, name = the example's name. New file over examples_out_v1_0_0.json (the earlier deck's transcript), which stays unchanged; the page-data builder 2.25.0 reads the newest examples_out in the deck folder first.",
+ "Before the sign-in: version, state, scopes": [
+  [
+   "import ezsheets, google_standin\ngoogle_standin.uninstall()\nprint('ezsheets', ezsheets.__version__)\nprint('signed in:', ezsheets.IS_INITIALIZED)\nprint('sheets scope:', ezsheets.SCOPES_SHEETS[0])\nprint('drive scope:', ezsheets.SCOPES_DRIVE[0])",
+   ""
+  ]
+ ],
+ "What a token file holds": [
+  [
+   "import json, pickle\nfrom google.oauth2.credentials import Credentials\ncreds = Credentials(token='FAKE-access', refresh_token='FAKE-refresh',\n    token_uri='https://oauth2.googleapis.com/token',\n    scopes=['https://www.googleapis.com/auth/spreadsheets'])\nfor key, value in json.loads(creds.to_json()).items():\n    print(key, '=', value)\nprint(type(pickle.loads(pickle.dumps(creds))).__name__)",
+   ""
+  ]
+ ],
+ "The sign-in address the library builds": [
+  [
+   "from google_auth_oauthlib.flow import Flow\nSCOPE = 'https://www.googleapis.com/auth/spreadsheets'\ncfg = {'installed': {'client_id': 'FAKE', 'client_secret': 'FAKE',\n    'auth_uri': 'https://accounts.google.com/o/oauth2/auth',\n    'token_uri': 'https://oauth2.googleapis.com/token'}}\nflow = Flow.from_client_config(cfg, [SCOPE],\n    redirect_uri='http://localhost:8080/')\nurl, state = flow.authorization_url(access_type='offline')\nq = dict(p.split('=') for p in url.split('?')[1].split('&'))\nfor k in ('response_type', 'access_type', 'code_challenge_method'):\n    print(k, '=', q[k])",
+   ""
+  ]
+ ],
+ "The challenge: a hash of a secret": [
+  [
+   "import hashlib, base64\nverifier = b'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk'\ndigest = hashlib.sha256(verifier).digest()\nchallenge = base64.urlsafe_b64encode(digest).rstrip(b'=')\nprint('verifier :', verifier.decode())\nprint('challenge:', challenge.decode())",
+   ""
+  ]
+ ],
+ "Loading a pickle can run code": [
+  [
+   "import pickle\nclass Trap:\n    def __reduce__(self):\n        return (print, ('this line ran while loading',))\ndata = pickle.dumps(Trap())\nprint('file written:', len(data), 'bytes')\npickle.loads(data)",
+   ""
+  ]
+ ],
+ "Valid, expired and renewable tokens": [
+  [
+   "import datetime as dt\nfrom google.oauth2.credentials import Credentials\nnow = dt.datetime.now(dt.timezone.utc).replace(tzinfo=None)\nfor name, h in (('fresh', 1), ('stale', -1), ('week old', -168)):\n    c = Credentials('X', 'X', expiry=now + dt.timedelta(hours=h))\n    print(name, '| valid:', c.valid, '| expired:', c.expired)",
+   ""
+  ]
+ ],
+ "Create a spreadsheet and list spreadsheets": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nss = ezsheets.Spreadsheet()\nother = ezsheets.createSpreadsheet('Boringcoin')\nprint(ss.title, '|', other.title)\nprint(ezsheets.listSpreadsheets())\nprint(len(g.log), 'requests so far')",
+   ""
+  ]
+ ],
+ "Open one spreadsheet by id and by address": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nss = ezsheets.Spreadsheet(g.load('SHEET123', 'Boringcoin', [['A']]))\nurl = 'https://docs.google.com/spreadsheets/d/SHEET123/edit#gid=0'\nprint(ezsheets.Spreadsheet('SHEET123').title)\nprint(ezsheets.Spreadsheet(url).title)\nprint(ezsheets.getIdFromUrl(url))\nprint(ezsheets.getIdFromUrl('https://docs.google.com/spreadsheets/d/SHEET123'))",
+   ""
+  ]
+ ],
+ "Spreadsheet attributes you can and cannot set": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nss = ezsheets.Spreadsheet()\nss.title = 'Sweigart Books'\nprint(ss.title, ss.sheetTitles, ss.id, ss.url)\nfor name in ('id', 'url', 'sheetTitles'):\n    try: setattr(ss, name, 'x')\n    except AttributeError as e: print(name, '->', e)",
+   ""
+  ]
+ ],
+ "Upload a file and download in six formats": [
+  [
+   "import ezsheets, google_standin, os, tempfile\ng = google_standin.install()\nos.chdir(tempfile.mkdtemp())\nopen('data.csv', 'w').write('a,b\\n1,2\\n')\nprint(ezsheets.upload('data.csv').title)\nss = ezsheets.Spreadsheet(g.load('X', 'Sweigart Books (DO NOT DELETE)', [['T']]))\nfor fmt in ('Excel', 'CSV', 'TSV', 'PDF', 'ODS', 'HTML'):\n    print(fmt, '->', getattr(ss, 'downloadAs' + fmt)())",
+   ""
+  ]
+ ],
+ "Delete: to the Trash, or for good": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nss = ezsheets.Spreadsheet()\nkeep = ezsheets.createSpreadsheet('Keep me')\nss.delete()\nprint(g.log[-1][0], g.log[-1][3])\nprint(ezsheets.listSpreadsheets())\nss.delete(permanent=True)\nprint(g.log[-1][0], 'then', list(ezsheets.listSpreadsheets().values()))",
+   ""
+  ]
+ ],
+ "Read and write a cell": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nrows = [['PRODUCE', 'COST', 'POUNDS'], ['Okra', '2.26', '38.6']]\nsheet = ezsheets.Spreadsheet(g.load('P', 'produce', rows)).sheets[0]\ng.log.clear()\nprint(sheet['A1'], sheet[1, 1], sheet['B2'], sheet[2, 2])\nprint(len(g.log), 'requests to read four cells')\nsheet['B2'] = 30\nprint(repr(sheet['B2']), '|', g.log[-1][0], g.log[-1][2].split('&')[0])\nsheet.refresh()\nprint(repr(sheet['B2']))",
+   ""
+  ]
+ ],
+ "Addresses and column letters": [
+  [
+   "import ezsheets\nprint(ezsheets.convertAddress('A2'), ezsheets.convertAddress(1, 2))\nprint(ezsheets.convertAddress((2, 5)))\nL, N = ezsheets.getColumnLetterOf, ezsheets.getColumnNumberOf\nprint(L(2), L(27), L(999))\nprint(N('B'), N('ZZZ'))",
+   ""
+  ]
+ ],
+ "Rows and columns: getRow, getColumn, updateRow": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nrows = [['PRODUCE', 'COST', 'POUNDS'], ['Okra', '2.26', '38.6'],\n        ['Garlic', '1.19', '10']]\nsheet = ezsheets.Spreadsheet(g.load('P', 'produce', rows)).sheets[0]\nprint(sheet.getRow(2))\nprint(sheet.getColumn('A') == sheet.getColumn(1), sheet.getColumn(1)[:3])\nsheet.updateRow(3, ['Pumpkin', '11.50', '20'])\nsheet.updateColumn(1, [v.upper() for v in sheet.getColumn(1)])\nprint(sheet.getRows())",
+   ""
+  ]
+ ],
+ "One request per cell, or one for the column": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nvalues = [str(n) for n in range(1, 9)]\nsheet = ezsheets.Spreadsheet(g.load('S', 'Counts', [['']] * 8)).sheets[0]\ng.log.clear()\nfor row, value in enumerate(values, 1): sheet[1, row] = value\nprint('cell by cell:', len(g.log), 'requests')\ng.log.clear()\nsheet.updateColumn(1, values)\nprint('whole column:', len(g.log), 'request')",
+   ""
+  ]
+ ],
+ "Create, move and delete sheets": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nss = ezsheets.Spreadsheet()\nprint(ss.Sheet('Spam'))\nss.createSheet('Eggs')\nss.createSheet('Bacon', 0)\nprint(ss.sheetTitles)\nss.sheets[0].index = 2\nprint(ss.sheetTitles)\nss.sheets[1].delete()\nprint(ss.sheetTitles)",
+   ""
+  ]
+ ],
+ "Copy a sheet and clear a sheet": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nrows = [['PRODUCE', 'COST', 'POUNDS'], ['Okra', '2.26', '38.6']]\nsource = ezsheets.Spreadsheet(g.load('P', 'produce', rows)).sheets[0]\ntarget = ezsheets.Spreadsheet()\nsource.copyTo(target)\ntarget.refresh()\nprint(target.sheetTitles, target.sheets[1].getRows())\nsource.clear()\nprint(source.getRows(), source.rowCount, source.columnCount)",
+   ""
+  ]
+ ],
+ "Surprises of the library": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\na = ezsheets.Spreadsheet().sheets[0]\nb = ezsheets.Spreadsheet().sheets[0]\nprint('equal:', a == b, '| ids', a.sheetId, b.sheetId)\nnames = ezsheets.Spreadsheet(g.load('Q', 'Q', [['Alice', '1']])).sheets[0]\nprint('Alice in sheet:', 'Alice' in names)\nprint('empty cell is', repr(names['C1']))",
+   ""
+  ]
+ ],
+ "Collect e-mail addresses from form answers": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nanswers = [['Timestamp', 'Name', 'Email address'],\n           ['10:00', 'Ada', 'ada@example.org'],\n           ['10:05', 'Alan', 'alan@example.org'],\n           ['10:09', 'Ada', 'ada@example.org']]\nsheet = ezsheets.Spreadsheet(g.load('F', 'Responses', answers)).sheets[0]\nemails = sheet.getColumn(3)[1:]\nprint(emails)\nprint(sorted(set(emails)))",
+   ""
+  ]
+ ],
+ "Quota errors: the library waits and retries": [
+  [
+   "import ezsheets, google_standin, time, types\ng = google_standin.install()\npauses = []\nezsheets.time = types.SimpleNamespace(sleep=pauses.append, time=time.time)\ng.fail = [(429, 'RESOURCE_EXHAUSTED')] * 20\ntry:\n    ezsheets.Spreadsheet()\nexcept Exception as e:\n    print(len(g.log), 'tries,', sum(pauses), 'seconds,', type(e).__name__)\nezsheets.time = time",
+   ""
+  ]
+ ],
+ "Project 11, step 1: audit the ledger": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nledger = [['PRE-MINE', 'Alice', '1000'], ['PRE-MINE', 'Bob', '500'],\n          ['Alice', 'Bob', '200'], ['Bob', 'Carol', '150']]\nsheet = ezsheets.Spreadsheet(g.load('B', 'Boringcoin', ledger)).sheets[0]\naccounts = {}\nfor sender, recipient, amount in sheet.getRows():\n    if sender != 'PRE-MINE':\n        accounts[sender] = accounts.get(sender, 0) - int(amount)\n    accounts[recipient] = accounts.get(recipient, 0) + int(amount)\nprint(accounts)\nprint('Total Boringcoins:', sum(accounts.values()))",
+   ""
+  ]
+ ],
+ "The audit stops at an empty row": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nledger = [['PRE-MINE', 'Alice', '1000'], ['Alice', 'Bob', '200']]\nsheet = ezsheets.Spreadsheet(g.load('B', 'Boringcoin', ledger)).sheets[0]\nsheet.rowCount += 1\nprint('audit of', len(sheet.getRows()), 'rows')\ntry: total = sum(int(row[2]) for row in sheet.getRows())\nexcept ValueError as e: print('stopped:', e)",
+   ""
+  ]
+ ],
+ "Project 11, step 2: add a transaction": [
+  [
+   "import ezsheets, google_standin, sys\ng = google_standin.install()\nsys.argv = ['add.py', 'Al Sweigart', 'Eve', '2000']\nsender, recipient, amount = sys.argv[1:]\nledger = [['PRE-MINE', 'Alice', '1000'], ['Alice', 'Bob', '200']]\nsheet = ezsheets.Spreadsheet(g.load('B', 'Boringcoin', ledger)).sheets[0]\ng.log.clear()\nsheet.rowCount += 1\nfor col, value in enumerate((sender, recipient, amount), 1):\n    sheet[col, sheet.rowCount] = value\nprint(sheet.getRow(sheet.rowCount), '|', len(g.log), 'requests')",
+   ""
+  ]
+ ],
+ "Two programs add a row at the same time": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nledger = [['PRE-MINE', 'Alice', '1000'], ['Alice', 'Bob', '200']]\nfirst = ezsheets.Spreadsheet(g.load('B', 'Boringcoin', ledger)).sheets[0]\nsecond = ezsheets.Spreadsheet('B').sheets[0]\nfor who, sheet in (('first', first), ('second', second)):\n    sheet.rowCount += 1; sheet[1, sheet.rowCount] = who\n    print(who, 'writes to row', sheet.rowCount)\nfirst.refresh()\nprint(first.rowCount, first.getRow(3))",
+   ""
+  ]
+ ],
+ "Finding mistakes: check the totals": [
+  [
+   "import ezsheets, google_standin\ng = google_standin.install()\nbeans = [['Qty', 'Price', 'Total'], ['4', '25', '100'],\n         ['3', '40', '130'], ['10', '12', '120']]\nrows = ezsheets.Spreadsheet(g.load('BEAN', 'Beans', beans)).sheets[0].getRows()\nfor n, (qty, price, total) in enumerate(rows[1:], 2):\n    if int(qty) * int(price) != int(total):\n        print('row', n, 'says', total, 'is', int(qty) * int(price))",
+   ""
+  ]
+ ]
+}
