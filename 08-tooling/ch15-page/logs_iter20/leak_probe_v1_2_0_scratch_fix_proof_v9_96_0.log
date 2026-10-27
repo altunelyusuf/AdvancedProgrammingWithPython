@@ -1,0 +1,15 @@
+Scratch proof (NOT a deliverable; the page v9_96_0 is unchanged). ROOT CAUSE of the FAIL of v9_96_0 (leak_probe_v1_2_0_template_9_52_4_page_v9_96_0.log, same drifts 4, 7, 9, 5, 9 as v9_95_0):
+the template runs py_boot (line 893) BEFORE it defines the worker's _run/_restore (line 894), so the boot program of pywheels_v9_95_1.json found no _restore (globals().get('_restore') is None) and wrapped nothing.
+Repair that works: wrap _restore lazily, from _before_run (the template calls it inside the first program, when _restore exists):
+  def _before_run():
+      _reset_library()
+      _o = globals().get('_restore')
+      if _o is not None and not getattr(_o, '_library_wrapped', False):
+          def _restore_and_reset(*_a, **_k):
+              try: return _o(*_a, **_k)
+              finally: _reset_library()
+          _restore_and_reset._library_wrapped = True
+          globals()['_restore'] = _restore_and_reset
+Printed by: flock /tmp/page_test.lock python3 08-tooling/sen0414_exercise_leak_probe_v1_2_0.py NODE_PATH WORK 08-tooling/course_page_template_v9_52_4.html SCRATCH_COPY.html 4 4 1 3
+seed 1 course_page_template_v9_52_4.html 3.13.2 15 programs 4 rounds 4 probes 315 runs baseline_bad=0 wrong_real_runs=0 state_drifts=0 final: {"path":5,"cwd":"/home/pyodide","modules_outside_lib":0} PASS
+seed 3 course_page_template_v9_52_4.html 3.13.2 15 programs 4 rounds 4 probes 315 runs baseline_bad=0 wrong_real_runs=0 state_drifts=0 final: {"path":5,"cwd":"/home/pyodide","modules_outside_lib":0} PASS
