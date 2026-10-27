@@ -1,0 +1,7 @@
+Scratch proof (NOT a deliverable; the page v9_95_0 is unchanged): the leak probe v1_2_0 on a copy of page v9_95_0 in a temporary folder whose py_boot ALSO restores ezsheets and google_standin after every run
+(it wraps the worker's global _restore once, from _before_run, and calls the same reset as _before_run; the template file is not changed). Root cause of the FAIL in leak_probe_v1_2_0_template_9_52_4_page_v9_95_0.log:
+the page's boot restores the chapter library only BEFORE the next program (_before_run), the template restores sys.path/modules/cwd/environ/tracemalloc/warnings/... AFTER a program, and the probe reads the public
+attributes of every /lib/ module loaded at boot after EVERY run: a program that replaces ezsheets.time (LibraryThrottle) or ezsheets.SCOPES_SHEETS, SCOPES_DRIVE, DEFAULT_NEW_ROW_COUNT (TokenPickle) leaves it replaced until the next run.
+Printed by: flock /tmp/page_test.lock python3 08-tooling/sen0414_exercise_leak_probe_v1_2_0.py NODE_PATH WORK 08-tooling/course_page_template_v9_52_4.html SCRATCH_COPY.html 4 4 1 3
+seed 1 course_page_template_v9_52_4.html 3.13.2 15 programs 4 rounds 4 probes 315 runs baseline_bad=0 wrong_real_runs=0 state_drifts=0 final: {"path":5,"cwd":"/home/pyodide","modules_outside_lib":0} PASS
+seed 3 course_page_template_v9_52_4.html 3.13.2 15 programs 4 rounds 4 probes 315 runs baseline_bad=0 wrong_real_runs=0 state_drifts=0 final: {"path":5,"cwd":"/home/pyodide","modules_outside_lib":0} PASS
