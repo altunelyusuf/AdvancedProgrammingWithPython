@@ -1,0 +1,25 @@
+{
+ "_version": "9.95.0",
+ "wheels": [
+  {
+   "file": "pypdf-6.20.1-py3-none-any.whl",
+   "sha256": "aa5a55ddcffdc5e5ab291d5decb23f6383f4e56f8e3263dc39af41fff03885ad",
+   "project": "https://pypi.org/project/pypdf/6.20.1/",
+   "licence": "BSD-3-Clause"
+  },
+  {
+   "file": "python_docx-1.2.0-py3-none-any.whl",
+   "sha256": "3fd478f3250fbbbfd3b94fe1e985955737c145627498896a8a6bf81f4baf66c7",
+   "project": "https://pypi.org/project/python-docx/1.2.0/",
+   "licence": "MIT"
+  }
+ ],
+ "pyodide_packages": [
+  "lxml",
+  "pillow",
+  "cryptography",
+  "typing-extensions"
+ ],
+ "boot_python": "import os, sys, gc, warnings\nimport pypdf, docx, docx.document\n_cwd0 = os.getcwd()\n_LIBS = {}\nfor _n, _m in list(sys.modules.items()):\n    if _m is not None and (_n.split('.')[0] in ('pypdf', 'docx')):\n        _LIBS[_n] = (_m, dict(vars(_m)))\ndef _gc_clean():\n    with warnings.catch_warnings():\n        warnings.simplefilter('ignore')\n        gc.collect(); gc.collect()\ndef _reset_library():\n    # one Python serves many programs in the browser; put the folder and the attributes of pypdf and python-docx back as they were at start\n    os.chdir(_cwd0)\n    for _n, (_m, _v) in _LIBS.items():\n        sys.modules[_n] = _m\n        for _k in [_k for _k in vars(_m) if _k not in _v]:\n            delattr(_m, _k)\n        vars(_m).update(_v)\ndef _before_run():\n    _gc_clean()\n    _reset_library()\n    _o = globals().get('_restore')\n    if _o is not None and not getattr(_o, '_gc_wrapped', False):\n        def _restore_and_gc(*_a, **_k):\n            try:\n                return _o(*_a, **_k)\n            finally:\n                _reset_library()\n                _gc_clean()\n        _restore_and_gc._gc_wrapped = True\n        globals()['_restore'] = _restore_and_gc\n",
+ "_note": "Pure-Python wheels the chapter 17 page embeds (template 9.45.0 unpacks them in the page's Python worker) so that pypdf and python-docx run in the browser; Pyodide 0.28.2's own distribution has neither, but it has the packages in pyodide_packages (lxml 6.0.0, Pillow 11.3.0, cryptography 45.0.5, typing_extensions 4.14.1), which the page loads first; the research ran lxml 6.1.3, Pillow 12.3.0 and cryptography 50.0.2. Downloaded from PyPI with pip on 2026-10-12; the page-data builder refuses a file whose SHA-256 differs from the one recorded here. pdfminer.six is not embedded (6.6 MB of character-map data), so the one example that uses it is shown as recorded. boot_python defines _before_run(), which the Python worker calls before every program and which puts the working folder back as it was at start. VERSION 9.95.0 (new file over 1.0.0; the wheels and Pyodide packages are those of 1.0.0, unchanged): boot_python imports pypdf and docx at start, and _before_run (called by the template at the start of every program) collects garbage with warnings ignored, puts the working folder and the module attributes of pypdf and python-docx back as they were at start, and wraps the worker's _restore once, lazily, so that the same happens after EVERY program (the template starts the boot program before it defines _restore, so the wrap is made from inside _before_run). The chapter's programs build PDF and Word files in memory or in a temporary folder and may leave file objects in reference cycles; the collection closes them before the next program."
+}
