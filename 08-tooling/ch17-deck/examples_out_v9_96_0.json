@@ -1,0 +1,172 @@
+{
+ "_version": "9.96.0",
+ "_note": "Made from chapter_code_ch17_v1_0_0.json: the deck's 28 code examples in slide order, the code as the manifest has it.",
+ "Inside a small PDF": [
+  [
+   "import base64, zlib\nblob = ('eNq1kF9PgzAUxd/5FPdliT5oW6DAzMLD/sVEjcvAp2UP3SjIgtS0nW5+etsNRx'\n        'BfLUlJT8+95/46WEznN+TWdwhgEJudMxqh9PjO0YRpVokCLVjBFbjmdhnHDq8z'\n        'a3J/mU8m9FBmauVbJwR2X6OJ2Nca3LbQ+1U4F7VGyX6j7cEqBI2Z4if5nlcfXJ'\n        'db1pb7f+SaTXKbYiPRE89KNhaHFTZHD2OI8BotuRJ7ueXK1NnW9kfAOzPFsRmz'\n        '1qaFAtrFpG3cI68L/QqhZVFacvbmjFOwbUgEaQ6EYvAxpBlcfQpZZdeQ7mCWQs'\n        'fkXjyGrRKNx6Y1LZvc4J8xwy5m2MekfUy/S5CwisnjHRAXmwUvyfQHGZ8+WZg3'\n        'MaOB69oJQXLI+6QHyXPHTO/gy4KAUo9CDq02hPNN3WrU72mEkL4W9n1uRHuaj/'\n        'saJUGracnKikv7Rkn5xSFCSyE0kOYllWZSn2ACb+gMBrPnufMNU9nkUQ==')\ndata = zlib.decompress(base64.b64decode(blob))\nprint(data[:8], data.rstrip().endswith(b'%%EOF'))\ntext = data.decode()\nstart = text.split('startxref')[1].split()[0]\nprint(text.count(' obj'), 'objects; table at byte', start)",
+   ""
+  ]
+ ],
+ "PdfReader, pages and page size": [
+  [
+   "import io, pypdf\nwriter = pypdf.PdfWriter()\nfor width in (100, 200, 300): writer.add_blank_page(width, 100)\nbuf = io.BytesIO()\nwriter.write(buf)\nreader = pypdf.PdfReader(buf)\nprint(len(reader.pages), 'pages; locked:', reader.is_encrypted)\nwidths = [float(p.mediabox.width) for p in reader.pages]\nprint('width of each page in points:', widths)",
+   ""
+  ]
+ ],
+ "Extracting text: stream order and the black box": [
+  [
+   "import base64, io, zlib, pypdf\nblob = ('eNq1kF9PgzAUxd/5FPdliT5oW6DAzMLD/sVEjcvAp2UP3SjIgtS0nW5+etsNRx'\n        'BfLUlJT8+95/46WEznN+TWdwhgEJudMxqh9PjO0YRpVokCLVjBFbjmdhnHDq8z'\n        'a3J/mU8m9FBmauVbJwR2X6OJ2Nca3LbQ+1U4F7VGyX6j7cEqBI2Z4if5nlcfXJ'\n        'db1pb7f+SaTXKbYiPRE89KNhaHFTZHD2OI8BotuRJ7ueXK1NnW9kfAOzPFsRmz'\n        '1qaFAtrFpG3cI68L/QqhZVFacvbmjFOwbUgEaQ6EYvAxpBlcfQpZZdeQ7mCWQs'\n        'fkXjyGrRKNx6Y1LZvc4J8xwy5m2MekfUy/S5CwisnjHRAXmwUvyfQHGZ8+WZg3'\n        'MaOB69oJQXLI+6QHyXPHTO/gy4KAUo9CDq02hPNN3WrU72mEkL4W9n1uRHuaj/'\n        'saJUGracnKikv7Rkn5xSFCSyE0kOYllWZSn2ACb+gMBrPnufMNU9nkUQ==')\npdf = zlib.decompress(base64.b64decode(blob))\nreader = pypdf.PdfReader(io.BytesIO(pdf))\nprint('stream order:', repr(reader.pages[0].extract_text()))\nlayout = reader.pages[0].extract_text(extraction_mode='layout')\nprint('layout mode:', layout.split())\nprint('under the black box:', reader.pages[1].extract_text())",
+   ""
+  ]
+ ],
+ "Post-processing extracted text": [
+  [
+   "import re\nraw = 'The ﬁrst chap-\\nter was long.\\nIt had two\\nlines.'\nprint(repr(raw))\ntext = raw.replace('ﬁ', 'fi')\ntext = re.sub(r'-\\n', '', text)\ntext = re.sub(r'(?<!\\.)\\n', ' ', text)\nprint(repr(text))\nprompt = 'Fix the line breaks of this text:\\n' + raw\nn = len(prompt.split())\nprint(len(raw.split()), 'words in; a prompt of', n, 'words')",
+   ""
+  ]
+ ],
+ "Extracting images, and a page with no text": [
+  [
+   "import io, os, tempfile, pypdf\nfrom PIL import Image\nbuf = io.BytesIO()\nImage.new('RGB', (60, 40), 'red').save(buf, 'PDF')\npage = pypdf.PdfReader(buf).pages[0]\nprint('text found:', repr(page.extract_text()))\nprint('images found:', len(page.images))\nos.chdir(tempfile.mkdtemp())\nfor i, image in enumerate(page.images, 1):\n    open('page1_%d.bin' % i, 'wb').write(image.data)\nsize = Image.open(io.BytesIO(page.images[0].data)).size\nprint(os.listdir('.'), size)",
+   ""
+  ]
+ ],
+ "Copying pages: a tuple is a range": [
+  [
+   "import io, pypdf\nsrc = pypdf.PdfWriter()\nfor n in range(1, 7): src.add_blank_page(100 * n, 100)\nbuf = io.BytesIO()\nsrc.write(buf)\ndef pick(pages):\n    w = pypdf.PdfWriter()\n    w.append(io.BytesIO(buf.getvalue()), pages)\n    return [int(p.mediabox.width) // 100 for p in w.pages]\nfor pages in ((0, 5), (0, 5, 2), [0, 5]):\n    print(pages, '->', pick(pages))",
+   ""
+  ]
+ ],
+ "merge() and blank pages": [
+  [
+   "import io, pypdf\nw = pypdf.PdfWriter()\nfor n in (1, 2, 3): w.add_blank_page(100 * n, 100)\nother = pypdf.PdfWriter()\nfor n in (7, 8): other.add_blank_page(100 * n, 100)\nbuf = io.BytesIO()\nother.write(buf)\ndef sizes(): return [int(p.mediabox.width) for p in w.pages]\nw.merge(1, buf, pages=(0, 2))\nprint('after merge at 1:', sizes())\nw.insert_blank_page(index=2)\nprint('after insert_blank_page:', sizes())",
+   ""
+  ]
+ ],
+ "Rotating pages": [
+  [
+   "import pypdf\npage = pypdf.PdfWriter().add_blank_page(100, 100)\nprint('start:', page.rotation)\nseen = [page.rotate(angle).rotation for angle in (90, 270, -90, 180)]\nprint('rotation after each turn:', seen)\ntry:\n    page.rotate(45)\nexcept ValueError:\n    print('45 degrees refused: use multiples of 90')",
+   ""
+  ]
+ ],
+ "Watermarks and overlays": [
+  [
+   "import io, pypdf\nfrom PIL import Image\ndef page_with(size, color):\n    buf = io.BytesIO()\n    Image.new('RGB', size, color).save(buf, 'PDF')\n    return pypdf.PdfReader(buf).pages[0]\nbase = page_with((60, 40), 'blue')\ntop = page_with((30, 20), 'red')\nbefore = len(base.images)\nbase.merge_page(top)\nprint('images:', before, '->', len(base.images))\nprint('drawn first to last:', [im.image.size for im in base.images])",
+   ""
+  ]
+ ],
+ "Encrypt and decrypt": [
+  [
+   "import io, pypdf\nwriter = pypdf.PdfWriter()\nwriter.add_blank_page(100, 100)\nwriter.encrypt('userpw', algorithm='AES-256')\nbuf = io.BytesIO()\nwriter.write(buf)\nreader = pypdf.PdfReader(buf)\nprint('locked:', reader.is_encrypted)\ntry: reader.pages[0]\nexcept Exception as e: print('refused:', type(e).__name__)\nfor guess in ('wrong', 'userpw'):\n    print(repr(guess), '->', reader.decrypt(guess).name)\nprint(len(reader.pages), 'page after decrypt')",
+   ""
+  ]
+ ],
+ "User and owner passwords": [
+  [
+   "import io, pypdf\nwriter = pypdf.PdfWriter()\nwriter.add_blank_page(100, 100)\nwriter.encrypt(user_password='open-me', owner_password='boss',\n               algorithm='AES-256')\nbuf = io.BytesIO()\nwriter.write(buf)\nfor pw in ('open-me', 'boss', 'guess'):\n    reader = pypdf.PdfReader(io.BytesIO(buf.getvalue()))\n    print(pw, '->', reader.decrypt(pw).name)",
+   ""
+  ]
+ ],
+ "Which lock was used": [
+  [
+   "import io, pypdf\ndef lock(**options):\n    w = pypdf.PdfWriter()\n    w.add_blank_page(100, 100)\n    w.encrypt('pw', **options)\n    b = io.BytesIO()\n    w.write(b)\n    return pypdf.PdfReader(b).trailer['/Encrypt']\nfor algo in (None, 'AES-128', 'AES-256'):\n    e = lock(algorithm=algo)\n    v, r, bits = e['/V'], e['/R'], e['/Length']\n    print('%s: V=%d R=%d bits=%d' % (algo, v, r, bits))",
+   ""
+  ]
+ ],
+ "Project 12, step 1: find the PDF files": [
+  [
+   "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nfor name in ('b.pdf', 'A.pdf', 'c.PDF', 'notes.txt'):\n    open(name, 'w').close()\npdf_filenames = []\nfor filename in os.listdir('.'):\n    if filename.lower().endswith('.pdf'):\n        pdf_filenames.append(filename)\npdf_filenames.sort(key=str.lower)\nprint(pdf_filenames)",
+   ""
+  ]
+ ],
+ "Project 12, steps 2 and 3: combine and save": [
+  [
+   "import os, tempfile, pypdf\nos.chdir(tempfile.mkdtemp())\nw = pypdf.PdfWriter()\nw.add_blank_page(100, 100)\nfor name in ('b.pdf', 'A.pdf', 'c.PDF'):\n    w.add_blank_page(100, 100)\n    w.write(name)\npdf_filenames = ['A.pdf', 'b.pdf', 'c.PDF']\nwriter = pypdf.PdfWriter()\nfor name in pdf_filenames:\n    writer.append(name, (1, len(pypdf.PdfReader(name).pages)))\nwriter.write('combined.pdf')\nsizes = [len(pypdf.PdfReader(n).pages) for n in pdf_filenames]\nprint(sizes, 'pages ->', len(pypdf.PdfReader('combined.pdf').pages))",
+   ""
+  ]
+ ],
+ "A .docx file is a ZIP of XML": [
+  [
+   "import io, zipfile, docx\ndoc = docx.Document()\ndoc.add_paragraph('Hello, world!')\nbuf = io.BytesIO()\ndoc.save(buf)\nprint(buf.getvalue()[:2], 'starts every ZIP file')\nz = zipfile.ZipFile(buf)\nnames = z.namelist()\npart = 'word/document.xml'\nprint(len(names), 'parts;', part, 'in names:', part in names)\nbody = z.read(part).decode().split('<w:body>')[1]\nprint(body[:46])",
+   ""
+  ]
+ ],
+ "Paragraphs and runs": [
+  [
+   "import docx\ndoc = docx.Document()\np = doc.add_paragraph('A plain ')\np.add_run('bold').bold = True\np.add_run(' word.')\ntable = doc.add_table(rows=1, cols=1)\ntable.cell(0, 0).text = 'in a table'\nprint([x.text for x in doc.paragraphs])\nprint([(r.text, r.bold) for r in p.runs])\nprint('table text is kept apart:', doc.tables[0].cell(0, 0).text)",
+   ""
+  ]
+ ],
+ "Getting the full text of a .docx file": [
+  [
+   "import io, docx\ndoc = docx.Document()\nfor line in ('Title line', 'First paragraph.', 'Second paragraph.'):\n    doc.add_paragraph(line)\nbuf = io.BytesIO()\ndoc.save(buf)\ndef get_text(source):\n    doc = docx.Document(source)\n    return '\\n'.join(p.text for p in doc.paragraphs)\ntext = get_text(io.BytesIO(buf.getvalue()))\nprint(text)\nprint(len(text.split('\\n')), 'lines,', len(text.split()), 'words')",
+   ""
+  ]
+ ],
+ "Styles: paragraph kind and run kind": [
+  [
+   "import docx\ndoc = docx.Document()\np = doc.add_paragraph('Quoted words')\np.style = 'Quote'\nprint('paragraph style:', p.style.name)\nrun = p.add_run(' and a run')\nrun.style = 'Quote Char'\nprint('run style:', run.style.name)\nprint(len(doc.styles), 'styles in a new document')",
+   ""
+  ]
+ ],
+ "Styles: the kind and the exact name": [
+  [
+   "import docx\ndoc = docx.Document()\np = doc.add_paragraph('Quoted words')\ntry: p.style = 'Quote Char'\nexcept ValueError: print('a paragraph refuses a character style')\ntry: doc.add_paragraph('x', 'List Number ')\nexcept KeyError: print('style not found: names match exactly')\ndoc.add_paragraph('x', 'List Number')\nprint('List Number found:', doc.paragraphs[-1].style.name)",
+   ""
+  ]
+ ],
+ "Run attributes: three states": [
+  [
+   "import docx\ndoc = docx.Document()\nrun = doc.add_paragraph().add_run('text')\nfor value in (True, False, None):\n    run.bold = value\n    print('bold =', value, '-> reads back', run.bold)\nrun.italic, run.underline = True, True\nprint('italic:', run.italic, '| underline:', run.underline)\nrun.strike = True\nprint('run.strike ->', run.font.strike)\nrun.font.strike = True\nprint('run.font.strike ->', run.font.strike)",
+   ""
+  ]
+ ],
+ "Writing paragraphs and runs": [
+  [
+   "import io, docx\ndoc = docx.Document()\np = doc.add_paragraph('Hello world!')\nr = p.add_run(' A second run.')\nr.italic = True\nprint(type(p).__name__, type(r).__name__)\nbuf = io.BytesIO()\ndoc.save(buf)\nagain = docx.Document(buf)\ntexts = [r.text for r in again.paragraphs[0].runs]\nprint(len(again.paragraphs), 'paragraph; runs:', texts)",
+   ""
+  ]
+ ],
+ "Adding headings": [
+  [
+   "import docx\ndoc = docx.Document()\nfor level in (0, 1, 9):\n    h = doc.add_heading('Heading %d' % level, level)\n    print('level', level, '->', h.style.name)\ntry: doc.add_heading('Too deep', 10)\nexcept ValueError: print('level 10 refused: levels are 0 to 9')",
+   ""
+  ]
+ ],
+ "Line and page breaks": [
+  [
+   "import docx\nfrom docx.enum.text import WD_BREAK\ndoc = docx.Document()\np = doc.add_paragraph('First line')\np.add_run().add_break(WD_BREAK.LINE)\np.add_run('second line, same paragraph')\ndoc.add_page_break()\ndoc.add_paragraph('Second page')\nxml = doc.element.xml\npages = xml.count('w:type=\"page\"')\nprint(pages, 'page break;', xml.count('<w:br'), 'breaks in all')",
+   ""
+  ]
+ ],
+ "Adding pictures": [
+  [
+   "import io, docx\nfrom PIL import Image\nfrom docx.shared import Cm, Inches\npng = io.BytesIO()\nImage.new('RGB', (60, 80), 'red').save(png, 'PNG')\ndoc = docx.Document()\nsizes = {'as is': {}, '1 inch wide': {'width': Inches(1)},\n         '2 cm high': {'height': Cm(2)}}\nfor label, kw in sizes.items():\n    shape = doc.add_picture(io.BytesIO(png.getvalue()), **kw)\n    print(label, '->', int(shape.width), 'x', int(shape.height), 'EMU')",
+   ""
+  ]
+ ],
+ "Practice program: PDF Paranoia, walk the tree": [
+  [
+   "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('tree/sub')\nfor path in ('tree/a.pdf', 'tree/sub/B.PDF', 'tree/c.txt'):\n    open(path, 'w').close()\nfound = []\nfor folder, dirs, names in os.walk('tree'):\n    for name in names:\n        if name.lower().endswith('.pdf'):\n            found.append(os.path.join(folder, name))\nprint(sorted(found))",
+   ""
+  ]
+ ],
+ "Practice program: PDF Paranoia, lock and check": [
+  [
+   "import os, tempfile, pypdf\nos.chdir(tempfile.mkdtemp())\nw = pypdf.PdfWriter()\nw.add_blank_page(100, 100)\nw.write('a.pdf')\nw = pypdf.PdfWriter(clone_from='a.pdf')\nw.encrypt('swordfish', algorithm='AES-256')\nw.write('a_encrypted.pdf')\nr = pypdf.PdfReader('a_encrypted.pdf')\nok = r.is_encrypted and r.decrypt('swordfish').name != 'NOT_DECRYPTED'\nif ok: os.remove('a.pdf')\nprint(ok, os.listdir('.'))",
+   ""
+  ]
+ ],
+ "Practice program: Custom Invitations": [
+  [
+   "import docx\ndoc = docx.Document()\nguests = ['Prof. Plum', 'Miss Scarlet', 'Col. Mustard']\nfor i, guest in enumerate(guests):\n    doc.add_paragraph('You are invited,')\n    doc.add_paragraph(guest, 'Title')\n    if i < len(guests) - 1:\n        doc.add_page_break()\nnames = [p.text for p in doc.paragraphs if p.style.name == 'Title']\nxml = doc.element.xml\nprint(len(names), 'guests;', xml.count('w:type=\"page\"'), 'page breaks')\nprint(names)",
+   ""
+  ]
+ ],
+ "Practice program: PDF Password Breaker": [
+  [
+   "import io, pypdf\nwords = ['apple', 'banana', 'cherry', 'dragonfruit']\nw = pypdf.PdfWriter()\nw.add_blank_page(100, 100)\nw.encrypt('CHERRY', algorithm='AES-256')\nbuf = io.BytesIO()\nw.write(buf)\nreader = pypdf.PdfReader(buf)\ntries = [g for x in words for g in (x, x.upper())]\nfor attempts, guess in enumerate(tries, 1):\n    if reader.decrypt(guess).name != 'NOT_DECRYPTED': break\nprint('found', guess, 'after', attempts, 'of at most', len(tries))",
+   ""
+  ]
+ ]
+}
