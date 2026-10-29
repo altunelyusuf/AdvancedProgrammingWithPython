@@ -1,0 +1,408 @@
+{
+ "decisions": [
+  {
+   "topic": "Scope of the pair",
+   "decision": "Two papers, a midterm and a make-up, both over chapters 1, 2, 3, 4, 6, 7 and 8 (chapter 5, Debugging, is out); one sitting of 60 minutes each; physical printed paper; one printed answer key per paper.",
+   "reason": "This is the Owner's statement of 2026-10-29 and his chapter decision of 2026-10-30 in the brief 08-tooling/briefs/exam/r3/BRIEF_TK4_Design.md. Interactive-HTML delivery, QTI export and CATS export are dropped by the same statement, so none is designed."
+  },
+  {
+   "topic": "Reuse of the existing exam engine",
+   "decision": "Reuse the idea of an exam kind with a time, a preferred level list and a mix of types (XEXAM in 08-tooling/course_page_template_v9_52_4.html) and the type names of the 17 types; do not reuse its chapter-specific, screen-bound question generation.",
+   "reason": "The page engine makes 19 to 20 questions of one chapter for a screen, with typed answers and a 40 or 85 minute timer. A printed cross-chapter paper of 60 minutes needs a different assembler, so the engine of the paper is new and only the vocabulary of types and the exam-kind idea carry over."
+  },
+  {
+   "topic": "Reuse of the chapter question banks",
+   "decision": "The 839 items of the newest banks of chapters 1, 2, 3, 4, 6, 7, 8 are seeds only, never exam items.",
+   "reason": "The Owner's ruling of 2026-10-30: page questions are open to students before the exam, are chapter specific and rarely cross-section, so they may seed better questions but are not used directly. Measured in the newest banks: 357 of 839 items (42.5 per cent) are at Apply or Analyze and none at Evaluate or Create, so they could not give the required majority at the higher levels even if they were allowed."
+  },
+  {
+   "topic": "Reuse of the Exam desk, release tool and assessment ontology",
+   "decision": "Nothing in 08-tooling/sen0414_exam_desk_v2_2_0.html or 08-tooling/sen0414_exam_release_v1_0_0.py is reused. The weights of 04-assessment/sen0414_assessment_v1_0_0.ttl are reused as they are (Midterm 30 per cent).",
+   "reason": "The Exam desk and the release code belong to the on-screen, locked-result flow of the pages, which the Owner has dropped for the printed exams. The ontology holds weights only and no items, so the weight is the only fact to take from it. A committed file is never edited, so any new item store is a new file."
+  },
+  {
+   "topic": "Item model",
+   "decision": "One record per item with the fields id, chapters, source, bloom, critical_point, type, stem, options_or_blanks, answer, points, reason, plus seed_item, course_point, indirect_form, code_width and bank_id. id is unique inside the pair of papers; chapters is a list with at least one chapter of 1, 2, 3, 4, 6, 7, 8; source is a list with at least one link to a deck slide, speaker note, corpus passage or story that exists; bloom is an integer 1 to 6; type is one of the kept types; points is a number; reason is one sentence saying why the answer is right.",
+   "reason": "The fields named in the brief are all present. seed_item and course_point are required by the Owner's ruling of 2026-10-30. Every field is checkable by a tool, so a SHACL shape and its fixture can be built from this list later."
+  },
+  {
+   "topic": "Seed link and course-point link",
+   "decision": "seed_item holds the page item the new item grew from, written as <bank file path>#<position of the item in that file counted from 0>, or the word none. course_point holds the entry of the critical-points list of the course it tests, written as <file name>#<position counted from 0>; at least one course_point is required for every item.",
+   "reason": "The banks carry no item identifiers (they hold concept, level, q, options, answer and why), so a path plus a position is the only stable link that exists. The critical-points files are made by the sibling tasks TK4_Points_A and TK4_Points_B; their names and contents were not available when this design was written, so the link form is fixed here and the names are filled in by the engine."
+  },
+  {
+   "topic": "Near-copy measure",
+   "decision": "An exam item is a near copy of a seed when the 4-word-sequence containment C of its text in the seed's text is at least 0.50 and the two correct answers are the same text after normalising, or when C is at least 0.80 whatever the answer. The text of an item is stem, code and options joined; words are lower-cased runs of letters, digits and underscore; C is the share of the exam item's 4-word sequences that also occur in the seed.",
+   "reason": "Measured on the 839 bank items (351,541 pairs): the 99.9th percentile of C between different items is 0.273 and the largest value is 0.733, the pairs near that top being different items that share a code template. Only one pair reaches C 0.50 with the same answer text, none reaches 0.80, so the rule separates copies from template relatives. Stem-only comparison was rejected because many stems are the same short template ('what does this program print?'). The numbers are an assumption to be confirmed on the fixture in the design file."
+  },
+  {
+   "topic": "Fixture for the near-copy measure",
+   "decision": "The design file lists a fixture of a seed and five variants with the C values computed by the method, among them an identical copy (C 1.0), one word changed (C 0.942), a rewritten stem with the options kept (C 0.871), the same with two options swapped and the answer moved (C 0.786, same answer text) and a new-angle item (C 0.0).",
+   "reason": "A rule needs a case whose answer is known before a tool can be tested. The values were computed with a short script before they were written, and the tool built later must print the same values."
+  },
+  {
+   "topic": "What an enhancement iteration changes",
+   "decision": "Each iteration changes at least one of four things in a seed: a new angle (the same critical point asked from the other side, for example the consequence instead of the definition), a cross-chapter link (a second chapter's idea needed to answer), a reasoning step (the answer needs two steps or a reason, not recall), a changed code case (a different listing whose output differs from the page's). The result must pass the near-copy measure and keep the course_point link.",
+   "reason": "The Owner asked that the result tests the critical point and not the memory of the page. Four named changes can be recorded in a field and counted, so the iteration is checkable, and the near-copy measure then proves the change was made."
+  },
+  {
+   "topic": "Question types kept: choice",
+   "decision": "Keep mcq (four options A to D, one correct), in two forms: plain (about 60 seconds) and with a short code listing (about 100 seconds).",
+   "reason": "Four options with one letter is the form that a machine reads with certainty from a scan and that a person can answer in the shortest time. The two times are the carried-over values for print."
+  },
+  {
+   "topic": "Question types dropped: multi and judge",
+   "decision": "Drop multi and judge as separate types. Their idea survives inside mcq: 'which statements I, II, III are correct' with the option letters naming the combinations, and 'which statement is true'.",
+   "reason": "multi ticks several boxes with a penalty for a wrong tick, which makes one item produce several marks to read and a scoring rule the student must learn. judge has a 50 per cent chance of a right guess. mcq with combination options reads one mark and keeps the 25 per cent guess rate."
+  },
+  {
+   "topic": "Question types kept: match",
+   "decision": "Keep match: five premises to a list of eight answers lettered A to H, each premise one row on the answer sheet, one point per premise, about 240 seconds.",
+   "reason": "Matching to a longer list than the premises gives a low guess rate and one row per premise is read like a choice row. The carried-over time for print is 240 seconds."
+  },
+  {
+   "topic": "Question types kept: order",
+   "decision": "Keep order for four steps of a process or the four lines of a short program, each step lettered A to D on the paper; the answer sheet has one row per position with the cells A to D; one point per correct position; about 120 seconds.",
+   "reason": "Ordering code lines is one of the code types the course needs. Reading by position rows keeps the same mark style as a choice and gives partial credit by position."
+  },
+  {
+   "topic": "Question types kept: blank and cloze",
+   "decision": "Keep blank (a gap in a code listing) and cloze (a gap in a sentence about the course) in the printed form 'fill from a shared numbered bank': the gaps are numbered, the bank holds more entries than gaps, and the student fills the cell of the bank number on the answer sheet; one point per gap; about 60 seconds per code item and 45 per sentence item.",
+   "reason": "The engine's blank and cloze take a typed answer, which a machine cannot read with certainty from handwriting. A numbered bank turns the same task into a mark the machine reads, and the bank can be randomised as the Owner asks. The 45 second value is the carried-over time for a bank fill-in."
+  },
+  {
+   "topic": "Question types kept: predict",
+   "decision": "Keep predict (the printed result of a short listing) in two answer forms: choose one of four printed outputs (a letter) or write a whole number of at most two digits and a sign by filling digit cells (about 120 seconds either way). Numeric answers are results of expressions, counts of loop passes, lengths and indexes.",
+   "reason": "Both forms are read by machine. A digit grid (tens row, ones row, a minus cell) reads a whole number without reading handwriting, and the minus cell is needed because negative indexes are part of the course. Money and fee arithmetic of the other course does not carry over."
+  },
+  {
+   "topic": "Question types kept: short",
+   "decision": "Keep short, at most two items per paper, answered in words on the back of the answer sheet and marked by hand by the instructor against a rubric of at most 3 points printed in the key; about 240 seconds.",
+   "reason": "Evaluate and Create levels need words; choice items cannot reach them. The rubric is limited to 3 points so the mark stays repeatable, and the paper names the item as written (assumption: the number of short items is two and the Owner may set it to zero)."
+  },
+  {
+   "topic": "Question types dropped: repair",
+   "decision": "Drop repair as a type. Its task 'find the faulty line' survives as an mcq with a numbered listing whose options are the line numbers or the corrected line.",
+   "reason": "repair asks the student to edit a program on a screen and checks it by running it, which paper cannot do. As a choice about a numbered listing the same critical point is still tested and read by machine."
+  },
+  {
+   "topic": "Question types dropped: program and write",
+   "decision": "Drop program and write. Writing code on paper is not enabled in this design.",
+   "reason": "Enabling it needs a marking rubric and a named marker. No rubric for code exists in the course material, and a handwritten program cannot be graded reliably by machine in a 60-minute sitting. If the Owner wants it, the paper must name the item, give a rubric of at most 3 points and name the instructor as marker."
+  },
+  {
+   "topic": "Question types dropped: string, graph, object, ask, sparql",
+   "decision": "Drop string, graph, object, ask and sparql.",
+   "reason": "They need a screen: a typed free string compared with a key, a graph or object view, a live question to the corpus or a query to a live endpoint. None can be answered on paper and read by machine."
+  },
+  {
+   "topic": "Listing on paper",
+   "decision": "A listing has at most 12 lines and no line is wrapped; code is set in a monospace face at 9 point; the declared width is 45 characters in a two-column page and 90 in a one-column page; a listing that does not fit is shortened, never wrapped; lines of a listing are numbered 1, 2, 3 at the left when the question refers to a line.",
+   "reason": "Carried-over rule for print. A wrapped line changes what the student reads as one statement. Numbering lines allows 'which line' questions to be answered by a number."
+  },
+  {
+   "topic": "Code types kept",
+   "decision": "Keep four code tasks: predict the printed output, find the faulty line (choose the line number), complete a gap in the code from the bank, and order the lines.",
+   "reason": "They are the tasks the brief lists for a Python course, and each one is answered by a mark the machine reads. Each is built on the types kept above."
+  },
+  {
+   "topic": "Output answers and the exact-match rule",
+   "decision": "Outputs printed as options are written exactly as Python prints them: print of a text shows it without quotes; a list shows as [1, 2] with a comma and one space; a dictionary shows as {'a': 1} with single quotes; repr of a text keeps its quotes; two lines of output are shown as two lines in the option box. Printed output options differ in a way that a reader sees: no two options differ only in a space. If a handwritten output answer is ever enabled, it is marked by hand and a whole-line match counts: quotes, the comma and space after a comma, and line breaks are significant and a trailing space is not.",
+   "reason": "With a machine-read choice there is no exact-match problem; the rule matters only for the printed options and for the optional hand case. Quotes, spacing and line breaks change the output of the course's print, list and dictionary examples, so they must be kept in the printed option."
+  },
+  {
+   "topic": "Blueprint size and time",
+   "decision": "30 items in 60 minutes. The summed answer times are 3150 seconds (52.5 minutes): 8 plain mcq at 60 s, 6 mcq with code at 100 s, 2 match at 240 s, 2 order at 120 s, 3 blank at 60 s, 2 cloze at 45 s, 5 predict at 120 s, 2 short at 240 s.",
+   "reason": "The carried-over rule is a sum at or under 90 per cent of 60 minutes, that is 3240 seconds; 3150 is 87.5 per cent. The short time of 240 seconds and the 60 seconds for a code blank are assumptions of this design and are easy to change in the table."
+  },
+  {
+   "topic": "Blueprint across chapters",
+   "decision": "Items per chapter: chapter 1 four, chapter 2 five, chapter 3 five, chapter 4 five, chapter 6 four, chapter 7 four, chapter 8 three (sum 30); the count is the items whose first chapter it is.",
+   "reason": "Shares were taken in proportion to the number of items in each chapter's newest question bank (109, 131, 143, 142, 123, 122, 69) and rounded by largest remainder. This is an assumption, because the Owner clears the exact chapter content after the lectures; the table is a quota the engine reads, so changing it needs no change in the engine."
+  },
+  {
+   "topic": "Bloom reading and blueprint",
+   "decision": "The reading used is Apply and up (levels 3 to 6). The target is 21 of 30 items (70 per cent) at levels 3 to 6, by level: Remember 2, Understand 7, Apply 10, Analyze 7, Evaluate 3, Create 1. Evaluate is reached by mcq that judge two designs or two programs and by one short item; Create by one short item.",
+   "reason": "The brief says more than half must be at Apply or above and asks to name the reading; the Owner has not fixed it, so this is an assumption kept in one number (share_apply_or_above). With the Analyze-and-up reading the same plan gives 11 of 30 items (37 per cent), which would fail, so the Owner's choice of reading changes the verdict and must be asked."
+  },
+  {
+   "topic": "Cross-chapter, synthesis and indirect items",
+   "decision": "At least 9 items name two or more chapters (30 per cent); synthesis items are among them and need an idea of each chapter named. Indirect items (a consequence, an exception or a reason) are enabled, at least 6 per paper, and each states its form in the field indirect_form.",
+   "reason": "Page questions are rarely cross-section (the Owner's ruling), so these items are authored and are the main new work. The counts are assumptions kept as numbers in the blueprint."
+  },
+  {
+   "topic": "Spread of correct letters",
+   "decision": "The 17 items answered with one letter (14 mcq and 3 predict by choice) have keys A 5, B 4, C 4, D 4; the counts differ by at most one and no letter is the key of four items in a row.",
+   "reason": "The carried-over rule. The same rule is applied to every form of the paper after the options are shuffled."
+  },
+  {
+   "topic": "Randomised banks",
+   "decision": "For blank and cloze, the order of the bank entries is a permutation made by a seeded generator; the seed is stored in the build record; the bank has two entries more than gaps; the key numbers of the gaps of one item are all different, and no number is the key of three gaps in a row across the paper; the bank is never in the order of the gaps.",
+   "reason": "The Owner asked that fill-in option banks are randomised. A stored seed makes a form rebuildable for the key and the check, and the rules stop a pattern the student can guess."
+  },
+  {
+   "topic": "Pair rules: midterm and make-up",
+   "decision": "The make-up paper repeats no item of the midterm: no equal id, no pair of items with C at or above 0.50 and the same answer text. The same critical point may appear in both, tested by a different item.",
+   "reason": "The carried-over rule allows a repeat only if the pair allows it; for a printed make-up sitting a repeated item would be known to the students who saw the midterm paper."
+  },
+  {
+   "topic": "Two forms of a paper",
+   "decision": "Each paper has two forms, A and B, with the same items in a different order within a block of the same type and the options in a different order; the answer-sheet layout is the same for both because the type of each position is the same.",
+   "reason": "The sheets of two neighbours then do not show the same letters, and no page is added. The keys of the two forms are different files and each form's letter counts obey the spread rule."
+  },
+  {
+   "topic": "Item order in the paper",
+   "decision": "The paper is in five parts by type: choice (mcq), trace (predict), fill from the bank (blank and cloze), match and order, and short. Positions are numbered 1 to 30 across the whole paper, and the answer sheet repeats the numbers.",
+   "reason": "One instruction per part is printed once and the reader does not switch task at each item. One continuous numbering means a number on the sheet is the same number on the paper."
+  },
+  {
+   "topic": "Page budget",
+   "decision": "Expected 4 pages of paper (2 sheets printed on both sides) and 1 answer sheet printed on both sides (the back holds the two short answers): 6 pages, 3 sheets of A4 per student.",
+   "reason": "About 370 lines of text and code fit 3.3 pages at about 112 lines per page in two columns of 10 point text (listings at 9 point). Instructions are printed once on page 1. The figure is an estimate to be verified when the engine builds the first paper; the build must report the real count and fail the design check if it is above 4 paper pages."
+  },
+  {
+   "topic": "Layout that saves pages",
+   "decision": "Two columns of A4 with margins of 12 mm; body 10 point or larger, code 9 point; one shared stem for a group of items on the same listing (a listing is printed once and its items refer to it); compact code of at most 12 lines; answers are never written on the paper, so no answer lines or boxes are printed on it; black ink on white, no shading or colour; no student name or number printed on the paper.",
+   "reason": "The carried-over conventions plus the page-saving methods asked for. Answers go to the one answer sheet, so space for them on the paper is saved."
+  },
+  {
+   "topic": "Answer sheet layout",
+   "decision": "One A4 portrait sheet with four corner markers, a header (version strip, paper check number, calibration cells, student-ID line) and two columns of answer fields; each field is rows of cells, one row per answer, with the item number at the left; the cells in a row are labelled A to D (choice), A to H (match), 1 to 12 (bank number) or 0 to 9 (digit rows).",
+   "reason": "The reader needs a fixed grid; one mark style and a grid per field type make every field readable with the same routine. Row counts: 17 choice, 6 digit rows, 10 match, 8 order, 9 blank and 5 cloze rows, 55 rows in all, which fit two columns of 33 rows with the headings."
+  },
+  {
+   "topic": "Mark style",
+   "decision": "One mark style only: fill the whole circle completely with dark ink or soft pencil. A crossed-out mark is a withdrawn mark; to change an answer cross out the old mark and fill the new one.",
+   "reason": "One style removes the choice between ticks, crosses and circles. A cross over a cell is the only way to withdraw one, and a person reads it (see the double-mark rule)."
+  },
+  {
+   "topic": "Answer-sheet geometry",
+   "decision": "Corner markers: three solid squares of 8 by 8 mm at the top left, top right and bottom left and one hollow square (8 mm outside, 3 mm hole) at the bottom right, with outer edges 10 mm from the page edges; cells: bubble circle 4.5 mm across, pitch 7.0 mm across and 6.5 mm down, read area the inner 3.0 mm; scan or photograph at 300 dpi target, 200 dpi least.",
+   "reason": "At 200 dpi 1 mm is 7.9 pixels, so the read area is about 24 pixels across and a bubble 35, enough to count dark pixels. A hollow marker tells a turned page from an upright one, and four markers let a tool correct a tilt or a photograph taken at an angle."
+  },
+  {
+   "topic": "Student-ID line and personal data",
+   "decision": "The sheet has a line for the student number written by hand and read by a person only; the sheet and the paper carry no name; every example sheet used to test a tool is synthetic and says so.",
+   "reason": "Handwriting is not read by machine, so there is no risk of a wrong machine reading of an identity. Nothing personal is stored in the repository."
+  },
+  {
+   "topic": "Version marks that tie sheet to paper",
+   "decision": "The header has a version strip of 12 pre-printed cells (kind 1 cell, form 1 cell, paper version 6 cells, parity 1 cell, 3 reserved cells) and the page footers of the paper print the same kind, form and version in words. Page 1 of the paper prints a three-digit check number derived from the kind, form and version; the student fills it in three digit rows of the sheet; the reader compares it with the strip.",
+   "reason": "The strip proves what the sheet is; the check number proves the student had the sheet with the paper of the same form. A mismatch holds the sheet for a person. The version number of a paper is exactly the previous number plus one."
+  },
+  {
+   "topic": "Reducing mistakes in giving answers",
+   "decision": "Rules printed once on page 1: use the answer sheet only, fill whole circles, one mark per row, cross out to withdraw, leave a row empty for no answer. In the items: numbering as on the sheet, options labelled A to D in a fixed order, no 'all of the above' or 'none of the above', no negative stem unless the word is in capitals, options of similar length and without overlap, one answer defensible, absolute words (always, never) only when true in Python.",
+   "reason": "Each rule removes a source of a wrong mark or a dispute. An option set where the key is regularly the longest or the only one with a qualifier would tell the answer without the knowledge, so length is checked by a rule."
+  },
+  {
+   "topic": "Check boxes",
+   "decision": "Each part of the paper ends with a printed reminder naming the rows of the sheet it covers, for example 'rows 1 to 14 of the sheet'.",
+   "reason": "A student who skips an item can lose track of the row; the reminder is a check at the point where it helps, and costs one line per part."
+  },
+  {
+   "topic": "Reading by machine",
+   "decision": "The machine reads the version strip, the check number, the calibration cells and every choice, digit, match, order and bank row. A cell is filled when at least 45 per cent of its read area is darker than the calibration; empty at 15 per cent or less; between is doubtful.",
+   "reason": "Choice and digit cells are the only marks a machine reads with certainty from a good scan. The two thresholds and the calibration cells (one pre-printed empty, one pre-printed filled) are assumptions to be fitted on synthetic sheets, with a margin between them."
+  },
+  {
+   "topic": "Reading by hand",
+   "decision": "A person reads the student-ID line, the two short answers, every held row, every held sheet and any crossed-out mark. The person's reading of the original sheet is final.",
+   "reason": "Whatever the machine cannot read with certainty is given to a person; the original sheet is the evidence, not the machine's image."
+  },
+  {
+   "topic": "Unreadable rule",
+   "decision": "A sheet is held as a whole when a marker is not found, the scan is below 200 dpi, the version strip fails its parity cell, the check number differs from the strip, or the tilt after correction is above 5 degrees. A row is held when a cell is doubtful or the row cannot be located.",
+   "reason": "These conditions mean the geometry cannot be trusted, so no mark on the sheet is trusted either."
+  },
+  {
+   "topic": "Double-mark rule",
+   "decision": "A row with two or more filled cells is held and never scored by the machine; a person decides from the original sheet, taking a crossed-out mark as withdrawn; when the person cannot decide, the row scores zero. A row with no filled cell scores zero and is not held.",
+   "reason": "This follows the carried-over rule that a doubtful or double mark is held for a person. Zero when undecidable is the same for every student."
+  },
+  {
+   "topic": "Applying the key",
+   "decision": "The key is a file per paper and form with the answer and the points of every position and a SHA-256 digest of its own content; the tool refuses a key whose kind, form and version differ from the sheet's strip. Points: mcq 3, predict 4, match 1 per premise (5), order 1 per position (4), blank 1 per gap, cloze 1 per gap, short up to 3 by hand; 100 points in all; no negative marking.",
+   "reason": "A key is only valid for the paper it was made with. The point values sum to 100: 14x3 + 5x4 + 2x5 + 2x4 + 9 + 5 + 2x3. No negative marking is an assumption the Owner may change; it keeps the rule simple and the total independent of guessing choices."
+  },
+  {
+   "topic": "Second check",
+   "decision": "Every result is checked twice. Two independent readings of each row (the threshold method and a method that takes the single darkest cell and requires it to be clearly darker than the rest) must agree or the row is held; the total is recomputed from the stored per-item results by a second routine and must equal the first; a person compares the original with the result for every held sheet and for a random sample of at least 10 per cent of sheets (and at least 5); the hand-marked short answers are entered twice and any difference is looked at again.",
+   "reason": "One method can share a fault with itself; two methods that disagree expose it. The sample finds a fault that no flag shows. All three are checkable on synthetic sheets whose true marks are known."
+  },
+  {
+   "topic": "What the Owner must supply",
+   "decision": "The Owner supplies: the Bloom reading (Apply and up, or Analyze and up); the number of short items (0, 1 or 2) and who marks them; whether a code-writing item is enabled; whether guesses carry a penalty; the length of the student number if the number is to be read by machine; and the final item counts per chapter after the lectures.",
+   "reason": "Each one is a choice the course material cannot settle. They are listed in the design file as assumptions so one change changes the whole blueprint."
+  }
+ ],
+ "item_types_kept": [
+  {
+   "type": "mcq",
+   "why": "One letter A to D, read by machine with certainty, about 60 s plain and 100 s with a short listing; also carries combination-of-statements, find-the-faulty-line and compare-two-designs items."
+  },
+  {
+   "type": "match",
+   "why": "Five premises to eight lettered answers, one row per premise, a low guess rate and partial credit by premise, about 240 s."
+  },
+  {
+   "type": "order",
+   "why": "Four steps or four code lines, one row per position with cells A to D, partial credit by position, about 120 s."
+  },
+  {
+   "type": "blank",
+   "why": "A gap in a code listing filled from a shared numbered bank, so the answer is a mark and not handwriting, about 60 s."
+  },
+  {
+   "type": "cloze",
+   "why": "A gap in a sentence about the course filled from a shared numbered bank, about 45 s."
+  },
+  {
+   "type": "predict",
+   "why": "The printed result of a short listing, answered by choosing one of four printed outputs or by filling a one- or two-digit whole number with a sign cell, about 120 s."
+  },
+  {
+   "type": "short",
+   "why": "Written on the back of the answer sheet and marked by hand against a rubric of at most 3 points; the only way to reach Evaluate and Create on paper; at most two per paper."
+  }
+ ],
+ "item_types_dropped": [
+  {
+   "type": "multi",
+   "why": "Several ticks with a penalty make one item several marks and a scoring rule to learn; its idea survives as an mcq with combination options."
+  },
+  {
+   "type": "judge",
+   "why": "A 50 per cent chance of a right guess; its idea survives as an mcq asking which statement is true."
+  },
+  {
+   "type": "repair",
+   "why": "Needs a screen to edit and run the program; the task survives as an mcq about a numbered listing."
+  },
+  {
+   "type": "program",
+   "why": "Needs a screen to run the code; writing code on paper is not enabled because no rubric or named marker exists."
+  },
+  {
+   "type": "write",
+   "why": "Writing code on paper is not enabled: no marking rubric exists and handwritten code cannot be graded reliably by machine."
+  },
+  {
+   "type": "string",
+   "why": "A typed free string compared with a key needs a screen and handwriting cannot be read by machine with certainty."
+  },
+  {
+   "type": "graph",
+   "why": "Needs a screen to show and explore a graph of the corpus."
+  },
+  {
+   "type": "object",
+   "why": "Needs a screen to show and explore an object view."
+  },
+  {
+   "type": "ask",
+   "why": "Needs a live question to the corpus; cannot be answered on paper."
+  },
+  {
+   "type": "sparql",
+   "why": "Needs a live endpoint to run a query; cannot be answered on paper."
+  }
+ ],
+ "blueprint": {
+  "items": 30,
+  "minutes": 60,
+  "share_apply_or_above": 70,
+  "letters": {
+   "A": 5,
+   "B": 4,
+   "C": 4,
+   "D": 4
+  },
+  "chapters": {
+   "1": 4,
+   "2": 5,
+   "3": 5,
+   "4": 5,
+   "6": 4,
+   "7": 4,
+   "8": 3
+  },
+  "types": {
+   "mcq": 14,
+   "match": 2,
+   "order": 2,
+   "blank": 3,
+   "cloze": 2,
+   "predict": 5,
+   "short": 2
+  },
+  "cross_chapter_items": 9
+ },
+ "page_budget": {
+  "pages_per_student": 6,
+  "sheets_per_student": 3,
+  "reasoning": "About 370 lines of text and code (8 plain mcq of 7 lines, 6 mcq with code of 17, 2 match of 14, 2 order of 10, 3 blank and 2 cloze of about 43 in all, 5 predict of 15, 2 short of 10, a 25-line first page with the instructions printed once) at about 112 lines per A4 page in two columns of 10 point text give 3.3 pages, so 4 paper pages on 2 sheets printed on both sides, plus one answer sheet printed on both sides (the back holds the two short answers): 6 pages and 3 sheets. An estimate to be checked by the first build."
+ },
+ "answer_sheet": {
+  "layout": "A4 portrait, four corner markers, a header strip of about 35 mm (version strip, three digit rows for the paper check number, two calibration cells, a handwritten student-ID line), then two columns of answer fields from 56 mm to 275 mm; field cells start at x 32 mm (left column) and x 120 mm (right column); each field row has its item number at the left and 4, 8, 10 or 12 cells; 55 answer rows in all; scan or photograph of both sides at 300 dpi target and 200 dpi least; the back is ruled for the two short answers.",
+  "mark_style": "Fill the whole circle with dark ink or soft pencil; one mark per row; cross out a mark to withdraw it; an empty row means no answer.",
+  "geometry": {
+   "markers": [
+    {
+     "corner": "top_left",
+     "shape": "solid_square",
+     "size_mm": 8,
+     "centre_mm": [
+      14,
+      14
+     ]
+    },
+    {
+     "corner": "top_right",
+     "shape": "solid_square",
+     "size_mm": 8,
+     "centre_mm": [
+      196,
+      14
+     ]
+    },
+    {
+     "corner": "bottom_left",
+     "shape": "solid_square",
+     "size_mm": 8,
+     "centre_mm": [
+      14,
+      283
+     ]
+    },
+    {
+     "corner": "bottom_right",
+     "shape": "hollow_square",
+     "size_mm": 8,
+     "hole_mm": 3,
+     "centre_mm": [
+      196,
+      283
+     ]
+    }
+   ],
+   "cell_mm": {
+    "pitch_across": 7.0,
+    "pitch_down": 6.5,
+    "bubble_diameter": 4.5,
+    "read_diameter": 3.0
+   },
+   "resolution_dpi": 300
+  },
+  "student_id_line": "A ruled line 80 mm long in the header, labelled for the student number, written by hand and read by a person only; no name, no machine reading, no data printed beforehand.",
+  "version_mark": "A pre-printed strip of 12 cells in the header (cell 1 kind: 0 midterm, 1 make-up; cell 2 form: 0 A, 1 B; cells 3 to 8 paper version as a binary number; cell 9 even parity over cells 1 to 8; cells 10 to 12 reserved empty) repeated in words in the footer of every paper page, plus a three-digit paper check number printed on page 1 of the paper that the student fills in three digit rows of the sheet."
+ },
+ "grading": {
+  "read_by_machine": "The version strip, the paper check number, the two calibration cells, and every choice, digit, match, order and bank row; a cell is filled at 45 per cent or more of the read area darker than the calibration, empty at 15 per cent or less, doubtful in between.",
+  "read_by_hand": "The student-ID line, the two short answers, every held row, every held sheet and every crossed-out mark; the person reads the original sheet and that reading is final.",
+  "unreadable_rule": "The whole sheet is held when a marker is not found, the scan is under 200 dpi, the version strip fails its parity cell, the check number differs from the strip, or the tilt after correction is above 5 degrees; a row is held when a cell is doubtful or the row cannot be located; a held item is never scored by the machine.",
+  "double_mark_rule": "A row with two or more filled cells is held; a person decides from the original sheet, counting a crossed-out mark as withdrawn; if the person cannot decide the row scores zero; an empty row scores zero and is not held.",
+  "key_application": "One key file per paper and form (answer and points of every position, with a SHA-256 digest of its content); the tool refuses a key whose kind, form and version differ from the sheet's version strip; points: mcq 3, predict 4, match 1 per premise, order 1 per position, blank 1 per gap, cloze 1 per gap, short up to 3 by hand; total 100; no negative marking.",
+  "second_check": "Two independent readings of each row (threshold method; darkest-cell-with-margin method) must agree or the row is held; the total is recomputed by a second routine from the stored per-item results; a person compares original and result for every held sheet and for a random sample of at least 10 per cent of sheets and at least 5; hand-marked short answers are entered twice."
+ }
+}
