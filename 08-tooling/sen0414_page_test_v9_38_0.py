@@ -1694,10 +1694,7 @@ with sync_playwright() as p:
     F_D5 = "D5 no code of the page has a lambda (data, quiz, question bank, Playground samples, every code box)"
     try:
         dp = ctx.new_page(); dp.goto("file://" + page_path); dp.wait_for_timeout(1500)
-        keys_ = dp.evaluate("Object.keys(GROUP_OF)")
-        states_ = ["showTab('%s')" % k for k in keys_]
-        # the detail card: open it on the first concept of the first top-level subject, and look at the chapter-code results of the first example
-        states_ += ["goTo('%s')" % nodes[0]["id"], "showTab('%s')" % tops[0]["id"]]
+        states_ = DG.build_states(dp, with_run=True)
         figs_, per_ = DG.audit_all(dp, states_)
         ok_, det_ = DG.verdict_figures(figs_)
         nfig_ = len(figs_)

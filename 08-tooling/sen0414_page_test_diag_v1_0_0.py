@@ -26,7 +26,20 @@ AUDIT_JS = r"""()=>{
 def audit_here(pg):
     return pg.evaluate(AUDIT_JS)
 
-def audit_all(pg, visit_js, settle_ms=250):
+ASYNC_TABS = ("taxonomy", "map", "ontograph", "ontoclass", "ontoerd")
+def build_states(pg, with_run=False):
+    """every tab of the page, every concept (its card and sub-page), the parse-tree diagram of every concept with an example, and (with_run) the result visual of the chapter-code examples"""
+    keys = pg.evaluate("Object.keys(GROUP_OF)")
+    st = ["showTab('%s')" % k for k in keys]
+    ids = pg.evaluate("Object.values(byId).filter(n=>n.level>=2).map(n=>[n.id,!!n.io])")
+    for i, io in ids:
+        st.append("goTo('%s')" % i)
+        if io: st.append("(()=>{const b=document.querySelector('[data-diagram=\"%s\"]');if(b)b.click()})()" % i)
+    if with_run:
+        st.append("(async()=>{showTab('chaptercode');await ccRun()})()")
+    return st
+
+def audit_all(pg, visit_js, settle_ms=700):
     """visit_js: JS statements to show a state, one per list item; the audit runs after each. Figures are keyed by label+tag+state."""
     seen = {}; per_state = {}
     for st in visit_js:
@@ -35,6 +48,11 @@ def audit_all(pg, visit_js, settle_ms=250):
         except Exception as e:
             per_state[st] = "error: %s" % str(e)[:80]; continue
         pg.wait_for_timeout(settle_ms)
+        m = re.match(r"showTab\('(\w+)'\)$", st or "")
+        if m and m.group(1) in ASYNC_TABS:
+            try: pg.wait_for_function("k=>document.querySelector('[data-pane=\"'+k+'\"] svg')", arg=m.group(1), timeout=60000)
+            except Exception: pass
+            pg.wait_for_timeout(300)
         for rec in audit_here(pg):
             key = (st, rec["tag"], rec["label"], len(seen))
             seen[key] = rec
@@ -82,7 +100,7 @@ def behaviour(pg, panel_sel):
     pg.locator(panel_sel + " .dprh").first.focus(); pg.keyboard.press("ArrowDown"); pg.keyboard.press("ArrowDown"); pg.wait_for_timeout(200)
     h4 = host(); res["keys"] = h4["hh"] - h3["hh"] >= 30
     res["within_screen"] = h4["hh"] <= h4["ih"] and h4["pw"] <= h4["iw"] + 1
-    ok = all(v for k, v in res.items() if k not in ("fs_mode",)) and res["fs_cover"] == 0
+    ok = all(v for k, v in res.items() if k not in ("fs_mode", "fs_cover")) and res["fs_cover"] == 0
     return ok, json.dumps(res)
 
 LAMBDA_RE = re.compile(r"\blambda\b")
