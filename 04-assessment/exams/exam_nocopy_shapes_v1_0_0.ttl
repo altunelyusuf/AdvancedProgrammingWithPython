@@ -1,0 +1,64 @@
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix nc:  <https://example.org/sen0414/nocopy#> .
+
+# SEN0414 exam items: the near-copy ruling of the Owner (2026-10-30) as SHACL.
+# Task TK4_Distinct_Build; method: 04-assessment/exams/exam_design_v1_0_0.md section 2.1;
+# measured by 04-assessment/exams/exam_nocopy_v1_0_0.py (to_graph writes the description below).
+# Description of a measured item: nc:MeasuredItem with one nc:Comparison per seed that shares a
+# 4-word sequence (or a listing equal after whitespace): nc:seedId, nc:coverage (decimal 0 to 1,
+# the C of the method), nc:answersEqual (the correct answers are equal as normalised text),
+# nc:listingCopy (the listing equals a seed listing after whitespace and no change of case alters
+# what it prints). Thresholds of the ruling: 0.50 with equal answers; 0.80 whatever the answer.
+
+nc:MeasuredItem a rdfs:Class, sh:NodeShape ;
+    rdfs:label "Measured exam item" ;
+    rdfs:comment "An exam item together with its comparisons against every seed (the page-visible set) and, for a pair of papers, against the other paper." ;
+    sh:targetClass nc:MeasuredItem ;
+    sh:property [
+        sh:path nc:itemId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
+        sh:message "A measured item has exactly one item id." ] ;
+    sh:property [
+        sh:path nc:comparedWith ; sh:node nc:ComparisonShape ;
+        sh:message "Every comparison of a measured item must be a well-formed comparison." ] ;
+    sh:sparql nc:NearCopyRefusal .
+
+nc:Comparison a rdfs:Class ;
+    rdfs:label "Comparison of an item with one seed" .
+
+nc:ComparisonShape a sh:NodeShape ;
+    rdfs:label "Comparison shape" ;
+    sh:property [ sh:path nc:seedId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path nc:coverage ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ;
+                  sh:minInclusive 0 ; sh:maxInclusive 1 ] ;
+    sh:property [ sh:path nc:answersEqual ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:boolean ] ;
+    sh:property [ sh:path nc:listingCopy ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:boolean ] .
+
+nc:NearCopyRefusal a sh:SPARQLConstraint ;
+    rdfs:label "No exam item is a near copy of a seed" ;
+    rdfs:comment "Refuses an item that has a comparison with coverage 0.50 or more and equal answers, or coverage 0.80 or more whatever the answer, or a listing copy." ;
+    sh:message "Near copy of a seed: coverage 0.50 or more with the same answer, or 0.80 or more whatever the answer, or a copied listing." ;
+    sh:prefixes [ sh:declare [ sh:prefix "nc" ; sh:namespace "https://example.org/sen0414/nocopy#"^^xsd:anyURI ] ,
+                              [ sh:prefix "xsd" ; sh:namespace "http://www.w3.org/2001/XMLSchema#"^^xsd:anyURI ] ] ;
+    sh:select """
+        SELECT $this ?value
+        WHERE {
+            $this nc:comparedWith ?cmp .
+            ?cmp nc:seedId ?value ;
+                 nc:coverage ?c ;
+                 nc:answersEqual ?same ;
+                 nc:listingCopy ?lst .
+            FILTER ( ( ?c >= 0.50 && ?same = true ) || ?c >= 0.80 || ?lst = true )
+        }
+    """ .
+
+# The two numbers of the ruling, as data, so that the checks can compare them with the library.
+nc:NearCopyRuling a rdfs:Class ;
+    rdfs:label "Near-copy ruling" .
+
+nc:TheRuling a nc:NearCopyRuling ;
+    rdfs:label "Owner's ruling of 2026-10-30 on near copies" ;
+    nc:sameAnswerThreshold 0.50 ;
+    nc:anyAnswerThreshold 0.80 ;
+    nc:wordLength 4 .
