@@ -59,8 +59,8 @@ def record(bridge):
     ok = {c: bool(vd.get(eid(c)) and vd[eid(c)][0] and all(vd.get(fid(c, i)) and vd[fid(c, i)][0] for i in range(len(G[c][2])))) for c in G}
     # the Owner's later time box (functional property: the value is replaced in this new version)
     for u in ("Urgent_1", "Urgent_2"):
-        i, j = blk(t, u); b = t[i:j]
-        nb = re.sub(r'backlog:urgencyTimeBoxUntil "2026-10-30T03:00:00Z"\^\^<http://www.w3.org/2001/XMLSchema#dateTime>', 'backlog:urgencyTimeBoxUntil "2026-10-30T11:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>', b, count=1)
+        i = t.index("<http://example.org/sen0414-slides-lineage#%s> a backlog:UrgentInterruption" % u); j = t.find("\n\n", i); j = len(t) if j < 0 else j; b = t[i:j]
+        nb = b.replace('backlog:urgencyTimeBoxUntil "2026-10-30T03:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>', 'backlog:urgencyTimeBoxUntil "2026-10-30T11:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>', 1)
         assert nb != b, u
         t = t[:i] + nb + t[j:]; add.append("ex:%s backlog:hasAuditNote %s .\n" % (u, W.lit(OWNER_BOX)))
     add.append("ex:Iter_U8 backlog:hasAuditNote %s .\n" % W.lit(OWNER_BOX))
@@ -102,10 +102,23 @@ def record(bridge):
                 add.append('ex:Complete8C_%s a backlog:TransitionEvent ; rdfs:label %s@en ; backlog:transitionedItem ex:%s ;\n    backlog:viaTransition backlog:T_Complete ; backlog:transitionedAt "%s"^^xsd:dateTime ; backlog:transitionedBy backlog:Builder ;\n    backlog:hasTransitionNote %s .\n' % (k, W.lit(k + " completed on the controller's verdict"), k, fin, W.lit("Done on the controller's own re-runs, verified by the evidence bridge; the executor's report alone was not taken as the result.")))
                 done.append(k)
         i, j = blk(t, sid); b = t[i:j]
-        nb = re.sub(r'backlog:hasState backlog:InProgress ; backlog:startedAt ("[^"]*"\^\^xsd:dateTime)', lambda m: 'backlog:hasState backlog:Done ; backlog:startedAt %s ; backlog:finishedAt "%s"^^xsd:dateTime ; backlog:lastAuditedAt "%s"^^xsd:dateTime ; backlog:hasEvidence %s' % (m.group(1), fin, fin, ev), b, count=1)
+        nb = re.sub(r'backlog:hasState backlog:InProgress ; backlog:startedAt ("[^"]*"\^\^xsd:dateTime)', lambda m: 'backlog:hasState backlog:Done ; backlog:hasExecutionModality backlog:Mode_Hybrid ; backlog:startedAt %s ; backlog:finishedAt "%s"^^xsd:dateTime ; backlog:lastAuditedAt "%s"^^xsd:dateTime ; backlog:hasEvidence %s' % (m.group(1), fin, fin, ev), b, count=1)
         assert nb != b, sid
         t = t[:i] + nb + t[j:]; done.append(sid)
+        add.append('ex:Harness8_%s a backlog:TestHarness ; rdfs:label %s@en ; backlog:harnessFor ex:%s ; backlog:harnessComplete true ; backlog:hasHarnessEvidence %s .\n' % (sid, W.lit("Checks run for " + sid), sid, ev))
         add.append('ex:Complete8C_%s a backlog:TransitionEvent ; rdfs:label %s@en ; backlog:transitionedItem ex:%s ;\n    backlog:viaTransition backlog:T_Complete ; backlog:transitionedAt "%s"^^xsd:dateTime ; backlog:transitionedBy backlog:Builder ;\n    backlog:hasTransitionNote %s .\n' % (sid, W.lit(sid + " completed: its tasks are Done"), sid, fin, W.lit("All tasks of the story are Done on the controller's evidence.")))
+    n2 = W.now()
+    for sid in sorted(set(re.findall(r"\nex:(ST\w+) a backlog:Story", t))):
+        i = t.index("\nex:%s a backlog:Story" % sid) + 1; j = t.find("\nex:", i + 1); b = t[i:j]
+        m = re.search(r"backlog:hasPriorityScore ex:Score(\d+)_%s\b" % sid, b)
+        if not m or "backlog:hasState backlog:Done" in b:
+            continue
+        kk = int(m.group(1)); k0 = t.index("\nex:Score%d_%s a" % (kk, sid)) + 1; r0 = t[k0:t.find("\nex:", k0 + 1)]
+        q = re.search(r"business value (\d+) \+ time criticality (\d+) \+ risk reduction (\d+)\) / job size ([\d.]+) h", r0); assert q, sid
+        bv, tc, rr, size = int(q.group(1)), int(q.group(2)), int(q.group(3)), float(q.group(4))
+        t = t[:i] + b.replace(m.group(0), "backlog:hasPriorityScore ex:Score%d_%s" % (kk + 1, sid), 1) + t[j:]
+        val = (bv + tc + rr) / size
+        add.append('ex:Score%d_%s a backlog:PriorityScore ; backlog:scoredByMethod backlog:Method_WSJF ;\n    backlog:hasScoreValue "%.2f"^^xsd:decimal ; backlog:scoredAt "%s"^^xsd:dateTime ; backlog:isAveragedFromMembers false ;\n    backlog:hasScoreRationale %s .\n' % (kk + 1, sid, val, n2, W.lit("WSJF = (business value %d + time criticality %d + risk reduction %d) / job size %.1f h = %.2f. RE-RUN on %s UTC after the controller's completions (%s): the earlier record predates them. Inputs unchanged." % (bv, tc, rr, size, val, n2, ", ".join(done)))))
     add.append("ex:Lineage2 backlog:hasAuditNote %s .\n" % W.lit("RANKING after the controller's verdicts (%s UTC): done now %s; held %s. The Chapter 7 deck rebuild (ST_Ch07_DeckRebuild) is a new repair item ranked behind the exam path; the exam lineage's box 2 (the midterm first) comes next once the interruptions are resolved and resumed." % (n, ", ".join(done) or "none", ", ".join(held) or "none")))
     out = W.write_new(src, t + "\n" + "".join(add), "Urgent Chapter 8 box: the Owner's later time box (11:00Z), the deck-check result and the controller's verdicts on bridge-verified evidence: Done %s%s; Chapter 7 deck rebuild recorded as a repair item." % (", ".join(done) or "none", ("; held: " + ", ".join(held)) if held else ""))
     print(os.path.basename(out), "done:", done, "held:", held)
