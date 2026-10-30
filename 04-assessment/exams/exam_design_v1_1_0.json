@@ -1,0 +1,688 @@
+{
+ "decisions": [
+  {
+   "topic": "Scope of the pair",
+   "decision": "Two papers, a midterm and a make-up, both over chapters 1, 2, 3, 4, 6, 7 and 8 (chapter 5, Debugging, is out); one sitting of 60 minutes each; physical printed paper; one printed answer key per paper.",
+   "reason": "This is the Owner's statement of 2026-10-29 and his chapter decision of 2026-10-30 in the brief 08-tooling/briefs/exam/r3/BRIEF_TK4_Design.md. Interactive-HTML delivery, QTI export and CATS export are dropped by the same statement, so none is designed."
+  },
+  {
+   "topic": "Reuse of the existing exam engine",
+   "decision": "Reuse the idea of an exam kind with a time, a preferred level list and a mix of types (XEXAM in 08-tooling/course_page_template_v9_52_4.html) and the type names of the 17 types; do not reuse its chapter-specific, screen-bound question generation.",
+   "reason": "The page engine makes 19 to 20 questions of one chapter for a screen, with typed answers and a 40 or 85 minute timer. A printed cross-chapter paper of 60 minutes needs a different assembler, so the engine of the paper is new and only the vocabulary of types and the exam-kind idea carry over."
+  },
+  {
+   "topic": "Reuse of the chapter question banks",
+   "decision": "The 839 items of the newest banks of chapters 1, 2, 3, 4, 6, 7, 8 are seeds only, never exam items.",
+   "reason": "The Owner's ruling of 2026-10-30: page questions are open to students before the exam, are chapter specific and rarely cross-section, so they may seed better questions but are not used directly. Measured in the newest banks: 357 of 839 items (42.5 per cent) are at Apply or Analyze and none at Evaluate or Create, so they could not give the required majority at the higher levels even if they were allowed."
+  },
+  {
+   "topic": "Reuse of the Exam desk, release tool and assessment ontology",
+   "decision": "Nothing in 08-tooling/sen0414_exam_desk_v2_2_0.html or 08-tooling/sen0414_exam_release_v1_0_0.py is reused. The weights of 04-assessment/sen0414_assessment_v1_0_0.ttl are reused as they are (Midterm 30 per cent).",
+   "reason": "The Exam desk and the release code belong to the on-screen, locked-result flow of the pages, which the Owner has dropped for the printed exams. The ontology holds weights only and no items, so the weight is the only fact to take from it. A committed file is never edited, so any new item store is a new file."
+  },
+  {
+   "topic": "Item model",
+   "decision": "One record per item with the fields id, chapters, source, bloom, critical_point, course_point, seed_item, type, stem, listing, options_or_blanks, answer, points, reason, indirect_form, code_width and bank_id (section 2 of the md; the validator exam_item_check_v1_0_0.py checks exactly these and no other field). id is unique inside the pair of papers; chapters is a non-empty list of 1, 2, 3, 4, 6, 7, 8; source is a non-empty list of links to files that exist (a deck, speaker-note deck, corpus file or stories file, with an optional #place); bloom is an integer 1 to 6; type is one of the kept types; points is a whole number fixed by the type; listing is a list of at most 12 code lines, each no wider than code_width; reason is one sentence saying why the answer is right.",
+   "reason": "The fields named in the brief are all present. v1.0.0 held the listing inside the stem; it is now a field of its own so that its line count and width are checkable. Every field is checkable by a tool, so the validator and a SHACL shape can be built from this one list."
+  },
+  {
+   "topic": "Seed link and course-point link",
+   "decision": "seed_item holds the page item the new item grew from, written <bank file path>#<position counted from 0>, or the word none. course_point is a non-empty list of links <path of a critical-points file>#<position counted from 0>; the file is 04-assessment/exams/critical_points_ch01_04_v1_0_0.json or critical_points_ch06_08_v1_0_0.json; critical_point is the text of the point of one linked entry.",
+   "reason": "The banks carry no identifiers, so path plus position is the only stable link. The two critical-points files now exist (v1.0.0 only fixed the form of the link), so the link is checked: it resolves to an entry or the item is refused by the validator."
+  },
+  {
+   "topic": "Near-copy measure",
+   "decision": "An exam item is a near copy of a seed when the 4-word-sequence containment C of its text in the seed's text is at least 0.50 and the two correct answers are the same text after normalising, or when C is at least 0.80 whatever the answer. The text of an item is stem, code and options joined; words are lower-cased runs of letters, digits and underscore; C is the share of the exam item's 4-word sequences that also occur in the seed.",
+   "reason": "Measured on the 839 bank items (351,541 pairs): the 99.9th percentile of C between different items is 0.273 and the largest value is 0.733, the pairs near that top being different items that share a code template. Only one pair reaches C 0.50 with the same answer text, none reaches 0.80, so the rule separates copies from template relatives. Stem-only comparison was rejected because many stems are the same short template ('what does this program print?'). The numbers are an assumption to be confirmed on the fixture in the design file."
+  },
+  {
+   "topic": "Fixture for the near-copy measure",
+   "decision": "The design file lists a fixture of a seed and five variants with the C values computed by the method, among them an identical copy (C 1.0), one word changed (C 0.942), a rewritten stem with the options kept (C 0.871), the same with two options swapped and the answer moved (C 0.786, same answer text) and a new-angle item (C 0.0).",
+   "reason": "A rule needs a case whose answer is known before a tool can be tested. The values were computed with a short script before they were written, and the tool built later must print the same values."
+  },
+  {
+   "topic": "What an enhancement iteration changes",
+   "decision": "Each iteration changes at least one of four things in a seed: a new angle (the same critical point asked from the other side, for example the consequence instead of the definition), a cross-chapter link (a second chapter's idea needed to answer), a reasoning step (the answer needs two steps or a reason, not recall), a changed code case (a different listing whose output differs from the page's). The result must pass the near-copy measure and keep the course_point link.",
+   "reason": "The Owner asked that the result tests the critical point and not the memory of the page. Four named changes can be recorded in a field and counted, so the iteration is checkable, and the near-copy measure then proves the change was made."
+  },
+  {
+   "topic": "Question types kept: mcq",
+   "decision": "Keep mcq (four options A to D, one correct), in two forms: plain (about 60 seconds) and with a short code listing (about 100 seconds). It also carries combination-of-statements, compare-two-designs and find-the-faulty-line, where the four options are line numbers of the numbered listing. Sheet unit kind: choice.",
+   "reason": "One letter of four is read by the sheet reader as one row of four bubbles. Find-the-faulty-line is a choice among four line numbers, so it needs no unit kind beyond choice."
+  },
+  {
+   "topic": "Question types dropped: multi and judge",
+   "decision": "Drop multi and judge as separate types. Their idea survives inside mcq: 'which statements I, II, III are correct' with the option letters naming the combinations, and 'which statement is true'.",
+   "reason": "multi ticks several boxes with a penalty for a wrong tick, which makes one item produce several marks to read and a scoring rule the student must learn. judge has a 50 per cent chance of a right guess. mcq with combination options reads one mark and keeps the 25 per cent guess rate."
+  },
+  {
+   "topic": "Question types kept: match",
+   "decision": "Keep match: five premises to a list of seven answers lettered A to G, one sheet row per premise, one point per premise, about 240 seconds. Sheet unit kind: match (five units per item).",
+   "reason": "The sheet module defines the kind match with the options A to G in its own sample (seven answers), and that is the width run in the scratch test of this task; v1.0.0 used eight (A to H), which no run had covered. Seven answers for five premises still leave two spare answers, so the guess rate stays low."
+  },
+  {
+   "topic": "Question types kept: order",
+   "decision": "Keep order for four steps of a process or four lines of a short program, printed in a shuffled order and lettered A to D; the sheet has one row per printed step with the cells 1 to 4, and the student fills the cell of the place that step takes in the right order; one point per correct step; about 120 seconds. Sheet unit kind: order (four units per item).",
+   "reason": "The sheet module defines the kind order with one row per step and numbered cells (its sample uses 1 to 3); four cells 1 to 4 were run in the scratch test and read without fault. v1.0.0 had one row per position with letter cells; the row-per-step form is the module's own and is kept."
+  },
+  {
+   "topic": "Question types kept: blank and cloze",
+   "decision": "Keep blank (a gap in a code listing) and cloze (a gap in a sentence about the course) as fill from a shared bank. Every bank entry prints a two-digit code (serial digit 0 to 9, then its check digit); the bank has at most 10 entries and two more entries than gaps in the cloze part, one more in the blank part; the student fills the two digits of the entry on the sheet. One point per gap; about 90 seconds per code item (three gaps) and 60 per sentence item. Sheet unit kind: bank (one unit of two digit rows per gap).",
+   "reason": "The sheet module defines the kind bank as two rows of digits 0 to 9 holding a code with a check digit (Damm), which catches every single wrong digit and every swap of neighbours. Its layout has exactly two digit rows, so a bank has at most 10 entries (serial 0 to 9); v1.0.0 allowed 12. Two marks per gap cost more time than one, so the times are raised from 60 and 45 seconds (the new values are this design's own and easy to change)."
+  },
+  {
+   "topic": "Question types kept: predict",
+   "decision": "Keep predict (the printed result of a short listing) in ONE answer form: choose one of four printed outputs (a letter). The form with a one- or two-digit number and a sign cell is dropped. About 120 seconds. Sheet unit kind: choice.",
+   "reason": "The sheet module has no digit-row unit that a person fills for a number: its bank kind reads only a printed code and its human kind is a box the reader does not read (it only sees ink). v1.0.0 needed digit rows with a sign cell, so the item type is changed to need none; a numeric result is asked as a letter among four printed numbers."
+  },
+  {
+   "topic": "Question types dropped: short",
+   "decision": "Short (a hand-marked written answer) is dropped. The paper has no short item; the back of the answer sheet carries no answer space for one.",
+   "reason": "The Owner decided on 2026-10-30 that nothing is written freely. The recommended default is none because every answer is then read by machine and no marker, rubric or double entry is needed; keeping even one would give the sheet a human unit that the reader can only hold for a person, and would put marking back into the sitting. The cost is that Create level cannot be reached on a choice paper (see the Bloom decision)."
+  },
+  {
+   "topic": "Question types dropped: repair",
+   "decision": "Drop repair as a type. Its task 'find the faulty line' survives as an mcq with a numbered listing whose options are the line numbers or the corrected line.",
+   "reason": "repair asks the student to edit a program on a screen and checks it by running it, which paper cannot do. As a choice about a numbered listing the same critical point is still tested and read by machine."
+  },
+  {
+   "topic": "Question types dropped: program and write",
+   "decision": "Drop program and write. Nothing is written freely on the paper: no code, no words, no numbers.",
+   "reason": "The Owner decided on 2026-10-30 that code on paper is read-and-choose plus fill-the-blank and that nothing is written freely. This closes the earlier option of enabling code-writing with a rubric and a named marker."
+  },
+  {
+   "topic": "Question types dropped: string, graph, object, ask, sparql",
+   "decision": "Drop string, graph, object, ask and sparql.",
+   "reason": "They need a screen: a typed free string compared with a key, a graph or object view, a live question to the corpus or a query to a live endpoint. None can be answered on paper and read by machine."
+  },
+  {
+   "topic": "No free writing anywhere",
+   "decision": "No item type needs a student to write anything. Every answer is a mark in a sheet row of the unit kinds choice, match, order or bank. The only handwriting on the sheet is the identification box, which the reader does not read.",
+   "reason": "This is the Owner's decision of 2026-10-30 and it removes the human unit kind from the item types. It also removes the whole question of handwriting that a machine reads wrongly. The design check refuses any type that maps to the unit kind human."
+  },
+  {
+   "topic": "Listing on paper",
+   "decision": "A listing has at most 12 lines and no line is wrapped; code is set in a monospace face at 9 point; the declared width is 45 characters in a two-column page and 90 in a one-column page; a listing that does not fit is shortened, never wrapped; lines of a listing are numbered 1, 2, 3 at the left when the question refers to a line.",
+   "reason": "Carried-over rule for print. A wrapped line changes what the student reads as one statement. Numbering lines allows 'which line' questions to be answered by a number."
+  },
+  {
+   "topic": "Code types kept",
+   "decision": "Keep four code tasks: predict the printed output, find the faulty line (choose the line number), complete a gap in the code from the bank, and order the lines.",
+   "reason": "They are the tasks the brief lists for a Python course, and each one is answered by a mark the machine reads. Each is built on the types kept above."
+  },
+  {
+   "topic": "Output answers",
+   "decision": "Outputs printed as options are written exactly as Python prints them: print of a text shows it without quotes; a list shows as [1, 2] with a comma and one space; a dictionary shows as {'a': 1} with single quotes; repr of a text keeps its quotes; two lines of output are shown as two lines in the option box. Printed output options differ in a way that a reader sees: no two options differ only in a space.",
+   "reason": "With a machine-read choice there is no exact-match problem; the rule matters only for the printed options. Quotes, spacing and line breaks change the output of the course's print, list and dictionary examples, so they must be kept in the printed option. The v1.0.0 hand-answer case is removed because nothing is written."
+  },
+  {
+   "topic": "Blueprint size and time",
+   "decision": "30 items in 60 minutes. The summed answer times are 2950 seconds (49.2 minutes, 81.9 per cent of 60): 9 plain mcq at 60 s = 540, 7 mcq with code at 100 s = 700, 5 predict at 120 s = 600, 2 match at 240 s = 480, 2 order at 120 s = 240, 3 blank at 90 s = 270, 2 cloze at 60 s = 120. Items 9+7+5+2+2+3+2 = 30; points 27+21+20+10+8+9+5 = 100.",
+   "reason": "The rule is a sum at or under 90 per cent of 60 minutes, that is 3240 seconds; 2950 is under it with 290 seconds to spare. The 30 items are an assumption of the Owner (not yet answered); the 90 and 60 second values for blank and cloze are this design's own (two sheet marks per gap). The two short items of v1.0.0 (480 seconds) are replaced by two plain and one coded mcq and the extra 290 seconds are the margin."
+  },
+  {
+   "topic": "Blueprint across chapters",
+   "decision": "Items per chapter: chapter 1 four, chapter 2 five, chapter 3 five, chapter 4 five, chapter 6 four, chapter 7 four, chapter 8 three (sum 30); the count is the items whose first chapter it is.",
+   "reason": "Shares were taken in proportion to the number of items in each chapter's newest question bank (109, 131, 143, 142, 123, 122, 69) and rounded by largest remainder. This is an assumption, because the Owner clears the exact chapter content after the lectures; the table is a quota the engine reads, so changing it needs no change in the engine."
+  },
+  {
+   "topic": "Bloom reading and blueprint",
+   "decision": "The reading used is Apply and up (levels 3 to 6). The target is 21 of 30 items (70 per cent) at levels 3 to 6, by level: Remember 2, Understand 7, Apply 11, Analyze 8, Evaluate 2, Create 0. Evaluate is reached by mcq that judge two designs or two programs. Create is not reached.",
+   "reason": "The brief says more than half must be at Apply or above and asks to name the reading; the Owner has not fixed it, so this is an assumption kept in one number (share_apply_or_above). With the Analyze-and-up reading the same plan gives 10 of 30 items (33 per cent), which fails, so the Owner's choice of reading changes the verdict. Without a written answer, Create cannot be asked on a choice paper; this is stated, not hidden."
+  },
+  {
+   "topic": "Cross-chapter, synthesis and indirect items",
+   "decision": "At least 9 items name two or more chapters (30 per cent); synthesis items are among them and need an idea of each chapter named. Indirect items (a consequence, an exception or a reason) are enabled, at least 6 per paper, and each states its form in the field indirect_form.",
+   "reason": "Page questions are rarely cross-section (the Owner's ruling), so these items are authored and are the main new work. The counts are assumptions kept as numbers in the blueprint."
+  },
+  {
+   "topic": "Spread of correct letters",
+   "decision": "The 21 items answered with one letter (16 mcq and 5 predict) have keys A 6, B 5, C 5, D 5; the counts differ by at most one and no letter is the key of four items in a row.",
+   "reason": "The carried-over rule, now over 21 lettered items because every predict item is answered by a letter. The same rule is applied to every form of the paper after the options are shuffled."
+  },
+  {
+   "topic": "Randomised banks",
+   "decision": "For blank and cloze, the order of the bank entries is a permutation made by a seeded generator; the seed is stored in the build record; the blank bank has 10 entries for 9 gaps and the cloze bank has 7 entries for 5 gaps; the serial digit of an entry is its place in the printed bank (0 to 9) and its code is the serial plus the check digit; the keys of the gaps of one item are all different, and no serial is the key of three gaps in a row; the bank is never in the order of the gaps.",
+   "reason": "The Owner asked that fill-in option banks are randomised. A stored seed makes a form rebuildable for the key and the check. The bank size is limited to 10 by the sheet's two digit rows."
+  },
+  {
+   "topic": "Pair rules: midterm and make-up",
+   "decision": "The make-up paper repeats no item of the midterm: no equal id, no pair of items with C at or above 0.50 and the same answer text. The same critical point may appear in both, tested by a different item.",
+   "reason": "The carried-over rule allows a repeat only if the pair allows it; for a printed make-up sitting a repeated item would be known to the students who saw the midterm paper."
+  },
+  {
+   "topic": "Two forms of a paper",
+   "decision": "Each paper has two forms, A and B, with the same items in a different order within a block of the same type and the options in a different order; the answer-sheet layout is the same for both because the type of each position is the same.",
+   "reason": "The sheets of two neighbours then do not show the same letters, and no page is added. The keys of the two forms are different files and each form's letter counts obey the spread rule."
+  },
+  {
+   "topic": "Item order in the paper",
+   "decision": "The paper is in four parts by type: choice (mcq), trace (predict), fill from the bank (blank and cloze), match and order. Positions are numbered 1 to 30 across the whole paper, and the sheet repeats the numbers (a unit with several rows is 22a, 22b and so on).",
+   "reason": "One instruction per part is printed once. The short part of v1.0.0 is gone. The sheet module groups consecutive units of one kind into blocks, so this order gives the fewest blocks."
+  },
+  {
+   "topic": "Page budget",
+   "decision": "Expected 4 pages of paper (2 sheets printed on both sides) and 1 answer sheet printed on both sides: 6 pages, 3 sheets of A4 per student. The sheet part is measured: the sample specification of 54 units gave 2 sheet pages.",
+   "reason": "About 393 lines (9 plain mcq of 7, 7 mcq with code of 17, 5 predict of 19 because four outputs are printed, 2 match of 14, 2 order of 10, 43 for the bank items, 25 for page 1) at about 112 lines per page = 3.5 pages, so 4 paper pages. The paper part is an estimate to be verified by the first build; more than 4 paper pages fails this design."
+  },
+  {
+   "topic": "Layout that saves pages",
+   "decision": "Two columns of A4 with margins of 12 mm; body 10 point or larger, code 9 point; one shared stem for a group of items on the same listing (a listing is printed once and its items refer to it); compact code of at most 12 lines; answers are never written on the paper, so no answer lines or boxes are printed on it; black ink on white, no shading or colour; no student name or number printed on the paper.",
+   "reason": "The carried-over conventions plus the page-saving methods asked for. Answers go to the one answer sheet, so space for them on the paper is saved."
+  },
+  {
+   "topic": "Answer sheet reuse",
+   "decision": "The answer sheet is the SEN0401 sheet, reused and never edited: sen0401_exam_answersheet_v1_0_0.py (specification, layout, renderer, check digit, registration, bubble features) and sen0401_exam_answersheet_v1_1_0.py (the reader, which imports v1_0_0). This section replaces sections 7 and 9 of v1.0.0 (own geometry, digit rows, thresholds). The SEN0414 repository obtains the two modules as byte-identical vendored copies in 08-tooling with their SHA-256 recorded in this design; the design check compares the source with the record at every control.",
+   "reason": "The Owner decided on 2026-10-30 to reuse the sheet and reader. A vendored copy keeps the repository self-contained and the record makes a change visible. The copies are made by the later engine task (this task adds files only under 04-assessment/exams). If a source file differs from the recorded SHA-256, the sheet or reader changed: the vendored copy stays as recorded, the check fails, and a person decides whether to take the new version and repeat the sample reading test."
+  },
+  {
+   "topic": "Item types onto sheet unit kinds",
+   "decision": "The sheet module defines five unit kinds: choice, match, order, bank, human. Mapping: mcq and predict -> choice (one row, options A to D); match -> match (one unit per premise, options A to G); order -> order (one unit per printed step, options 1 to 4); blank and cloze -> bank (one unit per gap, two digit rows). Nothing maps to human. One extra bank unit, numbered F, carries the form code (below).",
+   "reason": "Every kept type is read by the module's own kinds, so no new geometry is needed. The unit kinds were read from the module (BLOCK_MAX and build_layout) and a sheet for the 54 units of one paper was built and read in a scratch folder outside the repository: 54 of 54 marks read back with no flag."
+  },
+  {
+   "topic": "Mark style",
+   "decision": "The sheet's own rules: fill the bubble completely in dark ink; to change an answer draw a large X through the old bubble and fill the new one; exactly one filled bubble without an X per row, two filled bubbles count as no answer; after each block fill the bubble of every number left blank (the closure row); fill-in codes are two digits, one bubble in each of two rows.",
+   "reason": "These are the six rules the sheet prints on its first page. The closure row and the X rule are the sheet's methods against shifted rows and withdrawn marks. A struck-through bubble reads as empty; with no other mark the row reads as no answer."
+  },
+  {
+   "topic": "Answer-sheet geometry",
+   "decision": "Geometry is the sheet module's: A4 portrait (595.28 by 841.89 pt), margin 15 mm, two columns of 245 pt with a gap of 20 pt, bubble radius 5.5 pt, pitch 19 pt, row height 15.5 pt, four L-shaped corner marks on every sheet page (leg 8 mm, stroke 1.2 mm, 7 mm from the page edges), no hollow marker. The reader works on a 150 dpi image of the page in the sheet's own coordinates and does not guess: it reads the layout the module wrote.",
+   "reason": "v1.0.0 fixed its own geometry (3 solid and 1 hollow marker, 7.0 by 6.5 mm cells). The module has other numbers and cannot be edited, so the module's numbers replace the old ones. A turned (180 degree) sheet is not told from an upright one by the marks; a turned sheet is expected to show as a closure or check-digit mismatch and has NOT been measured."
+  },
+  {
+   "topic": "Student-ID line and personal data",
+   "decision": "The sheet has an identification box (a rectangle in the header) filled by hand and read by a person only; the sheet and the paper carry no name; every example sheet used to test a tool is synthetic and says so.",
+   "reason": "The reader does not read the box, so no machine reading of an identity can be wrong. Nothing personal is stored in the repository."
+  },
+  {
+   "topic": "Form code that ties sheet to paper",
+   "decision": "The sheet prints a form code (four digits and a check digit) in its header, which the module takes from the specification. This design makes the form code identify kind, form and version, prints the same words in the footer of every paper page, and adds one bank unit F as the first unit of the sheet: the student copies the printed two-digit form mark (serial 0 midterm A, 1 midterm B, 2 make-up A, 3 make-up B, then its check digit) from page 1 of the paper. The reader reads it like any bank unit; the grading tool compares it with the key's form and refuses a mismatch. The paper version number is exactly the previous plus one.",
+   "reason": "The module has no version strip, parity cell or check-number rows (v1.0.0 sections 7 and 9 had them); it does have the bank kind with a check digit, which suffices to tie sheet to paper without a new kind. The printed header code is read by a person only."
+  },
+  {
+   "topic": "Reducing mistakes in giving answers",
+   "decision": "Rules printed once on page 1 of the paper: use the answer sheet only, fill whole circles, one mark per row, X through a bubble to withdraw, fill the blank-number bubbles at the end of each block, copy the form mark into unit F. In the items: numbering as on the sheet, options labelled A to D in a fixed order, no \"all of the above\" or \"none of the above\", no negative stem unless the word is in capitals, options of similar length and without overlap, one answer defensible, absolute words (always, never) only when true in Python.",
+   "reason": "Each rule removes a source of a wrong mark or a dispute; the item rules are the ones the item validator checks by machine (not the length rule, which a person checks). An option set where the key is regularly the longest would tell the answer without the knowledge."
+  },
+  {
+   "topic": "Check boxes",
+   "decision": "Each part of the paper ends with a printed reminder naming the rows of the sheet it covers, for example 'rows 1 to 14 of the sheet'.",
+   "reason": "A student who skips an item can lose track of the row; the reminder is a check at the point where it helps, and costs one line per part."
+  },
+  {
+   "topic": "Reading by machine",
+   "decision": "The module's reader (v1.1.0) reads every choice, match, order and bank row and the closure row of every block. A bubble is filled at a mean ink of 0.50 or more inside the ring (0.7 of the radius) at 150 dpi, faint from 0.12, struck when at least three of the four corner patches outside the bubble hold ink above 0.08; a bubble not filled and not faint is still called a faint mark when its optical density is 0.03 or more. These are the module's thresholds and replace the 45 and 15 per cent of v1.0.0.",
+   "reason": "The thresholds were fixed by the SEN0401 sheet task on its calibration seeds; they are reused as they are. They have NOT been measured again on SEN0414 sheets or on any scan or photograph: the sample run of this task drew marks into a rasterised sheet, which is a perfect scan."
+  },
+  {
+   "topic": "Reading by hand",
+   "decision": "A person reads the identification box, every row the reader holds (flags double, faint, incomplete, check-digit, held-block), every sheet the reader cannot register (fewer than three corner marks found), and any row where the person doubts the machine. The person's reading of the original sheet is final.",
+   "reason": "Whatever the machine cannot read with certainty is given to a person; the original sheet is the evidence, not the machine's image. The module has no human unit in use here, so nothing handwritten is part of the score."
+  },
+  {
+   "topic": "Unreadable rule",
+   "decision": "A sheet page is held as a whole when the reader cannot register it (fewer than three corner marks found). A bank unit whose rows are incomplete, doubled or faint, or whose code fails the check digit, is held. A block whose closure row disagrees with its blank rows is held whole, and a shifted run of blocks of one kind is held to where the shift lands (the module's rule).",
+   "reason": "These are the module's conditions. The v1.0.0 conditions on dpi, parity, check-number difference and 5 degree tilt are not in the module and are dropped: the module corrects tilt by a similarity transform and has no tilt limit; whether a limit is needed is NOT_MEASURED."
+  },
+  {
+   "topic": "Double-mark rule",
+   "decision": "A row with two or more filled bubbles reads as double and is held and never scored by the machine; a person decides from the original sheet, taking an X-ed bubble as withdrawn; when the person cannot decide, the row scores zero. A row with no filled bubble scores zero and is not held by itself (the closure row tells a left-blank row from a skipped one).",
+   "reason": "This is the module's double and blank behaviour (measured in the scratch run: a row with two filled bubbles gave the flag double; a bubble crossed out with an X and nothing else gave no value and no flag)."
+  },
+  {
+   "topic": "Applying the key",
+   "decision": "The key is a file per paper and form with the answer and the points of every position and a SHA-256 digest of its own content; the grading tool refuses a key whose kind, form and version differ from the form mark read in unit F. Points: mcq 3, predict 4, match 1 per premise (5), order 1 per step (4), blank 1 per gap, cloze 1 per gap; 100 points in all; no negative marking.",
+   "reason": "A key is only valid for the paper it was made with. The point values sum to 100: 16x3 + 5x4 + 2x5 + 2x4 + 9 + 5. No negative marking is an assumption the Owner may change."
+  },
+  {
+   "topic": "Second check",
+   "decision": "Every result is checked twice. The first reading is the module's read_sheet; the second is the module's read_naive (the darkest bubble of a row if dark enough, no strike rule, no closure, no check digit); a row where they disagree is looked at by a person; the total is recomputed from the stored per-item results by a second routine and must equal the first; a person compares the original with the result for every held sheet and for a random sample of at least 10 per cent of sheets (and at least 5).",
+   "reason": "One method can share a fault with itself; a second method that disagrees exposes it. Both readers exist in the module. The sample finds a fault that no flag shows. The hand-marked short entry of v1.0.0 is gone with the short type."
+  },
+  {
+   "topic": "Item validator",
+   "decision": "A machine checks every item record before it enters a paper: exam_item_check_v1_0_0.py (library and command line) with the fixtures exam_item_check_fixtures_v1_0_0.json (a valid item of each kept type and one defective item for each rule, each with its expected verdict). The self-test prints expected and actual for each fixture and exits 0 only when all are as expected.",
+   "reason": "The item model is only useful if it is enforced. Fixtures of known answer are the test of the checker itself; a check that has never failed on a known defect proves nothing."
+  },
+  {
+   "topic": "What the Owner must supply",
+   "decision": "Open for the Owner (full list with recommended default and effect in owner_decisions.open): items per paper; the Bloom reading; the chapter weights; the final chapter list after the lectures; negative marking; the printed title of the sheet (it says SEN0401).",
+   "reason": "Each one is a choice the course material cannot settle. They are assumptions, kept as numbers, so one change changes the whole blueprint."
+  }
+ ],
+ "item_types_kept": [
+  {
+   "type": "mcq",
+   "why": "One letter A to D, a sheet row of kind choice, read by machine; about 60 s plain and 100 s with a short listing; also carries combination-of-statements, find-the-faulty-line (four line numbers) and compare-two-designs items."
+  },
+  {
+   "type": "match",
+   "why": "Five premises to seven lettered answers A to G, one sheet unit of kind match per premise, a low guess rate and partial credit by premise, about 240 s."
+  },
+  {
+   "type": "order",
+   "why": "Four steps or four code lines printed shuffled, one sheet unit of kind order per step with cells 1 to 4, partial credit by step, about 120 s."
+  },
+  {
+   "type": "blank",
+   "why": "A gap in a code listing filled from a shared bank of at most 10 printed two-digit codes, one sheet unit of kind bank per gap, about 90 s per item of three gaps."
+  },
+  {
+   "type": "cloze",
+   "why": "A gap in a sentence about the course filled from a shared bank of at most 10 printed two-digit codes, one sheet unit of kind bank per gap, about 60 s per item."
+  },
+  {
+   "type": "predict",
+   "why": "The printed result of a short listing, answered by choosing one of four printed outputs (a sheet row of kind choice); the digit-and-sign form of v1.0.0 is dropped because the sheet has no unit for it; about 120 s."
+  }
+ ],
+ "item_types_dropped": [
+  {
+   "type": "multi",
+   "why": "Several ticks with a penalty make one item several marks and a scoring rule to learn; its idea survives as an mcq with combination options."
+  },
+  {
+   "type": "judge",
+   "why": "A 50 per cent chance of a right guess; its idea survives as an mcq asking which statement is true."
+  },
+  {
+   "type": "repair",
+   "why": "Needs a screen to edit and run the program; the task survives as an mcq about a numbered listing."
+  },
+  {
+   "type": "program",
+   "why": "Needs a screen to run the code; writing code on paper is not enabled because no rubric or named marker exists."
+  },
+  {
+   "type": "write",
+   "why": "Writing code on paper is not enabled: no marking rubric exists and handwritten code cannot be graded reliably by machine."
+  },
+  {
+   "type": "string",
+   "why": "A typed free string compared with a key needs a screen and handwriting cannot be read by machine with certainty."
+  },
+  {
+   "type": "graph",
+   "why": "Needs a screen to show and explore a graph of the corpus."
+  },
+  {
+   "type": "object",
+   "why": "Needs a screen to show and explore an object view."
+  },
+  {
+   "type": "ask",
+   "why": "Needs a live question to the corpus; cannot be answered on paper."
+  },
+  {
+   "type": "sparql",
+   "why": "Needs a live endpoint to run a query; cannot be answered on paper."
+  },
+  {
+   "type": "short",
+   "why": "A written answer marked by hand; the Owner decided on 2026-10-30 that nothing is written freely, and the recommended default of no short items means every answer is read by machine."
+  }
+ ],
+ "blueprint": {
+  "items": 30,
+  "minutes": 60,
+  "share_apply_or_above": 70,
+  "letters": {
+   "A": 6,
+   "B": 5,
+   "C": 5,
+   "D": 5
+  },
+  "chapters": {
+   "1": 4,
+   "2": 5,
+   "3": 5,
+   "4": 5,
+   "6": 4,
+   "7": 4,
+   "8": 3
+  },
+  "types": {
+   "mcq": 16,
+   "predict": 5,
+   "match": 2,
+   "order": 2,
+   "blank": 3,
+   "cloze": 2
+  },
+  "cross_chapter_items": 9,
+  "bloom_levels": {
+   "1": 2,
+   "2": 7,
+   "3": 11,
+   "4": 8,
+   "5": 2,
+   "6": 0
+  },
+  "arithmetic": {
+   "rows": [
+    {
+     "name": "mcq plain",
+     "type": "mcq",
+     "items": 9,
+     "seconds_each": 60,
+     "points": 27,
+     "points_each": "3",
+     "unit_kind": "choice",
+     "units": 9
+    },
+    {
+     "name": "mcq with code",
+     "type": "mcq",
+     "items": 7,
+     "seconds_each": 100,
+     "points": 21,
+     "points_each": "3",
+     "unit_kind": "choice",
+     "units": 7
+    },
+    {
+     "name": "predict",
+     "type": "predict",
+     "items": 5,
+     "seconds_each": 120,
+     "points": 20,
+     "points_each": "4",
+     "unit_kind": "choice",
+     "units": 5
+    },
+    {
+     "name": "match",
+     "type": "match",
+     "items": 2,
+     "seconds_each": 240,
+     "points": 10,
+     "points_each": "5 (1 per premise)",
+     "unit_kind": "match",
+     "units": 10
+    },
+    {
+     "name": "order",
+     "type": "order",
+     "items": 2,
+     "seconds_each": 120,
+     "points": 8,
+     "points_each": "4 (1 per step)",
+     "unit_kind": "order",
+     "units": 8
+    },
+    {
+     "name": "blank",
+     "type": "blank",
+     "items": 3,
+     "seconds_each": 90,
+     "points": 9,
+     "points_each": "3 (3 gaps)",
+     "unit_kind": "bank",
+     "units": 9
+    },
+    {
+     "name": "cloze",
+     "type": "cloze",
+     "items": 2,
+     "seconds_each": 60,
+     "points": 5,
+     "points_each": "3 and 2 (gaps)",
+     "unit_kind": "bank",
+     "units": 5
+    }
+   ],
+   "form_unit": {
+    "no": "F",
+    "unit_kind": "bank",
+    "units": 1
+   },
+   "total_items": 30,
+   "total_seconds": 2950,
+   "limit_seconds": 3240,
+   "time_share_percent": 81.9,
+   "total_points": 100,
+   "total_units": 54,
+   "lettered_items": 21,
+   "apply_or_above_items": 21,
+   "analyze_or_above_items": 10,
+   "analyze_or_above_percent": 33.3,
+   "sheet_pages_measured": 2,
+   "paper_pages_estimate": 4,
+   "paper_lines_estimate": 393,
+   "lines_per_page": 112
+  }
+ },
+ "page_budget": {
+  "pages_per_student": 6,
+  "sheets_per_student": 3,
+  "reasoning": "About 393 lines (9 plain mcq of 7 lines, 7 mcq with code of 17, 5 predict of 19 with four printed outputs, 2 match of 14, 2 order of 10, about 43 for 3 blank and 2 cloze items, a 25-line first page with the instructions printed once) at about 112 lines per A4 page in two columns of 10 point text give 3.5 pages, so 4 paper pages on 2 sheets printed on both sides, plus one answer sheet of 2 pages (measured: the sample specification of 54 units gave 2 sheet pages in the module's own layout): 6 pages and 3 sheets. The paper figure is an estimate to be checked by the first build."
+ },
+ "answer_sheet": {
+  "layout": "The sheet is the SEN0401 sheet module (sen0401_exam_answersheet_v1_0_0.py) and its reader (sen0401_exam_answersheet_v1_1_0.py), reused and never edited. A4 portrait, a header on the first page (title, form code, identification box, six printed rules), then blocks of at most 5 choice, match or order units or 3 bank units, each with a header row of option labels, one row per unit (two for a bank unit) with the number at both ends, and a closure row; blocks are flowed into two columns per page. The engine writes a layout file giving every row and bubble position; the reader reads that file and does not guess.",
+  "mark_style": "Fill the bubble completely in dark ink; X through a bubble withdraws it; one filled bubble without an X per row; fill the closure bubble of every number left blank; fill-in codes are two digits.",
+  "geometry": {
+   "page_pt": [
+    595.2756,
+    841.8898
+   ],
+   "margin_mm": 15,
+   "columns": 2,
+   "column_width_pt": 245.0,
+   "column_gap_pt": 20.0,
+   "bubble_radius_pt": 5.5,
+   "pitch_pt": 19.0,
+   "row_height_pt": 15.5,
+   "corner_marks": "four L-shaped marks on every sheet page, leg 8 mm, stroke 1.2 mm, 7 mm from the page edges, no hollow marker",
+   "reading_dpi": 150
+  },
+  "student_id_line": "An identification box in the header, filled by hand, read by a person only; no name or number printed; example sheets are synthetic.",
+  "version_mark": "The header prints a form code of four digits and a check digit from the specification; the sheet also has one bank unit F that the student fills with the printed two-digit form mark of the paper (serial 0 midterm A, 1 midterm B, 2 make-up A, 3 make-up B, plus its check digit); the reader reads it like any bank unit and the grading tool compares it with the key.",
+  "reuse": {
+   "source_dir": "/home/claude/sen0401/08-tooling/exam/",
+   "modules": [
+    {
+     "file": "sen0401_exam_answersheet_v1_0_0.py",
+     "role": "sheet: specification, layout, renderer, check digit, registration, bubble features, naive reader",
+     "sha256": "929184f5ed0a52b975677eb59f511b69b3982024e8a8bd858e20278afe4dcf23"
+    },
+    {
+     "file": "sen0401_exam_answersheet_v1_1_0.py",
+     "role": "reader: read_sheet with optical-density flags; imports the v1_0_0 module",
+     "sha256": "758cd9af5d300d6c1cf0dc4046e381cb1a78034494e513c733f40e18fd034573"
+    }
+   ],
+   "how_obtained": "byte-identical vendored copies in 08-tooling of the SEN0414 repository (made by the engine task, not by this one), each with its SHA-256 recorded here and in a vendor record file; at control the copy and the source are compared byte for byte and with the recorded digest",
+   "if_source_changes": "A source whose SHA-256 differs from the record means the sheet geometry, thresholds or reader changed after this design was written. The check fails; the vendored copy is not replaced by itself; a person decides whether to adopt the new version, and the sample sheet reading test is repeated before any paper is printed.",
+   "sample_run": {
+    "folder": "scratch folder outside the repository, not kept",
+    "units": 54,
+    "pages": 2,
+    "marks_drawn_and_read_back": "54 of 54 with no flag",
+    "double_mark_row": "flag double",
+    "x_through_only_mark": "no value, no flag",
+    "not_measured": [
+     "a printed sheet scanned or photographed",
+     "a sheet turned by 180 degrees",
+     "thresholds on SEN0414 sheets",
+     "a scan at a resolution other than 150 dpi (the module expects its own frame; a scan must be resized to 150 dpi first)"
+    ]
+   }
+  },
+  "unit_kinds": {
+   "choice": {
+    "rows_per_unit": 1,
+    "options": "given by the specification, ABCD here",
+    "block_max_units": 5
+   },
+   "match": {
+    "rows_per_unit": 1,
+    "options": "given by the specification, ABCDEFG here",
+    "block_max_units": 5
+   },
+   "order": {
+    "rows_per_unit": 1,
+    "options": "given by the specification, 1234 here",
+    "block_max_units": 5
+   },
+   "bank": {
+    "rows_per_unit": 2,
+    "options": "digits 0 to 9 in each row; the two digits are a serial and its Damm check digit",
+    "block_max_units": 3
+   },
+   "human": {
+    "rows_per_unit": 0,
+    "options": "a box of digit cells written by hand; the reader only sees ink and holds the unit for a person",
+    "block_max_units": 4
+   }
+  },
+  "type_map": {
+   "mcq": {
+    "unit_kind": "choice",
+    "options": "ABCD",
+    "units_per_item": 1
+   },
+   "predict": {
+    "unit_kind": "choice",
+    "options": "ABCD",
+    "units_per_item": 1
+   },
+   "match": {
+    "unit_kind": "match",
+    "options": "ABCDEFG",
+    "units_per_item": 5
+   },
+   "order": {
+    "unit_kind": "order",
+    "options": "1234",
+    "units_per_item": 4
+   },
+   "blank": {
+    "unit_kind": "bank",
+    "options": "two digit rows",
+    "units_per_item": 3
+   },
+   "cloze": {
+    "unit_kind": "bank",
+    "options": "two digit rows",
+    "units_per_item": "gaps of the item (3 and 2)"
+   }
+  },
+  "read_by_machine_answers": "every mcq and predict letter, every match premise, every order step, every bank code (blank and cloze), the form mark in unit F, and the closure row of each block",
+  "held_for_a_person": "the identification box; every row flagged double, faint, incomplete, check-digit or held-block; every sheet page the reader cannot register; every X-ed mark in doubt",
+  "dropped_from_v1_0_0": "digit rows (tens, ones, sign), the version strip with parity, the check-number rows, the two calibration cells, the hollow corner marker, the 5 degree tilt limit, the 200 dpi limit and the 45 and 15 per cent fill thresholds: the module has none of them"
+ },
+ "grading": {
+  "read_by_machine": "The module's reader reads every choice, match, order and bank row and the closure rows; filled from a mean ink of 0.50, faint from 0.12 (or optical density 0.03 below that), struck by ink in at least three of four corner patches.",
+  "read_by_hand": "The identification box, every held row, every sheet page that cannot be registered and any doubted X-ed mark; the person's reading of the original sheet is final.",
+  "unreadable_rule": "A sheet page is held when fewer than three corner marks are found; a bank unit is held when its rows are incomplete, doubled or faint or its code fails the check digit; a block is held whole when its closure row disagrees with its blank rows; a held item is never scored by the machine.",
+  "double_mark_rule": "A row with two or more filled bubbles is held; a person decides from the original sheet, taking an X-ed bubble as withdrawn; if the person cannot decide the row scores zero; an empty row scores zero.",
+  "key_application": "One key file per paper and form (answer and points of every position, with a SHA-256 digest of its content); refused when kind, form and version differ from the form mark read in unit F; points: mcq 3, predict 4, match 1 per premise, order 1 per step, blank 1 per gap, cloze 1 per gap; total 100; no negative marking.",
+  "second_check": "The module's read_sheet and read_naive must agree per row or the row is held; the total is recomputed by a second routine; a person compares original and result for every held sheet and a random sample of at least 10 per cent of sheets and at least 5."
+ },
+ "owner_decisions": {
+  "decided": [
+   {
+    "date": "2026-10-30",
+    "decision": "Physical printed paper, one sitting of 60 minutes.",
+    "reason": "The Owner's statement (relayed); it sets the time limit of the blueprint and drops every screen flow.",
+    "effect": "time rule: answer time at most 90 per cent of 3600 s"
+   },
+   {
+    "date": "2026-10-30",
+    "decision": "Code on paper is read-and-choose plus fill-the-blank; nothing is written freely.",
+    "reason": "The Owner's statement (relayed); a machine reads every answer and no marker is needed.",
+    "effect": "kept: predict by choice, faulty line by choice, blank from a bank, order; dropped: short, digit answers, write"
+   },
+   {
+    "date": "2026-10-30",
+    "decision": "The interactive pages' questions are visible to the students, so they are seeds and are never copied.",
+    "reason": "The Owner's statement (relayed); students can open the pages before the sitting.",
+    "effect": "near-copy measure (C 0.50 with the same answer, or 0.80 whatever the answer) and the seed_item field"
+   },
+   {
+    "date": "2026-10-30",
+    "decision": "Chapters 1, 2, 3, 4, 6, 7, 8; chapter 5 is out.",
+    "reason": "The Owner's statements of 2026-10-29 and 2026-10-30 (relayed).",
+    "effect": "chapter quota and the validator's chapter rule"
+   },
+   {
+    "date": "2026-10-30",
+    "decision": "The answer sheet is a separate bubble grid that reuses the SEN0401 sheet and reader (read-only).",
+    "reason": "The Owner's statement (relayed); one tested sheet and reader serve both courses.",
+    "effect": "sections 7 and 9 of v1.0.0 replaced by the module's own unit kinds, geometry and thresholds"
+   },
+   {
+    "date": "2026-10-30",
+    "decision": "The midterm is made first; nothing is built for the make-up paper in this box.",
+    "reason": "The Owner's statement (relayed); the midterm is next week.",
+    "effect": "the pair rules stay in the design but are not exercised here"
+   }
+  ],
+  "open": [
+   {
+    "id": "Q1",
+    "question": "How many items does one paper have?",
+    "assumption": "A2: 30 items",
+    "recommended_default": "30",
+    "if_answer_changes": "Every row of the arithmetic table scales: time (sum must stay at or under 3240 s: at the same mix of about 98 s per item, 32 items is the most), points (the per-type points are rescaled to total 100), sheet units (1.8 units per item; the sheet page count and the paper page count are re-measured), chapter quota and letter counts."
+   },
+   {
+    "id": "Q2",
+    "question": "Which Bloom reading: Apply and up (levels 3 to 6) or Analyze and up (levels 4 to 6)?",
+    "assumption": "A1: Apply and up",
+    "recommended_default": "Apply and up",
+    "if_answer_changes": "With Analyze and up this plan has 10 of 30 items (33 per cent) and fails the rule of more than 50 per cent; it would need at least 16 items at levels 4 to 6, which on a choice-only paper means mostly compare-two-designs, indirect and trace items, longer times per item, and fewer items per paper."
+   },
+   {
+    "id": "Q3",
+    "question": "What are the chapter weights?",
+    "assumption": "A3: items per chapter 4, 5, 5, 5, 4, 4, 3 for chapters 1, 2, 3, 4, 6, 7, 8 (proportional to the 109, 131, 143, 142, 123, 122, 69 items of the chapter question banks)",
+    "recommended_default": "the proportional quota above",
+    "if_answer_changes": "Only the chapter quota table changes (the engine reads it); the arithmetic, the sheet and the validator do not."
+   },
+   {
+    "id": "Q4",
+    "question": "Is the final chapter list the one fixed on 2026-10-30 (1, 2, 3, 4, 6, 7, 8)?",
+    "assumption": "chapters 1, 2, 3, 4, 6, 7, 8",
+    "recommended_default": "as assumed",
+    "if_answer_changes": "The validator's chapter set and the quota table change; critical points of an added chapter must exist first."
+   },
+   {
+    "id": "Q5",
+    "question": "Do wrong answers cost points?",
+    "assumption": "A5: no negative marking",
+    "recommended_default": "no negative marking",
+    "if_answer_changes": "The key rule and the total change; a penalty needs a blank-row rule that the sheet's closure row already supports."
+   },
+   {
+    "id": "Q6",
+    "question": "The reused sheet prints the title \"SEN0401 answer sheet\" and the course name cannot be changed without editing the module. Accept it, or overprint?",
+    "assumption": "not yet decided",
+    "recommended_default": "overprint the title line on the rendered PDF in the engine task (a white box with the SEN0414 text), without editing the module",
+    "if_answer_changes": "If accepted as it is, SEN0414 students receive a sheet that says SEN0401; if overprinted, the engine task adds one step and the printed result must be looked at once by a person."
+   }
+  ]
+ },
+ "supersedes": {
+  "file": "04-assessment/exams/exam_design_v1_0_0.md and exam_design_v1_0_0.json",
+  "status": "stays as committed and controlled; this version is new files",
+  "replaced": {
+   "section 3 (short, predict digit form)": "short dropped; predict by choice only",
+   "section 5 (blueprint)": "redone for the six kept types, see blueprint.arithmetic",
+   "section 7 (answer sheet and geometry)": "replaced by the SEN0401 sheet's own unit kinds and geometry",
+   "section 9 (reading, assessing, grading)": "replaced by the SEN0401 reader's thresholds, flags and closure rule",
+   "section 10 (what the Owner must supply)": "now owner_decisions.open"
+  },
+  "kept": [
+   "scope",
+   "reuse of engine, banks and ontology weight",
+   "near-copy measure and fixture",
+   "enhancement iteration",
+   "listing rules",
+   "pair rules",
+   "two forms",
+   "layout that saves pages"
+  ]
+ }
+}
