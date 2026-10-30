@@ -1,0 +1,190 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix ex:   <https://example.org/sen0414/exam-engine#> .
+
+# SEN0414 printed exams: the blueprint rules of the exam engine as SHACL (task TK4_Engine_Core).
+# A ruling is never kept as prose: each rule below is one shape named E01 to E19; the engine
+# (exam_engine_v1_0_0.py, function build_graph) writes the description of a pool and of a built paper,
+# this file decides. Data that comes from the design (quotas, minutes, cross-chapter and indirect minima,
+# the Bloom level that counts as "3 or above", which is assumption A1) is in the description of the paper;
+# the thresholds that are rules of the engine (90 per cent of the time, more than 50 per cent at the Bloom
+# level, letter spread of 1, no letter four times in a row, no bank number three times in a row,
+# near-copy 0.50 with the same answer or 0.80 whatever the answer) are written in the shapes.
+#
+# Description (all classes in the ex: namespace):
+#   ex:Paper         one per build: ex:minutes, ex:bloomThreshold, ex:crossMin, ex:indirectMin
+#   ex:ChapterQuota  ex:chapter, ex:quota          (from the design, per chapter)
+#   ex:TypeQuota     ex:itemType, ex:count          (from the design, per type)
+#   ex:PoolRecord    ex:poolId                      (one per record of the pool)
+#   ex:PaperItem     ex:inPaper, ex:itemId, ex:firstChapter, ex:itemType, ex:seconds, ex:bloom, ex:chapterCount,
+#                    ex:indirect (boolean), ex:validatorFailures, ex:maxCoverageSame, ex:maxCoverageAny, ex:listingCopy,
+#                    ex:otherIdRepeated, ex:otherMaxCoverageSame, ex:otherMaxCoverageAny, ex:otherListingCopy
+#   ex:Form          ex:formName
+#   ex:Letter        A to D
+#   ex:Keyed         ex:inForm, ex:rank (position among the lettered items), ex:keyLetter
+#   ex:Presented     ex:inForm, ex:forItem, ex:position, ex:itemType, ex:groupSize, ex:optionOrder
+#   ex:Bank          ex:inForm, ex:forItem, ex:entries, ex:gaps, ex:bankSeed, ex:reproduced
+#   ex:Gap           ex:inBank, ex:inForm, ex:gapNo, ex:seq (position among the gaps of the form), ex:key (bank serial)
+
+ex: a owl:Ontology ;
+    rdfs:label "SEN0414 exam engine blueprint rules" ;
+    sh:declare [ sh:prefix "ex" ; sh:namespace "https://example.org/sen0414/exam-engine#"^^xsd:anyURI ] .
+
+ex:Paper a rdfs:Class .
+ex:PaperItem a rdfs:Class .
+ex:PoolRecord a rdfs:Class .
+ex:Form a rdfs:Class .
+ex:Letter a rdfs:Class .
+ex:Keyed a rdfs:Class .
+ex:Presented a rdfs:Class .
+ex:Bank a rdfs:Class .
+ex:Gap a rdfs:Class .
+ex:ChapterQuota a rdfs:Class .
+ex:TypeQuota a rdfs:Class .
+
+ex:E01 a sh:NodeShape ; rdfs:label "Item ids are unique in the pool" ;
+    sh:targetClass ex:PoolRecord ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E01: an item id occurs more than once" ;
+        sh:select """SELECT $this WHERE { $this ex:poolId ?i . ?o a ex:PoolRecord ; ex:poolId ?i . FILTER(?o != $this) }""" ] .
+
+ex:E02 a sh:NodeShape ; rdfs:label "Every item of the paper passes the item validator" ;
+    sh:targetClass ex:PaperItem ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E02: the item validator reports a failure" ;
+        sh:select """SELECT $this WHERE { $this ex:validatorFailures ?f . FILTER(?f > 0) }""" ] .
+
+ex:E03 a sh:NodeShape ; rdfs:label "Items per chapter equal the quota of the chapter" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E03: a chapter holds a number of items other than its quota" ;
+        sh:select """SELECT $this ?c WHERE { $this ex:hasChapterQuota ?q . ?q ex:chapter ?c ; ex:quota ?n .
+            OPTIONAL { ?i ex:inPaper $this ; ex:firstChapter ?c } } GROUP BY $this ?c ?n HAVING (COUNT(?i) != ?n)""" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E03: an item stands in a chapter that has no quota" ;
+        sh:select """SELECT $this ?c WHERE { ?i ex:inPaper $this ; ex:firstChapter ?c .
+            FILTER NOT EXISTS { $this ex:hasChapterQuota ?q . ?q ex:chapter ?c } }""" ] .
+
+ex:E04 a sh:NodeShape ; rdfs:label "Counts of each item type equal the blueprint" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E04: a type holds a number of items other than the blueprint" ;
+        sh:select """SELECT $this ?t WHERE { $this ex:hasTypeQuota ?q . ?q ex:itemType ?t ; ex:count ?n .
+            OPTIONAL { ?i ex:inPaper $this ; ex:itemType ?t } } GROUP BY $this ?t ?n HAVING (COUNT(?i) != ?n)""" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E04: an item has a type the blueprint does not list" ;
+        sh:select """SELECT $this ?t WHERE { ?i ex:inPaper $this ; ex:itemType ?t .
+            FILTER NOT EXISTS { $this ex:hasTypeQuota ?q . ?q ex:itemType ?t } }""" ] .
+
+ex:E05 a sh:NodeShape ; rdfs:label "Answer time is at most 90 per cent of the sitting" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E05: the answer time of the items is more than 90 per cent of the minutes" ;
+        sh:select """SELECT $this WHERE { ?i ex:inPaper $this ; ex:seconds ?s . $this ex:minutes ?m }
+            GROUP BY $this ?m HAVING (SUM(?s) * 100 > 90 * ?m * 60)""" ] .
+
+ex:E06 a sh:NodeShape ; rdfs:label "More than 50 per cent of the items are at the Bloom level of the assumption or above" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E06: the share of items at the Bloom threshold or above is not above 50 per cent" ;
+        sh:select """SELECT $this WHERE { ?i ex:inPaper $this ; ex:bloom ?b . $this ex:bloomThreshold ?th }
+            GROUP BY $this ?th HAVING (SUM(IF(?b >= ?th, 1, 0)) * 100 <= 50 * COUNT(?i))""" ] .
+
+ex:E07 a sh:NodeShape ; rdfs:label "Counts of the correct letters differ by at most one in each form" ;
+    sh:targetClass ex:Form ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E07: the counts of two correct letters differ by more than one" ;
+        sh:select """SELECT $this ?l1 ?l2 WHERE { ?l1 a ex:Letter . ?l2 a ex:Letter .
+            OPTIONAL { ?k1 ex:inForm $this ; ex:keyLetter ?l1 } OPTIONAL { ?k2 ex:inForm $this ; ex:keyLetter ?l2 } }
+            GROUP BY $this ?l1 ?l2 HAVING (COUNT(DISTINCT ?k1) - COUNT(DISTINCT ?k2) > 1)""" ] .
+
+ex:E08 a sh:NodeShape ; rdfs:label "No letter is the key of four items in a row in each form" ;
+    sh:targetClass ex:Form ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E08: one letter is the key of four items in a row" ;
+        sh:select """SELECT $this ?l WHERE { ?a ex:inForm $this ; ex:rank ?r ; ex:keyLetter ?l .
+            BIND(?r + 1 AS ?r2) ?b ex:inForm $this ; ex:rank ?r2 ; ex:keyLetter ?l .
+            BIND(?r + 2 AS ?r3) ?c ex:inForm $this ; ex:rank ?r3 ; ex:keyLetter ?l .
+            BIND(?r + 3 AS ?r4) ?d ex:inForm $this ; ex:rank ?r4 ; ex:keyLetter ?l }""" ] .
+
+ex:E09 a sh:NodeShape ; rdfs:label "At least the design's number of cross-chapter items" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E09: fewer cross-chapter items than the design asks" ;
+        sh:select """SELECT $this WHERE { ?i ex:inPaper $this ; ex:chapterCount ?cc . $this ex:crossMin ?m }
+            GROUP BY $this ?m HAVING (SUM(IF(?cc >= 2, 1, 0)) < ?m)""" ] .
+
+ex:E10 a sh:NodeShape ; rdfs:label "At least the design's number of indirect items" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E10: fewer indirect items than the design asks" ;
+        sh:select """SELECT $this WHERE { ?i ex:inPaper $this ; ex:indirect ?d . $this ex:indirectMin ?m }
+            GROUP BY $this ?m HAVING (SUM(IF(?d, 1, 0)) < ?m)""" ] .
+
+ex:E11 a sh:NodeShape ; rdfs:label "A fill-in bank has more entries than gaps" ;
+    sh:targetClass ex:Bank ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E11: a bank has no more entries than gaps" ;
+        sh:select """SELECT $this WHERE { $this ex:entries ?e ; ex:gaps ?g . FILTER(?e <= ?g) }""" ] .
+
+ex:E12 a sh:NodeShape ; rdfs:label "A bank is a seeded permutation: the seed is stored and reproduces the printed order" ;
+    sh:targetClass ex:Bank ;
+    sh:property [ sh:path ex:bankSeed ; sh:minCount 1 ; sh:maxCount 1 ; sh:message "E12: the seed of a bank is not stored" ] ;
+    sh:property [ sh:path ex:reproduced ; sh:hasValue true ; sh:minCount 1 ; sh:message "E12: the stored seed does not reproduce the printed bank order" ] .
+
+ex:E13 a sh:NodeShape ; rdfs:label "A bank is not in gap order" ;
+    sh:targetClass ex:Bank ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E13: the keys of the gaps rise with the gap number (the bank is in gap order)" ;
+        sh:select """SELECT $this WHERE { $this ex:gaps ?g . FILTER(?g >= 2)
+            FILTER NOT EXISTS { ?a ex:inBank $this ; ex:gapNo ?na ; ex:key ?ka . ?b ex:inBank $this ; ex:gapNo ?nb ; ex:key ?kb .
+                FILTER(?na < ?nb && ?ka > ?kb) } }""" ] .
+
+ex:E14 a sh:NodeShape ; rdfs:label "Gaps of one item have different keys" ;
+    sh:targetClass ex:Bank ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E14: two gaps of one item have the same key" ;
+        sh:select """SELECT $this WHERE { ?a ex:inBank $this ; ex:gapNo ?na ; ex:key ?k . ?b ex:inBank $this ; ex:gapNo ?nb ; ex:key ?k .
+            FILTER(?na < ?nb) }""" ] .
+
+ex:E15 a sh:NodeShape ; rdfs:label "No bank number is the key of three gaps in a row" ;
+    sh:targetClass ex:Gap ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E15: one bank number is the key of three gaps in a row" ;
+        sh:select """SELECT $this WHERE { $this ex:inForm ?f ; ex:seq ?s ; ex:key ?k .
+            BIND(?s + 1 AS ?s2) ?b ex:inForm ?f ; ex:seq ?s2 ; ex:key ?k .
+            BIND(?s + 2 AS ?s3) ?c ex:inForm ?f ; ex:seq ?s3 ; ex:key ?k }""" ] .
+
+ex:E16 a sh:NodeShape ; rdfs:label "No item of the paper is a near copy of a seed (the near-copy ruling)" ;
+    sh:targetClass ex:PaperItem ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E16: the item is a near copy of a seed: 4-word coverage 0.50 or more with the same answer, 0.80 or more whatever the answer, or an equal listing" ;
+        sh:select """SELECT $this WHERE { $this ex:maxCoverageSame ?s ; ex:maxCoverageAny ?a ; ex:listingCopy ?l .
+            FILTER(?s >= 0.5 || ?a >= 0.8 || ?l = true) }""" ] .
+
+ex:E17 a sh:NodeShape ; rdfs:label "The make-up paper repeats no item of the midterm (same id or near copy)" ;
+    sh:targetClass ex:PaperItem ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E17: the item repeats an item of the other paper" ;
+        sh:select """SELECT $this WHERE { $this ex:otherIdRepeated ?r ; ex:otherMaxCoverageSame ?s ; ex:otherMaxCoverageAny ?a ; ex:otherListingCopy ?l .
+            FILTER(?r = true || ?s >= 0.5 || ?a >= 0.8 || ?l = true) }""" ] .
+
+ex:E18 a sh:NodeShape ; rdfs:label "Forms A and B have the same item type at every position" ;
+    sh:targetClass ex:Presented ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E18: the type at a position differs between the forms" ;
+        sh:select """SELECT $this WHERE { $this ex:inForm ?f ; ex:position ?p ; ex:itemType ?t .
+            ?o a ex:Presented ; ex:inForm ?f2 ; ex:position ?p ; ex:itemType ?t2 . FILTER(?f != ?f2 && ?t != ?t2) }""" ] .
+
+ex:E19 a sh:NodeShape ; rdfs:label "Between the forms the order inside a group of equal type differs and the options of every item differ" ;
+    sh:targetClass ex:Presented ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E19: an item has the same option order in both forms" ;
+        sh:select """SELECT $this WHERE { $this ex:inForm ?f ; ex:forItem ?i ; ex:optionOrder ?oo .
+            ?o a ex:Presented ; ex:inForm ?f2 ; ex:forItem ?i ; ex:optionOrder ?oo . FILTER(?f != ?f2) }""" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E19: an item stands at the same position in both forms although its group of equal type has more than one item" ;
+        sh:select """SELECT $this WHERE { $this ex:inForm ?f ; ex:forItem ?i ; ex:position ?p ; ex:groupSize ?g .
+            ?o a ex:Presented ; ex:inForm ?f2 ; ex:forItem ?i ; ex:position ?p . FILTER(?f != ?f2 && ?g >= 2) }""" ] .
