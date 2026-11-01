@@ -7,3 +7,4 @@
 | TK4_Items_A2 | SEN0414-EX-items-a2 | 3.0 | TK4_ItemRules2 (and the engine check at assembly) |
 | TK4_Items_B2 | SEN0414-EX-items-b2 | 3.0 | TK4_Items_A2 |
 | TK4_Papers | SEN0414-EX-papers | 2.5 | TK4_Engine5, TK4_Cover, TK4_Items_A2 (B for the make-up) |
+| TK4_Points5 | SEN0414-EX-points5 | 1.0 | none (blocker, rank 1) |
