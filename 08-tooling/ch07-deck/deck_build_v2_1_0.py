@@ -148,7 +148,7 @@ def make_title(prs):
     s = base(prs, "Dictionaries and Structuring Data", None, chip=True, nt=T.NOTES["title"])
     s.shapes[-1].left, s.shapes[-1].top, s.shapes[-1].width, s.shapes[-1].height = Inches(0.6), Inches(1.7), Inches(8.8), Inches(0.9)
     for r in s.shapes[-1].text_frame.paragraphs[0].runs:
-        r.font.size = K.Pt(38)
+        r.font.size = K.Pt(32)
     tb(s, 0.6, 2.65, 8.8, 0.7, "Chapter 7 of Automate the Boring Stuff with Python, 3rd edition, for an advanced course", 16, C["muted"], name="subtitle")
     nconc = len({a for _, _, _, rows in T.ANALOGIES for a, _ in rows})
     for i, (a, b) in enumerate([(str(len(X.EXAMPLES)), "code examples that run on the chapter page"), ("4", "true stories told with real names, dates and places"),
@@ -215,8 +215,8 @@ def make_divider(prs, k):
         elif p[0] == "analogy":
             items.append((i, [a_[1] for a_ in T.ANALOGIES if a_[0] == p[1]][0]))
     rows = [["Slide", "In this part"]] + [[str(i), t if len(t) < 46 else t[:43] + "..."] for i, t in items]
-    rh = min(0.4, 3.55 / len(rows))
-    table(s, 6.3, 1.55, 3.3, rows, [0.65, 3.4], rowh=rh, name="table")
+    rh = min(0.4, 3.3 / len(rows))
+    table(s, 6.3, 1.45, 3.3, rows, [0.65, 3.4], rowh=rh, name="table")
     return s
 
 
@@ -225,8 +225,8 @@ def make_analogy(prs, aid):
     s = base(prs, title, None, nt=T.NOTES[aid])
     rect(s, 0.4, 0.82, 9.2, 0.62, C["amberLight"], radius=0.08, name="card")
     tb(s, 0.55, 0.84, 8.9, 0.58, [[("ANALOGY  ", {"bold": True, "color": C["amber"]}), (head, {})]], 14, C["ink"], anchor=MSO_ANCHOR.MIDDLE, name="analogy")
-    rh = min(0.5, 3.55 / (len(rows) + 1))
-    table(s, 0.4, 1.6, 9.2, [["Chapter concept", "Everyday picture"]] + [[a, b] for a, b in rows], [3.0, 6.2], rowh=rh, bold_cols=(0,))
+    rh = min(0.5, 3.45 / (len(rows) + 1))
+    table(s, 0.4, 1.52, 9.2, [["Chapter concept", "Everyday picture"]] + [[a, b] for a, b in rows], [3.0, 6.2], fs=12 if len(rows) >= 6 else None, rowh=rh, bold_cols=(0,))
     return s
 
 
@@ -238,6 +238,9 @@ def make_story(prs, sid):
     yy = 0.95
     for key in ("p1", "p2", "p3"):
         txt = st[key]
+        if "%(" in txt:
+            cc = RUN["char_count"][1]["count"]
+            txt = txt % {"total": sum(cc.values()), "kinds": len(cc)}
         nlines = math.ceil(len(txt) / 56.0)
         h = max(0.6, nlines * 0.27 + 0.18)
         rect(s, 3.5, yy, 6.1, h, C["card"], line=C["line"], radius=0.1, name="card")
@@ -358,7 +361,7 @@ def make_summary(prs):
         label_shape(s, 0.4, yy + 0.04, 0.4, 0.4, str(i + 1), C["teal"], "FFFFFF", size=13, bold=True)
         tb(s, 0.9, yy, 4.6, 0.58, t, 11.5, C["ink"], anchor=MSO_ANCHOR.MIDDLE, name="point")
     kinds = {"Read": ["keys", "values", "items", "get", "pop", "setdefault"], "Test": ["in", "not in", "==", "is"],
-             "Change": ["del", "update", "clear", "copy", "popitem"]}
+             "Change": ["pop", "update", "clear", "copy", "popitem"]}
     for nm in [n for v in kinds.values() for n in v if n.isidentifier() and n not in ("in", "is")]:
         assert hasattr(dict, nm), nm
     tb(s, 5.7, 1.4, 3.9, 0.5, "Dictionary tools in this chapter, by what they do", 10.5, C["teal"], bold=True, name="chart label")
