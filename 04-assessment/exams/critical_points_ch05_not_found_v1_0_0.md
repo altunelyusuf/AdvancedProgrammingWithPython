@@ -1,0 +1,21 @@
+# Critical points of chapter 5 (Debugging): what could not be found or confirmed (v1.0.0)
+
+For the Owner. Each item is a question that can be answered in one line.
+
+Sources read: the newest committed deck `03-materials/ch05/SEN0414_Ch05_Debugging_3e_v3_1_0.pptx` (63 slides, slide text, tables and speaker notes of every slide); the corpus `08-tooling/sen0414_ch05_corpus_v1_0_0.py` (the "Watch out" paragraphs); the stories `08-tooling/sen0414_ch05_stories_v1_1_0.py`; the built chapter document `03-materials/ch05/rdodi/sen0414_ch05_document_v1_3_0.ttl` for the common mistakes the chapter names (the six worked cases). Not read: pictures, drawings and chart data inside the deck (only titles and captions); the other ontology files of `03-materials/ch05/rdodi/`. The chapter 5 build executor was producing a newer deck; v3.1.0 is the newest committed at the start of this task.
+
+## Chapter 5 (Debugging)
+
+1. Nothing in the repository records what you stressed aloud in the lectures, and the speaker notes are short (two to four sentences per slide; none explains a point at length). Every point in the JSON file rests on a deck stress (title, closing line, repeated, practice question), a speaker note, or a corpus, story or chapter-document passage. Which of the 44 points do you want kept, and which dropped?
+2. 21 of the 44 points rest on corpus or story text alone (18 corpus, 3 story). A corpus "Watch out" paragraph is a common-mistake warning written for the corpus, not necessarily something you said in class. Should corpus-only points count as "explained in the course" for the exams?
+3. The corpus warns about things the deck never shows: `assert (False, 'msg')` with parentheses, `logging.enable` not existing, lazy formatting still evaluating its arguments, `guess in ('heads')` without the comma, `guess == 'heads' or 'tails'`, a `breakpoint()` left in shared code. Did you explain these in class?
+4. The six worked cases (off-by-one range, accumulator start, string concatenation, random integer, membership test, type mismatch) are the only common mistakes the chapter document names. The deck shows three of them (slides 41 to 50). Are the other three (accumulator start, membership test comma, type mismatch in a comparison spread over lines) examinable?
+5. Slide 50 prints 489 fixed wins out of 1000 with seed 7, and slide 42 prints a total of 0. Must students know the numbers, or only that the buggy version never wins and the fixed one wins about half?
+6. Slide 60 lists what is newer than the book (add_note 3.11, error locations 3.11, force=True 3.8, breakpoint() 3.7, `python -m pdb -p PID` 3.14). Are the version numbers examinable, or only the behaviour? I listed only add_note (slide 14) as a point; the others are not points.
+7. The debugger part (slides 51 to 58) uses sys.settrace (slide 56) and a swapped sys.breakpointhook (slide 58) to show how a debugger works. Are these two examinable, or only the controls of slide 54 and breakpoint() with PYTHONBREAKPOINT?
+8. The deck names the Mu editor (slide 52) and the corpus has a concept for it. I found no slide that teaches its buttons. Is Mu examinable at all?
+9. Slide 37 and 38 (lazy formatting) and slide 31 and 32 (the format string with a fixed UTC time) are in the deck but are not named by a practice question. Are they examinable at the depth of slides 29 to 36?
+10. The practice questions on slide 62 are listed inside the points they test (questions 1 to 4 appear in points 5, 12, 13 and 15), not as separate points. Are they examinable as written, or only as the topic they test?
+11. The three stories (Hopper's moth 9 September 1947, Kernighan 1979, PEP 282 of 4 February 2002) are listed as points because the story file states a lesson that the deck also teaches. Are story facts such as dates and names themselves examinable?
+12. The corpus has concepts for the command line, files, objects, environment variables and process identifiers (vocabulary of the chapter). The deck has no slide for them. Did you teach any of it?
+13. No file named sen0414_ch05_corpus_text_a/b/c exists (the chapter 5 corpus is the single file named above), so every corpus place is a quoted fragment of that one file. Is that acceptable?
