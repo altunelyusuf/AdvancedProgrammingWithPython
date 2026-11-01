@@ -1,0 +1,318 @@
+{
+ "chapter": 6,
+ "version": "1.1.1",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch06/SEN0414_Ch06_Lists_3e_v3_1_1.pptx",
+ "about": "The code examples of the chapter 6 deck, in the order of the code slides (order = slide order). The page's chapter-code tab lists them by NAME in this order; every example is self-contained and runs with the Python standard library only and prints its result; the expected result is what the run printed in a fresh interpreter. The code is exactly the text of the deck's code boxes: indented per the Python standard, no prompt, no lambda. The deck's slide order is the order of this list.",
+ "executed_with": {
+  "python": "3.13.16",
+  "library": null
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "page_requirements": [
+   "random (seeded Mersenne Twister)",
+   "copy",
+   "collections.Counter"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "indexes",
+   "name": "Indexes: a row of numbered lockers",
+   "slide": 8,
+   "concepts": [
+    "The List Data Type",
+    "List",
+    "len()"
+   ],
+   "code": "# a list holds items in order, between square brackets\nspam = ['cat', 'bat', 'rat', 'elephant']\n# counting starts at 0 on the left\nprint(spam[0], spam[3])\n# a minus sign counts from the right end\nprint(spam[-1], spam[-3])\n# len() counts the items\nprint(len(spam))",
+   "expected": "cat elephant\nelephant bat\n4\n"
+  },
+  {
+   "order": 2,
+   "id": "nested",
+   "name": "Lists of lists and a wrong index",
+   "slide": 10,
+   "concepts": [
+    "List of Lists",
+    "IndexError"
+   ],
+   "code": "# a list may hold lists: one index per level\ngrid = [['a', 'b'], ['c', 'd', 'e']]\nprint(grid[1][2], len(grid[1]))\nspam = ['cat', 'bat', 'rat']\n# an index past the end raises IndexError\ntry:\n    print(spam[10])\nexcept IndexError as err:\n    print('IndexError:', err)",
+   "expected": "e 3\nIndexError: list index out of range\n"
+  },
+  {
+   "order": 3,
+   "id": "slices",
+   "name": "Slices cut a part out of a list",
+   "slide": 12,
+   "concepts": [
+    "Slice",
+    "Indexes and Slices"
+   ],
+   "code": "spam = ['cat', 'bat', 'rat', 'elephant']\n# start included, stop never included\nprint(spam[1:3], spam[:2])\n# leave a side empty to run to the edge\nprint(spam[2:], spam[::2])\n# a step of -1 walks backwards\nprint(spam[::-1])\n# spam[:] is a copy: equal, but not the same list\nprint(spam[:] == spam, spam[:] is spam)",
+   "expected": "['bat', 'rat'] ['cat', 'bat']\n['rat', 'elephant'] ['cat', 'rat']\n['elephant', 'rat', 'bat', 'cat']\nTrue False\n"
+  },
+  {
+   "order": 4,
+   "id": "dijkstra",
+   "name": "Start in, end out: Dijkstra's rule",
+   "slide": 14,
+   "concepts": [
+    "Slice",
+    "Indexes and Slices"
+   ],
+   "code": "s = list(range(10))\n# items 2 up to 5: three items, and 5 - 2 is 3\nprint(s[2:5], len(s[2:5]))\n# neighbouring slices meet without a gap\nprint(s[0:3] + s[3:10] == s)\nprint([len(s[0:3]), len(s[3:10]), len(s)])",
+   "expected": "[2, 3, 4] 3\nTrue\n[3, 7, 10]\n"
+  },
+  {
+   "order": 5,
+   "id": "sequences",
+   "name": "Strings and tuples are sequences too",
+   "slide": 16,
+   "concepts": [
+    "Sequence Data Types",
+    "Tuple"
+   ],
+   "code": "name = 'Zophie'\n# a string has indexes and slices like a list\nprint(name[0], name[-1], name[1:4])\nprint(list(name))\n# a tuple is a list that cannot change\npoint = (3, 4)\nprint(point[0], len(point))\n# in asks about an item or a piece\nprint('a' in 'cat', 3 in [1, 2, 3])",
+   "expected": "Z e oph\n['Z', 'o', 'p', 'h', 'i', 'e']\n3 2\nTrue True\n"
+  },
+  {
+   "order": 6,
+   "id": "change",
+   "name": "Replace, add and remove items",
+   "slide": 21,
+   "concepts": [
+    "Working with Lists",
+    "append",
+    "insert",
+    "remove"
+   ],
+   "code": "spam = ['cat', 'bat', 'rat', 'elephant']\n# assign to an index to replace an item\nspam[1] = 'aardvark'\n# append adds at the end, insert at a chosen place\nspam.append('moose')\nspam.insert(1, 'chicken')\nprint(spam)\n# pop takes the last item out and returns it\nprint(spam.pop(), len(spam))\n# del removes by place, remove by value\ndel spam[0]\nspam.remove('rat')\nprint(spam)",
+   "expected": "['cat', 'chicken', 'aardvark', 'rat', 'elephant', 'moose']\nmoose 5\n['chicken', 'aardvark', 'elephant']\n"
+  },
+  {
+   "order": 7,
+   "id": "augmented",
+   "name": "Combine lists and grow them in place",
+   "slide": 23,
+   "concepts": [
+    "Augmented Assignment Operators",
+    "extend"
+   ],
+   "code": "spam = [1, 2, 3]\n# + and * build a new list; spam stays as it is\nprint(spam + ['A', 'B'])\nprint(['X', 'Y'] * 3)\n# += and *= change the list itself\nspam += [4]\nspam *= 2\nprint(spam)\n# extend adds many items at once\nspam.extend(['A', 'B'])\nprint(spam)",
+   "expected": "[1, 2, 3, 'A', 'B']\n['X', 'Y', 'X', 'Y', 'X', 'Y']\n[1, 2, 3, 4, 1, 2, 3, 4]\n[1, 2, 3, 4, 1, 2, 3, 4, 'A', 'B']\n"
+  },
+  {
+   "order": 8,
+   "id": "searching",
+   "name": "Is it there, and where?",
+   "slide": 26,
+   "concepts": [
+    "Searching a list",
+    "index"
+   ],
+   "code": "pets = ['Zophie', 'Pooka', 'Fat-tail', 'Pooka']\n# in answers yes or no\nprint('Pooka' in pets, 'Cat' not in pets)\n# index answers where: the first match\nprint(pets.index('Pooka'))\n# a missing item is an error, so guard it\ntry:\n    pets.index('Cat')\nexcept ValueError:\n    print('Cat is not in the list')\n# count says how often\nprint(pets.count('Pooka'))",
+   "expected": "True True\n1\nCat is not in the list\n2\n"
+  },
+  {
+   "order": 9,
+   "id": "shortcircuit",
+   "name": "Short-circuiting stops early",
+   "slide": 28,
+   "concepts": [
+    "Short-Circuiting Boolean Operators"
+   ],
+   "code": "spam = []\n# an empty list is false, so spam[0] is never tried\nprint(spam and spam[0] == 'cat')\nprint(bool(spam))\n# or returns the first true value it meets\nname = '' or 'Guest'\nprint(name)\nprint(0 or [] or 'last')\n# and returns the first false value, else the last\nprint(1 and 2 and 3)",
+   "expected": "[]\nFalse\nGuest\nlast\n3\n"
+  },
+  {
+   "order": 10,
+   "id": "sort",
+   "name": "sort() changes, sorted() returns",
+   "slide": 30,
+   "concepts": [
+    "sort",
+    "sorted"
+   ],
+   "code": "nums = [2, 5, 3.14, 1, -7]\n# sort() reorders the list itself\nnums.sort()\nprint(nums)\nnums.sort(reverse=True)\nprint(nums)\nletters = ['a', 'z', 'A', 'Z']\n# capitals sort before small letters\nprint(sorted(letters))\nprint(sorted(letters, key=str.lower))\n# sort() itself returns None\nprint(nums.sort())",
+   "expected": "[-7, 1, 2, 3.14, 5]\n[5, 3.14, 2, 1, -7]\n['A', 'Z', 'a', 'z']\n['a', 'A', 'z', 'Z']\nNone\n"
+  },
+  {
+   "order": 11,
+   "id": "magic8",
+   "name": "Magic 8 Ball with a list",
+   "slide": 33,
+   "concepts": [
+    "A Short Program: Magic 8 Ball with a List",
+    "random.randint"
+   ],
+   "code": "import random\n# the answers live in a list: a new answer is one more item\nmessages = ['It is certain', 'Yes definitely']\nmessages += ['Ask again later', 'Very doubtful']\n# a fixed seed makes every run print the same answers\nrandom.seed(1946)\nfor _ in range(3):\n    pick = random.randint(0, len(messages) - 1)\n    print(messages[pick])",
+   "expected": "Yes definitely\nIt is certain\nYes definitely\n"
+  },
+  {
+   "order": 12,
+   "id": "loops",
+   "name": "Loop by position and by item",
+   "slide": 37,
+   "concepts": [
+    "range()",
+    "enumerate",
+    "len()"
+   ],
+   "code": "supplies = ['pens', 'staplers', 'flamethrowers', 'binders']\n# by position: range(len(...)) gives 0, 1, 2, 3\nfor i in range(len(supplies)):\n    print(i, supplies[i])\n# by item and number together, counting from 1\nfor n, s in enumerate(supplies, 1):\n    print(n, s, len(s))",
+   "expected": "0 pens\n1 staplers\n2 flamethrowers\n3 binders\n1 pens 4\n2 staplers 8\n3 flamethrowers 13\n4 binders 7\n"
+  },
+  {
+   "order": 13,
+   "id": "removal",
+   "name": "The removal trap",
+   "slide": 39,
+   "concepts": [
+    "The removal trap",
+    "clear"
+   ],
+   "code": "items = ['a', 'b', 'c', 'd']\n# a removal moves the next item into the gap\nfor x in items:\n    items.remove(x)\nprint(items)\n# safe: build a new list with a comprehension\nitems = ['a', 'b', 'c', 'd']\nkeep = [x for x in items if x not in 'ab']\nprint(keep)\n# or empty the list in one step\nitems.clear()\nprint(items)",
+   "expected": "['b', 'd']\n['c', 'd']\n[]\n"
+  },
+  {
+   "order": 14,
+   "id": "unpack",
+   "name": "Unpacking gives items names",
+   "slide": 41,
+   "concepts": [
+    "Unpacking",
+    "Starred unpacking"
+   ],
+   "code": "# one name for each item\nsize, color, mood = ['fat', 'gray', 'loud']\nprint(size, color, mood)\n# a starred name collects the rest as a list\nfirst, *rest = [1, 2, 3, 4]\nprint(first, rest)\n# swap two names without a helper\na, b = 'x', 'y'\na, b = b, a\nprint(a, b)",
+   "expected": "fat gray loud\n1 [2, 3, 4]\ny x\n"
+  },
+  {
+   "order": 15,
+   "id": "comprehension",
+   "name": "List comprehensions build lists",
+   "slide": 43,
+   "concepts": [
+    "List comprehension"
+   ],
+   "code": "# for every x from 1 to 6, put x squared in a new list\nsquares = [x ** 2 for x in range(1, 7)]\nprint(squares)\n# the if part keeps only some items\nevens = [x for x in range(10) if x % 2 == 0]\nprint(evens)\nprint(sum(squares))",
+   "expected": "[1, 4, 9, 16, 25, 36]\n[0, 2, 4, 6, 8]\n91\n"
+  },
+  {
+   "order": 16,
+   "id": "input",
+   "name": "input() returns text",
+   "slide": 45,
+   "concepts": [
+    "input()",
+    "split",
+    "int()"
+   ],
+   "code": "# what input() would return: always text\nline = '4 8 15 16 23 42'\n# split() cuts the text into words, int() makes numbers\nnums = [int(w) for w in line.split()]\nprint(nums)\nprint(sum(nums), max(nums), len(nums))\nprint(type(line).__name__)",
+   "expected": "[4, 8, 15, 16, 23, 42]\n108 42 6\nstr\n"
+  },
+  {
+   "order": 17,
+   "id": "alias",
+   "name": "Two names, one list",
+   "slide": 49,
+   "concepts": [
+    "References",
+    "Aliasing"
+   ],
+   "code": "spam = [0, 1, 2, 3]\n# this copies the name, not the list\neggs = spam\neggs[1] = 'Hello!'\n# spam shows the change too\nprint(spam)\nprint(eggs is spam, id(eggs) == id(spam))",
+   "expected": "[0, 'Hello!', 2, 3]\nTrue True\n"
+  },
+  {
+   "order": 18,
+   "id": "argument",
+   "name": "A function can change your list",
+   "slide": 51,
+   "concepts": [
+    "Passing References",
+    "Aliasing"
+   ],
+   "code": "# the parameter items is a second name for the caller's list\ndef add_hello(items):\n    items.append('Hello')\n    return items\nnums = [1, 2, 3]\nresult = add_hello(nums)\nprint(nums, result is nums)\nprint(len(nums))",
+   "expected": "[1, 2, 3, 'Hello'] True\n4\n"
+  },
+  {
+   "order": 19,
+   "id": "copies",
+   "name": "Shallow copy versus deep copy",
+   "slide": 53,
+   "concepts": [
+    "Shallow copy",
+    "Deep copy",
+    "copy.copy",
+    "copy.deepcopy"
+   ],
+   "code": "import copy\ngrid = [[1, 2], [3, 4]]\n# shallow: a new outer list, the inner lists are shared\nshallow = copy.copy(grid)\n# deep: every level is copied\ndeep = copy.deepcopy(grid)\ngrid[0][0] = 99\nprint(shallow[0][0], deep[0][0])\n# a trap: this repeats ONE inner list twice\nboard = [[0] * 3] * 2\nboard[0][0] = 9\nprint(board)",
+   "expected": "99 1\n[[9, 0, 0], [9, 0, 0]]\n"
+  },
+  {
+   "order": 20,
+   "id": "random",
+   "name": "choice, shuffle and randint",
+   "slide": 57,
+   "concepts": [
+    "random.choice",
+    "random.shuffle",
+    "random.randint"
+   ],
+   "code": "import random\n# a fixed seed makes the random numbers repeat\nrandom.seed(5)\npets = ['cat', 'dog', 'owl', 'fox']\nprint(random.choice(pets))\nrandom.shuffle(pets)\nprint(pets)\n# shuffle changes the list and returns None\nprint(random.shuffle(pets))\nprint(random.randint(1, 6))",
+   "expected": "owl\n['dog', 'cat', 'fox', 'owl']\nNone\n2\n"
+  },
+  {
+   "order": 21,
+   "id": "fairshuffle",
+   "name": "Is the shuffle fair?",
+   "slide": 60,
+   "concepts": [
+    "random.shuffle",
+    "Counter"
+   ],
+   "code": "import random\nfrom collections import Counter\nrandom.seed(1938)\ncards = list('abc')\n# deal shuffles the cards and returns them as one word\ndef deal():\n    random.shuffle(cards)\n    return ''.join(cards)\nc = Counter(deal() for _ in range(6000))\norders = sorted(c)\nprint(orders)\nprint([c[k] - 1000 for k in orders])",
+   "expected": "['abc', 'acb', 'bac', 'bca', 'cab', 'cba']\n[-29, -27, 9, 14, 45, -12]\n"
+  },
+  {
+   "order": 22,
+   "id": "matrix",
+   "name": "The Matrix screensaver",
+   "slide": 63,
+   "concepts": [
+    "A Short Program: The Matrix Screensaver",
+    "random.choice"
+   ],
+   "code": "import random\nrandom.seed(7)\nctr = [0] * 16\nfor row in range(5):\n    for i in range(16):\n        if ctr[i] == 0 and random.random() < 0.2:\n            ctr[i] = 3\n        # above zero: draw a digit, otherwise a space\n        digit = random.choice('01') if ctr[i] else ' '\n        print(digit, end='')\n        ctr[i] = max(0, ctr[i] - 1)\n    print()",
+   "expected": " 00 01   0   100\n 00 00   0   111\n 11 001  1  1010\n   1  1     01  \n   11 0     101 \n"
+  },
+  {
+   "order": 23,
+   "id": "commacode",
+   "name": "Comma Code: a list into a sentence",
+   "slide": 66,
+   "concepts": [
+    "Practice Programs",
+    "join"
+   ],
+   "code": "def list_to_text(items):\n    # fewer than three items need no commas\n    if len(items) < 3:\n        return ' and '.join(items)\n    # join all but the last, then add 'and' and the last\n    return ', '.join(items[:-1]) + ', and ' + items[-1]\ntests = [['a', 'b', 'c'], ['x', 'y'], ['z'], []]\nfor t in tests:\n    print(repr(list_to_text(t)))",
+   "expected": "'a, b, and c'\n'x and y'\n'z'\n''\n"
+  },
+  {
+   "order": 24,
+   "id": "coinstreaks",
+   "name": "Coin Flip Streaks",
+   "slide": 68,
+   "concepts": [
+    "Practice Programs",
+    "random.choice"
+   ],
+   "code": "import random\nrandom.seed(6)\nstreaks = 0\nfor experiment in range(10000):\n    # one experiment: a list of 100 random flips\n    flips = [random.choice('HT') for _ in range(100)]\n    text = ''.join(flips)\n    # six equal letters in a row make a streak\n    if 'HHHHHH' in text or 'TTTTTT' in text:\n        streaks += 1\nprint('Streak of 6:', 100 * streaks / 10000, '%')",
+   "expected": "Streak of 6: 81.48 %\n"
+  }
+ ]
+}
