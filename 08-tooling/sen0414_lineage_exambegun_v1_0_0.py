@@ -7,8 +7,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import sen0414_lineage_standard_v1_2_0 as W
 lit = W.lit
 GATE = "/home/claude/altunelyusuf/backlog-roadmap-framework/03-tooling/backlog_execution_ready_v1_6_0.py"
-STORY = {"TK4_Design2": "ST4_DesignRev2", "TK4_ItemRules2": "ST4_DesignRev2", "TK4_Cover": "ST4_Cover", "TK4_Engine5": "ST4_Engine5", "TK4_Items_A2": "ST4_Items2", "TK4_Items_B2": "ST4_Items2", "TK4_Papers": "ST4_Papers"}
-SESS = {"TK4_Design2": "SEN0414-EX-design2", "TK4_ItemRules2": "SEN0414-EX-itemrules2", "TK4_Cover": "SEN0414-EX-cover", "TK4_Engine5": "SEN0414-EX-engine5", "TK4_Items_A2": "SEN0414-EX-items-a2", "TK4_Items_B2": "SEN0414-EX-items-b2", "TK4_Papers": "SEN0414-EX-papers"}
+STORY = {"TK4_Points5": "ST4_Points5", "TK4_Design2": "ST4_DesignRev2", "TK4_ItemRules2": "ST4_DesignRev2", "TK4_Cover": "ST4_Cover", "TK4_Engine5": "ST4_Engine5", "TK4_Items_A2": "ST4_Items2", "TK4_Items_B2": "ST4_Items2", "TK4_Papers": "ST4_Papers"}
+SESS = {"TK4_Points5": "SEN0414-EX-points5", "TK4_Design2": "SEN0414-EX-design2", "TK4_ItemRules2": "SEN0414-EX-itemrules2", "TK4_Cover": "SEN0414-EX-cover", "TK4_Engine5": "SEN0414-EX-engine5", "TK4_Items_A2": "SEN0414-EX-items-a2", "TK4_Items_B2": "SEN0414-EX-items-b2", "TK4_Papers": "SEN0414-EX-papers"}
 BR = "08-tooling/briefs/exam/r10"
 src = W.newest(); t = open(src, encoding="utf-8").read(); L = []; started = set()
 def blk(name):
