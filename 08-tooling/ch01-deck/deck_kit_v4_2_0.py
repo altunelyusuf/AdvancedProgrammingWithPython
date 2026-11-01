@@ -134,7 +134,7 @@ def line_seg(s, x1, y1, x2, y2, color=None, width=1.0):
 
 
 # ---- code
-KW = {"for", "in", "def", "return", "if", "else", "elif", "while", "not", "and", "or", "import", "print"}
+KW = {"for", "in", "def", "return", "if", "else", "elif", "while", "not", "and", "or", "import", "print", "try", "except", "as"}
 TOK = re.compile(r"(f?'''(?:.|\n)*?'''|f?'(?:[^'\\]|\\.)*'|f?\"(?:[^\"\\]|\\.)*\"|#.*$|\b\d[\w.]*\b|\b[A-Za-z_]\w*\b|\s+|.)")
 
 

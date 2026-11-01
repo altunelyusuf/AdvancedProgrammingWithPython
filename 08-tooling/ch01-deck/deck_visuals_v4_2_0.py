@@ -310,25 +310,27 @@ def v_module(s, x, y, w, h, ns, out):
 
 
 # ------------------------------------------------------------------ part 4
-@need(1.0)
+@need(1.6)
 def v_first(s, x, y, w, h, ns, out):
-    src = [l for l in __import__("examples_v4_2_0").code_lines(__import__("examples_v4_2_0").BY_ID["first"])]
+    ex = __import__("examples_v4_2_0")
     env = {}
-    rows = [["Line", "What Python does"]]
+    rows = []
     cf = {}
-    for i, l in enumerate(src, 1):
+    for i, l in enumerate(ex.code_lines(ex.BY_ID["first"]), 1):
         b = io.StringIO()
         with contextlib.redirect_stdout(b):
             exec(l, env)
         o = b.getvalue().rstrip("\n")
         if o:
-            rows.append([str(i), "shows: " + short(o, 30)])
-            cf[(len(rows) - 1, 1)] = C["greenLight"]
+            rows.append((str(i), "shows: " + short(o, 34), "green"))
         else:
             name = l.split("=")[0].strip()
-            rows.append([str(i), "stores %s in %s" % (repr(env[name]), name)])
-            cf[(len(rows) - 1, 1)] = C["amberLight"]
-    table(s, x, y, w, rows, [0.5, 3.0], rowh=min(0.42, h / len(rows)), fs=10, mono_cols=(), cell_fill=cf, align_cols={0: PP_ALIGN.CENTER})
+            rows.append((str(i), "stores %s in %s" % (short(repr(env[name]), 22), name), "amber"))
+    half = (len(rows) + 1) // 2
+    for k, part in enumerate((rows[:half], rows[half:])):
+        t = [["Line", "What Python does"]] + [[a, b_] for a, b_, _ in part]
+        cf = {(j + 1, 1): (C["greenLight"] if kind == "green" else C["amberLight"]) for j, (_, _, kind) in enumerate(part)}
+        table(s, x + k * (w / 2 + 0.05), y, w / 2 - 0.05, t, [0.5, 3.6], rowh=min(0.27, h / (half + 1)), fs=10, mono_cols=(), cell_fill=cf, align_cols={0: PP_ALIGN.CENTER})
 
 
 @need(1.4)
