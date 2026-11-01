@@ -1,0 +1,38 @@
+sheet module layout, pages by number of units (kind choice ABCD unless stated); measured with build_layout
+choice units 20 -> pages 1
+choice units 24 -> pages 1
+choice units 27 -> pages 1
+choice units 30 -> pages 1
+choice units 36 -> pages 1
+choice units 40 -> pages 1
+choice units 45 -> pages 2
+choice units 54 -> pages 2
+kinds example unit match/order/bank:
+def build_layout(spec):
+    # group consecutive units of one kind into blocks, and keep the units of one printed item (same leading number) together when they fit
+    blocks = []; cur = None
+    for u in spec['units']:
+        k = u['kind']
+        if cur is None or cur['kind'] != k or len(cur['units']) >= BLOCK_MAX[k]:
+            cur = {'kind': k, 'units': []}; blocks.append(cur)
+        cur['units'].append(u)
+    top = MARG + 175                  # header zone above the blocks (title, form code, identification, rules)
+    bottom = PH - MARG - 14
+    cells = []; humans = []; closures = []; placed = []
+    page, col, y = 0, 0, top
+    for bi, b in enumerate(blocks):
+        rows = [2 if (u['kind'] == 'bank') else 1 for u in b['units']]
+        h = 14 + (sum(rows) * ROWH if b['kind'] != 'human' else len(b['units']) * HUMAN_H) + 17 + 8
+        if y + h > bottom:
+            col += 1; y = top if page == 0 else MARG + 10
+            if col == 2: page += 1; col = 0; y = MARG + 10
+        x0 = MARG + col * (COLW + COLGAP)
+        pb = {'id': bi, 'kind': b['kind'], 'page': page, 'col': col, 'x': x0, 'y': y, 'h': h, 'units': [], 'closure': []}
+        yy = y + 14
+        for u, nr in zip(b['units'], rows):
+            ud = {'no': u['no'], 'kind': u['kind'], 'rows': []}
+            if u['kind'] == 'human':
+                ud['box'] = {'x': x0 + 24, 'y': yy + 2, 'w': 18.0 * u.get('cells', 5), 'h': HUMAN_H - 6}
+                yy += HUMAN_H
+            else:
+                for r in ra
