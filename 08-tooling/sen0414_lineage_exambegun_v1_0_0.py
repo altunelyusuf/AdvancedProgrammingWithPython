@@ -24,11 +24,11 @@ finally:
 for k, hh in args:
     at = "2026-11-01T" + hh; s = SESS[k]; sid = STORY[k]
     i, j = blk(k); b = t[i:j]; assert "backlog:hasState backlog:Ready" in b and "startedAt" not in b, k
-    t = t[:i] + b.replace("backlog:hasState backlog:Ready", 'backlog:hasState backlog:InProgress ; backlog:startedAt "%s"^^xsd:dateTime' % at, 1) + t[j:]
+    t = t[:i] + b.replace("backlog:hasState backlog:Ready", 'backlog:hasState backlog:InProgress ; backlog:startedAt "%sZ"^^xsd:dateTime' % at, 1) + t[j:]
     if sid not in started:
         i, j = blk(sid); b = t[i:j]
         if "backlog:hasState backlog:Ready" in b:
-            t = t[:i] + b.replace("backlog:hasState backlog:Ready", 'backlog:hasState backlog:InProgress ; backlog:startedAt "%s"^^xsd:dateTime' % at, 1) + t[j:]
+            t = t[:i] + b.replace("backlog:hasState backlog:Ready", 'backlog:hasState backlog:InProgress ; backlog:startedAt "%sZ"^^xsd:dateTime' % at, 1) + t[j:]
             L.append(f'ex:Begin4e_{sid} a backlog:TransitionEvent ; rdfs:label "{sid} started with its first task"@en ; backlog:transitionedItem ex:{sid} ; backlog:viaTransition backlog:T_Start ; backlog:transitionedAt "{at}Z"^^xsd:dateTime ; backlog:transitionedBy backlog:Builder ;\n    backlog:hasTransitionNote "The story starts with the real start of its first task {k} at {at} UTC." .\n')
         started.add(sid)
     bf = "%s/BRIEF_%s.md" % (BR, k); sha = hashlib.sha256(open(os.path.join(W.REPO, bf), "rb").read()).hexdigest()
