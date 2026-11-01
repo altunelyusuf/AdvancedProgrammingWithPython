@@ -1,0 +1,299 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix ex:   <https://example.org/sen0414/exam-engine#> .
+
+# SEN0414 printed exams: the rules of the five-question exam engine as SHACL (task TK4_Engine5). New file over
+# exam_engine_shapes_v1_0_0.ttl, which stays. A ruling is never kept as prose: each rule below is one shape named
+# E01 to E28; the engine (exam_engine_v1_1_0.py, function build_graph) writes the description of a pool and of a built
+# paper, this file decides. Numbers that come from the design (quotas per chapter, type, question; minutes; minima;
+# page capacities; allowances) and the named constants of the engine (Bloom threshold 3, Analyze threshold 4, minimum
+# of Analyze-and-above sub-questions 8) are in the description of the paper and are marked in every build record;
+# the thresholds that are rules (90 per cent of the time, more than 50 per cent at the Bloom threshold, half of the base
+# points at the Bloom threshold, letter spread of 1, no letter four times in a row, no bank number three times in a row,
+# near-copy 0.50 with the same answer or 0.80 whatever the answer) are written in the shapes.
+#
+# A SUB-QUESTION is one answer-sheet unit (design v1_2_0); a record counts for its units. Rules E03 to E06, E09, E10 and
+# E21 and E24 count ex:SubQuestion nodes (one per unit); E02, E16, E17 and E22 and E25 look at ex:PaperItem (one per record).
+#
+# Description (all classes in the ex: namespace):
+#   ex:Paper         one per build: minutes, bloomThreshold, analyzeThreshold, minAnalyze, crossMin, indirectMin, basePoints,
+#                    bonusPoints, subTotal, fixedSeconds, coverPages, maxPages, capacityFour, capacitySix, formMarkUnit
+#   ex:ChapterQuota  chapter, quota (sub-questions per chapter)   ex:TypeQuota  itemType, count (sub-questions per type)
+#   ex:QuestionQuota question, subs, pointsTarget, bonus          ex:QuestionType  question, itemType (the format of the question)
+#   ex:PoolRecord    poolId (set name and record id)
+#   ex:PaperItem     inPaper, itemId, question, itemType, units, points, bloom, validatorFailures, coverage and copy measures
+#   ex:SubQuestion   inPaper, ofItem, question, chapter, itemType, seconds, bloom, cross, indirect
+#   ex:Form          formName, layoutLines, sheetPages           ex:AbbrFault  inForm, short (a short form used before its full form)
+#   ex:Letter A to D  ex:Keyed  inForm, rank, keyLetter          ex:Presented  inForm, forItem, position, itemType, question, groupSize, optionOrder
+#   ex:Bank          inForm, forItem, entries, gaps, bankSeed, reproduced   ex:Gap  inBank, inForm, gapNo, seq, key
+#   ex:BlockUnit     inForm, seq, unitNo, kind, question, ordinal (the units of the question blocks, in print order)
+#   ex:SheetUnit     seq, unitNo, kind (the units of the sheet specification, without the form mark F)
+
+ex: a owl:Ontology ;
+    rdfs:label "SEN0414 five-question exam engine rules" ;
+    sh:declare [ sh:prefix "ex" ; sh:namespace "https://example.org/sen0414/exam-engine#"^^xsd:anyURI ] .
+
+ex:Paper a rdfs:Class .
+ex:PaperItem a rdfs:Class .
+ex:SubQuestion a rdfs:Class .
+ex:PoolRecord a rdfs:Class .
+ex:Form a rdfs:Class .
+ex:Letter a rdfs:Class .
+ex:Keyed a rdfs:Class .
+ex:Presented a rdfs:Class .
+ex:Bank a rdfs:Class .
+ex:Gap a rdfs:Class .
+ex:ChapterQuota a rdfs:Class .
+ex:TypeQuota a rdfs:Class .
+ex:QuestionQuota a rdfs:Class .
+ex:QuestionType a rdfs:Class .
+ex:AbbrFault a rdfs:Class .
+ex:BlockUnit a rdfs:Class .
+ex:SheetUnit a rdfs:Class .
+
+ex:E01 a sh:NodeShape ; rdfs:label "Item ids are unique in the pool" ;
+    sh:targetClass ex:PoolRecord ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E01: an item id occurs more than once" ;
+        sh:select """SELECT $this WHERE { $this ex:poolId ?i . ?o a ex:PoolRecord ; ex:poolId ?i . FILTER(?o != $this) }""" ] .
+
+ex:E02 a sh:NodeShape ; rdfs:label "Every item of the paper passes the item validator" ;
+    sh:targetClass ex:PaperItem ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E02: the item validator reports a failure" ;
+        sh:select """SELECT $this WHERE { $this ex:validatorFailures ?f . FILTER(?f > 0) }""" ] .
+
+ex:E03 a sh:NodeShape ; rdfs:label "Sub-questions per chapter equal the quota of the chapter" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E03: a chapter holds a number of sub-questions other than its quota" ;
+        sh:select """SELECT $this ?c WHERE { $this ex:hasChapterQuota ?q . ?q ex:chapter ?c ; ex:quota ?n .
+            OPTIONAL { ?i a ex:SubQuestion ; ex:inPaper $this ; ex:chapter ?c } } GROUP BY $this ?c ?n HAVING (COUNT(?i) != ?n)""" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E03: a sub-question stands in a chapter that has no quota" ;
+        sh:select """SELECT $this ?c WHERE { ?i a ex:SubQuestion ; ex:inPaper $this ; ex:chapter ?c .
+            FILTER NOT EXISTS { $this ex:hasChapterQuota ?q . ?q ex:chapter ?c } }""" ] .
+
+ex:E04 a sh:NodeShape ; rdfs:label "Counts of the sub-questions of each item type equal the blueprint" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E04: a type holds a number of sub-questions other than the blueprint" ;
+        sh:select """SELECT $this ?t WHERE { $this ex:hasTypeQuota ?q . ?q ex:itemType ?t ; ex:count ?n .
+            OPTIONAL { ?i a ex:SubQuestion ; ex:inPaper $this ; ex:itemType ?t } } GROUP BY $this ?t ?n HAVING (COUNT(?i) != ?n)""" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E04: a sub-question has a type the blueprint does not list" ;
+        sh:select """SELECT $this ?t WHERE { ?i a ex:SubQuestion ; ex:inPaper $this ; ex:itemType ?t .
+            FILTER NOT EXISTS { $this ex:hasTypeQuota ?q . ?q ex:itemType ?t } }""" ] .
+
+ex:E05 a sh:NodeShape ; rdfs:label "Answer time with the allowances is at most 90 per cent of the sitting" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E05: the answer time of the sub-questions plus the allowances is more than 90 per cent of the minutes" ;
+        sh:select """SELECT $this WHERE { ?i a ex:SubQuestion ; ex:inPaper $this ; ex:seconds ?s . $this ex:minutes ?m ; ex:fixedSeconds ?f }
+            GROUP BY $this ?m ?f HAVING ((SUM(?s) + ?f) * 100 > 90 * ?m * 60)""" ] .
+
+ex:E06 a sh:NodeShape ; rdfs:label "More than 50 per cent of the sub-questions are at the Bloom threshold (Apply) or above" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E06: Apply and above is not the majority of the sub-questions" ;
+        sh:select """SELECT $this WHERE { $this ex:bloomThreshold ?th . OPTIONAL { ?i a ex:SubQuestion ; ex:inPaper $this }
+            OPTIONAL { ?j a ex:SubQuestion ; ex:inPaper $this ; ex:bloom ?b . FILTER(?b >= ?th) } }
+            GROUP BY $this ?th HAVING (COUNT(DISTINCT ?j) * 100 <= 50 * COUNT(DISTINCT ?i))""" ] .
+
+ex:E07 a sh:NodeShape ; rdfs:label "Counts of the correct letters differ by at most one in each form" ;
+    sh:targetClass ex:Form ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E07: the counts of two correct letters differ by more than one" ;
+        sh:select """SELECT $this ?l1 ?l2 WHERE { ?l1 a ex:Letter . ?l2 a ex:Letter .
+            OPTIONAL { ?k1 ex:inForm $this ; ex:keyLetter ?l1 } OPTIONAL { ?k2 ex:inForm $this ; ex:keyLetter ?l2 } }
+            GROUP BY $this ?l1 ?l2 HAVING (COUNT(DISTINCT ?k1) - COUNT(DISTINCT ?k2) > 1)""" ] .
+
+ex:E08 a sh:NodeShape ; rdfs:label "No letter is the key of four items in a row in each form" ;
+    sh:targetClass ex:Form ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E08: one letter is the key of four items in a row" ;
+        sh:select """SELECT $this ?l WHERE { ?a ex:inForm $this ; ex:rank ?r ; ex:keyLetter ?l .
+            BIND(?r + 1 AS ?r2) ?b ex:inForm $this ; ex:rank ?r2 ; ex:keyLetter ?l .
+            BIND(?r + 2 AS ?r3) ?c ex:inForm $this ; ex:rank ?r3 ; ex:keyLetter ?l .
+            BIND(?r + 3 AS ?r4) ?d ex:inForm $this ; ex:rank ?r4 ; ex:keyLetter ?l }""" ] .
+
+
+ex:E09 a sh:NodeShape ; rdfs:label "At least the design's number of cross-chapter sub-questions" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E09: fewer cross-chapter sub-questions than the design asks" ;
+        sh:select """SELECT $this WHERE { $this ex:crossMin ?m . OPTIONAL { ?i a ex:SubQuestion ; ex:inPaper $this ; ex:cross true } }
+            GROUP BY $this ?m HAVING (COUNT(?i) < ?m)""" ] .
+
+ex:E10 a sh:NodeShape ; rdfs:label "At least the design's number of indirect sub-questions" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E10: fewer indirect sub-questions than the design asks" ;
+        sh:select """SELECT $this WHERE { $this ex:indirectMin ?m . OPTIONAL { ?i a ex:SubQuestion ; ex:inPaper $this ; ex:indirect true } }
+            GROUP BY $this ?m HAVING (COUNT(?i) < ?m)""" ] .
+
+ex:E11 a sh:NodeShape ; rdfs:label "A fill-in bank has more entries than gaps" ;
+    sh:targetClass ex:Bank ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E11: a bank has no more entries than gaps" ;
+        sh:select """SELECT $this WHERE { $this ex:entries ?e ; ex:gaps ?g . FILTER(?e <= ?g) }""" ] .
+
+ex:E12 a sh:NodeShape ; rdfs:label "A bank is a seeded permutation: the seed is stored and reproduces the printed order" ;
+    sh:targetClass ex:Bank ;
+    sh:property [ sh:path ex:bankSeed ; sh:minCount 1 ; sh:maxCount 1 ; sh:message "E12: the seed of a bank is not stored" ] ;
+    sh:property [ sh:path ex:reproduced ; sh:hasValue true ; sh:minCount 1 ; sh:message "E12: the stored seed does not reproduce the printed bank order" ] .
+
+ex:E13 a sh:NodeShape ; rdfs:label "A bank is not in gap order" ;
+    sh:targetClass ex:Bank ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E13: the keys of the gaps rise with the gap number (the bank is in gap order)" ;
+        sh:select """SELECT $this WHERE { $this ex:gaps ?g . FILTER(?g >= 2)
+            FILTER NOT EXISTS { ?a ex:inBank $this ; ex:gapNo ?na ; ex:key ?ka . ?b ex:inBank $this ; ex:gapNo ?nb ; ex:key ?kb .
+                FILTER(?na < ?nb && ?ka > ?kb) } }""" ] .
+
+ex:E14 a sh:NodeShape ; rdfs:label "Gaps of one item have different keys" ;
+    sh:targetClass ex:Bank ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E14: two gaps of one item have the same key" ;
+        sh:select """SELECT $this WHERE { ?a ex:inBank $this ; ex:gapNo ?na ; ex:key ?k . ?b ex:inBank $this ; ex:gapNo ?nb ; ex:key ?k .
+            FILTER(?na < ?nb) }""" ] .
+
+ex:E15 a sh:NodeShape ; rdfs:label "No bank number is the key of three gaps in a row" ;
+    sh:targetClass ex:Gap ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E15: one bank number is the key of three gaps in a row" ;
+        sh:select """SELECT $this WHERE { $this ex:inForm ?f ; ex:seq ?s ; ex:key ?k .
+            BIND(?s + 1 AS ?s2) ?b ex:inForm ?f ; ex:seq ?s2 ; ex:key ?k .
+            BIND(?s + 2 AS ?s3) ?c ex:inForm ?f ; ex:seq ?s3 ; ex:key ?k }""" ] .
+
+ex:E16 a sh:NodeShape ; rdfs:label "No item of the paper is a near copy of a seed (the near-copy ruling)" ;
+    sh:targetClass ex:PaperItem ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E16: the item is a near copy of a seed: 4-word coverage 0.50 or more with the same answer, 0.80 or more whatever the answer, or an equal listing" ;
+        sh:select """SELECT $this WHERE { $this ex:maxCoverageSame ?s ; ex:maxCoverageAny ?a ; ex:listingCopy ?l .
+            FILTER(?s >= 0.5 || ?a >= 0.8 || ?l = true) }""" ] .
+
+ex:E17 a sh:NodeShape ; rdfs:label "The make-up paper repeats no item of the midterm (same id or near copy)" ;
+    sh:targetClass ex:PaperItem ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E17: the item repeats an item of the other paper" ;
+        sh:select """SELECT $this WHERE { $this ex:otherIdRepeated ?r ; ex:otherMaxCoverageSame ?s ; ex:otherMaxCoverageAny ?a ; ex:otherListingCopy ?l .
+            FILTER(?r = true || ?s >= 0.5 || ?a >= 0.8 || ?l = true) }""" ] .
+
+ex:E18 a sh:NodeShape ; rdfs:label "Forms A and B have the same item type at every position" ;
+    sh:targetClass ex:Presented ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E18: the type at a position differs between the forms" ;
+        sh:select """SELECT $this WHERE { $this ex:inForm ?f ; ex:position ?p ; ex:itemType ?t .
+            ?o a ex:Presented ; ex:inForm ?f2 ; ex:position ?p ; ex:itemType ?t2 . FILTER(?f != ?f2 && ?t != ?t2) }""" ] .
+
+ex:E19 a sh:NodeShape ; rdfs:label "Between the forms the order inside a group of equal type differs and the options of every item differ" ;
+    sh:targetClass ex:Presented ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E19: an item has the same option order in both forms" ;
+        sh:select """SELECT $this WHERE { $this ex:inForm ?f ; ex:forItem ?i ; ex:optionOrder ?oo .
+            ?o a ex:Presented ; ex:inForm ?f2 ; ex:forItem ?i ; ex:optionOrder ?oo . FILTER(?f != ?f2) }""" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E19: an item stands at the same position in both forms although its group of equal type has more than one item" ;
+        sh:select """SELECT $this WHERE { $this ex:inForm ?f ; ex:forItem ?i ; ex:position ?p ; ex:groupSize ?g .
+            ?o a ex:Presented ; ex:inForm ?f2 ; ex:forItem ?i ; ex:position ?p . FILTER(?f != ?f2 && ?g >= 2) }""" ] .
+
+# ---------------------------------------------------------------- rules of the five-question structure (E20 on)
+ex:E20 a sh:NodeShape ; rdfs:label "Each question takes only records of its own format" ;
+    sh:targetClass ex:Presented ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E20: a record stands in a question whose format does not allow its item type" ;
+        sh:select """SELECT $this WHERE { $this ex:question ?q ; ex:itemType ?t .
+            FILTER NOT EXISTS { ?a a ex:QuestionType ; ex:question ?q ; ex:itemType ?t } }""" ] .
+
+ex:E21 a sh:NodeShape ; rdfs:label "Sub-questions per question equal the design and add up to the 30 of the paper" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E21: a question holds a number of sub-questions other than the design" ;
+        sh:select """SELECT $this ?q WHERE { $this ex:hasQuestionQuota ?qq . ?qq ex:question ?q ; ex:subs ?n .
+            OPTIONAL { ?s a ex:SubQuestion ; ex:inPaper $this ; ex:question ?q } } GROUP BY $this ?q ?n HAVING (COUNT(?s) != ?n)""" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E21: the paper does not hold exactly the design's number of sub-questions in all" ;
+        sh:select """SELECT $this WHERE { $this ex:subTotal ?n . OPTIONAL { ?s a ex:SubQuestion ; ex:inPaper $this } }
+            GROUP BY $this ?n HAVING (COUNT(?s) != ?n)""" ] .
+
+ex:E22 a sh:NodeShape ; rdfs:label "Points per question equal the design (25, 25, 25, 25 and the 10 bonus) and the base points are 100" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E22: a question carries points other than the design" ;
+        sh:select """SELECT $this ?q WHERE { $this ex:hasQuestionQuota ?qq . ?qq ex:question ?q ; ex:pointsTarget ?t .
+            OPTIONAL { ?i a ex:PaperItem ; ex:inPaper $this ; ex:question ?q ; ex:points ?p } } GROUP BY $this ?q ?t HAVING (COALESCE(SUM(?p), 0) != ?t)""" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E22: the points of the questions that are not the bonus do not add up to the base points" ;
+        sh:select """SELECT $this WHERE { $this ex:basePoints ?b . OPTIONAL { ?i a ex:PaperItem ; ex:inPaper $this ; ex:question ?q ; ex:points ?p .
+            ?qq ex:question ?q ; ex:bonus false } } GROUP BY $this ?b HAVING (COALESCE(SUM(?p), 0) != ?b)""" ] .
+
+ex:E23 a sh:NodeShape ; rdfs:label "The paper has exactly the design's questions, each as one block in order, with the same records in both forms" ;
+    sh:targetClass ex:Presented ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E23: a record stands in a question that the design does not have" ;
+        sh:select """SELECT $this WHERE { $this ex:question ?q . FILTER NOT EXISTS { ?qq a ex:QuestionQuota ; ex:question ?q } }""" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E23: a record of a later question stands before a record of an earlier question" ;
+        sh:select """SELECT $this WHERE { $this ex:inForm ?f ; ex:position ?p1 ; ex:question ?q1 .
+            ?o a ex:Presented ; ex:inForm ?f ; ex:position ?p2 ; ex:question ?q2 . FILTER(?p1 < ?p2 && STR(?q1) > STR(?q2)) }""" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E23: a record stands in a different question in the two forms" ;
+        sh:select """SELECT $this WHERE { $this ex:forItem ?i ; ex:question ?q ; ex:inForm ?f .
+            ?o a ex:Presented ; ex:forItem ?i ; ex:question ?q2 ; ex:inForm ?f2 . FILTER(?f != ?f2 && STR(?q) != STR(?q2)) }""" ] .
+
+ex:E23b a sh:NodeShape ; rdfs:label "Every question of the design has a block in each form" ;
+    sh:targetClass ex:Form ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E23: a form has no block for a question of the design" ;
+        sh:select """SELECT $this ?q WHERE { ?p a ex:Paper ; ex:hasQuestionQuota ?qq . ?qq ex:question ?q .
+            FILTER NOT EXISTS { ?x a ex:Presented ; ex:inForm $this ; ex:question ?q } }""" ] .
+
+ex:E24 a sh:NodeShape ; rdfs:label "At least the minimum of sub-questions (8 of 30) are at Analyze and above" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E24: fewer sub-questions at Analyze and above than the minimum" ;
+        sh:select """SELECT $this WHERE { $this ex:analyzeThreshold ?an ; ex:minAnalyze ?m . OPTIONAL { ?s a ex:SubQuestion ; ex:inPaper $this ; ex:bloom ?b . FILTER(?b >= ?an) } }
+            GROUP BY $this ?an ?m HAVING (COUNT(?s) < ?m)""" ] .
+
+ex:E25 a sh:NodeShape ; rdfs:label "At least half of the base points are on records at the Bloom threshold (Apply) or above" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E25: less than half of the base points are on records at Apply and above" ;
+        sh:select """SELECT $this WHERE { $this ex:basePoints ?b ; ex:bloomThreshold ?th . OPTIONAL { ?i a ex:PaperItem ; ex:inPaper $this ; ex:question ?q ; ex:points ?p ; ex:bloom ?bl .
+            ?qq ex:question ?q ; ex:bonus false . FILTER(?bl >= ?th) } } GROUP BY $this ?b HAVING (COALESCE(SUM(?p), 0) * 2 < ?b)""" ] .
+
+ex:E26 a sh:NodeShape ; rdfs:label "Every abbreviation is written in full at its first use, in print order" ;
+    sh:targetClass ex:AbbrFault ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E26: a short form is used before its full form or is not in the registry" ;
+        sh:select """SELECT $this WHERE { $this ex:short ?s }""" ] .
+
+ex:E27 a sh:NodeShape ; rdfs:label "The page budget: 4 pages in total, or else 6, cover and answer sheet included" ;
+    sh:targetClass ex:Form ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E27: the layout lines do not fit in 6 pages in total (cover, question pages, sheet)" ;
+        sh:select """SELECT $this WHERE { $this ex:layoutLines ?l ; ex:sheetPages ?sp .
+            ?p a ex:Paper ; ex:capacityFour ?c4 ; ex:capacitySix ?c6 ; ex:coverPages ?cv ; ex:maxPages ?mx .
+            BIND(IF(?l <= ?c4, 2, IF(?l <= ?c6, 4, 99)) AS ?q) FILTER(?cv + ?q + ?sp > ?mx) }""" ] .
+
+ex:E28 a sh:NodeShape ; rdfs:label "The sheet specification has one unit per sub-question, in print order, numbered as in the question blocks, and the form mark" ;
+    sh:targetClass ex:BlockUnit ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E28: a unit of the question blocks has no unit of the same place, number and kind in the sheet specification" ;
+        sh:select """SELECT $this WHERE { $this ex:seq ?s ; ex:unitNo ?n ; ex:kind ?k .
+            FILTER NOT EXISTS { ?u a ex:SheetUnit ; ex:seq ?s ; ex:unitNo ?n ; ex:kind ?k } }""" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E28: a unit number is not the question digit and the running letter of the unit inside its question" ;
+        sh:select """SELECT $this WHERE { $this ex:question ?q ; ex:ordinal ?o ; ex:unitNo ?n .
+            FILTER(?o < 1 || STR(?n) != CONCAT(SUBSTR(STR(?q), 2), SUBSTR("abcdefghijklmnopqrstuvwxyz", ?o, 1))) }""" ] .
+
+ex:E28b a sh:NodeShape ; rdfs:label "The sheet specification has no unit that the question blocks do not have, and holds the form mark" ;
+    sh:targetClass ex:Paper ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes ex: ;
+        sh:message "E28: the sheet specification holds a unit that the question blocks do not have" ;
+        sh:select """SELECT $this ?s WHERE { ?u a ex:SheetUnit ; ex:seq ?s ; ex:unitNo ?n ; ex:kind ?k .
+            FILTER NOT EXISTS { ?b a ex:BlockUnit ; ex:seq ?s ; ex:unitNo ?n ; ex:kind ?k } }""" ] ;
+    sh:property [ sh:path ex:formMarkUnit ; sh:hasValue true ; sh:minCount 1 ; sh:message "E28: the sheet specification has no form mark unit F" ] .
