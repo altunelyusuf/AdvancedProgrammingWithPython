@@ -6,7 +6,7 @@ Usage: sen0414_control_exam4_v1_0_0.py points5 | itemrules2 | itemsa2 | engine5 
   cover    the executor's check exits 0 with RESULT: PASS; the controller builds midterm form A and make-up form B itself, converts with LibreOffice (one page each), finds no wording of the template's course, finds the grade-table texts (/25 four times, '/10 (bonus)', '/100 + bonus'); the commit adds only new files
   points5  the critical-points checks of sen0414_control_exam_v1_0_0 (points) for chapter 5; the not-found list exists; the task's commits add only new files under 04-assessment/exams"""
 import re
-import collections, glob, json, os, subprocess, sys, tempfile
+import collections, glob, json, os, shutil, subprocess, sys, tempfile
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); X = os.path.join(R, "04-assessment/exams"); bad = []
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 def run(cmd, **k):
@@ -470,8 +470,11 @@ elif m == "revengine":
     from fractions import Fraction as Fr
     bf = json.load(open(tmp + "/w/exam_midterm_s1_buildfull.json")); su = bf["scoring"]["units"]; bad = []
     A = {r["id"]: r for r in json.load(open(IT))}
-    for u in su:
-        r = A[u["id"]]; k = u["k"]; pt = Fr(u["points"]); wc = Fr(u["wrong_cost"])
+    order = []; nuu = lambda r: {"mcq": 1, "predict": 1, "order": 4}.get(r["type"]) or (len(r["options_or_blanks"]["premises"]) if r["type"] == "match" else r["options_or_blanks"]["gaps"])
+    for rid_ in sorted(A, key=lambda x: (x[:2], x[2:])): order += [rid_] * nuu(A[rid_])
+    say(len(order) == len(su) == 30 and [u["unit"] for u in su] == sorted([u["unit"] for u in su], key=lambda x: (x[0], x[1:])), "the table lists the 30 units in print order")
+    for ui, u in enumerate(su):
+        r = A[order[ui]]; k = u["k"]; pt = Fr(u["points"]); wc = Fr(u["wrong_cost"])
         kk = {"mcq": 4, "predict": 4, "order": 4}.get(r["type"]) or (len(r["options_or_blanks"]["bank"]) if r["type"] in ("blank", "cloze") else len(r["options_or_blanks"]["answers"]))
         if k != kk or wc != pt / (kk - 1) or pt / kk - wc * Fr(kk - 1, kk) != 0 or Fr(u["expected_blind_gain"]) != 0: bad.append(u["unit"])
     say(len(su) == 30 and not bad, "the engine's scoring table of the built paper has 30 units; k, the cost points/(k-1) and the exact blind gain 0 recomputed by me from the items: disagreements %s" % bad)
