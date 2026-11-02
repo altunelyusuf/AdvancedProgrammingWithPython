@@ -1,0 +1,8 @@
+# Addendum to the brief of TK4_Rev_Papers (session SEN0414-EX-rev-papers)
+
+Pass this file TOGETHER WITH `08-tooling/briefs/exam/r15/BRIEF_TK4_Rev_Papers.md`, unedited. Where the two differ, this addendum wins. Launch only on the lineage agent's "go" (Items, Engine and the sheet wording task must be controlled and registered first).
+
+- **Validator and root.** The items are checked with `exam_item_check_v1_2_0.py` in `/home/claude/CME/exams/SEN0414/04-assessment/exams/` and the environment variable `SEN0414_ROOT=/home/claude/AdvancedProgrammingWithPython` (that repository holds `03-materials`, `08-tooling` and the points files; the CME copy does not): `SEN0414_ROOT=/home/claude/AdvancedProgrammingWithPython python3 exam_item_check_v1_2_0.py check items/items_v3_0_0.json`. Every tool that reads decks or points files needs the same variable.
+- **The sheet.** Use sheet v2.1.0 (`sen0414_exam_answersheet_v2_1_0.py`, task TK4_Rev_SheetText) and its sentence file `exam_sheet_wording_v1_0_0.json` for the answer sheet's page 1; the sentence for the question pages stays the design's `legal_copy.sentence` (top of question page 1). The tips of the records go on page 2 of the sheet; the sheet refuses an overflow, so build the real sheet and report that it raised no SheetOverflow (the page holds about 10 tips of 25 words, 15 of 20 words or 26 of 12 words).
+- **Page count.** The real page count of the paper is measured here for the first time (design estimate: cover 1 + at most 4 question pages + sheet 2). Report the measured number; NOT_MEASURED is not a pass.
+- **Where files go.** All new files in `/home/claude/CME/exams/SEN0414/`; nothing in the public repository.
