@@ -1,0 +1,22 @@
+# Brief for the executor session SEN0414-EX-mock (HTML mock exam and its derivation tool)
+
+Task TK4_Mock_Build (story ST4_MockExam, owner change request CR4_MockExam), written by the lineage agent on 2026-11-03. **Do not launch before the SEN0401 v7.2.0 set is delivered (the machine has 2 cores); the real start is the instant the coordinator gives from `date -u`.** Estimated 2.5 hours of agent work in one session (an estimate, G120). The Owner's request of 2026-11-03 00:45 Istanbul, relayed: after the real exam, if time allows, build an HTML mock exam for the course with the option to derive new mock exams again, never reusing a question of the real exam (midterm v4.0.0 items).
+
+## Read first
+COMMON_v4_0_0.md in `briefs/exam/r20/` (rules of an executor, no gate weakened, new versioned files only, private exam files stay in CME). The design v1_6_0 rules of the real exam (five alternatives, right = its points, wrong or blank = 0, no deductions, tip of 12 words or fewer on the question, 100 points, four questions of 25) apply to the mock exam as well, so a student practises the real rules.
+
+## What is built (new files in `/home/claude/CME/exams/SEN0414/04-assessment/mock/`, new folder)
+1. **Question bank for mocks** `mock_bank_v1_0_0.json`: items in the same record format as `items/items_v4_0_1.json`, covering chapters 1 to 8 as the real exam does, each answer recomputed by running the code, each passing the item validator `exam_item_check_v1_3_0.py` (five alternatives, tips, scope rule R27). Items are NEW. The bank holds at least 3 times the units of one mock (at least 81 units), so several mocks can be derived without repeats.
+2. **The exclusion rule (the Owner's hard condition), enforced by a gate**: no unit of a mock may equal or resemble a question of any delivered exam (v1.0.0 to v4.0.0: items_a/b v2, items v3_0_0, items v4_0_0/v4_0_1). A gate `mock_exclusion_check_v1_0_0.py` compares by item id, seed item, the normalised stem, the normalised listing, the set of answer texts, and the sequence of code tokens of the listing (a listing that differs only by names or numbers is a resemblance); a mock or bank item that matches fails. The gate has a fixture with a known copy and a known renamed copy that must be refused, and a fixture of a new item that must pass.
+3. **The derivation tool** `mock_derive_v1_0_0.py` (seed N -> a new mock): chooses units from the bank by the design's chapter quotas and Bloom minimum, never an item used in an earlier mock (a ledger `mock_ledger_v1_0_0.json` lists the item ids of each mock made), runs the exclusion gate, and writes the mock as one HTML file.
+4. **The HTML mock exam** `mock_exam_template_v1_0_0.html` (one self-contained file per mock): works on a phone and a large screen (adaptive), readable default text with a text-size control, five alternatives per question, answer by choosing, a button to check; after checking it shows the right answer with the reason and the points (right = points, wrong or blank = 0, total out of 100), a timer of 60 minutes that may be switched off, no data sent anywhere. Code of each question is shown in a block that never wraps (widen it). No tips page: the tip is printed under the stem. Interactive checks of the page: Playwright test that a right choice scores, a wrong one scores 0, a blank scores 0, the total is the sum, the text-size control changes the size, the layout has no horizontal scroll at 390 px and 1400 px width.
+5. First mock `mock_s1_v1_0_0.html` derived with seed 1, and its report (units, chapters, Bloom levels, blind expectation, exclusion gate result).
+
+## Not decided here (Owner points, asked one at a time by the lineage agent when needed)
+Where the mock is published (the real exam files are private; a mock built only from new items may go to the public course repository, but the Owner decides when and where, and not before the real exam has been sat).
+
+## Rules and report
+Same as COMMON. Final report to the coordinator: commit SHAs, new files with SHA-256, the verbatim output of every check, achieved / not achieved in plain words. Never touch the register. Word is not involved; the page is HTML.
+
+## Done means (the controller re-runs all of these itself)
+Bank validator PASS on every item; exclusion gate PASS on bank and first mock with both fixtures behaving as stated; derivation of two more mocks (seeds 2 and 3) shares no item with the first or with each other; page tests PASS; everything committed to CME.
