@@ -1,0 +1,25 @@
+# Brief for the executor session SEN0414-EX-q5-4 (part 4 of 4: measurement of the delivery set)
+
+Task TK4_Q5Free_4_Measure (story ST4_Q5Free), written by the lineage agent. Executor session name: **SEN0414-EX-q5-4**. Estimated 0.6 hours of agent work (an estimate; the real start is the instant the coordinator gives from `date -u`).
+
+## Why this work exists (all four parts)
+The Owner ruled at 17:42 Istanbul (14:42Z) on 2026-11-02: (1) the floor is at 0 on the whole paper (printed default A4, ruled at 16:52) and (2) **the bonus question Q5 must never reduce the grade: a wrong Q5 answer costs nothing** (the design variant `A4-q5free` of the marking tool). Q1 to Q4 keep the rule "a wrong answer costs points/(k-1), a blank costs 0". (3) Every file delivered to the Owner is named `<course>_exam_<kind>_v<MAJOR>_<MINOR>_<PATCH>_<part>.<ext>` (SEN0401 does this: `sen0401_exam_midterm_v6_0_0_paper.docx`); the SEN0414 deliveries so far lacked it. This is the FINAL SEN0414 delivery set and is version **3.0.0** (the first delivery, papers_r15, is v1.0.0 and the corrections version papers_r18_revfix is v2.0.0; both stay exactly as committed and are never edited). The sheet wording point "Office number 10100. Do not fill it." of wording file v1_1_0 stays as already implemented (an Owner wording point left as default).
+
+## The work is split in four parallel parts (each its own executor session)
+1. `TK4_Q5Free_1_Build` design v1_4_0, engine v1_3_0 and the real build.  2. `TK4_Q5Free_2_Score` marking tool v1_1_0 and the blind figures.  3. `TK4_Q5Free_3_Render` paper, key, sheet and the named delivery set.  4. `TK4_Q5Free_4_Measure` measurement of the delivery set.
+Parts 1 and 2 start at once. Part 3 prepares its renderers against a synthetic build and renders the real files when part 1's build is committed (poll `git -C /home/claude/CME pull --rebase --autostash`). Part 4 starts when part 3 has committed its delivery set.
+
+## Rules of an executor
+- You are an EXECUTOR session. You do NOT touch the register (07-lineage); the lineage agent records your start and controls your result by its own re-runs.
+- All work is in `/home/claude/CME/exams/SEN0414/` as NEW versioned files (new folder `04-assessment/exams/papers_r19/` for generated files). No committed file is edited: design v1_3_0, engine v1_2_1 and older, the items, the marking tool v1_0_0, the renderers v1_2_0 and older, papers_r15 and papers_r18_revfix stay byte for byte. Nothing in the public repository `/home/claude/AdvancedProgrammingWithPython` (set `SEN0414_ROOT=/home/claude/AdvancedProgrammingWithPython`); the Owner's cover template is read only and is never copied into any repository.
+- No gate is weakened: where a rule must change (Q5 now costs nothing, so its expected blind gain is points/k, not 0), the old rule is kept for Q1 to Q4 and the change is a stated, tested rule with a fixture of known answer and a fixture that proves the old behaviour is refused where it still applies.
+- First `git pull --rebase --autostash` in /home/claude/CME. Commit ONLY your own new files; never `git add -A`; the message ends with your task identifier in parentheses; push, no force.
+- The machine is shared (2 cores): no heavy parallel runs, use `nice`; delete your own scratch; STOP and report if free space falls under 0.8 GB.
+- Report every result exactly as printed (PASS, FAIL, NOT_MEASURED, CANNOT_RUN; the last two are not passes). A failing result is never worked around. Never invent a term or fact. Wait inside your turn; never schedule a wake-up.
+- Final report to the coordinator: commit SHAs, new files with SHA-256, the verbatim output of every check, achieved / not achieved in plain words.
+
+## Part 4 task
+Start only when part 3 has committed its delivery set (poll `git -C /home/claude/CME pull --rebase --autostash` inside your turn). Make `exam_papers_measure_v1_2_0.py` (a copy of v1_1_0, new file) and run it on `papers_r19/delivery/`: the file names against the convention; the SHA-256 list equal to the files; paper pages (5 at most) and type size, cover overshoot, slack of every question page (say which page has the least), 30 answer spaces, no sub-question split, key letters against the printed options, sheet 2 pages and 31 places, sheet and paper agree word for word on every shared sentence (the Q5 sentence included), the marking tool v1_1_0 on the real key: all right 110, all blank 0, and a mixed reading whose exact value you compute BY HAND first from the printed scoring table under the new rule (a wrong Q5 answer costs nothing; the floor at 0 on the paper) and write in the script before it runs, plus the same reading under the old rule so the difference is visible; no exam file and no template copy in the public repository. Word stays NOT_MEASURED and is said so. Write 7 page images for reading.
+
+## Done means (the controller re-runs all of these itself)
+The measure prints no FAIL; every RISK is explained; NOT_MEASURED items are named; the log and images are committed to CME.
