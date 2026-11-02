@@ -1,0 +1,13 @@
+# Brief M7: TK4_Mock_7_ConceptLinks (executor session SEN0414-EX-mock-t) - concept links of the mock records
+Read COMMON_MOCK_v1_0_0.md, slot_table_v1_0_0.md and RELEASE_CONFIGURATION_v1_0_0.md first. Estimated 45 minutes (an estimate, G120).
+## Why
+Owner hint 2026-11-03 01:35 Istanbul, relayed: the mock exam may use the related semantic technologies of the chapter interactive pages. Permission, not a change of the core: the core delivery (set v1.0.1) is done. Reading: after submit the result view links each record to the concept of the chapter page that it tests.
+## Task
+1. READ-ONLY inputs: the newest chapter pages `03-materials/ch01..ch04, ch06..ch08/page/sen0414_chNN_page_v*.html` (public repository; never edit; never chapter 5) and their concept data (the pages embed their concept list; find how a concept is opened by a stable hash or id). Record the page file name and version used per chapter.
+2. Write `04-assessment/mock/sen0414_mock_exam_v1_1_0_concept_links.json` (new file, in CME): for each of the 84 records (block + slot) one entry {block, slot, chapter, concept_id, concept_label (the page's own label), page_file, anchor (the stable way the page opens that concept)}; a multi-chapter record gets the link of its primary chapter (the first of `chapters`). Only anchors that exist: every entry is verified by opening the page in headless Chromium under `flock /tmp/page_test.lock nice -n 10` and showing that the anchor opens that concept (print PASS or FAIL per chapter, 7 chapters; a concept that cannot be opened by a stable anchor is left untagged and listed, never guessed).
+3. The tag must be honest: the concept names the thing the record tests (a record about sort() in place links the lists page's concept for sort), chosen by reading the record and the page concept list; no tag from the real exam items (the page's quiz questions are off-limits as items; use them as hints only).
+4. Do not touch the chapter pages or the textbook ontology. The links are relative to a base the page takes from a constant `PAGE_BASE` (empty by default: relative path `03-materials/chNN/page/<file>#anchor`); publication location is the Owner's later decision.
+5. Coverage rule of the derivation: report, per block, which concepts the 14 records cover and how many distinct concepts (a block should cover at least 10 distinct concepts; report the shortfall, do not invent).
+Commit the links file, then hand over to the page change (mock-h resumed: an optional 'Learn more' line per record in the result view, shown only when the record has a link; tests: link present, opens the right anchor, absent when none).
+## Done means
+Links file for 84 records with per-chapter verification PASS, coverage report, committed to CME; no page file touched.
