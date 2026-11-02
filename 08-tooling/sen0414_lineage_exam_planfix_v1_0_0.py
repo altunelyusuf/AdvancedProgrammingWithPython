@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+"""sen0414_lineage_exam_planfix v1_0_0 - ONE new register file: gives task TK4_V4Simple_Items1b the planning event the validator rule L2 asks for (found by the validation of 2.395.0: 27 violations, one more than the baseline 26), and records the Owner's ruling on the Bloom minimum, addendum 2, and the starts of 2b, 4b and 3b."""
+__version__ = "1.0.0"
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import sen0414_lineage_standard_v1_2_0 as W
+src = W.newest(); t = open(src, encoding="utf-8").read(); now = "2026-11-02T15:40:25"; sid = "ST4_V4Simple"
+add = ['ex:Plan7c_%s a backlog:PlanningEvent ; rdfs:label "Planning of the items v4.0.1 task into box 3"@en ; backlog:belongsToLineage ex:Lineage4 ;\n    backlog:plannedAt "%sZ"^^xsd:dateTime ; backlog:plannedBy backlog:Builder ; backlog:plannedInto ex:Iter_Ex3 ;\n    backlog:plansItem ex:%s ; backlog:producesTask ex:TK4_V4Simple_Items1b ;\n    backlog:refinementProduces ex:Spec4, ex:Scen4_Sound, ex:Scen4_Refused .\n' % (sid, now, sid)]
+add.append("ex:%s backlog:hasAuditNote %s .\n" % (sid, W.lit("2026-11-02T16:40Z (record written later, said openly): validation of 2.395.0 found one violation more than the baseline (rule L2: the task TK4_V4Simple_Items1b had no planning event); the planning event (planned 15:40:25Z, before its start 15:40:32Z) is added in this version. Real starts given by the coordinator (date -u) and not yet individually registered: part 2b 16:23:07Z (design v1_6_0 and real build, controlled: design check PASS, 34 of 34 engine rules PASS on the real build, 7 of 27 units at Bloom 4 or higher), part 4b and part 3b 16:24:53Z (3b controlled: blind figures reproduced exactly, agreement check PASS 10 of 10). Owner ruling about 19:3x Istanbul: minimum 7 of 27 units at Bloom level 4 or higher (design v1_6_0, source named in the design); the briefs ADDENDUM_1 and ADDENDUM_2 (commit aed31d0) carry the changes.")))
+print(os.path.basename(W.write_new(src, t + "\n" + "".join(add), "Exam: planning event for task TK4_V4Simple_Items1b (rule L2), notes of the Owner's Bloom ruling and of parts 2b, 3b, 4b.")))
