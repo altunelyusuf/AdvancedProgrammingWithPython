@@ -783,4 +783,170 @@ elif m == "revfix":
     tr = subprocess.run(["git", "ls-files"], cwd=PUB, capture_output=True, text=True).stdout.splitlines(); say(not [f for f in tr if "papers_r1" in f or "exam_midterm_s1" in f or "revfix" in f.lower() and "08-tooling" not in f], "nothing of the corrected paper is tracked in the public repository")
     pubs = subprocess.run(["git", "status", "--short"], cwd=PUB, capture_output=True, text=True).stdout; ex = [l for l in pubs.splitlines() if re.search(r"papers_r|_key|answersheet|midterm_s1", l, re.I) and "08-tooling" not in l and "07-lineage" not in l]; say(not ex, "no exam file in the public working tree: %s" % ex[:3])
     shutil.rmtree(tmp, ignore_errors=True)
+elif m == "revq5score":
+    import hashlib, math
+    from fractions import Fraction as Fr
+    C = "/home/claude/CME"; X2 = C + "/exams/SEN0414/04-assessment/exams"; XT = C + "/exams/SEN0414/08-tooling/exam"; K2 = X2 + "/papers_r19/build/exam_midterm_s1_key.json"; K1 = X2 + "/papers_r15/build/exam_midterm_s1_key.json"
+    sh = lambda f: hashlib.sha256(open(f, "rb").read()).hexdigest()
+    o = subprocess.run(["git", "show", "--name-status", "--format=", "35788aa"], cwd=C, capture_output=True, text=True).stdout
+    rows = [l.split("\t") for l in o.strip().splitlines()]; say(len(rows) == 10 and all(r[0] == "A" for r in rows), "CME commit 35788aa adds only new files (%d files)" % len(rows))
+    for f in ("sen0414_exam_score_v1_1_0.py", "sen0414_exam_score_check_v1_1_0.py", "sen0414_exam_score_blind_v1_1_0.py"): print("SHA256", f, sh(XT + "/" + f))
+    say(sh(XT + "/sen0414_exam_score_v1_1_0.py").startswith("5a1a8b72aa6280fa") and sh(XT + "/sen0414_exam_score_check_v1_1_0.py").startswith("a2b86375c8c2d2af") and sh(XT + "/sen0414_exam_score_blind_v1_1_0.py").startswith("98cc5682ced00a98"), "the three tool files have the SHA-256 of the executor's report")
+    say(subprocess.run(["git", "show", "604140d:exams/SEN0414/04-assessment/exams/papers_r19/build/exam_midterm_s1_key.json"], cwd=C, capture_output=True).stdout == open(K2, "rb").read(), "the part 1 key is the COMMITTED one (604140d)")
+    sys.path.insert(0, XT); sys.dont_write_bytecode = True
+    import sen0414_exam_score_v1_1_0 as S
+    RECS = {r_["id"]: r_ for r_ in json.load(open(X2 + "/items/items_v3_0_0.json"))}
+    k_of = lambda r_: {"mcq": 4, "predict": 4, "order": 4}.get(r_["type"]) or (len(r_["options_or_blanks"]["bank"]) if r_["type"] in ("blank", "cloze") else len(r_["options_or_blanks"]["answers"]))
+    key2 = S.load_key(K2); key1 = S.load_key(K1); info = {}
+    for it in key2["items"]:
+        for u in it["units"]: info[u["unit"]] = (Fr(u["points"]), k_of(RECS[it["id"]]), it["question"], u)
+    q5 = [n_ for n_, v in info.items() if v[2] == "Q5"]; scu = {u_["unit"]: u_ for u_ in json.load(open(K2))["A"]["scoring"]["units"]}; print("Q5 units in the key scoring section:", {n_: (scu[n_]["wrong_cost"], scu[n_]["expected_blind_gain"], scu[n_].get("free")) for n_ in q5})
+    say(sum(info[n_][0] for n_ in q5) == 10 and all(Fr(scu[n_]["wrong_cost"]) == 0 and Fr(scu[n_]["expected_blind_gain"]) == info[n_][0] / info[n_][1] for n_ in q5) and all(Fr(scu[n_]["wrong_cost"]) == info[n_][0] / (info[n_][1] - 1) for n_ in info if n_ not in q5), "the part 1 key: Q5 has 10 points, wrong cost 0 and blind gain points/k; the other 26 units keep cost points/(k-1)")
+    # exact blind distribution by integer-scaled convolution
+    def exact(q5free):
+        costs = {n_: (Fr(0) if (q5free and v[2] == "Q5") else v[0] / (v[1] - 1)) for n_, v in info.items()}
+        L = 1
+        for n_, v in info.items():
+            for x in (v[0], costs[n_]): L = L * x.denominator // math.gcd(L, x.denominator)
+        dist = {0: Fr(1)}
+        for n_, v in info.items():
+            pt, k = v[0], v[1]; up = int(pt * L); dn = -int(costs[n_] * L); nd = {}
+            for val, pr in dist.items():
+                nd[val + up] = nd.get(val + up, 0) + pr / k; nd[val + dn] = nd.get(val + dn, 0) + pr * (k - 1) / k
+            dist = nd
+        mean = sum(max(0, v) * pr for v, pr in dist.items()) / L; m2 = sum(max(0, v) ** 2 * pr for v, pr in dist.items()) / L ** 2
+        raw = sum(v * pr for v, pr in dist.items()) / L
+        return float(mean), float((m2 - mean ** 2) ** 0.5), float(sum(pr for v, pr in dist.items() if v > 0)), float(sum(pr for v, pr in dist.items() if v > 10 * L)), float(raw), float(sum(pr for v, pr in dist.items() if v < 0))
+    eo = exact(False); en = exact(True); print("exact old A4  (mean, sd, P>0, P>10, raw mean, P<0):", eo); print("exact new q5free:", en)
+    close = lambda a, b, t: abs(a - b) < t
+    say(close(eo[0], 4.3220, 5e-4) and close(eo[1], 6.6076, 5e-4) and close(eo[2], 0.4844, 5e-4) and close(eo[3], 0.17491, 5e-5), "my own exact blind figures for the old rule A4 agree with the executor's: mean %.4f (4.3220), sd %.4f (6.6076), share above 0 %.4f, above 10 %.5f" % (eo[0], eo[1], eo[2], eo[3]))
+    say(close(en[0], 5.5729, 5e-4) and close(en[1], 7.3355, 5e-4) and close(en[2], 0.5720, 5e-4) and close(en[3], 0.23532, 5e-5), "my own exact blind figures for the new rule agree with the executor's: mean %.4f (5.5729), sd %.4f (7.3355), share above 0 %.4f (0.5720), above 10 %.5f (0.23532)" % (en[0], en[1], en[2], en[3]))
+    say(close(en[4] - eo[4], 2.5, 1e-9) and close(eo[4], 0, 1e-9), "the raw sum before the floor: old rule mean %.6f, new rule mean %.6f (a difference of exactly 2.5, the Q5 expected bonus); the floor gives back part of it, so the floored mean moves by %.4f, not 2.5" % (eo[4], en[4], en[0] - eo[0]))
+    # tool on the keys
+    ans = {n_: str(v[3]["answer"]) for n_, v in info.items()}
+    allr = {"F": {"value": key2["form_mark"]["code"], "flag": None}}; allr.update({n_: {"value": a_, "flag": None} for n_, a_ in ans.items()}); allb = {"F": allr["F"]}; allb.update({n_: {"value": None, "flag": "blank"} for n_ in ans})
+    G = lambda x: Fr(x["exact"]) if isinstance(x, dict) else Fr(str(x))
+    r1 = S.score_sheet(key2, allr); r2 = S.score_sheet(key2, allb); say(G(r1["total"]) == 110 and G(r2["total"]) == 0, "the tool v1_1_0 on the part 1 key under its default: all right %s, all blank %s" % (r1["total"]["exact"], r2["total"]["exact"]))
+    WRONG = {"1c": "B", "1e": "A", "2b": "13", "2e": "00", "3b": "A", "3e": "G", "3g": "A", "4b": "2", "4f": "A", "5b": "A"}; BLANK = {"1d", "2c", "2g", "3d", "4c", "5d"}
+    rd = {"F": allr["F"]}; hold = Fr(0); hold_old = Fr(0)
+    for n_, v in info.items():
+        pt, k = v[0], v[1]
+        if n_ in BLANK: rd[n_] = {"value": None, "flag": "blank"}; x = Fr(0); xo = Fr(0)
+        elif n_ in WRONG: rd[n_] = {"value": WRONG[n_], "flag": None}; x = Fr(0) if v[2] == "Q5" else -pt / (k - 1); xo = -pt / (k - 1)
+        else: rd[n_] = {"value": ans[n_], "flag": None}; x = pt; xo = pt
+        hold += x; hold_old += xo
+    t2 = G(S.score_sheet(key2, rd)["total"]); print("hand mixed new", hold, "old", hold_old)
+    say(hold_old == Fr(1817, 42) and hold == Fr(1845, 42) and t2 == hold, "the executor's mixed reading by hand: old rule %s, new rule %s (5b wrong costs 0 now: +2/3); the tool on the part 1 key gives %s" % (hold_old, hold, t2))
+    t1d = G(S.score_sheet(key1, rd)["total"]); t1o = G(S.score_sheet(key1, rd, S.RULES["A4"])["total"])
+    say(t1o == Fr(1817, 42) and t1d == Fr(1845, 42), "the tool on the FIRST-version key: --rule A4 gives %s (by hand 1817/42) and the default gives %s (by hand 1845/42): the S9b expectation moved 3329/42 to 3371/42 only because the default rule moved, and --rule A4 is unchanged (the difference on that check's reading is the Q5 wrong cost)" % (t1o, t1d))
+    try:
+        S.score_sheet(key2, rd, S.RULES["A4"]); refused = False
+    except BaseException as e:
+        refused = True; print("A4 on the new key refused:", repr(e)[:160])
+    say(refused, "the gate: the part 1 key (Q5 cost 0) is refused under the old rule A4 (a key that contradicts the rule in force)")
+    for nm, lg in (("check", "/tmp/q5c_check.log"), ("blind seed 20261104", "/tmp/q5c_bl1.out"), ("blind seed 777", "/tmp/q5c_bl2.out")):
+        if os.path.exists(lg) and open(lg).read().strip(): print(nm, "log tail:", open(lg).read().strip().splitlines()[-1][:160])
+elif m == "revq5render":
+    import hashlib, tempfile, pdfplumber, docx as _docx
+    from fractions import Fraction as Fr
+    from docx.table import Table as _T
+    from docx.text.paragraph import Paragraph as _P
+    C = "/home/claude/CME"; X2 = C + "/exams/SEN0414/04-assessment/exams"; XT = C + "/exams/SEN0414/08-tooling/exam"; P1 = X2 + "/papers_r15"; P2 = X2 + "/papers_r19"; DL = P2 + "/delivery"; NM = "sen0414_exam_midterm_v3_0_0_"; PUB = "/home/claude/AdvancedProgrammingWithPython"
+    sh = lambda f: hashlib.sha256(open(f, "rb").read()).hexdigest()
+    import re as _re
+    o = subprocess.run(["git", "show", "--name-status", "--format=", "cde3fa9"], cwd=C, capture_output=True, text=True).stdout
+    rows = [l.split("\t") for l in o.strip().splitlines()]; say(len(rows) >= 40 and all(r[0] == "A" for r in rows), "CME commit cde3fa9 (part 3) adds only new files (%d files)" % len(rows))
+    P18 = X2 + "/papers_r18_revfix"
+    say(sh(P1 + "/exam_midterm_s1_paper.docx").startswith("26ce713caeec0b7c") and sh(P18 + "/exam_midterm_s1_v2_paper.docx").startswith("4d0bd217752aead9") and sh(P18 + "/exam_midterm_s1_v2_answersheet.pdf").startswith("ef1fa337d78475954") and sh(P18 + "/exam_midterm_s1_v2_paper.pdf").startswith("f774abce54086b9"), "the first version (v1.0.0) and the corrections version (v2.0.0) are untouched (SHA-256 26ce713c, 4d0bd217, ef1fa337, f774abce)")
+    o = subprocess.run(["git", "status", "--short", "--untracked-files=no", "exams/SEN0414"], cwd=C, capture_output=True, text=True).stdout; say(not o.strip(), "no tracked file under exams/SEN0414 in CME is modified")
+    names = sorted(os.listdir(DL)); okn = [f for f in names if _re.match(r"^sen0414_exam_midterm_v3_0_0_(paper\.docx|paper\.pdf|key\.docx|key\.pdf|sheet\.pdf|SHA256\.txt)$", f)]
+    say(len(names) == 6 and len(okn) == 6, "the delivery folder holds 6 files and all follow <course>_exam_<kind>_v<MAJOR>_<MINOR>_<PATCH>_<part>.<ext>: %s" % names)
+    orig = {"paper.docx": "exam_midterm_s1_v3_paper.docx", "paper.pdf": "exam_midterm_s1_v3_paper.pdf", "key.docx": "exam_midterm_s1_v3_key.docx", "key.pdf": "exam_midterm_s1_v3_key.pdf", "sheet.pdf": "exam_midterm_s1_v3_answersheet.pdf"}
+    say(all(sh(DL + "/" + NM + k_) == sh(P2 + "/" + v_) for k_, v_ in orig.items()), "the five delivery copies are byte-identical to the rendered originals")
+    lst = dict((l.split()[1], l.split()[0]) for l in open(DL + "/" + NM + "SHA256.txt").read().strip().splitlines()); say(len(lst) == 5 and all(lst[NM + k_] == sh(DL + "/" + NM + k_) for k_ in orig), "the SHA256.txt of the delivery lists the true SHA-256 of the five files")
+    for k_ in orig: print("SHA256", NM + k_, sh(DL + "/" + NM + k_))
+    bf = sorted(os.listdir(P1 + "/build")); cm = lambda f: subprocess.run(["git", "show", "604140d:exams/SEN0414/04-assessment/exams/papers_r19/build/" + f], cwd=C, capture_output=True).stdout
+    say(all(cm(f) == open(P2 + "/build/" + f, "rb").read() for f in bf), "the build in papers_r19 is byte for byte the COMMITTED part 1 build (604140d), the one the parts were rendered from")
+    diffs = [f for f in bf if sh(P1 + "/build/" + f) != sh(P2 + "/build/" + f)]; print("build files that differ from the first version's:", diffs)
+    kd = json.load(open(P1 + "/build/exam_midterm_s1_key.json"))["A"]; kn = json.load(open(P2 + "/build/exam_midterm_s1_key.json"))["A"]
+    ki = lambda k_: [(it["id"], it["position"], [(u["unit"], u["answer"], u["points"]) for u in it["units"]]) for it in k_["items"]]; say(ki(kd) == ki(kn), "the new key has the same items, positions, answers and points as the first version's key (only the scoring section and the Q5 rule differ)")
+    jb = lambda f: json.load(open(f)); say(jb(P1 + "/build/exam_midterm_s1_authored.json") == jb(P2 + "/build/exam_midterm_s1_authored.json"), "the authored items are the same as the first version's (no question changed)")
+    dd = open(P1 + "/build/exam_midterm_s1_directions.txt").read().splitlines(); dn = open(P2 + "/build/exam_midterm_s1_directions.txt").read().splitlines(); chg = [(a_, b_) for a_, b_ in zip(dd, dn) if a_ != b_]; print("directions lines changed:", chg); say(len(dd) == len(dn) and len(chg) == 1 and "Question 5" in chg[0][1] and "costs nothing" in chg[0][1], "the directions differ from the first version's in exactly one line, the Q5 sentence")
+    tmp = tempfile.mkdtemp(prefix="rf_ctl_")
+    subprocess.run(["soffice", "-env:UserInstallation=file://" + tmp + "/prof", "--headless", "--convert-to", "pdf", "--outdir", tmp, DL + "/" + NM + "paper.docx"], capture_output=True, text=True, timeout=240)
+    pdf = pdfplumber.open(tmp + "/" + NM + "paper.pdf"); cm = pdfplumber.open(DL + "/" + NM + "paper.pdf")
+    say(len(pdf.pages) == 5 and len(cm.pages) == 5, "my own LibreOffice conversion of the new paper .docx: %d pages; the committed PDF: %d pages; with the sheet 7 of 7" % (len(pdf.pages), len(cm.pages)))
+    say([re.sub(r"\s+", " ", q.extract_text()) for q in pdf.pages] == [re.sub(r"\s+", " ", q.extract_text()) for q in cm.pages], "the committed paper PDF has the same text on every page as my own conversion")
+    sz = min(c["size"] for q in pdf.pages[1:] for c in q.chars if c["top"] < 800 and c["text"].strip()); say(sz >= 9.99, "smallest type on the question pages: %.1f pt" % sz)
+    cov = pdf.pages[0]; ov = max([c["x1"] for c in cov.chars if c["text"].strip()] + [0]) - (595.3 - 56.6); say(ov <= 0.1, "cover: the largest glyph overshoot past the right margin is %.2f pt (first version 0.55)" % ov)
+    sl = []
+    for q in pdf.pages[1:]:
+        ink = max([c["bottom"] for c in q.chars if c["text"].strip() and c["top"] < 800] + [r["bottom"] for r in q.rects if r["bottom"] < 805] + [l["bottom"] for l in q.lines if l["bottom"] < 805]); sl.append(round(805.04 - ink, 1))
+    print("slack of the four question pages (pt):", sl); say(sl[-1] >= 40, "slack of the last question page %.1f pt (first version 11.5; the page before has %.1f pt: in Word the content may shift)" % (sl[-1], sl[-2]))
+    d = _docx.Document(DL + "/" + NM + "paper.docx"); seq = []
+    for ch in d.element.body.iterchildren():
+        if ch.tag.endswith("}p"): seq.append(("p", _P(ch, d).text))
+        elif ch.tag.endswith("}tbl"): seq.append(("t", [[c.text for c in r.cells] for r in _T(ch, d).rows]))
+    alltext = "\n".join(v if k == "p" else "\n".join(c for r in v for c in r) for k, v in seq)
+    key = json.load(open(P2 + "/build/exam_midterm_s1_key.json"))["A"]; items = {r["id"]: r for r in json.load(open(X2 + "/items/items_v3_0_0.json"))}
+    nsp = len(re.findall(r"(?m)^(?:Answer|Gap) \d[a-g]", alltext)); nord = alltext.count("Give the place of this step"); say(nsp + nord == 30, "answer spaces on the paper text: %d labelled (Answer or Gap) plus %d boxes of the order steps = %d (30 expected)" % (nsp, nord, nsp + nord))
+    split = []
+    for pi, q in enumerate(pdf.pages[1:], 1):
+        pass
+    pages_text = [q.extract_text() for q in pdf.pages]
+    for it in key["items"]:
+        for u in it["units"]:
+            n_ = u["unit"]; hp = [i for i, tx in enumerate(pages_text) if re.search(r"(?m)^%s\b" % n_, tx) or re.search(r"(?m)^%s\S*[ -]" % n_[:1] + n_[1:], tx)]
+            ap = [i for i, tx in enumerate(pages_text) if re.search(r"(?:Answer|Gap) %s\b" % n_, tx)]
+            if u["kind"] == "order": continue
+            if not ap or (hp and ap[0] not in hp): split.append((n_, hp, ap))
+    say(not split, "every unit's answer label stands on a page that also holds its heading (sub-question not split): problems %s" % split[:5])
+    letbad = []; okc = 0
+    for it in key["items"]:
+        r = items[it["id"]]
+        for u in it["units"]:
+            if u["kind"] != "choice": continue
+            idx = next((i for i, (k_, v_) in enumerate(seq) if k_ == "p" and v_.startswith(u["unit"] + "\t")), None); opts = {}
+            if idx is not None:
+                for k_, v_ in seq[idx + 1:idx + 40]:
+                    if k_ == "p" and re.match(r"^\d[a-g]\t", v_): break
+                    if k_ == "p" and re.match(r"^[A-D]\t", v_): opts[v_[0]] = v_[2:].strip()
+                    if k_ == "t" and v_ and re.match(r"^[A-D]  ", v_[0][0]):
+                        for row in v_:
+                            for c in row:
+                                if re.match(r"^[A-D]  ", c): opts[c[0]] = c[3:].strip()
+                        break
+            good = r["options_or_blanks"]["ABCD".index(r["answer"])]
+            if opts.get(u["answer"], "").strip() == good.strip(): okc += 1
+            else: letbad.append((u["unit"], u["answer"]))
+    say(not letbad and okc == 14, "key letters against the options printed in the NEW paper: %d of 14 print the correct option text; disagreements %s" % (okc, letbad))
+    W2 = json.load(open(X2 + "/exam_sheet_wording_v1_1_0.json")); print("wording file keys:", list(W2.keys())); print(json.dumps(W2, indent=1)[:1500])
+    sheet = pdfplumber.open(DL + "/" + NM + "sheet.pdf").pages; t1 = re.sub(r"\s+", " ", sheet[0].extract_text()); t2 = re.sub(r"\s+", " ", sheet[1].extract_text())
+    nos = [u["no"] for u in json.load(open(X2 + "/exam_design_v1_3_0.json"))["answer_sheet"]["units"]]; miss = [n for n in nos if not re.search(r"(^|\s)%s(\s|$)" % re.escape(n), t1)]
+    say(len(sheet) == 2 and not miss and len(sheet[1].curves) == 0 and len(sheet[0].curves) == 298, "the new sheet: 2 pages, 31 labels (missing %s), page 2 without circles, %d circles on page 1" % (miss, len(sheet[0].curves)))
+    sentence = W2["sheet_sentence"]; say(re.sub(r"\s+", " ", sentence) in t1, "the sheet sentence of the wording file v1_1_0 stands on sheet page 1 word for word")
+    say("form code" not in (t1 + t2).lower() and t1.count("Office number 10100. Do not fill it.") == 1 and t2.count("Office number 10100. Do not fill it.") == 1, "the header: 'Office number 10100. Do not fill it.' on both pages and the words 'form code' on none")
+    rowf = "On the answer sheet, in the row marked F, fill the number 00."; lc = re.sub(r"\s+", " ", sheet[0].crop((0, 0, 295, 841)).extract_text()); say(rowf in lc and re.sub(r"\s+", " ", rowf) in re.sub(r"\s+", " ", alltext), "the line above row F on the sheet equals the paper's sentence word for word")
+    smx = max(c["x1"] for q in sheet for c in q.chars); smn = min(c["x0"] for q in sheet for c in q.chars); fb = max(c["bottom"] for q in sheet for c in q.chars if c["text"].strip()); say(smx <= 552.8 and smn >= 42.4 and fb <= 799.37, "sheet glyphs between %.1f and %.1f pt; the lowest glyph bottom %.2f pt, the bottom margin line 799.37 pt" % (smn, smx, fb))
+    lines = [l for l in sheet[0].extract_text().splitlines() if l.strip()]; single = [l for l in lines if len(l.split()) == 1 and re.search(r"[a-z]\.$", l)]; say(not single, "no orphan line of a single word ending a sentence on sheet page 1 (found %s)" % single)
+    tips = [it for it in key["items"] if it.get("tip", "none").strip() != "none"]; tm = [it["id"] for it in tips if re.sub(r"\s+", " ", it["tip"]) not in t2]; say(len(tips) == 13 and not tm, "the tips page: 13 tips word for word, missing %s" % tm)
+    Q5S = "A wrong choice in Question 5 costs nothing: the bonus never lowers your grade."
+    say(re.sub(r"\s+", " ", Q5S) in re.sub(r"\s+", " ", alltext) and re.sub(r"\s+", " ", Q5S) in t2, "the Q5 sentence stands word for word in the paper directions and on sheet page 2")
+    kdx = _docx.Document(DL + "/" + NM + "key.docx"); ktx = "\n".join(pp.text for pp in kdx.paragraphs) + "\n" + "\n".join(c.text for t_ in kdx.tables for r_ in t_.rows for c in r_.cells)
+    kpdf = pdfplumber.open(DL + "/" + NM + "key.pdf"); ktp = re.sub(r"\s+", " ", " ".join(q.extract_text() or "" for q in kpdf.pages))
+    say(re.sub(r"\s+", " ", Q5S) in re.sub(r"\s+", " ", ktx) or re.sub(r"\s+", " ", Q5S) in ktp, "the Q5 sentence stands in the key (.docx or PDF)")
+    subprocess.run(["soffice", "-env:UserInstallation=file://" + tmp + "/prof", "--headless", "--convert-to", "pdf", "--outdir", tmp + "/k", DL + "/" + NM + "key.docx"], capture_output=True, text=True, timeout=240)
+    kp2 = pdfplumber.open(tmp + "/k/" + NM + "key.pdf"); say(len(kp2.pages) == 3 and len(kpdf.pages) == 3, "the key: my own LibreOffice conversion of the .docx gives %d pages, the committed PDF %d pages" % (len(kp2.pages), len(kpdf.pages)))
+    kl = max(c["bottom"] for c in kp2.pages[-1].chars if c["text"].strip() and c["top"] < 800); print("key last page: lowest text %.1f pt of the bottom margin line 805 pt: the .docx in Word may need a 4th page, print the PDF" % kl)
+    say(("floor" in ktx.lower() or "floor" in ktp.lower()) and ("0" in ktx) and ("no cost" in ktx.lower() or "costs nothing" in ktx.lower() or "costs nothing" in ktp.lower()), "the key states the floor and that a wrong Q5 answer costs nothing")
+    hdr = "In Questions 1 to 4 a wrong answer costs part of its points, so leave an answer blank when you do not know it."; say(hdr in t1, "the sheet page 1 header cost sentence (changed from v2.2.0, needed because the old wording contradicts a free Q5) reads: In Questions 1 to 4 ...")
+    sys.path.insert(0, XT); sys.dont_write_bytecode = True
+    import sen0414_exam_score_v1_1_0 as S
+    K = S.load_key(P2 + "/build/exam_midterm_s1_key.json"); G = lambda x: Fr(x["exact"]) if isinstance(x, dict) else Fr(str(x)); ans = {u["unit"]: str(u["answer"]) for it in K["items"] for u in it["units"]}
+    allr = {"F": {"value": K["form_mark"]["code"], "flag": None}}; allr.update({n_: {"value": a_, "flag": None} for n_, a_ in ans.items()}); r1 = S.score_sheet(K, allr)
+    allb = {"F": allr["F"]}; allb.update({n_: {"value": None, "flag": "blank"} for n_ in ans}); r2 = S.score_sheet(K, allb)
+    say(G(r1["total"]) == 110 and G(r2["total"]) == 0, "the marking tool on the key of the corrections version: all right %s, all blank %s" % (r1["total"]["exact"], r2["total"]["exact"]))
+    tr = subprocess.run(["git", "ls-files"], cwd=PUB, capture_output=True, text=True).stdout.splitlines(); say(not [f for f in tr if "papers_r1" in f or "exam_midterm_s1" in f or "revfix" in f.lower() and "08-tooling" not in f], "nothing of the delivery is tracked in the public repository")
+    pubs = subprocess.run(["git", "status", "--short"], cwd=PUB, capture_output=True, text=True).stdout; ex = [l for l in pubs.splitlines() if re.search(r"papers_r|_key|answersheet|midterm_s1", l, re.I) and "08-tooling" not in l and "07-lineage" not in l]; say(not ex, "no exam file in the public working tree: %s" % ex[:3])
+    shutil.rmtree(tmp, ignore_errors=True)
 print("RESULT " + ("FAIL: " + "; ".join(map(str, bad)) if bad else "PASS")); sys.exit(1 if bad else 0)
