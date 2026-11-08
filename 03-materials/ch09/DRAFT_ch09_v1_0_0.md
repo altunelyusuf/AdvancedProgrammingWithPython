@@ -12,28 +12,33 @@ nothing is rendered again until you approve this.
 
 ---
 
-## 1. The story (5N1K)
+## 1. The story
 
-**Who:** Stephen Cole Kleene, American mathematician (1909–1994), and — a generation later —
-Larry Wall, creator of Perl.
-**What:** Kleene introduced the *regular expression* (he called them "regular events") as an algebraic
-notation for the patterns a simple neuron-inspired network could recognize.
-**When:** 1951 (RAND Corporation research memorandum), published in final form in 1956.
-**Where:** Kleene was investigating networks of the artificial neurons that Warren McCulloch and
-Walter Pitts had described in 1943 — the story starts in theoretical neuroscience, not in text
-editing.
-**Why:** He wanted to know exactly which patterns a network of these simple neurons could, in
-principle, ever detect — regular expressions were his notation for writing those patterns down
-algebraically, decades before anyone used them to search a string.
-**How:** Decades later, Larry Wall built that abstract notation into Perl's working syntax, which is
-the lineage Python's `re` module is a direct descendant of — the `.`, `*`, `+`, character classes and
-groups a student types in this chapter are, almost unchanged, Kleene's 1951 algebra.
+In 1943, the neuroscientist Warren McCulloch and the logician Walter Pitts published the first
+mathematical model of an artificial neuron — not a working machine, just a notation for thinking
+about what networks of simple on/off units could, in principle, do. An American mathematician named
+Stephen Kleene picked up that question in the early 1950s, working at the RAND Corporation, and asked
+it more precisely: exactly which patterns can such a network ever recognize? To answer it, he needed
+a way to write those patterns down algebraically rather than draw a diagram for every one of them. In
+a 1951 research memorandum, polished into its final published form by 1956, he called the patterns
+"regular events" and gave them a compact symbolic notation — the first regular expression. Kleene
+never touched a text editor; he was doing pure theory of computation, decades before anyone thought
+to point this algebra at a string of characters on a screen.
+
+That jump — from an abstract theory of neural networks to a tool programmers actually type — took
+another generation. By the 1990s, Larry Wall had built that same notation directly into the working
+syntax of Perl, turning Kleene's algebra into something a line of code could execute. Python's `re`
+module is a direct descendant of that Perl syntax: the `.`, `*`, `+`, character classes and groups a
+student types in this chapter are, almost unchanged, Kleene's 1951 algebra, inherited through Perl.
+It's worth pausing on that lineage when the chapter reaches `compile()` and `search()` — the dense
+little punctuation a beginner finds intimidating is, quite literally, seventy-year-old mathematics
+doing exactly the job it was invented for.
 
 **Picture and source (asset already on file):** `assets/photo_stephen_kleene.jpg` — provenance in
 `assets/ASSETS_PROVENANCE_v1_0_0.md`. **Live link:**
 https://student.cs.uwaterloo.ca/~cs360/Hall/kleene.html (Univ. of Waterloo's Theory of Computing Hall
 of Fame entry; cites Kleene's 1956 paper directly). Second picture on file,
-`assets/photo_larry_wall_2007.jpg`, for the "how it reached Python" half of the story.
+`assets/photo_larry_wall_2007.jpg`, for the Perl half of the story.
 
 *(The deck's third story asset, `assets/photo_ken_thompson_2019.jpg`, is Ken Thompson — his 1968 `ed`
 and `grep` work is the direct bridge between Kleene's algebra and Unix text tools, and belongs on the

@@ -11,21 +11,26 @@ pinned to sourced figures with a live link, matching the current standard.
 
 ---
 
-## 1. The story (5N1K)
+## 1. The story
 
-**Who:** Douglas Crockford, together with Chip Morningstar, at the company State Software.
-**What:** the JSON (JavaScript Object Notation) data format — this chapter's second half (saving
-variables with `shelf` and with `json`) is exactly the "plain alternative" Crockford built.
-**When:** 2001.
-**Where:** State Software, in Morningstar's garage, where the two were testing an early
-single-page-web-application idea and needed a simple way to move structured data between browser and
-server.
-**Why:** the dominant format of the day was XML; Crockford wanted something a browser's own JavaScript
-could parse without a library, so he deliberately kept the format minimal — "the good thing about
-reinventing the wheel is that you can get a round one," as he put it when accused of reinventing XML.
-**How:** he registered json.org, wrote a one-page specification, and let adoption happen on its own
-once the format existed to point to — which is why this chapter can teach `json.dump`/`json.load` as
-a small, fixed, universally-supported format rather than a shifting one.
+In 2001, Douglas Crockford and Chip Morningstar — co-founders of a small technology consultancy
+called State Software — were gathered in Morningstar's garage, testing an early idea for what we'd
+now call a single-user, multi-person web application, years before the rest of the web caught up to
+the idea. They needed something ordinary web pages of the time struggled with: a simple way to move
+structured data back and forth between a browser's JavaScript and a server. The accepted answer in
+2001 was XML, but Crockford didn't want a parsing library — he wanted the browser's own JavaScript
+engine to read the data natively, with nothing extra installed. So he looked at JavaScript's own
+object literal syntax, stripped it down to the smallest subset that could represent any data
+structure, and gave that subset a name: JavaScript Object Notation, JSON.
+
+He didn't patent it or found a working group. He registered the domain json.org, put up a one-page
+specification, and let the format speak for itself. When critics pointed out that he'd just
+reinvented part of what XML already did, Crockford's answer became one of the format's most quoted
+lines: "the good thing about reinventing the wheel is that you can get a round one." That
+deliberate minimalism — no schemas, no namespaces, just objects, arrays, strings, numbers, booleans
+and null — is exactly why `json.dump()` and `json.load()` in this chapter are as small and stable as
+they are twenty-five years later, and why JSON ended up as the plain, portable alternative this
+chapter offers once `shelf` has shown students the more convenient, Python-only option.
 
 **Picture and source (asset already on file):** `assets/photo_douglas_crockford_2013.jpg` — provenance
 in `assets/ASSETS_PROVENANCE_v1_0_0.md`. **Live link:**
