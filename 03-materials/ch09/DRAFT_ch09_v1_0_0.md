@@ -25,6 +25,15 @@ a 1951 research memorandum, polished into its final published form by 1956, he c
 never touched a text editor; he was doing pure theory of computation, decades before anyone thought
 to point this algebra at a string of characters on a screen.
 
+Kleene's "regular events" turned out to sit at the very bottom of a ladder the linguist Noam Chomsky
+laid out a few years later, in 1956: the Chomsky hierarchy of formal languages, which ranks every kind
+of pattern a machine could ever check by how much machinery it takes to check it. Regular languages —
+exactly the patterns a regular expression can express — are Type-3, the simplest rung, recognizable by
+nothing more than a finite automaton with no memory at all; everything above that (balanced
+parentheses, nested HTML tags, most of a real programming language's grammar) needs a strictly more
+powerful machine. That is the honest answer to "why can't regex do absolutely everything" — it's a
+theorem, not a limitation of Python's `re` module.
+
 That jump — from an abstract theory of neural networks to a tool programmers actually type — took
 another generation. By the 1990s, Larry Wall had built that same notation directly into the working
 syntax of Perl, turning Kleene's algebra into something a line of code could execute. Python's `re`
@@ -126,6 +135,27 @@ story-image assets.
   free walkthrough matching this chapter's scope.
 
 ---
+
+## 4a. A correctness check on the story, done at your request
+
+You asked me to check whether the story misdirects students into thinking regular expressions were
+"invented in the 20th century," pointing to algebra's much older history — Babylonian equation-solving
+and al-Khwārizmī, the 9th-century Baghdad mathematician whose book title gave us the word "algebra"
+itself (and whose name gave us "algorithm").
+
+Checked, and the two claims should stay separate: al-Khwārizmī is correctly called the father of
+algebra — the discipline of solving equations by named, systematic methods — and that lineage really
+does run back through him to Babylonian mathematics. But a *regular expression* is a different,
+specific, 20th-century mathematical object: a notation for the patterns a finite-memory machine can
+recognize, which Kleene named and formalized in 1951–56 by analogy ("an algebra of regular events"),
+not by extending al-Khwārizmī's algebra of equations. No source ties the two together — searched for
+one directly and found none; the word "algebra" is the only thing they share. Telling students
+al-Khwārizmī anticipated regex, or that regex descends from Babylonian mathematics, would be the
+misreading, not a fix for one. What *is* correctly older and worth the chapter having is the Chomsky
+hierarchy placement added above — regular languages as Type-3, the oldest-standing formal result
+regex sits inside — and if you'd like a one-line etymological aside noting that the word "algebra"
+itself (not regex) comes from al-Khwārizmī's *al-jabr*, I can add that too, clearly marked as being
+about the word only.
 
 ## 5. Open items (not blocking the render; named so they are not lost)
 
