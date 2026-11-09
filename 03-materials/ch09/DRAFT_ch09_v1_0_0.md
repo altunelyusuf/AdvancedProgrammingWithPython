@@ -14,6 +14,17 @@ nothing is rendered again until you approve this.
 
 ## 1. The story
 
+Machines that could only ever behave in a fixed, finite repertoire of ways existed long before anyone
+had a name for what kind of machine that was. Around the first century CE, the Alexandrian engineer
+Hero built a self-propelled cart whose entire routine — how far it rolled, when it turned, even
+reversing itself — was set by the order twine was wound around its axle; rewind the twine differently
+and the cart's sequence of moves changed, with no understanding required of why it worked, only that
+a fixed drum of pegs or cord produces a fixed, repeatable sequence of actions. Eleven centuries later,
+in 1206, the engineer al-Jazari built automated musicians on a boat whose drummer could be made to
+play entirely different rhythms by moving the pegs on a rotating drum — the same idea, built with more
+deliberate intent to make it reprogrammable. Neither Hero nor al-Jazari had, or needed, any
+mathematics for what they'd built; the pegs and cams simply were the program.
+
 In 1943, the neuroscientist Warren McCulloch and the logician Walter Pitts published the first
 mathematical model of an artificial neuron — not a working machine, just a notation for thinking
 about what networks of simple on/off units could, in principle, do. An American mathematician named
@@ -34,6 +45,13 @@ parentheses, nested HTML tags, most of a real programming language's grammar) ne
 powerful machine. That is the honest answer to "why can't regex do absolutely everything" — it's a
 theorem, not a limitation of Python's `re` module.
 
+Put the two halves of this story together and Kleene's theorem reads differently: it isn't a
+20th-century invention out of nowhere, it's the first precise answer to a question engineers like
+Hero and al-Jazari had been running into by hand for two thousand years without ever being able to
+state it — exactly how much a machine with a fixed, finite set of internal states can ever do, and
+no more. The cam drum and the peg sequence were always, mathematically, finite automata; nobody could
+say so, or say exactly where their limits were, until 1951–56.
+
 That jump — from an abstract theory of neural networks to a tool programmers actually type — took
 another generation. By the 1990s, Larry Wall had built that same notation directly into the working
 syntax of Perl, turning Kleene's algebra into something a line of code could execute. Python's `re`
@@ -43,11 +61,16 @@ It's worth pausing on that lineage when the chapter reaches `compile()` and `sea
 little punctuation a beginner finds intimidating is, quite literally, seventy-year-old mathematics
 doing exactly the job it was invented for.
 
-**Picture and source (asset already on file):** `assets/photo_stephen_kleene.jpg` — provenance in
-`assets/ASSETS_PROVENANCE_v1_0_0.md`. **Live link:**
-https://student.cs.uwaterloo.ca/~cs360/Hall/kleene.html (Univ. of Waterloo's Theory of Computing Hall
-of Fame entry; cites Kleene's 1956 paper directly). Second picture on file,
-`assets/photo_larry_wall_2007.jpg`, for the Perl half of the story.
+**Pictures and sources:** Hero's cart and al-Jazari's drum are not yet on file as assets — recommend
+adding one image for each (a diagram of Hero's cart from a museum/university source, and an
+illustration of al-Jazari's boat automaton, both widely reproduced from his 1206 manuscript) before
+the opening of the story; live sources: https://www.techradar.com/news/the-forgotten-history-of-the-800-year-old-robot
+(Prof. Noel Sharkey's reconstruction of al-Jazari's peg-drum, and his account of Hero's twine-driven
+cart) and https://en.wikipedia.org/wiki/Al-Jazari for the manuscript illustrations. Kleene:
+`assets/photo_stephen_kleene.jpg` — provenance in `assets/ASSETS_PROVENANCE_v1_0_0.md`. **Live
+link:** https://student.cs.uwaterloo.ca/~cs360/Hall/kleene.html (Univ. of Waterloo's Theory of
+Computing Hall of Fame entry; cites Kleene's 1956 paper directly). Perl:
+`assets/photo_larry_wall_2007.jpg`, already on file.
 
 *(The deck's third story asset, `assets/photo_ken_thompson_2019.jpg`, is Ken Thompson — his 1968 `ed`
 and `grep` work is the direct bridge between Kleene's algebra and Unix text tools, and belongs on the
@@ -131,6 +154,11 @@ story-image assets.
   https://regex101.com/
 - **Seminal work:** S. C. Kleene, *Representation of Events in Nerve Nets and Finite Automata* (1956)
   — cited via the Waterloo Hall-of-Fame page above.
+- **Formal placement:** regular languages as the Type-3 (simplest) class of the Chomsky hierarchy —
+  any standard automata-theory reference (e.g. Sipser, *Introduction to the Theory of Computation*).
+- **Ancient automata referenced in the story:** Prof. Noel Sharkey's reconstruction and analysis of
+  historical programmable machines — techradar.com; background on Ismail al-Jazari's 1206
+  peg-drum automated musicians — Wikipedia, "Al-Jazari."
 - **Tutorial/video:** Corey Schafer, "Python Tutorial: re Module" (YouTube) — a widely used, current,
   free walkthrough matching this chapter's scope.
 
@@ -141,21 +169,26 @@ story-image assets.
 You asked me to check whether the story misdirects students into thinking regular expressions were
 "invented in the 20th century," pointing to algebra's much older history — Babylonian equation-solving
 and al-Khwārizmī, the 9th-century Baghdad mathematician whose book title gave us the word "algebra"
-itself (and whose name gave us "algorithm").
+itself (and whose name gave us "algorithm"). You then asked a second, related question: whether
+ancient mechanically-working autonomous machines exist that are, in effect, finite automata, even
+though nobody at the time could have named them that.
 
-Checked, and the two claims should stay separate: al-Khwārizmī is correctly called the father of
-algebra — the discipline of solving equations by named, systematic methods — and that lineage really
-does run back through him to Babylonian mathematics. But a *regular expression* is a different,
-specific, 20th-century mathematical object: a notation for the patterns a finite-memory machine can
-recognize, which Kleene named and formalized in 1951–56 by analogy ("an algebra of regular events"),
-not by extending al-Khwārizmī's algebra of equations. No source ties the two together — searched for
-one directly and found none; the word "algebra" is the only thing they share. Telling students
-al-Khwārizmī anticipated regex, or that regex descends from Babylonian mathematics, would be the
-misreading, not a fix for one. What *is* correctly older and worth the chapter having is the Chomsky
-hierarchy placement added above — regular languages as Type-3, the oldest-standing formal result
-regex sits inside — and if you'd like a one-line etymological aside noting that the word "algebra"
-itself (not regex) comes from al-Khwārizmī's *al-jabr*, I can add that too, clearly marked as being
-about the word only.
+On the first question: al-Khwārizmī is correctly called the father of algebra — the discipline of
+solving equations by named, systematic methods — and that lineage really does run back through him
+to Babylonian mathematics. But a *regular expression* is a different, specific, 20th-century
+mathematical object: a notation for the patterns a finite-memory machine can recognize, which Kleene
+named and formalized in 1951–56 by analogy ("an algebra of regular events"), not by extending
+al-Khwārizmī's algebra of equations. No source ties the two together — searched for one directly and
+found none; the word "algebra" is the only thing they share. Telling students al-Khwārizmī anticipated
+regex, or that regex descends from Babylonian mathematics, would be the misreading, not a fix for one.
+
+On the second question: yes, correct, and that's now the fix worked into the story itself above
+(Hero's cart, al-Jazari's peg-drum musicians) rather than kept separate here — a cam drum or peg
+sequence is, structurally, a finite automaton with no memory beyond its current position, running
+for two thousand years before anyone could say so or state its limits precisely. What belongs here,
+and doesn't duplicate the story, is just the one remaining loose thread: if you'd like a one-line
+etymological aside noting that the word "algebra" itself (not regex) comes from al-Khwārizmī's
+*al-jabr*, I can add that too, clearly marked as being about the word only.
 
 ## 5. Open items (not blocking the render; named so they are not lost)
 
