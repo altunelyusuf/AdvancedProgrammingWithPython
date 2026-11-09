@@ -5,44 +5,72 @@
 already went through the full Iteration-20 retrofit pipeline and were controlled and verified Done
 (deck standard check 13/13 PASS, overlap check CLEAN, 18/18 examples reproduce their recorded output,
 page test 9.37.0: 402 features passed/0 failed, chapter-check Research/Ch10: PASS). Read against the
-current standard again this turn (`TK3_StateCheck_Ch10`) — no open gap found. This draft exists so
-chapter 10 is rendered from the same one-draft process as chapter 9, and so the story slot below is
-pinned to sourced figures with a live link, matching the current standard.
+current standard again this turn (`TK3_StateCheck_Ch10`) — the chapter's content has no open gap, but
+this draft's own story section did: the first pass only wrote up one of the deck's four existing story
+beats (JSON) and left the other three unused. Corrected below (2026-11-09) to all four, matching the
+story companion `08-tooling/sen0414_ch10_stories_v1_0_0.py`. This draft exists so chapter 10 is
+rendered from the same one-draft process as chapter 9, and so the story section is pinned to sourced
+figures with live links, matching the current standard.
 
 ---
 
 ## 1. The story
 
-In 2001, Douglas Crockford and Chip Morningstar — co-founders of a small technology consultancy
-called State Software — were gathered in Morningstar's garage, testing an early idea for what we'd
-now call a single-user, multi-person web application, years before the rest of the web caught up to
-the idea. They needed something ordinary web pages of the time struggled with: a simple way to move
-structured data back and forth between a browser's JavaScript and a server. The accepted answer in
-2001 was XML, but Crockford didn't want a parsing library — he wanted the browser's own JavaScript
-engine to read the data natively, with nothing extra installed. So he looked at JavaScript's own
-object literal syntax, stripped it down to the smallest subset that could represent any data
-structure, and gave that subset a name: JavaScript Object Notation, JSON.
+**Correction to the first pass of this draft:** the deck already carries four story beats, not one —
+recorded in `08-tooling/sen0414_ch10_stories_v1_0_0.py` (self-check: 4 stories, 0 failures) and matching
+the four photo/logo assets in `assets/ASSETS_PROVENANCE_v1_0_0.md`. My first pass only wrote up the JSON
+beat and treated the Thompson/Pike assets as spare. They aren't spare — they're already part of this
+chapter's standard. All four, in the order the chapter teaches them:
 
-He didn't patent it or found a working group. He registered the domain json.org, put up a one-page
-specification, and let the format speak for itself. When critics pointed out that he'd just
-reinvented part of what XML already did, Crockford's answer became one of the format's most quoted
-lines: "the good thing about reinventing the wheel is that you can get a round one." That
-deliberate minimalism — no schemas, no namespaces, just objects, arrays, strings, numbers, booleans
-and null — is exactly why `json.dump()` and `json.load()` in this chapter are as small and stable as
-they are twenty-five years later, and why JSON ended up as the plain, portable alternative this
-chapter offers once `shelf` has shown students the more convenient, Python-only option.
+The chapter opens on `Path` objects, and the reason a path is an object with its own methods rather
+than a plain string traces to one proposal: on 30 July 2012, Antoine Pitrou wrote PEP 428, "The
+pathlib module — object-oriented filesystem paths," arguing a filesystem path deserved to be its own
+object rather than a string handed to separate `os.path` functions. The proposal was discussed through
+2013 and shipped two years later, in Python 3.4 (March 2014) — bringing with it the `/` join operator
+and the `parts`/`parent`/`stem`/`suffix` attributes this chapter's opening examples now treat as the
+ordinary way to build and take apart a path.
 
-**Picture and source (asset already on file):** `assets/photo_douglas_crockford_2013.jpg` — provenance
-in `assets/ASSETS_PROVENANCE_v1_0_0.md`. **Live link:**
-https://twobithistory.org/2017/09/21/the-rise-and-rise-of-json.html (names Morningstar and the garage
-origin directly) and https://www.json.org/ for the one-page spec itself.
+A few examples later, the chapter reaches `open()`'s `encoding` argument — almost always `'utf-8'` by
+the chapter's own count — and that format has an exact birthday. Rob Pike later wrote that UTF-8 was
+"designed, in front of my eyes, on a placemat in a New Jersey diner one night in September" 1992, with
+Ken Thompson working out the bit-packing by hand while Pike watched; the surviving source changes date
+the first working code to 4 September 1992 and a proposal mailed to the X/Open committee four days
+later. The two had been asked to review a rival encoding for the Plan 9 operating system they were
+building at Bell Labs, found it couldn't recover a byte stream picked up mid-character, and designed a
+fix overnight instead — by the end of that week, Plan 9 ran entirely on the format they'd sketched on
+a placemat.
 
-*(The deck's other two story assets — `assets/photo_rob_pike_oscon.jpg` and
-`assets/photo_ken_thompson_2019.jpg` — fit the file-path/`pathlib`-flavoured opening half of the
-chapter if a second story beat is wanted there: both co-created Unix's own path and file-handling
-conventions this chapter's `Path` examples still follow. Left as background unless a second beat is
-wanted; the JSON story alone covers the chapter's two halves — paths/files, then structured
-storage — well enough on its own.)*
+Further in, the chapter shows `shelve.open()` as the path of least resistance for saving a program's
+own variables, and that shape is older still: Ken Thompson — already known for Unix and, two chapters
+ago, for the regular-expression search algorithm — wrote the first `dbm`, a simple key-value store AT&T
+released as part of Unix in 1979. `dbm` let a program store a string under a string key and get it
+back by that key alone, no query language, no server — exactly the shape `shelve.open()` still presents
+today, through whichever backend Python currently picks (`dbm.sqlite3` first since Python 3.13).
+
+Only after `shelve` does the chapter reach JSON, offered as the plain alternative for data meant to
+leave Python entirely. In 2001, Douglas Crockford and Chip Morningstar — working together at a small
+consultancy called State Software — wanted a browser and a server to exchange data without reloading
+the page. The accepted answer at the time was XML, but Crockford wanted the browser's own JavaScript
+engine to read the data natively, so he stripped JavaScript's object-literal syntax down to its
+smallest useful subset and gave it a name: JavaScript Object Notation, JSON. He didn't patent it or
+found a working group — he registered json.org, put up a one-page spec on 12 November 2002, and let
+the format speak for itself. When critics said he'd just reinvented part of what XML already did,
+Crockford's answer became one of the format's most quoted lines: "the good thing about reinventing the
+wheel is that you can get a round one." That deliberate minimalism — objects, arrays, strings, numbers,
+booleans, null, nothing else — is exactly why `json.dump()` and `json.load()` are still this small and
+stable a quarter-century later, and why the chapter sets JSON beside `shelve` as the option for when
+the data needs to be read by another program or language.
+
+**Pictures and sources (all four assets already on file, provenance in `assets/ASSETS_PROVENANCE_v1_0_0.md`):**
+`logo_python.png` for the Pitrou/pathlib beat (no free personal photo of Pitrou was sourced, so the
+chapter illustrates this one with the Python logo rather than a portrait) — live link
+https://peps.python.org/pep-0428/; `assets/photo_rob_pike_oscon.jpg` and `assets/photo_ken_thompson_2019.jpg`
+for the UTF-8 beat — live link https://doc.cat-v.org/bell_labs/utf-8_history; `assets/photo_ken_thompson_2019.jpg`
+again for the dbm/shelve beat (same Thompson photo, two different stories) — live link
+https://en.wikipedia.org/wiki/DBM_(computing); `assets/photo_douglas_crockford_2013.jpg` for the JSON
+beat — live link https://en.wikipedia.org/wiki/JSON (or
+https://twobithistory.org/2017/09/21/the-rise-and-rise-of-json.html, which names Morningstar and the
+garage origin directly).
 
 ---
 
@@ -107,9 +135,13 @@ story-image assets.
 ## 4. Resources slide
 
 - **Python docs:** `pathlib` — https://docs.python.org/3/library/pathlib.html; `json` —
-  https://docs.python.org/3/library/json.html
-- **Seminal/community:** the JSON specification itself — https://www.json.org/
-- **Story source:** https://twobithistory.org/2017/09/21/the-rise-and-rise-of-json.html
+  https://docs.python.org/3/library/json.html; `shelve`/`dbm` —
+  https://docs.python.org/3/library/shelve.html
+- **Seminal work (pathlib):** PEP 428, "The pathlib module" — https://peps.python.org/pep-0428/
+- **Seminal/community (JSON):** the JSON specification itself — https://www.json.org/
+- **Story sources:** https://en.wikipedia.org/wiki/DBM_(computing) (dbm/shelve);
+  https://doc.cat-v.org/bell_labs/utf-8_history (UTF-8); https://peps.python.org/pep-0428/ (pathlib);
+  https://twobithistory.org/2017/09/21/the-rise-and-rise-of-json.html (JSON)
 - **Tutorial/video:** Corey Schafer, "Python Tutorial: File Objects" (YouTube) — matches this
   chapter's open/read/write scope.
 
@@ -117,8 +149,9 @@ story-image assets.
 
 ## 5. Open items (not blocking the render; named so they are not lost)
 
-1. **No content gap found.** Chapter 10 is already at the current standard; this draft mainly adds
-   the sourced story and resources above.
+1. **No content gap found.** Chapter 10's code/page content is already at the current standard; this
+   draft's correction was to its own story section (above) and the resources slide, not the chapter
+   itself.
 2. **Legacy duplicate — closed (2026-11-09):** you decided to retire it now. `Chapter8ReadingAndWritingFiles_YA_v1_0_0.pptx`
    has been removed from `03-materials/slides/` (recoverable from git history); `ST3_YaRetirement` is Done
    (same decision as chapter 9's duplicate).

@@ -10,6 +10,18 @@ figures with a live link, and the chapter's research/ABox retrofit against the c
 standard is still open (`TK_Ret_Ch09_Research`, carried into this lineage). Please read and correct —
 nothing is rendered again until you approve this.
 
+**Second correction (2026-11-09):** the deck's own story companion,
+`08-tooling/sen0414_ch09_stories_v1_0_0.py` (self-check: 4 stories, 0 failures), already carries four
+real, sourced stories matching the 4 story-image assets in `assets/ASSETS_PROVENANCE_v1_0_0.md` —
+Kleene (1951), Thompson's 1968 regex-search algorithm, Wall/Perl (1987), and Secret Labs' `_sre.c`
+engine (1999). My first two passes only used Kleene and Wall, and conflated Thompson's role with
+McCulloch and Pitts' unrelated 1943 neuron model, which isn't part of this companion at all. Corrected
+below to all four, in the order the chapter teaches them. The ancient-automata material you asked me
+to fact-check (Hero of Alexandria, al-Jazari) stays, as short framing before Kleene — it's accurate and
+you approved weaving it in — but it is not one of the deck's four story slides and needs no new image
+asset; it is prose context, not a fifth slide, consistent with fitting new story material within the
+chapter's existing scope rather than expanding it.
+
 ---
 
 ## 1. The story
@@ -17,65 +29,67 @@ nothing is rendered again until you approve this.
 Machines that could only ever behave in a fixed, finite repertoire of ways existed long before anyone
 had a name for what kind of machine that was. Around the first century CE, the Alexandrian engineer
 Hero built a self-propelled cart whose entire routine — how far it rolled, when it turned, even
-reversing itself — was set by the order twine was wound around its axle; rewind the twine differently
-and the cart's sequence of moves changed, with no understanding required of why it worked, only that
-a fixed drum of pegs or cord produces a fixed, repeatable sequence of actions. Eleven centuries later,
-in 1206, the engineer al-Jazari built automated musicians on a boat whose drummer could be made to
-play entirely different rhythms by moving the pegs on a rotating drum — the same idea, built with more
-deliberate intent to make it reprogrammable. Neither Hero nor al-Jazari had, or needed, any
-mathematics for what they'd built; the pegs and cams simply were the program.
+reversing itself — was set by the order twine was wound around its axle. Eleven centuries later, in
+1206, the engineer al-Jazari built automated musicians on a boat whose drummer could be made to play
+entirely different rhythms by moving the pegs on a rotating drum. Neither man had, or needed, any
+mathematics for what he'd built; the pegs and cams simply were the program, and nobody could yet say
+exactly what kind of machine that made, or where its limits were. *(Framing only — not one of the
+deck's four story slides, no new image asset needed; see the note below.)*
 
-In 1943, the neuroscientist Warren McCulloch and the logician Walter Pitts published the first
-mathematical model of an artificial neuron — not a working machine, just a notation for thinking
-about what networks of simple on/off units could, in principle, do. An American mathematician named
-Stephen Kleene picked up that question in the early 1950s, working at the RAND Corporation, and asked
-it more precisely: exactly which patterns can such a network ever recognize? To answer it, he needed
-a way to write those patterns down algebraically rather than draw a diagram for every one of them. In
-a 1951 research memorandum, polished into its final published form by 1956, he called the patterns
-"regular events" and gave them a compact symbolic notation — the first regular expression. Kleene
-never touched a text editor; he was doing pure theory of computation, decades before anyone thought
-to point this algebra at a string of characters on a screen.
-
-Kleene's "regular events" turned out to sit at the very bottom of a ladder the linguist Noam Chomsky
-laid out a few years later, in 1956: the Chomsky hierarchy of formal languages, which ranks every kind
-of pattern a machine could ever check by how much machinery it takes to check it. Regular languages —
-exactly the patterns a regular expression can express — are Type-3, the simplest rung, recognizable by
-nothing more than a finite automaton with no memory at all; everything above that (balanced
-parentheses, nested HTML tags, most of a real programming language's grammar) needs a strictly more
-powerful machine. That is the honest answer to "why can't regex do absolutely everything" — it's a
+That question got a precise answer in 1951. Working for the RAND Corporation in Santa Monica, the
+mathematician Stephen Cole Kleene wrote "Representation of Events in Nerve Nets and Finite Automata,"
+defining what he called a regular event: a set of symbol sequences built from single symbols by
+exactly three operations — concatenation, union and repetition. The union is exactly the pipe this
+chapter calls alternation, `Cat(erpillar|astrophe|ch|egory)`, and the repetition is exactly the `*`
+and `+` quantifiers; every pattern string this chapter writes is, formally, one more instance of the
+object Kleene named seventy-four years before Python compiled it. Kleene, born in Hartford,
+Connecticut in 1909, spent almost his whole career at the University of Wisconsin–Madison and died in
+1994; he never touched a text editor — this was pure theory of computation, worked out for the
+abstract neuron model McCulloch and Pitts had published in 1943, decades before anyone pointed the
+algebra at a string of characters on a screen. His "regular events" also turned out to sit at the very
+bottom rung of the Chomsky hierarchy of formal languages (1956): regular languages, Type-3, the
+simplest class, recognizable by a finite automaton with no memory at all — which is the honest, proven
+reason regex can't match balanced parentheses or a programming language's full grammar; it's a
 theorem, not a limitation of Python's `re` module.
 
-Put the two halves of this story together and Kleene's theorem reads differently: it isn't a
-20th-century invention out of nowhere, it's the first precise answer to a question engineers like
-Hero and al-Jazari had been running into by hand for two thousand years without ever being able to
-state it — exactly how much a machine with a fixed, finite set of internal states can ever do, and
-no more. The cam drum and the peg sequence were always, mathematically, finite automata; nobody could
-say so, or say exactly where their limits were, until 1951–56.
+Seventeen years later, in June 1968, Ken Thompson published "Regular Expression Search Algorithm" in
+*Communications of the ACM*, describing an algorithm that compiles a regular expression into machine
+code once and then uses that compiled form to search text — simulating a non-deterministic finite
+automaton to do it. Thompson had already built that same two-step shape into the QED text editor he
+wrote for Bell Labs, the first editor to add regular expressions to a text search at all, and later
+received a US patent for the technique. The chapter's own `re.compile()` for a `Pattern` object,
+followed by `.search()` for a `Match`, is the same two steps fifty-seven years later — a method call
+apart now instead of a step in an editor's command loop.
 
-That jump — from an abstract theory of neural networks to a tool programmers actually type — took
-another generation. By the 1990s, Larry Wall had built that same notation directly into the working
-syntax of Perl, turning Kleene's algebra into something a line of code could execute. Python's `re`
-module is a direct descendant of that Perl syntax: the `.`, `*`, `+`, character classes and groups a
-student types in this chapter are, almost unchanged, Kleene's 1951 algebra, inherited through Perl.
-It's worth pausing on that lineage when the chapter reaches `compile()` and `search()` — the dense
-little punctuation a beginner finds intimidating is, quite literally, seventy-year-old mathematics
-doing exactly the job it was invented for.
+The shorthand a student actually types — `\d`, `\w`, `\s` — came later still, and from a different
+direction entirely. Larry Wall released Perl 1.0 on 18 December 1987 while working as a programmer at
+Unisys, and Perl 2, in June 1988, shipped a markedly better regex engine built around exactly these
+backslash classes, together with their capitalized opposites. Perl's regex strength carried it to wide
+popularity as a web scripting language through the 1990s, and the shorthand travelled with it into
+most regex engines written afterward — which is why Python's own `re` documentation still opens by
+saying it provides matching operations similar to those found in Perl, one sentence that ties this
+chapter's `\d+\s\w+` straight back to 1987.
 
-**Pictures and sources:** Hero's cart and al-Jazari's drum are not yet on file as assets — recommend
-adding one image for each (a diagram of Hero's cart from a museum/university source, and an
-illustration of al-Jazari's boat automaton, both widely reproduced from his 1206 manuscript) before
-the opening of the story; live sources: https://www.techradar.com/news/the-forgotten-history-of-the-800-year-old-robot
-(Prof. Noel Sharkey's reconstruction of al-Jazari's peg-drum, and his account of Hero's twine-driven
-cart) and https://en.wikipedia.org/wiki/Al-Jazari for the manuscript illustrations. Kleene:
-`assets/photo_stephen_kleene.jpg` — provenance in `assets/ASSETS_PROVENANCE_v1_0_0.md`. **Live
-link:** https://student.cs.uwaterloo.ca/~cs360/Hall/kleene.html (Univ. of Waterloo's Theory of
-Computing Hall of Fame entry; cites Kleene's 1956 paper directly). Perl:
-`assets/photo_larry_wall_2007.jpg`, already on file.
+The engine actually doing the work underneath `re`, though, is younger than any of that. Python's
+`_sre.c`, the C source behind every `Pattern` and `Match` object this chapter hands back, carries a
+history log inside its own comments opening on 24 October 1999, crediting the initials "fl" for most
+of the early engine and naming a small Swedish company, Secret Labs AB, as copyright holder. The same
+log records Hewlett-Packard funding the work needed to fold the engine into Python 1.6 and Guido van
+Rossum himself fixing a memory leak in `sub()` and `subn()`. Every `mo.group()` and `mo.span()` this
+chapter calls reaches, underneath, into an engine whose own change log is now a quarter of a century
+old.
 
-*(The deck's third story asset, `assets/photo_ken_thompson_2019.jpg`, is Ken Thompson — his 1968 `ed`
-and `grep` work is the direct bridge between Kleene's algebra and Unix text tools, and belongs on the
-slide between the Kleene and Wall slides if a third story beat is wanted; keeping it as background
-only, inside the two-beat story above, unless you want three.)*
+**Pictures and sources (three of the deck's four story-image assets already on file, per
+`assets/ASSETS_PROVENANCE_v1_0_0.md`):** Kleene — `assets/photo_stephen_kleene.jpg`, live link
+https://en.wikipedia.org/wiki/Stephen_Cole_Kleene. Thompson — `assets/photo_ken_thompson_2019.jpg`,
+live link (the 1968 paper itself) https://cacmb4.acm.org/magazines/1968/6/12736-programming-techniques-regular-expression-search-algorithm.
+Wall/Perl — `assets/photo_larry_wall_2007.jpg`, live link https://en.wikipedia.org/wiki/Perl. The
+fourth asset, `logo_python.png`, illustrates the `_sre.c`/Secret Labs beat (no personal photo exists
+for this one — it's a company, not a person); live link
+https://chromium.googlesource.com/external/github.com/python/cpython/+/v3.7.0/Modules/_sre.c. The
+ancient-automata framing paragraph above uses no asset of its own; if you'd like it illustrated too, it
+would need a fifth slide and a new image search (Hero's cart and al-Jazari's drum are not yet on file),
+which I'd treat as a separate scope decision rather than default into, given the render date.
 
 ---
 
@@ -142,8 +156,11 @@ is a confirmation, not a rebuild)
 
 All 25 examples already run under the standard library only and reproduce their recorded output
 (e.g. example 1 prints `True False` then the two matched phone numbers); nothing here needs a code
-change. Story slides sit at the open (Kleene) and a mid-chapter beat (Wall), per the deck's 4
-story-image assets.
+change. The deck's 4 story slides carry all four beats above — Kleene, Thompson, Wall/Perl,
+Secret Labs/`_sre.c` — placed through the chapter per the story companion's `concepts` field
+(`Alternation`, `CompileAndSearch`, `ShorthandClasses`, `MatchObjectAccess`), i.e. near the pipe/groups
+examples, the `compile()`/`search()` examples, the shorthand-class examples, and the Match-object
+examples respectively — not bunched at the open.
 
 ---
 
@@ -152,11 +169,15 @@ story-image assets.
 - **Python docs:** `re` module — https://docs.python.org/3/library/re.html
 - **Community:** regex101.com (interactive tester the deck's examples can be pasted into) —
   https://regex101.com/
-- **Seminal work:** S. C. Kleene, *Representation of Events in Nerve Nets and Finite Automata* (1956)
-  — cited via the Waterloo Hall-of-Fame page above.
+- **Seminal work (Kleene):** S. C. Kleene, RM-704, *Representation of Events in Nerve Nets and Finite
+  Automata* (RAND Corporation, 1951) — https://en.wikipedia.org/wiki/Stephen_Cole_Kleene
+- **Seminal work (Thompson):** Ken Thompson, "Regular Expression Search Algorithm," *CACM* 11(6), June
+  1968 — https://cacmb4.acm.org/magazines/1968/6/12736-programming-techniques-regular-expression-search-algorithm
 - **Formal placement:** regular languages as the Type-3 (simplest) class of the Chomsky hierarchy —
   any standard automata-theory reference (e.g. Sipser, *Introduction to the Theory of Computation*).
-- **Ancient automata referenced in the story:** Prof. Noel Sharkey's reconstruction and analysis of
+- **Perl/shorthand-class history:** https://en.wikipedia.org/wiki/Perl (Perl 1.0, 18 December 1987)
+- **The `_sre.c` engine:** CPython source history — https://chromium.googlesource.com/external/github.com/python/cpython/+/v3.7.0/Modules/_sre.c
+- **Ancient automata referenced in the framing:** Prof. Noel Sharkey's reconstruction and analysis of
   historical programmable machines — techradar.com; background on Ismail al-Jazari's 1206
   peg-drum automated musicians — Wikipedia, "Al-Jazari."
 - **Tutorial/video:** Corey Schafer, "Python Tutorial: re Module" (YouTube) — a widely used, current,
