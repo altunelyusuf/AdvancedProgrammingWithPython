@@ -22,6 +22,14 @@ you approved weaving it in — but it is not one of the deck's four story slides
 asset; it is prose context, not a fifth slide, consistent with fitting new story material within the
 chapter's existing scope rather than expanding it.
 
+**Build status (2026-11-09, owner approved):** checked the actual deck and page against this draft —
+both already carry the correct four stories (Kleene, Thompson/1968, Wall/Perl, `_sre.c`/1999), each with
+its real asset and live link; nothing differed, so nothing was re-rendered and no new version was cut
+(`cme_version_check_v1_0_0.py` exit 0). `ST3_ApprovalGate` and `ST3_RenderCh09` are Done in the lineage.
+The ancient-automata framing stays unrendered — a new slide and new images would be needed, which is a
+separate decision. `TK_Ret_Ch09_Research`/`_Verify` (the document/ABox retrofit) is still open, same as
+before, and doesn't block anything delivered this week.
+
 ---
 
 ## 1. The story

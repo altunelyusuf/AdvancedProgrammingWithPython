@@ -12,6 +12,12 @@ story companion `08-tooling/sen0414_ch10_stories_v1_0_0.py`. This draft exists s
 rendered from the same one-draft process as chapter 9, and so the story section is pinned to sourced
 figures with live links, matching the current standard.
 
+**Build status (2026-11-09, owner approved):** checked the actual deck and page against this draft —
+both already carry the correct four stories (Pitrou/pathlib, Thompson-and-Pike/UTF-8, Thompson/dbm,
+Crockford-Morningstar/JSON), each with its real asset and live link; nothing differed, so nothing was
+re-rendered and no new version was cut (`cme_version_check_v1_0_0.py` exit 0). `ST3_RenderCh10` is Done
+in the lineage.
+
 ---
 
 ## 1. The story
