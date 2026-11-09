@@ -27,8 +27,16 @@ both already carry the correct four stories (Kleene, Thompson/1968, Wall/Perl, `
 its real asset and live link; nothing differed, so nothing was re-rendered and no new version was cut
 (`cme_version_check_v1_0_0.py` exit 0). `ST3_ApprovalGate` and `ST3_RenderCh09` are Done in the lineage.
 The ancient-automata framing stays unrendered — a new slide and new images would be needed, which is a
-separate decision. `TK_Ret_Ch09_Research`/`_Verify` (the document/ABox retrofit) is still open, same as
-before, and doesn't block anything delivered this week.
+separate decision.
+
+**Decision (2026-11-10):** attempted to source the two needed images from Wikimedia Commons; the
+al-Jazari manuscript folio (`File:Al-Jazari - A Musical Toy.jpg`) was found and confirmed Public Domain
+via the Commons API, but every download (api.php and direct file fetch, waits up to 60s) returned
+HTTP 429 from this environment's shared proxy — no Hero image was even reached. Asked; owner decided to
+drop the fifth slide for this week rather than hold the chapter on an external rate limit
+(`ST3_AncientAutomataSlide`, Cancelled). Ch09 ships as its existing, already-correct four-story deck,
+unchanged. `TK_Ret_Ch09_Research`/`_Verify` (the document/ABox retrofit) is still open, same as before,
+and doesn't block anything delivered this week.
 
 ---
 
