@@ -119,6 +119,6 @@ story-image assets.
 
 1. **No content gap found.** Chapter 10 is already at the current standard; this draft mainly adds
    the sourced story and resources above.
-2. **Legacy duplicate:** `03-materials/slides/Chapter8ReadingAndWritingFiles_YA_v1_0_0.pptx` duplicates
-   this chapter under the old edition's numbering — same owner decision as chapter 9's duplicate
-   (`ST3_YaRetirement`), not acted on here.
+2. **Legacy duplicate — closed (2026-11-09):** you decided to retire it now. `Chapter8ReadingAndWritingFiles_YA_v1_0_0.pptx`
+   has been removed from `03-materials/slides/` (recoverable from git history); `ST3_YaRetirement` is Done
+   (same decision as chapter 9's duplicate).

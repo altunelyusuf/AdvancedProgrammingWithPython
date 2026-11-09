@@ -196,6 +196,5 @@ etymological aside noting that the word "algebra" itself (not regex) comes from 
    current chapter-check standard) are still `Ready`, not `Done`. This is ontology/back-end work, not
    visible on the deck or page, and does not block teaching from this draft — but it is open and
    should be scheduled once chapters 9-10 ship.
-2. **Legacy duplicate:** `03-materials/slides/Chapter7PatternMatchingWithRegularExpressions_YA_v1_0_0.pptx`
-   duplicates this chapter under the old edition's numbering. Recommend retiring it; this is named as
-   an owner decision in the lineage backlog (`ST3_YaRetirement`), not acted on here.
+2. **Legacy duplicate — closed (2026-11-09):** you decided to retire it now. `Chapter7PatternMatchingWithRegularExpressions_YA_v1_0_0.pptx`
+   has been removed from `03-materials/slides/` (recoverable from git history); `ST3_YaRetirement` is Done.
