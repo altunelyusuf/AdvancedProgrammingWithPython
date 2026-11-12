@@ -1,0 +1,259 @@
+{
+ "chapter": 19,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch19/SEN0414_Ch19_TimeScheduling_3e_v2_0_0.pptx",
+ "about": "The code examples of the chapter 19 deck, in the order of the code slides (order = slide order). Every example is self-contained, uses the Python standard library (time, calendar, datetime, zoneinfo, subprocess, shlex, sched) and runs offline, reads no keyboard and opens no window. Waiting is replaced by a stand-in clock (a list holding a number) where a real wait would be slow or machine-dependent; the slide says so. The child programs of the subprocess examples are Python itself (sys.executable) or the commands sleep, false and echo. The schedule package, playsound3 and pyperclip of the book are not used by the examples: the scheduling slide uses the standard library, and the countdown stands in for the alarm. The page's time zone data is the tzdata wheel of the assets. The expected result is what the run printed under Python 3.13.18. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed.",
+ "executed_with": {
+  "python": "3.13.18",
+  "library": "standard library only (zoneinfo reads tzdata 2026.5 or the system copy)"
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [
+   "03-materials/ch19/assets/playsound3-3.3.2-py3-none-any.whl",
+   "03-materials/ch19/assets/pyperclip-1.11.0-py3-none-any.whl",
+   "03-materials/ch19/assets/schedule-1.2.2-py3-none-any.whl",
+   "03-materials/ch19/assets/tzdata-2026.5-py2.py3-none-any.whl"
+  ],
+  "wheel_sha256": {
+   "playsound3-3.3.2-py3-none-any.whl": "fde2ca4378ae7a34d125a5965799fb1eee2af9907dbec29d394e29d28ee4137b",
+   "pyperclip-1.11.0-py3-none-any.whl": "299403e9ff44581cb9ba2ffeed69c7aa96a008622ad0c46cb575ca75b5b84273",
+   "schedule-1.2.2-py3-none-any.whl": "5bef4a2a0183abf44046ae0d164cadcac21b1db011bdd8102e4a0c1e91e06a7d",
+   "tzdata-2026.5-py2.py3-none-any.whl": "b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac"
+  },
+  "page_requirements": [
+   "the standard library modules time, calendar, datetime, zoneinfo, subprocess, shlex, and sched, and the built-ins print, len, range, round, repr, type, str, int, float, sorted, list, tuple, isinstance",
+   "the tzdata wheel (03-materials/ch19/assets/tzdata-2026.5-py2.py3-none-any.whl) that the page embeds, for zoneinfo",
+   "the subprocess examples start sys.executable and the commands sleep, false and echo; in the browser's Python (Pyodide) there is no subprocess, so the page runs the four subprocess examples as recorded stand-ins and the chapter-code tab says which (the page's standin_v1_0_0.json and limits_v1_0_0.json)"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "epoch",
+   "name": "Epoch timestamp",
+   "slide": 7,
+   "concepts": [
+    "The time Module",
+    "Returning the Epoch Timestamp",
+    "time"
+   ],
+   "code": "import calendar\nfrom datetime import datetime, UTC\nt = calendar.timegm((2026, 3, 18, 6, 4, 35))\nprint('timestamp:', t)\nprint('zero:', datetime.fromtimestamp(0, UTC).isoformat())\nprint('last:', datetime.fromtimestamp(2**31 - 1, UTC).isoformat())\nprint('wrapped:', datetime.fromtimestamp(-2**31, UTC).isoformat())",
+   "expected": "timestamp: 1773813875\nzero: 1970-01-01T00:00:00+00:00\nlast: 2038-01-19T03:14:07+00:00\nwrapped: 1901-12-13T20:45:52+00:00\n"
+  },
+  {
+   "order": 2,
+   "id": "clocks",
+   "name": "Which clock",
+   "slide": 8,
+   "concepts": [
+    "The time Module",
+    "time"
+   ],
+   "code": "import time\nfor name in ('time', 'monotonic', 'perf_counter'):\n    info = time.get_clock_info(name)\n    print(name, info.monotonic, info.adjustable)\nwall, mono = [1000.0, 990.0], [50.0, 60.0]\nprint('wall clock set back 10 s:', wall[1] - wall[0])\nprint('monotonic clock:', mono[1] - mono[0])\nstart = time.monotonic()\ntime.sleep(0.2)\nprint('lasted at least 0.2:', time.monotonic() - start >= 0.2)",
+   "expected": "time False True\nmonotonic True False\nperf_counter True False\nwall clock set back 10 s: -10.0\nmonotonic clock: 10.0\nlasted at least 0.2: True\n"
+  },
+  {
+   "order": 3,
+   "id": "sleep",
+   "name": "Pausing programs",
+   "slide": 10,
+   "concepts": [
+    "Pausing Programs",
+    "time"
+   ],
+   "code": "import time\nstart = time.monotonic()\nresult = time.sleep(0.2)\nprint('returns', result, '| at least 0.2:', time.monotonic() - start >= 0.2)\nwork, rounds = 0.02, 3600\nprint('sleep after work:', round((rounds - 1) * (work + 1.0), 2))\nprint('fixed tick:', round((rounds - 1) * 1.0, 2))",
+   "expected": "returns None | at least 0.2: True\nsleep after work: 3670.98\nfixed tick: 3599.0\n"
+  },
+  {
+   "order": 4,
+   "id": "stopwatch",
+   "name": "Stopwatch laps",
+   "slide": 11,
+   "concepts": [
+    "Step 1: Set Up the Program to Track Times",
+    "Step 2: Track and Print Lap Times",
+    "stopwatch.py",
+    "Ideas for Similar Programs (stopwatch)"
+   ],
+   "code": "now = [1000.0]\ndef clock():\n    return now[0]\nstart_time = last_time = clock()\nlap_number = 1\nfor gap in (3.56, 5.07, 9.05, 1.43):\n    now[0] += gap\n    lap_time = round(clock() - last_time, 2)\n    total_time = round(clock() - start_time, 2)\n    print(f'Lap #{lap_number}: {total_time} ({lap_time})')\n    lap_number += 1\n    last_time = clock()",
+   "expected": "Lap #1: 3.56 (3.56)\nLap #2: 8.63 (5.07)\nLap #3: 17.68 (9.05)\nLap #4: 19.11 (1.43)\n"
+  },
+  {
+   "order": 5,
+   "id": "durations",
+   "name": "Durations",
+   "slide": 15,
+   "concepts": [
+    "The datetime Module",
+    "Representing Duration",
+    "Pausing Until a Specific Date",
+    "datetime"
+   ],
+   "code": "from datetime import datetime, timedelta\nd = timedelta(days=11, hours=10, minutes=9, seconds=8)\nprint(d.days, d.seconds, d.total_seconds())\ntry:\n    timedelta(months=1)\nexcept TypeError:\n    print('TypeError: timedelta has no months')\nstart = datetime(2026, 10, 21, 16, 29)\nback = start - timedelta(days=365 * 30)\nprint(back.date(), start.replace(year=1996).date())",
+   "expected": "11 36548 986948.0\nTypeError: timedelta has no months\n1996-10-28 1996-10-21\n"
+  },
+  {
+   "order": 6,
+   "id": "strftime",
+   "name": "datetime to string",
+   "slide": 16,
+   "concepts": [
+    "Converting datetime Objects into Strings",
+    "Table 19-1: strftime() directives"
+   ],
+   "code": "from datetime import datetime\ndt = datetime(2026, 11, 3, 16, 29, 7)\nprint(dt.strftime('%Y/%m/%d %H:%M:%S'))\nprint(dt.strftime('%I:%M %p'))\nprint(dt.strftime('%A, %B %d'))\nprint(dt.strftime('%j %w'))\nprint(dt.isoformat())\nprint(datetime.fromisoformat('2026-11-03T16:29:07'))",
+   "expected": "2026/11/03 16:29:07\n04:29 PM\nTuesday, November 03\n307 2\n2026-11-03T16:29:07\n2026-11-03 16:29:07\n"
+  },
+  {
+   "order": 7,
+   "id": "strptime",
+   "name": "String to datetime",
+   "slide": 17,
+   "concepts": [
+    "Converting Strings into datetime Objects"
+   ],
+   "code": "from datetime import datetime\nprint(datetime.strptime('October 21, 2026', '%B %d, %Y'))\nfor text in ('2026-10-21', 'Oct 21, 2026'):\n    try: datetime.strptime(text, '%B %d, %Y')\n    except ValueError as e: print('ValueError:', e)\nfor text in ('00', '26', '68', '69', '99'):\n    print(text, datetime.strptime(text, '%y').year)",
+   "expected": "2026-10-21 00:00:00\nValueError: time data '2026-10-21' does not match format '%B %d, %Y'\nValueError: time data 'Oct 21, 2026' does not match format '%B %d, %Y'\n00 2000\n26 2026\n68 2068\n69 1969\n99 1999\n"
+  },
+  {
+   "order": 8,
+   "id": "zones",
+   "name": "Time zones",
+   "slide": 19,
+   "concepts": [
+    "The datetime Module",
+    "datetime"
+   ],
+   "code": "from datetime import datetime, UTC\nfrom zoneinfo import ZoneInfo\nnaive = datetime(2026, 10, 21, 16, 29)\naware = naive.replace(tzinfo=UTC)\nprint(naive == aware)\ntry: naive - aware\nexcept TypeError as e: print('TypeError:', e)\nfor zone in ('America/Los_Angeles', 'UTC', 'Europe/Istanbul'):\n    print(zone, datetime.fromtimestamp(1000000, ZoneInfo(zone)).isoformat())",
+   "expected": "False\nTypeError: can't subtract offset-naive and offset-aware datetimes\nAmerica/Los_Angeles 1970-01-12T05:46:40-08:00\nUTC 1970-01-12T13:46:40+00:00\nEurope/Istanbul 1970-01-12T15:46:40+02:00\n"
+  },
+  {
+   "order": 9,
+   "id": "dst",
+   "name": "Daylight saving time",
+   "slide": 20,
+   "concepts": [
+    "The datetime Module",
+    "datetime"
+   ],
+   "code": "from datetime import datetime, timedelta, UTC\nfrom zoneinfo import ZoneInfo\nny = ZoneInfo('America/New_York')\nx = datetime(2026, 3, 7, 12, tzinfo=ny)\ny = x + timedelta(days=1)\nprint('wall:', y - x)\nprint('real:', y.astimezone(UTC) - x.astimezone(UTC))\nfirst = datetime(2026, 11, 1, 1, 30, tzinfo=ny)\nsecond = first.replace(fold=1)\na, b = first.astimezone(UTC), second.astimezone(UTC)\nprint(a.hour, b.hour, first == second)",
+   "expected": "wall: 1 day, 0:00:00\nreal: 23:00:00\n5 6 True\n"
+  },
+  {
+   "order": 10,
+   "id": "run",
+   "name": "subprocess.run",
+   "slide": 24,
+   "concepts": [
+    "Launching Other Programs from Python",
+    "Receiving Output Text from Launched Commands",
+    "subprocess"
+   ],
+   "code": "import subprocess, sys\nchild = 'import sys; print(\"out\"); print(\"err\", file=sys.stderr)'\ncommand = [sys.executable, '-c', child]\ndone = subprocess.run(command, capture_output=True)\nprint(done.returncode, done.stdout, done.stderr)\ndone = subprocess.run(command, capture_output=True, text=True)\nprint(type(done.stdout).__name__, repr(done.stdout))",
+   "expected": "0 b'out\\n' b'err\\n'\nstr 'out\\n'\n"
+  },
+  {
+   "order": 11,
+   "id": "popen",
+   "name": "subprocess.Popen",
+   "slide": 25,
+   "concepts": [
+    "Launching Other Programs from Python",
+    "subprocess"
+   ],
+   "code": "import subprocess\np = subprocess.Popen(['sleep', '0.4'])\nprint('poll():', p.poll())\nprint('wait():', p.wait())\nprint('poll():', p.poll())\nfor call in (['nosuch'], ['false']):\n    try:\n        subprocess.run(call, check=True)\n    except Exception as e:\n        print(type(e).__name__, e)",
+   "expected": "poll(): None\nwait(): 0\npoll(): 0\nFileNotFoundError [Errno 2] No such file or directory: 'nosuch'\nCalledProcessError Command '['false']' returned non-zero exit status 1.\n"
+  },
+  {
+   "order": 12,
+   "id": "exits",
+   "name": "Exit codes",
+   "slide": 26,
+   "concepts": [
+    "Launching Other Programs from Python",
+    "subprocess"
+   ],
+   "code": "import subprocess, sys\ndef code_of(source):\n    return subprocess.run([sys.executable, '-c', source], stderr=subprocess.DEVNULL).returncode\nkill = 'import os, signal; os.kill(os.getpid(), signal.SIG%s)'\nprint(code_of('pass'), code_of('import sys; sys.exit(3)'), code_of('raise ValueError'))\nprint(code_of(kill % 'KILL'), code_of(kill % 'TERM'))",
+   "expected": "0 3 1\n-9 -15\n"
+  },
+  {
+   "order": 13,
+   "id": "shell",
+   "name": "Shell safety",
+   "slide": 27,
+   "concepts": [
+    "Passing Command Line Arguments to Processes",
+    "Opening Files with Default Applications",
+    "webbrowser",
+    "hello.txt"
+   ],
+   "code": "import subprocess, shlex\ndef sh(args, **kw):\n    return subprocess.run(args, capture_output=True, text=True, **kw).stdout\nname = 'x; echo INJECTED'\nprint(repr(sh(f'echo opening {name}', shell=True)))\nprint(repr(sh(f'echo opening {shlex.quote(name)}', shell=True)))\nprint(repr(sh(['echo', 'opening', name])))",
+   "expected": "'opening x\\nINJECTED\\n'\n'opening x; echo INJECTED\\n'\n'opening x; echo INJECTED\\n'\n"
+  },
+  {
+   "order": 14,
+   "id": "sched",
+   "name": "In-process scheduler",
+   "slide": 32,
+   "concepts": [
+    "Running Task Scheduler, launchd, and cron"
+   ],
+   "code": "import sched\nnow, log = [0.0], []\ndef clock(): return now[0]\ndef advance(seconds): now[0] += seconds\ns = sched.scheduler(clock, advance)\njobs = ((5, 1, 'five'), (2, 1, 'two'), (5, 0, 'five-0'), (0, 9, 'now'))\nfor delay, priority, name in jobs:\n    s.enter(delay, priority, log.append, (name,))\ns.run()\nprint(log, now[0])",
+   "expected": "['now', 'two', 'five-0', 'five'] 5.0\n"
+  },
+  {
+   "order": 15,
+   "id": "cron",
+   "name": "Cron fields",
+   "slide": 33,
+   "concepts": [
+    "Running Task Scheduler, launchd, and cron"
+   ],
+   "code": "from datetime import datetime, timedelta\ndef matches(text, value):\n    return text == '*' or str(value) in text.split(',')\ndef next_run(fields, t):\n    while True:\n        t += timedelta(minutes=1)\n        now = (t.minute, t.hour, t.isoweekday() % 7)\n        if all(map(matches, fields, now)):\n            return t\nstart = datetime(2026, 10, 13, 9, 30)\nfmt = '%Y-%m-%d %H:%M %a'\nprint(next_run(('30', '9', '1,2,3,4,5'), start).strftime(fmt))\nprint(next_run(('0', '0', '5'), start).strftime(fmt))",
+   "expected": "2026-10-14 09:30 Wed\n2026-10-16 00:00 Fri\n"
+  },
+  {
+   "order": 16,
+   "id": "countdown",
+   "name": "Countdown timer",
+   "slide": 37,
+   "concepts": [
+    "Step 1: Count Down",
+    "Step 2: Play the Sound File",
+    "Ideas for Similar Programs (countdown)",
+    "simplecountdown.py",
+    "playsound3",
+    "alarm.wav"
+   ],
+   "code": "now = [0.0]\ntime_left = 5\nwhile time_left > 0:\n    print(time_left, end=' ')\n    now[0] += 1\n    time_left = time_left - 1\nprint()\nprint('counted', now[0], 'seconds; the alarm needs a sound card')",
+   "expected": "5 4 3 2 1 \ncounted 5.0 seconds; the alarm needs a sound card\n"
+  },
+  {
+   "order": 17,
+   "id": "pretty",
+   "name": "Prettified stopwatch",
+   "slide": 38,
+   "concepts": [
+    "Prettified Stopwatch",
+    "Practice Programs"
+   ],
+   "code": "rows = [(1, 3.56, 3.56), (2, 8.63, 5.07), (3, 17.68, 9.05), (4, 19.11, 1.43)]\nfor number, total, lap in rows:\n    print('Lap #' + str(number).rjust(2) + ': ' + str(total).rjust(6) + ' (' + str(lap).rjust(6) + ')')",
+   "expected": "Lap # 1:   3.56 (  3.56)\nLap # 2:   8.63 (  5.07)\nLap # 3:  17.68 (  9.05)\nLap # 4:  19.11 (  1.43)\n"
+  },
+  {
+   "order": 18,
+   "id": "friday",
+   "name": "Friday the 13th",
+   "slide": 39,
+   "concepts": [
+    "Friday the 13th Finder"
+   ],
+   "code": "from datetime import date, timedelta\nday = date(2026, 10, 13)\nfound = []\nwhile len(found) < 10:\n    if day.day == 13 and day.weekday() == 4:\n        found.append(day.isoformat())\n    day += timedelta(days=1)\nprint(found[0], '...', found[-1])\nprint(len(found), 'dates')",
+   "expected": "2026-11-13 ... 2032-08-13\n10 dates\n"
+  }
+ ]
+}

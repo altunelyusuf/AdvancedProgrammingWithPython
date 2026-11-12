@@ -18,3 +18,20 @@ Downloaded on 2026-10-13 from PyPI with pip (the proxy of the build machine); no
 The licences (MIT for schedule and playsound3, BSD for pyperclip, Apache-2.0 for tzdata) allow redistribution with the licence text, which is inside each
 wheel's dist-info. No file of the book's online materials is embedded (calcProd.py, stopwatch.py and simplecountdown.py are written out by the examples
 themselves where they are used). Photographs: see 08-tooling/ch19-page/stories_img_v1_0_1.json.
+
+## Story pictures of the lecture deck 2.0.0 (added 2026-11-12)
+
+Each picture was found on Wikimedia Commons by its exact file title, its licence was read from the file description at build time, and the record
+(source URL, SHA-256, licence, author, credit line, disclosure) is in 03-materials/ch19/assets/story_images_v1_0_0.json. Pictures are the 960 px thumbnails
+Wikimedia serves (full-size downloads answer HTTP 429). Fetch script: 08-tooling/ch19-deck/story_images_fetch_v1_0_0.py.
+
+| file | slide | Commons file | licence |
+|---|---|---|---|
+| image_pdp11.jpg | 6 | DEC PDP-11 20 computer at the Computer History Museum.jpg (Don DeBold) | CC BY 2.0 |
+| image_y2038.jpg | 9 | drawn for this deck (a 32-bit counter wrapping); no free photograph exists | the course's own drawing |
+| image_oct1582.jpg | 14 | Koledar 1582 oktober.png (Andrej Jakobčič) | CC BY-SA 4.0 |
+| image_clock.jpg | 18 | Atomic Clock041.jpg (NIST) | public domain |
+| image_tzmap.jpg | 21 | Standard time zones of the world (2012).svg (Poulpy) | CC BY-SA 3.0 |
+| image_vax.jpg | 31 | LCM - DEC VAX 11-780-5 - 01.jpg (Joe Mabel) | CC BY-SA 3.0 |
+
+No photograph of a person is used. Where a picture shows a related object, not the thing in the story, the slide credit says so.
