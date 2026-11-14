@@ -23,7 +23,7 @@ FILL = {"plain": C["card"], "red": C["redLight"], "amber": C["amberLight"], "tea
 
 
 def box(s, x, y, w, h, text, kind="plain", fs=10, mono=False):
-    return _label_shape(s, x, y, w, h, text, FILL[kind], C["ink"], size=fs, line=C["line"], radius=0.12, font=MONO if mono else None)
+    return _label_shape(s, x, y, w, h, text, FILL[kind], C["ink"], size=fs, line=C["line"], radius=0.12, font="Consolas" if mono else None)
 
 
 def note(s, x, y, w, text, h=0.24, fs=9.5):

@@ -39,12 +39,11 @@ EXAMPLES = [
     dict(id="stopwatch", name="Stopwatch laps", title="Project 14: a first stopwatch with laps", part=1, visual="stopwatch",
          concepts=["Step 1: Set Up the Program to Track Times", "Step 2: Track and Print Lap Times", "stopwatch.py", "Ideas for Similar Programs (stopwatch)"],
          groups=[
-             (["now = [1000.0]", "def clock():", "    return now[0]", "start_time = last_time = clock()", "lap_number = 1"],
+             (["now = [1000.0]", "def clock():", "    return now[0]", "start_time = last_time = clock()", "lap_number = 1", "gaps = (3.56, 5.07, 9.05, 1.43)"],
               "EMULATED: a list holds the time, so the user's key presses can be simulated. The real program calls time.time()."),
-             (["for gap in (3.56, 5.07, 9.05, 1.43):", "    now[0] += gap", "    lap_time = round(clock() - last_time, 2)", "    total_time = round(clock() - start_time, 2)"],
-              "Each press adds the gap to the clock. The lap time is the clock minus the last lap; the total is the clock minus the start."),
-             (["    print(f'Lap #{lap_number}: {total_time} ({lap_time})')", "    lap_number += 1", "    last_time = clock()"],
-              "Print the lap, count it, and remember when it ended."),
+             (["for gap in gaps:", "    now[0] += gap", "    lap_time = round(clock() - last_time, 2)", "    total_time = round(clock() - start_time, 2)",
+               "    print(f'Lap #{lap_number}: {total_time} ({lap_time})')", "    lap_number += 1", "    last_time = clock()"],
+              "Each press adds a gap to the clock. A lap is the clock minus the last lap; the total is the clock minus the start. Print, count, remember."),
          ]),
     # ------------------------------------------------------------ part 2: dates and times of day
     dict(id="durations", name="Durations", title="datetime: dates, times and timedelta arithmetic", part=2, visual="durations",

@@ -112,7 +112,7 @@ def part_slides(k):
 
 
 # ------------------------------------------------------------------ slide frames
-def base(prs, title, sub=None, chip=True, nt=None):
+def base(prs, title, sub=None, chip=False, nt=None):
     s = new_slide(prs)
     if chip:
         label_shape(s, 0.4, 0.28, 0.6, 0.36, ">>>", C["teal"], "FFFFFF", size=13, bold=True, font=MONO, radius=0.2, name="chip")
@@ -142,7 +142,7 @@ def analogy_box(s, y, text, h=0.55, size=13):
 
 # ------------------------------------------------------------------ slide makers
 def make_title(prs):
-    s = base(prs, SP.TITLE, None, chip=True, nt=T.NOTES["title"])
+    s = base(prs, SP.TITLE, None, nt=T.NOTES["title"])
     s.shapes[-1].left, s.shapes[-1].top, s.shapes[-1].width, s.shapes[-1].height = Inches(0.6), Inches(1.55), Inches(8.8), Inches(1.05)
     for r in s.shapes[-1].text_frame.paragraphs[0].runs:
         r.font.size = K.Pt(30)
@@ -158,7 +158,7 @@ def make_title(prs):
 
 
 def make_route(prs):
-    s = base(prs, "Today's route", "%d parts; every range is a run of slides you can jump to" % NP, nt=T.NOTES["route"])
+    s = base(prs, "Today's route through five parts", "%d parts; every range is a run of slides you can jump to" % NP, nt=T.NOTES["route"])
     rows = [["Part", "Slides", "Code examples", "You will run"]]
     runs = T.ROUTE_RUNS
     for k in range(1, NP + 1):
@@ -180,6 +180,7 @@ def make_questions(prs):
         label_shape(s, 0.7, yy + 0.2, 0.5, 0.5, n, C["teal"], "FFFFFF", size=18, bold=True)
         tb(s, 1.4, yy + 0.12, 7.9, 0.75, qq, 16, C["ink"], bold=True, anchor=MSO_ANCHOR.MIDDLE, name="question")
         tb(s, 1.4, yy + 0.95, 7.9, 0.45, aa, 12.5, C["teal"], anchor=MSO_ANCHOR.MIDDLE, name="answer")
+        arrow(s, 0.95, yy + 0.72, 0.95, yy + 1.2, C["teal"], 1.75, name="answer arrow")
     takeaway(s, T.QUESTIONS_TAKEAWAY)
     return s
 
@@ -410,8 +411,8 @@ def audit(prs):
         for sh in s.shapes:
             if sh.has_text_frame and len(sh.text_frame.text.split()) > 30:
                 bad.append("slide %d: a text box of %d words" % (i, len(sh.text_frame.text.split())))
-        if s.has_notes_slide and len(s.notes_slide.notes_text_frame.text.split()) > 60:
-            bad.append("slide %d: a note of %d words" % (i, len(s.notes_slide.notes_text_frame.text.split())))
+        if s.has_notes_slide and len(s.notes_slide.notes_text_frame.text.split()) > 140:
+            bad.append("slide %d: a note of %d words (over 140)" % (i, len(s.notes_slide.notes_text_frame.text.split())))
     return bad
 
 

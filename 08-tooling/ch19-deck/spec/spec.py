@@ -7,11 +7,11 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
 import examples_v2_0_0 as X
 import visuals_v2_0_0 as V
-import content_v2_0_0 as T
+import content_v2_1_0 as T
 
 CH = 19
-OUT_DECK = "03-materials/ch19/SEN0414_Ch19_TimeScheduling_3e_v2_0_0.pptx"
-OUT_MAN = "03-materials/ch19/page/chapter_code_ch19_v1_0_0.json"
+OUT_DECK = "03-materials/ch19/SEN0414_Ch19_TimeScheduling_3e_v2_1_0.pptx"
+OUT_MAN = "03-materials/ch19/page/chapter_code_ch19_v1_1_0.json"
 IMAGE_FILES = ["story_images_v1_0_0.json"]
 TITLE = "Chapter 19: Time, Scheduling and Launching Programs"
 SUBTITLE = "Keeping time, scheduling tasks and launching programs: the time and datetime modules, subprocess, cron"

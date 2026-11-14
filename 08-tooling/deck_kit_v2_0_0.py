@@ -155,8 +155,8 @@ def code_runs(line):
 
 
 def code_box(s, x, y, w, h, lines, fs):
-    """A dark card whose every paragraph is '>>> ' + one line of code; no wrapping; the line width is checked against the card."""
-    longest = max(len(l) for l in lines) + 4
+    """A dark card whose every paragraph is one line of plain code (no prompt marker, ruling 4 of 2026-11-14); no wrapping; the line width is checked against the card."""
+    longest = max(len(l) for l in lines) + 1
     need = longest * 0.6 * fs + 0.2 * 72
     if need > w * 72:
         raise SystemExit("REFUSED: a code line of %d characters at %.1f pt does not fit a %.2f in box" % (longest, fs, w))
@@ -166,7 +166,7 @@ def code_box(s, x, y, w, h, lines, fs):
     tf.margin_left = tf.margin_right = Inches(0.1)
     tf.margin_top = tf.margin_bottom = Inches(0.04)
     tf.vertical_anchor = MSO_ANCHOR.MIDDLE
-    paras = [[(">>> ", {"color": C["pale"], "font": MONO})] + code_runs(l) for l in lines]
+    paras = [code_runs(l) for l in lines]
     fill_text(tf, paras, fs, C["codeTxt"], font=MONO, align=PP_ALIGN.LEFT)
     return sh
 
@@ -293,6 +293,6 @@ def picture(s, path, x, y, w, h, descr, name):
 
 def notes(s, text):
     n = len(text.split())
-    if n > 60:
+    if n > 140 or n < 30:
         raise SystemExit("REFUSED: speaker note of %d words" % n)
     s.notes_slide.notes_text_frame.text = text
