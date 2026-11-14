@@ -4,7 +4,7 @@ It is the chapter 18 deck builder (08-tooling/ch18-deck/deck_build_v2_0_3.py) wi
 the spec holds the examples, the result visuals, the words (content), the plan and the output paths. Every code example is RUN here, in one interpreter and in slide
 order; the printed result and every number in a result visual come from that run. One light background scheme, a number on every slide, a chip '>>>' on every slide
 that is not a divider, native tables and charts, drawn diagrams with arrows, story pictures embedded with their licences.
-Usage:  python3 chapter_deck_build_v2_1_0.py SPEC_DIR   where SPEC_DIR holds spec.py (the spec module) and what it names.
+Usage:  python3 chapter_deck_build_v2_2_0.py SPEC_DIR   where SPEC_DIR holds spec.py (the spec module) and what it names.
 """
 __version__ = "2.1.0"
 import contextlib
@@ -36,8 +36,8 @@ import importlib.metadata as _md
 import PIL
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches
-import deck_kit_v2_0_0 as K
-from deck_kit_v2_0_0 import C, MONO, arrow, chart, code_box, label_shape, new_deck, new_slide, notes, picture, rect, table, tb
+import deck_kit_v2_1_0 as K
+from deck_kit_v2_1_0 import C, MONO, arrow, chart, code_box, label_shape, new_deck, new_slide, notes, picture, rect, table, tb
 SPEC_DIR = os.path.abspath(sys.argv[1])
 SP = load("chapter_spec", os.path.join(SPEC_DIR, "spec.py"))
 sys.path.insert(0, SPEC_DIR)
@@ -256,13 +256,12 @@ def make_story(prs, sid):
     picture(s, framed(os.path.join(ASSETS, st["img"]) if not dry else _p, 2.9, 3.2), 0.4, 0.95, 2.9, 3.2, "Picture for the story: " + st["title"].replace("Story: ", ""), "photo " + sid)
     tb(s, 0.4, 4.2, 2.9, 0.7, credit, 9.5, C["muted"], name="credit")
     yy = 0.92
-    for lab in ("who", "what", "when", "where", "why", "how"):
-        txt = st[lab]
-        nlines = math.ceil((len(txt) + 7) / 70.0)
-        h = max(0.44, nlines * 0.215 + 0.12)
+    for txt in st["prose"]:
+        nlines = math.ceil(len(txt) / 62.0)
+        h = max(0.7, nlines * 0.25 + 0.2)
         rect(s, 3.5, yy, 6.1, h, C["card"], line=C["line"], radius=0.1, name="card")
-        tb(s, 3.55, yy, 6.0, h, [[(lab.upper() + "  ", {"bold": True, "color": C["teal"]}), (txt, {})]], 12, C["ink"], anchor=MSO_ANCHOR.MIDDLE, name=lab)
-        yy += h + 0.07
+        tb(s, 3.6, yy, 5.9, h, txt, 13, C["ink"], anchor=MSO_ANCHOR.MIDDLE, name="story")
+        yy += h + 0.1
     if yy > 4.85:
         print("WARN story %s: the READ line starts at %.2f in" % (sid, yy))
     tb(s, 3.5, yy + 0.02, 6.1, 0.36, [[("READ  ", {"bold": True, "color": C["amber"]}), (st["linktext"], {"link": st["link"], "color": C["teal"]})]], 13, C["ink"], name="read")

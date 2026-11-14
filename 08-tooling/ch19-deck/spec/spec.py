@@ -1,4 +1,4 @@
-"""Chapter 19 deck spec for the generic builder 08-tooling/chapter_deck_build_v2_1_0.py (deck 2.0.0 of chapter 19, built from the owner-approved draft DRAFT_ch19_v1_0_1... v1.0.0)."""
+"""Chapter 19 deck spec for the generic builder 08-tooling/chapter_deck_build_v2_2_0.py (deck 2.0.0 of chapter 19, built from the owner-approved draft DRAFT_ch19_v1_0_1... v1.0.0)."""
 import hashlib
 import os
 import sys
@@ -7,10 +7,10 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
 import examples_v2_0_0 as X
 import visuals_v2_0_0 as V
-import content_v2_1_0 as T
+import content_v2_2_0 as T
 
 CH = 19
-OUT_DECK = "03-materials/ch19/SEN0414_Ch19_TimeScheduling_3e_v2_1_0.pptx"
+OUT_DECK = "03-materials/ch19/SEN0414_Ch19_TimeScheduling_3e_v2_2_0.pptx"
 OUT_MAN = "03-materials/ch19/page/chapter_code_ch19_v1_1_0.json"
 IMAGE_FILES = ["story_images_v1_0_0.json"]
 TITLE = "Chapter 19: Time, Scheduling and Launching Programs"

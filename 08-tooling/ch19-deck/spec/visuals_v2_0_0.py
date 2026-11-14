@@ -1,11 +1,11 @@
 """Chapter 19 deck visuals, version 2.0.0: the executed result of every code example drawn as a native table, a native chart or a drawn flow with arrows.
 Every number, string and truth value shown is taken from the run of the example's own code (the namespace `ns` and the printed text `out` that the
-generic builder 08-tooling/chapter_deck_build_v2_1_0.py passes in); nothing is typed in by hand except plain-language names of boxes and columns.
+generic builder 08-tooling/chapter_deck_build_v2_2_0.py passes in); nothing is typed in by hand except plain-language names of boxes and columns.
 Each function: visual(s, x, y, w, h, ns, out). The attribute .need is the least height (inches) it wants."""
 __version__ = "2.0.0"
 import ast
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
-from deck_kit_v2_0_0 import C, MONO, arrow, chart, label_shape as _label_shape, table as _table, tb, rect
+from deck_kit_v2_1_0 import C, MONO, arrow, chart, label_shape as _label_shape, table as _table, tb, rect
 
 
 def table(s, x, y, w, rows, colw, fs=10.5, **kw):

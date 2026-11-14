@@ -3,7 +3,7 @@ One example per code slide, in slide order; the example order is the page-tab or
 explanation that stands beside it; the lines of all groups, in order, are the example's code. A code box holds at most 30 words (the '>>> ' prompt of each line counts one).
 Nothing here depends on the clock or the zone of the machine: every moment is built from numbers, every zone is named, and a clock the program reads is either a
 monotonic one compared with a bound or a stand-in the program moves itself (marked EMULATED on its slide). No example uses a lambda or a keyboard, none reads the network.
-Nothing here carries a result; chapter_deck_build_v2_1_0.py runs the code and takes every printed result from the run."""
+Nothing here carries a result; chapter_deck_build_v2_2_0.py runs the code and takes every printed result from the run."""
 __version__ = "2.0.0"
 
 EXAMPLES = [
