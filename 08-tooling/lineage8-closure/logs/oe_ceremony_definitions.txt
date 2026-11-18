@@ -1,0 +1,80 @@
+ids found ['BP-D2', 'BP-D63', 'BP-D64', 'BP-D7', 'L-113', 'L-118', 'L-65', 'L-66', 'L-78']
+
+== BP-D64 | BP-D64: The operating-discipline file is a pointer, not a payload; every rule's text lives once, in this ABox's skos:definition
+The discipline markdown file a session reads before acting is a POINTER, never a PAYLOAD. It states, in ceremony order: ceremony resolution and the three ceremony steps; each standing boundary and standing principle as a one-line label with its governing BP-D/L identifier; where to query (the highest-versioned 09-governance/oegov_abox_v*.ttl, BestPractice and LessonsLearned individuals, their skos:definition). It does NOT restate a rule's reasoning, method, examples, or history in prose — that text is authored once, as the rule's skos:definition in this ABox, and the pointer file cites the identifier instead of copying the words.
+
+Two costs this corrects. First, a governed action is preceded by the ceremony (BP-D1 and its successors), which is read in full before every substantive step; a discipline file that both names the rules AND restates their bodies is read twice over — once as the index, once as a second copy of content the ABox already carries verbatim. Second, every restated section drifts from its ABox source the moment either is edited alone (the same failure BP-D60/BP-D61 name for duplicate terms, here applied to duplicate rule text): the knowledge-base-governs rule already says the ABox wins a divergence, which only matters because the duplicate exists to diverge.
+
+The method, applied: (1) for a rule section currently written as prose with worked examples, method s
+
+== L-65 | L-65: Verify before publishing — confidence at generation time is not evidence
+When Claude (or any LLM-based author) generates content that includes externally-verifiable claims — bibliography entries, code package versions, SHA hashes, statistic citations, quoted definitions — confidence at generation time is not evidence of correctness. The plausibility of a generated string is not a substitute for verifying it against the source.
+
+Anti-pattern this prevents: shipping a deliverable with externally-verifiable claims that were never externally verified, then declaring "all gates PASS" because the gates verified internal consistency (count, formatting, no-self-reference) but not external truth.
+
+Operational form (apply before submitting any deliverable that contains externally-verifiable claims):
+
+  1. ENUMERATE the externally-verifiable claims in the deliverable. For a bibliography this is each reference; for a code package it is each version pin; for a SHA-anchored manifest it is each hash; for a quoted definition it is each quote-source pair.
+
+  2. For each enumerated claim, retrieve the authoritative source and verify the claim against it. "Retrieve" means web_fetch / web_search / file inspection, not reasoning from training data.
+
+  3. Record the verification: in a manifest, in a disclosure block, in a structured log. The verification record makes the claim auditable rather than assumed.
+
+  4. If a claim cannot be verified, REMOVE it rather than retai
+
+== L-66 | L-66: Declared measurement frameworks must not silently extend at synthesis time
+When authoring proposals or reports based on a declared measurement framework, the synthesis step must use ONLY the classifications produced by the declared measurements. Adding a new classification step at synthesis time — even one that feels self-evident — bypasses the verification gate L-65 establishes. Detection signal: a proposal cites a measurement framework in its preamble, then in the synthesis introduces a 'recommended destination' or 'verdict by category' step that was not part of the declared framework. Example from this session: Proposal D v1.0.0 declared 'class-purpose classification' as the measurement framework, then in Stage D added 'BP-D21 recommended destination per bucket' which assigned the 218 non-KB classes to 5 destination subjects without any measurement of whether those destinations were semantically distinct from KB. The user surfaced the inflation; Proposal D v2.0.0 retracted v1.0.0 with rename-only verdict. Mitigation: when synthesis would add a new classification step, halt and either (a) extend the declared framework + re-measure, or (b) explicitly note the un-measured step as 'inferred without measurement' for user review.
+
+== BP-D2 | Never trust summaries — read raw files
+Closure documents, README files, and conversational summaries describe what their authors INTENDED to ship. The actual artifact may differ. Always read the raw TTL/MD/code file with the view or bash tool before making claims about its content. Specifically:
+
+  1. SHA-256 verify against MANIFEST_SHA256.txt before reading.
+  2. Open the actual file (view or cat), not a summary.
+  3. For ontologies: parse with rdflib, count triples, query for the specific axioms claimed.
+  4. For closure documents claiming 'V=0 W=0' or 'HermiT CONSISTENT': independently re-run the validators on the actual data graph.
+  5. For SHA-256 claims: re-compute and compare.
+
+Verified value: across this study, 'never trust summaries' caught 3 distinct defects (D-PHASE2-1, D-PHASE2-2, D-PHASE3-1) that closure-document summaries explicitly claimed were CONSISTENT/CONFORMANT.
+
+== BP-D7 | Strict BP-3 version semantics with versionInfo and versionIRI alignment
+Every ontology release follows BP-3 SemVer:
+  - The size of the bump (PATCH, MINOR, MAJOR) is the size of the change: see BP-D62 (since 2026-11-04). The four-part form x.y.z.1 of earlier releases is not SemVer and is no longer used.
+
+For each release, ensure all of these align:
+  - owl:versionInfo (string literal): '1.4.1'
+  - owl:versionIRI (URI): http://.../{ontology}/1.4.1
+  - owl:priorVersion (URI): http://.../{predecessor}/{predecessor-version}
+  - dcterms:modified (date): the release date
+
+A common defect (caught in this session): versionInfo says '1.4.1' but versionIRI ends in /1.0.0 — these MUST match. The release_check.sh Gate D should verify alignment.
+
+Examples of BP-3 application:
+  - I-17 patches: PATCH (v6.5.0 → v6.5.1, removed conflicting axioms, no vocabulary change)
+  - amod_v1_4_1_archive_extension: historical; a new class is a MINOR change by BP-D62 (v1.4.0 → v1.5.0), the number it carried was a patch-level number
+  - oqc_measurements v1.0.0 → v1.0.1: PATCH (D-PHASE2-1 fix only)
+  - oqc_measurements v1.0.1 → v1.0.2: PATCH (D-PHASE2-2 fix only)
+
+== L-113 | L-113: A plural request answered by resolving one item is not license to treat the rest as answered - give every named item its own disposition
+When a request names or clearly implies more than one item - categories, findings, tasks - resolving one of them is not license to treat the rest as answered. Give every named item its own explicit disposition: built, confirmed already covered, or declined with a stated reason. A single aggregate judgement that silently drops an item is the tell, even when the item that was addressed was addressed correctly and completely. Distinct from acting-vs-asking discipline: that is about not manufacturing a decision point the evidence already settles; this is about not letting a settled decision on one item stand in for a decision on all of them.
+
+== L-118 | L-118: Every governed element carries a human label, and discussion uses it — an identifier is a handle for machines, not a substitute for a sentence a reader can judge
+An identifier is a handle for machines: chosen for uniqueness and brevity, it compresses a sentence into a token and invites the reader to reconstruct the sentence by guessing. A reviewer who cannot read an element cannot challenge it, and a governance framework whose elements cannot be challenged is decorative. Two halves, enforced differently: (1) every governed element carries a one-sentence human label — not a restatement of the identifier, but what the element actually is, in words a reader outside the session can judge; enforceable per-package by a SHACL shape requiring rdfs:label or an equivalent title property on intent-bearing classes. (2) discussion, reports, and changelogs use the label, not the identifier — an identifier appears only where it is needed to act (a path to edit, a term to grep, disambiguating two similarly labelled elements), and then alongside its label, never instead of it. The second half applies as much to a session reporting to its owner as to peer sessions: answering in identifiers asks the owner to decode rather than to decide, and if the label does not exist, that absence is the finding to report, not a gap to route silently around.
+
+== BP-D63 | BP-D63: Talk to the owner in plain, short, high-level language; details go into files and are discussed only when he asks or the decision needs them
+The owner reads what the agent says in order to decide and to know where things stand. A message he cannot read at once costs him time and the work its direction.
+
+THE RULE. Every message to the owner is in everyday human language, short, and at a high level: what is achieved, what is not, and what happens next. Detail is given only when he asks for it or when a decision needs it, and then only the detail that decision needs. When his input is needed, one point at a time, with two or three options.
+
+WHAT STAYS OUT. Identifiers, file names, version numbers, tool names, register terms and rule numbers, unless he needs them to act. This extends B7 (label before identifier): B7 says which name to use when a thing is named; this says how much to say and in what words. Detail that matters for the record goes into the files (the changelog, the register, the research record), not into the conversation.
+
+WHAT NO SHAPE CAN REACH. Whether a message is plain is a judgement of reading; it is a rule of work, not a check. The independent reviewer reads the report to the owner against it, and a report that needs the source files to be understood is returned.
+
+== L-78 | L-78: Defensive-deferral drift (asking about what the rules already settle)
+When the catalogue/convention or on-disk evidence already settles a choice, ACT and report the result; do NOT manufacture a decision point for the user. Asking for confirmation is warranted only when a matter is GENUINELY undecidable from the available rules and evidence - not when it is merely large, irreversible-feeling, costly, or arriving after a run of prior mistakes.
+
+ANTI-PATTERN this prevents: converting the author's own low confidence into the user's decision-load. A question cannot be 'wrong' the way an action can, so after errors the AI is tempted to ask rather than act - which offloads the author's risk onto the user's confirmations and makes the user pay, click by click, for the author's bruised confidence. The tell: the AI presents a 'fork' whose options are not genuinely co-equal because the convention or evidence already determines the answer.
+
+OPERATIONAL FORM (apply before surfacing any decision point to the user):
+  1. Ask: does a convention, policy, or piece of on-disk evidence already determine this choice? If yes - apply it, act, and report what was done and why. Do not ask.
+  2. Distinguish 'undecidable' from 'big'. Size, reversibility-feel, and cost do not make a settled choice undecidable. Only genuine absence of a deciding rule/evidence does.
+  3. If genuinely undecidable, ask ONCE, with co-equal options and the reason it is undecidable stated plainly 
