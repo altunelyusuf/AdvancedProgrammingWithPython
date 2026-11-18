@@ -1,0 +1,48 @@
+@prefix backlog: <http://example.org/backlog#> .
+@prefix ex:      <http://example.org/sen0414-ch18corr-lineage#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://example.org/sen0414-ch18corr-lineage> a owl:Ontology ;
+    rdfs:label "Fresh narrow lineage: SEN0414 Chapter 18 corrections"@en ;
+    owl:versionInfo "1.4.0" ; owl:versionIRI <http://example.org/sen0414-ch18corr-lineage/1.4.0> ; dcterms:identifier "sen0414_ch18corr_lineage" ;
+    rdfs:comment "1.4.0 (2026-11-18): Backlog stage. The state check is the measured baseline of the Mission and Objective stages (live files, 2026-11-18). Four stories, each with a build and a verify task; the register knows no other task types."@en .
+
+ex:Backlog9 a backlog:Backlog ; rdfs:label "Chapter 18 corrections backlog"@en ;
+    backlog:backlogForMission ex:Mission9 ; backlog:belongsToLineage ex:Lineage9 ;
+    backlog:hasBacklogMember ex:ST9_Spec, ex:ST9_Deck, ex:ST9_Page, ex:ST9_Release .
+ex:DoD9 a backlog:DefinitionOfDone ; rdfs:label "Definition of Done of the chapter 18 corrections lineage"@en ; backlog:belongsToLineage ex:Lineage9 ;
+    rdfs:comment "Written for this lineage. A story is Done only when (1) each acceptance criterion has a check that was run in the current turn and its output saved in the repository; (2) a verify task re-runs the check from the files, not from the builder's report; (3) a check that cannot be run, or a result that is not shown, is named in the audit note and never dropped; (4) no change goes beyond a ruling of 2026-11-14: the chapter's content, stories and the meaning of its examples stay as approved; (5) every changed file has its own new version."@en .
+ex:AC9_Spec a backlog:AcceptanceCriterion ; rdfs:label "A spec folder holds the chapter 18 examples, visuals, words, plan and output paths; the generic builder runs it and the manifest equals what the old build printed for each example"@en ; backlog:belongsToLineage ex:Lineage9 .
+ex:AC9_Deck a backlog:AcceptanceCriterion ; rdfs:label "On the new deck the material check passes 8 of 8 on the deck conditions and deck standard 1.1.0 passes 13 of 13; no note is outside 60 to 140 words (30 on title, part and resources slides)"@en ; backlog:belongsToLineage ex:Lineage9 .
+ex:AC9_Page a backlog:AcceptanceCriterion ; rdfs:label "The page has a Slide code tab equal to the deck code, no lambda unless taught, and the full page test shows every feature passing"@en ; backlog:belongsToLineage ex:Lineage9 .
+ex:AC9_Release a backlog:AcceptanceCriterion ; rdfs:label "The check logs are saved and a review record gives a verdict for each reviewed condition and each of the three roles"@en ; backlog:belongsToLineage ex:Lineage9 .
+ex:ST9_Spec a backlog:Story ; rdfs:label "Move the chapter 18 deck into a spec for the generic builder"@en ; backlog:belongsToLineage ex:Lineage9 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD9 ; backlog:hasAcceptanceCriterion ex:AC9_Spec ;
+    backlog:decomposesInto ex:TK9_Spec_Build, ex:TK9_Spec_Verify .
+ex:TK9_Spec_Build a backlog:ExecutionTask ; rdfs:label "Write the spec: examples, visuals, content, plan, parts, route and question words taken from the old builder, with the chapter's wheels and page requirements"@en ; backlog:belongsToLineage ex:Lineage9 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Ready .
+ex:TK9_Spec_Verify a backlog:ExecutionTask ; rdfs:label "Run the generic builder on the spec and compare every example's result with the old build, from the files"@en ; backlog:belongsToLineage ex:Lineage9 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK9_Spec_Build .
+ex:ST9_Deck a backlog:Story ; rdfs:label "Write the notes, titles and frames of the chapter 18 deck and build deck 3.0.0"@en ; backlog:belongsToLineage ex:Lineage9 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD9 ; backlog:hasAcceptanceCriterion ex:AC9_Deck ;
+    backlog:decomposesInto ex:TK9_Deck_Build, ex:TK9_Deck_Verify .
+ex:TK9_Deck_Build a backlog:ExecutionTask ; rdfs:label "Write the 53 notes (point at, result, lead into next), lengthen 3 titles, give slide 3 one thing to look at, remove lambdas from examples, build deck 3.0.0 and manifest 1.1.0"@en ; backlog:belongsToLineage ex:Lineage9 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK9_Spec_Verify .
+ex:TK9_Deck_Verify a backlog:ExecutionTask ; rdfs:label "Run the material check, deck standard 1.1.0, overlap, story prose, manifest self-check and a note-by-note read from the files"@en ; backlog:belongsToLineage ex:Lineage9 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK9_Deck_Build .
+ex:ST9_Page a backlog:Story ; rdfs:label "Build chapter 18 page with the Slide code tab and test it"@en ; backlog:belongsToLineage ex:Lineage9 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD9 ; backlog:hasAcceptanceCriterion ex:AC9_Page ;
+    backlog:decomposesInto ex:TK9_Page_Build, ex:TK9_Page_Verify .
+ex:TK9_Page_Build a backlog:ExecutionTask ; rdfs:label "Rebuild the page data and page on template 9.53.5 with the lambda-free maker and the Slide code tab from manifest 1.1.0, and replace the labelled story layout"@en ; backlog:belongsToLineage ex:Lineage9 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK9_Deck_Verify .
+ex:TK9_Page_Verify a backlog:ExecutionTask ; rdfs:label "Run the full page test and the story layout probe; read the log"@en ; backlog:belongsToLineage ex:Lineage9 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK9_Page_Build .
+ex:ST9_Release a backlog:Story ; rdfs:label "Record the checks and the three-role review of chapter 18"@en ; backlog:belongsToLineage ex:Lineage9 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD9 ; backlog:hasAcceptanceCriterion ex:AC9_Release ;
+    backlog:decomposesInto ex:TK9_Release_Build, ex:TK9_Release_Verify .
+ex:TK9_Release_Build a backlog:ExecutionTask ; rdfs:label "Write the review record: four reviewed conditions times three roles, labelled agent-made and not independent"@en ; backlog:belongsToLineage ex:Lineage9 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK9_Page_Verify .
+ex:TK9_Release_Verify a backlog:ExecutionTask ; rdfs:label "Re-run every automatic check from the files and compare with the record"@en ; backlog:belongsToLineage ex:Lineage9 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK9_Release_Build .
