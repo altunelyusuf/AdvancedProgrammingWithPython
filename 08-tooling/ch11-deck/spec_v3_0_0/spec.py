@@ -6,16 +6,17 @@ import sys
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
-import examples_v3_0_0 as X
+import examples_v3_1_0 as X
 import visuals_v3_0_0 as V
 import content_v3_0_0 as T0
-import notes_v3_0_0 as N0
+import notes_v3_1_0 as N0
 
 
 class _T:
     """the content words with the notes of this version"""
     NOTES = N0.NOTES
     STORY_NOTES = N0.STORY_NOTES
+    RESULT_SAYS = N0.RESULT_SAYS
 
     def __getattr__(self, k):
         return getattr(T0, k)
