@@ -1,6 +1,6 @@
 {
- "_version": "9.96.0",
- "_note": "Made from chapter_code_ch17_v1_0_0.json: the deck's 28 code examples in slide order, the code as the manifest has it.",
+ "_version": "3.0.0",
+ "_note": "Made from the chapter-code manifest 03-materials/ch17/page/chapter_code_ch17_v1_1_0.json (same code, same order): one cell per manifest example, name = the example's name.",
  "Inside a small PDF": [
   [
    "import base64, zlib\nblob = ('eNq1kF9PgzAUxd/5FPdliT5oW6DAzMLD/sVEjcvAp2UP3SjIgtS0nW5+etsNRx'\n        'BfLUlJT8+95/46WEznN+TWdwhgEJudMxqh9PjO0YRpVokCLVjBFbjmdhnHDq8z'\n        'a3J/mU8m9FBmauVbJwR2X6OJ2Nca3LbQ+1U4F7VGyX6j7cEqBI2Z4if5nlcfXJ'\n        'db1pb7f+SaTXKbYiPRE89KNhaHFTZHD2OI8BotuRJ7ueXK1NnW9kfAOzPFsRmz'\n        '1qaFAtrFpG3cI68L/QqhZVFacvbmjFOwbUgEaQ6EYvAxpBlcfQpZZdeQ7mCWQs'\n        'fkXjyGrRKNx6Y1LZvc4J8xwy5m2MekfUy/S5CwisnjHRAXmwUvyfQHGZ8+WZg3'\n        'MaOB69oJQXLI+6QHyXPHTO/gy4KAUo9CDq02hPNN3WrU72mEkL4W9n1uRHuaj/'\n        'saJUGracnKikv7Rkn5xSFCSyE0kOYllWZSn2ACb+gMBrPnufMNU9nkUQ==')\ndata = zlib.decompress(base64.b64decode(blob))\nprint(data[:8], data.rstrip().endswith(b'%%EOF'))\ntext = data.decode()\nstart = text.split('startxref')[1].split()[0]\nprint(text.count(' obj'), 'objects; table at byte', start)",
@@ -51,7 +51,7 @@
  ],
  "Watermarks and overlays": [
   [
-   "import io, pypdf\nfrom PIL import Image\ndef page_with(size, color):\n    buf = io.BytesIO()\n    Image.new('RGB', size, color).save(buf, 'PDF')\n    return pypdf.PdfReader(buf).pages[0]\nbase = page_with((60, 40), 'blue')\ntop = page_with((30, 20), 'red')\nbefore = len(base.images)\nbase.merge_page(top)\nprint('images:', before, '->', len(base.images))\nprint('drawn first to last:', [im.image.size for im in base.images])",
+   "import io, pypdf, PIL.Image\ndef page_with(size, color):\n    buf = io.BytesIO()\n    PIL.Image.new('RGB', size, color).save(buf, 'PDF')\n    return pypdf.PdfReader(buf).pages[0]\nbase = page_with((60, 40), 'blue')\nbefore = len(base.images)\nbase.merge_page(page_with((30, 20), 'red'))\nprint('images:', before, '->', len(base.images))\nprint('drawn first to last:', [im.image.size for im in base.images])",
    ""
   ]
  ],
@@ -141,7 +141,7 @@
  ],
  "Adding pictures": [
   [
-   "import io, docx\nfrom PIL import Image\nfrom docx.shared import Cm, Inches\npng = io.BytesIO()\nImage.new('RGB', (60, 80), 'red').save(png, 'PNG')\ndoc = docx.Document()\nsizes = {'as is': {}, '1 inch wide': {'width': Inches(1)},\n         '2 cm high': {'height': Cm(2)}}\nfor label, kw in sizes.items():\n    shape = doc.add_picture(io.BytesIO(png.getvalue()), **kw)\n    print(label, '->', int(shape.width), 'x', int(shape.height), 'EMU')",
+   "import io, docx, PIL.Image\nfrom docx.shared import Cm, Inches\npng = io.BytesIO()\nPIL.Image.new('RGB', (60, 80), 'red').save(png, 'PNG')\ndoc = docx.Document()\nsizes = {'as is': {}, '1 inch wide': {'width': Inches(1)},\n         '2 cm high': {'height': Cm(2)}}\nfor label, kw in sizes.items():\n    shape = doc.add_picture(io.BytesIO(png.getvalue()), **kw)\n    print(label, '->', int(shape.width), 'x', int(shape.height), 'EMU')",
    ""
   ]
  ],
