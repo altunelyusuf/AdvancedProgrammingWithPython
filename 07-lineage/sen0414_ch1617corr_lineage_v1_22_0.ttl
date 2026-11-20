@@ -1,0 +1,33 @@
+@prefix backlog: <http://example.org/backlog#> .
+@prefix ex:      <http://example.org/sen0414-ch1617corr-lineage#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://example.org/sen0414-ch1617corr-lineage> a owl:Ontology ;
+    rdfs:label "Fresh narrow lineage: SEN0414 Chapters 11, 17 and 16 corrections"@en ;
+    owl:versionInfo "1.22.0" ; owl:versionIRI <http://example.org/sen0414-ch1617corr-lineage/1.22.0> ; dcterms:identifier "sen0414_ch1617corr_lineage" ;
+    rdfs:comment "1.22.0 (2026-11-20): Repair of a register finding. The newest framework check (backlog_next_act 1.2.0, shape DoneNeedsRunningCriterionShape, G237) refused ten Done stories because the Definition of Done DoD10 had no criterion that runs. DoD10 now carries three criteria that are run by named tools, and one that cannot be machine-run and says so. The lineage stays open."@en .
+
+ex:DoD10 backlog:hasDoDCriterion ex:DoD10_DeckChecks, ex:DoD10_OwnVersion, ex:DoD10_StoryRepeat, ex:DoD10_ContentUnchanged .
+ex:DoD10_DeckChecks a backlog:DoDCriterion ; rdfs:label "Every deck of this lineage passes the automatic deck conditions"@en ;
+    backlog:hasCheckQuery "Run cme_material_check 1.0.2, sen0414_deck_standard_check 1.1.0, sen0414_deck_overlap_check 1.0.0, sen0414_reader_notes_check 1.0.0, sen0414_story_prose_check 1.0.0 and manifest_selfcheck 2.1.0 on the deck and its chapter-code manifest." ;
+    backlog:hasExpectedResult "Every check exits 0 (material check: no failing condition; deck standard: 13 of 13; overlap: 0 findings; reader notes: clean; story prose: clean; manifest: pass)." ;
+    backlog:hasCriterionStatus backlog:Holds ;
+    rdfs:comment "Run on 2026-11-20 on the decks of chapters 10, 11 and 17 (logs in 08-tooling/ch10-deck/logs_v3_0_0, ch11-deck/logs_v3_1_0, ch17-deck/logs_v3_0_0); each exits 0." .
+ex:DoD10_OwnVersion a backlog:DoDCriterion ; rdfs:label "Every changed file has its own new version"@en ;
+    backlog:hasCheckQuery "Run 08-tooling/cme_version_check_v1_0_0.py on the repository root." ;
+    backlog:hasExpectedResult "Exit 0." ;
+    backlog:hasCriterionStatus backlog:Holds ;
+    rdfs:comment "Run on 2026-11-20 after register 1.21.0: exit 0." .
+ex:DoD10_StoryRepeat a backlog:DoDCriterion ; rdfs:label "No story of a chapter is repeated in another chapter without the owner's confirmation"@en ;
+    backlog:hasCheckQuery "Run sen0414_story_repeat_check_v1_0_0.py for the chapter against every other chapter." ;
+    backlog:hasExpectedResult "RESULT CLEAN against every other chapter; a candidate is named to the owner." ;
+    backlog:hasCriterionStatus backlog:Violated ;
+    rdfs:comment "Run on 2026-11-20: chapter 17 is clean against all other chapters; chapter 10 has two candidates (UTF-8 against chapter 8, JSON against chapter 7) that await the owner, so the criterion is Violated until he decides." .
+ex:DoD10_ContentUnchanged a backlog:DoDCriterion ; rdfs:label "Content, stories and the meaning of examples stay as approved"@en ;
+    backlog:hasCheckQuery "The owner reads the re-cut story prose and balloon sentences against the approved drafts." ;
+    backlog:hasExpectedResult "The owner confirms that nothing went beyond the ruling of 2026-11-14." ;
+    backlog:hasCriterionStatus backlog:NotYetEnforceable ;
+    rdfs:comment "No tool can run this: it needs the owner's reading. Named here and never dropped." .
