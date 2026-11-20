@@ -1,0 +1,103 @@
+@prefix backlog: <http://example.org/backlog#> .
+@prefix ex:      <http://example.org/sen0414-ch1011simp-lineage#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://example.org/sen0414-ch1011simp-lineage> a owl:Ontology ;
+    rdfs:label "Urgent narrow lineage: SEN0414 chapters 10 and 11, one code, one environment"@en ;
+    owl:versionInfo "1.5.0" ; owl:versionIRI <http://example.org/sen0414-ch1011simp-lineage/1.5.0> ; dcterms:identifier "sen0414_ch1011simp_lineage" ;
+    rdfs:comment """1.5.0 (2026-11-20): Backlog stage. Eleven stories beside the review story: two tools (single-source step, generic check), code, deck, page and release for chapter 10 then chapter 11 (chapter 10 first: it is the session the Owner could not teach), and the method guide last, so it is written from what worked on both chapters. Each story has a Build and a Verify task. Definition of Done written for this lineage. Dates are forecasts only."""@en .
+
+ex:DoD11 a backlog:DefinitionOfDone ; rdfs:label "Definition of Done of the chapters 10 and 11 one-code lineage"@en ; backlog:belongsToLineage ex:Lineage11 ;
+    rdfs:comment "A story is Done only when (1) each acceptance criterion has a check that was run in the current turn and its output saved in the repository; (2) a verify task re-runs the check from the files, not from the builder's report; (3) a check that cannot be run, or a result that is not shown, is named in the audit note and never dropped; (4) no change goes beyond the scope: content, stories and note meaning of the chapters stay; (5) the code of an example is traced to a book code block or the story names why it is not; (6) a measurement that fails against its target stays a recorded failure, not a waived one."@en .
+ex:AC11_Make a backlog:AcceptanceCriterion ; rdfs:label "A tool reads one source per chapter and writes the slide code, the page example and the Slide code tab; running it twice gives identical output; it holds no chapter-specific text."@en ; backlog:belongsToLineage ex:Lineage11 .
+ex:AC11_Check a backlog:AcceptanceCriterion ; rdfs:label "A generic check fails on a slide code that differs from the source or the page, on a code split over more than one box, and on an example that does not run; it passes on a toy source and fails on a deliberately broken copy."@en ; backlog:belongsToLineage ex:Lineage11 .
+ex:AC11_Code_10 a backlog:AcceptanceCriterion ; rdfs:label "Each chapter 10 example is traced to a book code block, short, plain, without prompts and without additions beyond the subject; the source file holds each once."@en ; backlog:belongsToLineage ex:Lineage11 .
+ex:AC11_Deck_10 a backlog:AcceptanceCriterion ; rdfs:label "On the new deck every code is in one box, in order, without explanation boxes inside it, the real result is shown, no slide is added, and the deck rulings of 2026-11-14 pass."@en ; backlog:belongsToLineage ex:Lineage11 .
+ex:AC11_Page_10 a backlog:AcceptanceCriterion ; rdfs:label "The page holds every deck example in slide order with its explanation, the Slide code tab equals the deck code, test files are prepared by a hidden step, and the full page test passes."@en ; backlog:belongsToLineage ex:Lineage11 .
+ex:AC11_Release_10 a backlog:AcceptanceCriterion ; rdfs:label "The check logs are saved and a review record gives a verdict for teachability, understandability, explainability and human communication from each of the three roles."@en ; backlog:belongsToLineage ex:Lineage11 .
+ex:AC11_Code_11 a backlog:AcceptanceCriterion ; rdfs:label "Each chapter 11 example is traced to a book code block, short, plain, without prompts or extras; test set-up is moved out of the visible code; the source holds each once."@en ; backlog:belongsToLineage ex:Lineage11 .
+ex:AC11_Deck_11 a backlog:AcceptanceCriterion ; rdfs:label "On the new deck every code is in one box, in order, without explanation boxes inside it, the real result is shown, no slide is added, and the deck rulings pass."@en ; backlog:belongsToLineage ex:Lineage11 .
+ex:AC11_Page_11 a backlog:AcceptanceCriterion ; rdfs:label "The page holds every deck example in slide order with its explanation, the Slide code tab equals the deck code, and the full page test passes."@en ; backlog:belongsToLineage ex:Lineage11 .
+ex:AC11_Release_11 a backlog:AcceptanceCriterion ; rdfs:label "The check logs are saved and a review record gives a verdict for each reviewed condition from each of the three roles."@en ; backlog:belongsToLineage ex:Lineage11 .
+ex:AC11_Guide a backlog:AcceptanceCriterion ; rdfs:label "A guide explains, in plain words and without chapter-specific text, how another chapter or course takes a book's code into one source, slide and page, and which checks to run; it states what was proven on which chapters and what was not."@en ; backlog:belongsToLineage ex:Lineage11 .
+ex:ST11_Make a backlog:Story ; rdfs:label "Make slide code, page example and Slide code tab from one source per chapter"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD11 ; backlog:hasAcceptanceCriterion ex:AC11_Make ;
+    backlog:decomposesInto ex:TK11_Make_Build, ex:TK11_Make_Verify .
+ex:TK11_Make_Build a backlog:ExecutionTask ; rdfs:label "Write the single-source step: one source format, its three outputs, no chapter text"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Ready ;
+    backlog:belongsToLineage ex:Lineage11 .
+ex:TK11_Make_Verify a backlog:ExecutionTask ; rdfs:label "Run it on a toy two-example source and on chapter 10's first three examples; compare the three outputs from the files"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Make_Build .
+ex:ST11_Check a backlog:Story ; rdfs:label "Check that slide, page and source are equal, each code is in one box and every example runs"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD11 ; backlog:hasAcceptanceCriterion ex:AC11_Check ;
+    backlog:decomposesInto ex:TK11_Check_Build, ex:TK11_Check_Verify .
+ex:TK11_Check_Build a backlog:ExecutionTask ; rdfs:label "Write the generic check for the three conditions"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Make_Verify .
+ex:TK11_Check_Verify a backlog:ExecutionTask ; rdfs:label "Run it on a good toy and on three broken copies, one per condition; read the log"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Check_Build .
+ex:ST11_Code_10 a backlog:Story ; rdfs:label "Choose and write chapter 10's examples from the book's own code"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD11 ; backlog:hasAcceptanceCriterion ex:AC11_Code_10 ;
+    backlog:decomposesInto ex:TK11_Code_10_Build, ex:TK11_Code_10_Verify .
+ex:TK11_Code_10_Build a backlog:ExecutionTask ; rdfs:label "Trace each subject to the book's blocks; write the source: book programs as they are, shell examples as plain programs with the result as a comment (Owner's option C)"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Check_Verify .
+ex:TK11_Code_10_Verify a backlog:ExecutionTask ; rdfs:label "Compare each example with its book block from the book file; list every difference and its reason"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Code_10_Build .
+ex:ST11_Deck_10 a backlog:Story ; rdfs:label "Rebuild the chapter 10 deck from the source: one whole code box per slide"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD11 ; backlog:hasAcceptanceCriterion ex:AC11_Deck_10 ;
+    backlog:decomposesInto ex:TK11_Deck_10_Build, ex:TK11_Deck_10_Verify .
+ex:TK11_Deck_10_Build a backlog:ExecutionTask ; rdfs:label "Build the deck from the source with the generic builder; move explanations beside or below the code; show real output"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Code_10_Verify .
+ex:TK11_Deck_10_Verify a backlog:ExecutionTask ; rdfs:label "Run the deck standard, the material check and the new code check on the deck from the files"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Deck_10_Build .
+ex:ST11_Page_10 a backlog:Story ; rdfs:label "Rebuild the chapter 10 page: every example present, in slide order, running"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD11 ; backlog:hasAcceptanceCriterion ex:AC11_Page_10 ;
+    backlog:decomposesInto ex:TK11_Page_10_Build, ex:TK11_Page_10_Verify .
+ex:TK11_Page_10_Build a backlog:ExecutionTask ; rdfs:label "Rebuild page data and page from the source; add the hidden step that prepares sample files"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Deck_10_Verify .
+ex:TK11_Page_10_Verify a backlog:ExecutionTask ; rdfs:label "Run the code check and the full page test; read the logs"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Page_10_Build .
+ex:ST11_Release_10 a backlog:Story ; rdfs:label "Record the checks and the three-role review of chapter 10"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD11 ; backlog:hasAcceptanceCriterion ex:AC11_Release_10 ;
+    backlog:decomposesInto ex:TK11_Release_10_Build, ex:TK11_Release_10_Verify .
+ex:TK11_Release_10_Build a backlog:ExecutionTask ; rdfs:label "Write the review record, labelled agent-made and not independent"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Page_10_Verify .
+ex:TK11_Release_10_Verify a backlog:ExecutionTask ; rdfs:label "Re-run every automatic check from the files and compare with the record"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Release_10_Build .
+ex:ST11_Code_11 a backlog:Story ; rdfs:label "Choose and write chapter 11's examples from the book's own code"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD11 ; backlog:hasAcceptanceCriterion ex:AC11_Code_11 ;
+    backlog:decomposesInto ex:TK11_Code_11_Build, ex:TK11_Code_11_Verify .
+ex:TK11_Code_11_Build a backlog:ExecutionTask ; rdfs:label "Trace each subject to the book's blocks; write the source with the same rules as chapter 10"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Release_10_Verify .
+ex:TK11_Code_11_Verify a backlog:ExecutionTask ; rdfs:label "Compare each example with its book block from the book file; list every difference and its reason"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Code_11_Build .
+ex:ST11_Deck_11 a backlog:Story ; rdfs:label "Rebuild the chapter 11 deck from the source: one whole code box per slide"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD11 ; backlog:hasAcceptanceCriterion ex:AC11_Deck_11 ;
+    backlog:decomposesInto ex:TK11_Deck_11_Build, ex:TK11_Deck_11_Verify .
+ex:TK11_Deck_11_Build a backlog:ExecutionTask ; rdfs:label "Build the deck from the source; move explanations beside or below the code"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Code_11_Verify .
+ex:TK11_Deck_11_Verify a backlog:ExecutionTask ; rdfs:label "Run the deck standard, the material check and the code check on the deck from the files"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Deck_11_Build .
+ex:ST11_Page_11 a backlog:Story ; rdfs:label "Rebuild the chapter 11 page: every example present, in slide order, running"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD11 ; backlog:hasAcceptanceCriterion ex:AC11_Page_11 ;
+    backlog:decomposesInto ex:TK11_Page_11_Build, ex:TK11_Page_11_Verify .
+ex:TK11_Page_11_Build a backlog:ExecutionTask ; rdfs:label "Rebuild page data and page from the source"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Deck_11_Verify .
+ex:TK11_Page_11_Verify a backlog:ExecutionTask ; rdfs:label "Run the code check and the full page test; read the logs"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Page_11_Build .
+ex:ST11_Release_11 a backlog:Story ; rdfs:label "Record the checks and the three-role review of chapter 11"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD11 ; backlog:hasAcceptanceCriterion ex:AC11_Release_11 ;
+    backlog:decomposesInto ex:TK11_Release_11_Build, ex:TK11_Release_11_Verify .
+ex:TK11_Release_11_Build a backlog:ExecutionTask ; rdfs:label "Write the review record, labelled agent-made and not independent"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Page_11_Verify .
+ex:TK11_Release_11_Verify a backlog:ExecutionTask ; rdfs:label "Re-run every automatic check from the files and compare with the record"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Release_11_Build .
+ex:ST11_Guide a backlog:Story ; rdfs:label "Write the course-neutral method guide from what worked on chapters 10 and 11"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasState backlog:Ready ;
+    backlog:appliesDefinitionOfDone ex:DoD11 ; backlog:hasAcceptanceCriterion ex:AC11_Guide ;
+    backlog:decomposesInto ex:TK11_Guide_Build, ex:TK11_Guide_Verify .
+ex:TK11_Guide_Build a backlog:ExecutionTask ; rdfs:label "Write the guide from the two chapters' logs"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Build ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Release_11_Verify .
+ex:TK11_Guide_Verify a backlog:ExecutionTask ; rdfs:label "Check every claim in the guide against a log or file; name any claim without one"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:hasTaskType backlog:TaskType_Verify ; backlog:hasState backlog:Blocked ;
+    backlog:dependsOn ex:TK11_Guide_Build .
+ex:Backlog11 backlog:backlogForMission ex:Mission11 ; backlog:hasBacklogMember ex:ST11_Review_And_Plan, ex:ST11_Make, ex:ST11_Check, ex:ST11_Code_10, ex:ST11_Deck_10, ex:ST11_Page_10, ex:ST11_Release_10, ex:ST11_Code_11, ex:ST11_Deck_11, ex:ST11_Page_11, ex:ST11_Release_11, ex:ST11_Guide .
