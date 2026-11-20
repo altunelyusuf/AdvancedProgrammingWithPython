@@ -1,0 +1,32 @@
+@prefix backlog: <http://example.org/backlog#> .
+@prefix ex:      <http://example.org/sen0414-ch1011simp-lineage#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://example.org/sen0414-ch1011simp-lineage> a owl:Ontology ;
+    rdfs:label "Urgent narrow lineage: SEN0414 chapters 10 and 11, one code, one environment"@en ;
+    owl:versionInfo "1.8.0" ; owl:versionIRI <http://example.org/sen0414-ch1011simp-lineage/1.8.0> ; dcterms:identifier "sen0414_ch1011simp_lineage" ;
+    rdfs:comment """1.8.0 (2026-11-20): Repair of 1.7.0. The register check refused 1.7.0 (a story was Done under a Definition of Done with no running criterion), and 1.7.0 was committed before the output was read; the repair is this version. Cause: the Definition of Done written in 1.5.0 listed its rules as text and gave no criterion a check. Lesson kept: the output of the check is read in full before a commit, not its last lines."""@en .
+
+ex:DoD11 backlog:hasDoDCriterion ex:DoD11_ToolRun, ex:DoD11_OwnVersion, ex:DoD11_TracedCode, ex:DoD11_ContentUnchanged .
+ex:DoD11_ToolRun a backlog:DoDCriterion ; rdfs:label "A tool of this lineage gives identical output twice, runs its own output and refuses a broken input"@en ;
+    backlog:hasCheckQuery "Run the tool twice on the same source and diff the outputs; run the made tab; run it on broken copies of the source." ;
+    backlog:hasExpectedResult "Outputs identical; the tab exits 0; every broken copy is refused." ;
+    backlog:hasCriterionStatus backlog:Holds ;
+    rdfs:comment "Run on 2026-11-20 for the single-source step: 08-tooling/code-source/logs_v1_0_0/make_toy_run.log." .
+ex:DoD11_OwnVersion a backlog:DoDCriterion ; rdfs:label "Every changed file has its own new version"@en ;
+    backlog:hasCheckQuery "Run 08-tooling/cme_version_check_v1_0_0.py on the repository root." ;
+    backlog:hasExpectedResult "Exit 0." ;
+    backlog:hasCriterionStatus backlog:Holds ;
+    rdfs:comment "Run on 2026-11-20 before this version: exit 0." .
+ex:DoD11_TracedCode a backlog:DoDCriterion ; rdfs:label "Every chapter example is traced to a book code block, or the story names why not"@en ;
+    backlog:hasCheckQuery "Compare each source example's book reference and code with the book file, and list every difference with its reason." ;
+    backlog:hasExpectedResult "Every example has a trace or a named reason." ;
+    backlog:hasCriterionStatus backlog:NotYetEnforceable ;
+    rdfs:comment "Applies to the chapter code stories, not yet run; it becomes running there." .
+ex:DoD11_ContentUnchanged a backlog:DoDCriterion ; rdfs:label "Content, stories and the meaning of the notes stay as approved"@en ;
+    backlog:hasCheckQuery "The Owner reads the changed slides and notes against the approved ones." ;
+    backlog:hasExpectedResult "The Owner confirms nothing went beyond the scope." ;
+    backlog:hasCriterionStatus backlog:NotYetEnforceable ;
+    rdfs:comment "No tool can run this; it needs the Owner's reading. Named and never dropped." .
