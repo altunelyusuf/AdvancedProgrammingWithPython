@@ -1,0 +1,217 @@
+[
+ {
+  "order": 1,
+  "id": "copy",
+  "name": "shutil.copy: one file",
+  "slide": 6,
+  "concepts": [
+   "The shutil Module",
+   "shutil.copy",
+   "Copying and moving"
+  ],
+  "code": "import shutil\nprint(shutil.copy('spam/file1.txt', '.'))\nprint(shutil.copy('spam/file1.txt', 'spam/file2.txt'))",
+  "expected": ""
+ },
+ {
+  "order": 2,
+  "id": "copytree",
+  "name": "shutil.copytree: a whole folder",
+  "slide": 7,
+  "concepts": [
+   "shutil.copytree",
+   "mkdir"
+  ],
+  "code": "import shutil\nprint(shutil.copytree('spam', 'spam_backup'))",
+  "expected": ""
+ },
+ {
+  "order": 3,
+  "id": "copy2",
+  "name": "copy2 keeps the time stamp",
+  "slide": 8,
+  "concepts": [
+   "shutil.copy"
+  ],
+  "code": "import shutil\nfrom pathlib import Path\nshutil.copy2('spam/file1.txt', 'spam/kept.txt')\na, b = Path('spam/file1.txt'), Path('spam/kept.txt')\nprint(a.stat().st_mtime == b.stat().st_mtime)",
+  "expected": ""
+ },
+ {
+  "order": 4,
+  "id": "move",
+  "name": "shutil.move: move and rename",
+  "slide": 9,
+  "concepts": [
+   "shutil.move"
+  ],
+  "code": "import shutil\nprint(shutil.move('spam/file1.txt', 'spam2'))\nprint(shutil.move('spam2/file1.txt', 'spam2/new_name.txt'))",
+  "expected": ""
+ },
+ {
+  "order": 5,
+  "id": "unlink",
+  "name": "os.unlink and os.rmdir",
+  "slide": 12,
+  "concepts": [
+   "unlink"
+  ],
+  "code": "os.unlink('spam/file1.txt')\nos.rmdir('spam/eggs')\nprint(os.listdir('spam'))",
+  "expected": ""
+ },
+ {
+  "order": 6,
+  "id": "rmtree",
+  "name": "shutil.rmtree",
+  "slide": 13,
+  "concepts": [
+   "Safe deletion"
+  ],
+  "code": "import shutil\nfrom pathlib import Path\nshutil.rmtree('spam')\nprint(Path('spam').exists())",
+  "expected": ""
+ },
+ {
+  "order": 7,
+  "id": "dryrun",
+  "name": "A dry run before deleting",
+  "slide": 14,
+  "concepts": [
+   "Safe deletion",
+   "unlink"
+  ],
+  "code": "from pathlib import Path\nfor filename in Path('.').glob('*.rxt'):\n    # os.unlink(filename)\n    print('Deleting', filename)",
+  "expected": ""
+ },
+ {
+  "order": 8,
+  "id": "listing",
+  "name": "Listing one folder",
+  "slide": 19,
+  "concepts": [
+   "Walking a Directory Tree"
+  ],
+  "code": "import os\nfrom pathlib import Path\nprint(sorted(os.listdir('spam')))\nprint(sorted(Path('spam').iterdir()))",
+  "expected": ""
+ },
+ {
+  "order": 9,
+  "id": "walk",
+  "name": "os.walk visits every folder",
+  "slide": 20,
+  "concepts": [
+   "walk",
+   "Walking a folder tree"
+  ],
+  "code": "import os\nfor folder, subfolders, filenames in os.walk('spam'):\n    subfolders.sort()\n    print('The current folder is ' + folder)\n    for subfolder in subfolders:\n        print('SUBFOLDER OF ' + folder + ': ' + subfolder)\n    for filename in sorted(filenames):\n        print('FILE INSIDE ' + folder + ': ' + filename)\n    print('')",
+  "expected": ""
+ },
+ {
+  "order": 10,
+  "id": "sizes",
+  "name": "Folder sizes with os.walk",
+  "slide": 21,
+  "concepts": [
+   "walk"
+  ],
+  "code": "import os\ntotal = 0\nfor folder, subfolders, files in os.walk('spam'):\n    for name in files:\n        total += os.path.getsize(os.path.join(folder, name))\nprint(total)",
+  "expected": ""
+ },
+ {
+  "order": 11,
+  "id": "mkdir",
+  "name": "Path.mkdir with parents",
+  "slide": 22,
+  "concepts": [
+   "mkdir"
+  ],
+  "code": "from pathlib import Path\nPath('spam/eggs/bacon').mkdir(parents=True)\nPath('spam/eggs/bacon').mkdir(parents=True, exist_ok=True)\nprint(Path('spam/eggs/bacon').is_dir())",
+  "expected": ""
+ },
+ {
+  "order": 12,
+  "id": "zipwrite",
+  "name": "Writing a ZIP file",
+  "slide": 26,
+  "concepts": [
+   "zipfile.ZipFile",
+   "Compressing Files with the zipfile Module"
+  ],
+  "code": "import zipfile\nwith open('file1.txt', 'w', encoding='utf-8') as file_obj:\n    file_obj.write('Hello' * 10000)\nwith zipfile.ZipFile('example.zip', 'w') as example_zip:\n    example_zip.write(\n        'file1.txt',\n        compress_type=zipfile.ZIP_DEFLATED,\n        compresslevel=9)\nwith zipfile.ZipFile('example.zip') as example_zip:\n    info = example_zip.getinfo('file1.txt')\n    print(info.file_size, info.compress_size)",
+  "expected": ""
+ },
+ {
+  "order": 13,
+  "id": "zipmodes",
+  "name": "ZIP modes: append and refuse",
+  "slide": 27,
+  "concepts": [
+   "zipfile.ZipFile"
+  ],
+  "code": "import zipfile\nwith zipfile.ZipFile('example.zip', 'a') as example_zip:\n    example_zip.write('file2.txt')\nprint(zipfile.ZipFile('example.zip').namelist())",
+  "expected": ""
+ },
+ {
+  "order": 14,
+  "id": "extract",
+  "name": "Extracting from a ZIP",
+  "slide": 28,
+  "concepts": [
+   "extract"
+  ],
+  "code": "import zipfile\nwith zipfile.ZipFile('example.zip') as example_zip:\n    example_zip.extractall('out')\n    print(example_zip.extract('file1.txt', 'new/folder'))",
+  "expected": ""
+ },
+ {
+  "order": 15,
+  "id": "archives",
+  "name": "make_archive and unpack_archive",
+  "slide": 29,
+  "concepts": [
+   "Archives"
+  ],
+  "code": "import shutil\nshutil.make_archive('spam_backup', 'zip', 'spam')\nshutil.unpack_archive('spam_backup.zip', 'spam_copy')\nprint(sorted(os.listdir('spam_copy')))",
+  "expected": ""
+ },
+ {
+  "order": 16,
+  "id": "backup",
+  "name": "Project 5: backupToZip",
+  "slide": 34,
+  "concepts": [
+   "Practice Programs"
+  ],
+  "code": "import zipfile, os\nfrom pathlib import Path\ndef backup_to_zip(folder):\n    folder = Path(folder)\n    number = 1\n    while True:\n        zip_name = Path(folder.name + '_' + str(number) + '.zip')\n        if not zip_name.exists():\n            break\n        number = number + 1\n    print(f'Creating {zip_name}...')\n    backup_zip = zipfile.ZipFile(zip_name, 'w')\n    for folder_name, subfolders, filenames in os.walk(folder):\n        folder_name = Path(folder_name)\n        print(f'Adding files in folder {folder_name}...')\n        for filename in filenames:\n            print(f'Adding file {filename}...')\n            backup_zip.write(folder_name / filename)\n    backup_zip.close()\n    print('Done.')\nbackup_to_zip('spam')",
+  "expected": ""
+ },
+ {
+  "order": 17,
+  "id": "selective",
+  "name": "Practice 1: copy by extension",
+  "slide": 35,
+  "concepts": [
+   "Practice Programs"
+  ],
+  "code": "import os, shutil\nfor folder, subfolders, files in os.walk('src'):\n    for name in sorted(files):\n        if name.endswith('.pdf'):\n            shutil.copy(os.path.join(folder, name), 'dest')\nprint(sorted(os.listdir('dest')))",
+  "expected": ""
+ },
+ {
+  "order": 18,
+  "id": "large",
+  "name": "Practice 2: the big files",
+  "slide": 36,
+  "concepts": [
+   "Practice Programs"
+  ],
+  "code": "import os\nfor folder_name, subfolders, filenames in os.walk('spam'):\n    for filename in sorted(filenames):\n        path = os.path.join(folder_name, filename)\n        if os.path.getsize(path) > 1000:\n            print(path, os.path.getsize(path))",
+  "expected": ""
+ },
+ {
+  "order": 19,
+  "id": "dates",
+  "name": "Practice 3: swap day and month",
+  "slide": 37,
+  "concepts": [
+   "Practice Programs"
+  ],
+  "code": "import os, re, shutil\ndate_pattern = re.compile(r'(\\d\\d)-(\\d\\d)-(\\d\\d\\d\\d)')\nfor filename in sorted(os.listdir('.')):\n    if date_pattern.search(filename):\n        new_name = date_pattern.sub(r'\\2-\\1-\\3', filename)\n        shutil.move(filename, new_name)\nprint(sorted(os.listdir('.')))",
+  "expected": ""
+ }
+]
