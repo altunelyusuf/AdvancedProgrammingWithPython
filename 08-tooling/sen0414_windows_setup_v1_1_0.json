@@ -1,0 +1,15 @@
+{
+ "_version": "1.1.0",
+ "_about": "Hidden Windows display set-up (Lineage11, owner's ruling 2026-11-24: the default platform is Windows). Run first by every example of chapters 10 and 11: pathlib.Path shows the Windows form (C: drive, backslashes, WindowsPath) when the program itself (code that is not in a .py file) prints or formats it, while the library code (pathlib, shutil, os) keeps the real system form so that files are found. 1.1.0 replaces 1.0.0: its string form broke Path.iterdir() and friends on absolute paths.",
+ "lines": [
+  "import pathlib, sys",
+  "class WindowsPath(pathlib.PosixPath):",
+  "    def __str__(self):",
+  "        s = pathlib.PosixPath.__str__(self)",
+  "        if not sys._getframe(1).f_code.co_filename.endswith('.py'):",
+  "            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')",
+  "        return s",
+  "    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))",
+  "pathlib.Path = pathlib.WindowsPath = WindowsPath"
+ ]
+}
