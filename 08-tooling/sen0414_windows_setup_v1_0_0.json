@@ -1,0 +1,14 @@
+{
+ "_version": "1.0.0",
+ "_about": "Hidden Windows display set-up (Lineage11, owner's ruling 2026-11-24: the default platform is Windows). Run first by every example of chapters 10 and 11: pathlib.Path shows the Windows form (C: drive, backslashes, WindowsPath) while files stay on the real system. as_posix() and as_uri() keep the real system form so that the library functions that use it still find the files.",
+ "lines": [
+  "import pathlib",
+  "class WindowsPath(pathlib.PosixPath):",
+  "    def __str__(self): return ('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self).replace('/', '\\\\')",
+  "    def __repr__(self): return 'WindowsPath(%r)' % str(self).replace('\\\\', '/')",
+  "    def __fspath__(self): return pathlib.PosixPath.__str__(self)",
+  "    def as_posix(self): return pathlib.PosixPath.__str__(self)",
+  "    def as_uri(self): return pathlib.PurePosixPath(pathlib.PosixPath.__str__(self)).as_uri()",
+  "pathlib.Path = pathlib.WindowsPath = WindowsPath"
+ ]
+}
