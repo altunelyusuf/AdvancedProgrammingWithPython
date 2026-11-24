@@ -1,0 +1,529 @@
+{
+ "chapter": 10,
+ "title": "Chapter 10 Reading and Writing Files: the code of every code slide, one source (Lineage11)",
+ "examples": [
+  {
+   "id": "pathobjects",
+   "name": "Path objects: joining names",
+   "title": "Path objects: joining names into a path",
+   "part": 1,
+   "visual": "pathobjects",
+   "slide": 6,
+   "concepts": [
+    "Files and Filepaths",
+    "Standardizing Path Separators",
+    "Joining Paths",
+    "Path()"
+   ],
+   "book": "The book's section Joining Paths: the first three blocks (Path with parts, the slash operator, Path joined with Path) and the my_files loop; the str-slash-str error block is left out, with a Linux path printed in place of WindowsPath",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())"
+   ],
+   "code": [
+    "from pathlib import Path",
+    "print(Path('spam', 'bacon', 'eggs'))",
+    "print(Path('spam') / 'bacon' / 'eggs')",
+    "print(Path('spam') / Path('bacon', 'eggs'))",
+    "for name in ['accounts.txt', 'details.csv']:",
+    "    print(Path('spam', name))"
+   ],
+   "explain": "Path() and the slash both join names into one path; the slash works only when a Path is on the left."
+  },
+  {
+   "id": "locations",
+   "name": "Where you stand",
+   "title": "Where you stand: working directory and home",
+   "part": 1,
+   "visual": "locations",
+   "slide": 9,
+   "concepts": [
+    "Accessing the Current Working Directory",
+    "Accessing the Home Directory",
+    "Specifying Absolute vs. Relative Paths",
+    "Handling Absolute and Relative Paths",
+    "Current working directory",
+    "Absolute path",
+    "Relative path",
+    "Path.cwd()",
+    "Path.home()",
+    "is_absolute",
+    "os.chdir()"
+   ],
+   "book": "The book's sections on the current working directory, the home directory and absolute versus relative paths; the machine-specific folder names are replaced by yes-or-no tests so that the result is the same on every computer",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())"
+   ],
+   "code": [
+    "from pathlib import Path",
+    "print(Path.cwd().is_absolute())",
+    "print(Path.home().is_absolute())",
+    "print(Path('my/relative/path').is_absolute())",
+    "print(Path('./spam.txt') == Path('spam.txt'))"
+   ],
+   "explain": "cwd() and home() give absolute paths; a path written without a start is relative to where the program runs."
+  },
+  {
+   "id": "anatomy",
+   "name": "Taking a path apart",
+   "title": "Taking a path apart",
+   "part": 1,
+   "visual": "anatomy",
+   "slide": 10,
+   "concepts": [
+    "Getting the Parts of a Filepath"
+   ],
+   "book": "The book's section Getting the Parts of a Filepath (the anchor, parent, name, stem, suffix, drive, parts and parents blocks, joined in one program); PureWindowsPath is used so that the Windows path works on any computer",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())"
+   ],
+   "code": [
+    "from pathlib import PureWindowsPath",
+    "p = PureWindowsPath('C:/Users/Al/spam.txt')",
+    "print(p.anchor, p.drive)",
+    "print(p.parent)",
+    "print(p.name, p.stem, p.suffix)",
+    "print(p.parts)",
+    "print(p.parents[1])"
+   ],
+   "explain": "A path is made of an anchor, parents, a name, a stem and a suffix; each one is an attribute."
+  },
+  {
+   "id": "folders",
+   "name": "Creating folders",
+   "title": "Creating folders and listing a tree",
+   "part": 2,
+   "visual": "folders",
+   "slide": 13,
+   "concepts": [
+    "Creating New Folders",
+    "os.makedirs()",
+    "mkdir"
+   ],
+   "book": "The book's section Creating New Folders: the os.makedirs block and the Path.mkdir block, with a relative path in place of C:, and a listing loop to show the result",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())"
+   ],
+   "code": [
+    "import os",
+    "from pathlib import Path",
+    "os.makedirs('delicious/walnut/waffles')",
+    "Path('delicious/walnut/pecan').mkdir()",
+    "for p in sorted(Path('delicious').rglob('*')):",
+    "    print(p)"
+   ],
+   "explain": "makedirs builds a whole chain of folders; mkdir makes only the last one; rglob lists everything below."
+  },
+  {
+   "id": "glob",
+   "name": "glob: find files by a pattern",
+   "title": "glob: find files by a pattern",
+   "part": 2,
+   "visual": "glob",
+   "slide": 14,
+   "concepts": [
+    "Finding Files Using Glob Patterns",
+    "glob"
+   ],
+   "book": "The book's section Finding Files Using Glob Patterns: the glob loop block (same loop, sorted so the order is fixed, on sample files made in a temporary folder)",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())",
+    "from pathlib import Path",
+    "for name in ['project1.txt', 'project2.txt', 'project10.txt', 'notes.csv']:",
+    "    Path(name).write_text('x')"
+   ],
+   "code": [
+    "from pathlib import Path",
+    "for name in sorted(Path('.').glob('*.txt')):",
+    "    print(name)",
+    "for name in sorted(Path('.').glob('project?.txt')):",
+    "    print(name)"
+   ],
+   "explain": "An asterisk stands for any characters and a question mark for exactly one."
+  },
+  {
+   "id": "fileinfo",
+   "name": "Does it exist? How big? How old?",
+   "title": "Does it exist? How big? How old?",
+   "part": 2,
+   "visual": "fileinfo",
+   "slide": 15,
+   "concepts": [
+    "Checking Path Validity",
+    "exists",
+    "Finding File Sizes and Timestamps",
+    "stat"
+   ],
+   "book": "The book's sections Checking Path Validity and Finding File Sizes and Timestamps: the exists, is_file, is_dir block and the stat block; gmtime replaces localtime so the time is the same on every computer",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())",
+    "from pathlib import Path",
+    "Path('spam.txt').write_text('Hello, world!')",
+    "os.utime('spam.txt', (1712627129, 1712627129))"
+   ],
+   "code": [
+    "import time",
+    "from pathlib import Path",
+    "f = Path('spam.txt')",
+    "print(f.exists(), f.is_file(), f.is_dir())",
+    "print(f.stat().st_size)",
+    "print(time.asctime(time.gmtime(f.stat().st_mtime)))",
+    "print(Path('nothere').exists())"
+   ],
+   "explain": "exists, is_file and is_dir test a path; stat tells its size and its last change."
+  },
+  {
+   "id": "wholefile",
+   "name": "Whole files: write_text and read_text",
+   "title": "Whole files: write_text and read_text",
+   "part": 3,
+   "visual": "wholefile",
+   "slide": 18,
+   "concepts": [
+    "The File Reading and Writing Process",
+    "Plaintext file",
+    "Binary file",
+    "read_text",
+    "write_text",
+    "Reading the Contents of Files",
+    "Writing to Files"
+   ],
+   "book": "The book's section on plaintext files: the write_text and read_text block, exactly",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())"
+   ],
+   "code": [
+    "from pathlib import Path",
+    "p = Path('spam.txt')",
+    "print(p.write_text('Hello, world!'))",
+    "print(p.read_text())"
+   ],
+   "explain": "write_text saves a whole string and returns how many characters it wrote; read_text returns it all."
+  },
+  {
+   "id": "openclose",
+   "name": "open(): a file object you must close",
+   "title": "open(): a file object you must close",
+   "part": 3,
+   "visual": "openclose",
+   "slide": 20,
+   "concepts": [
+    "Opening Files",
+    "open()",
+    "File object",
+    "write",
+    "close",
+    "read"
+   ],
+   "book": "The book's section Writing to Files: the bacon.txt block (write, append, read back), with print() added so that the counts and the text show",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())"
+   ],
+   "code": [
+    "bacon_file = open('bacon.txt', 'w', encoding='UTF-8')",
+    "print(bacon_file.write('Hello, world!\\n'))",
+    "bacon_file.close()",
+    "bacon_file = open('bacon.txt', 'a', encoding='UTF-8')",
+    "print(bacon_file.write('Bacon is not a vegetable.'))",
+    "bacon_file.close()",
+    "bacon_file = open('bacon.txt', encoding='UTF-8')",
+    "content = bacon_file.read()",
+    "bacon_file.close()",
+    "print(content)"
+   ],
+   "explain": "Open a file, use it, and close it: write mode starts the file, append mode adds to it."
+  },
+  {
+   "id": "readmethods",
+   "name": "Reading: the file cursor moves",
+   "title": "Reading: the file cursor moves",
+   "part": 3,
+   "visual": "readmethods",
+   "slide": 21,
+   "concepts": [
+    "readlines"
+   ],
+   "book": "The book's section Reading the Contents of Files: the sonnet29.txt readlines block; the sample file holds the four lines the book shows, and one more read shows the cursor",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())",
+    "open('sonnet29.txt', 'w', encoding='UTF-8').write(\"When, in disgrace with fortune and men's eyes,\\nI all alone beweep my outcast state,\\nAnd trouble deaf heaven with my bootless cries,\\nAnd look upon myself and curse my fate,\")"
+   ],
+   "code": [
+    "sonnet_file = open('sonnet29.txt', encoding='UTF-8')",
+    "lines = sonnet_file.readlines()",
+    "print(len(lines))",
+    "print(lines[0], end='')",
+    "print(repr(sonnet_file.read()))",
+    "sonnet_file.close()"
+   ],
+   "explain": "readlines returns every line at once and leaves the cursor at the end, so a second read finds nothing."
+  },
+  {
+   "id": "withstatement",
+   "name": "with: the file closes itself",
+   "title": "with: the file closes itself",
+   "part": 3,
+   "visual": "withstatement",
+   "slide": 23,
+   "concepts": [
+    "Using with Statements",
+    "Context manager"
+   ],
+   "book": "The book's section Using with Statements: the data.txt block, exactly, with a print of the content and of the closed state added",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())"
+   ],
+   "code": [
+    "with open('data.txt', 'w', encoding='UTF-8') as file_obj:",
+    "    file_obj.write('Hello, world!')",
+    "with open('data.txt', encoding='UTF-8') as file_obj:",
+    "    content = file_obj.read()",
+    "print(content)",
+    "print(file_obj.closed)"
+   ],
+   "explain": "with closes the file at the end of its block, even if something goes wrong inside it."
+  },
+  {
+   "id": "modes",
+   "name": "Write modes: w overwrites, a appends",
+   "title": "Write modes: w overwrites, a appends",
+   "part": 3,
+   "visual": "modes",
+   "slide": 24,
+   "concepts": [
+    "Writing to Files"
+   ],
+   "book": "The book's section Writing to Files (the write and append modes); the four-step loop is the deck's own way to show both modes in one program because the book shows them in two blocks. Exclusive mode x is not shown",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())"
+   ],
+   "code": [
+    "from pathlib import Path",
+    "steps = [('w', 'A'), ('a', 'B'), ('a', 'C'), ('w', 'D')]",
+    "for mode, text in steps:",
+    "    with open('log.txt', mode, encoding='UTF-8') as f:",
+    "        f.write(text + '\\n')",
+    "    print(mode, repr(Path('log.txt').read_text()))"
+   ],
+   "explain": "Mode w throws the old content away; mode a keeps it and adds at the end."
+  },
+  {
+   "id": "encoding",
+   "name": "encoding: how bytes become characters",
+   "title": "encoding: how bytes become characters",
+   "part": 3,
+   "visual": "encoding",
+   "slide": 25,
+   "concepts": [
+    "Opening Files"
+   ],
+   "book": "The book's use of encoding='UTF-8' in every open call; the byte counts are the deck's own short demonstration of why the argument is there",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())"
+   ],
+   "code": [
+    "from pathlib import Path",
+    "Path('a.txt').write_text('café', encoding='UTF-8')",
+    "print(open('a.txt', encoding='UTF-8').read())",
+    "print(len('café'), len('café'.encode('UTF-8')))",
+    "print(Path('a.txt').read_bytes())"
+   ],
+   "explain": "A file holds bytes; the encoding says how they become characters. The e with an accent takes two bytes in UTF-8."
+  },
+  {
+   "id": "shelve",
+   "name": "shelve: a dictionary that a file can keep",
+   "title": "shelve: a dictionary that a file can keep",
+   "part": 4,
+   "visual": "shelve",
+   "slide": 28,
+   "concepts": [
+    "Saving Variables with the shelve Module",
+    "Shelf",
+    "shelve.open()"
+   ],
+   "book": "The book's section Saving Variables with the shelve Module: the three blocks (save cats, read it back and show the type, list the keys) in one program",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())"
+   ],
+   "code": [
+    "import shelve",
+    "shelf_file = shelve.open('mydata')",
+    "shelf_file['cats'] = ['Zophie', 'Pooka', 'Simon']",
+    "shelf_file.close()",
+    "shelf_file = shelve.open('mydata')",
+    "print(type(shelf_file))",
+    "print(list(shelf_file.keys()))",
+    "print(shelf_file['cats'])",
+    "shelf_file.close()"
+   ],
+   "explain": "A shelf works like a dictionary but keeps its keys and values in a file for the next run."
+  },
+  {
+   "id": "json",
+   "name": "json: a plain format other programs read",
+   "title": "json: a plain format other programs read",
+   "part": 4,
+   "visual": "json",
+   "slide": 30,
+   "concepts": [
+    "Saving Variables with the shelve Module"
+   ],
+   "book": "Not a block of the book's chapter 10: the deck's own short contrast to shelve, which the book's section on shelve points to as the portable alternative; named so in the register",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())"
+   ],
+   "code": [
+    "import json",
+    "data = {'cats': ['Zophie', 'Pooka', 'Simon']}",
+    "text = json.dumps(data)",
+    "print(text)",
+    "print(json.loads(text) == data)"
+   ],
+   "explain": "json turns the same data into plain text that programs in any language can read."
+  },
+  {
+   "id": "madlibs",
+   "name": "Practice program: Mad Libs",
+   "title": "Practice program: Mad Libs",
+   "part": 5,
+   "visual": "madlibs",
+   "slide": 34,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "book": "The book's practice program Mad Libs and its sample text; the typed answers of the book (input) are a list here so that the program runs without a keyboard",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())",
+    "__import__('pathlib').Path('panda.txt').write_text('The ADJECTIVE panda walked to the NOUN and then VERB. A nearby NOUN was unaffected by these events.', encoding='UTF-8')"
+   ],
+   "code": [
+    "from pathlib import Path",
+    "text = Path('panda.txt').read_text(encoding='UTF-8')",
+    "answers = ['silly', 'chandelier', 'screamed', 'pickup truck']",
+    "for word in ['ADJECTIVE', 'NOUN', 'VERB', 'NOUN']:",
+    "    text = text.replace(word, answers.pop(0), 1)",
+    "print(text)",
+    "Path('panda_filled.txt').write_text(text, encoding='UTF-8')"
+   ],
+   "explain": "The program reads the story, replaces each capital word with an answer in turn, and saves the new story."
+  },
+  {
+   "id": "regexsearch",
+   "name": "Practice program: search the text files",
+   "title": "Practice program: search the text files",
+   "part": 5,
+   "visual": "regexsearch",
+   "slide": 35,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "book": "The book's practice program Regex Search (open every .txt file of a folder and print the lines that match a pattern); the pattern is fixed in the program instead of typed",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())",
+    "from pathlib import Path",
+    "Path('a.txt').write_text('spam and eggs\\nbacon alone\\nSPAM again\\n')",
+    "Path('b.txt').write_text('nothing here\\nspam, glorious spam\\n')",
+    "Path('notes.csv').write_text('spam,1\\n')"
+   ],
+   "code": [
+    "import re",
+    "from pathlib import Path",
+    "pattern = re.compile('spam')",
+    "for path in sorted(Path('.').glob('*.txt')):",
+    "    lines = path.read_text().splitlines()",
+    "    for number, line in enumerate(lines, 1):",
+    "        if pattern.search(line):",
+    "            print(path.name, number, line)"
+   ],
+   "explain": "The program reads every text file of the folder and prints each line that matches the pattern."
+  },
+  {
+   "id": "quizquestion",
+   "name": "Project 4, step 1: one question",
+   "title": "Project 4, step 1: one multiple-choice question",
+   "part": 5,
+   "visual": "quizquestion",
+   "slide": 36,
+   "concepts": [
+    "Project 4: Generate Random Quiz Files"
+   ],
+   "book": "The book's Project 4, Generate Random Quiz Files: the capitals dictionary, the shuffled states and the question loop of randomQuizGenerator.py, with four states instead of fifty and a fixed seed so that the result repeats",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())"
+   ],
+   "code": [
+    "import random",
+    "capitals = {'Ohio': 'Columbus', 'Utah': 'Salt Lake City',",
+    "            'Iowa': 'Des Moines', 'Maine': 'Augusta'}",
+    "random.seed(10)",
+    "states = list(capitals)",
+    "random.shuffle(states)",
+    "correct = capitals[states[0]]",
+    "options = list(capitals.values())",
+    "random.shuffle(options)",
+    "print(f'Capital of {states[0]}?')",
+    "for i in range(4):",
+    "    print(f\"    {'ABCD'[i]}. {options[i]}\")"
+   ],
+   "explain": "A shuffled list of states gives the question; a shuffled list of capitals gives the four options."
+  },
+  {
+   "id": "quizfiles",
+   "name": "Project 4, step 2: the quiz and its key",
+   "title": "Project 4, step 2: write the quiz and its key",
+   "part": 5,
+   "visual": "quizfiles",
+   "slide": 37,
+   "concepts": [
+    "Project 4: Generate Random Quiz Files",
+    "Summary"
+   ],
+   "book": "The book's Project 4: the quiz_file and answer_file writing blocks of randomQuizGenerator.py (the question loop and the answer-key line), with four states and one quiz instead of fifty and thirty-five",
+   "setup": [
+    "import os, tempfile",
+    "os.chdir(tempfile.mkdtemp())"
+   ],
+   "code": [
+    "import random",
+    "capitals = {'Ohio': 'Columbus', 'Utah': 'Salt Lake City',",
+    "            'Iowa': 'Des Moines', 'Maine': 'Augusta'}",
+    "random.seed(10)",
+    "states = list(capitals)",
+    "random.shuffle(states)",
+    "quiz_file = open('quiz1.txt', 'w', encoding='UTF-8')",
+    "answer_file = open('quiz_key1.txt', 'w', encoding='UTF-8')",
+    "for num in range(4):",
+    "    correct = capitals[states[num]]",
+    "    options = list(capitals.values())",
+    "    random.shuffle(options)",
+    "    quiz_file.write(f'{num + 1}. Capital of {states[num]}:\\n')",
+    "    for i in range(4):",
+    "        quiz_file.write(f\"    {'ABCD'[i]}. {options[i]}\\n\")",
+    "    letter = 'ABCD'[options.index(correct)]",
+    "    answer_file.write(f'{num + 1}. {letter}\\n')",
+    "quiz_file.close()",
+    "answer_file.close()",
+    "print(open('quiz1.txt', encoding='UTF-8').read())",
+    "print(open('quiz_key1.txt', encoding='UTF-8').read())"
+   ],
+   "explain": "Each question goes to the quiz file and its letter to the key file; both are closed at the end."
+  }
+ ]
+}
