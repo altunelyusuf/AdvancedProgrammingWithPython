@@ -1,0 +1,32 @@
+@prefix backlog: <http://example.org/backlog#> .
+@prefix ex:      <http://example.org/sen0414-ch1011simp-lineage#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://example.org/sen0414-ch1011simp-lineage> a owl:Ontology ;
+    rdfs:label "Urgent narrow lineage: SEN0414 chapters 10 and 11, one code, one environment"@en ;
+    owl:versionInfo "1.37.0" ; owl:versionIRI <http://example.org/sen0414-ch1011simp-lineage/1.37.0> ; dcterms:identifier "sen0414_ch1011simp_lineage" ;
+    rdfs:comment """1.37.0 (2026-11-24): Scope change only (one stage per version). The Owner asked at 18:32 Istanbul that students see their mock exam results and answers after finishing, that the same exam can be retaken as often as wished, and that exam and results are two separate functions. Discipline files were last re-read from GitHub on 2026-11-24 (OE 2.41.0, lineage discipline 163.0.7)."""@en .
+
+ex:CR11_ExamResults a backlog:ChangeRequest ;
+    rdfs:label "Mock exam: results visible after finishing, unlimited retakes, exam and results as two functions"@en ;
+    backlog:requestsChangeTo ex:Scope11 ; backlog:hasChangeDirection backlog:Direction_Grow ;
+    backlog:hasChangeRequestRationale "Owner's request of 2026-11-24 18:32 Istanbul (content, not a verbatim quotation): the students want to see their mock exam results; make the answers visible to them after the exam is completed; they may redo the same exam as many times as they wish; the exam and its results are two different functions. This replaces the graded-exam behaviour of page template 9.19.0, in which the score and corrections stay hidden until the instructor gives a release code." ;
+    backlog:hasDisposition backlog:Disp_Accepted .
+
+ex:IA11_ExamResults a backlog:ImpactAssessment ;
+    rdfs:label "What the lock touches today, measured before planning"@en ;
+    backlog:analyzesRequest ex:CR11_ExamResults ; backlog:identifiesAffectedLineage ex:Lineage11 ;
+    backlog:hasImpactStatement "MEASURED FACTS (2026-11-24, read-only): in page template 9.53.7 the mock exam is one tab (Practice, Mock exam) that holds the start controls, the questions, the marked report and the list of earlier attempts. Template 9.19.0 added a graded layer on top: the exam cannot start without student number, name and surname; after Finish only a Submitted notice shows; the score and the correction under each question open only with an instructor release code checked against the instructor's public key. The template has 11 references to the release lock and the page test 9.40.0 has 10 lines that depend on it. The review of an earlier attempt, the retake of the same code and the list of attempts already exist in the base template; the lock hides the result from them too. The instructor's result desk (2.2.0) re-marks the result files and compares the page's own total in them (page_total), so that field stays in the result file. The chapter pages of every chapter carry the same tab through the shared template. Scope of this lineage is chapters 10 and 11 only; the shared template change is built once and reusable." ;
+    backlog:hasAuditNote "Open: whether chapters 1 to 9 and 12 to 25 take the new template (one Owner question to follow after the proof on chapters 10 and 11, since standing rule 2026-11-11 holds presented chapters unchanged until the book is finished). Decided as a default, without asking: student number, name and surname become optional and are used only in the downloadable result file. The instructor desk still issues release codes that the page no longer asks for; not changed here." .
+
+ex:Area11_ExamResults a backlog:ScopeArea ; rdfs:label "Mock exam and exam results as two functions, results shown after finishing"@en ; backlog:belongsToLineage ex:Lineage11 .
+ex:Del11_ExamResults a backlog:ScopeDeliverable ; rdfs:label "Page template with a separate Exam results tab, and chapters 10 and 11 pages built on it"@en ; backlog:belongsToLineage ex:Lineage11 ; backlog:deliverableForArea ex:Area11_ExamResults .
+
+ex:SC11_ExamResults a backlog:ScopeChange ;
+    rdfs:label "Scope grown by the mock exam and exam results change"@en ;
+    backlog:fulfillsRequest ex:CR11_ExamResults ; backlog:changesScope ex:Scope11 ; backlog:decidedBy backlog:Owner ;
+    backlog:admitsItem ex:Area11_ExamResults, ex:Del11_ExamResults ;
+    backlog:hasScopeChangeRationale "Owner's request of 2026-11-24 18:32 Istanbul. One area and one deliverable added; other chapters stay excluded until the Owner decides. The urgency case is resolved only after this is done." .
+ex:Scope11 backlog:coversArea ex:Area11_ExamResults ; backlog:hasScopeDeliverable ex:Del11_ExamResults .
