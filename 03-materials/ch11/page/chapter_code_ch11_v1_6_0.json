@@ -1,0 +1,257 @@
+{
+ "chapter": 11,
+ "version": "1.6.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch11/SEN0414_Ch11_OrganizingFiles_3e_v4_3_0.pptx",
+ "about": "The code examples of the chapter 11 deck, in the order of the code slides (order = slide order). The page's Slide code tab lists them by name in this order; every example is self-contained, works in its own new temporary folder (tempfile.mkdtemp) and runs with the Python standard library only (os, shutil, tempfile, zipfile, re, pathlib); it reads no keyboard and opens no window, and writes nothing outside its folder. Each example carries its hidden setup lines (made sample files in a new temporary folder); the page runs setup then code and shows only the code. The expected result is what the run printed under Python 3.13.18. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed.",
+ "executed_with": {
+  "python": "3.13.18",
+  "library": "the Python standard library only"
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "wheel_sha256": {},
+  "page_requirements": [
+   "The Python standard library modules os, shutil, tempfile, zipfile, re and pathlib; every example works in its own temporary folder and writes nothing outside it"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "copy",
+   "name": "shutil.copy: one file",
+   "slide": 6,
+   "concepts": [
+    "The shutil Module",
+    "shutil.copy",
+    "Copying and moving"
+   ],
+   "code": "import shutil\nprint(shutil.copy('spam/file1.txt', '.'))\nprint(shutil.copy('spam/file1.txt', 'spam/file2.txt'))",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('spam')\nopen('spam/file1.txt', 'w').write('Hello')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "./file1.txt\nspam/file2.txt\n"
+  },
+  {
+   "order": 2,
+   "id": "copytree",
+   "name": "shutil.copytree: a whole folder",
+   "slide": 7,
+   "concepts": [
+    "shutil.copytree",
+    "mkdir"
+   ],
+   "code": "import shutil\nprint(shutil.copytree('spam', 'spam_backup'))",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('spam')\nopen('spam/file1.txt', 'w').write('Hello')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "spam_backup\n"
+  },
+  {
+   "order": 3,
+   "id": "copy2",
+   "name": "copy2 keeps the time stamp",
+   "slide": 8,
+   "concepts": [
+    "shutil.copy"
+   ],
+   "code": "import shutil\nfrom pathlib import Path\nshutil.copy2('spam/file1.txt', 'spam/kept.txt')\na, b = Path('spam/file1.txt'), Path('spam/kept.txt')\nprint(a.stat().st_mtime == b.stat().st_mtime)",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('spam')\nopen('spam/file1.txt', 'w').write('Hello')\nos.utime('spam/file1.txt', (1000000000, 1000000000))\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "True\n"
+  },
+  {
+   "order": 4,
+   "id": "move",
+   "name": "shutil.move: move and rename",
+   "slide": 9,
+   "concepts": [
+    "shutil.move"
+   ],
+   "code": "import shutil\nprint(shutil.move('spam/file1.txt', 'spam2'))\nprint(shutil.move('spam2/file1.txt', 'spam2/new_name.txt'))",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('spam')\nos.makedirs('spam2')\nopen('spam/file1.txt', 'w').write('Hello')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "spam2/file1.txt\nspam2/new_name.txt\n"
+  },
+  {
+   "order": 5,
+   "id": "unlink",
+   "name": "os.unlink and os.rmdir",
+   "slide": 12,
+   "concepts": [
+    "unlink"
+   ],
+   "code": "import os\nos.unlink('spam/file1.txt')\nos.rmdir('spam/eggs')\nprint(os.listdir('spam'))",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('spam/eggs')\nopen('spam/file1.txt', 'w').write('Hello')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "[]\n"
+  },
+  {
+   "order": 6,
+   "id": "rmtree",
+   "name": "shutil.rmtree",
+   "slide": 13,
+   "concepts": [
+    "Safe deletion"
+   ],
+   "code": "import shutil\nfrom pathlib import Path\nshutil.rmtree('spam')\nprint(Path('spam').exists())",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('spam/eggs')\nopen('spam/eggs/file2.txt', 'w').write('Hello')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "False\n"
+  },
+  {
+   "order": 7,
+   "id": "dryrun",
+   "name": "A dry run before deleting",
+   "slide": 14,
+   "concepts": [
+    "Safe deletion",
+    "unlink"
+   ],
+   "code": "from pathlib import Path\nfor filename in Path('.').glob('*.rxt'):\n    # os.unlink(filename)\n    print('Deleting', filename)",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nopen('a.txt', 'w').write('x')\nopen('b.txt', 'w').write('x')\nopen('c.rxt', 'w').write('x')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "Deleting c.rxt\n"
+  },
+  {
+   "order": 8,
+   "id": "listing",
+   "name": "Listing one folder",
+   "slide": 19,
+   "concepts": [
+    "Walking a Directory Tree"
+   ],
+   "code": "import os\nfrom pathlib import Path\nprint(sorted(os.listdir('spam')))\nprint(sorted(Path('spam').iterdir()))",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('spam/eggs/bacon')\nfor f in ['spam/file1.txt', 'spam/eggs/file2.txt', 'spam/eggs/file3.txt', 'spam/eggs/bacon/file4.txt']:\n    open(f, 'w').write('Hello')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "['eggs', 'file1.txt']\n[WindowsPath('spam/eggs'), WindowsPath('spam/file1.txt')]\n"
+  },
+  {
+   "order": 9,
+   "id": "walk",
+   "name": "os.walk visits every folder",
+   "slide": 20,
+   "concepts": [
+    "walk",
+    "Walking a folder tree"
+   ],
+   "code": "import os\nfor folder, subfolders, filenames in os.walk('spam'):\n    subfolders.sort()\n    print('The current folder is ' + folder)\n    for subfolder in subfolders:\n        print('SUBFOLDER OF ' + folder + ': ' + subfolder)\n    for filename in sorted(filenames):\n        print('FILE INSIDE ' + folder + ': ' + filename)\n    print('')",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('spam/eggs/bacon')\nfor f in ['spam/file1.txt', 'spam/eggs/file2.txt', 'spam/eggs/file3.txt', 'spam/eggs/bacon/file4.txt']:\n    open(f, 'w').write('Hello')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "The current folder is spam\nSUBFOLDER OF spam: eggs\nFILE INSIDE spam: file1.txt\n\nThe current folder is spam/eggs\nSUBFOLDER OF spam/eggs: bacon\nFILE INSIDE spam/eggs: file2.txt\nFILE INSIDE spam/eggs: file3.txt\n\nThe current folder is spam/eggs/bacon\nFILE INSIDE spam/eggs/bacon: file4.txt\n\n"
+  },
+  {
+   "order": 10,
+   "id": "sizes",
+   "name": "Counting bytes while walking",
+   "slide": 21,
+   "concepts": [
+    "walk"
+   ],
+   "code": "import os\ntotal = 0\nfor folder, subfolders, files in os.walk('spam'):\n    for name in files:\n        total += os.path.getsize(os.path.join(folder, name))\nprint(total)",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('spam/eggs/bacon')\nfor f in ['spam/file1.txt', 'spam/eggs/file2.txt', 'spam/eggs/file3.txt', 'spam/eggs/bacon/file4.txt']:\n    open(f, 'w').write('Hello')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "20\n"
+  },
+  {
+   "order": 11,
+   "id": "mkdir",
+   "name": "Path.mkdir with parents",
+   "slide": 22,
+   "concepts": [
+    "mkdir"
+   ],
+   "code": "from pathlib import Path\nPath('spam/eggs/bacon').mkdir(parents=True)\nPath('spam/eggs/bacon').mkdir(parents=True, exist_ok=True)\nprint(Path('spam/eggs/bacon').is_dir())",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "True\n"
+  },
+  {
+   "order": 12,
+   "id": "zipwrite",
+   "name": "Writing a ZIP file",
+   "slide": 26,
+   "concepts": [
+    "zipfile.ZipFile",
+    "Compressing Files with the zipfile Module"
+   ],
+   "code": "import zipfile\nwith open('file1.txt', 'w', encoding='utf-8') as file_obj:\n    file_obj.write('Hello' * 10000)\nwith zipfile.ZipFile('example.zip', 'w') as example_zip:\n    example_zip.write(\n        'file1.txt',\n        compress_type=zipfile.ZIP_DEFLATED,\n        compresslevel=9)\nwith zipfile.ZipFile('example.zip') as example_zip:\n    info = example_zip.getinfo('file1.txt')\n    print(info.file_size, info.compress_size)",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "50000 97\n"
+  },
+  {
+   "order": 13,
+   "id": "zipmodes",
+   "name": "ZIP mode a: append",
+   "slide": 27,
+   "concepts": [
+    "zipfile.ZipFile"
+   ],
+   "code": "import zipfile\nwith zipfile.ZipFile('example.zip', 'a') as example_zip:\n    example_zip.write('file2.txt')\nprint(zipfile.ZipFile('example.zip').namelist())",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nopen('file1.txt', 'w').write('Hello')\nopen('file2.txt', 'w').write('World')\nimport zipfile\nzipfile.ZipFile('example.zip', 'w').write('file1.txt')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "['file1.txt', 'file2.txt']\n"
+  },
+  {
+   "order": 14,
+   "id": "extract",
+   "name": "Extracting from a ZIP",
+   "slide": 28,
+   "concepts": [
+    "extract"
+   ],
+   "code": "import zipfile\nwith zipfile.ZipFile('example.zip') as example_zip:\n    example_zip.extractall('out')\n    print(example_zip.extract('file1.txt', 'new/folder'))",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nopen('file1.txt', 'w').write('Hello')\nimport zipfile\nzipfile.ZipFile('example.zip', 'w').write('file1.txt')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "new/folder/file1.txt\n"
+  },
+  {
+   "order": 15,
+   "id": "archives",
+   "name": "make_archive and unpack_archive",
+   "slide": 29,
+   "concepts": [
+    "Archives"
+   ],
+   "code": "import os\nimport shutil\nshutil.make_archive('spam_backup', 'zip', 'spam')\nshutil.unpack_archive('spam_backup.zip', 'spam_copy')\nprint(sorted(os.listdir('spam_copy')))",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('spam/eggs/bacon')\nfor f in ['spam/file1.txt', 'spam/eggs/file2.txt', 'spam/eggs/file3.txt', 'spam/eggs/bacon/file4.txt']:\n    open(f, 'w').write('Hello')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "['eggs', 'file1.txt']\n"
+  },
+  {
+   "order": 16,
+   "id": "backup",
+   "name": "Project 5: backupToZip",
+   "slide": 34,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "code": "import zipfile, os\nfrom pathlib import Path\ndef backup_to_zip(folder):\n    folder = Path(folder)\n    number = 1\n    while True:\n        zip_name = Path(folder.name + '_' + str(number) + '.zip')\n        if not zip_name.exists():\n            break\n        number = number + 1\n    print(f'Creating {zip_name}...')\n    backup_zip = zipfile.ZipFile(zip_name, 'w')\n    for folder_name, subfolders, filenames in os.walk(folder):\n        folder_name = Path(folder_name)\n        print(f'Adding files in folder {folder_name}...')\n        for filename in filenames:\n            print(f'Adding file {filename}...')\n            backup_zip.write(folder_name / filename)\n    backup_zip.close()\n    print('Done.')\nbackup_to_zip('spam')",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('spam')\nopen('spam/file1.txt', 'w').write('Hello')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "Creating spam_1.zip...\nAdding files in folder spam...\nAdding file file1.txt...\nDone.\n"
+  },
+  {
+   "order": 17,
+   "id": "selective",
+   "name": "Practice 1: copy by extension",
+   "slide": 35,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "code": "import os, shutil\nfor folder, subfolders, files in os.walk('src'):\n    for name in sorted(files):\n        if name.endswith('.pdf'):\n            shutil.copy(os.path.join(folder, name), 'dest')\nprint(sorted(os.listdir('dest')))",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('src/a')\nos.makedirs('dest')\nopen('src/one.pdf', 'w').write('x')\nopen('src/a/two.pdf', 'w').write('x')\nopen('src/three.txt', 'w').write('x')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "['one.pdf', 'two.pdf']\n"
+  },
+  {
+   "order": 18,
+   "id": "large",
+   "name": "Practice 2: the big files",
+   "slide": 36,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "code": "import os\nfor folder_name, subfolders, filenames in os.walk('spam'):\n    for filename in sorted(filenames):\n        path = os.path.join(folder_name, filename)\n        if os.path.getsize(path) > 1000:\n            print(path, os.path.getsize(path))",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nos.makedirs('spam/sub')\nopen('spam/big.bin', 'wb').write(b'x' * 3000)\nopen('spam/tiny.txt', 'wb').write(b'x' * 40)\nopen('spam/sub/huge.bin', 'wb').write(b'x' * 9000)\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "spam/big.bin 3000\nspam/sub/huge.bin 9000\n"
+  },
+  {
+   "order": 19,
+   "id": "dates",
+   "name": "Practice 3: swap day and month",
+   "slide": 37,
+   "concepts": [
+    "Practice Programs"
+   ],
+   "code": "import os, re, shutil\ndate_pattern = re.compile(r'(\\d\\d)-(\\d\\d)-(\\d\\d\\d\\d)')\nfor filename in sorted(os.listdir('.')):\n    if date_pattern.search(filename):\n        new_name = date_pattern.sub(r'\\2-\\1-\\3', filename)\n        shutil.move(filename, new_name)\nprint(sorted(os.listdir('.')))",
+   "setup": "import os, tempfile\nos.chdir(tempfile.mkdtemp())\nfor name in ['spam12-31-1900.txt', 'report01-02-2020.txt', 'notes.txt']:\n    open(name, 'w').write('x')\nimport pathlib, sys\nclass WindowsPath(pathlib.PosixPath):\n    def __str__(self):\n        s = pathlib.PosixPath.__str__(self)\n        if not sys._getframe(1).f_code.co_filename.endswith('.py'):\n            s = ('C:' if s.startswith('/') else '') + s.replace('/', '\\\\')\n        return s\n    def __repr__(self): return 'WindowsPath(%r)' % (('C:' if pathlib.PosixPath.__str__(self).startswith('/') else '') + pathlib.PosixPath.__str__(self))\npathlib.Path = pathlib.WindowsPath = WindowsPath",
+   "expected": "['notes.txt', 'report02-01-2020.txt', 'spam31-12-1900.txt']\n"
+  }
+ ]
+}
