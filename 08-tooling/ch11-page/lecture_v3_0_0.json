@@ -1,0 +1,294 @@
+{
+ "_version": "3.0.0",
+ "_deck": "4.4.0",
+ "_python": "3.13",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 11: Organizing Files",
+   "say": "This chapter of the book, Organizing Files, moves from single files to whole folders: copying, moving, deleting, listing, walking and packing them into ZIP archives. The deck has nineteen code examples that run on the chapter page, four true stories about the people behind these tools, and a plain explanation of every concept. Each code slide shows one whole program in one box that can be copied in a single step, a balloon that explains it, and what the run really printed, drawn as a table, a chart or a small picture. The sample files each program needs are made by lines that the slide does not show. Slide 2 lays out the route through the five parts.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "Today's route through five parts",
+   "say": "The table is the map of the chapter. Part 1 (slides 4 to 9) copies and moves, part 2 (10 to 16) deletes and stays safe, part 3 (17 to 23) lists and walks folders, part 4 (24 to 31) packs ZIP archives and part 5 (32 to 37) joins everything in four small programs. The last row collects the changes since the book, the summary, the practice questions and the links. The nineteen examples of the table are the same ones that the chapter-code tab of the page lists, in the same order, so every slide has a page example to run. Slide 3 asks the two questions that the chapter answers.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "Two questions this chapter answers",
+   "say": "Two questions run through the whole chapter. The first asks which operations change the disk for good and how a program can show what it is about to do before it does it; the answer is built in part 2 (slides 12 to 14), with the dry run as its centre. The second asks how a program visits every file of a folder tree and packs the result into one archive; the answer comes from the walk (slide 20) and the numbered backup (slide 34). Keeping these two questions in mind makes the nineteen examples easier to sort: each one either changes files safely or finds them. Part 1, copying and moving, starts on slide 4.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "Part 1: Copying and moving",
+   "say": "Part 1 covers the shutil module's copying and moving tools. The four concepts on the left are shutil.copy for one file, copytree for a whole folder, copy2 for keeping the time stamp, and move for relocating and renaming. The table on the right lists the slides of this part with their titles. The one rule that separates them is that a copy leaves the original in place and a move does not. Every one of these functions returns the new path, which is how a program learns where its file ended up. Chapter 10 handled single files with open and Path; this part works on files as objects of the file system. Slide 5 explains the concepts in plain words.",
+   "concept": "CopyingAndMoving",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "Copying and moving files with shutil",
+   "say": "The headline states the rule of this part: a copy leaves the original in place, and a move takes the original to the new place. The table explains each concept in plain words: shutil.copy copies one file and returns the path of the copy, copytree copies a whole folder with everything inside it, and move relocates or renames a file or folder. If the target already holds a file with the same name, the moved file replaces it, and slides 6 to 9 return to that warning. What a function really does is shown by its run. Slide 6 runs shutil.copy.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "shutil.copy: one file to a folder or a new name",
+   "say": "Shutil.copy copies the contents of one file and returns the path of the copy. The program calls it twice. The first call gives a folder as the target, here the current folder, so the copy keeps the name file1.txt. The second call gives a file name as the target, so the copy is called file2.txt and sits inside spam. Each call prints the path it returns, and those two paths are the two lines of the result. The folder list under them shows that spam still holds the original file1.txt next to the new file2.txt, because a copy never removes the original. Slide 7 copies a whole folder with copytree.",
+   "concept": "CopyFile",
+   "visual": ""
+  },
+  {
+   "n": 7,
+   "title": "shutil.copytree: a folder with everything in it",
+   "say": "Shutil.copytree copies a folder together with every subfolder and file in it, and returns the path of the new folder. The program copies spam to spam_backup and prints that path. The result compares the two folders: both hold the same names, so the copy is complete. The target name must be new, because copytree refuses a folder that already exists; the option dirs_exist_ok=True merges into an existing folder instead, and it replaces files with the same name, so it should be used on purpose. The folder list shows what spam_backup contains. Slide 8 looks at what copying does to time stamps.",
+   "concept": "CopyFolderTree",
+   "visual": ""
+  },
+  {
+   "n": 8,
+   "title": "copy and copy2: what happens to the time stamp",
+   "say": "Copying a file normally gives the copy a new modification time, the moment of copying. Shutil.copy2 also copies the file's metadata, including the modification time, which is why it is the better choice for backups. The program copies file1.txt to kept.txt with copy2, reads the modification time of both files with stat, and prints whether they are equal; the answer is True. The table shows the same fact in numbers, one identical time stamp for the original and for the copy. With plain copy the two times would differ. Slide 9 moves files.",
+   "concept": "CopyWithMetadata",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "shutil.move: move, rename, overwrite",
+   "say": "Shutil.move relocates a file or folder, and it renames in the same call when the target is a new file name. The program moves file1.txt into the folder spam2, which keeps its name, and then moves it again to spam2/new_name.txt, which renames it. Each call prints the path it returns, and those are the two lines of the result. The folder list shows that spam is now empty and spam2 holds only new_name.txt. Moving onto a name that already exists silently overwrites it, so a careful program checks first. When source and target are on different disks, move copies the file and then deletes the original. Part 2, on deleting, begins on slide 10.",
+   "concept": "MoveFileOrFolder",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "Part 2: Deleting, and staying safe",
+   "say": "Part 2 is about deleting, and about deleting safely. The four concepts are unlink and rmdir for one file or one empty folder, rmtree for a whole folder tree, the dry run that prints what would be deleted, and send2trash that uses the recycle bin. The headline gives the reason for the whole part: permanent deletion has no undo, so a program prints first and deletes afterwards. The functions of part 1 could overwrite a file by mistake; the functions of this part can destroy files on purpose, which is why the habit of printing first matters more here. The table on the right lists the slides. Slide 11 explains the concepts in plain words.",
+   "concept": "Deleting",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "Deleting files and folders safely",
+   "say": "The headline gives the reason for the whole part: permanent deletion cannot be undone, while a file in the recycle bin can be restored until the bin is emptied. The table explains os.unlink, which removes one file for good, send2trash, which moves a file to the recycle bin, and shutil.rmtree, which removes a whole folder with everything inside it. The dry run prints what would be deleted and deletes nothing. The three habits of this part are to delete one thing deliberately, to delete a tree only after counting what is inside, and to print the list before running the real call. The real runs begin on slide 12.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "os.unlink and os.rmdir: one file, one empty folder",
+   "say": "Os.unlink deletes one file for good, and os.rmdir removes one folder, but only when it is empty. The program deletes spam/file1.txt, removes the empty folder spam/eggs, and prints what is left in spam. The result is an empty list, so both are gone and nothing is left. The small note under the folder list says why this matters: there is no recycle bin in between, and neither call can be undone. If rmdir is pointed at a folder that still holds something, Python raises an error instead of deleting it. Slide 13 removes a whole tree.",
+   "concept": "DeleteFile",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "shutil.rmtree: a folder and everything inside",
+   "say": "Shutil.rmtree removes a folder and everything inside it in one call, which is why it is the most dangerous function of the chapter. The program starts with spam, which holds a subfolder eggs and one file inside it, so three paths exist. It calls rmtree on spam and prints whether spam still exists; the answer is False. The table lists the three paths before the call and after it: all three were there, and all three are gone. Because it cannot be undone, the habit on slide 14 comes first: print what would go before anything is deleted.",
+   "concept": "DeleteFolderTree",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "Safe deletion: print first, delete later",
+   "say": "A dry run prints what a program would delete, and the delete call stays a comment until the list is right. The folder holds a.txt, b.txt and c.rxt. The loop uses the pattern *.rxt, which has a typo, because the wanted extension is txt. Printing the matches shows at once that only c.rxt would be deleted, and the line with os.unlink is still marked with a hash, so nothing was touched. The table shows for each file whether it matches the pattern. Only when the printed list is right is the comment mark removed. Slide 15 shows a safer tool, send2trash.",
+   "concept": "DryRun",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "send2trash: the recycle bin",
+   "say": "The table sets os.unlink beside send2trash, row by row: where the file goes, whether it can be recovered, where the function comes from, and whether it runs on the chapter page. Os.unlink sends the file nowhere and it cannot come back. Send2trash moves it to the recycle bin, where it stays until the bin is emptied. Send2trash is a third-party module installed with pip, so it is not part of the standard library and the page cannot run it; it is shown here for comparison only. When a program deletes files that a person created, sending them to the bin is the kinder default. The story of the bin's icon follows on slide 16.",
+   "concept": "RecycleBin",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "Story: the recycle bin is a 1983 drawing",
+   "say": "In 1983 Susan Kare drew the trash can icon for the first Macintosh, working with Andy Hertzfeld at Apple Computer in California; the Macintosh shipped in 1984. Pictures made commands friendly for people who had never used a computer, and the bin taught a whole generation that deleting is a move to a place from which a file can be fetched back. That is exactly what send2trash on slide 15 does, while os.unlink removes the file for good. The picture, the credit and the live read link below the text belong to this story. Of the functions met so far, those that can still be undone are the ones that copy; those that cannot are unlink, rmdir and rmtree. Part 3, folders and trees, begins on slide 17.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 17,
+   "title": "Part 3: Folders and trees",
+   "say": "Part 3 is about folders and trees. The four concepts are listdir and glob for reading one folder, walk for visiting a whole tree, folder sizes for adding up bytes while walking, and mkdir for making folders. The headline says the order of the part: one folder is listed first, and then a whole tree is walked. A folder tree is a folder that holds folders, which hold folders in turn, and slide 18 draws that structure. Walking is the loop from chapter 3 applied to a tree whose size is not known in advance, and a walk can count every folder of a laptop in a second. The table on the right lists the slides of this part.",
+   "concept": "FolderTrees",
+   "visual": ""
+  },
+  {
+   "n": 18,
+   "title": "Walking through folder trees",
+   "say": "The headline defines the folder tree: a folder holds subfolders, which hold subfolders in turn. The table explains os.walk, which visits one folder and then every folder inside it, and gives at each step the folder name, its subfolder names and its file names. mkdir creates one new folder, and with parents=True it also creates the missing folders above it. listdir and glob both read one folder: listdir returns every name, and glob only the names that match a pattern. The order of a visit matters: a walk can handle a folder before its subfolders or after them, and slide 20 shows both orders. Slide 19 lists one folder in four ways.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "Listing one folder: listdir and iterdir",
+   "say": "Listing one folder can be done in different ways, and each returns something different. Os.listdir gives plain names as text. The iterdir method of a Path gives Path objects, which know their own location and whether they are folders. The program prints both for the folder spam, wrapped in sorted so that the order is the same on every computer. Both lists hold eggs and file1.txt, and only the second shows the type, WindowsPath, as the book shows, because Windows is the default platform of these examples; Linux and macOS show PosixPath. The text file inside eggs is not listed, because neither call descends into subfolders; the walk on slide 20 does. The Path methods are those of chapter 10.",
+   "concept": "ListDirectory",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "os.walk: the folder, its subfolders, its files",
+   "say": "Os.walk visits a folder and then each folder below it, and at every step it hands over three values: the folder's path, the list of its subfolders and the list of its files. The program loops over the walk with the for loop of chapter 3 and prints one line for each subfolder and each file. Sorting the subfolders fixes the order of the visit, so the lines are the same on every run. The result shows three steps, spam, spam/eggs and spam/eggs/bacon, with four files in all; the table and the chips draw the same tree. Slide 21 uses the walk to add up bytes.",
+   "concept": "WalkTree",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "Counting bytes while walking a folder tree",
+   "say": "A walk can add up how much space the files of a tree use. For every folder the walk hands over, the program takes each file name, joins it to the folder path with os.path.join, asks os.path.getsize for its size in bytes, and adds it to a running total. The tree has four files of five bytes each, so the printed total is 20. The bar chart shows the same bytes split by folder, which is useful when the question is where the space went. The same loop with a size limit finds big files, on slide 36. Slide 22 builds folders with mkdir.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "Path.mkdir: making folders, also in a chain",
+   "say": "Path.mkdir makes one folder, and it refuses when the folder above it does not exist. The program passes parents=True, which builds the whole chain of missing folders, spam, eggs and bacon, in one call. The second call asks for the same chain again with exist_ok=True, which accepts a folder that is already there instead of raising an error. The program ends by printing whether the last folder is a directory, and the answer is True. The small tree shows the three folders. With these two options a program can run twice without failing the second time, which is the safe default for set-up code. The story of where the folder tree came from is on slide 23.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 23,
+   "title": "Story: the folder tree is a 1965 Multics design",
+   "say": "In 1965, at the Fall Joint Computer Conference, Peter G. Neumann and R. C. Daley presented a paper on a file system for Multics. Their idea was folders holding folders holding files, so that many users could share one disk and each manage their own part. Unix kept the same tree, and os.walk descends it folder by folder today, which is why a walk can reach every file on a computer from a single starting point. The portrait, the credit and the live read link belong to this story. The tree that part 3 walked is therefore a design of the 1960s that is still in every laptop. Part 4, on ZIP archives, begins on slide 24.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 24,
+   "title": "Part 4: ZIP archives",
+   "say": "Part 4 is about ZIP archives: many files in one smaller file and back again. The four concepts are ZipFile for opening an archive, compression for making it smaller, extract for taking files out, and make_archive for packing a whole folder in one call. A ZIP file holds many files in one smaller file, and every file can come out again unchanged. The standard-library zipfile module needs no installation, so every example of this part runs on the chapter page. The table on the right lists the slides. Slide 25 explains the ZIP concepts in plain words.",
+   "concept": "ZipArchives",
+   "visual": ""
+  },
+  {
+   "n": 25,
+   "title": "Packing files into ZIP archives",
+   "say": "The headline defines a ZIP file: many files stored in one smaller file, from which every file comes out again unchanged. The table explains compression, which makes the archive smaller than the files together, and extract, which takes out one file or, with extractall, every file. ZipFile is the object that opens an archive: the mode w starts a new one, a adds to one and r reads one. How much a file shrinks depends on its content: repeated text shrinks enormously, while a file that is already compressed hardly shrinks at all. Slide 26 writes a file into an archive and measures the saving.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 26,
+   "title": "zipfile.ZipFile: write a file into an archive",
+   "say": "Zipfile.ZipFile opens an archive, and the mode w starts a new one. The program first writes a file of repeated text, fifty thousand characters, then adds it to a new archive with compress_type=ZIP_DEFLATED and the highest compression level; without that argument the file is only stored, not shrunk. It then reads the archive back and asks getinfo for the original size and the stored size, which print as 50000 and 97. The column chart compares the two sizes, and the chip says the archive is about five hundred times smaller. Repeated text compresses extremely well; real documents shrink much less. Slide 27 shows another mode of a ZIP file.",
+   "concept": "CreateZip",
+   "visual": ""
+  },
+  {
+   "n": 27,
+   "title": "ZIP mode a: adding a file to an archive",
+   "say": "A ZipFile can be opened in four modes, and each one changes what may happen to an existing archive: w starts a new archive, a adds to an existing one, r only reads, and x creates a new one and refuses to overwrite. The program opens example.zip, which already holds file1.txt, in mode a and writes file2.txt into it. It then prints the member names with namelist, and the list now holds both files. The table shows the two members with their sizes in bytes. Nothing already in the archive was lost. Slide 28 unpacks archives.",
+   "concept": "AppendToZip",
+   "visual": ""
+  },
+  {
+   "n": 28,
+   "title": "extractall and extract: unpacking an archive",
+   "say": "An archive can be unpacked completely or one member at a time. The program opens example.zip, which holds file1.txt. Extractall unpacks every member into the folder out, creating the folder if needed. Extract takes out one named member into a folder of your choice, here new/folder, and returns the path of the new file, which the program prints. The folder list shows both places: out and new. Member names in an archive are paths, so a program should only unpack archives it trusts. Slide 29 packs a whole folder in one call.",
+   "concept": "ExtractAll",
+   "visual": ""
+  },
+  {
+   "n": 29,
+   "title": "shutil.make_archive and unpack_archive: one call each way",
+   "say": "The shutil module can pack and unpack a whole folder in one call each. Make_archive packs the folder spam into spam_backup.zip, and the names inside keep the structure of the folder. Unpack_archive is the one-call way back and guesses the format from the file name; here it unpacks into the new folder spam_copy. The program prints the content of spam_copy, which is eggs and file1.txt, the same top level as spam. The table lists the members of the ZIP, and the chip counts the entries that appeared after unpacking. For a quick backup these two calls are enough; for control over every member the zipfile calls of slides 26 to 28 are needed. The history of the format is on slide 30.",
+   "concept": "MakeArchive",
+   "visual": ""
+  },
+  {
+   "n": 30,
+   "title": "Story: the ZIP format was given away on 14 February 1989",
+   "say": "On 14 February 1989, Phil Katz of PKWARE and Gary Conway released the ZIP format into the public domain. Katz had been sued over his earlier program PKARC, so they designed a new, open format that any program could read or write. That openness is the reason Python's zipfile module can read archives made by any tool, and every ZipFile call of this chapter works on that same structure. The picture of the PKZIP floppy disk, its credit and the live read link belong to this story. Slide 31 tells the story of the compression engine that sits inside most ZIP files.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 31,
+   "title": "Story: the engine under ZIP_DEFLATED shipped on 1 May 1995",
+   "say": "On 1 May 1995, Jean-loup Gailly and Mark Adler released zlib 0.9, a free library for the DEFLATE method. It was written by collaborating over the internet and was first needed by the libpng image library. Programs needed compression that no company owned and no patent blocked, and zlib supplied it. When a write asks for ZIP_DEFLATED, Python's zipfile hands the bytes to zlib, so the saving measured on slide 26 comes from this library. The portrait, the credit and the live read link belong to this story. Part 5, the programs that use everything so far, begins on slide 32.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 32,
+   "title": "Part 5: Programs that organize files",
+   "say": "Part 5 has four programs that use everything so far. The four concepts are backupToZip, selective copy, big files and date renaming. A practice program combines the tools of the chapter on sample files, and no real file is at risk, because every program works in its own temporary folder. Each program combines earlier parts: the walk of part 3, the copy and move of part 1 and the ZIP calls of part 4. The date renaming also uses the regular expressions of chapter 9. The table on the right lists the slides. Slide 33 explains the four programs in plain words.",
+   "concept": "Programs",
+   "visual": ""
+  },
+  {
+   "n": 33,
+   "title": "Programs that organize files",
+   "say": "The headline says what a practice program is: it combines the tools of this chapter on sample files in a temporary folder, so no real file is at risk. The table explains the four programs: backupToZip packs a whole folder into a ZIP file with a number in its name, so an earlier backup is never overwritten; selective copy walks a folder tree and copies only the files with one extension; date renaming finds file names with an American date and renames them with the European order. The four programs are chosen because real tasks look like them. Slide 34 builds the numbered backup.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 34,
+   "title": "Project 5: back a folder up into a numbered ZIP",
+   "say": "This is the fifth project of the book, a backup into a numbered ZIP. The function finds the first number for which a name such as spam_1.zip is still free, so an old backup is never overwritten. It then walks the folder, prints a line for every folder and file it adds, writes each file into the new archive and closes it. The last line of the program calls the function for spam. The result shows the printed lines and the member of spam_1.zip; the amber chip says that the next run makes spam_2.zip. The function is the kind of helper that chapter 4 introduced. Slide 35 copies only the PDFs of a tree.",
+   "concept": "BackupProject",
+   "visual": ""
+  },
+  {
+   "n": 35,
+   "title": "Practice program: copy every PDF of a tree",
+   "say": "Selective copy walks a tree and copies only the files of one type. The source tree src holds one.pdf, a subfolder a with two.pdf, and three.txt, and the folder dest is empty. The loop walks src, tests whether each name ends with .pdf, and copies the match into dest. The program prints the content of dest, which is the two PDFs, and the text file stays out. The chip counts the files of src and the files copied, and the folder list shows the source, which keeps everything. The test is case-sensitive, so a name ending in .PDF would not be found. Slide 36 finds the big files of a tree.",
+   "concept": "SelectiveCopy",
+   "visual": ""
+  },
+  {
+   "n": 36,
+   "title": "Practice program: find the big files",
+   "say": "Finding the big files of a tree is a walk with a size test. The program walks spam and, for every file, asks os.path.getsize for the size in bytes. Only files larger than 1000 bytes are printed, with their size. The tree holds big.bin with 3000 bytes, tiny.txt with 40 bytes and huge.bin with 9000 bytes inside sub, so two lines are printed. The bar chart shows all three sizes against the limit of one thousand. Changing the limit changes the list, and the same loop with the sums of slide 21 would report folders instead of files. Slide 37 renames files by swapping day and month.",
+   "concept": "LargeFiles",
+   "visual": ""
+  },
+  {
+   "n": 37,
+   "title": "Practice program: American dates to European dates",
+   "say": "This program renames files whose names carry an American date, month-day-year, into the European order, day-month-year. The folder holds spam12-31-1900.txt, report01-02-2020.txt and notes.txt. The pattern keeps month, day and year as three groups, and the loop uses sub to swap groups one and two and shutil.move to rename the file. The pattern is a regular expression, the subject of chapter 9. The printed list shows spam31-12-1900.txt and report02-01-2020.txt, so the day and the month changed places, while notes.txt, which has no date, stays as it is. Slide 38 shows what current Python adds.",
+   "concept": "DateRenaming",
+   "visual": ""
+  },
+  {
+   "n": 38,
+   "title": "What differs from the book today",
+   "say": "The table lists five things from the chapter and what current Python offers instead. Path.walk, since Python 3.12, gives the same three values as os.walk, from a Path object. The onexc argument of rmtree, also from 3.12, replaces onerror, which is deprecated. ZipFile.mkdir, since 3.11, adds an empty folder entry to an archive. Path.copy and Path.move, since 3.14, work without importing shutil, and the recurse_symlinks argument of glob, since 3.13, chooses whether glob follows symbolic links. The book's examples still run; the table is a guide to what may replace them in newer code. The summary is on slide 39.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 39,
+   "title": "Summary",
+   "say": "The five numbered sentences are the chapter in short. Copy keeps the original; move relocates and can overwrite. Unlink, rmdir and rmtree cannot be undone, so a program prints first. Os.walk gives the folder, its subfolders and its files at every step. ZipFile writes, appends and reads archives. A short program can back up, copy by type or rename in bulk. The column chart on the right shows how many code examples belong to each part, which is also a map of where the chapter spends its time: part 1 and part 5 hold the most. Each sentence can be traced to a slide with the same words. The practice questions follow on slide 40.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 40,
+   "title": "Practice Questions",
+   "say": "The four questions are short drills, and each has its answer on a slide that was already shown. The first asks about copy and move (slides 6 to 9). The second asks why a program prints before os.unlink may run (slides 12 to 14). The third asks which three values every step of os.walk gives (slide 20). The fourth asks which ZipFile mode adds a file and which refuses to overwrite one (slide 27). An answer is best given in one sentence and then checked by running the example on the chapter page. The links come last, on slide 41.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 41,
+   "title": "Resources: where to go next",
+   "say": "The cards collect the further reading for the chapter: the book chapter first, then the Python documentation for shutil, os.walk, zipfile and pathlib, the what's-new pages for Python 3.12 and 3.14, send2trash on the package index, the ZIP format specification, the zlib home page, three history links from the stories and one video. Every link is live and each one belongs to something taught in the deck. The chapter-code tab of the page holds all nineteen examples, to run again. This is the end of chapter 11.",
+   "concept": "",
+   "visual": ""
+  }
+ ]
+}
