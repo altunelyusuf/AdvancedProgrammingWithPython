@@ -25,7 +25,7 @@ _rep("title", "stamps and locks it", "adds watermarks to it and locks it")
 _rep("title", "and an everyday picture for every concept", "and a plain explanation of every concept")
 _rep("divider2", "A PdfWriter is an empty binder: append and merge copy pages in, rotate turns them, merge_page lays one page on another as a stamp, and encrypt",
      "A PdfWriter is an empty new file: append and merge copy pages in, rotate turns them, merge_page draws one page on another as a watermark, and encrypt")
-_rep("rotate_pages", "Slide 16 gave the everyday picture, and slide 21 puts one page on another.", "Slide 20 explained rotation plainly, and slide 21 puts one page on another.")
+_rep("rotate_pages", "Slide 16 gave the everyday picture, and slide 21 puts one page on another.", "Slide 16 explained rotation plainly, and slide 21 puts one page on another.")
 _rep("watermark", "merge_page lays the stamp page on the base page", "merge_page draws the watermark page on the base page")
 _rep("watermark", "A watermark is a stamp behind the words and an overlay is a see-through sheet on top; the call is the same.",
      "A watermark is a faint page behind the words and an overlay is a page on top; the call is the same.")

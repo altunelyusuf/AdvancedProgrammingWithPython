@@ -1,0 +1,420 @@
+{
+ "_version": "2.0.0",
+ "_deck": "4.0.0",
+ "_python": "3.13",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 17: PDF and Word Documents",
+   "say": "This chapter of the book, PDF and Word Documents, shows how a program reads a PDF with pypdf, builds a new PDF from chosen pages, adds watermarks to it and locks it, and how it reads and writes Word files with python-docx. The deck has twenty-eight code examples that run on the chapter page, six true stories about the formats and the libraries, and a plain explanation of every concept. Each code slide shows small steps, a balloon for each step, and what the run really printed. Slide 2 lays out the five parts; chapter 10 and chapter 11 come before it with files and folders.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "Today's route through five parts",
+   "say": "The table is the map of the chapter. Each row is one of the five parts, with the slides it covers, the number of code examples in it and what you will run. The last row covers the table of calls, the changes against the book, the summary, the practice questions and the links. The same twenty-eight examples are listed in the Slide code tab of the chapter page, in this order, so a slide and its tab can be opened side by side. Parts 1 and 2 are about PDF files, parts 3 and 4 about Word files, and part 5 joins both in three practice programs. Part 1 starts on slide 4.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "Two questions this chapter answers",
+   "say": "Two questions run through the chapter, and the deck answers them at the end. The first asks what a program can do with a PDF or a Word file and what it cannot recover from them; slide 55 lists the calls and what each one needs. The second asks where the book's printed output, programs and statements differ from current pypdf and python-docx; slide 56 lists the changes that the chapter research found. Keeping both questions in mind makes each later slide easier to place, because every example either shows a call that works or a limit that the call has.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "Part 1: What a PDF holds",
+   "say": "Part 1 is about what a PDF holds. A PDF is a page description: drawing commands, numbered objects and a table at the end. The four cards on the slide are the ideas of the part: PdfReader opens a file and lists its pages, extract_text returns words in drawing order, images lists the pictures of a page, and post-processing mends the text. Slides 5 to 14 cover them, and part 2 later builds new files from the same pages.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "PDF files and how pypdf reads them",
+   "say": "A PDF stores how each page is drawn, as drawing commands, so the look is the same on every screen but the words are not kept as sentences that can be moved. pypdf is the library that reads, copies, rotates, watermarks and locks PDF pages. A PdfReader opens a file for reading and changes nothing. A page object is one page of that file, pages is the list of page objects counted from zero, and is_encrypted tells you whether the file is locked, so read it before the pages. The io module gives file objects that stay in memory. Slide 8 shows the same ideas in code.",
+   "concept": "PdfReaderPages",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "Story: A 1991 memo called Camelot started the PDF",
+   "say": "John Warnock outlined the system called Camelot in the spring of 1991, in a design document at Adobe. The photograph shows him in 2008. A PDF is a page description made to look the same everywhere, and the first Acrobat was released on 15 June 1993. Chapter 17 reads and rewrites exactly such files. Slide 7 opens a small one and shows its numbered objects and its table; slide 13 tells how the format later became an international standard. The link on the slide leads to a biography of Warnock.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 7,
+   "title": "Inside a small PDF: header, objects, table, trailer",
+   "say": "The sample PDF travels inside the code as compressed text, so the book's own files are not needed. Unpacked, it is a file that begins with a version line, holds numbered objects and ends with a table whose position the last lines name. The run found the version line and the end marker, counted the objects and named the byte where the table begins. A reader follows that table to find the pages. Slide 8 opens the same kind of file with PdfReader, and slide 13 tells how the format became a standard.",
+   "concept": "HeaderAndTrailer",
+   "visual": ""
+  },
+  {
+   "n": 8,
+   "title": "PdfReader: pages, their size and whether the file is locked",
+   "say": "A PdfWriter starts empty, and here three blank pages of different widths stand in for a real document. Writing them into memory and reading them back gives a PdfReader. Its pages are a list counted from zero, and the media box gives each page's size in points, which is how the three pages are told apart. is_encrypted says whether a password is needed before the pages can be read. Slide 7 showed what such a file holds inside; slide 9 reads the words of its pages.",
+   "concept": "PdfReaderPages",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "Extracting text: what comes out, and what a black box hides",
+   "say": "A PDF stores drawing commands, not sentences. Page one draws the word world before Hello, so the stream order gives worldHello, while layout mode sorts the words by their position and gives Hello world. Page two draws a black box over a line of text, yet extract_text still returns the line: the text is in the file, only covered. A black rectangle is therefore not a safe way to hide text. Slide 11 mends rough text; slide 12 meets a page with no text at all.",
+   "concept": "TextOrderIsStreamOrder",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "Extracting text and pictures from PDFs",
+   "say": "extract_text returns the words of a page in the order the file draws them, which is why drawing order and reading order can differ. The images list holds the pictures of a page and needs the Pillow package. Post-processing, for example by a language model, mends the extracted text: line breaks, hyphens and odd letters. The two small programs of the book copy the text or the pictures out of a whole file. The open function returns a file object that you close when you are done. Slide 9 showed the first of these ideas; slide 11 mends the result.",
+   "concept": "ContentStreamText",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "Post-processing: mend the text before anyone reads it",
+   "say": "Extracted text often needs mending before anyone reads it: a ligature such as the single letter fi, a hyphen at the end of a line, and line breaks inside sentences. Three small regular expressions do that work here. The chapter hands the same job to a language model; this example only builds the request and counts its words, so nothing is sent anywhere. Compare slide 9, where the rough text came from, and chapter 10, which covers writing the result to a file.",
+   "concept": "TextPostProcessing",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "Extracting images: a scanned page is a picture without text",
+   "say": "A scanned page is a picture with no text, so extract_text gives an empty string and the images list holds the picture. The loop writes each image's bytes to a file, as the chapter's image script does for every page of a file. The images list needs the Pillow package; without it, the call fails with an ImportError. A scan therefore needs a different tool, optical character recognition, before its words can be used. Slide 9 showed text that is really in the file.",
+   "concept": "ScannedPageNoText",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "Story: In July 2008 PDF became an international standard",
+   "say": "PDF 1.7 was released in November 2006 and became the standard ISO 32000-1 in July 2008, after Adobe announced in January 2007 that it sought standardization. The photograph shows the Adobe headquarters towers in San Jose. The standard describes the pieces that slide 7 opened: header, objects, table and trailer, so that other programs such as pypdf can read and write PDF from the same rules. The link leads to the description of the format at the Library of Congress.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "Story: pyPdf of 2005 is today's pypdf",
+   "say": "The library of this chapter began as pyPdf in 2005 by Mathieu Fenniak, became PyPDF2 at the end of 2011, and took the name pypdf in 2023. The picture is the Python logo of that time, not a picture of the authors. Old tutorials say PyPDF2 or use PdfFileReader, which no longer exists; slide 56 lists such changes. A library that nobody maintains stops working with new Python, and a fork and new maintainers kept this one alive. The link leads to the history in the pypdf documentation.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "Part 2: New PDFs from pages",
+   "say": "Part 2 builds new PDF files. A PdfWriter is an empty new file: append and merge copy pages in, rotate turns them, merge_page draws one page on another as a watermark, and encrypt locks the file so that a password is needed. The four cards are the ideas of the part, and Project 12 at the end combines many files into one. Slides 16 to 28 cover them, and part 1 earlier explains what a page is made of.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "Building a new PDF from pages",
+   "say": "A new PDF is made by adding chosen pages from other files to an empty PdfWriter and then saving it; only the pages you add are in the new file. append copies pages to the end, and merge copies them in at a chosen position, with the pages argument named. add_blank_page adds a blank page at the end and insert_blank_page adds one at a given number; a blank page can separate one part of a document from the next. A rotation turns a page by a multiple of 90 degrees, for example to read a wide table. Slide 17 shows copying pages in code, and slide 19 shows rotation.",
+   "concept": "PdfWriterStartsEmpty",
+   "visual": ""
+  },
+  {
+   "n": 17,
+   "title": "Copying pages into a new file: a tuple is a range, a list is exact",
+   "say": "Page widths tell which page was copied, because each page is a different width. A tuple is a range with a start, a stop and a step, while a list names pages exactly. So (0, 5) copies the first five pages and [0, 5] copies page one and page six. A third value in the tuple is the step: (0, 5, 2) takes pages one, three and five. Slide 18 shows merge, which puts pages inside a file, and slide 28 uses append on whole files.",
+   "concept": "AppendRangeTuple",
+   "visual": ""
+  },
+  {
+   "n": 18,
+   "title": "merge() puts pages inside; blank pages fill gaps",
+   "say": "merge puts another file's pages inside this one at an index, here at position 1. Write pages= by name: the third position of merge is a bookmark title, so a tuple given there is wrong. The book's call inserts five pages; with a tuple in that place, current pypdf takes it as a title and all pages go in. insert_blank_page adds a clean sheet and copies the size of the page before it. Compare slide 17, where append put pages at the end.",
+   "concept": "MergePositionalTupleTrap",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "Rotating pages: angles add up and must be multiples of 90",
+   "say": "rotate adds the angle to the total already there, and the total is not wrapped at 360, so turns of 90, 270, minus 90 and 180 end at 450. Only multiples of 90 are accepted; anything else raises a ValueError, which the example catches and replaces by a plain sentence. A wide table can be read after a quarter turn. The rotation is stored with the page and does not change the drawing commands. Slide 16 explained rotation plainly, and slide 21 puts one page on another.",
+   "concept": "RotationAccumulates",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "Rotation, watermarks and passwords",
+   "say": "rotate turns a page by quarter turns, and the new angle adds to the angle the page already has. A watermark is a faint page drawn behind the words and an overlay is a page drawn on top; merge_page draws one page onto another so that both show, and the later page lies on top. encrypt locks a file with a password, and the default method is RC4. decrypt tries a password and returns whether it fitted. Slide 21 shows the watermark and slide 22 the lock.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "Watermarks and overlays: merge_page lays one page on another",
+   "say": "merge_page draws the watermark page on the base page, and the page then draws both pictures, the later one on top. The run shows the image count of the base page rising from one to two, and the order in which the pictures are drawn, from first to last. A watermark is a faint page behind the words and an overlay is a page on top; the call is the same. Without Pillow the images list would not work. Slide 22 locks the result.",
+   "concept": "WatermarkUnderlay",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "Encrypt, then decrypt: a locked file refuses its pages",
+   "say": "encrypt locks the file. A reader still opens it but refuses its pages, with a FileNotDecryptedError, until decrypt matches the password. decrypt answers with a PasswordType: a wrong word gives NOT_DECRYPTED, and the right one gives a code for the key that fitted. When only one password is given it serves as both the user and the owner password, so the answer here is OWNER_PASSWORD. Slide 24 separates the two keys.",
+   "concept": "ReaderRefusesBeforeDecrypt",
+   "visual": ""
+  },
+  {
+   "n": 23,
+   "title": "User password, owner password, Project 12",
+   "say": "The user password lets you open a PDF and read it. The owner password lets you open it and also change its permissions. PasswordType is the answer of decrypt: not decrypted, user password or owner password. Project 12 combines many files in three steps: find the PDF files in a folder, open each one and copy all of its pages except the first, then save the new PDF. Slide 24 shows both passwords, and slides 27 and 28 run the project.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 24,
+   "title": "Two passwords: the user opens, the owner may do more",
+   "say": "Two passwords give two answers. The user password opens the file to read; the owner password also controls what the file allows. decrypt reports which one fitted: USER_PASSWORD, OWNER_PASSWORD, or NOT_DECRYPTED when neither did. The run tries three words in turn, and each answer names the key that fitted. The distinction matters when a file may be read but not changed. Compare slide 22, where one password served as both, and slide 25, which shows how the file records its lock.",
+   "concept": "DecryptReturnValues",
+   "visual": ""
+  },
+  {
+   "n": 25,
+   "title": "Which lock was used: RC4 by default, AES when asked",
+   "say": "A locked file records how it was locked. The default algorithm in pypdf is the old RC4, recorded as version 2, revision 3 and a 128-bit key. AES-128 records version 4, revision 4, and AES-256 records version 5, revision 6 with a 256-bit key. The book shows AES-256 only; asking for it needs the cryptography package. The trailer entry that the run reads is part of the structure that slide 7 opened. Slide 28 uses the lock in Project 12.",
+   "concept": "EncryptRc4Default",
+   "visual": ""
+  },
+  {
+   "n": 26,
+   "title": "Working through many files",
+   "say": "A program that handles many files lists a folder or walks a folder tree and then treats every file alike. The os module holds the file-system functions. os.listdir returns the names in one folder, and os.walk visits every folder below a start folder. Sorting the names with case ignored puts A and a together before the pages are combined, and combine_pdfs.py is the finished program of Project 12. The same loop could watermark every page, split a book or number the pages. Slide 27 finds the files.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 27,
+   "title": "Project 12, step 1: find all PDF files and sort them",
+   "say": "Project 12, step one: find the PDF files of a folder and sort them. lower() lets the test see c.PDF too, and sorting with str.lower ignores case, so A.pdf comes first. The files here are empty, because only their names matter at this step. The result is a list called pdf_filenames, the name that the next slide uses. os.listdir, shown on slide 26, looks at one shelf only; walking a whole tree needs os.walk, which slide 51 uses.",
+   "concept": "CaseInsensitiveSort",
+   "visual": ""
+  },
+  {
+   "n": 28,
+   "title": "Project 12, steps 2 and 3: open each PDF, copy, save",
+   "say": "Project 12, steps two and three: open each PDF, copy every page but the first, and save the result. The three small files here have three, two and four pages, so the combined file has six. The chapter's loop uses a list name that does not exist; the list is pdf_filenames, as slide 27 builds it. A second run would also read combined.pdf, because it is in the same folder, so a real program saves the result elsewhere. Compare slide 17, which copies pages by range.",
+   "concept": "CombineAllPdfs",
+   "visual": ""
+  },
+  {
+   "n": 29,
+   "title": "Part 3: Reading Word documents",
+   "say": "Part 3 reads Word documents. A .docx file is a ZIP archive of XML parts. A document holds paragraphs, a paragraph holds runs, and a style is a named rule that must fit the object it is given. The four cards are the ideas of the part: the ZIP and XML, paragraph and run, style, and the three states of a run attribute. Slides 30 to 40 cover them, and part 4 later writes the same kind of file.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 30,
+   "title": "Word files and python-docx objects",
+   "say": "A .docx file keeps its words, fonts and pictures in separate XML parts of a ZIP file. The Document object is the whole file in the program, a Paragraph is one paragraph of it, and a Run is a stretch of text inside a paragraph that has one formatting. You install python-docx but you write import docx. Reading a file means going through its paragraphs and then their runs, and readDocx.py joins the text of all paragraphs into the full text. Slide 32 opens the file.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 31,
+   "title": "Story: In February 2008 Microsoft published the .doc format",
+   "say": "On 15 February 2008 Microsoft published the binary format of the older Word .doc file, in a post on Brian Jones's Office blog. The photograph shows Office 2007 boxes, the release whose default format was already .docx; it is not a picture of the announcement. A .doc file starts with the bytes D0 CF 11 E0, not with PK, so python-docx refuses it, as slide 32 explains for the newer format. The link leads to the Microsoft post.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 32,
+   "title": "A .docx file is a ZIP archive of XML parts",
+   "say": "A .docx file begins with the two bytes PK because it is a ZIP archive. This one holds seventeen parts, and the text lives in word/document.xml, inside paragraph, run and text tags. python-docx hides this structure, but knowing it explains why a .doc file, which starts with other bytes, is refused. Chapter 11 shows how to open a ZIP archive with the zipfile module. Slide 31 tells how the older .doc format was published, and slide 33 reads paragraphs and runs.",
+   "concept": "DocxIsZipOfXml",
+   "visual": ""
+  },
+  {
+   "n": 33,
+   "title": "Reading a Word file: paragraphs hold runs",
+   "say": "A document holds paragraphs and a paragraph holds runs. The example makes a paragraph with three runs, of which only the middle one is bold: the others read back None, which means that the style decides. A table's text is not in the paragraphs list; it is in the tables list, and the same holds for headers. Reading both lists is therefore needed for the full text of a file. Slide 34 joins the paragraphs into one text.",
+   "concept": "ParagraphsOfBody",
+   "visual": ""
+  },
+  {
+   "n": 34,
+   "title": "Getting the full text from a .docx file",
+   "say": "The readDocx idea is short: open the file and join each paragraph's text with a line break. Document accepts a file name or a file object, so the example builds three paragraphs in memory and reads them back. The run printed the three lines and counted three lines and six words. The same function works on a real file by giving its name. Slide 33 explains why tables stay out of this text; chapter 10 covers writing such text to a plain file.",
+   "concept": "TablesAndHeadersApart",
+   "visual": ""
+  },
+  {
+   "n": 35,
+   "title": "Paragraphs, runs and named styles",
+   "say": "A style is a named formatting rule. A paragraph takes a paragraph style, which sets spacing and the size of the letters for the whole paragraph, and a run takes a character style, such as emphasis, for a few words. The paragraphs property lists the paragraphs of a document in order, and the runs property lists the runs of a paragraph; a run ends where the formatting changes. The name of a style must fit the kind of object and match exactly. Slide 36 shows both kinds and slide 37 shows what goes wrong.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 36,
+   "title": "Styles: a paragraph style and a run style",
+   "say": "A paragraph takes a paragraph style and a run takes a character style. Quote is the first kind and Quote Char is the second, and the example gives one of each to the same words. A new document holds 164 styles, while the chapter prints a list of 34. Styles are the way to change the look of a whole document in one place. Slide 37 shows what happens when the kind or the name is wrong, and slide 35 explained the objects plainly.",
+   "concept": "StyleKindsOfTemplate",
+   "visual": ""
+  },
+  {
+   "n": 37,
+   "title": "Styles: the right kind and the exact name",
+   "say": "The kind of style must fit the object: a character style given to a paragraph raises a ValueError. The name must also match exactly: a trailing space raises a KeyError, as the book's printed list of names would. The run shows both errors caught and replaced by plain sentences, and then the correct name working. Compare slide 36, where the right kinds were used. Print the names of the styles in your own document before you rely on one.",
+   "concept": "UnknownStyleKeyError",
+   "visual": ""
+  },
+  {
+   "n": 38,
+   "title": "Bold, italic and underline in runs",
+   "say": "Each run attribute has three states: True turns the formatting on, False turns it off, and None means that the style decides. Bold makes the text bold, italic makes it italic, and underline draws a line under it. A run that never set an attribute reports None, so reading the attribute tells you whether the run decided or the style did. Slide 39 shows all three states, and the same idea returns in part 4 when a new run is written.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 39,
+   "title": "Run attributes: bold, italic and underline have three states",
+   "say": "Bold, italic and underline are real attributes of a run, with three states: True, False and None. The run reads each value back. Strike is not an attribute of a run: setting run.strike does nothing visible and reads back None, while run.font.strike really sets it. The book's table lists more attributes than the library accepts. Compare slide 33, where None meant that the style decides. Slide 40 turns from attributes to the history of Word itself.",
+   "concept": "TriStateBold",
+   "visual": ""
+  },
+  {
+   "n": 40,
+   "title": "Story: Word's source code went to a museum in 2014",
+   "say": "In 1983 Word began as Multi-Tool Word, built on Bravo, the word processor that Charles Simonyi made at Xerox PARC. On 25 March 2014 the Computer History Museum published the source code of Word for Windows 1.1a. The photograph shows Simonyi in 2006. A .docx file is what such a program saves, and python-docx lets a script save the same kind of file without Word, as slide 43 shows. The link leads to the museum's page about the source code.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 41,
+   "title": "Part 4: Writing Word documents",
+   "say": "Part 4 writes Word documents. A new document starts empty; add_paragraph adds a card and returns it, add_heading adds a title or a heading from level 0 to 9, a line break sits inside a run while a page break is a call of its own, and add_picture pins a picture by width or height. Slides 42 to 48 cover the four cards, and part 3 earlier shows how the same objects look when a file is read.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 42,
+   "title": "Writing a new Word file",
+   "say": "A new document starts empty: you call docx.Document(), add content and save it to a file. add_paragraph adds a paragraph at the end and returns it, and add_run adds more text to a paragraph with its own formatting. add_heading adds a heading paragraph: level 0 is the title and levels 1 to 9 are headings. A line break starts a new line and is added inside a run with add_break; a page break ends the page and has a call of its own. Slide 43 writes a small file.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 43,
+   "title": "Writing a Word file: add_paragraph and add_run",
+   "say": "add_paragraph returns the new Paragraph and add_run returns the new Run, so the names p and r hold what you want to change next. After saving to memory and opening the file again, the one paragraph holds two runs with their text intact. Saving writes the whole document at once, so a program builds the content first and saves last. Slide 44 adds headings to the same kind of document, and slide 33 reads one back.",
+   "concept": "AddParagraphReturnsParagraph",
+   "visual": ""
+  },
+  {
+   "n": 44,
+   "title": "Adding headings: levels 0 to 9",
+   "say": "add_heading takes levels 0 to 9: level 0 is the Title style and levels 1 to 9 are Heading 1 to Heading 9. Level 10 raises a ValueError, which the example catches. The book's text says 0 to 4 in one place and 1 to 9 in another; the library accepts 0 to 9. The levels are the outline of a document, so a program can build a table of contents from them. Slide 45 adds breaks.",
+   "concept": "AddHeadingLevels",
+   "visual": ""
+  },
+  {
+   "n": 45,
+   "title": "Adding line breaks and page breaks",
+   "say": "A line break is an item inside a run, added by add_break with a named choice; a page break is added by add_page_break on the document. Counting the tags in the XML shows what was written: one page break and two breaks in all. The named choice WD_BREAK comes from docx.enum.text, the drawer of named choices that slide 46 describes. Compare slide 44, where headings gave the document its outline, and slide 53, where page breaks separate invitations.",
+   "concept": "PageBreakRun",
+   "visual": ""
+  },
+  {
+   "n": 46,
+   "title": "Pictures and their sizes",
+   "say": "add_picture places an image file in the document; give a width or a height and the other follows from the shape of the picture. Inches and Cm are units from docx.shared, which also holds Pt and other sizes. docx.enum.text holds named choices, such as the kind of break: LINE or PAGE. Slide 47 shows the sizes in code, and slide 45 earlier used the named choices.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 47,
+   "title": "Adding pictures: width and height in inches or centimetres",
+   "say": "A picture's size is stored in EMU, English Metric Units, 914400 to the inch. Given no size, the picture keeps its own shape. Given a width or a height, the other follows from the picture's shape, so one inch wide gives 1219200 units high for this 60 by 80 picture. Inches and Cm come from docx.shared. Pillow makes the stand-in picture here, in memory. Slide 46 explained the calls plainly; slide 48 ends the part with a warning about the package name.",
+   "concept": "PictureSizeFromWidth",
+   "visual": ""
+  },
+  {
+   "n": 48,
+   "title": "Story: pip install docx has not worked since 2014",
+   "say": "Two packages share the import name docx, but only python-docx is maintained. The package called docx on PyPI has its last release, 0.2.4, dated 6 February 2014, and it fails under current Python. Install python-docx and write import docx. The picture is a screenshot of the Python Package Index home page from December 2007. Compare slide 14, where a library changed its name, and slide 30, where the import name is also not the package name. The link leads to the old package.",
+   "concept": "PackageNameTrap",
+   "visual": ""
+  },
+  {
+   "n": 49,
+   "title": "Part 5: Practice programs",
+   "say": "Part 5 gathers three practice programs: PDF Paranoia, which locks every PDF of a folder tree, Custom Invitations, which makes one card per guest in a Word file, and the Password Breaker, which tries a word list against a locked file. Each runs on small stand-in files, and each shows a limit of its method. Slides 50 to 54 cover them, and the tools of part 2 and part 4 return here in new combinations.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 50,
+   "title": "Practice programs and brute force",
+   "say": "The practice programs combine the tools of the chapter. PDF Paranoia encrypts every PDF in a folder tree, tests the encrypted copy and only then removes the original. Custom Invitations writes one invitation for each guest into a Word file. The Password Breaker tries each word of a list as the password until decrypt succeeds. A brute-force attack tries every candidate, and a long random password has too many candidates to try. pdfminer.high_level is another library that also extracts the text of PDFs.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 51,
+   "title": "Practice program 1, part 1: walk a folder tree for PDFs",
+   "say": "PDF Paranoia, part one: os.walk visits every folder of a tree, and each name that ends in .pdf, in any case, becomes a full path. The tree holds empty files, because only the names matter. The two PDFs, one of them B.PDF in a subfolder, were found, and the text file was skipped. Compare slide 27, where os.listdir looked at one folder only. Slide 52 locks the files that this walk finds.",
+   "concept": "WalkFindsAllPdfs",
+   "visual": ""
+  },
+  {
+   "n": 52,
+   "title": "Practice program 1, part 2: lock a copy, check it, remove the original",
+   "say": "PDF Paranoia, part two: copy the PDF, lock the copy with AES-256, test it with the password, and only then remove the original. The test is the point: a program that deletes before it checks can destroy the only copy. Real use never passes the password on the command line, where other programs can read it. The needs of AES are those of slide 25. Slide 51 found the files that this step would lock.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 53,
+   "title": "Practice program 2: Custom Invitations",
+   "say": "Custom Invitations: one card per guest, the name in a big built-in style, and a page break after every card but the last. Three guests need two page breaks, and the run lists the three names it found in the Title style. The book's version reads the guests from a text file; here a list stands in. Compare slide 45, where a single page break was added, and slide 43, which wrote a paragraph.",
+   "concept": "InvitationPageBreaks",
+   "visual": ""
+  },
+  {
+   "n": 54,
+   "title": "Practice program 3: PDF Password Breaker",
+   "say": "The Password Breaker tries every word in two cases until decrypt stops answering NOT_DECRYPTED. Four words give at most eight attempts, and the run found CHERRY at the sixth. The book's dictionary has far more words, so the attempts grow with the size of the list, while a long random password is in no dictionary. With the shipped dictionary of 699,800 attempts, the research measured about 241 seconds for RC4 and 1467 seconds for AES-256. Slide 24 explains the answers that decrypt gives.",
+   "concept": "DictionaryAttackBothCases",
+   "visual": ""
+  },
+  {
+   "n": 55,
+   "title": "Which call does what, and what it needs",
+   "say": "The calls of the chapter in one table, each with the slide of its code. Reads change nothing; writes make a new file; locks need the cryptography package for AES. A PdfReader only looks; a PdfWriter builds; a Document opens or starts a Word file, and its paragraphs, runs and tables are kept apart. The last column leads to the example, so a call can be found again after the lecture. Compare slide 56, which lists where the book differs from today's libraries.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 56,
+   "title": "What differs from the book today",
+   "say": "What differs from the book today, from the chapter research of 12 October 2026. Run the book's lines first; then compare with these rows. The merge call takes a title where the book gives a range, the Project 12 loop names a list that does not exist, and the table of run attributes lists more than the library accepts. Older tutorials use PdfFileReader and PdfMerger, which are gone. Each row names the slide that shows it, so slide 55 and this slide can be read together.",
+   "concept": "RemovedNames",
+   "visual": ""
+  },
+  {
+   "n": 57,
+   "title": "Summary",
+   "say": "Five sentences close the chapter. A PDF is a page description: drawing commands, objects and a table. pypdf copies, turns, watermarks and locks pages, but it cannot recover structure that was lost. A .docx file is a ZIP of XML, where documents hold paragraphs and paragraphs hold runs. A style must fit its object and match by exact name. A password is only as strong as it is long and random. The chart counts the examples of each part; compare slide 2.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 58,
+   "title": "Practice Questions",
+   "say": "Five questions to predict first and then check by running the code on the chapter page. Each one points back to a slide: the order of extracted text, a tuple against a list, the three states of a bold run, why a black rectangle hides nothing, and how many attempts a word list needs. Writing the prediction before the run is what makes the result useful. Slides 9, 17 and 39 hold the answers to the first three, and slide 54 the last.",
+   "concept": "PracticeAnswersChecked",
+   "visual": ""
+  },
+  {
+   "n": 59,
+   "title": "Resources: where to go next",
+   "say": "Links to read and watch next: the chapter of the book, the documentation of pypdf and python-docx, the PDF and Office standards at the Library of Congress, the zipfile documentation and the page behind the first story. Each link is live and was opened while this deck was made. The documentation pages of the two packages go deeper than the chapter does, so read them also when a call behaves differently from the book. Slide 55 lists the calls that these pages describe.",
+   "concept": "",
+   "visual": ""
+  }
+ ]
+}
