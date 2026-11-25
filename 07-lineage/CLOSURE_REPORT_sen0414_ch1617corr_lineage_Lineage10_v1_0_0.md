@@ -1,6 +1,6 @@
 # Closure Report — SEN0414 chapters 11, 17 and 16 corrections (`ex:Lineage10`)
 
-**Status:** DRAFT for the Owner's confirmation. Not yet closed in the register.
+**Status:** closed 2026-11-26 as `LS_Achieved`, `Out_Achieved` (register 1.50.0). The Owner ruled on 2026-11-26 00:07 Istanbul that no confirmation is needed while the conditions hold.
 **Register:** `07-lineage/sen0414_ch1617corr_lineage_v1_49_0.ttl` (last state of every item across all versions).
 **Mission:** the chapter 17 and chapter 16 decks and pages are corrected to the six rulings of 2026-11-14, with approved content unchanged; amended on 2026-11-19 (chapter 10 and the balloon, reader-note and own-version practices for chapters 10 and 11, as an urgency) and by the ruling of 2026-11-24 (no everyday analogies).
 **Measured 2026-11-26:** 19 of 19 stories and 39 of 39 tasks Done.
@@ -41,4 +41,4 @@ Final materials: chapter 17 deck 4.0.0 (59 slides) and page 9.23.0; chapter 16 d
 - Reports owed: vocabulary finding (no partial outcome value), the G237 / DoD10 repair report, the BRSF tool gaps handover, the lab-materials package queued after this lineage.
 
 ## 5. Closure actions
-Proposed outcome: full achievement (`LS_Achieved`, `Out_Achieved`), because all nine objectives meet their targets as measured. The limits above are carried in the report. The archive (`backlog_lineage_archive`) is not run inside this step; it goes in the next release. No guard was promised in this register that needs reading again.
+Outcome: full achievement (`LS_Achieved`, `Out_Achieved`), because all nine objectives meet their targets as measured. The limits above are carried in the report. The archive (`backlog_lineage_archive`) is not run inside this step; it goes in the next release. No guard was promised in this register that needs reading again.
