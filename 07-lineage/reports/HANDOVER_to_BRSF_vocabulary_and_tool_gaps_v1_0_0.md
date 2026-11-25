@@ -1,0 +1,20 @@
+# Handover to BRSF: one vocabulary gap and three tool gaps (2026-11-26)
+
+From a package that runs lineages under BRSF. Each point states the sender's own fault first, then the framework part. Every claim was checked on 2026-11-26 against the live files (backlog_abox_v1_217_0.ttl, backlog_urgency_v1_0_0.py, backlog_lineage_archive_v2_12_0.py, the standard v1.165.0).
+
+## 1. Mission outcome has no value for partial achievement
+- **Sender's fault.** I closed a lineage with five of six objectives met and first wrote the outcome as free text. BRSF's T-Box makes `hasMissionOutcome` an object property, so the register refused it; I then wrote `Out_Achieved`, the nearest value, and kept the partial result in the report text. A value that says "achieved" for a partly achieved mission is wrong, and I should have raised the gap before closing, not after.
+- **Framework part.** The vocabulary has three outcomes: `Out_InFlight`, `Out_Achieved`, `Out_Abandoned` (backlog_abox_v1_217_0.ttl, lines 1040 to 1048). The owner's closure rule has three results: failure, partial achievement (say what is achieved, what is missing and why) and full achievement. Partial has no value. **Ask:** add a partial-achievement outcome, and make the closure-report shape require the statement of what is achieved and what is missing for it.
+
+## 2. Urgency tool reads the first state of an item
+- **Sender's fault.** My register is made of delta files in which a later `hasState` wins. I ran the urgency tool on the delta set without reading how it takes a state.
+- **Framework part.** `backlog_urgency_v1_0_0.py` takes `next(g.objects(i, B.hasState), None)` (line 36): with several states on one item it returns whichever comes first, not the latest, and its state change only works if the text holds `hasState <old>` exactly once (line 45 to 46). **Ask:** read the latest state by the register's own rule, and refuse, naming the item, when an item has several states and none is marked latest.
+
+## 3. Archive tool: the dry run says ARCHIVABLE, the apply aborts with a message that points at the wrong cause
+- **Sender's fault.** My register had no register root. BRSF's standard (2.5c-xxi) requires one; I did not read that before the first archive attempt and lost three attempts to it.
+- **Framework part.** Without `isRegisterRoot`, `register_root()` falls back to the lineage's own backlog, so `protected()` (backlog_lineage_archive_v2_12_0.py, lines 140 to 167) keeps the Lineage and its Mission live. The dry run still printed ARCHIVABLE (190 subjects, 5 kept live), and `--apply` then stopped with "could not mark the archived copy ... does not carry lineageArchived false on the first line" (line 363). That is a symptom, not the cause: the Lineage statement was never in the archive text. **Ask:** (a) the dry run should refuse a register with no declared root, naming the standard; (b) the apply message should say that the lineage statement was not moved and why.
+- A second, smaller point: the marking step needs `lineageArchived false` on the same line as `a backlog:Lineage`, which a normal Turtle layout (one predicate per line) does not give. **Ask:** accept it on any line of the statement, or say so in the usage text.
+
+## 4. Closure does not check a Definition of Done criterion left Violated or NotYetEnforceable
+- **Sender's fault.** My lineage's Definition of Done had one criterion recorded `Violated` and one `NotYetEnforceable` from 2026-11-20. I closed and archived the lineage on 2026-11-26 without reading them again, and said "the conditions hold". They did not all hold (see the repair report of the same date). Recording them was right; not computing the status from the register before closing was my error.
+- **Framework part.** The register's checks (7 shapes) accepted the closure and the archive tool accepted the lineage. **Ask:** a closure or archive shape that refuses a lineage whose Definition of Done holds a `Violated` criterion, and names a `NotYetEnforceable` one in its output.
