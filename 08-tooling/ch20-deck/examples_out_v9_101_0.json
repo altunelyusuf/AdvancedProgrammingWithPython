@@ -1,0 +1,118 @@
+{
+ "_version": "9.101.0",
+ "_note": "Made from the chapter-code manifest 03-materials/ch20/page/chapter_code_ch20_v1_2_2.json (same code, same order): one cell per manifest example, name = the example's name.",
+ "Setting up the Gmail API": [
+  [
+   "import ezgmail, os, tempfile\nos.chdir(tempfile.mkdtemp())\ntry:\n    ezgmail.init()\nexcept ezgmail.EZGmailException as e:\n    print(str(e).split(' at ')[0])\nprint(ezgmail.SCOPES, ezgmail.LOGGED_IN)",
+   ""
+  ]
+ ],
+ "Sending mail with EZGmail": [
+  [
+   "import ezgmail, base64, email\nfrom unittest.mock import MagicMock\nezgmail.SERVICE_GMAIL = MagicMock()\nezgmail.EMAIL_ADDRESS = 'me@example.com'\nezgmail.send('al@example.org', 'RoboCop', 'Watch it this weekend?')\ncall = ezgmail.SERVICE_GMAIL.users().messages().send.call_args\nraw = call.kwargs['body']['raw']\nmsg = email.message_from_bytes(base64.urlsafe_b64decode(raw))\nprint(msg['To'], '|', msg['From'], '|', msg['Subject'])\nprint(msg.get_payload())",
+   ""
+  ]
+ ],
+ "Reading and searching mail": [
+  [
+   "import ezgmail, base64\nfrom unittest.mock import MagicMock\nezgmail.SERVICE_GMAIL = svc = MagicMock()\ntext = base64.urlsafe_b64encode(b'Watch it this weekend?').decode()\nhead = {'From': 'Al <al@example.org>', 'Subject': 'RoboCop',\n        'Content-Type': 'text/plain; charset=utf-8'}\npayload = {'headers': [{'name': k, 'value': v} for k, v in head.items()],\n           'body': {'data': text}}\nmsg = {'id': 'M1', 'threadId': 'T1', 'snippet': '', 'historyId': '1',\n       'internalDate': '0', 'payload': payload}\nm = ezgmail.GmailMessage(msg)\nprint(m.sender, '|', m.subject, '|', m.body)\nprint(ezgmail.search('RoboCop'))\nprint(svc.users().threads().list.call_args.kwargs['q'])",
+   ""
+  ]
+ ],
+ "Replying to a message": [
+  [
+   "import ezgmail, base64, email\nfrom unittest.mock import MagicMock\nezgmail.SERVICE_GMAIL = svc = MagicMock()\nezgmail.EMAIL_ADDRESS = 'me@example.com'\nhead = [{'name': 'From', 'value': 'Al <al@example.org>'},\n        {'name': 'Subject', 'value': 'RoboCop'}]\nmsg = {'id': 'M1', 'threadId': 'T1', 'snippet': '', 'historyId': '1',\n       'internalDate': '0', 'payload': {'headers': head}}\nezgmail.GmailMessage(msg).reply('Saturday works.')\nsent = svc.users().messages().send.call_args.kwargs['body']\nraw = email.message_from_bytes(base64.urlsafe_b64decode(sent['raw']))\nprint(sent['threadId'], '|', raw['To'], '|', raw['Subject'])\nprint(raw.get_payload())",
+   ""
+  ]
+ ],
+ "Downloading attachments": [
+  [
+   "import ezgmail, os, tempfile\nfrom unittest.mock import MagicMock\nos.chdir(tempfile.mkdtemp())\nezgmail.SERVICE_GMAIL = svc = MagicMock()\npart = {'mimeType': 'text/plain', 'filename': '../tulips.txt',\n        'body': {'attachmentId': 'A1', 'size': 6}}\nmsg = {'id': 'M1', 'threadId': 'T1', 'snippet': '', 'historyId': '1',\n       'internalDate': '0', 'payload': {'headers': [], 'parts': [part]}}\nget = svc.users().messages().attachments().get()\nget.execute.return_value = {'data': 'dHVsaXBz'}\nm = ezgmail.GmailMessage(msg)\nprint(m.downloadAllAttachments(downloadFolder='inbox'))\nprint(os.listdir('inbox'), os.listdir('.'))",
+   ""
+  ]
+ ],
+ "Building a message": [
+  [
+   "from email.message import EmailMessage\nmsg = EmailMessage()\nmsg['To'] = 'Jon <jon@example.org>'\nmsg['Subject'] = 'RoboCop'\nmsg.set_content('Watch it this weekend?')\nmsg.add_alternative('<p>Watch <b>RoboCop</b>?</p>', subtype='html')\nmsg.add_attachment(b'\\x00\\x01', 'application', 'octet-stream',\n                   filename='poster.bin')\nprint([p.get_content_type() for p in msg.walk()])\nprint([a.get_filename() for a in msg.iter_attachments()])\nprint(msg.get_body(preferencelist=('html', 'plain')).get_content_type())",
+   ""
+  ]
+ ],
+ "Headers and the envelope": [
+  [
+   "from email.message import EmailMessage\nfrom email.utils import parseaddr, formataddr\nmsg = EmailMessage()\nmsg['Subject'] = 'Yedekleme bitti ✓'\nmsg['To'] = formataddr(('Ayşe Yılmaz', 'ayse@example.org'))\nprint(msg['Subject'], '|', msg['To'])\nprint(msg.as_bytes().decode().splitlines()[0][:44])\nprint(parseaddr('Al <al@inventwithpython.com>'))\ntry:\n    msg['X-Note'] = 'hello\\r\\nBcc: evil@example.net'\nexcept ValueError as e:\n    print('refused:', str(e)[:40])",
+   ""
+  ]
+ ],
+ "smtplib and STARTTLS": [
+  [
+   "import smtplib, ssl, subprocess, tempfile, os\nfrom aiosmtpd.controller import Controller\nos.chdir(tempfile.mkdtemp())\ncmd = ('openssl req -x509 -newkey rsa:2048 -nodes -subj /CN=localhost'\n       ' -addext subjectAltName=DNS:localhost -keyout k.pem -out c.pem')\nsubprocess.run(cmd.split(), capture_output=True)\nctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)\nctx.load_cert_chain('c.pem', 'k.pem')\nctl = Controller(object(), port=8025, tls_context=ctx)\nctl.start()\nsmtp = smtplib.SMTP('localhost', 8025)\nprint(smtp.ehlo()[0], smtp.has_extn('starttls'))\ncli = ssl.create_default_context(cafile='c.pem')\nprint(smtp.starttls(context=cli)[0])\nprint(type(smtp.sock).__name__)\nctl.stop()",
+   ""
+  ]
+ ],
+ "SMTP refusals and errors": [
+  [
+   "from aiosmtpd.controller import Controller\nclass Box:\n    async def handle_RCPT(self, srv, ses, envelope, address, opts):\n        if 'refused' in address:\n            return '550 no such mailbox'\n        envelope.rcpt_tos.append(address)\n        return '250 OK'\nimport smtplib\nctl = Controller(Box(), hostname='127.0.0.1', port=8026)\nctl.start()\nsmtp = smtplib.SMTP('127.0.0.1', 8026)\nto = ['ok@a.example', 'x@refused.example']\nprint(smtp.sendmail('al@a.example', to, 'hi'))\ntry:\n    smtp.sendmail('al@a.example', to[1:], 'hi')\nexcept smtplib.SMTPRecipientsRefused as e:\n    print('all refused:', e.recipients)\nctl.stop()",
+   ""
+  ]
+ ],
+ "Envelope against headers": [
+  [
+   "from aiosmtpd.controller import Controller\nsent = []\nclass Box:\n    async def handle_DATA(self, server, session, envelope):\n        sent.append(envelope)\n        return '250 OK'\nimport smtplib\nctl = Controller(Box(), hostname='127.0.0.1', port=8027)\nctl.start()\ntext = 'From: al@example.com\\r\\nTo: jon@example.org\\r\\n\\r\\nWatch it?'\nto = ['jon@example.org', 'boss@example.net']\nwith smtplib.SMTP('127.0.0.1', 8027) as smtp:\n    smtp.sendmail('al@example.com', to, text)\nctl.stop()\nprint(sent[0].mail_from, sent[0].rcpt_tos)\nprint('boss in text:', 'boss@example.net' in sent[0].content.decode())",
+   ""
+  ]
+ ],
+ "SMS email gateways": [
+  [
+   "gateways = {'AT&T': 'txt.att.net', 'T-Mobile': 'tmomail.net',\n            'Verizon': 'vtext.com', 'Xfinity Mobile': 'vtext.com'}\ndef address(number, carrier):\n    return number + '@' + gateways[carrier]\nprint(address('2125551234', 'Verizon'))\nshared = [c for c, d in gateways.items() if d == 'vtext.com']\ndomains = len(set(gateways.values()))\nprint(len(gateways), 'carriers,', domains, 'domains; shared:', shared)\nfrom datetime import date\ndays = (date(2026, 11, 16) - date(2025, 6, 17)).days\nprint(days, 'days since AT&T closed its gateway')",
+   ""
+  ]
+ ],
+ "Segments": [
+  [
+   "GSM = set('@£$¥èéùìòÇ\\nØø\\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&\\'()*+,-./0123456789'\n           ':;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿'\n           'abcdefghijklmnopqrstuvwxyzäöñüà')\ndef pieces(n, one, many):\n    return 1 if n <= one else -(-n // many)\ndef segments(text):\n    if all(c in GSM for c in text):\n        return 'GSM-7', len(text), pieces(len(text), 160, 153)\n    units = len(text.encode('utf-16-le')) // 2\n    return 'UCS-2', units, pieces(units, 70, 67)\nfor text in ('Hello, world!', 'a' * 161, 'Yedekleme tamamlandi',\n             'Yedekleme tamamlandı'):\n    print(len(text), segments(text))",
+   ""
+  ]
+ ],
+ "ntfy: publish": [
+  [
+   "import requests\nurl = 'http://ntfy.example/AlSweigartZPgxBQ42'\nreq = requests.Request('POST', url, data='Hello, world!').prepare()\nprint(req.method, req.url)\nprint(req.body, req.headers['Content-Length'])\nprint(req.headers.get('Content-Type'))",
+   ""
+  ]
+ ],
+ "ntfy: headers": [
+  [
+   "import requests\nurl = 'http://ntfy.example/t'\nextra = {'Title': 'Important: Read this!',\n         'Tags': 'warning,neutral_face', 'Priority': '5'}\npost = requests.Request('POST', url, data='Rent is high!', headers=extra)\nreq = post.prepare()\nprint({k: req.headers[k] for k in extra})\ntry:\n    'Yedekleme tamamlandı'.encode('latin-1')\nexcept UnicodeEncodeError as e:\n    print(type(e).__name__, 'in a header')",
+   ""
+  ]
+ ],
+ "ntfy: polling": [
+  [
+   "import json\nrows = [{'time': 1797823340, 'event': 'open'},\n        {'time': 1797823341, 'event': 'message', 'message': 'Hello!'},\n        {'time': 1797823350, 'event': 'message',\n         'title': 'Backup', 'message': 'Done'}]\nanswer = '\\n'.join(json.dumps(r) for r in rows)\nevents = [json.loads(line) for line in answer.splitlines()]\nprint([e['event'] for e in events])\nfrom datetime import datetime, UTC\nfor e in events:\n    if e['event'] == 'message':\n        t = datetime.fromtimestamp(e['time'], UTC).strftime('%H:%M:%S')\n        print(t, e.get('title', '-'), e['message'])",
+   ""
+  ]
+ ],
+ "Topic secrecy and limits": [
+  [
+   "import math, secrets\ntopic = 'AlSweigartZPgxBQ42'\nper, n = math.log2(62), len(topic)\nprint(n, 'characters:', round(n * per, 1), 'bits at most')\nprint(round(8 * per, 1), 'bits for a guessable 8-letter name')\nrandom_topic = secrets.token_urlsafe(18)\nprint(len(random_topic), 'characters; 144 bits of randomness')\ntitle = 'Yedekleme tamamlandı'\nprint(len(title), 'characters,', len(title.encode()), 'bytes')",
+   ""
+  ]
+ ],
+ "Auto unsubscriber": [
+  [
+   "from html.parser import HTMLParser\nhtml = '<a href=\"/u?id=1\">Unsubscribe</a> <a href=\"/p\">Preferences</a>'\nclass Links(HTMLParser):\n    found, href = [], None\n    def handle_starttag(self, tag, attrs):\n        self.href = dict(attrs).get('href')\n    def handle_data(self, data):\n        if self.href and 'unsubscribe' in data.lower():\n            self.found.append(self.href)\nparser = Links()\nparser.feed(html)\nprint(parser.found)\nheader = '<mailto:stop@example.com>, <https://example.com/u?id=1>'\nprint([part.strip(' <>') for part in header.split(',')])",
+   ""
+  ]
+ ],
+ "Umbrella reminder": [
+  [
+   "periods = [{'name': 'Tonight', 'shortForecast': 'Showers Likely',\n            'probabilityOfPrecipitation': {'value': 60}},\n           {'name': 'Friday', 'shortForecast': 'Mostly Sunny',\n            'probabilityOfPrecipitation': {'value': None}}]\nfor p in periods:\n    chance = p['probabilityOfPrecipitation']['value'] or 0\n    word = 'rain' in p['shortForecast'].lower()\n    row = {'word': word, 'chance': chance, 'umbrella': chance >= 50}\n    print(p['name'], row)",
+   ""
+  ]
+ ],
+ "Email-based computer control": [
+  [
+   "import hmac, subprocess, sys\nSECRET = 'correct horse'\nALLOWED = {'hello': [sys.executable, '-c', 'print(\"hello\")']}\ndef handle(password, name):\n    if not hmac.compare_digest(password, SECRET):\n        return 'wrong password'\n    if name not in ALLOWED:\n        return 'not allowed'\n    done = subprocess.run(ALLOWED[name], capture_output=True, text=True)\n    return f'ran {name}, printed {done.stdout!r}'\nmails = (('x', 'hello'), (SECRET, 'rm -rf /'), (SECRET, 'hello'))\nfor password, name in mails:\n    print(handle(password, name))",
+   ""
+  ]
+ ]
+}
