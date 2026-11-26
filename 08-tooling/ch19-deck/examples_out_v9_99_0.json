@@ -1,0 +1,112 @@
+{
+ "_version": "9.99.0",
+ "_note": "Made from the chapter-code manifest 03-materials/ch19/page/chapter_code_ch19_v1_2_0.json (same code, same order): one cell per manifest example, name = the example's name.",
+ "Epoch timestamp": [
+  [
+   "import calendar\nfrom datetime import datetime, UTC\nt = calendar.timegm((2026, 3, 18, 6, 4, 35))\nprint('timestamp:', t)\nprint('zero:', datetime.fromtimestamp(0, UTC).isoformat())\nprint('last:', datetime.fromtimestamp(2**31 - 1, UTC).isoformat())\nprint('wrapped:', datetime.fromtimestamp(-2**31, UTC).isoformat())",
+   ""
+  ]
+ ],
+ "Which clock": [
+  [
+   "import time\nfor name in ('time', 'monotonic', 'perf_counter'):\n    info = time.get_clock_info(name)\n    print(name, info.monotonic, info.adjustable)\nwall, mono = [1000.0, 990.0], [50.0, 60.0]\nprint('wall clock set back 10 s:', wall[1] - wall[0])\nprint('monotonic clock:', mono[1] - mono[0])\nstart = time.monotonic()\ntime.sleep(0.2)\nprint('lasted at least 0.2:', time.monotonic() - start >= 0.2)",
+   ""
+  ]
+ ],
+ "Pausing programs": [
+  [
+   "import time\nstart = time.monotonic()\nresult = time.sleep(0.2)\nprint('returns', result, '| at least 0.2:', time.monotonic() - start >= 0.2)\nwork, rounds = 0.02, 3600\nprint('sleep after work:', round((rounds - 1) * (work + 1.0), 2))\nprint('fixed tick:', round((rounds - 1) * 1.0, 2))",
+   ""
+  ]
+ ],
+ "Stopwatch laps": [
+  [
+   "now = [1000.0]\ndef clock():\n    return now[0]\nstart_time = last_time = clock()\nlap_number = 1\ngaps = (3.56, 5.07, 9.05, 1.43)\nfor gap in gaps:\n    now[0] += gap\n    lap_time = round(clock() - last_time, 2)\n    total_time = round(clock() - start_time, 2)\n    print(f'Lap #{lap_number}: {total_time} ({lap_time})')\n    lap_number += 1\n    last_time = clock()",
+   ""
+  ]
+ ],
+ "Durations": [
+  [
+   "from datetime import datetime, timedelta\nd = timedelta(days=11, hours=10, minutes=9, seconds=8)\nprint(d.days, d.seconds, d.total_seconds())\ntry:\n    timedelta(months=1)\nexcept TypeError:\n    print('TypeError: timedelta has no months')\nstart = datetime(2026, 10, 21, 16, 29)\nback = start - timedelta(days=365 * 30)\nprint(back.date(), start.replace(year=1996).date())",
+   ""
+  ]
+ ],
+ "datetime to string": [
+  [
+   "from datetime import datetime\ndt = datetime(2026, 11, 3, 16, 29, 7)\nprint(dt.strftime('%Y/%m/%d %H:%M:%S'))\nprint(dt.strftime('%I:%M %p'))\nprint(dt.strftime('%A, %B %d'))\nprint(dt.strftime('%j %w'))\nprint(dt.isoformat())\nprint(datetime.fromisoformat('2026-11-03T16:29:07'))",
+   ""
+  ]
+ ],
+ "String to datetime": [
+  [
+   "from datetime import datetime\nprint(datetime.strptime('October 21, 2026', '%B %d, %Y'))\nfor text in ('2026-10-21', 'Oct 21, 2026'):\n    try: datetime.strptime(text, '%B %d, %Y')\n    except ValueError as e: print('ValueError:', e)\nfor text in ('00', '26', '68', '69', '99'):\n    print(text, datetime.strptime(text, '%y').year)",
+   ""
+  ]
+ ],
+ "Time zones": [
+  [
+   "from datetime import datetime, UTC\nfrom zoneinfo import ZoneInfo\nnaive = datetime(2026, 10, 21, 16, 29)\naware = naive.replace(tzinfo=UTC)\nprint(naive == aware)\ntry: naive - aware\nexcept TypeError as e: print('TypeError:', e)\nfor zone in ('America/Los_Angeles', 'UTC', 'Europe/Istanbul'):\n    print(zone, datetime.fromtimestamp(1000000, ZoneInfo(zone)).isoformat())",
+   ""
+  ]
+ ],
+ "Daylight saving time": [
+  [
+   "from datetime import datetime, timedelta, UTC\nfrom zoneinfo import ZoneInfo\nny = ZoneInfo('America/New_York')\nx = datetime(2026, 3, 7, 12, tzinfo=ny)\ny = x + timedelta(days=1)\nprint('wall:', y - x)\nprint('real:', y.astimezone(UTC) - x.astimezone(UTC))\nfirst = datetime(2026, 11, 1, 1, 30, tzinfo=ny)\nsecond = first.replace(fold=1)\na, b = first.astimezone(UTC), second.astimezone(UTC)\nprint(a.hour, b.hour, first == second)",
+   ""
+  ]
+ ],
+ "subprocess.run": [
+  [
+   "import subprocess, sys\nchild = 'import sys; print(\"out\"); print(\"err\", file=sys.stderr)'\ncommand = [sys.executable, '-c', child]\ndone = subprocess.run(command, capture_output=True)\nprint(done.returncode, done.stdout, done.stderr)\ndone = subprocess.run(command, capture_output=True, text=True)\nprint(type(done.stdout).__name__, repr(done.stdout))",
+   ""
+  ]
+ ],
+ "subprocess.Popen": [
+  [
+   "import subprocess\np = subprocess.Popen(['sleep', '0.4'])\nprint('poll():', p.poll())\nprint('wait():', p.wait())\nprint('poll():', p.poll())\nfor call in (['nosuch'], ['false']):\n    try:\n        subprocess.run(call, check=True)\n    except Exception as e:\n        print(type(e).__name__, e)",
+   ""
+  ]
+ ],
+ "Exit codes": [
+  [
+   "import subprocess, sys\ndef code_of(source):\n    return subprocess.run([sys.executable, '-c', source], stderr=subprocess.DEVNULL).returncode\nkill = 'import os, signal; os.kill(os.getpid(), signal.SIG%s)'\nprint(code_of('pass'), code_of('import sys; sys.exit(3)'), code_of('raise ValueError'))\nprint(code_of(kill % 'KILL'), code_of(kill % 'TERM'))",
+   ""
+  ]
+ ],
+ "Shell safety": [
+  [
+   "import subprocess, shlex\ndef sh(args, **kw):\n    return subprocess.run(args, capture_output=True, text=True, **kw).stdout\nname = 'x; echo INJECTED'\nprint(repr(sh(f'echo opening {name}', shell=True)))\nprint(repr(sh(f'echo opening {shlex.quote(name)}', shell=True)))\nprint(repr(sh(['echo', 'opening', name])))",
+   ""
+  ]
+ ],
+ "In-process scheduler": [
+  [
+   "import sched\nnow, log = [0.0], []\ndef clock(): return now[0]\ndef advance(seconds): now[0] += seconds\ns = sched.scheduler(clock, advance)\njobs = ((5, 1, 'five'), (2, 1, 'two'), (5, 0, 'five-0'), (0, 9, 'now'))\nfor delay, priority, name in jobs:\n    s.enter(delay, priority, log.append, (name,))\ns.run()\nprint(log, now[0])",
+   ""
+  ]
+ ],
+ "Cron fields": [
+  [
+   "from datetime import datetime, timedelta\ndef matches(text, value):\n    return text == '*' or str(value) in text.split(',')\ndef next_run(fields, t):\n    while True:\n        t += timedelta(minutes=1)\n        now = (t.minute, t.hour, t.isoweekday() % 7)\n        if all(map(matches, fields, now)):\n            return t\nstart = datetime(2026, 10, 13, 9, 30)\nfmt = '%Y-%m-%d %H:%M %a'\nprint(next_run(('30', '9', '1,2,3,4,5'), start).strftime(fmt))\nprint(next_run(('0', '0', '5'), start).strftime(fmt))",
+   ""
+  ]
+ ],
+ "Countdown timer": [
+  [
+   "now = [0.0]\ntime_left = 5\nwhile time_left > 0:\n    print(time_left, end=' ')\n    now[0] += 1\n    time_left = time_left - 1\nprint()\nprint('counted', now[0], 'seconds; the alarm needs a sound card')",
+   ""
+  ]
+ ],
+ "Prettified stopwatch": [
+  [
+   "rows = [(1, 3.56, 3.56), (2, 8.63, 5.07), (3, 17.68, 9.05), (4, 19.11, 1.43)]\nfor number, total, lap in rows:\n    print('Lap #' + str(number).rjust(2) + ': ' + str(total).rjust(6) + ' (' + str(lap).rjust(6) + ')')",
+   ""
+  ]
+ ],
+ "Friday the 13th": [
+  [
+   "from datetime import date, timedelta\nday = date(2026, 10, 13)\nfound = []\nwhile len(found) < 10:\n    if day.day == 13 and day.weekday() == 4:\n        found.append(day.isoformat())\n    day += timedelta(days=1)\nprint(found[0], '...', found[-1])\nprint(len(found), 'dates')",
+   ""
+  ]
+ ]
+}

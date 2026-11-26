@@ -1,0 +1,301 @@
+{
+ "_version": "4.0.0",
+ "_deck": "4.0.0",
+ "_python": "3.13.18",
+ "slides": [
+  {
+   "n": 1,
+   "title": "Chapter 19: Time, Scheduling and Launching Programs",
+   "say": "This chapter of the book is about time and about other programs. It shows how a program reads a clock, waits, writes a date as text and reads it back, starts another program and collects its result, and schedules a job for later. Time hides traps: a clock that is set back, a day with twenty-three hours and a calendar that skipped ten days. The deck has eighteen code examples that run on the chapter page, in the same order, in the Slide code tab. Where a real wait would be slow, a stand-in clock moves instead, and the slide says so. Slide 2 shows the five parts.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 2,
+   "title": "Today's route through five parts",
+   "say": "The route has five parts, and each row gives the slides of the part, how many code examples it holds and what you will run. Part 1 treats time as a number, part 2 covers dates and times of day, part 3 launches other programs, part 4 schedules tasks and part 5 combines them in three practice programs. The last row covers the practice questions, the summary and the links. Use the slide ranges to find one part quickly. The eighteen examples are the same ones that fill the Slide code tab of the chapter page. Slide 3 states the two questions that frame the chapter.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 3,
+   "title": "Two questions this chapter answers",
+   "say": "Two questions frame the chapter, and the answers come back at the end. The first asks how a program measures, stores and prints a moment without being wrong about clocks, zones and calendars; the summary on slide 41 answers it. The second asks how a program starts other programs and runs its own jobs later without a surprise from the shell; the practice questions on slide 40 let you check yourself. Keep both in mind while reading the code, and ask of each example which of the two it answers. Part 1 starts on slide 4 with time as a number.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 4,
+   "title": "Part 1: Time as a number (the time module)",
+   "say": "Part 1 treats time as a number. A timestamp is a count of seconds from an agreed starting point, the epoch. The four cards name the concepts of the part: the epoch itself, the clocks, sleep and the stopwatch. time() follows the wall clock, which a person can set back, while monotonic() only moves forward. sleep() promises at least the time asked, never exactly that time. A stopwatch must read one clock for every lap. The table on the right lists the slides of the part. Slide 5 explains the concepts in plain words.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 5,
+   "title": "The time module and the stopwatch",
+   "say": "A timestamp is one number: the seconds counted from the epoch, 1 January 1970 at 00:00 UTC. The table gives each concept of the time module its meaning. time.time() returns that number as a float, the same in every time zone. sleep() pauses at least as long as asked. The stopwatch reads a clock once at the start and subtracts it from later readings, and a lap is the difference between two readings of one clock. Slide 6 tells why the epoch is 1970, and slide 7 runs the first example.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 6,
+   "title": "Story: Unix chose its 1970 epoch after two earlier ones",
+   "say": "The Unix engineers at Bell Labs counted time in sixtieths of a second from 1971, then from 1972, and only later settled on seconds from 1970. The reason is that sixtieths of a second in a 32-bit counter last only about two and a third years, so the unit had to become seconds. The picture is a DEC PDP-11 in the Computer History Museum, a machine of the family Unix ran on, and not a page of the manual. An epoch is a convention that engineers chose. The link leads to the Wikipedia page on Unix time. Slide 7 runs the epoch in code.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 7,
+   "title": "Returning the epoch timestamp: the number behind a date",
+   "say": "The first printed line shows that calendar.timegm turned the date 18 March 2026, 06:04:35 UTC into the number 1773813875. The second line shows that second 0 is the epoch itself, midnight on 1 January 1970. The third line shows 2**31 - 1, the last second that a signed 32-bit counter holds, which is 03:14:07 on 19 January 2038. The last line shows that the next value wraps to the most negative number and reads as December 1901. Slide 9 tells the story of that wrap. Slide 8 compares the clocks of the time module.",
+   "concept": "EpochTimestamp",
+   "visual": ""
+  },
+  {
+   "n": 8,
+   "title": "Clocks and what each measures: time(), monotonic(), perf_counter()",
+   "say": "The first three printed lines answer two questions about each clock. A monotonic clock only moves forward, and an adjustable clock can be set by hand. time() is adjustable and not monotonic; monotonic() and perf_counter() are the other way round. The next two lines use two lists as stand-in clocks: setting the wall clock back ten seconds makes the difference negative, while the monotonic clock still shows ten. The last line checks that a pause lasted at least the time asked. Use monotonic() to measure how long, and time() to learn what time it is. Slide 10 treats sleep().",
+   "concept": "ClockKinds",
+   "visual": ""
+  },
+  {
+   "n": 9,
+   "title": "Story: A counter that wraps on 19 January 2038",
+   "say": "A signed 32-bit counter of seconds runs out at 03:14:07 UTC on 19 January 2038, and the next second wraps to December 1901. The picture is one frame of an animated diagram by a Wikimedia Commons contributor, in the public domain: it shows the counter, its decimal value, the wrong date and the true date at the wrap. Systems that store a timestamp in 32 bits, such as old file formats and embedded devices, are at risk, while systems with 64-bit times are not. Know how many bits your timestamp has. The link leads to the Wikipedia page on the Year 2038 problem. Slide 10 treats sleep().",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 10,
+   "title": "Pausing programs: time.sleep() and what it does not promise",
+   "say": "The first line shows that sleep() returns None and that the pause lasted at least 0.2 seconds, so it promises a minimum and not an exact time. The other two lines compare two loops of 3600 rounds. A loop that sleeps one second after each piece of work lasts 3670.98 seconds, because the work of every round is added. A loop that sleeps only until the next fixed tick lasts 3599 seconds and does not drift. The real program would wait; here numbers stand in for the work. Slide 11 builds the stopwatch on one clock.",
+   "concept": "SleepFunction",
+   "visual": ""
+  },
+  {
+   "n": 11,
+   "title": "Project 14: a first stopwatch with laps",
+   "say": "The four printed lines are laps. A stand-in clock moves by the gaps 3.56, 5.07, 9.05 and 1.43 seconds, so every number is exact and nothing waits. Each lap is the clock now minus the clock at the last lap, and the total is the clock now minus the start. The first number in each line is the total, and the number in brackets is the lap. The real program reads time.perf_counter() each time the Enter key is pressed. Every reading comes from one clock, which keeps the laps consistent. Slide 12 starts part 2, on dates and times of day.",
+   "concept": "SuperStopwatch",
+   "visual": ""
+  },
+  {
+   "n": 12,
+   "title": "Part 2: Dates and times of day (the datetime module)",
+   "say": "Part 2 covers dates and times of day with the datetime module. A datetime holds a date and a time of day, and a timedelta holds a length of time that has no months. strftime writes a moment as text and strptime reads text back, refusing a text that does not match its format. A time zone turns one moment into a clock reading, and daylight saving time can make a day twenty-three hours long. The table lists the slides of the part. Slide 13 explains the concepts of the datetime module in plain words.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 13,
+   "title": "The datetime module: dates, times and durations",
+   "say": "A datetime holds a date and a time of day, with or without a time zone, and a timedelta holds a length of time as days, seconds and microseconds. The table gives every concept of the datetime module its meaning. strftime writes a datetime as text from a format of directives, and strptime reads text with a format and raises ValueError when they differ. Table 19-1 of the book lists the directives; slide 16 runs the common ones. Slide 14 tells the story of the ten days that did not happen in 1582.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 14,
+   "title": "Story: In October 1582 ten days did not happen",
+   "say": "In October 1582, Thursday 4 October was followed by Friday 15 October, because the reform of Pope Gregory XIII removed ten days to bring Easter back to its season. The picture is a calendar page of October 1582 with those days missing. Python's date type is proleptic: it applies today's calendar backwards, so it has a 5 October 1582 and calls it a Tuesday. Before 1582, Python dates are not the dates people used at the time. The link leads to the Wikipedia page on the Gregorian calendar. Slide 15 treats durations.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 15,
+   "title": "datetime: dates, times and timedelta arithmetic",
+   "say": "The first line shows the three parts of a timedelta built from 11 days, 10 hours, 9 minutes and 8 seconds: 11 days, 36548 seconds, and 986948.0 seconds in total. The second line shows that asking for months raises a TypeError, because a timedelta has no month or year; their lengths vary. The last line subtracts 365 times 30 days from a date in 2026 and lands on 28 October 1996, a week away from 21 October 1996, because the leap days were missed. Use calendar-aware code when a length is in years. Slide 16 writes a datetime as text.",
+   "concept": "DurationsTimedelta",
+   "visual": ""
+  },
+  {
+   "n": 16,
+   "title": "datetime to string: strftime() and its directives",
+   "say": "The six printed lines show one moment, 3 November 2026 at 16:29:07, written six ways. The first uses %Y, %m, %d, %H, %M and %S for the numbers. The second uses %I and %p for the twelve-hour clock, 04:29 PM. The third uses %A and %B for the names of the weekday and the month. The fourth uses %j for the day of the year, 307, and %w for the weekday number, 2. isoformat() writes the standard text, and fromisoformat() reads it back unchanged. Slide 17 does the opposite and reads text.",
+   "concept": "StrftimeFormat",
+   "visual": ""
+  },
+  {
+   "n": 17,
+   "title": "String to datetime: strptime() and its errors",
+   "say": "The first printed line shows that strptime read 'October 21, 2026' with the format %B %d, %Y and returned a datetime at midnight. The next two lines show that a text with a different separator and a text with Oct where %B expects October both raise a ValueError, which a program can catch to report bad input. The last five lines show the rule for a two-digit year: 69 to 99 read as 1969 to 1999, and 00 to 68 read as 2000 to 2068. The format must match the text exactly. Slide 19 adds time zones.",
+   "concept": "StrptimeParse",
+   "visual": ""
+  },
+  {
+   "n": 18,
+   "title": "Story: Twenty-seven leap seconds since 1972",
+   "say": "Twenty-seven leap seconds were added between 1972 and 2016 to keep civil time near the rotation of the Earth, which is not steady. POSIX time skips them: every day has exactly 86400 seconds, so the last second of a leap day has no timestamp of its own, and datetime refuses a 60th second. The picture shows the cesium of an atomic clock, the part that keeps the second, and not a leap second itself. Epoch seconds are not the same as the seconds counted by atomic clocks. The link leads to the Wikipedia page on the leap second. Slide 19 treats time zones.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 19,
+   "title": "Time zones with zoneinfo",
+   "say": "The first line shows that a naive datetime, which has no zone, is not equal to an aware one of the same clock reading. The second line shows that subtracting them raises a TypeError, because one has no zone. The last three lines turn one timestamp, second one million after the epoch, into three clock readings: 05:46:40 in Los Angeles, 13:46:40 in UTC and 15:46:40 in Istanbul, which was UTC+2 in January 1970. The moment is the same; only the reading differs. Name the zone whenever a moment leaves your program. Slide 20 shows the day with twenty-three hours.",
+   "concept": "ZoneAwareness",
+   "visual": ""
+  },
+  {
+   "n": 20,
+   "title": "Daylight saving time: a day with 23 hours and an hour that happens twice",
+   "say": "The first printed line shows that adding one day to noon in New York on 7 March 2026 gives a difference of 1 day on the wall clock. The second line shows that only 23 hours really passed, because the clocks moved forward that night. The last line comes from the autumn change, when 01:30 happens twice: fold=1 selects the second one, the two moments are 5 and 6 UTC, and yet the two datetimes compare equal. So compare moments in UTC. Slide 21 tells the story of the database that holds these rules. Part 2 ends there.",
+   "concept": "DaylightSaving",
+   "visual": ""
+  },
+  {
+   "n": 21,
+   "title": "Story: A lawsuit shut down the tz database in 2011",
+   "say": "The rules for time zones and daylight saving time are data that volunteers maintain, and in 2011 a lawsuit led to a shutdown of the database for a time. The picture is a world map of the time zones, which the database describes the rules of, and not the database itself. Because governments change the rules, often at short notice, the data needs updating, and Python reads it from the system or from the tzdata package. Keep tzdata up to date. The link leads to the Wikipedia page on the tz database. Slide 22 starts part 3.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 22,
+   "title": "Part 3: Launching other programs (subprocess)",
+   "say": "Part 3 launches other programs with the subprocess module. run() starts a program, waits for it and returns a result. Popen() starts a program and returns at once, so the caller can carry on and wait later. The exit code tells how the program ended: zero is success and any other number is a failure. A list of arguments is safer than one string given to a shell, because a string can carry a second command. The table lists the slides of the part. Slide 23 explains the concepts in plain words.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 23,
+   "title": "Launching programs with subprocess",
+   "say": "subprocess.run() starts another program, waits for it and returns its result. The table gives the concepts of launching programs their meanings. The arguments go in a list, one item for each argument, so no shell has to split a string. capture_output=True collects what the program printed, and text=True returns it as strings instead of bytes. Opening a file with its default application differs on every system, and slide 28 compares the three ways. Slide 24 runs the first example.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 24,
+   "title": "subprocess.run(): launch a program and read its output",
+   "say": "The first printed line shows the return code 0, the standard output b'out\\n' and the standard error b'err\\n': with capture_output=True the result holds what the child printed as bytes. The second line shows that text=True turns the output into a str. run() starts the child, waits for it and returns a result with returncode, stdout and stderr. The child here is Python itself, so the example runs on any machine. Slide 25 shows Popen, which does not wait.",
+   "concept": "RunAndPopen",
+   "visual": ""
+  },
+  {
+   "n": 25,
+   "title": "subprocess.Popen(): start now, wait later",
+   "say": "The first printed line shows poll() returning None, because the child, which sleeps 0.4 seconds, is still running. wait() blocks until the child ends and returns 0, and the next poll() returns 0 as well. The last two lines show two errors: a missing program raises FileNotFoundError, and check=True makes run() raise CalledProcessError when the exit status is not zero. In the browser page the child is a recorded stand-in, and the chapter-code tab says so. Slide 26 explains the exit codes.",
+   "concept": "PopenNoWait",
+   "visual": ""
+  },
+  {
+   "n": 26,
+   "title": "Exit codes and signals",
+   "say": "The first printed line shows three exit codes: 0 for a child that ends normally, 3 for a child that calls sys.exit(3), and 1 for a child that ends with an uncaught exception. The second line shows -9 and -15. On Linux and macOS a negative return code is the signal that ended the child: minus nine is KILL and minus fifteen is TERM. Read the code before assuming that a job worked. Slide 27 shows why a list of arguments is safer than a string.",
+   "concept": "ExitCodes",
+   "visual": ""
+  },
+  {
+   "n": 27,
+   "title": "Shell safety: a list of arguments, not a string",
+   "say": "The first printed line shows that a string built for the shell ran two commands: the text after the semicolon ran and printed INJECTED. The second line shows that shlex.quote() turned the name into one harmless word, and the third line shows that a list of arguments with no shell does the same, because nothing is read as a command. The safest form is the list. In the browser page the shell is a stand-in that understands echo only, and the slide says so. Slide 28 compares the ways to open a file with its default program.",
+   "concept": "ShellInjection",
+   "visual": ""
+  },
+  {
+   "n": 28,
+   "title": "Opening files and web pages with the default program",
+   "say": "The table compares the ways to open a file or a web page with its default program. webbrowser.open() shows a web page and works on every system. os.startfile() opens a file and works on Windows only. On macOS the program open, and on Linux the program xdg-open, do the same job, and subprocess launches both. These calls are not run in the deck, because a machine without a screen has no default application to open. A portable program checks the system first. Slide 29 starts part 4, on scheduling.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 29,
+   "title": "Part 4: Scheduling tasks",
+   "say": "Part 4 schedules tasks, which means doing work later or again and again. The sched module keeps a list of jobs ordered by time and, for equal times, by priority. A cron entry has five fields that say when a job runs. The system schedulers, Task Scheduler on Windows, launchd on macOS and cron on Linux, start a program at the set times, so the program does not stay in memory. The table lists the slides of the part. Slide 30 explains the concepts in plain words.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 30,
+   "title": "Scheduling tasks with system schedulers",
+   "say": "A scheduler starts a job at the times it is given, so the job need not wait in memory. The table gives the concepts of scheduling their meanings. Each operating system has its own scheduler; the book names Task Scheduler, launchd and cron. calcProd.py is the small program of the book that the schedulers run, and pyperclip is the module that gives a program access to the clipboard. Slide 31 tells how cron once woke every minute, and slide 34 compares the three schedulers.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 31,
+   "title": "Story: Cron woke every minute until Purdue's event list",
+   "say": "Version 7 cron woke every minute and read its table of jobs. At Purdue, a graduate student, Robert Brown, read the paper of Franta and Maly and wrote a version with an event list that sleeps until the next job. The reason was that waking every minute used resources and overloaded a time-shared VAX with a hundred users. The picture is a VAX 11/780 in a museum, the kind of machine in the story, and not the one at Purdue. A scheduler is a daemon, and the job it starts does not inherit your shell. The link leads to the Wikipedia page on cron. Slide 32 treats the sched module.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 32,
+   "title": "In-process scheduling: the sched module",
+   "say": "The printed list shows the order in which five jobs ran: now, two, five-0, five. Jobs are entered with a delay, a priority and an action. The sched module runs them in order of time, and for equal times the lower priority number goes first, which is why five-0 ran before five. The stand-in clock is advanced instead of sleeping, so run() finishes at once, and the last number, 5.0, is where the clock ended. The real clock would sleep until each job is due. Slide 33 reads the five cron fields.",
+   "concept": "InProcessScheduling",
+   "visual": ""
+  },
+  {
+   "n": 33,
+   "title": "Cron fields: when does a job next run?",
+   "say": "The two printed lines show the next run of two schedules from Tuesday 13 October 2026, 09:30. The fields are minute, hour, day of the month, month and day of the week. The first schedule, 30 9 with weekdays 1 to 5, next runs on Wednesday 14 October at 09:30. The second, 0 0 with weekday 5, next runs at midnight on Friday 16 October. The small matcher knows only a star and lists of numbers, and counts Sunday as 0; real cron has more syntax, which its manual lists. Slide 34 compares the native schedulers.",
+   "concept": "CronFields",
+   "visual": ""
+  },
+  {
+   "n": 34,
+   "title": "Running Task Scheduler, launchd and cron",
+   "say": "The table compares the scheduler of each operating system. Task Scheduler runs on Windows and is set up in an app or with the schtasks command. launchd runs on macOS and reads property-list files. cron runs on Linux and other Unix systems and reads a crontab file. Each one starts your program at the set times, so the program does not wait in memory, and each has its own way to say when. The Python script stays the same. The cron row is read field by field on slide 33. Slide 35 starts part 5.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 35,
+   "title": "Part 5: Practice programs",
+   "say": "Part 5 has three small programs that combine the earlier parts. The countdown timer counts down and then plays a sound. The prettified stopwatch prints its laps in columns of fixed width. The Friday the 13th finder steps through the calendar one day at a time and collects the dates. Each program uses calls from parts 1 and 2, so the part shows how they work together. The table lists the slides of the part. Slide 36 explains the concepts of the three programs in plain words.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 36,
+   "title": "The practice programs: timer, laps, Fridays",
+   "say": "Each practice program combines calls of the earlier parts. The table gives the concepts of part 5 their meanings. The countdown loop prints the remaining seconds and pauses one second at each step, then plays a sound file. The prettified stopwatch pads its numbers to a fixed width so that columns line up. The Friday the 13th finder steps through the calendar with a timedelta and keeps the dates whose day is 13 and weekday is Friday. Slide 37 runs the countdown.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 37,
+   "title": "Project 15: a countdown timer",
+   "say": "The first printed line shows the counting, 5 4 3 2 1, and the second line shows that the program counted 5.0 seconds on the stand-in clock, so the run finished at once. The loop prints the remaining time and then waits one step, the same shape as many small tools: a loop, a pause and a final action. The real program sleeps one second for each count and then calls playsound3 for the alarm, which needs a sound file and a speaker, so the alarm is not played here. Slide 38 prints laps in columns.",
+   "concept": "SimpleCountdown",
+   "visual": ""
+  },
+  {
+   "n": 38,
+   "title": "Practice program: a prettified stopwatch",
+   "say": "The four printed lines are the laps of the first stopwatch on slide 11, now in columns that line up: the lap number, the total and the lap time. rjust() pads a text on the left to a fixed width, so numbers of different lengths end in the same column. Only the print line changed from slide 11; the logic of the laps is the same. A small change in how a result is printed can make it much easier to read. Slide 39 shows the last practice program.",
+   "concept": "ColumnFormatting",
+   "visual": ""
+  },
+  {
+   "n": 39,
+   "title": "Practice program: the Friday the 13th finder",
+   "say": "The first printed line shows the first and last of ten dates, 2026-11-13 and 2032-08-13, and the second line shows that ten dates were found. The loop starts on 13 October 2026 and adds one day at a time with a timedelta. A date is a Friday the 13th when day is 13 and weekday() is 4, because Monday is 0. Stepping one day at a time is simple and fast enough for six years. Slide 40 lists the practice questions.",
+   "concept": "FridayForward",
+   "visual": ""
+  },
+  {
+   "n": 40,
+   "title": "Practice Questions",
+   "say": "These are the practice questions, and each one points to the part where the idea was shown. The first is about sleep() and drift, slide 10. The second asks about naive and aware times and the day when the clocks change, slides 19 and 20. The third is about strptime() and strftime(), slides 16 and 17. The fourth is about run() and exit codes, slides 24 and 26. The fifth asks for the five cron fields, slide 33. Predict an answer first, then run what you can on the chapter page. Slide 41 summarises the chapter.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 41,
+   "title": "Summary",
+   "say": "Five sentences to remember. A timestamp counts seconds from the epoch, and 32 bits run out in 2038. Use monotonic() for how long, and remember that sleep() promises only at least. datetime holds dates and durations, and strftime and strptime convert them to text and back. A moment needs a zone, and a day can have 23 hours. subprocess takes a list of arguments, and the exit code says how the job went. The first three points answer the first question of slide 3, and the last two the second. Slide 42 lists the links to read next.",
+   "concept": "",
+   "visual": ""
+  },
+  {
+   "n": 42,
+   "title": "Resources: where to go next",
+   "say": "These are the links to read next. The chapter of the book is the starting point, followed by the documentation of the time, datetime, zoneinfo and subprocess modules. The POSIX definition settles what counts as a second since the epoch, and the crontab manual lists every cron field. The two package pages show the schedule and tzdata projects, and the Wikipedia pages are the stories told on slides 6, 9, 14, 18, 21 and 31. Choose one link that matches your weakest part and read it this week.",
+   "concept": "",
+   "visual": ""
+  }
+ ]
+}
