@@ -31,3 +31,6 @@ Released versions: deck 3.1.0 (`03-materials/ch14/SEN0414_Ch14_ExcelSpreadsheets
 
 ## Honest limits
 The owner has not opened the page or the deck. The slides were rendered and looked at with LibreOffice (two slides), not PowerPoint. The browser examples run in Python 3.13 (Pyodide) while the recorded results are from Python 3.13.18; the book's 3.14.6 interpreter is not available in this workspace. The page test ran with a test key, not the instructor's. The 14 resource links are those of deck 2.0.0 and were not re-opened in this session (only the PyPI page was). The slide-credit data is that of `story_images_v2_0_0.json`, not re-checked against the file pages of the pictures. The merge scripts that move register states are the lineage's own tooling, a deviation from the rule that tool gaps go to BRSF; it is to be handed over.
+
+## Correction appended after release
+The release commit ead38e3 was pushed without the register: a command slip removed register 1.15.0 before 1.16.0 was written. Commit 8dd4594 restores it as 1.16.0 (the register comment says so). The repository held no live register for the time between the two commits.
