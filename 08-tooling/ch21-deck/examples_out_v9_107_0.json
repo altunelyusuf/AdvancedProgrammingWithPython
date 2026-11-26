@@ -1,0 +1,94 @@
+{
+ "_version": "9.107.0",
+ "_note": "Made from the chapter-code manifest 03-materials/ch21/page/chapter_code_ch21_v1_0_0.json (same code, same order): one cell per manifest example, name = the example's name.",
+ "Colours and RGBA values": [
+  [
+   "from PIL import Image, ImageColor\nnames = ['red', 'lime', 'blue', 'CornflowerBlue', '#CCDDEE']\nfor n in names:\n    print(n, ImageColor.getcolor(n, 'RGBA'))\nprint(Image.new('1', (176, 176)).size, 176 * 176, 'pixels')",
+   ""
+  ]
+ ],
+ "Coordinates and box tuples": [
+  [
+   "from PIL import Image\nim = Image.new('RGB', (28, 27), 'white')\nprint(im.size, im.width, im.height)\nleft, top, right, bottom = 3, 1, 9, 6\nprint(right - left, 'wide,', bottom - top, 'high')\npart = im.crop((left, top, right, bottom))\nprint(part.size, im.size)",
+   ""
+  ]
+ ],
+ "Cropping a picture": [
+  [
+   "from PIL import Image, ImageDraw\ncat = Image.new('RGB', (200, 140), 'tan')\nImageDraw.Draw(cat).ellipse((60, 30, 140, 110), fill='black')\nface = cat.crop((60, 30, 141, 111))\nprint(cat.size, face.size)\nprint(cat.getpixel((100, 70)), face.getpixel((40, 40)))",
+   ""
+  ]
+ ],
+ "Pasting and tiling": [
+  [
+   "from PIL import Image\nface = Image.new('RGB', (40, 40), 'orange')\nsheet = Image.new('RGB', (200, 120), 'white')\ncount = 0\nfor left in range(0, sheet.width, face.width):\n    for top in range(0, sheet.height, face.height):\n        sheet.paste(face, (left, top))\n        count += 1\nprint(count, 'pastes')\nprint(sheet.getpixel((199, 119)), sheet.paste(face, (0, 0)))",
+   ""
+  ]
+ ],
+ "Pasting with a mask and the alpha channel": [
+  [
+   "from PIL import Image\nbase = Image.new('RGBA', (4, 4), 'red')\ntop = Image.new('RGBA', (2, 2), (0, 0, 255, 128))\nplain, masked = base.copy(), base.copy()\nplain.paste(top, (1, 1))\nmasked.paste(top, (1, 1), top)\nprint(plain.getpixel((1, 1)))\nprint(masked.getpixel((1, 1)))",
+   ""
+  ]
+ ],
+ "Resize, rotate, flip and set a pixel": [
+  [
+   "from PIL import Image\nim = Image.new('RGB', (120, 80), 'white')\nbig = im.rotate(90, expand=True)\nprint(im.resize((60, 40)).size, im.rotate(90).size, big.size)\nprint(im.rotate(6).size, im.rotate(6, expand=True).size)\nprint(im.transpose(Image.Transpose.FLIP_LEFT_RIGHT).size)\nim.putpixel((0, 0), (255, 0, 0))\nprint(im.getpixel((0, 0)), im.getpixel((1, 0)))\nprint(im.rotate(6).getpixel((0, 0)))",
+   ""
+  ]
+ ],
+ "Saving: PNG, JPEG and pixel density": [
+  [
+   "import io\nfrom PIL import Image, ImageDraw\nim = Image.new('RGB', (200, 200), 'white')\nImageDraw.Draw(im).ellipse((20, 20, 180, 180), fill='green')\nfor kind in ('PNG', 'JPEG'):\n    buf = io.BytesIO()\n    im.save(buf, kind)\n    print(kind, len(buf.getvalue()))\ntry:\n    im.convert('RGBA').save(io.BytesIO(), 'JPEG')\nexcept OSError as e:\n    print(e)",
+   ""
+  ]
+ ],
+ "Project 16: add a logo": [
+  [
+   "import os\nfrom PIL import Image\nlogo = Image.new('RGBA', (40, 30), (255, 0, 0, 200))\ndef stamp(name):\n    im = Image.open(name)\n    if im.width < 4 * logo.width:\n        return None\n    r = min(1, 300 / max(im.size))\n    im = im.resize((round(im.width * r), round(im.height * r)))\n    x, y = im.width - logo.width, im.height - logo.height\n    im.paste(logo, (x, y), logo)\n    return im.size\nfor name in sorted(os.listdir('.')):\n    print(name, stamp(name))",
+   ""
+  ]
+ ],
+ "Drawing shapes on a picture": [
+  [
+   "from PIL import Image, ImageDraw\nim = Image.new('RGBA', (200, 200), 'white')\ndraw = ImageDraw.Draw(im)\ndraw.point([(5, 5), (6, 6)], fill='red')\ndraw.line([(0, 0), (199, 199)], fill='black', width=3)\ndraw.rectangle((20, 30, 60, 60), fill='blue')\ndraw.ellipse((100, 50, 180, 130), outline='green')\ndraw.polygon([(30, 150), (90, 190), (20, 190)], fill='purple')\ncolours = {c: n for n, c in im.getcolors()}\nprint(colours[(0, 0, 255, 255)], 'blue pixels')",
+   ""
+  ]
+ ],
+ "Drawing text": [
+  [
+   "from PIL import Image, ImageDraw, ImageFont\nfont = ImageFont.load_default(size=24)\nim = Image.new('RGB', (200, 60), 'white')\ndraw = ImageDraw.Draw(im)\nbox = draw.textbbox((10, 10), 'Howdy!', font=font)\nprint(box)\nprint(box[2] - box[0], 'wide,', box[3] - box[1], 'high')\ndraw.text((10, 10), 'Howdy!', fill='black', font=font)\nprint(len(im.getcolors()) > 1)",
+   ""
+  ]
+ ],
+ "Copying and pasting images to the clipboard": [
+  [
+   "from PIL import Image\nclass Clipboard:\n    held = None\n    def copy(self, im):\n        self.held = im.copy()\n    def paste(self):\n        return self.held\nclip = Clipboard()\nclip.copy(Image.new('RGB', (30, 20), 'orange'))\ngot = clip.paste()\nprint(got.size, got.getpixel((0, 0)))",
+   ""
+  ]
+ ],
+ "Line graphs and scatter plots": [
+  [
+   "import io\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nlines = plt.plot([1, 2, 3, 4], [1, 4, 9, 16], label='squares')\ndots = plt.scatter([1, 2, 3, 4], [2, 3, 5, 8])\nplt.title('Growth'); plt.xlabel('step')\nplt.ylabel('size'); plt.legend()\nbuf = io.BytesIO()\nplt.savefig(buf, dpi=100, format='png')\ntitle, size = plt.gca().get_title(), len(buf.getvalue())\nprint(len(lines), type(dots).__name__, title, size > 1000)",
+   ""
+  ]
+ ],
+ "Bar graphs and pie charts": [
+  [
+   "import matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nnames, votes = ['A', 'B', 'C'], [5, 3, 2]\nbars = plt.bar(names, votes)\nprint([round(b.get_height()) for b in bars])\nplt.figure()\nwedges, labels = plt.pie(votes, labels=names)\nprint(len(wedges), round(wedges[0].theta2 - wedges[0].theta1))",
+   ""
+  ]
+ ],
+ "Tile Maker": [
+  [
+   "from PIL import Image, ImageDraw\ndef make_tile(face, across, down):\n    w, h = face.size\n    sheet = Image.new('RGB', (w * across, h * down))\n    for x in range(across):\n        for y in range(down):\n            sheet.paste(face, (x * w, y * h))\n    return sheet\nface = Image.new('RGB', (50, 40), 'tan')\nImageDraw.Draw(face).ellipse((10, 5, 40, 35), fill='black')\nsheet = make_tile(face, 4, 3)\nprint(sheet.size, sheet.getpixel((25, 20)), sheet.getpixel((75, 60)))",
+   ""
+  ]
+ ],
+ "Creating custom seating cards": [
+  [
+   "from PIL import Image, ImageDraw, ImageFont\nguests = ['Ada Lovelace', 'Alan Turing', 'Grace Hopper']\nfont = ImageFont.load_default(size=28)\ncards = []\nfor name in guests:\n    card = Image.new('RGB', (288, 360), 'white')\n    draw = ImageDraw.Draw(card)\n    box = draw.textbbox((0, 0), name, font=font)\n    x = (288 - (box[2] - box[0])) // 2\n    draw.text((x, 160), name, fill='black', font=font)\n    cards.append(card)\ncard, white = cards[0], (255, 255, 255)\nprint(len(cards), card.size)\nprint(card.getpixel((0, 0)), card.getpixel((144, 175)) != white)",
+   ""
+  ]
+ ]
+}
