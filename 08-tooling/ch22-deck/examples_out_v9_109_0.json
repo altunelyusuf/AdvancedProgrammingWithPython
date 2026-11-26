@@ -1,0 +1,94 @@
+{
+ "_version": "9.109.0",
+ "_note": "Made from the chapter-code manifest 03-materials/ch22/page/chapter_code_ch22_v2_0_0.json (same code, same order): one cell per manifest example, name = the example's name.",
+ "The engine and its languages": [
+  [
+   "import pytesseract as tess\nprint(tess.get_tesseract_version())\nlangs = tess.get_languages()\nprint(len(langs), langs[:5])\nprint('eng' in langs, 'xyz' in langs)",
+   ""
+  ]
+ ],
+ "Reading one line of text": [
+  [
+   "from PIL import Image, ImageDraw, ImageFont\nimport pytesseract as tess\nfont = ImageFont.load_default(size=40)\nim = Image.new('L', (440, 90), 255)\nImageDraw.Draw(im).text((20, 20), 'Hello OCR 2026', fill=0, font=font)\ntext = tess.image_to_string(im)\nprint(repr(text))\nprint(text.strip() == 'Hello OCR 2026')",
+   ""
+  ]
+ ],
+ "Lines, breaks and the data behind a line": [
+  [
+   "import pytesseract as tess\n# im holds three lines of text, drawn one under the other\ntext = tess.image_to_string(im)\nprint(type(text).__name__, len(text))\nprint(text.splitlines())",
+   ""
+  ]
+ ],
+ "Words, boxes and confidence": [
+  [
+   "import pytesseract as tess\n# im holds one line: Invoice 2026-114 total 482.50\nd = tess.image_to_data(im, output_type=tess.Output.DICT)\nfor w, c, x, y in zip(d['text'], d['conf'], d['left'], d['top']):\n    if w.strip():\n        print(w, c, x, y)",
+   ""
+  ]
+ ],
+ "Text that is too small": [
+  [
+   "def page(px, tilt=0):\n    font = ImageFont.load_default(size=px)\n    im = Image.new('L', (int(font.getlength(TRUTH)) + 60, px * 3), 255)\n    ImageDraw.Draw(im).text((30, px), TRUTH, fill=0, font=font)\n    return im.rotate(tilt, expand=True, fillcolor=255)\ndef score(im):\n    read = tess.image_to_string(im).strip()\n    return round(difflib.SequenceMatcher(None, TRUTH, read).ratio(), 2)\nfor px in (7, 8, 9, 10, 12, 16):\n    print(px, score(page(px)))",
+   ""
+  ]
+ ],
+ "A page that is crooked": [
+  [
+   "# page() and score() are those of the size example\nfor deg in (0, 4, 6, 7, 8, 9, 12):\n    print(deg, score(page(24, deg)))",
+   ""
+  ]
+ ],
+ "Noise on the picture": [
+  [
+   "def noisy(im, s):\n    rng = np.random.default_rng(1)\n    a = np.array(im, dtype=int) + rng.integers(-s, s + 1, (im.height, im.width))\n    return Image.fromarray(np.clip(a, 0, 255).astype('uint8'))\nfor s in (0, 50, 90, 100, 105, 110):\n    print(s, score(noisy(page(24), s)))",
+   ""
+  ]
+ ],
+ "Cleaning a picture before reading": [
+  [
+   "tilted = page(24, 10)\nprint('tilted', score(tilted), score(tilted.rotate(-10, expand=True, fillcolor=255)))\nsmall = page(8)\nbig = small.resize((small.width * 3, small.height * 3), Image.Resampling.LANCZOS)\nprint('small', score(small), score(big))\ntable = [0] * 128 + [255] * 128\nprint('black and white', score(big.point(table)))",
+   ""
+  ]
+ ],
+ "Telling Tesseract what to expect": [
+  [
+   "import pytesseract as tess\n# im holds the line: Call 555-0199 now: 2026\nprint(repr(tess.image_to_string(im).strip()))\ndigits = '--psm 7 -c tessedit_char_whitelist=0123456789-'\nprint(repr(tess.image_to_string(im, config=digits).strip()))",
+   ""
+  ]
+ ],
+ "Languages other than English": [
+  [
+   "def ratio(a, b):\n    return round(difflib.SequenceMatcher(None, a, b).ratio(), 2)\nfor lang, text in texts.items():\n    as_eng = tess.image_to_string(line(text), lang='eng').strip()\n    as_own = tess.image_to_string(line(text), lang=lang).strip()\n    print(lang, ratio(text, as_eng), ratio(text, as_own))\ntry:\n    tess.image_to_string(line(texts['deu']), lang='xyz')\nexcept tess.TesseractError as e:\n    print(type(e).__name__)",
+   ""
+  ]
+ ],
+ "Finding the mistakes of a reading": [
+  [
+   "import difflib\nTRUTH = 'Invoice 2026-114 total 482.50'\nread = 'lnvoice 2O26-114 totaI 482.5O'\nfor tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, TRUTH, read).get_opcodes():\n    if tag != 'equal':\n        print(tag, repr(TRUTH[i1:i2]), 'read as', repr(read[j1:j2]))\nratio = difflib.SequenceMatcher(None, TRUTH, read).ratio()\nprint(round(ratio, 2))",
+   ""
+  ]
+ ],
+ "A searchable PDF": [
+  [
+   "import subprocess, tempfile\nimport pytesseract as tess\n# im holds two lines of text\npdf = tess.image_to_pdf_or_hocr(im, extension='pdf')\nprint(type(pdf).__name__, pdf[:5])\npath = tempfile.mktemp(suffix='.pdf')\nopen(path, 'wb').write(pdf)\ndone = subprocess.run(['pdftotext', path, '-'], capture_output=True, text=True)\nprint([t for t in done.stdout.splitlines() if t.strip()])",
+   ""
+  ]
+ ],
+ "Running NAPS2 from Python": [
+  [
+   "import subprocess\ncommand = ['NAPS2.Console', '-n', '0', '-i', 'ocr-example.png', '-o', 'output.pdf']\nprint(' '.join(command))\ntry:\n    subprocess.run(command, check=True)\nexcept FileNotFoundError as e:\n    print(type(e).__name__, e.filename)",
+   ""
+  ]
+ ],
+ "Reading the screen": [
+  [
+   "class Screen:\n    def screenshot(self):\n        im = Image.new('RGB', (640, 300), 'white')\n        draw = ImageDraw.Draw(im)\n        draw.text((20, 60), 'Embedded document', fill='black', font=font)\n        draw.text((20, 120), 'Page 3 of 12: total 482.50', fill='black', font=font)\n        return im\nshot = Screen().screenshot()\npart = shot.crop((0, 50, 640, 170))\nprint(shot.size, part.size)\nprint(tess.image_to_string(part).strip().splitlines())",
+   ""
+  ]
+ ],
+ "Practice program: browser text scraper": [
+  [
+   "def screenshot(n):\n    im = Image.new('RGB', (640, 160), 'white')\n    line = f'Page {n} of 3: total {n * 100}.50'\n    ImageDraw.Draw(im).text((20, 50), line, fill='black', font=font)\n    return im\nfor n in (1, 2, 3):\n    part = screenshot(n).crop((0, 20, 640, 120))\n    text = tess.image_to_string(part).strip()\n    with open('output.txt', 'a') as f:\n        f.write(text + '\\n')\nprint(open('output.txt').read().splitlines())",
+   ""
+  ]
+ ]
+}

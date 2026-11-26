@@ -100,7 +100,7 @@ STORIES = [
     },
 ]
 
-LINK_STATUS = {}
+LINK_STATUS = {'Goldberg1931': 200, 'Kurzweil1976': 200, 'Tesseract1985': 200, 'Recaptcha2009': 200, 'Frankenstein1831': 200}
 
 
 def run_checks():
