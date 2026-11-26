@@ -1,0 +1,26 @@
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix ipo:     <http://example.org/rdodi/interactive-page-ontology#> .
+@prefix shp:     <http://example.org/sen0414/page-shapes#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://example.org/sen0414/page-shapes> a owl:Ontology ;
+    rdfs:label "SEN0414: shapes for the chapter pages' own A-boxes"@en ;
+    owl:versionInfo "1.0.0" ; owl:versionIRI <http://example.org/sen0414/page-shapes/1.0.0> ; dcterms:identifier "sen0414_page_shapes" ;
+    rdfs:comment "1.0.0 (2026-11-26): the SHACL of the chapter pages' A-boxes (03-materials/chNN/page/sen0414_chNN_page_abox_*.ttl). One rule so far, the Owner's ruling of 2026-11-24 confirmed 2026-11-26 09:29 Istanbul for every chapter: a page's main menu has an item that runs the chapter's slide examples in order. Rulings are shapes, never prose."@en .
+
+shp:PageRunInOrderMenuShape a sh:NodeShape ;
+    rdfs:label "A chapter page's main menu has an item that runs the slide examples in order"@en ;
+    sh:targetClass ipo:PrimaryNavigation ;
+    sh:severity sh:Violation ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "The main menu of this page has no item that runs the chapter's slide examples in order: a menu item (ipo:Menu, part of this navigation) whose label says 'Run examples in order' is required on every chapter page (Owner's ruling, 2026-11-24, confirmed 2026-11-26)." ;
+        sh:prefixes [ sh:declare [ sh:prefix "ipo" ; sh:namespace "http://example.org/rdodi/interactive-page-ontology#"^^xsd:anyURI ] ,
+                                  [ sh:prefix "dcterms" ; sh:namespace "http://purl.org/dc/terms/"^^xsd:anyURI ] ,
+                                  [ sh:prefix "rdfs" ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ] ] ;
+        sh:select """SELECT $this WHERE {
+            FILTER NOT EXISTS { ?m a ipo:Menu ; dcterms:isPartOf $this ; rdfs:label ?l .
+                                FILTER (CONTAINS(LCASE(STR(?l)), "run examples in order")) }
+        }""" ] .
