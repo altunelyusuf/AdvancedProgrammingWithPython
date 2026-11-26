@@ -1,0 +1,245 @@
+{
+ "chapter": 21,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch21/SEN0414_Ch21_GraphsAndImages_3e_v4_0_0.pptx",
+ "about": "The code examples of the chapter 21 deck, in the order of the code slides (order = slide order). Every example is self-contained and runs offline, reads no keyboard and opens no window. Every picture is drawn by the example itself (no file of the book's download is used); the clipboard of pyperclipimg, which needs a display, is replaced by a small class with the same two calls (EMULATED); Matplotlib draws with the Agg backend into memory. The slide says so. No example needs an account or a network. The expected result is what the run printed under Python 3.12.3. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed.",
+ "executed_with": {
+  "python": "3.12.3",
+  "library": "Pillow, Matplotlib, and the standard library"
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "wheel_sha256": {},
+  "page_requirements": [
+   "the packages Pillow (PIL) and Matplotlib, and the standard library modules io, os and tempfile",
+   "on the page (Pyodide) the examples run with the Agg backend and in memory; byte counts of saved pictures belong to the library version that ran them, and the chapter-code tab shows the printed result of the recorded run"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "colours",
+   "name": "Colours and RGBA values",
+   "slide": 8,
+   "concepts": [
+    "Computer Image Fundamentals",
+    "Colors and RGBA Values",
+    "Table 21-1: Standard Color Names and Their RGBA Values",
+    "PIL.ImageColor"
+   ],
+   "code": "from PIL import Image, ImageColor\nnames = ['red', 'lime', 'blue', 'CornflowerBlue', '#CCDDEE']\nfor n in names:\n    print(n, ImageColor.getcolor(n, 'RGBA'))\nprint(Image.new('1', (176, 176)).size, 176 * 176, 'pixels')",
+   "setup": "",
+   "expected": "red (255, 0, 0, 255)\nlime (0, 255, 0, 255)\nblue (0, 0, 255, 255)\nCornflowerBlue (100, 149, 237, 255)\n#CCDDEE (204, 221, 238, 255)\n(176, 176) 30976 pixels\n"
+  },
+  {
+   "order": 2,
+   "id": "boxtuple",
+   "name": "Coordinates and box tuples",
+   "slide": 10,
+   "concepts": [
+    "Coordinates and Box Tuples",
+    "Figure 21-1: the x- and y-coordinates of a 28x27 image",
+    "Figure 21-2: the area represented by the box tuple (3, 1, 9, 6)",
+    "Working with the Image Data Type"
+   ],
+   "code": "from PIL import Image\nim = Image.new('RGB', (28, 27), 'white')\nprint(im.size, im.width, im.height)\nleft, top, right, bottom = 3, 1, 9, 6\nprint(right - left, 'wide,', bottom - top, 'high')\npart = im.crop((left, top, right, bottom))\nprint(part.size, im.size)",
+   "setup": "",
+   "expected": "(28, 27) 28 27\n6 wide, 5 high\n(6, 5) (28, 27)\n"
+  },
+  {
+   "order": 3,
+   "id": "crop",
+   "name": "Cropping a picture",
+   "slide": 11,
+   "concepts": [
+    "Manipulating Images with Pillow",
+    "Cropping Images"
+   ],
+   "code": "from PIL import Image, ImageDraw\ncat = Image.new('RGB', (200, 140), 'tan')\nImageDraw.Draw(cat).ellipse((60, 30, 140, 110), fill='black')\nface = cat.crop((60, 30, 141, 111))\nprint(cat.size, face.size)\nprint(cat.getpixel((100, 70)), face.getpixel((40, 40)))",
+   "setup": "",
+   "expected": "(200, 140) (81, 81)\n(0, 0, 0) (0, 0, 0)\n"
+  },
+  {
+   "order": 4,
+   "id": "paste",
+   "name": "Pasting and tiling",
+   "slide": 12,
+   "concepts": [
+    "Pasting Images onto Other Images",
+    "Figure 21-6: nested for loops used with paste() duplicate the cat face"
+   ],
+   "code": "from PIL import Image\nface = Image.new('RGB', (40, 40), 'orange')\nsheet = Image.new('RGB', (200, 120), 'white')\ncount = 0\nfor left in range(0, sheet.width, face.width):\n    for top in range(0, sheet.height, face.height):\n        sheet.paste(face, (left, top))\n        count += 1\nprint(count, 'pastes')\nprint(sheet.getpixel((199, 119)), sheet.paste(face, (0, 0)))",
+   "setup": "",
+   "expected": "15 pastes\n(255, 165, 0) None\n"
+  },
+  {
+   "order": 5,
+   "id": "mask",
+   "name": "Pasting with a mask and the alpha channel",
+   "slide": 16,
+   "concepts": [
+    "Colors and RGBA Values",
+    "Figure 21-13: the logo with and without the third argument"
+   ],
+   "code": "from PIL import Image\nbase = Image.new('RGBA', (4, 4), 'red')\ntop = Image.new('RGBA', (2, 2), (0, 0, 255, 128))\nplain, masked = base.copy(), base.copy()\nplain.paste(top, (1, 1))\nmasked.paste(top, (1, 1), top)\nprint(plain.getpixel((1, 1)))\nprint(masked.getpixel((1, 1)))",
+   "setup": "",
+   "expected": "(0, 0, 255, 128)\n(127, 0, 128, 191)\n"
+  },
+  {
+   "order": 6,
+   "id": "transform",
+   "name": "Resize, rotate, flip and set a pixel",
+   "slide": 17,
+   "concepts": [
+    "Resizing Images",
+    "Rotating and Flipping Images",
+    "Changing Individual Pixels",
+    "Figure 21-8: the image rotated six degrees normally and with expand=True"
+   ],
+   "code": "from PIL import Image\nim = Image.new('RGB', (120, 80), 'white')\nbig = im.rotate(90, expand=True)\nprint(im.resize((60, 40)).size, im.rotate(90).size, big.size)\nprint(im.rotate(6).size, im.rotate(6, expand=True).size)\nprint(im.transpose(Image.Transpose.FLIP_LEFT_RIGHT).size)\nim.putpixel((0, 0), (255, 0, 0))\nprint(im.getpixel((0, 0)), im.getpixel((1, 0)))\nprint(im.rotate(6).getpixel((0, 0)))",
+   "setup": "",
+   "expected": "(60, 40) (120, 80) (80, 120)\n(120, 80) (128, 94)\n(120, 80)\n(255, 0, 0) (255, 255, 255)\n(0, 0, 0)\n"
+  },
+  {
+   "order": 7,
+   "id": "save",
+   "name": "Saving: PNG, JPEG and pixel density",
+   "slide": 20,
+   "concepts": [
+    "Working with the Image Data Type",
+    "PIL.Image"
+   ],
+   "code": "import io\nfrom PIL import Image, ImageDraw\nim = Image.new('RGB', (200, 200), 'white')\nImageDraw.Draw(im).ellipse((20, 20, 180, 180), fill='green')\nfor kind in ('PNG', 'JPEG'):\n    buf = io.BytesIO()\n    im.save(buf, kind)\n    print(kind, len(buf.getvalue()))\ntry:\n    im.convert('RGBA').save(io.BytesIO(), 'JPEG')\nexcept OSError as e:\n    print(e)",
+   "setup": "",
+   "expected": "PNG 1219\nJPEG 3648\ncannot write mode RGBA as JPEG\n"
+  },
+  {
+   "order": 8,
+   "id": "logo",
+   "name": "Project 16: add a logo",
+   "slide": 25,
+   "concepts": [
+    "Project 16: Add a Logo",
+    "Step 1: Open the Logo Image",
+    "Step 2: Loop Over All Files",
+    "Step 3: Resize the Images",
+    "Step 4: Add the Logo and Save the Changes",
+    "Figure 21-12: the left and top coordinates of the logo",
+    "resizeAndAddLogo.py",
+    "Ideas for Similar Programs",
+    "os",
+    "catlogo.png"
+   ],
+   "code": "import os\nfrom PIL import Image\nlogo = Image.new('RGBA', (40, 30), (255, 0, 0, 200))\ndef stamp(name):\n    im = Image.open(name)\n    if im.width < 4 * logo.width:\n        return None\n    r = min(1, 300 / max(im.size))\n    im = im.resize((round(im.width * r), round(im.height * r)))\n    x, y = im.width - logo.width, im.height - logo.height\n    im.paste(logo, (x, y), logo)\n    return im.size\nfor name in sorted(os.listdir('.')):\n    print(name, stamp(name))",
+   "setup": "import os, tempfile\nfrom PIL import Image\nos.chdir(tempfile.mkdtemp())\nfor w in [300, 80, 500]:\n    Image.new('RGB', (w, w // 2), 'skyblue').save(f'{w}.png')",
+   "expected": "300.png (300, 150)\n500.png (300, 150)\n80.png None\n"
+  },
+  {
+   "order": 9,
+   "id": "draw",
+   "name": "Drawing shapes on a picture",
+   "slide": 26,
+   "concepts": [
+    "Drawing on Images",
+    "Shapes",
+    "Points",
+    "Lines",
+    "Rectangles",
+    "Ellipses",
+    "Polygons",
+    "A Drawing Example",
+    "Figure 21-14: the resulting drawing.png image",
+    "PIL.ImageDraw"
+   ],
+   "code": "from PIL import Image, ImageDraw\nim = Image.new('RGBA', (200, 200), 'white')\ndraw = ImageDraw.Draw(im)\ndraw.point([(5, 5), (6, 6)], fill='red')\ndraw.line([(0, 0), (199, 199)], fill='black', width=3)\ndraw.rectangle((20, 30, 60, 60), fill='blue')\ndraw.ellipse((100, 50, 180, 130), outline='green')\ndraw.polygon([(30, 150), (90, 190), (20, 190)], fill='purple')\ncolours = {c: n for n, c in im.getcolors()}\nprint(colours[(0, 0, 255, 255)], 'blue pixels')",
+   "setup": "",
+   "expected": "1271 blue pixels\n"
+  },
+  {
+   "order": 10,
+   "id": "text",
+   "name": "Drawing text",
+   "slide": 27,
+   "concepts": [
+    "Text",
+    "PIL.ImageFont"
+   ],
+   "code": "from PIL import Image, ImageDraw, ImageFont\nfont = ImageFont.load_default(size=24)\nim = Image.new('RGB', (200, 60), 'white')\ndraw = ImageDraw.Draw(im)\nbox = draw.textbbox((10, 10), 'Howdy!', font=font)\nprint(box)\nprint(box[2] - box[0], 'wide,', box[3] - box[1], 'high')\ndraw.text((10, 10), 'Howdy!', fill='black', font=font)\nprint(len(im.getcolors()) > 1)",
+   "setup": "",
+   "expected": "(10, 17, 93, 39)\n83 wide, 22 high\nTrue\n"
+  },
+  {
+   "order": 11,
+   "id": "clipboard",
+   "name": "Copying and pasting images to the clipboard",
+   "slide": 31,
+   "concepts": [
+    "Copying and Pasting Images to the Clipboard",
+    "pyperclipimg"
+   ],
+   "code": "from PIL import Image\nclass Clipboard:\n    held = None\n    def copy(self, im):\n        self.held = im.copy()\n    def paste(self):\n        return self.held\nclip = Clipboard()\nclip.copy(Image.new('RGB', (30, 20), 'orange'))\ngot = clip.paste()\nprint(got.size, got.getpixel((0, 0)))",
+   "setup": "",
+   "expected": "(30, 20) (255, 165, 0)\n"
+  },
+  {
+   "order": 12,
+   "id": "line",
+   "name": "Line graphs and scatter plots",
+   "slide": 32,
+   "concepts": [
+    "Creating Graphs with Matplotlib",
+    "Line Graphs and Scatter Plots",
+    "matplotlib.pyplot",
+    "Additional Components",
+    "Figure 21-20: the example line graph with additional components"
+   ],
+   "code": "import io\nimport matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nlines = plt.plot([1, 2, 3, 4], [1, 4, 9, 16], label='squares')\ndots = plt.scatter([1, 2, 3, 4], [2, 3, 5, 8])\nplt.title('Growth'); plt.xlabel('step')\nplt.ylabel('size'); plt.legend()\nbuf = io.BytesIO()\nplt.savefig(buf, dpi=100, format='png')\ntitle, size = plt.gca().get_title(), len(buf.getvalue())\nprint(len(lines), type(dots).__name__, title, size > 1000)",
+   "setup": "",
+   "expected": "1 PathCollection Growth True\n"
+  },
+  {
+   "order": 13,
+   "id": "barpie",
+   "name": "Bar graphs and pie charts",
+   "slide": 33,
+   "concepts": [
+    "Bar Graphs and Pie Charts"
+   ],
+   "code": "import matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt\nnames, votes = ['A', 'B', 'C'], [5, 3, 2]\nbars = plt.bar(names, votes)\nprint([round(b.get_height()) for b in bars])\nplt.figure()\nwedges, labels = plt.pie(votes, labels=names)\nprint(len(wedges), round(wedges[0].theta2 - wedges[0].theta1))",
+   "setup": "",
+   "expected": "[5, 3, 2]\n3 180\n"
+  },
+  {
+   "order": 14,
+   "id": "tile",
+   "name": "Tile Maker",
+   "slide": 36,
+   "concepts": [
+    "Practice Programs",
+    "Tile Maker",
+    "zophie.png"
+   ],
+   "code": "from PIL import Image, ImageDraw\ndef make_tile(face, across, down):\n    w, h = face.size\n    sheet = Image.new('RGB', (w * across, h * down))\n    for x in range(across):\n        for y in range(down):\n            sheet.paste(face, (x * w, y * h))\n    return sheet\nface = Image.new('RGB', (50, 40), 'tan')\nImageDraw.Draw(face).ellipse((10, 5, 40, 35), fill='black')\nsheet = make_tile(face, 4, 3)\nprint(sheet.size, sheet.getpixel((25, 20)), sheet.getpixel((75, 60)))",
+   "setup": "",
+   "expected": "(200, 120) (0, 0, 0) (0, 0, 0)\n"
+  },
+  {
+   "order": 15,
+   "id": "seating",
+   "name": "Creating custom seating cards",
+   "slide": 37,
+   "concepts": [
+    "Creating Custom Seating Cards",
+    "guests.txt",
+    "Identifying Photo Folders on the Hard Drive"
+   ],
+   "code": "from PIL import Image, ImageDraw, ImageFont\nguests = ['Ada Lovelace', 'Alan Turing', 'Grace Hopper']\nfont = ImageFont.load_default(size=28)\ncards = []\nfor name in guests:\n    card = Image.new('RGB', (288, 360), 'white')\n    draw = ImageDraw.Draw(card)\n    box = draw.textbbox((0, 0), name, font=font)\n    x = (288 - (box[2] - box[0])) // 2\n    draw.text((x, 160), name, fill='black', font=font)\n    cards.append(card)\ncard, white = cards[0], (255, 255, 255)\nprint(len(cards), card.size)\nprint(card.getpixel((0, 0)), card.getpixel((144, 175)) != white)",
+   "setup": "",
+   "expected": "3 (288, 360)\n(255, 255, 255) True\n"
+  }
+ ]
+}

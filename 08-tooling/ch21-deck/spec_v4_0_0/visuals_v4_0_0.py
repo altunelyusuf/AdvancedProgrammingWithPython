@@ -63,18 +63,22 @@ def caption(s, x, y, w, text, fs=9.5):
 
 
 # ------------------------------------------------------------------ part 1: pixels, colours and boxes
+def reading(s, x, y, w, rows, rowh=0.27, fs=10, fills=None):
+    """what the run printed, as a native table of two columns"""
+    return table(s, x, y, w, [["What the run printed", "Value"]] + rows, [w * 0.42, w * 0.58], rowh=rowh, mono_cols=(1,), cell_fill=fills, fs=fs)
+
+
 @need(1.3)
 def v_colours(s, x, y, w, h, ns, out):
     L = lines(out)
     names = ["red", "lime", "blue", "CornflowerBlue", "#CCDDEE"]
-    n = len(names)
-    cw = (w - 0.1 * (n - 1)) / n
-    for i, nm in enumerate(names):
-        r, g, b, a = lit(L[i].split(" ", 1)[1])
-        xx = x + i * (cw + 0.1)
-        rect(s, xx, y, cw, 0.5, "%02X%02X%02X" % (r, g, b), line=C["line"], name="swatch")
-        tb(s, xx, y + 0.52, cw, 0.5, [nm, "%d, %d, %d, %d" % (r, g, b, a)], 9.5, C["ink"], align=None, name="swatch label")
-    note(s, x, y + 1.03, w, "Last line printed: %s" % L[5], h=0.24, fs=9.5)
+    nums = [lit(L[i].split(" ", 1)[1]) for i in range(len(names))]
+    hexes = ["%02X%02X%02X" % tuple(n[:3]) for n in nums]
+    rows = [names, ["%d, %d, %d, %d" % n for n in nums]]
+    fills = {(0, i): hexes[i] for i in range(len(names))}
+    colors = {(0, i): ("FFFFFF" if sum(n[:3]) < 400 else C["ink"]) for i, n in enumerate(nums)}
+    table(s, x, y, w, rows, [w / len(names)] * len(names), header=False, rowh=0.4, mono_cols=(), cell_fill=fills, cell_color=colors, fs=10, bold_cols=())
+    note(s, x, y + 0.9, w, "Colour, then red, green, blue, alpha. Last line printed: %s" % L[5], h=0.24, fs=9.5)
 
 
 @need(1.25)
@@ -86,38 +90,38 @@ def v_boxtuple(s, x, y, w, h, ns, out):
     gx, gy = x + 0.1, y + 0.05
     rect(s, gx, gy, gw * cell, gh * cell, "FFFFFF", line=C["muted"], name="grid")
     rect(s, gx + 3 * cell, gy + 1 * cell, 6 * cell, 5 * cell, C["tealLight"], line=C["teal"], name="box (3, 1, 9, 6)")
-    tb(s, gx + gw * cell + 0.2, y, w - gw * cell - 0.4, 1.2, ["The picture is %s pixels." % L[0].split(" ", 1)[0].replace("(", "").replace(",", " by").replace(")", ""),
-                                                           "The box (3, 1, 9, 6) is %s." % L[1], "crop((3, 1, 9, 6)) gave %s; the picture stays %s." % tuple(L[2].replace(") (", ")|(").split("|"))],
-       10.5, C["ink"], name="reading")
+    sizes = L[2].replace(") (", ")|(").split("|")
+    reading(s, x + gw * cell + 0.3, y, w - gw * cell - 0.4, [["picture size", L[0].split(") ")[0] + ")"],
+                                                           ["the box (3, 1, 9, 6)", L[1]], ["crop of the box", sizes[0]], ["picture afterwards", sizes[1]]], rowh=0.27, fs=10)
 
 
 @need(1.5)
 def v_crop(s, x, y, w, h, ns, out):
     L = lines(out)
     cat, face = ns["cat"], ns["face"]
-    narrow = w < 5
-    if narrow:
-        pic(s, cat, x, y + 0.05, 2.0, 1.4, "the picture the example drew: a dark face on a tan field")
-        pic(s, face, x + 0.4, y + 1.7, 1.3, 1.3, "the cut-out face")
-        caption(s, x, y + 1.5, w, "the original: %s" % L[0].split(") (")[0] + ")")
-        caption(s, x, y + 3.05, w, "the crop: (%s" % L[0].split(") (")[1])
+    sizes = L[0].replace(") (", ")|(").split("|")
+    rows = [["original", sizes[0]], ["the crop", sizes[1]], ["middle pixels read", L[1]]]
+    if w < 5:
+        pic(s, cat, x, y + 0.05, 1.9, 1.33, "the picture the example drew: a dark face on a tan field")
+        pic(s, face, x + 2.1, y + 0.05, 1.19, 1.19, "the cut-out face")
+        reading(s, x, y + 1.7, w, rows, rowh=0.3, fs=9.5)
     else:
         pic(s, cat, x, y + 0.05, 1.7, 1.19, "the picture the example drew: a dark face on a tan field")
-        pic(s, face, x + 2.6, y + 0.05, 1.19, 1.19, "the cut-out face")
-        tb(s, x + 4.2, y, w - 4.2, 1.3, ["original %s" % L[0].split(") (")[0] + ")", "crop %s" % ("(" + L[0].split(") (")[1]), "pixels read: " + L[1]], 10.5, C["ink"], name="reading")
+        pic(s, face, x + 1.95, y + 0.05, 1.19, 1.19, "the cut-out face")
+        reading(s, x + 3.4, y, w - 3.4, rows, rowh=0.27, fs=10)
 
 
 @need(1.5)
 def v_paste(s, x, y, w, h, ns, out):
     L = lines(out)
     sheet = ns["sheet"]
-    narrow = w < 5
-    if narrow:
+    rows = [["pastes made", L[0].split(" ")[0]], ["last pixel of the sheet", L[1].split(" None")[0]], ["value paste() returned", "None"]]
+    if w < 5:
         pic(s, sheet, x, y + 0.05, 3.1, 1.86, "the sheet of 15 orange faces")
-        tb(s, x, y + 2.0, w, 1.2, [L[0], "last pixel %s" % L[1].split(" None")[0], "paste() returned None"], 10.5, C["ink"], name="reading")
+        reading(s, x, y + 2.1, w, rows, rowh=0.3, fs=9.5)
     else:
         pic(s, sheet, x, y + 0.05, 1.9, 1.14, "the sheet of 15 orange faces")
-        tb(s, x + 2.2, y, w - 2.2, 1.3, ["the run printed: %s" % L[0], "last pixel %s; paste() returned None" % L[1].split(" None")[0]], 10.5, C["ink"], name="reading")
+        reading(s, x + 2.2, y, w - 2.2, rows, rowh=0.27, fs=10)
 
 
 # ------------------------------------------------------------------ part 2: changing pictures
@@ -125,38 +129,45 @@ def v_paste(s, x, y, w, h, ns, out):
 def v_mask(s, x, y, w, h, ns, out):
     L = lines(out)
     plain, masked = ns["plain"], ns["masked"]
-    cw = 1.25 if w >= 5 else 1.4
+    rows = [["pasted without a mask", L[0]], ["pasted with the square as mask", L[1]]]
+    cw = 1.25
+    pic(s, plain, x, y + 0.05, cw, cw, "red base with a blue square pasted without a mask")
+    pic(s, masked, x + cw + 0.25, y + 0.05, cw, cw, "red base with the blue square pasted with a mask")
     if w >= 5:
-        pic(s, plain, x, y + 0.05, cw, cw, "red base with a blue square pasted without a mask")
-        pic(s, masked, x + 3.3, y + 0.05, cw, cw, "red base with the blue square pasted with a mask")
-        tb(s, x + cw + 0.15, y + 0.1, 1.8, 1.0, ["no mask", L[0]], 10.5, C["ink"], name="reading")
-        tb(s, x + 3.3 + cw + 0.15, y + 0.1, 3.6, 1.0, ["the square as the mask", L[1]], 10.5, C["ink"], name="reading")
+        reading(s, x + 2.9, y, w - 2.9, rows, rowh=0.3, fs=10)
     else:
-        pic(s, plain, x, y + 0.05, cw, cw, "red base with a blue square pasted without a mask")
-        pic(s, masked, x + 1.7, y + 0.05, cw, cw, "red base with the blue square pasted with a mask")
-        tb(s, x, y + 1.55, w, 1.4, ["no mask (left): " + L[0], "with the mask (right): " + L[1], "The mask blends; no mask replaces."], 10.5, C["ink"], name="reading")
+        reading(s, x, y + 1.6, w, rows, rowh=0.36, fs=9)
 
 
 @need(1.3)
 def v_transform(s, x, y, w, h, ns, out):
     L = lines(out)
-    a, b, c_ = lit(L[0].replace(") (", "),(")), None, None
+    a = lit(L[0].replace(") (", "),("))
     sizes = [("resize((60, 40))", a[0]), ("rotate(90)", a[1]), ("rotate(90, expand=True)", a[2])]
     t, e = lit(L[1].replace(") (", "),("))
     sizes += [("rotate(6)", t), ("rotate(6, expand=True)", e)]
-    chart(s, "col", x, y, w * 0.5, max(h, 1.3), [k for k, _ in sizes], [("width", [v[0] for _, v in sizes]), ("height", [v[1] for _, v in sizes])], fs=8, legend=True, gap=50)
-    rows = [["Call", "Size"]] + [[k, "%d by %d" % v] for k, v in sizes]
-    table(s, x + w * 0.55, y + 0.02, w * 0.45, rows, [2.5, 1.6], rowh=0.2, mono_cols=(0,), cell_fill={(3, 1): C["greenLight"], (5, 1): C["greenLight"]}, fs=9)
+    rows = [["Call", "Size (width by height)"]] + [[k, "%d by %d" % v] for k, v in sizes]
+    cf = {(3, 1): C["greenLight"], (5, 1): C["greenLight"]}
+    if w >= 5:
+        chart(s, "col", x, y, w * 0.5, max(h, 1.3), [k for k, _ in sizes], [("width", [v[0] for _, v in sizes]), ("height", [v[1] for _, v in sizes])], fs=8, legend=True, gap=50)
+        table(s, x + w * 0.55, y + 0.02, w * 0.45, rows, [2.5, 1.6], rowh=0.2, mono_cols=(0,), cell_fill=cf, fs=9)
+    else:
+        table(s, x, y + 0.05, w, rows, [1.9, 1.35], rowh=0.34, mono_cols=(0,), cell_fill=cf, fs=9)
+        tb(s, x, y + 2.3, w, 0.9, "Green: the canvas grew. The flip kept 120 by 80, and the corner of a turned picture is black.", 10, C["muted"], italic=True, name="visual note")
 
 
 @need(1.3)
 def v_save(s, x, y, w, h, ns, out):
     L = lines(out)
     sizes = {ln.split(" ")[0]: int(ln.split(" ")[1]) for ln in L[:2]}
-    chart(s, "col", x, y, w * 0.4, max(h, 1.3), list(sizes), [("bytes", list(sizes.values()))], fs=10, legend=False, gap=80)
-    rows = [["Format", "Bytes", "Alpha channel"], ["PNG", str(sizes["PNG"]), "kept"], ["JPEG", str(sizes["JPEG"]), "none"]]
-    table(s, x + w * 0.45, y + 0.05, w * 0.55, rows, [1.2, 1.2, 1.7], rowh=0.28, mono_cols=(1,), cell_fill={(2, 2): C["redLight"], (1, 2): C["greenLight"]}, fs=10)
-    box(s, x + w * 0.45, y + 1.0, w * 0.55, 0.3, "saving RGBA as JPEG: " + L[2], "red", 9.5, True)
+    rows = [["Format", "Bytes", "Alpha channel"], ["PNG", str(sizes["PNG"]), "kept"], ["JPEG", str(sizes["JPEG"]), "none"], ["RGBA as JPEG", "refused", "OSError"]]
+    cf = {(2, 2): C["redLight"], (1, 2): C["greenLight"], (3, 1): C["redLight"]}
+    if w >= 5:
+        chart(s, "col", x, y, w * 0.4, max(h, 1.3), list(sizes), [("bytes", list(sizes.values()))], fs=10, legend=False, gap=80)
+        table(s, x + w * 0.45, y + 0.05, w * 0.55, rows, [1.4, 1.2, 1.5], rowh=0.28, mono_cols=(1,), cell_fill=cf, fs=10)
+    else:
+        chart(s, "col", x, y, w, 2.1, list(sizes), [("bytes", list(sizes.values()))], fs=10, legend=False, gap=80)
+        table(s, x, y + 2.3, w, rows, [1.2, 0.8, 1.25], rowh=0.3, mono_cols=(1,), cell_fill=cf, fs=9)
 
 
 # ------------------------------------------------------------------ part 3: Project 16 and drawing
@@ -182,23 +193,25 @@ def v_logo(s, x, y, w, h, ns, out):
 @need(1.5)
 def v_draw(s, x, y, w, h, ns, out):
     L = lines(out)
+    rows = [["blue pixels counted", L[0].split(" ")[0]], ["41 by 31", "1271"], ["40 by 30 would be", "1200"]]
     if w >= 5:
         pic(s, ns["im"], x, y + 0.03, 1.25, 1.25, "the drawing: a point, a line, a rectangle, an ellipse and a polygon")
-        tb(s, x + 1.5, y, w - 1.5, 1.3, [L[0] + " (the rectangle from (20, 30) to (60, 60))", "41 times 31 is 1271; 40 times 30 would be 1200"], 10.5, C["ink"], name="reading")
+        reading(s, x + 1.6, y, w - 1.6, rows, rowh=0.3, fs=10)
     else:
         pic(s, ns["im"], x + 0.1, y + 0.05, 2.6, 2.6, "the drawing: a point, a line, a rectangle, an ellipse and a polygon")
-        tb(s, x, y + 2.75, w, 1.0, [L[0], "41 times 31 is 1271; 40 times 30 would be 1200"], 10.5, C["ink"], name="reading")
+        reading(s, x, y + 2.8, w, rows, rowh=0.3, fs=9.5)
 
 
 @need(1.4)
 def v_text(s, x, y, w, h, ns, out):
     L = lines(out)
+    rows = [["box of the text", L[0]], ["width and height", L[1]], ["ink was drawn", L[2]]]
     if w >= 5:
         pic(s, ns["im"], x, y + 0.05, 2.0, 0.6, "the picture with the text Howdy!")
-        tb(s, x + 2.3, y, w - 2.3, 1.3, ["box (left, top, right, bottom): " + L[0], L[1], "ink drawn: " + L[2]], 10.5, C["ink"], name="reading")
+        reading(s, x + 2.4, y, w - 2.4, rows, rowh=0.3, fs=10)
     else:
         pic(s, ns["im"], x, y + 0.05, 3.1, 0.93, "the picture with the text Howdy!")
-        tb(s, x, y + 1.15, w, 1.4, ["box: " + L[0], L[1], "ink drawn: " + L[2]], 10.5, C["ink"], name="reading")
+        reading(s, x, y + 1.2, w, rows, rowh=0.3, fs=9.5)
 
 
 # ------------------------------------------------------------------ part 4: the clipboard and graphs
@@ -217,22 +230,18 @@ def v_clipboard(s, x, y, w, h, ns, out):
 
 @need(1.3)
 def v_line(s, x, y, w, h, ns, out):
-    L = lines(out)
-    plt = ns["plt"]
-    fd, path = tempfile.mkstemp(suffix=".png", prefix="ch21_fig_")
-    os.close(fd)
-    plt.gcf().savefig(path, dpi=100)
-    _KEEP.append(path)
-    from PIL import Image
-    im = Image.open(path)
+    L = lines(out).copy()
+    n_lines, kind, title, saved = L[0].split(" ")
+    xs = [str(int(v)) for v in ns["lines"][0].get_xdata()]
+    ys = [float(v) for v in ns["lines"][0].get_ydata()]
+    dots = [float(v) for v in ns["dots"].get_offsets()[:, 1]]
+    rows = [["lines returned by plot()", n_lines], ["what scatter() returned", kind], ["title set", title], ["savefig() wrote data", saved]]
     if w >= 5:
-        picture(s, path, x, y, 1.7, 1.3, "the graph the example drew: a line, dots, a title, labels and a legend", "result picture")
-        xs = [1, 2, 3, 4]
-        chart(s, "col", x + 2.0, y, 3.0, max(h, 1.3), [str(v) for v in xs], [("squares", [1, 4, 9, 16]), ("scatter", [2, 3, 5, 8])], fs=9, legend=True, gap=50)
-        tb(s, x + 5.2, y, w - 5.2, 1.3, ["lines returned: " + L[0].split(" ")[0], "scatter returned: " + L[0].split(" ")[1], "title: " + L[0].split(" ")[2], "saved: " + L[0].split(" ")[3]], 10, C["ink"], name="reading")
+        chart(s, "col", x, y, w * 0.5, max(h, 1.3), xs, [("plot(): squares", ys), ("scatter(): dots", dots)], fs=9, legend=True, gap=50)
+        reading(s, x + w * 0.55, y, w * 0.45, rows, rowh=0.26, fs=9.5)
     else:
-        picture(s, path, x, y + 0.05, 3.15, 2.36, "the graph the example drew: a line, dots, a title, labels and a legend", "result picture")
-        tb(s, x, y + 2.55, w, 1.3, ["lines returned: " + L[0].split(" ")[0], "scatter returned: " + L[0].split(" ")[1], "title: " + L[0].split(" ")[2], "figure saved: " + L[0].split(" ")[3]], 10, C["ink"], name="reading")
+        chart(s, "col", x, y, w, 2.0, xs, [("plot(): squares", ys), ("scatter(): dots", dots)], fs=9, legend=True, gap=50)
+        reading(s, x, y + 2.15, w, rows, rowh=0.3, fs=9)
 
 
 @need(1.3)
@@ -256,26 +265,29 @@ def v_barpie(s, x, y, w, h, ns, out):
 @need(1.5)
 def v_tile(s, x, y, w, h, ns, out):
     L = lines(out)
+    size, p1, p2 = L[0].split(" (", 1)[0], None, None
+    parts = L[0].replace(") (", ")|(").split("|")
+    rows = [["sheet size", parts[0]], ["pixel at the middle of tile 1", parts[1]], ["pixel at the middle of tile 8", parts[2]]]
     if w >= 5:
         pic(s, ns["sheet"], x, y + 0.05, 1.9, 1.14, "the tile sheet: 4 faces across and 3 down")
-        tb(s, x + 2.2, y, w - 2.2, 1.3, ["sheet size and two pixels read: " + L[0]], 10.5, C["ink"], name="reading")
+        reading(s, x + 2.2, y, w - 2.2, rows, rowh=0.28, fs=10)
     else:
         pic(s, ns["sheet"], x, y + 0.05, 3.1, 1.86, "the tile sheet: 4 faces across and 3 down")
-        tb(s, x, y + 2.05, w, 1.4, ["printed: " + L[0], "4 across and 3 down of 50 by 40"], 10.5, C["ink"], name="reading")
+        reading(s, x, y + 2.1, w, rows, rowh=0.3, fs=9)
 
 
 @need(1.5)
 def v_seating(s, x, y, w, h, ns, out):
     L = lines(out)
     cards = ns["cards"]
+    n_cards, size = L[0].split(" ", 1)
+    rows = [["cards made", n_cards], ["size of a card", size], ["corner pixel, then ink in the middle", L[1]]]
+    for i, c_ in enumerate(cards):
+        pic(s, c_, x + i * 1.08, y + 0.05, 1.0, 1.25, "seating card for " + ns["guests"][i])
     if w >= 5:
-        for i, c_ in enumerate(cards):
-            pic(s, c_, x + i * 1.15, y + 0.05, 1.0, 1.25, "seating card for " + ns["guests"][i])
-        tb(s, x + 3.6, y, w - 3.6, 1.3, ["printed: " + L[0], L[1]], 10.5, C["ink"], name="reading")
+        reading(s, x + 3.4, y, w - 3.4, rows, rowh=0.3, fs=10)
     else:
-        for i, c_ in enumerate(cards):
-            pic(s, c_, x + i * 1.08, y + 0.05, 1.0, 1.25, "seating card for " + ns["guests"][i])
-        tb(s, x, y + 1.5, w, 1.4, ["printed: " + L[0], L[1]], 10.5, C["ink"], name="reading")
+        reading(s, x, y + 1.5, w, rows, rowh=0.4, fs=9)
 
 
 VISUALS = {k[2:]: v for k, v in dict(globals()).items() if k.startswith("v_") and callable(v)}

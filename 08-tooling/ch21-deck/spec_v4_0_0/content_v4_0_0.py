@@ -35,7 +35,7 @@ PLAN = [("title",), ("route",), ("questions",),
         ("divider", 1), ("analogy", "A1"), ("analogy", "A2"), ("story", "kirsch"), ("code", "colours"), ("compare", "colours"), ("code", "boxtuple"), ("code", "crop"), ("code", "paste"),
         ("divider", 2), ("analogy", "A3"), ("story", "alpha"), ("code", "mask"), ("code", "transform"), ("story", "png"), ("story", "jpeg"), ("code", "save"),
         ("divider", 3), ("analogy", "A4"), ("analogy", "A5"), ("story", "pil"), ("code", "logo"), ("code", "draw"), ("code", "text"),
-        ("divider", 4), ("analogy", "A6"), ("story", "matplotlib"), ("code", "clipboard"), ("code", "line"), ("code", "barpie"),
+        ("divider", 4), ("analogy", "A6"), ("story", "hunter"), ("code", "clipboard"), ("code", "line"), ("code", "barpie"),
         ("divider", 5), ("analogy", "A7"), ("code", "tile"), ("code", "seating"), ("practice",),
         ("summary",), ("resources",)]
 
@@ -126,13 +126,13 @@ ANALOGIES = [
 # ---- the stories (5N1K, told as natural prose); the picture of each is a record of story_images_v1_0_0.json in the chapter's assets folder
 STORIES = {
     "kirsch": dict(
-        title="Story: The first scanned photograph was 176 by 176 pixels of a baby", img="image_kirsch.jpg",
+        title="Story: The first scanned picture was 176 by 176 pixels of a baby", img="image_kirsch.jpg",
         prose=["In 1957 Russell A. Kirsch, an engineer at the National Bureau of Standards, led the group that built a drum scanner for the computer SEAC.",
                "One of the first pictures it scanned showed his three-month-old son, Walden. It was 176 by 176 pixels, 30976 in all, and each pixel was one bit: black or white.",
                "A picture you open in Pillow is still a grid of numbers; Image.new('1', (176, 176)) makes one of the same size."],
         linktext="Russell A. Kirsch (Wikipedia)", link="https://en.wikipedia.org/wiki/Russell_A._Kirsch"),
     "alpha": dict(
-        title="Story: The alpha channel came from a graphics lab in the late 1970s", img="image_alpha.jpg",
+        title="Story: The alpha channel was introduced in the late 1970s", img="image_alpha.jpg",
         prose=["In the late 1970s Alvy Ray Smith and Ed Catmull, at the Computer Graphics Lab of the New York Institute of Technology, introduced the alpha channel.",
                "A paper of 1984 by Thomas Porter and Tom Duff introduced premultiplied alpha.",
                "The fourth number of an RGBA tuple is that alpha: 0 for clear, 255 for solid. A mask in paste() uses it."],
@@ -155,8 +155,8 @@ STORIES = {
                "Development of the original library stopped in 2011. The Pillow project forked it and added support for Python 3.",
                "Chapter 21 still writes from PIL import Image, because Pillow kept the name of the package; only the name you install differs."],
         linktext="Python Imaging Library (Wikipedia)", link="https://en.wikipedia.org/wiki/Python_Imaging_Library"),
-    "matplotlib": dict(
-        title="Story: Matplotlib was named for MATLAB, plot and library", img="image_matplotlib.jpg",
+    "hunter": dict(
+        title="Story: The library that took part of MATLAB's name in 2003", img="image_matplotlib.jpg",
         prose=["John D. Hunter wrote Matplotlib and released it in 2003, as a plotting library for Python and its numerical extension NumPy.",
                "Its name joins three words: MATLAB, plot and library. The pyplot module of chapter 21 keeps one current figure that each call draws on.",
                "That is why plt.plot() needs no figure object: it adds a line to the current axes."],

@@ -25,7 +25,7 @@ EXAMPLES = [
              (["part = im.crop((left, top, right, bottom))", "print(part.size, im.size)"],
               "The box (3, 1, 9, 6) holds 6 by 5 pixels; the picture is unchanged."),
          ]),
-    dict(id="crop", name="Cropping a picture", title="Cropping a picture", part=1, visual="crop",
+    dict(id="crop", name="Cropping a picture", title="Cropping a picture with crop()", part=1, visual="crop",
          concepts=["Manipulating Images with Pillow", "Cropping Images"],
          groups=[
              (["from PIL import Image, ImageDraw", "cat = Image.new('RGB', (200, 140), 'tan')", "ImageDraw.Draw(cat).ellipse((60, 30, 140, 110), fill='black')"],
@@ -33,7 +33,7 @@ EXAMPLES = [
              (["face = cat.crop((60, 30, 141, 111))", "print(cat.size, face.size)", "print(cat.getpixel((100, 70)), face.getpixel((40, 40)))"],
               "crop() returns a new Image; the original keeps its size."),
          ]),
-    dict(id="paste", name="Pasting and tiling", title="Pasting and tiling", part=1, visual="paste",
+    dict(id="paste", name="Pasting and tiling", title="Pasting and tiling with paste()", part=1, visual="paste",
          concepts=["Pasting Images onto Other Images", "Figure 21-6: nested for loops used with paste() duplicate the cat face"],
          groups=[
              (["from PIL import Image", "face = Image.new('RGB', (40, 40), 'orange')", "sheet = Image.new('RGB', (200, 120), 'white')"],
@@ -99,7 +99,7 @@ EXAMPLES = [
                "colours = {c: n for n, c in im.getcolors()}", "print(colours[(0, 0, 255, 255)], 'blue pixels')"],
               "41 by 31 is 1271 blue pixels, not 40 by 30."),
          ]),
-    dict(id="text", name="Drawing text", title="Text and fonts", part=3, visual="text",
+    dict(id="text", name="Drawing text", title="Drawing text and choosing fonts", part=3, visual="text",
          concepts=["Text", "PIL.ImageFont"],
          groups=[
              (["from PIL import Image, ImageDraw, ImageFont", "font = ImageFont.load_default(size=24)", "im = Image.new('RGB', (200, 60), 'white')", "draw = ImageDraw.Draw(im)"],
