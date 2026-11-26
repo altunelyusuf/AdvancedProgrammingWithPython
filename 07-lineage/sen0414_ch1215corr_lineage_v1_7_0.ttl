@@ -1,0 +1,576 @@
+@prefix backlog: <http://example.org/backlog#> .
+@prefix ex:      <http://example.org/sen0414-ch1215corr-lineage#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://example.org/sen0414-ch1215corr-lineage> a owl:Ontology ;
+    rdfs:label "Fresh narrow lineage: SEN0414 Chapters 12 to 15 corrections"@en ;
+    owl:versionInfo "1.7.0" ; owl:versionIRI <http://example.org/sen0414-ch1215corr-lineage/1.7.0> ;
+    owl:priorVersion <http://example.org/sen0414-ch1215corr-lineage/1.6.0> ; dcterms:identifier "sen0414_ch1215corr_lineage" ;
+    rdfs:comment "1.7.0 (2026-11-26): Backlog stage of Lineage12: the register root, the backlog, 20 stories with acceptance criteria and links to the objectives they move and the deliverables they satisfy, and the lineage's own Definition of Done. Tasks follow in the planning stage, where each is produced by a planning event." .
+
+ex:Register_Ch1215corr a backlog:Backlog ; backlog:isRegisterRoot true ; rdfs:label "Chapters 12 to 15 corrections register"@en .
+ex:Backlog12 a backlog:Backlog ;
+    backlog:memberOfContainer ex:Register_Ch1215corr ;
+    backlog:backlogForMission ex:Mission12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    rdfs:label "Chapters 12 to 15 corrections backlog"@en .
+ex:DoD12 a backlog:DefinitionOfDone ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    rdfs:comment "Written for this lineage. A story is Done only when each acceptance criterion has a check run in the current turn with its output saved in the repository, a verify task re-runs it from the files and not from the builder's report, and a check that cannot be run or a result that is not shown leaves the story open." ;
+    rdfs:label "Definition of Done of the chapters 12 to 15 corrections lineage"@en .
+
+ex:DoD12 backlog:hasDoDCriterion ex:DoD12_ContentUnchanged .
+ex:DoD12_ContentUnchanged a backlog:DoDCriterion ;
+    backlog:hasCheckQuery "Compare, per chapter, the story ids and the number of examples in the new spec with DRAFT_chNN and the stories file; list every difference." ;
+    backlog:hasCriterionStatus backlog:NotYetEnforceable ;
+    backlog:hasExpectedResult "Every difference is one a ruling forces and is named in the story's record." ;
+    rdfs:comment "The comparison is not yet written; it is written in the Spec stories and its result then replaces this status." ;
+    rdfs:label "Content, stories and examples stay as approved"@en .
+ex:DoD12 backlog:hasDoDCriterion ex:DoD12_DeckChecks .
+ex:DoD12_DeckChecks a backlog:DoDCriterion ;
+    backlog:hasCheckQuery "Run 08-tooling/lineage12-opening/deckchecks_runner.sh NN DECK MANIFEST LOGDIR for each chapter." ;
+    backlog:hasCriterionStatus backlog:Violated ;
+    backlog:hasExpectedResult "Every check exits 0 on every chapter." ;
+    rdfs:comment "On 2026-11-26 the old decks fail deck standard D7 and D10 on all four chapters and the fit check refuses chapter 12 slide 16 and chapter 15 slide 34; no new deck exists yet." ;
+    rdfs:label "Every new deck passes the automatic deck conditions"@en .
+ex:DoD12 backlog:hasDoDCriterion ex:DoD12_MaterialCheck .
+ex:DoD12_MaterialCheck a backlog:DoDCriterion ;
+    backlog:hasCheckQuery "Run 08-tooling/cme_material_check_v1_0_2.py DECK PAGE for each chapter." ;
+    backlog:hasCriterionStatus backlog:Violated ;
+    backlog:hasExpectedResult "No failing condition on any chapter." ;
+    rdfs:comment "On 2026-11-26 25 conditions fail across the four old decks and pages." ;
+    rdfs:label "Every new deck and page pass the material check"@en .
+ex:DoD12 backlog:hasDoDCriterion ex:DoD12_RunOrderShape .
+ex:DoD12_RunOrderShape a backlog:DoDCriterion ;
+    backlog:hasCheckQuery "Run the page-shapes check with sen0414_page_shapes_v1_0_0.ttl on the built page A-box of each chapter." ;
+    backlog:hasCriterionStatus backlog:Violated ;
+    backlog:hasExpectedResult "PageRunInOrderMenuShape passes on all four pages." ;
+    rdfs:comment "The shape fails on the chapter 12 to 15 pages as shipped (log page_runorder_shape_test_v1_0_0.log)." ;
+    rdfs:label "Every chapter page has the run-in-order menu item"@en .
+ex:DoD12 backlog:hasDoDCriterion ex:DoD12_PageTest .
+ex:DoD12_PageTest a backlog:DoDCriterion ;
+    backlog:hasCheckQuery "Run 08-tooling/sen0414_page_test_run_v1_1_0.py N VERSION for each chapter." ;
+    backlog:hasCriterionStatus backlog:NotYetEnforceable ;
+    backlog:hasExpectedResult "The full test passes on every page." ;
+    rdfs:comment "No new page exists yet; the test takes about 15 to 20 minutes per page." ;
+    rdfs:label "Every new page passes the full page test"@en .
+ex:DoD12 backlog:hasDoDCriterion ex:DoD12_OwnVersion .
+ex:DoD12_OwnVersion a backlog:DoDCriterion ;
+    backlog:hasCheckQuery "Run python3 08-tooling/cme_version_check_v1_0_0.py . on the repository root." ;
+    backlog:hasCriterionStatus backlog:Holds ;
+    backlog:hasExpectedResult "Exit 0." ;
+    rdfs:comment "Exit 0 on 2026-11-26 before this register file; it is re-run in each stage." ;
+    rdfs:label "Every changed file has its own new version"@en .
+ex:DoD12 backlog:hasDoDCriterion ex:DoD12_OutsideFiles .
+ex:DoD12_OutsideFiles a backlog:DoDCriterion ;
+    backlog:hasCheckQuery "git diff --name-only from the opening commit, filtered against the allowed folders." ;
+    backlog:hasCriterionStatus backlog:Holds ;
+    backlog:hasExpectedResult "No file outside the allowed folders." ;
+    rdfs:comment "Only 07-lineage, 03-materials/sen0414_page_shapes and 08-tooling/lineage12-opening changed so far (page shapes file is the new shape the ruling needs)." ;
+    rdfs:label "No file outside chapters 12 to 15 and the lineage's own folders changes"@en .
+ex:DoD12 backlog:hasDoDCriterion ex:DoD12_StoryRepeat .
+ex:DoD12_StoryRepeat a backlog:DoDCriterion ;
+    backlog:hasCheckQuery "Run 08-tooling/sen0414_story_repeat_check_v1_0_0.py 1 25." ;
+    backlog:hasCriterionStatus backlog:Violated ;
+    backlog:hasExpectedResult "RESULT CLEAN for chapters 12 to 15 against every other chapter." ;
+    rdfs:comment "No link repeats; chapter 12 shares the name Ken Thompson with chapters 8, 9 and 10 and is not yet read, so the criterion stays Violated until the story-read story records it." ;
+    rdfs:label "No story of a chapter repeats in another chapter without the Owner"@en .
+ex:DoD12 backlog:hasDoDCriterion ex:DoD12_ReviewRecord .
+ex:DoD12_ReviewRecord a backlog:DoDCriterion ;
+    backlog:hasCheckQuery "Count the verdicts recorded per chapter against 12 conditions times 3 roles." ;
+    backlog:hasCriterionStatus backlog:NotYetEnforceable ;
+    backlog:hasExpectedResult "Every chapter has all its verdicts." ;
+    rdfs:comment "No verdict is recorded yet." ;
+    rdfs:label "Each reviewed condition has a verdict from all three roles"@en .
+ex:Executor_ClaudeCodeSession a backlog:Executor_SingleAgent ; rdfs:label "The Claude session that carries out the work"@en .
+ex:Register_Ch1215corr backlog:hasIdentifier "Register_SEN0414_Ch1215corr" ; backlog:belongsToLineage ex:Lineage12 ; backlog:hasCommitment ex:Commit12 .
+ex:Backlog12 backlog:hasIdentifier "Backlog_SEN0414_Ch1215corr" ; backlog:hasCommitment ex:Commit12 .
+ex:Commit12 a backlog:Commitment ; rdfs:label "This register commits to chapters 12 to 15 that meet the rulings"@en ;
+    backlog:commitsToGoal ex:G12_Mission ; backlog:commitsToObjective ex:Obj12_MissionLecture ; backlog:commitsToDefinitionOfDone ex:DoD12 .
+ex:Mission12 backlog:missionFor ex:Register_Ch1215corr .
+ex:Register_Ch1215corr backlog:appliesDefinitionOfDone ex:DoD12 .
+ex:Backlog12 backlog:appliesDefinitionOfDone ex:DoD12 .
+ex:Blueprint12 a backlog:Blueprint ; rdfs:label "What the chapters 12 to 15 corrections are about"@en ;
+    backlog:belongsToLineage ex:Lineage12 ; backlog:blueprintFor ex:Backlog12 ;
+    backlog:hasDomainEntity ex:DE12_Deck , ex:DE12_Page , ex:DE12_Spec , ex:DE12_Review .
+ex:Blueprint12Root a backlog:Blueprint ; rdfs:label "What the chapters 12 to 15 corrections are about (register root)"@en ;
+    backlog:belongsToLineage ex:Lineage12 ; backlog:blueprintFor ex:Register_Ch1215corr ;
+    backlog:hasDomainEntity ex:DE12_Deck , ex:DE12_Page , ex:DE12_Spec , ex:DE12_Review .
+ex:DE12_Deck a backlog:DomainEntity ; rdfs:label "Deck - a chapter's lecture slides with notes and balloons"@en ; backlog:belongsToLineage ex:Lineage12 .
+ex:DE12_Page a backlog:DomainEntity ; rdfs:label "Page - a chapter's interactive page that runs the slide code"@en ; backlog:belongsToLineage ex:Lineage12 .
+ex:DE12_Spec a backlog:DomainEntity ; rdfs:label "Spec - a chapter's description that the generic deck builder runs"@en ; backlog:belongsToLineage ex:Lineage12 .
+ex:DE12_Review a backlog:DomainEntity ; rdfs:label "Review - a recorded verdict of one of the three roles on one condition"@en ; backlog:belongsToLineage ex:Lineage12 .
+ex:Session12_Backlog a backlog:RegisterSession ; rdfs:label "The session that wrote the backlog stage"@en ;
+    backlog:sessionFor ex:Backlog12 , ex:Register_Ch1215corr ; backlog:sessionConductedBy "claude-session" ;
+    backlog:sessionStartedAt "2026-11-26T10:20:00"^^xsd:dateTime ; backlog:sessionEndedAt "2026-11-26T11:30:00"^^xsd:dateTime ;
+    backlog:stateVerifiedAtStart true ;
+    backlog:hasSessionScopeNote "Set out to write the Backlog stage only (stories, acceptance criteria, Definition of Done, links to objectives and deliverables). Left alone: tasks and planning events (planning stage), packages and sprints, and every file outside 07-lineage. Verified first: register 1.6.0 check passed and the working tree was clean at 5b422cc." .
+
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Spec_12 .
+ex:ST12_Spec_12 backlog:hasIdentifier "ST12_Spec_12" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Spec_12 backlog:pursuesObjective ex:Obj12_SpecRuns .
+ex:ST12_Spec_12 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Spec_12 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Chapter 12 spec for the generic deck builder"@en .
+ex:Obj12_SpecRuns backlog:metricMovableBy ex:ST12_Spec_12 .
+ex:ST12_Spec_12 backlog:satisfiesDeliverable ex:Del12_Spec_12 .
+ex:AC12_Spec_12 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the approved chapter 12 (Command-Line Programs) deck, stories and examples When the spec for the generic chapter deck builder is written and run Then it builds a deck of the same slide count with the same story and example entries and exits 0" ;
+    backlog:satisfiedByArtifact "08-tooling/ch12-spec/ (spec files and the build log)" ;
+    rdfs:label "Chapter 12 spec for the generic deck builder: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Deck_12 .
+ex:ST12_Deck_12 backlog:hasIdentifier "ST12_Deck_12" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Deck_12 backlog:pursuesObjective ex:Obj12_DeckStandard .
+ex:ST12_Deck_12 backlog:pursuesObjective ex:Obj12_NoteWords .
+ex:ST12_Deck_12 backlog:pursuesObjective ex:Obj12_ReaderNotes .
+ex:ST12_Deck_12 backlog:pursuesObjective ex:Obj12_StoryProse .
+ex:ST12_Deck_12 backlog:pursuesObjective ex:Obj12_DeckAnalogies .
+ex:ST12_Deck_12 backlog:pursuesObjective ex:Obj12_Balloons .
+ex:ST12_Deck_12 backlog:pursuesObjective ex:Obj12_MaterialConditions .
+ex:ST12_Deck_12 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Deck_12 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Rebuild the chapter 12 deck on the rulings"@en .
+ex:Obj12_DeckStandard backlog:metricMovableBy ex:ST12_Deck_12 .
+ex:Obj12_NoteWords backlog:metricMovableBy ex:ST12_Deck_12 .
+ex:Obj12_ReaderNotes backlog:metricMovableBy ex:ST12_Deck_12 .
+ex:Obj12_StoryProse backlog:metricMovableBy ex:ST12_Deck_12 .
+ex:Obj12_DeckAnalogies backlog:metricMovableBy ex:ST12_Deck_12 .
+ex:Obj12_Balloons backlog:metricMovableBy ex:ST12_Deck_12 .
+ex:Obj12_MaterialConditions backlog:metricMovableBy ex:ST12_Deck_12 .
+ex:ST12_Deck_12 backlog:satisfiesDeliverable ex:Del12_Deck_12 .
+ex:ST12_Deck_12 backlog:satisfiesDeliverable ex:Del12_Reader_12 .
+ex:ST12_Deck_12 backlog:satisfiesDeliverable ex:Del12_NoAnalogies_12 .
+ex:AC12_Deck_12 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the chapter 12 spec When the deck is built and the deck checks run Then deck standard 1.3.0, fit, layout, notes, overlap, reader notes, story prose and the material check all pass, no note is outside 60 to 140 words (30 on title, part and resources slides), no analogy slide remains and plain code parses without prompts" ;
+    backlog:satisfiedByArtifact "08-tooling/ch12-deck/ (new deck and the saved check logs)" ;
+    rdfs:label "Rebuild the chapter 12 deck on the rulings: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Page_12 .
+ex:ST12_Page_12 backlog:hasIdentifier "ST12_Page_12" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Page_12 backlog:pursuesObjective ex:Obj12_PageAnalogies .
+ex:ST12_Page_12 backlog:pursuesObjective ex:Obj12_CodeParses .
+ex:ST12_Page_12 backlog:pursuesObjective ex:Obj12_PageLambda .
+ex:ST12_Page_12 backlog:pursuesObjective ex:Obj12_CodeInPage .
+ex:ST12_Page_12 backlog:pursuesObjective ex:Obj12_PagesPassing .
+ex:ST12_Page_12 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Page_12 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Build the chapter 12 page with a lambda-free A-box and the Slide code tab"@en .
+ex:Obj12_PageAnalogies backlog:metricMovableBy ex:ST12_Page_12 .
+ex:Obj12_CodeParses backlog:metricMovableBy ex:ST12_Page_12 .
+ex:Obj12_PageLambda backlog:metricMovableBy ex:ST12_Page_12 .
+ex:Obj12_CodeInPage backlog:metricMovableBy ex:ST12_Page_12 .
+ex:Obj12_PagesPassing backlog:metricMovableBy ex:ST12_Page_12 .
+ex:ST12_Page_12 backlog:satisfiesDeliverable ex:Del12_Page_12 .
+ex:ST12_Page_12 backlog:satisfiesDeliverable ex:Del12_PageCode_12 .
+ex:AC12_Page_12 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the chapter 12 deck manifest When the page is built from the generic template and the page test is run Then the Slide code tab runs the deck code unchanged and in order, no lambda remains, no analogy word remains and the page test passes" ;
+    backlog:satisfiedByArtifact "the chapter 12 page file and its page-test log" ;
+    rdfs:label "Build the chapter 12 page with a lambda-free A-box and the Slide code tab: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Release_12 .
+ex:ST12_Release_12 backlog:hasIdentifier "ST12_Release_12" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Release_12 backlog:pursuesObjective ex:Obj12_ReviewVerdicts .
+ex:ST12_Release_12 backlog:pursuesObjective ex:Obj12_MissionLecture .
+ex:ST12_Release_12 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Release_12 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Record the three reviews and release chapter 12"@en .
+ex:Obj12_ReviewVerdicts backlog:metricMovableBy ex:ST12_Release_12 .
+ex:Obj12_MissionLecture backlog:metricMovableBy ex:ST12_Release_12 .
+ex:ST12_Release_12 backlog:satisfiesDeliverable ex:Del12_ReleaseRecord_12 .
+ex:AC12_Release_12 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the chapter 12 deck and page pass their automatic checks When the academician, the faculty reviewer and the undergraduate reader each record a verdict on every reviewed condition Then every verdict is recorded in the repository and the new versions are named as released" ;
+    backlog:satisfiedByArtifact "the chapter 12 review and release record in 07-lineage/reports/" ;
+    rdfs:label "Record the three reviews and release chapter 12: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Spec_13 .
+ex:ST12_Spec_13 backlog:hasIdentifier "ST12_Spec_13" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Spec_13 backlog:pursuesObjective ex:Obj12_SpecRuns .
+ex:ST12_Spec_13 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Spec_13 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Chapter 13 spec for the generic deck builder"@en .
+ex:Obj12_SpecRuns backlog:metricMovableBy ex:ST12_Spec_13 .
+ex:ST12_Spec_13 backlog:satisfiesDeliverable ex:Del12_Spec_13 .
+ex:AC12_Spec_13 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the approved chapter 13 (Web Scraping) deck, stories and examples When the spec for the generic chapter deck builder is written and run Then it builds a deck of the same slide count with the same story and example entries and exits 0" ;
+    backlog:satisfiedByArtifact "08-tooling/ch13-spec/ (spec files and the build log)" ;
+    rdfs:label "Chapter 13 spec for the generic deck builder: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Deck_13 .
+ex:ST12_Deck_13 backlog:hasIdentifier "ST12_Deck_13" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Deck_13 backlog:pursuesObjective ex:Obj12_DeckStandard .
+ex:ST12_Deck_13 backlog:pursuesObjective ex:Obj12_NoteWords .
+ex:ST12_Deck_13 backlog:pursuesObjective ex:Obj12_ReaderNotes .
+ex:ST12_Deck_13 backlog:pursuesObjective ex:Obj12_StoryProse .
+ex:ST12_Deck_13 backlog:pursuesObjective ex:Obj12_DeckAnalogies .
+ex:ST12_Deck_13 backlog:pursuesObjective ex:Obj12_Balloons .
+ex:ST12_Deck_13 backlog:pursuesObjective ex:Obj12_MaterialConditions .
+ex:ST12_Deck_13 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Deck_13 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Rebuild the chapter 13 deck on the rulings"@en .
+ex:Obj12_DeckStandard backlog:metricMovableBy ex:ST12_Deck_13 .
+ex:Obj12_NoteWords backlog:metricMovableBy ex:ST12_Deck_13 .
+ex:Obj12_ReaderNotes backlog:metricMovableBy ex:ST12_Deck_13 .
+ex:Obj12_StoryProse backlog:metricMovableBy ex:ST12_Deck_13 .
+ex:Obj12_DeckAnalogies backlog:metricMovableBy ex:ST12_Deck_13 .
+ex:Obj12_Balloons backlog:metricMovableBy ex:ST12_Deck_13 .
+ex:Obj12_MaterialConditions backlog:metricMovableBy ex:ST12_Deck_13 .
+ex:ST12_Deck_13 backlog:satisfiesDeliverable ex:Del12_Deck_13 .
+ex:ST12_Deck_13 backlog:satisfiesDeliverable ex:Del12_Reader_13 .
+ex:ST12_Deck_13 backlog:satisfiesDeliverable ex:Del12_NoAnalogies_13 .
+ex:AC12_Deck_13 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the chapter 13 spec When the deck is built and the deck checks run Then deck standard 1.3.0, fit, layout, notes, overlap, reader notes, story prose and the material check all pass, no note is outside 60 to 140 words (30 on title, part and resources slides), no analogy slide remains and plain code parses without prompts" ;
+    backlog:satisfiedByArtifact "08-tooling/ch13-deck/ (new deck and the saved check logs)" ;
+    rdfs:label "Rebuild the chapter 13 deck on the rulings: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Page_13 .
+ex:ST12_Page_13 backlog:hasIdentifier "ST12_Page_13" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Page_13 backlog:pursuesObjective ex:Obj12_PageAnalogies .
+ex:ST12_Page_13 backlog:pursuesObjective ex:Obj12_CodeParses .
+ex:ST12_Page_13 backlog:pursuesObjective ex:Obj12_PageLambda .
+ex:ST12_Page_13 backlog:pursuesObjective ex:Obj12_CodeInPage .
+ex:ST12_Page_13 backlog:pursuesObjective ex:Obj12_PagesPassing .
+ex:ST12_Page_13 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Page_13 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Build the chapter 13 page with a lambda-free A-box and the Slide code tab"@en .
+ex:Obj12_PageAnalogies backlog:metricMovableBy ex:ST12_Page_13 .
+ex:Obj12_CodeParses backlog:metricMovableBy ex:ST12_Page_13 .
+ex:Obj12_PageLambda backlog:metricMovableBy ex:ST12_Page_13 .
+ex:Obj12_CodeInPage backlog:metricMovableBy ex:ST12_Page_13 .
+ex:Obj12_PagesPassing backlog:metricMovableBy ex:ST12_Page_13 .
+ex:ST12_Page_13 backlog:satisfiesDeliverable ex:Del12_Page_13 .
+ex:ST12_Page_13 backlog:satisfiesDeliverable ex:Del12_PageCode_13 .
+ex:AC12_Page_13 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the chapter 13 deck manifest When the page is built from the generic template and the page test is run Then the Slide code tab runs the deck code unchanged and in order, no lambda remains, no analogy word remains and the page test passes" ;
+    backlog:satisfiedByArtifact "the chapter 13 page file and its page-test log" ;
+    rdfs:label "Build the chapter 13 page with a lambda-free A-box and the Slide code tab: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Release_13 .
+ex:ST12_Release_13 backlog:hasIdentifier "ST12_Release_13" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Release_13 backlog:pursuesObjective ex:Obj12_ReviewVerdicts .
+ex:ST12_Release_13 backlog:pursuesObjective ex:Obj12_MissionLecture .
+ex:ST12_Release_13 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Release_13 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Record the three reviews and release chapter 13"@en .
+ex:Obj12_ReviewVerdicts backlog:metricMovableBy ex:ST12_Release_13 .
+ex:Obj12_MissionLecture backlog:metricMovableBy ex:ST12_Release_13 .
+ex:ST12_Release_13 backlog:satisfiesDeliverable ex:Del12_ReleaseRecord_13 .
+ex:AC12_Release_13 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the chapter 13 deck and page pass their automatic checks When the academician, the faculty reviewer and the undergraduate reader each record a verdict on every reviewed condition Then every verdict is recorded in the repository and the new versions are named as released" ;
+    backlog:satisfiedByArtifact "the chapter 13 review and release record in 07-lineage/reports/" ;
+    rdfs:label "Record the three reviews and release chapter 13: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Spec_14 .
+ex:ST12_Spec_14 backlog:hasIdentifier "ST12_Spec_14" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Spec_14 backlog:pursuesObjective ex:Obj12_SpecRuns .
+ex:ST12_Spec_14 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Spec_14 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Chapter 14 spec for the generic deck builder"@en .
+ex:Obj12_SpecRuns backlog:metricMovableBy ex:ST12_Spec_14 .
+ex:ST12_Spec_14 backlog:satisfiesDeliverable ex:Del12_Spec_14 .
+ex:AC12_Spec_14 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the approved chapter 14 (Excel Spreadsheets) deck, stories and examples When the spec for the generic chapter deck builder is written and run Then it builds a deck of the same slide count with the same story and example entries and exits 0" ;
+    backlog:satisfiedByArtifact "08-tooling/ch14-spec/ (spec files and the build log)" ;
+    rdfs:label "Chapter 14 spec for the generic deck builder: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Deck_14 .
+ex:ST12_Deck_14 backlog:hasIdentifier "ST12_Deck_14" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Deck_14 backlog:pursuesObjective ex:Obj12_DeckStandard .
+ex:ST12_Deck_14 backlog:pursuesObjective ex:Obj12_NoteWords .
+ex:ST12_Deck_14 backlog:pursuesObjective ex:Obj12_ReaderNotes .
+ex:ST12_Deck_14 backlog:pursuesObjective ex:Obj12_StoryProse .
+ex:ST12_Deck_14 backlog:pursuesObjective ex:Obj12_DeckAnalogies .
+ex:ST12_Deck_14 backlog:pursuesObjective ex:Obj12_Balloons .
+ex:ST12_Deck_14 backlog:pursuesObjective ex:Obj12_MaterialConditions .
+ex:ST12_Deck_14 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Deck_14 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Rebuild the chapter 14 deck on the rulings"@en .
+ex:Obj12_DeckStandard backlog:metricMovableBy ex:ST12_Deck_14 .
+ex:Obj12_NoteWords backlog:metricMovableBy ex:ST12_Deck_14 .
+ex:Obj12_ReaderNotes backlog:metricMovableBy ex:ST12_Deck_14 .
+ex:Obj12_StoryProse backlog:metricMovableBy ex:ST12_Deck_14 .
+ex:Obj12_DeckAnalogies backlog:metricMovableBy ex:ST12_Deck_14 .
+ex:Obj12_Balloons backlog:metricMovableBy ex:ST12_Deck_14 .
+ex:Obj12_MaterialConditions backlog:metricMovableBy ex:ST12_Deck_14 .
+ex:ST12_Deck_14 backlog:satisfiesDeliverable ex:Del12_Deck_14 .
+ex:ST12_Deck_14 backlog:satisfiesDeliverable ex:Del12_Reader_14 .
+ex:ST12_Deck_14 backlog:satisfiesDeliverable ex:Del12_NoAnalogies_14 .
+ex:AC12_Deck_14 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the chapter 14 spec When the deck is built and the deck checks run Then deck standard 1.3.0, fit, layout, notes, overlap, reader notes, story prose and the material check all pass, no note is outside 60 to 140 words (30 on title, part and resources slides), no analogy slide remains and plain code parses without prompts" ;
+    backlog:satisfiedByArtifact "08-tooling/ch14-deck/ (new deck and the saved check logs)" ;
+    rdfs:label "Rebuild the chapter 14 deck on the rulings: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Page_14 .
+ex:ST12_Page_14 backlog:hasIdentifier "ST12_Page_14" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Page_14 backlog:pursuesObjective ex:Obj12_PageAnalogies .
+ex:ST12_Page_14 backlog:pursuesObjective ex:Obj12_CodeParses .
+ex:ST12_Page_14 backlog:pursuesObjective ex:Obj12_PageLambda .
+ex:ST12_Page_14 backlog:pursuesObjective ex:Obj12_CodeInPage .
+ex:ST12_Page_14 backlog:pursuesObjective ex:Obj12_PagesPassing .
+ex:ST12_Page_14 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Page_14 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Build the chapter 14 page with a lambda-free A-box and the Slide code tab"@en .
+ex:Obj12_PageAnalogies backlog:metricMovableBy ex:ST12_Page_14 .
+ex:Obj12_CodeParses backlog:metricMovableBy ex:ST12_Page_14 .
+ex:Obj12_PageLambda backlog:metricMovableBy ex:ST12_Page_14 .
+ex:Obj12_CodeInPage backlog:metricMovableBy ex:ST12_Page_14 .
+ex:Obj12_PagesPassing backlog:metricMovableBy ex:ST12_Page_14 .
+ex:ST12_Page_14 backlog:satisfiesDeliverable ex:Del12_Page_14 .
+ex:ST12_Page_14 backlog:satisfiesDeliverable ex:Del12_PageCode_14 .
+ex:AC12_Page_14 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the chapter 14 deck manifest When the page is built from the generic template and the page test is run Then the Slide code tab runs the deck code unchanged and in order, no lambda remains, no analogy word remains and the page test passes" ;
+    backlog:satisfiedByArtifact "the chapter 14 page file and its page-test log" ;
+    rdfs:label "Build the chapter 14 page with a lambda-free A-box and the Slide code tab: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Release_14 .
+ex:ST12_Release_14 backlog:hasIdentifier "ST12_Release_14" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Release_14 backlog:pursuesObjective ex:Obj12_ReviewVerdicts .
+ex:ST12_Release_14 backlog:pursuesObjective ex:Obj12_MissionLecture .
+ex:ST12_Release_14 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Release_14 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Record the three reviews and release chapter 14"@en .
+ex:Obj12_ReviewVerdicts backlog:metricMovableBy ex:ST12_Release_14 .
+ex:Obj12_MissionLecture backlog:metricMovableBy ex:ST12_Release_14 .
+ex:ST12_Release_14 backlog:satisfiesDeliverable ex:Del12_ReleaseRecord_14 .
+ex:AC12_Release_14 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the chapter 14 deck and page pass their automatic checks When the academician, the faculty reviewer and the undergraduate reader each record a verdict on every reviewed condition Then every verdict is recorded in the repository and the new versions are named as released" ;
+    backlog:satisfiedByArtifact "the chapter 14 review and release record in 07-lineage/reports/" ;
+    rdfs:label "Record the three reviews and release chapter 14: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Spec_15 .
+ex:ST12_Spec_15 backlog:hasIdentifier "ST12_Spec_15" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Spec_15 backlog:pursuesObjective ex:Obj12_SpecRuns .
+ex:ST12_Spec_15 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Spec_15 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Chapter 15 spec for the generic deck builder"@en .
+ex:Obj12_SpecRuns backlog:metricMovableBy ex:ST12_Spec_15 .
+ex:ST12_Spec_15 backlog:satisfiesDeliverable ex:Del12_Spec_15 .
+ex:AC12_Spec_15 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the approved chapter 15 (Google Sheets) deck, stories and examples When the spec for the generic chapter deck builder is written and run Then it builds a deck of the same slide count with the same story and example entries and exits 0" ;
+    backlog:satisfiedByArtifact "08-tooling/ch15-spec/ (spec files and the build log)" ;
+    rdfs:label "Chapter 15 spec for the generic deck builder: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Deck_15 .
+ex:ST12_Deck_15 backlog:hasIdentifier "ST12_Deck_15" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Deck_15 backlog:pursuesObjective ex:Obj12_DeckStandard .
+ex:ST12_Deck_15 backlog:pursuesObjective ex:Obj12_NoteWords .
+ex:ST12_Deck_15 backlog:pursuesObjective ex:Obj12_ReaderNotes .
+ex:ST12_Deck_15 backlog:pursuesObjective ex:Obj12_StoryProse .
+ex:ST12_Deck_15 backlog:pursuesObjective ex:Obj12_DeckAnalogies .
+ex:ST12_Deck_15 backlog:pursuesObjective ex:Obj12_Balloons .
+ex:ST12_Deck_15 backlog:pursuesObjective ex:Obj12_MaterialConditions .
+ex:ST12_Deck_15 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Deck_15 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Rebuild the chapter 15 deck on the rulings"@en .
+ex:Obj12_DeckStandard backlog:metricMovableBy ex:ST12_Deck_15 .
+ex:Obj12_NoteWords backlog:metricMovableBy ex:ST12_Deck_15 .
+ex:Obj12_ReaderNotes backlog:metricMovableBy ex:ST12_Deck_15 .
+ex:Obj12_StoryProse backlog:metricMovableBy ex:ST12_Deck_15 .
+ex:Obj12_DeckAnalogies backlog:metricMovableBy ex:ST12_Deck_15 .
+ex:Obj12_Balloons backlog:metricMovableBy ex:ST12_Deck_15 .
+ex:Obj12_MaterialConditions backlog:metricMovableBy ex:ST12_Deck_15 .
+ex:ST12_Deck_15 backlog:satisfiesDeliverable ex:Del12_Deck_15 .
+ex:ST12_Deck_15 backlog:satisfiesDeliverable ex:Del12_Reader_15 .
+ex:ST12_Deck_15 backlog:satisfiesDeliverable ex:Del12_NoAnalogies_15 .
+ex:AC12_Deck_15 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the chapter 15 spec When the deck is built and the deck checks run Then deck standard 1.3.0, fit, layout, notes, overlap, reader notes, story prose and the material check all pass, no note is outside 60 to 140 words (30 on title, part and resources slides), no analogy slide remains and plain code parses without prompts" ;
+    backlog:satisfiedByArtifact "08-tooling/ch15-deck/ (new deck and the saved check logs)" ;
+    rdfs:label "Rebuild the chapter 15 deck on the rulings: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Page_15 .
+ex:ST12_Page_15 backlog:hasIdentifier "ST12_Page_15" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Page_15 backlog:pursuesObjective ex:Obj12_PageAnalogies .
+ex:ST12_Page_15 backlog:pursuesObjective ex:Obj12_CodeParses .
+ex:ST12_Page_15 backlog:pursuesObjective ex:Obj12_PageLambda .
+ex:ST12_Page_15 backlog:pursuesObjective ex:Obj12_CodeInPage .
+ex:ST12_Page_15 backlog:pursuesObjective ex:Obj12_PagesPassing .
+ex:ST12_Page_15 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Page_15 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Build the chapter 15 page with a lambda-free A-box and the Slide code tab"@en .
+ex:Obj12_PageAnalogies backlog:metricMovableBy ex:ST12_Page_15 .
+ex:Obj12_CodeParses backlog:metricMovableBy ex:ST12_Page_15 .
+ex:Obj12_PageLambda backlog:metricMovableBy ex:ST12_Page_15 .
+ex:Obj12_CodeInPage backlog:metricMovableBy ex:ST12_Page_15 .
+ex:Obj12_PagesPassing backlog:metricMovableBy ex:ST12_Page_15 .
+ex:ST12_Page_15 backlog:satisfiesDeliverable ex:Del12_Page_15 .
+ex:ST12_Page_15 backlog:satisfiesDeliverable ex:Del12_PageCode_15 .
+ex:AC12_Page_15 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the chapter 15 deck manifest When the page is built from the generic template and the page test is run Then the Slide code tab runs the deck code unchanged and in order, no lambda remains, no analogy word remains and the page test passes" ;
+    backlog:satisfiedByArtifact "the chapter 15 page file and its page-test log" ;
+    rdfs:label "Build the chapter 15 page with a lambda-free A-box and the Slide code tab: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Release_15 .
+ex:ST12_Release_15 backlog:hasIdentifier "ST12_Release_15" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_Maintenance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Release_15 backlog:pursuesObjective ex:Obj12_ReviewVerdicts .
+ex:ST12_Release_15 backlog:pursuesObjective ex:Obj12_MissionLecture .
+ex:ST12_Release_15 a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Release_15 ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Record the three reviews and release chapter 15"@en .
+ex:Obj12_ReviewVerdicts backlog:metricMovableBy ex:ST12_Release_15 .
+ex:Obj12_MissionLecture backlog:metricMovableBy ex:ST12_Release_15 .
+ex:ST12_Release_15 backlog:satisfiesDeliverable ex:Del12_ReleaseRecord_15 .
+ex:AC12_Release_15 a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the chapter 15 deck and page pass their automatic checks When the academician, the faculty reviewer and the undergraduate reader each record a verdict on every reviewed condition Then every verdict is recorded in the repository and the new versions are named as released" ;
+    backlog:satisfiedByArtifact "the chapter 15 review and release record in 07-lineage/reports/" ;
+    rdfs:label "Record the three reviews and release chapter 15: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Template_RunOrder .
+ex:ST12_Template_RunOrder backlog:hasIdentifier "ST12_Template_RunOrder" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_NewCapability ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Template_RunOrder backlog:pursuesObjective ex:Obj12_RunOrderMenu .
+ex:ST12_Template_RunOrder a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Template_RunOrder ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Add the run-in-order menu item to the generic page template and A-box maker"@en .
+ex:Obj12_RunOrderMenu backlog:metricMovableBy ex:ST12_Template_RunOrder .
+ex:AC12_Template_RunOrder a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the generic page template and A-box maker When a new template version adds a top menu item labelled run examples in order and the page-shapes check is run on a built page Then PageRunInOrderMenuShape passes on the pages of chapters 12 to 15" ;
+    backlog:satisfiedByArtifact "the new page template version and 08-tooling/lineage12-opening/ shape-check log" ;
+    rdfs:label "Add the run-in-order menu item to the generic page template and A-box maker: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_Guards .
+ex:ST12_Guards backlog:hasIdentifier "ST12_Guards" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_LineageGovernance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_Guards backlog:pursuesObjective ex:Obj12_OutsideFiles .
+ex:ST12_Guards backlog:pursuesObjective ex:Obj12_ContentChanged .
+ex:ST12_Guards backlog:pursuesObjective ex:Obj12_ExamFiles .
+ex:ST12_Guards backlog:pursuesObjective ex:Obj12_OtherChapterFiles .
+ex:ST12_Guards backlog:pursuesObjective ex:Obj12_LabFiles .
+ex:ST12_Guards backlog:pursuesObjective ex:Obj12_RdodiFiles .
+ex:ST12_Guards a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_Guards ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Show by file listing that the guarded areas are untouched"@en .
+ex:Obj12_OutsideFiles backlog:metricMovableBy ex:ST12_Guards .
+ex:Obj12_ContentChanged backlog:metricMovableBy ex:ST12_Guards .
+ex:Obj12_ExamFiles backlog:metricMovableBy ex:ST12_Guards .
+ex:Obj12_OtherChapterFiles backlog:metricMovableBy ex:ST12_Guards .
+ex:Obj12_LabFiles backlog:metricMovableBy ex:ST12_Guards .
+ex:Obj12_RdodiFiles backlog:metricMovableBy ex:ST12_Guards .
+ex:AC12_Guards a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the lineage's commits since opening When git lists the files changed Then no file of exam work, other chapters, lab materials or the rdodi sets appears and no approved story or example entry differs from its draft except where a ruling forces it" ;
+    backlog:satisfiedByArtifact "08-tooling/lineage12-opening/ guard listing log" ;
+    rdfs:label "Show by file listing that the guarded areas are untouched: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_OwnVersions .
+ex:ST12_OwnVersions backlog:hasIdentifier "ST12_OwnVersions" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_LineageGovernance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_OwnVersions backlog:pursuesObjective ex:Obj12_OwnVersions .
+ex:ST12_OwnVersions a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_OwnVersions ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Give every changed file its own version and remove the older page drafts"@en .
+ex:Obj12_OwnVersions backlog:metricMovableBy ex:ST12_OwnVersions .
+ex:AC12_OwnVersions a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the files changed for chapters 12 to 15 When the version check is run on the repository root Then it exits 0 and no unreleased older page draft of these chapters remains" ;
+    backlog:satisfiedByArtifact "08-tooling/lineage12-opening/ version-check log" ;
+    rdfs:label "Give every changed file its own version and remove the older page drafts: acceptance"@en .
+ex:Backlog12 backlog:hasBacklogMember ex:ST12_StoryRead .
+ex:ST12_StoryRead backlog:hasIdentifier "ST12_StoryRead" ; backlog:responsible ex:Executor_ClaudeCodeSession ; backlog:hasInvestmentCategory backlog:Cat_LineageGovernance ; backlog:notYetScoreable true ; backlog:hasScoreabilityReason "Scored at planning, when the packages and sprints are cut." .
+ex:ST12_StoryRead backlog:pursuesObjective ex:Obj12_ContentChanged .
+ex:ST12_StoryRead a backlog:Story ;
+    backlog:appliesDefinitionOfDone ex:DoD12 ;
+    backlog:memberOfContainer ex:Backlog12 ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasAcceptanceCriterion ex:AC12_StoryRead ;
+    backlog:hasState backlog:Proposed ;
+    backlog:standsAlone true ;
+    rdfs:label "Read the chapter 12 pipeline story against the same name in chapters 8, 9 and 10"@en .
+ex:AC12_StoryRead a backlog:AcceptanceCriterion ;
+    backlog:belongsToLineage ex:Lineage12 ;
+    backlog:hasGherkinText "Given the story repeat check lists the shared name in chapter 12 When the story is read against chapters 8, 9 and 10 Then it is recorded as a different story or sent to the Owner as a candidate, and no repeat stays unrecorded" ;
+    backlog:satisfiedByArtifact "07-lineage/reports/ story-read record" ;
+    rdfs:label "Read the chapter 12 pipeline story against the same name in chapters 8, 9 and 10: acceptance"@en .
