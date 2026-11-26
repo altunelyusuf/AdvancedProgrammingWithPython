@@ -1,0 +1,234 @@
+{
+ "chapter": 22,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch22/SEN0414_Ch22_ReadingTextFromImages_3e_v4_0_0.pptx",
+ "about": "The code examples of the chapter 22 deck, in the order of the code slides (order = slide order). Every example is self-contained and runs offline, reads no keyboard and opens no window. Every picture is drawn by the example itself (no file of the book's download is used); the screen of pyautogui, which needs a display, is replaced by a small class with the same call (EMULATED); the program NAPS2 is not installed and its example shows the error. The examples need the program Tesseract with its English, German and French data. No example needs an account or a network. The expected result is what the run printed under Python 3.12.3. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed.",
+ "executed_with": {
+  "python": "3.12.3",
+  "library": "Pillow, NumPy, pytesseract, and the standard library"
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "wheel_sha256": {},
+  "page_requirements": [
+   "the packages Pillow (PIL), NumPy and pytesseract, and the standard library modules difflib, subprocess, os and tempfile",
+   "on the page (Pyodide) there is no Tesseract program, no NAPS2 and no display: the examples that need them are shown as recorded, and the chapter-code tab shows the printed result of the recorded run"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "engine",
+   "name": "The engine and its languages",
+   "slide": 7,
+   "concepts": [
+    "Installing Tesseract and PyTesseract",
+    "Windows",
+    "macOS",
+    "Linux",
+    "PyTesseract",
+    "pytesseract",
+    "Tesseract",
+    "tess.get_languages()",
+    "'--install', 'ocr-eng'"
+   ],
+   "code": "import pytesseract as tess\nprint(tess.get_tesseract_version())\nlangs = tess.get_languages()\nprint(len(langs), langs[:5])\nprint('eng' in langs, 'xyz' in langs)",
+   "setup": "",
+   "expected": "5.3.4\n22 ['ara', 'chi_sim', 'chi_tra', 'deu', 'eng']\nTrue False\n"
+  },
+  {
+   "order": 2,
+   "id": "read",
+   "name": "Reading one line of text",
+   "slide": 9,
+   "concepts": [
+    "OCR Fundamentals",
+    "tess.image_to_string()",
+    "PIL.Image",
+    "Image.open()",
+    "ocr-example.png",
+    "pytesseract"
+   ],
+   "code": "from PIL import Image, ImageDraw, ImageFont\nimport pytesseract as tess\nfont = ImageFont.load_default(size=40)\nim = Image.new('L', (440, 90), 255)\nImageDraw.Draw(im).text((20, 20), 'Hello OCR 2026', fill=0, font=font)\ntext = tess.image_to_string(im)\nprint(repr(text))\nprint(text.strip() == 'Hello OCR 2026')",
+   "setup": "",
+   "expected": "'Hello OCR 2026\\n'\nTrue\n"
+  },
+  {
+   "order": 3,
+   "id": "lines",
+   "name": "Lines, breaks and the data behind a line",
+   "slide": 10,
+   "concepts": [
+    "Figure 22-1: the top part of a scanned page from an 1831 print of Frankenstein by Mary Shelley",
+    "frankenstein.png"
+   ],
+   "code": "import pytesseract as tess\n# im holds three lines of text, drawn one under the other\ntext = tess.image_to_string(im)\nprint(type(text).__name__, len(text))\nprint(text.splitlines())",
+   "setup": "from PIL import Image, ImageDraw, ImageFont\nfont = ImageFont.load_default(size=28)\nim = Image.new('L', (560, 170), 255)\ndraw = ImageDraw.Draw(im)\nrows = ['It was on a dreary night', 'of November that I beheld', 'the accomplishment of my toils']\nfor n, line in enumerate(rows):\n    draw.text((20, 10 + n * 50), line, fill=0, font=font)",
+   "expected": "str 83\n['It was on a dreary night', 'of November that | beheld', '', 'the accomplishment of my toils']\n"
+  },
+  {
+   "order": 4,
+   "id": "data",
+   "name": "Words, boxes and confidence",
+   "slide": 11,
+   "concepts": [
+    "tess.image_to_string()",
+    "OCR Fundamentals"
+   ],
+   "code": "import pytesseract as tess\n# im holds one line: Invoice 2026-114 total 482.50\nd = tess.image_to_data(im, output_type=tess.Output.DICT)\nfor w, c, x, y in zip(d['text'], d['conf'], d['left'], d['top']):\n    if w.strip():\n        print(w, c, x, y)",
+   "setup": "from PIL import Image, ImageDraw, ImageFont\nfont = ImageFont.load_default(size=32)\nim = Image.new('L', (560, 80), 255)\nImageDraw.Draw(im).text((20, 20), 'Invoice 2026-114 total 482.50', fill=0, font=font)",
+   "expected": "Invoice 96 23 29\n2026-114 96 133 29\ntotal 96 281 27\n482.50 96 352 29\n"
+  },
+  {
+   "order": 5,
+   "id": "size",
+   "name": "Text that is too small",
+   "slide": 15,
+   "concepts": [
+    "Preprocessing an Image"
+   ],
+   "code": "def page(px, tilt=0):\n    font = ImageFont.load_default(size=px)\n    im = Image.new('L', (int(font.getlength(TRUTH)) + 60, px * 3), 255)\n    ImageDraw.Draw(im).text((30, px), TRUTH, fill=0, font=font)\n    return im.rotate(tilt, expand=True, fillcolor=255)\ndef score(im):\n    read = tess.image_to_string(im).strip()\n    return round(difflib.SequenceMatcher(None, TRUTH, read).ratio(), 2)\nfor px in (7, 8, 9, 10, 12, 16):\n    print(px, score(page(px)))",
+   "setup": "import difflib\nfrom PIL import Image, ImageDraw, ImageFont\nimport pytesseract as tess\nTRUTH = 'The quick brown fox jumps over the lazy dog'",
+   "expected": "7 0.0\n8 0.0\n9 0.95\n10 0.99\n12 1.0\n16 1.0\n"
+  },
+  {
+   "order": 6,
+   "id": "tilt",
+   "name": "A page that is crooked",
+   "slide": 16,
+   "concepts": [
+    "Preprocessing an Image"
+   ],
+   "code": "# page() and score() are those of the size example\nfor deg in (0, 4, 6, 7, 8, 9, 12):\n    print(deg, score(page(24, deg)))",
+   "setup": "import difflib\nimport numpy as np\nfrom PIL import Image, ImageDraw, ImageFont\nimport pytesseract as tess\nTRUTH = 'The quick brown fox jumps over the lazy dog'\ndef page(px, tilt=0):\n    font = ImageFont.load_default(size=px)\n    im = Image.new('L', (int(font.getlength(TRUTH)) + 60, px * 3), 255)\n    ImageDraw.Draw(im).text((30, px), TRUTH, fill=0, font=font)\n    return im.rotate(tilt, expand=True, fillcolor=255)\ndef score(im):\n    read = tess.image_to_string(im).strip()\n    return round(difflib.SequenceMatcher(None, TRUTH, read).ratio(), 2)",
+   "expected": "0 1.0\n4 1.0\n6 0.98\n7 0.9\n8 0.91\n9 0.0\n12 0.25\n"
+  },
+  {
+   "order": 7,
+   "id": "noise",
+   "name": "Noise on the picture",
+   "slide": 17,
+   "concepts": [
+    "Preprocessing an Image"
+   ],
+   "code": "def noisy(im, s):\n    rng = np.random.default_rng(1)\n    a = np.array(im, dtype=int) + rng.integers(-s, s + 1, (im.height, im.width))\n    return Image.fromarray(np.clip(a, 0, 255).astype('uint8'))\nfor s in (0, 50, 90, 100, 105, 110):\n    print(s, score(noisy(page(24), s)))",
+   "setup": "import difflib\nimport numpy as np\nfrom PIL import Image, ImageDraw, ImageFont\nimport pytesseract as tess\nTRUTH = 'The quick brown fox jumps over the lazy dog'\ndef page(px, tilt=0):\n    font = ImageFont.load_default(size=px)\n    im = Image.new('L', (int(font.getlength(TRUTH)) + 60, px * 3), 255)\n    ImageDraw.Draw(im).text((30, px), TRUTH, fill=0, font=font)\n    return im.rotate(tilt, expand=True, fillcolor=255)\ndef score(im):\n    read = tess.image_to_string(im).strip()\n    return round(difflib.SequenceMatcher(None, TRUTH, read).ratio(), 2)",
+   "expected": "0 1.0\n50 1.0\n90 1.0\n100 1.0\n105 0.0\n110 0.0\n"
+  },
+  {
+   "order": 8,
+   "id": "clean",
+   "name": "Cleaning a picture before reading",
+   "slide": 22,
+   "concepts": [
+    "Preprocessing an Image"
+   ],
+   "code": "tilted = page(24, 10)\nprint('tilted', score(tilted), score(tilted.rotate(-10, expand=True, fillcolor=255)))\nsmall = page(8)\nbig = small.resize((small.width * 3, small.height * 3), Image.Resampling.LANCZOS)\nprint('small', score(small), score(big))\ntable = [0] * 128 + [255] * 128\nprint('black and white', score(big.point(table)))",
+   "setup": "import difflib\nimport numpy as np\nfrom PIL import Image, ImageDraw, ImageFont\nimport pytesseract as tess\nTRUTH = 'The quick brown fox jumps over the lazy dog'\ndef page(px, tilt=0):\n    font = ImageFont.load_default(size=px)\n    im = Image.new('L', (int(font.getlength(TRUTH)) + 60, px * 3), 255)\n    ImageDraw.Draw(im).text((30, px), TRUTH, fill=0, font=font)\n    return im.rotate(tilt, expand=True, fillcolor=255)\ndef score(im):\n    read = tess.image_to_string(im).strip()\n    return round(difflib.SequenceMatcher(None, TRUTH, read).ratio(), 2)",
+   "expected": "tilted 0.0 1.0\nsmall 0.0 0.98\nblack and white 0.7\n"
+  },
+  {
+   "order": 9,
+   "id": "config",
+   "name": "Telling Tesseract what to expect",
+   "slide": 23,
+   "concepts": [
+    "tess.image_to_string()"
+   ],
+   "code": "import pytesseract as tess\n# im holds the line: Call 555-0199 now: 2026\nprint(repr(tess.image_to_string(im).strip()))\ndigits = '--psm 7 -c tessedit_char_whitelist=0123456789-'\nprint(repr(tess.image_to_string(im, config=digits).strip()))",
+   "setup": "from PIL import Image, ImageDraw, ImageFont\nfont = ImageFont.load_default(size=32)\nim = Image.new('L', (520, 90), 255)\nImageDraw.Draw(im).text((20, 20), 'Call 555-0199 now: 2026', fill=0, font=font)",
+   "expected": "'Call 555-0199 now: 2026'\n'555-01992026'\n"
+  },
+  {
+   "order": 10,
+   "id": "lang",
+   "name": "Languages other than English",
+   "slide": 24,
+   "concepts": [
+    "Recognizing Text in Non-English Languages",
+    "frankenstein_jpn.png",
+    "lang='eng+jpn'"
+   ],
+   "code": "def ratio(a, b):\n    return round(difflib.SequenceMatcher(None, a, b).ratio(), 2)\nfor lang, text in texts.items():\n    as_eng = tess.image_to_string(line(text), lang='eng').strip()\n    as_own = tess.image_to_string(line(text), lang=lang).strip()\n    print(lang, ratio(text, as_eng), ratio(text, as_own))\ntry:\n    tess.image_to_string(line(texts['deu']), lang='xyz')\nexcept tess.TesseractError as e:\n    print(type(e).__name__)",
+   "setup": "import difflib\nfrom PIL import Image, ImageDraw, ImageFont\nimport pytesseract as tess\nfont = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 32)\ntexts = {'deu': 'Straße über Äpfel schön', 'fra': 'Où est le café à côté'}\ndef line(text):\n    im = Image.new('L', (520, 80), 255)\n    ImageDraw.Draw(im).text((20, 20), text, fill=0, font=font)\n    return im",
+   "expected": "deu 0.83 1.0\nfra 0.86 1.0\nTesseractError\n"
+  },
+  {
+   "order": 11,
+   "id": "mistakes",
+   "name": "Finding the mistakes of a reading",
+   "slide": 28,
+   "concepts": [
+    "Fixing Mistakes Using Large Language Models"
+   ],
+   "code": "import difflib\nTRUTH = 'Invoice 2026-114 total 482.50'\nread = 'lnvoice 2O26-114 totaI 482.5O'\nfor tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, TRUTH, read).get_opcodes():\n    if tag != 'equal':\n        print(tag, repr(TRUTH[i1:i2]), 'read as', repr(read[j1:j2]))\nratio = difflib.SequenceMatcher(None, TRUTH, read).ratio()\nprint(round(ratio, 2))",
+   "setup": "",
+   "expected": "replace 'I' read as 'l'\nreplace '0' read as 'O'\nreplace 'l' read as 'I'\nreplace '0' read as 'O'\n0.86\n"
+  },
+  {
+   "order": 12,
+   "id": "pdf",
+   "name": "A searchable PDF",
+   "slide": 29,
+   "concepts": [
+    "output.pdf",
+    "ocrmypdf",
+    "subprocess",
+    "subprocess.run()"
+   ],
+   "code": "import subprocess, tempfile\nimport pytesseract as tess\n# im holds two lines of text\npdf = tess.image_to_pdf_or_hocr(im, extension='pdf')\nprint(type(pdf).__name__, pdf[:5])\npath = tempfile.mktemp(suffix='.pdf')\nopen(path, 'wb').write(pdf)\ndone = subprocess.run(['pdftotext', path, '-'], capture_output=True, text=True)\nprint([t for t in done.stdout.splitlines() if t.strip()])",
+   "setup": "from PIL import Image, ImageDraw, ImageFont\nfont = ImageFont.load_default(size=28)\nim = Image.new('L', (700, 160), 255)\ndraw = ImageDraw.Draw(im)\ndraw.text((20, 20), 'Invoice 2026-114 total 482.50', font=font, fill=0)\ndraw.text((20, 80), 'Paid by bank transfer', font=font, fill=0)",
+   "expected": "bytes b'%PDF-'\n['Invoice 2026-114 total 482.50', 'Paid by bank transfer']\n"
+  },
+  {
+   "order": 13,
+   "id": "naps",
+   "name": "Running NAPS2 from Python",
+   "slide": 30,
+   "concepts": [
+    "The NAPS2 Scanner Application",
+    "Installing and Setting Up NAPS2",
+    "Running NAPS2 from Python",
+    "Specifying Input",
+    "NAPS2",
+    "'-n', '0'",
+    "ocr-example.png"
+   ],
+   "code": "import subprocess\ncommand = ['NAPS2.Console', '-n', '0', '-i', 'ocr-example.png', '-o', 'output.pdf']\nprint(' '.join(command))\ntry:\n    subprocess.run(command, check=True)\nexcept FileNotFoundError as e:\n    print(type(e).__name__, e.filename)",
+   "setup": "",
+   "expected": "NAPS2.Console -n 0 -i ocr-example.png -o output.pdf\nFileNotFoundError NAPS2.Console\n"
+  },
+  {
+   "order": 14,
+   "id": "screen",
+   "name": "Reading the screen",
+   "slide": 34,
+   "concepts": [
+    "pyautogui.screenshot()",
+    "pyautogui",
+    "Figure 22-2: an example web page with an embedded document"
+   ],
+   "code": "class Screen:\n    def screenshot(self):\n        im = Image.new('RGB', (640, 300), 'white')\n        draw = ImageDraw.Draw(im)\n        draw.text((20, 60), 'Embedded document', fill='black', font=font)\n        draw.text((20, 120), 'Page 3 of 12: total 482.50', fill='black', font=font)\n        return im\nshot = Screen().screenshot()\npart = shot.crop((0, 50, 640, 170))\nprint(shot.size, part.size)\nprint(tess.image_to_string(part).strip().splitlines())",
+   "setup": "from PIL import Image, ImageDraw, ImageFont\nimport pytesseract as tess\nfont = ImageFont.load_default(size=28)",
+   "expected": "(640, 300) (640, 120)\n['Embedded document', '', 'Page 3 of 12: total 482.50']\n"
+  },
+  {
+   "order": 15,
+   "id": "scraper",
+   "name": "Practice program: browser text scraper",
+   "slide": 35,
+   "concepts": [
+    "Practice Program: Browser Text Scraper",
+    "output.txt",
+    "ocrscreen.py"
+   ],
+   "code": "def screenshot(n):\n    im = Image.new('RGB', (640, 160), 'white')\n    line = f'Page {n} of 3: total {n * 100}.50'\n    ImageDraw.Draw(im).text((20, 50), line, fill='black', font=font)\n    return im\nfor n in (1, 2, 3):\n    part = screenshot(n).crop((0, 20, 640, 120))\n    text = tess.image_to_string(part).strip()\n    with open('output.txt', 'a') as f:\n        f.write(text + '\\n')\nprint(open('output.txt').read().splitlines())",
+   "setup": "import os, tempfile\nfrom PIL import Image, ImageDraw, ImageFont\nimport pytesseract as tess\nos.chdir(tempfile.mkdtemp())\nfont = ImageFont.load_default(size=28)",
+   "expected": "['Page 1 of 3: total 100.50', 'Page 2 of 3: total 200.50', 'Page 3 of 3: total 300.50']\n"
+  }
+ ]
+}
