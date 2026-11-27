@@ -1,0 +1,100 @@
+{
+ "_version": "9.111.0",
+ "_note": "Made from the chapter-code manifest 03-materials/ch24/page/chapter_code_ch24_v1_0_0.json (same code, same order): one cell per manifest example, name = the example's name.",
+ "The packages and the tools": [
+  [
+   "import platform, importlib.metadata as md\nprint(platform.python_version())\nnames = ('pyttsx3', 'openai-whisper', 'yt-dlp', 'numpy')\nprint([md.version(n) for n in names])\nimport shutil, os\nprint(shutil.which('ffmpeg') is not None)\nprint(shutil.which('espeak-ng') is not None)\nprint(os.path.exists('/dev/snd'))",
+   ""
+  ]
+ ],
+ "Saying a sentence": [
+  [
+   "import pyttsx3\nevents = []\ndef began(**kw): events.append('started')\ndef ended(**kw): events.append('finished')\nengine = pyttsx3.init()\nengine.connect('started-utterance', began)\nengine.connect('finished-utterance', ended)\nqueued = engine.say('Hello. How are you doing?')\nprint('say() returned', queued, '| events', len(events))\nengine.runAndWait()\nprint('after runAndWait:', events)\ninit = 'import pyttsx3; e = pyttsx3.init(); '\nonce = init + 'e.runAndWait()'\ntwice = init + 'e.runAndWait(); e.runAndWait()'\nprint('once :', waits(once))\nprint('twice:', waits(twice))",
+   ""
+  ]
+ ],
+ "The voices of the engine": [
+  [
+   "import pyttsx3\nengine = pyttsx3.init()\nvoices = engine.getProperty('voices')\nfirst = voices[0]\nprint(len(voices), first.name, first.gender, first.age)\nprint(first.languages)\nprint(engine.getProperty('voice'))\nengine.setProperty('voice', voices[1].id)\nengine.save_to_file('Hello. How are you doing?', 'hello.wav')\nengine.runAndWait()\nprint(voices[1].name, wavinfo('hello.wav')['seconds'], 's')",
+   ""
+  ]
+ ],
+ "Rate and volume": [
+  [
+   "for rate in (50, 100, 150, 200, 250, 300, 400):\n    audio, seconds, peak = measure('rate', rate, FOX)\n    print('%3d -> %.2f s' % (rate, seconds))\nfor volume in (1.0, 0.5, 0.1, 0.0, 5):\n    print(volume, measure('volume', volume, FOX)[2])\nslow, fast = measure('rate', 100, FOX), measure('rate', 300, FOX)\nstrips('waves.png', [slow[:2], fast[:2]])",
+   ""
+  ]
+ ],
+ "Saving speech to a WAV file": [
+  [
+   "import pyttsx3, wave\nengine = pyttsx3.init()\nengine.save_to_file('Hello. How are you doing?', 'hello.wav')\nprint('before runAndWait:', os.path.exists('hello.wav'))\nengine.runAndWait()\nw = wave.open('hello.wav')\nprint(w.getnchannels(), w.getsampwidth(), w.getframerate())\nprint(round(w.getnframes() / w.getframerate(), 2), 's')\nengine.save_to_file('Hello.', 'hello.mp3')\nengine.runAndWait()\nwait_file('hello.mp3')\nhead = open('hello.mp3', 'rb').read(12)\nprint(head[:4], head[8:])\na, rate = samples('hello.wav')\nstrips('hello.png', [(a, len(a) / rate)])",
+   ""
+  ]
+ ],
+ "Whisper models": [
+  [
+   "import torch, whisper\nprint(len(whisper.available_models()), 'models')\nfor name in ('tiny', 'base', 'small'):\n    model = whisper.load_model(name)\n    count = sum(p.numel() for p in model.parameters()) / 1e6\n    size = os.path.getsize(cached(name))\n    print('%-5s %5.1f M, %d bytes' % (name, count, size))\nprint('cuda:', torch.cuda.is_available(), '| on', model.device)\nprint(kind(whisper.load_model, 'tiny', device='cuda'))",
+   ""
+  ]
+ ],
+ "Transcribing speech": [
+  [
+   "import pyttsx3, whisper\nengine = pyttsx3.init()\nsay_to(engine, FOX, 'fox.wav')\nfor name in ('tiny', 'base', 'small'):\n    model = whisper.load_model(name)\n    result = model.transcribe('fox.wav', temperature=0.0)\n    text = result['text']\n    print('%-5s %r WER %.1f' % (name, text, wer(FOX, text)))\nprint('keys:', list(result))\nprint('segment:', list(result['segments'][0])[:6])",
+   ""
+  ]
+ ],
+ "Reading audio needs ffmpeg": [
+  [
+   "import pyttsx3, whisper\nengine = pyttsx3.init()\nsay_to(engine, FOX, 'fox.wav')\naudio = whisper.load_audio('fox.wav')\nprint(type(audio).__name__, audio.dtype, audio.shape)\npath = os.environ['PATH']\nos.environ['PATH'] = '/nonexistent'\nprint(trying(whisper.load_audio, 'fox.wav'))\nos.environ['PATH'] = path\na = [int(v * 32767) for v in audio]\nstrips('audio16k.png', [(a, len(a) / 16000)])",
+   ""
+  ]
+ ],
+ "Languages": [
+  [
+   "import pyttsx3, whisper\nSAY = {'tr': 'Merhaba, bugün hava çok güzel.',\n       'it': 'Buongiorno, come sta oggi?',\n       'en-us': 'Good morning, how are you today?'}\nengine = pyttsx3.init()\nids = {v.languages[0]: v.id for v in engine.getProperty('voices')}\nmodels = {n: whisper.load_model(n) for n in ('tiny', 'base')}\nfor code, text in SAY.items():\n    engine.setProperty('voice', ids.get(code, code))\n    say_to(engine, text, code + '.wav')\n    row = {}\n    for n, m in models.items():\n        r = m.transcribe(code + '.wav', temperature=0.0)\n        row[n] = r['language']\n    print('%-5s heard as %s' % (code, row))\nprint(trying(models['tiny'].transcribe, 'tr.wav', language='xx'))",
+   ""
+  ]
+ ],
+ "Subtitle files": [
+  [
+   "from whisper.utils import get_writer\nsegs = [{'id': 0, 'start': 0.0, 'end': 5.64, 'text': A},\n        {'id': 1, 'start': 5.64, 'end': 14.96, 'text': B}]\nbook = {'text': A + B, 'language': 'en', 'segments': segs}\nfor fmt in ('srt', 'vtt', 'tsv'):\n    get_writer(fmt, '.')(book, 'audio')\n    got = open('audio.' + fmt, encoding='utf-8').read()\n    same = got.strip() == CHAPTER[fmt].strip()\n    print(fmt, len(got), 'bytes, same as the book:', same)\nprint('SRT time:', open('audio.srt').read().splitlines()[1])\nprint('VTT time:', open('audio.vtt').read().splitlines()[2])\nprint('TSV head:', open('audio.tsv').readline().split())\nprint('docx writer:', trying(get_writer, 'docx', '.'))\ncues_picture(segs)",
+   ""
+  ]
+ ],
+ "Writer options and word times": [
+  [
+   "import whisper\nfrom whisper.utils import get_writer\naudio = fetch('gettysburg_shurtagal.mp3')\nmodel = whisper.load_model('tiny')\nr = model.transcribe(audio, language='en')\nget_writer('srt', '.')(r, 'plain')\nn = len(open('plain.srt').read().strip().split('\\n\\n'))\ntimes = [t for s in r['segments'] for t in (s['start'], s['end'])]\nprint('segments', len(r['segments']), '| blocks', n)\nw = model.transcribe(audio, language='en', word_timestamps=True)\nprint('words in segment 1:', len(w['segments'][0]['words']))\nopts = {'max_line_width': 30, 'max_line_count': 2}\nget_writer('srt', '.')(w, 'wide', opts)\nblocks = open('wide.srt').read().strip().split('\\n\\n')\nprint('max_line_width=30:', len(blocks), 'blocks; the first:')\nprint(blocks[0])",
+   ""
+  ]
+ ],
+ "Metadata without a download": [
+  [
+   "import yt_dlp\nURL = 'https://archive.org/details/gettysburg_shurtagal_librivox'\noptions = {'quiet': True, 'skip_download': True}\nydl = yt_dlp.YoutubeDL(options)\ninfo = ydl.extract_info(URL, download=False)\nprint('title:', info['title'])\nprint(info['extractor'], '| formats:', len(info['formats']))\nhave = [k for k in CHAPTER_KEYS if k in info]\nprint('of 13 keys of the chapter, here:', len(have))\ngone = [k for k in CHAPTER_KEYS if k not in info]\nprint('missing:', ', '.join(gone))\nclean = ydl.sanitize_info(info)\nopen('metadata.json', 'w').write(json.dumps(clean))\nkept = json.load(open('metadata.json'))\nprint('metadata.json:', len(kept), 'keys')",
+   ""
+  ]
+ ],
+ "Downloading audio": [
+  [
+   "import yt_dlp\nURL = 'https://archive.org/details/gettysburg_shurtagal_librivox'\noptions = {'quiet': True, 'no_warnings': True,\n           'noprogress': True,\n           'outtmpl': 'downloaded_content.%(ext)s',\n           'format': 'm4a/bestaudio/best',\n           'postprocessors': [{'key': 'FFmpegExtractAudio',\n                               'preferredcodec': 'm4a'}]}\nwith yt_dlp.YoutubeDL(options) as ydl:\n    print('download() returned', ydl.download([URL]))\nprint(sorted(os.listdir('.')))\ncodec, seconds = probe_audio('downloaded_content.m4a')\nprint('codec', codec, '| seconds', seconds)\ngone = ['https://archive.org/details/no_such_item_ch24_zz']\nprint('a string, not a list:', ydl.download(URL))\nprint('an address that is nowhere:', kind(ydl.download, gone))",
+   ""
+  ]
+ ],
+ "Adding voice to Guess the Number": [
+  [
+   "import pyttsx3\nengine = pyttsx3.init()\nnames = iter(['g1.wav', 'g2.wav', 'g3.wav', 'g4.wav'])\ndef speak(text):\n    print(text)\n    engine.save_to_file(text, next(names))\n    engine.runAndWait()\ndef game(guesses, secret):\n    speak('I am thinking of a number between 1 and 20.')\n    for n, g in enumerate(guesses, 1):\n        if g == secret: return speak('You won in %d.' % n)\n        word = 'low' if g < secret else 'high'\n        speak('%d is too %s.' % (g, word))\ngame([5, 18, 12], 12)\nprint([wavinfo('g%d.wav' % k)['seconds'] for k in range(1, 5)])",
+   ""
+  ]
+ ],
+ "Singing 99 Bottles of Beer": [
+  [
+   "import pyttsx3\ndef bottles(k):\n    if k == 0: return 'No more bottles'\n    return '1 bottle' if k == 1 else '%d bottles' % k\ndef verse(n):\n    this, nxt = bottles(n), bottles(n - 1)\n    return (f'{this} of beer on the wall,\\n{this} of beer,\\n'\n            'Take one down, pass it around,\\n'\n            f'{nxt} of beer on the wall.')\nengine = pyttsx3.init()\nfor n in (3, 99):\n    text = '\\n\\n'.join(verse(k) for k in range(n, 0, -1))\n    name = 'song%d.wav' % n\n    say_to(engine, text, name)\n    print(n, 'verses:', wavinfo(name)['seconds'], 'seconds')\na, rate = samples('song3.wav')\nstrips('song.png', [(a, len(a) / rate)])",
+   ""
+  ]
+ ],
+ "The YouTube Transcriber": [
+  [
+   "import glob, yt_dlp, whisper\ndef transcribe_urls(urls, formats=('srt',), model_name='tiny'):\n    model = whisper.load_model(model_name)\n    for k, url in enumerate(urls):\n        stem = 'video%d' % k\n        with yt_dlp.YoutubeDL(audio_opts(stem)) as ydl:\n            ydl.download([url])\n        audio = glob.glob(stem + '.*')[0]\n        r = model.transcribe(audio, language='en', temperature=0)\n        for f in formats: whisper.utils.get_writer(f, '.')(r, stem)\n        print(len(r['segments']), 'segments')\nURLS = ['https://archive.org/details/gettysburg_shurtagal_librivox',\n        'https://archive.org/details/gettysburg_johng_librivox']\ntranscribe_urls(URLS, formats=('srt', 'vtt', 'txt'))\nbad = ['https://archive.org/details/no_such_item_ch24_zz']\nprint('one bad address:', kind(transcribe_urls, bad))",
+   ""
+  ]
+ ]
+}
