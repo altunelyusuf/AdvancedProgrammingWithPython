@@ -1,0 +1,256 @@
+{
+ "chapter": 25,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch25/SEN0414_Ch25_Threads_3e_v4_0_0.pptx",
+ "about": "The code examples of the chapter 25 deck, in the order of the code slides (order = slide order). Every example ran under the Python 3.14.6 of the chapter's environment with requests and beautifulsoup4; the free-threaded build of Python 3.14.6 is started as a child program where a slide asks it. Programs that wait print only what does not depend on how long they took. The downloader asks a stand-in of the comic site that runs on 127.0.0.1; xkcd.com is never contacted. The lines that give each example its own folder are hidden helpers (lab25). On the page there is no thread, no second process and no network socket, so the printed result of the recorded run is shown. The expected result is what the run printed under Python 3.14.6. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed.",
+ "executed_with": {
+  "python": "3.14.6",
+  "library": "requests, beautifulsoup4, and the standard library"
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "wheel_sha256": {},
+  "page_requirements": [
+   "Python 3.14.6 with requests and beautifulsoup4, a free-threaded build of Python 3.14.6 for the slide on the lock, and a machine that allows local sockets and child processes",
+   "on the page (Pyodide) there are no threads, no child processes and no sockets: every example is shown as recorded, and the chapter-code tab shows the printed result of the recorded run"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "start",
+   "name": "Starting a thread",
+   "slide": 7,
+   "concepts": [
+    "Multithreading",
+    "threading.Thread()",
+    "threadObj.start()",
+    "threadObj.join()",
+    "time.sleep()",
+    "target=takeANap",
+    "threadDemo.py",
+    "threading.current_thread()"
+   ],
+   "code": "import threading, time\nprint('Start of program.')\ndef takeANap():\n    time.sleep(0.5)\n    print('Wake up!')\nthreadObj = threading.Thread(target=takeANap)\nthreadObj.start()\nprint('End of program.')\nthreadObj.join()\nbox = []\ndef f():\n    me = threading.current_thread()\n    box.append((me.name, threading.active_count()))\nt = threading.Thread(target=f)\nt.start(); t.join()\nprint(box[0], threading.current_thread().name)",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "Start of program.\nEnd of program.\nWake up!\n('Thread-2 (f)', 2) MainThread\n"
+  },
+  {
+   "order": 2,
+   "id": "args",
+   "name": "The arguments of the target",
+   "slide": 8,
+   "concepts": [
+    "Passing Arguments to the Thread's Target Function",
+    "args=['Cats', 'Dogs', 'Frogs']",
+    "kwargs={'sep': ' & '}"
+   ],
+   "code": "import threading\ndef go(sep):\n    t = threading.Thread(target=print, kwargs={'sep': sep},\n                         args=['Cats', 'Dogs', 'Frogs'])\n    t.start(); t.join()\ngo(' & ')\ngo('& ')\nt = threading.Thread(target=print('Now', 'not later'))\nt.start(); t.join()\nprint('thread alive:', t.is_alive())",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "Cats & Dogs & Frogs\nCats& Dogs& Frogs\nNow not later\nthread alive: False\n"
+  },
+  {
+   "order": 3,
+   "id": "life",
+   "name": "The life of a Thread object",
+   "slide": 9,
+   "concepts": [
+    "Concurrency Issues"
+   ],
+   "code": "import threading\ndef f(): pass\na = threading.Thread(target=f)\na.start(); a.join()\ntry:\n    a.start()\nexcept RuntimeError as e:\n    print('RuntimeError:', e)\ndef boom():\n    raise ValueError('boom')\ndef hook(args):\n    print('hook:', repr(args.exc_value))\nthreading.excepthook = hook\nt = threading.Thread(target=boom); t.start(); t.join()\nprint('main continues')",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "RuntimeError: threads can only be started once\nhook: ValueError('boom')\nmain continues\n"
+  },
+  {
+   "order": 4,
+   "id": "join",
+   "name": "join(): waiting for a thread",
+   "slide": 10,
+   "concepts": [],
+   "code": "import threading, time\nt = threading.Thread(target=time.sleep, args=[0.6]); t.start()\nr = t.join(0.1)\nprint('join(0.1) returned', r, '| alive:', t.is_alive())\nt.join()\nprint('join() waited | alive:', t.is_alive())\nu = threading.Thread(target=print)\ntry:\n    u.join()\nexcept RuntimeError as e:\n    print('RuntimeError:', e)",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "join(0.1) returned None | alive: True\njoin() waited | alive: False\nRuntimeError: cannot join thread before it is started\n"
+  },
+  {
+   "order": 5,
+   "id": "daemon",
+   "name": "Daemon threads",
+   "slide": 11,
+   "concepts": [
+    "daemon=True"
+   ],
+   "code": "import threading, time\ntmpl = '''import threading, time\ndef f():\n    time.sleep(0.5); print('late')\nthreading.Thread(target=f, daemon=%s).start()\nprint('end')'''\nfor flag in (True, False):\n    out = py(tmpl % flag)\n    print('daemon=%s prints' % flag, out.split())\nt = threading.Thread(target=time.sleep, args=[0.2]); t.start()\ntry:\n    t.daemon = True\nexcept RuntimeError as e:\n    print('RuntimeError:', e)",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "daemon=True prints ['end']\ndaemon=False prints ['end', 'late']\nRuntimeError: cannot set daemon status of active thread\n"
+  },
+  {
+   "order": 6,
+   "id": "printed",
+   "name": "The downloader as printed",
+   "slide": 15,
+   "concepts": [
+    "Project: Multithreaded XKCD Downloader",
+    "Step 1: Modify the Program to Use a Function",
+    "downloadXkcd()",
+    "threadedDownloadXkcd.py"
+   ],
+   "code": "import threading\nthreads = []\nfor i in range(0, 140, 10):\n    start, end = max(i, 1), i + 9\n    t = threading.Thread(target=downloadXkcd, args=(start, end))\n    threads.append(t)\ntry:\n    for t in threads:\n        t.join()\nexcept RuntimeError as e:\n    print('RuntimeError:', e)\nprint('comic pages requested:', len(requested()))",
+   "setup": "from lab25_v1_0_0 import *\nbegin()\nserve()",
+   "expected": "RuntimeError: cannot join thread before it is started\ncomic pages requested: 0\n"
+  },
+  {
+   "order": 7,
+   "id": "fixed",
+   "name": "The downloader with start()",
+   "slide": 16,
+   "concepts": [
+    "Step 2: Create and Start Threads",
+    "Step 3: Wait for All Threads to End"
+   ],
+   "code": "import threading\nthreads = []\nfor i in range(0, 140, 10):\n    start, end = max(i, 1), i + 9\n    t = threading.Thread(target=downloadXkcd, args=(start, end))\n    threads.append(t)\n    t.start()\nfor t in threads:\n    t.join()\npages = requested()\nmissing = [n for n in range(1, 140) if n not in pages]\nprint('requested', len(pages), '| never requested', len(missing))\nprint(missing[:3], '...', missing[-1])\nskipped_png(pages)",
+   "setup": "from lab25_v1_0_0 import *\nbegin()\nserve()",
+   "expected": "requested 125 | never requested 14\n[9, 19, 29] ... 139\nsaved skipped.png: 1086 bytes, sha256 92c1cf3faef8\n"
+  },
+  {
+   "order": 8,
+   "id": "lost",
+   "name": "Lost updates",
+   "slide": 20,
+   "concepts": [
+    "Concurrency Issues"
+   ],
+   "code": "import threading, time\ndef trial(use_lock):\n    box = [0]; lk = threading.Lock()\n    def f():\n        if use_lock: lk.acquire()\n        v = box[0]; time.sleep(0.05); box[0] = v + 1\n        if use_lock: lk.release()\n    ts = [threading.Thread(target=f) for _ in range(2)]\n    for t in ts: t.start()\n    for t in ts: t.join()\n    return box[0]\nprint('no lock  :', [trial(False) for _ in range(3)])\nprint('with lock:', [trial(True) for _ in range(3)])",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "no lock  : [1, 1, 1]\nwith lock: [2, 2, 2]\n"
+  },
+  {
+   "order": 9,
+   "id": "lock",
+   "name": "Locks",
+   "slide": 21,
+   "concepts": [
+    "threading.Lock",
+    "threading.RLock"
+   ],
+   "code": "import threading\nbox = [0]; lk = threading.Lock()\ndef f():\n    for _ in range(100000):\n        with lk:\n            box[0] += 1\nts = [threading.Thread(target=f) for _ in range(4)]\nfor t in ts: t.start()\nfor t in ts: t.join()\nprint('4 threads x 100000 with a lock:', box[0])\nrk = threading.RLock(); lk.acquire(); rk.acquire()\nprint('Lock again, 0.2 s :', lk.acquire(timeout=0.2))\nprint('RLock again       :', rk.acquire(timeout=0.2))",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "4 threads x 100000 with a lock: 400000\nLock again, 0.2 s : False\nRLock again       : True\n"
+  },
+  {
+   "order": 10,
+   "id": "dead",
+   "name": "Deadlock",
+   "slide": 22,
+   "concepts": [],
+   "code": "import threading, time\na, b = threading.Lock(), threading.Lock()\ndef f(x, y):\n    with x:\n        time.sleep(0.1)\n        with y:\n            pass\nt1 = threading.Thread(target=f, args=(a, b), daemon=True)\nt2 = threading.Thread(target=f, args=(b, a), daemon=True)\nt1.start(); t2.start(); t1.join(0.5); t2.join(0.5)\nprint('alive after 0.5 s:', t1.is_alive(), t2.is_alive())",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "alive after 0.5 s: True True\n"
+  },
+  {
+   "order": 11,
+   "id": "sem",
+   "name": "Semaphores",
+   "slide": 24,
+   "concepts": [
+    "threading.Semaphore"
+   ],
+   "code": "import threading, time\ndef trial(limit):\n    inside, top, lk = [0], [0], threading.Lock()\n    sem = threading.BoundedSemaphore(limit)\n    def f():\n        with sem:\n            with lk:\n                inside[0] += 1\n                top[0] = max(top[0], inside[0])\n            time.sleep(0.1)\n            with lk:\n                inside[0] -= 1\n    ts = [threading.Thread(target=f) for _ in range(6)]\n    for t in ts: t.start()\n    for t in ts: t.join()\n    return top[0]\nprint('most inside, Semaphore(2):', trial(2))\nprint('most inside, Semaphore(6):', trial(6))",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "most inside, Semaphore(2): 2\nmost inside, Semaphore(6): 6\n"
+  },
+  {
+   "order": 12,
+   "id": "queue",
+   "name": "Queues and events",
+   "slide": 25,
+   "concepts": [
+    "queue.Queue",
+    "threading.Event",
+    "queue"
+   ],
+   "code": "import threading, queue\nq, got = queue.Queue(), []\ndef consumer():\n    for x in iter(q.get, None):\n        got.append(x)\nt = threading.Thread(target=consumer); t.start()\nfor i in range(5): q.put(i)\nq.put(None); t.join()\nprint('consumer received', got)\nimport time\nev, seen = threading.Event(), []\ndef wait():\n    ev.wait(); seen.append('woke')\nw = threading.Thread(target=wait)\nw.start(); time.sleep(0.2)\nprint('before set():', seen); ev.set(); w.join()\nprint('after set()  :', seen)",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "consumer received [0, 1, 2, 3, 4]\nbefore set(): []\nafter set()  : ['woke']\n"
+  },
+  {
+   "order": 13,
+   "id": "pool",
+   "name": "A pool of threads",
+   "slide": 29,
+   "concepts": [
+    "concurrent.futures",
+    "concurrent.futures.ThreadPoolExecutor()",
+    "executor.submit()",
+    "executor.map()",
+    "max_workers"
+   ],
+   "code": "import os, time, threading\nfrom concurrent.futures import ThreadPoolExecutor, as_completed\ndef f(n):\n    time.sleep(0.1 * (3 - n))\n    return n\nwith ThreadPoolExecutor(3) as ex:\n    print('map         :', list(ex.map(f, [0, 1, 2])))\n    fs = [ex.submit(f, n) for n in [0, 1, 2]]\n    done = [fu.result() for fu in as_completed(fs)]\n    print('as_completed:', done)\ndef name(i):\n    time.sleep(0.05)\n    return threading.current_thread().name\nwith ThreadPoolExecutor(2, thread_name_prefix='dl') as ex:\n    print('names:', sorted(set(ex.map(name, range(4)))))\nwith ThreadPoolExecutor() as ex:\n    used = set(ex.map(name, range(40)))\nprint('used by default:', len(used), '| CPUs:', os.cpu_count())",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "map         : [0, 1, 2]\nas_completed: [2, 1, 0]\nnames: ['dl_0', 'dl_1']\nused by default: 6 | CPUs: 2\n"
+  },
+  {
+   "order": 14,
+   "id": "future",
+   "name": "Futures: results, errors, cancelling",
+   "slide": 30,
+   "concepts": [
+    "future.result()"
+   ],
+   "code": "import time, concurrent.futures as cf\ndef bad():\n    raise ValueError('boom')\nwith cf.ThreadPoolExecutor(1) as ex:\n    fu = ex.submit(bad); time.sleep(0.1)\n    print('exception():', repr(fu.exception()))\n    try:\n        fu.result()\n    except ValueError as e:\n        print('result() raises:', e)\nex = cf.ThreadPoolExecutor(1)\nfs = [ex.submit(time.sleep, 0.2) for _ in range(5)]\ntime.sleep(0.05)\nex.shutdown(wait=True, cancel_futures=True)\ngone = sum(f.cancelled() for f in fs)\nprint('cancelled', gone, 'of 5 | ran', 5 - gone)",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "exception(): ValueError('boom')\nresult() raises: boom\ncancelled 4 of 5 | ran 1\n"
+  },
+  {
+   "order": 15,
+   "id": "gil",
+   "name": "The GIL, on and off",
+   "slide": 35,
+   "concepts": [
+    "The global interpreter lock",
+    "The free-threaded build",
+    "sys._is_gil_enabled()",
+    "PYTHON_GIL=1"
+   ],
+   "code": "import sys, sysconfig\nask = 'import sys; print(sys._is_gil_enabled())'\nflag = sysconfig.get_config_var('Py_GIL_DISABLED')\nprint('GIL on?  Py_GIL_DISABLED')\nprint('standard      :', sys._is_gil_enabled(), flag)\nprint('free-threaded :', py(ask, exe=FT))\nprint('PYTHON_GIL=1  :', py(ask, exe=FT, PYTHON_GIL='1'))",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "GIL on?  Py_GIL_DISABLED\nstandard      : True 0\nfree-threaded : False\nPYTHON_GIL=1  : True\n"
+  },
+  {
+   "order": 16,
+   "id": "proc",
+   "name": "Processes",
+   "slide": 36,
+   "concepts": [
+    "multiprocessing",
+    "subprocess",
+    "subprocess.Popen()",
+    "ProcessPoolExecutor",
+    "Keeping Time, Scheduling Tasks, and Launching Programs",
+    "Launching Other Programs from Python"
+   ],
+   "code": "import subprocess, sys\nchild = '''import multiprocessing as mp, threading\nif __name__ == '__main__':\n    d = {'n': 0}\n    p = mp.Process(target=d.update, args=({'n': 99},))\n    p.start(); p.join()\n    print('child process:', d)\n    t = threading.Thread(target=d.update, args=({'n': 99},))\n    t.start(); t.join()\n    print('thread:', d)\n    print('start method:', mp.get_start_method())'''\nprint(py(child))\nnap = 'import time; time.sleep(1)'\nk = subprocess.Popen([sys.executable, '-c', nap])\nprint('poll() while the child sleeps:', k.poll())\nprint('wait() returns the return code:', k.wait())",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "child process: {'n': 0}\nthread: {'n': 99}\nstart method: forkserver\npoll() while the child sleeps: None\nwait() returns the return code: 0\n"
+  },
+  {
+   "order": 17,
+   "id": "async",
+   "name": "asyncio, and choosing a tool",
+   "slide": 37,
+   "concepts": [
+    "asyncio",
+    "asyncio.gather()",
+    "asyncio.to_thread()",
+    "InterpreterPoolExecutor",
+    "concurrent.interpreters"
+   ],
+   "code": "import asyncio, time\nasync def pause(how):\n    if how == 'await':\n        await asyncio.sleep(0.2)\n    else:\n        time.sleep(0.2)\nasync def together(how):\n    await asyncio.gather(*[pause(how) for _ in range(5)])\nfor how in ('await', 'block'):\n    t0 = time.time(); asyncio.run(together(how))\n    print(how, 'under 0.6 s:', time.time() - t0 < 0.6)\ndef work():\n    time.sleep(0.2)\nasync def bridge():\n    jobs = [asyncio.to_thread(work) for _ in range(5)]\n    await asyncio.gather(*jobs)\nt0 = time.time(); asyncio.run(bridge())\nprint('to_thread under 0.6 s:', time.time() - t0 < 0.6)",
+   "setup": "from lab25_v1_0_0 import *\nbegin()",
+   "expected": "await under 0.6 s: True\nblock under 0.6 s: False\nto_thread under 0.6 s: True\n"
+  }
+ ]
+}
