@@ -110,6 +110,22 @@ elif stage == "backlog":
         w(f"ex:ST15_{st} backlog:coversEntity ex:DE15_{ent} ; backlog:coversStage backlog:Stage_Creation .\n")
         for stg in ("ActiveUse", "SuspensionException", "Termination"):
             w(f'ex:Gap15_{ent}_{stg} a backlog:BlueprintGap ; rdfs:label "Gap: {ent} at {stg}"@en ; backlog:belongsToLineage {L} ; backlog:gapForEntity ex:DE15_{ent} ; backlog:gapForStage backlog:Stage_{stg} ;\n    backlog:hasGapReason "The urgent lineage changes the {ent.lower()} at its creation only (the rulings of 2026-11-27 are changes of form); this stage is not part of the urgent scope and is recorded here, not left silent." .\n')
+elif stage == "planning":
+    SID = ["Pages_Ch1_9", "Exam_Open", "Sources_Clean", "Decks_CodeSlides", "Rollout_Reverify"]
+    DELS = " , ".join(f"ex:Del15_{k}" for _, k, *_ in DELIV)
+    AT = "2026-11-27T17:40:00"
+    w(f'ex:It15_1 a backlog:Iteration ; rdfs:label "Urgent iteration 1: five stories of the rulings of 2026-11-27"@en ; backlog:belongsToLineage {L} ; backlog:hasIdentifier "It15_1" ; backlog:memberOfContainer ex:Backlog15 ;\n    backlog:iterationStart "{AT}"^^xsd:dateTime ; backlog:iterationEnd "2026-11-30T23:59:00"^^xsd:dateTime ;\n    rdfs:comment "Time box of the urgent interruption (until 2026-11-30T23:59Z, register 1.25.0). A forecast bound, not a measurement; nothing waits for it and a passed date invalidates nothing."@en .\n')
+    w(f'ex:P15_1 a backlog:Package ; rdfs:label "Urgent package 1: pages, decks, sources and the route record under the rulings of 2026-11-27"@en ; backlog:belongsToLineage {L} ; backlog:hasIdentifier "P15_1" ;\n    backlog:hasPackageVersion "Urgent15-1.0.0" ; backlog:deliversDeliverable {DELS} ; backlog:memberOfContainer ex:Backlog15 , ex:It15_1 ; backlog:targetsIteration ex:It15_1 .\n')
+    CONC = {"Pages_Ch1_9": "Concern_Interaction", "Exam_Open": "Concern_Interaction", "Sources_Clean": "Concern_Data", "Decks_CodeSlides": "Concern_Interaction", "Rollout_Reverify": "Concern_Interaction"}
+    OUTC = {"Pages_Ch1_9": "The nine older pages are rebuilt on template 9.56.0 so no lambda string remains.", "Exam_Open": "The test states where corrections stay open and agrees with the pages.",
+            "Sources_Clean": "The sources no longer produce metadata questions.", "Decks_CodeSlides": "The code slides carry the chapter 11 standard, with no slide added.", "Rollout_Reverify": "Each page built before the route is opened and its examples run again under the route."}
+    TT = {1: "Task_Implementation", 2: "Task_Verification"}
+    for sid in SID:
+        s = f"ex:ST15_{sid}"
+        w(f'{s} backlog:memberOfContainer ex:P15_1 , ex:It15_1 .\nex:RE15_{sid} a backlog:RefinementEvent ; rdfs:label "Refinement of {sid}"@en ; backlog:belongsToLineage {L} ; backlog:refines {s} ; backlog:addressesConcern backlog:{CONC[sid]} ;\n    backlog:groomsForIteration ex:It15_1 ; backlog:refinedAt "{AT}"^^xsd:dateTime ; backlog:hasRefinementOutcome "{Q(OUTC[sid])} Acceptance criterion and typed tasks written; sizing left to the iteration." .\n')
+        w(f'ex:PE15_{sid} a backlog:PlanningEvent ; rdfs:label "Planning of {sid} into urgent iteration 1"@en ; backlog:belongsToLineage {L} ; backlog:plansItem {s} ; backlog:plannedInto ex:It15_1 ; backlog:plannedAt "{AT}"^^xsd:dateTime ;\n    backlog:producesTask ex:TK15_{sid}_1 , ex:TK15_{sid}_2 .\n')
+        for k in (1, 2): w(f"ex:TK15_{sid}_{k} backlog:memberOfContainer ex:It15_1 .\n")
+    w(f'ex:PE15_Page_Ch25 a backlog:PlanningEvent ; rdfs:label "Planning of Page_Ch25 (seeded, then withdrawn)"@en ; backlog:belongsToLineage {L} ; backlog:plansItem ex:ST15_Page_Ch25 ; backlog:plannedInto ex:It15_1 ; backlog:plannedAt "{AT}"^^xsd:dateTime ;\n    backlog:producesTask ex:TK15_Page_Ch25_1 , ex:TK15_Page_Ch25_2 .\n')
 else:
     sys.exit(__doc__)
 open(sys.argv[2], "w").write("".join(o))
