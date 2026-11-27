@@ -1,0 +1,260 @@
+{
+ "chapter": 24,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch24/SEN0414_Ch24_MakePythonTalk_3e_v4_0_0.pptx",
+ "about": "The code examples of the chapter 24 deck, in the order of the code slides (order = slide order). Every example ran the real pyttsx3, openai-whisper and yt-dlp of the chapter's Python 3.14 environment, with eSpeak NG and ffmpeg on the PATH. Nothing was heard: the machine has no sound card, so pyttsx3 wrote WAV files; no microphone, no graphics card, no Windows and no macOS were used. The examples that need audio from a public site use a public-domain LibriVox reading that the Internet Archive hosts; it stands in for YouTube, and nothing was downloaded from YouTube. The lines that give each example its own folder are hidden helpers (lab24). On the page there is no speech engine, so the printed result of the recorded run is shown. The expected result is what the run printed under Python 3.14.6. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed.",
+ "executed_with": {
+  "python": "3.14.6",
+  "library": "pyttsx3, openai-whisper, yt-dlp, PyTorch, NumPy, and the standard library"
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "wheel_sha256": {},
+  "page_requirements": [
+   "the packages pyttsx3, openai-whisper (with PyTorch) and yt-dlp, the programs ffmpeg and eSpeak NG, network access to archive.org, and Python 3.14",
+   "on the page (Pyodide) there is no speech engine, no model files and no network to a download site: every example is shown as recorded, and the chapter-code tab shows the printed result of the recorded run"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "pins",
+   "name": "The packages and the tools",
+   "slide": 8,
+   "concepts": [
+    "pyttsx3",
+    "whisper",
+    "yt_dlp",
+    "FFmpeg",
+    "eSpeak"
+   ],
+   "code": "import platform, importlib.metadata as md\nprint(platform.python_version())\nnames = ('pyttsx3', 'openai-whisper', 'yt-dlp', 'numpy')\nprint([md.version(n) for n in names])\nimport shutil, os\nprint(shutil.which('ffmpeg') is not None)\nprint(shutil.which('espeak-ng') is not None)\nprint(os.path.exists('/dev/snd'))",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "3.14.6\n['2.99', '20250625', '2026.11.23', '2.5.4']\nTrue\nTrue\nFalse\n"
+  },
+  {
+   "order": 2,
+   "id": "say",
+   "name": "Saying a sentence",
+   "slide": 9,
+   "concepts": [
+    "Text-to-Speech Engine",
+    "pyttsx3.init()",
+    "engine.say()",
+    "engine.runAndWait()",
+    "Generating Speech",
+    "hello_tts.py"
+   ],
+   "code": "import pyttsx3\nevents = []\ndef began(**kw): events.append('started')\ndef ended(**kw): events.append('finished')\nengine = pyttsx3.init()\nengine.connect('started-utterance', began)\nengine.connect('finished-utterance', ended)\nqueued = engine.say('Hello. How are you doing?')\nprint('say() returned', queued, '| events', len(events))\nengine.runAndWait()\nprint('after runAndWait:', events)\ninit = 'import pyttsx3; e = pyttsx3.init(); '\nonce = init + 'e.runAndWait()'\ntwice = init + 'e.runAndWait(); e.runAndWait()'\nprint('once :', waits(once))\nprint('twice:', waits(twice))",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "say() returned None | events 0\nafter runAndWait: ['started', 'finished']\nonce : returned, exit 0\ntwice: not back after 5 seconds\n"
+  },
+  {
+   "order": 3,
+   "id": "voices",
+   "name": "The voices of the engine",
+   "slide": 13,
+   "concepts": [
+    "engine.getProperty()",
+    "engine.setProperty()",
+    "engine.setProperty('voice', voices[1].id)",
+    "SAPI5",
+    "NSSpeechSynthesizer"
+   ],
+   "code": "import pyttsx3\nengine = pyttsx3.init()\nvoices = engine.getProperty('voices')\nfirst = voices[0]\nprint(len(voices), first.name, first.gender, first.age)\nprint(first.languages)\nprint(engine.getProperty('voice'))\nengine.setProperty('voice', voices[1].id)\nengine.save_to_file('Hello. How are you doing?', 'hello.wav')\nengine.runAndWait()\nprint(voices[1].name, wavinfo('hello.wav')['seconds'], 's')",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "131 Afrikaans Male None\n['af']\ngmw/en\nAudio saved to hello.wav\nAmharic 1.48 s\n"
+  },
+  {
+   "order": 4,
+   "id": "rate",
+   "name": "Rate and volume",
+   "slide": 14,
+   "concepts": [
+    "engine.setProperty('rate', 300)",
+    "engine.setProperty('volume', 0.5)"
+   ],
+   "code": "for rate in (50, 100, 150, 200, 250, 300, 400):\n    audio, seconds, peak = measure('rate', rate, FOX)\n    print('%3d -> %.2f s' % (rate, seconds))\nfor volume in (1.0, 0.5, 0.1, 0.0, 5):\n    print(volume, measure('volume', volume, FOX)[2])\nslow, fast = measure('rate', 100, FOX), measure('rate', 300, FOX)\nstrips('waves.png', [slow[:2], fast[:2]])",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": " 50 -> 6.46 s\n100 -> 5.44 s\n150 -> 3.62 s\n200 -> 2.70 s\n250 -> 2.16 s\n300 -> 1.76 s\n400 -> 1.26 s\n1.0 26394\n0.5 13024\n0.1 2222\n0.0 0\n5 32768\nsaved waves.png: 1956 bytes, sha256 70eaf43fc97f\n"
+  },
+  {
+   "order": 5,
+   "id": "wav",
+   "name": "Saving speech to a WAV file",
+   "slide": 15,
+   "concepts": [
+    "Saving Speech Audio to WAV Files",
+    "engine.save_to_file()",
+    "hello.wav",
+    "WAV"
+   ],
+   "code": "import pyttsx3, wave\nengine = pyttsx3.init()\nengine.save_to_file('Hello. How are you doing?', 'hello.wav')\nprint('before runAndWait:', os.path.exists('hello.wav'))\nengine.runAndWait()\nw = wave.open('hello.wav')\nprint(w.getnchannels(), w.getsampwidth(), w.getframerate())\nprint(round(w.getnframes() / w.getframerate(), 2), 's')\nengine.save_to_file('Hello.', 'hello.mp3')\nengine.runAndWait()\nwait_file('hello.mp3')\nhead = open('hello.mp3', 'rb').read(12)\nprint(head[:4], head[8:])\na, rate = samples('hello.wav')\nstrips('hello.png', [(a, len(a) / rate)])",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "before runAndWait: False\nAudio saved to hello.wav\n1 2 22050\n1.48 s\nAudio saved to hello.mp3\nb'RIFF' b'WAVE'\nsaved hello.png: 951 bytes, sha256 d0dc24138d51\n"
+  },
+  {
+   "order": 6,
+   "id": "models",
+   "name": "Whisper models",
+   "slide": 19,
+   "concepts": [
+    "Speech Recognition",
+    "whisper.load_model()",
+    "Table 24-1: properties of Whisper speech recognition models",
+    "Whisper"
+   ],
+   "code": "import torch, whisper\nprint(len(whisper.available_models()), 'models')\nfor name in ('tiny', 'base', 'small'):\n    model = whisper.load_model(name)\n    count = sum(p.numel() for p in model.parameters()) / 1e6\n    size = os.path.getsize(cached(name))\n    print('%-5s %5.1f M, %d bytes' % (name, count, size))\nprint('cuda:', torch.cuda.is_available(), '| on', model.device)\nprint(kind(whisper.load_model, 'tiny', device='cuda'))",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "14 models\ntiny   37.2 M, 75572083 bytes\nbase   71.8 M, 145262807 bytes\nsmall 240.6 M, 483617219 bytes\ncuda: False | on cpu\nRuntimeError\n"
+  },
+  {
+   "order": 7,
+   "id": "trans",
+   "name": "Transcribing speech",
+   "slide": 20,
+   "concepts": [
+    "model.transcribe()"
+   ],
+   "code": "import pyttsx3, whisper\nengine = pyttsx3.init()\nsay_to(engine, FOX, 'fox.wav')\nfor name in ('tiny', 'base', 'small'):\n    model = whisper.load_model(name)\n    result = model.transcribe('fox.wav', temperature=0.0)\n    text = result['text']\n    print('%-5s %r WER %.1f' % (name, text, wer(FOX, text)))\nprint('keys:', list(result))\nprint('segment:', list(result['segments'][0])[:6])",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "tiny  ' the quick run for some silver yellow laser dog.' WER 0.6\nbase  ' the quick brown fox dumps over the yellow lazy dog.' WER 0.1\nsmall ' the quick brown fox dumps over the yellow lazy dog.' WER 0.1\nkeys: ['text', 'segments', 'language']\nsegment: ['id', 'seek', 'start', 'end', 'text', 'tokens']\n"
+  },
+  {
+   "order": 8,
+   "id": "ffmpeg",
+   "name": "Reading audio needs ffmpeg",
+   "slide": 21,
+   "concepts": [
+    "whisper",
+    "FFmpeg"
+   ],
+   "code": "import pyttsx3, whisper\nengine = pyttsx3.init()\nsay_to(engine, FOX, 'fox.wav')\naudio = whisper.load_audio('fox.wav')\nprint(type(audio).__name__, audio.dtype, audio.shape)\npath = os.environ['PATH']\nos.environ['PATH'] = '/nonexistent'\nprint(trying(whisper.load_audio, 'fox.wav'))\nos.environ['PATH'] = path\na = [int(v * 32767) for v in audio]\nstrips('audio16k.png', [(a, len(a) / 16000)])",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "ndarray float32 (40970,)\nFileNotFoundError: [Errno 2] No such file or directory: 'ffmpeg'\nsaved audio16k.png: 1123 bytes, sha256 d29a92a8ed7b\n"
+  },
+  {
+   "order": 9,
+   "id": "lang",
+   "name": "Languages",
+   "slide": 22,
+   "concepts": [
+    "model.transcribe()"
+   ],
+   "code": "import pyttsx3, whisper\nSAY = {'tr': 'Merhaba, bugün hava çok güzel.',\n       'it': 'Buongiorno, come sta oggi?',\n       'en-us': 'Good morning, how are you today?'}\nengine = pyttsx3.init()\nids = {v.languages[0]: v.id for v in engine.getProperty('voices')}\nmodels = {n: whisper.load_model(n) for n in ('tiny', 'base')}\nfor code, text in SAY.items():\n    engine.setProperty('voice', ids.get(code, code))\n    say_to(engine, text, code + '.wav')\n    row = {}\n    for n, m in models.items():\n        r = m.transcribe(code + '.wav', temperature=0.0)\n        row[n] = r['language']\n    print('%-5s heard as %s' % (code, row))\nprint(trying(models['tiny'].transcribe, 'tr.wav', language='xx'))",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "tr    heard as {'tiny': 'th', 'base': 'th'}\nit    heard as {'tiny': 'ko', 'base': 'it'}\nen-us heard as {'tiny': 'en', 'base': 'en'}\nValueError: Unsupported language: xx\n"
+  },
+  {
+   "order": 10,
+   "id": "cues",
+   "name": "Subtitle files",
+   "slide": 28,
+   "concepts": [
+    "Creating Subtitle Files",
+    "whisper.utils.get_writer()",
+    "audio.srt",
+    "audio.vtt",
+    "audio.tsv",
+    "SRT (SubRip Subtitle)",
+    "VTT (Web Video Text Tracks)"
+   ],
+   "code": "from whisper.utils import get_writer\nsegs = [{'id': 0, 'start': 0.0, 'end': 5.64, 'text': A},\n        {'id': 1, 'start': 5.64, 'end': 14.96, 'text': B}]\nbook = {'text': A + B, 'language': 'en', 'segments': segs}\nfor fmt in ('srt', 'vtt', 'tsv'):\n    get_writer(fmt, '.')(book, 'audio')\n    got = open('audio.' + fmt, encoding='utf-8').read()\n    same = got.strip() == CHAPTER[fmt].strip()\n    print(fmt, len(got), 'bytes, same as the book:', same)\nprint('SRT time:', open('audio.srt').read().splitlines()[1])\nprint('VTT time:', open('audio.vtt').read().splitlines()[2])\nprint('TSV head:', open('audio.tsv').readline().split())\nprint('docx writer:', trying(get_writer, 'docx', '.'))\ncues_picture(segs)",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "srt 223 bytes, same as the book: True\nvtt 215 bytes, same as the book: True\ntsv 190 bytes, same as the book: True\nSRT time: 00:00:00,000 --> 00:00:05,640\nVTT time: 00:00.000 --> 00:05.640\nTSV head: ['start', 'end', 'text']\ndocx writer: KeyError: 'docx'\nsaved cues.png: 331 bytes, sha256 1b11c4e92953\n"
+  },
+  {
+   "order": 11,
+   "id": "opt",
+   "name": "Writer options and word times",
+   "slide": 29,
+   "concepts": [
+    "whisper.utils.get_writer()"
+   ],
+   "code": "import whisper\nfrom whisper.utils import get_writer\naudio = fetch('gettysburg_shurtagal.mp3')\nmodel = whisper.load_model('tiny')\nr = model.transcribe(audio, language='en')\nget_writer('srt', '.')(r, 'plain')\nn = len(open('plain.srt').read().strip().split('\\n\\n'))\ntimes = [t for s in r['segments'] for t in (s['start'], s['end'])]\nprint('segments', len(r['segments']), '| blocks', n)\nw = model.transcribe(audio, language='en', word_timestamps=True)\nprint('words in segment 1:', len(w['segments'][0]['words']))\nopts = {'max_line_width': 30, 'max_line_count': 2}\nget_writer('srt', '.')(w, 'wide', opts)\nblocks = open('wide.srt').read().strip().split('\\n\\n')\nprint('max_line_width=30:', len(blocks), 'blocks; the first:')\nprint(blocks[0])",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "segments 26 | blocks 26\nwords in segment 1: 14\nmax_line_width=30: 31 blocks; the first:\n1\n00:00:00,000 --> 00:00:02,300\nThis is the Liberal Vox\nRecording, all the Vox\n"
+  },
+  {
+   "order": 12,
+   "id": "ytm",
+   "name": "Metadata without a download",
+   "slide": 30,
+   "concepts": [
+    "Downloading Videos from Websites",
+    "yt_dlp.YoutubeDL()",
+    "ydl.extract_info()",
+    "ydl.sanitize_info()",
+    "'skip_download': True",
+    "json.dumps()",
+    "json",
+    "metadata.json",
+    "'quiet': True"
+   ],
+   "code": "import yt_dlp\nURL = 'https://archive.org/details/gettysburg_shurtagal_librivox'\noptions = {'quiet': True, 'skip_download': True}\nydl = yt_dlp.YoutubeDL(options)\ninfo = ydl.extract_info(URL, download=False)\nprint('title:', info['title'])\nprint(info['extractor'], '| formats:', len(info['formats']))\nhave = [k for k in CHAPTER_KEYS if k in info]\nprint('of 13 keys of the chapter, here:', len(have))\ngone = [k for k in CHAPTER_KEYS if k not in info]\nprint('missing:', ', '.join(gone))\nclean = ydl.sanitize_info(info)\nopen('metadata.json', 'w').write(json.dumps(clean))\nkept = json.load(open('metadata.json'))\nprint('metadata.json:', len(kept), 'keys')",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "title: The Gettysburg Address\narchive.org | formats: 3\nof 13 keys of the chapter, here: 7\nmissing: thumbnail, channel_id, channel_url, view_count, average_rating, age_limit\nmetadata.json: 55 keys\n"
+  },
+  {
+   "order": 13,
+   "id": "ytd",
+   "name": "Downloading audio",
+   "slide": 31,
+   "concepts": [
+    "ydl.download()",
+    "'outtmpl': 'downloaded_content.%(ext)s'",
+    "'format': 'm4a/bestaudio/best'",
+    "'postprocessors': FFmpegExtractAudio",
+    "downloaded_content.m4a",
+    "pathlib"
+   ],
+   "code": "import yt_dlp\nURL = 'https://archive.org/details/gettysburg_shurtagal_librivox'\noptions = {'quiet': True, 'no_warnings': True,\n           'noprogress': True,\n           'outtmpl': 'downloaded_content.%(ext)s',\n           'format': 'm4a/bestaudio/best',\n           'postprocessors': [{'key': 'FFmpegExtractAudio',\n                               'preferredcodec': 'm4a'}]}\nwith yt_dlp.YoutubeDL(options) as ydl:\n    print('download() returned', ydl.download([URL]))\nprint(sorted(os.listdir('.')))\ncodec, seconds = probe_audio('downloaded_content.m4a')\nprint('codec', codec, '| seconds', seconds)\ngone = ['https://archive.org/details/no_such_item_ch24_zz']\nprint('a string, not a list:', ydl.download(URL))\nprint('an address that is nowhere:', kind(ydl.download, gone))",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "download() returned 0\n['downloaded_content.m4a']\ncodec aac | seconds 100.3\na string, not a list: 0\nan address that is nowhere: DownloadError\n"
+  },
+  {
+   "order": 14,
+   "id": "guess",
+   "name": "Adding voice to Guess the Number",
+   "slide": 35,
+   "concepts": [
+    "Adding Voice to Guess the Number",
+    "Practice Programs"
+   ],
+   "code": "import pyttsx3\nengine = pyttsx3.init()\nnames = iter(['g1.wav', 'g2.wav', 'g3.wav', 'g4.wav'])\ndef speak(text):\n    print(text)\n    engine.save_to_file(text, next(names))\n    engine.runAndWait()\ndef game(guesses, secret):\n    speak('I am thinking of a number between 1 and 20.')\n    for n, g in enumerate(guesses, 1):\n        if g == secret: return speak('You won in %d.' % n)\n        word = 'low' if g < secret else 'high'\n        speak('%d is too %s.' % (g, word))\ngame([5, 18, 12], 12)\nprint([wavinfo('g%d.wav' % k)['seconds'] for k in range(1, 5)])",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "I am thinking of a number between 1 and 20.\nAudio saved to g1.wav\n5 is too low.\nAudio saved to g2.wav\n18 is too high.\nAudio saved to g3.wav\nYou won in 3.\nAudio saved to g4.wav\n[2.57, 1.09, 1.1, 0.92]\n"
+  },
+  {
+   "order": 15,
+   "id": "song",
+   "name": "Singing 99 Bottles of Beer",
+   "slide": 36,
+   "concepts": [
+    "Singing 99 Bottles of Beer"
+   ],
+   "code": "import pyttsx3\ndef bottles(k):\n    if k == 0: return 'No more bottles'\n    return '1 bottle' if k == 1 else '%d bottles' % k\ndef verse(n):\n    this, nxt = bottles(n), bottles(n - 1)\n    return (f'{this} of beer on the wall,\\n{this} of beer,\\n'\n            'Take one down, pass it around,\\n'\n            f'{nxt} of beer on the wall.')\nengine = pyttsx3.init()\nfor n in (3, 99):\n    text = '\\n\\n'.join(verse(k) for k in range(n, 0, -1))\n    name = 'song%d.wav' % n\n    say_to(engine, text, name)\n    print(n, 'verses:', wavinfo(name)['seconds'], 'seconds')\na, rate = samples('song3.wav')\nstrips('song.png', [(a, len(a) / rate)])",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "3 verses: 18.69 seconds\n99 verses: 708.3 seconds\nsaved song.png: 1789 bytes, sha256 7a930345e57a\n"
+  },
+  {
+   "order": 16,
+   "id": "tube",
+   "name": "The YouTube Transcriber",
+   "slide": 38,
+   "concepts": [
+    "YouTube Transcriber",
+    "Practice Programs",
+    "yt-dlp",
+    "Whisper"
+   ],
+   "code": "import glob, yt_dlp, whisper\ndef transcribe_urls(urls, formats=('srt',), model_name='tiny'):\n    model = whisper.load_model(model_name)\n    for k, url in enumerate(urls):\n        stem = 'video%d' % k\n        with yt_dlp.YoutubeDL(audio_opts(stem)) as ydl:\n            ydl.download([url])\n        audio = glob.glob(stem + '.*')[0]\n        r = model.transcribe(audio, language='en', temperature=0)\n        for f in formats: whisper.utils.get_writer(f, '.')(r, stem)\n        print(len(r['segments']), 'segments')\nURLS = ['https://archive.org/details/gettysburg_shurtagal_librivox',\n        'https://archive.org/details/gettysburg_johng_librivox']\ntranscribe_urls(URLS, formats=('srt', 'vtt', 'txt'))\nbad = ['https://archive.org/details/no_such_item_ch24_zz']\nprint('one bad address:', kind(transcribe_urls, bad))",
+   "setup": "from lab24_v1_0_0 import *\nbegin()",
+   "expected": "26 segments\n17 segments\none bad address: DownloadError\n"
+  }
+ ]
+}
