@@ -1,0 +1,254 @@
+{
+ "chapter": 23,
+ "version": "1.0.0",
+ "kind": "chapter-code manifest",
+ "deck": "03-materials/ch23/SEN0414_Ch23_KeyboardAndMouse_3e_v4_0_0.pptx",
+ "about": "The code examples of the chapter 23 deck, in the order of the code slides (order = slide order). Every example ran the real PyAutoGUI 0.9.54 on a private virtual X display (Xvfb, with the window manager openbox where needed) on which a small Tk window logs every event it receives; nobody saw that display and nothing was sent to a real screen. The lines that start the display and the window are hidden helpers (lab23) and are not part of the code a learner writes. Windows and macOS were not run. On the page there is no display, so the printed result of the recorded run is shown. The expected result is what the run printed under Python 3.14.6. The code is exactly the text of the deck's code boxes with the '>>> ' prompt removed.",
+ "executed_with": {
+  "python": "3.14.6",
+  "library": "PyAutoGUI, PyScreeze, Pillow, pyperclip, and the standard library"
+ },
+ "library": {
+  "file": null,
+  "sha256": null,
+  "data_files": [],
+  "wheel_sha256": {},
+  "page_requirements": [
+   "the packages pyautogui, pyscreeze, pillow and pyperclip, a graphical display (X) with xdotool, xclip and openbox, and Python 3.14",
+   "on the page (Pyodide) there is no display and no mouse or keyboard to control: every example is shown as recorded, and the chapter-code tab shows the printed result of the recorded run"
+  ]
+ },
+ "prelude": "",
+ "examples": [
+  {
+   "order": 1,
+   "id": "pins",
+   "name": "The packages and the display",
+   "slide": 7,
+   "concepts": [
+    "PyAutoGUI",
+    "pyautogui",
+    "pyautogui.size()",
+    "Figure 23-1: the coordinates of a computer screen with 1920x1080 resolution"
+   ],
+   "code": "import importlib.metadata as md, platform\nprint(platform.python_version())\nprint([md.version(p) for p in ('pyautogui', 'pyscreeze', 'pillow', 'pymsgbox')])\nimport pyautogui\nprint(pyautogui.size())\nprint(pyautogui.position())",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=False)",
+   "expected": "3.14.6\n['0.9.54', '1.0.1', '13.0.0', '2.0.1']\nSize(width=1920, height=1080)\nPoint(x=960, y=540)\n"
+  },
+  {
+   "order": 2,
+   "id": "session",
+   "name": "Without a display, and under Wayland",
+   "slide": 8,
+   "concepts": [
+    "Setting Up Accessibility Apps on macOS",
+    "Logouts"
+   ],
+   "code": "code = 'import pyautogui; print(pyautogui.size())'\nenv = dict(d.env); env.pop('DISPLAY')\nprint(child(code, env=env)[2])\nenv = dict(d.env, XDG_SESSION_TYPE='wayland')\nshot = 'import pyautogui; pyautogui.screenshot()'\nprint(child(shot, env=env)[2].split(':')[0])\nprint(child(code, env=d.env)[1])",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=False)",
+   "expected": "KeyError: 'DISPLAY'\npyscreeze.PyScreezeException\n['Size(width=1920, height=1080)']\n"
+  },
+  {
+   "order": 3,
+   "id": "xtest",
+   "name": "How a click reaches a window",
+   "slide": 9,
+   "concepts": [
+    "Staying on Track",
+    "pyautogui.click()",
+    "pyautogui.press()"
+   ],
+   "code": "import pyautogui\nst = watch.state()\npyautogui.click(st['rootx'] + 50, st['rooty'] + 10)\nprint('click      :', btns(watch))\nwatch.clear(); pyautogui.press('w')\nprint('press w    :', keys(watch))\nwatch.clear(); sendkey(d, 'observer', 'q')\nprint('SendEvent q:', keys(watch))\nprint('both reached the entry:', repr(watch.entry()))",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=True)\nwatch = d.observer()\nimport pyautogui; pyautogui.PAUSE = 0",
+   "expected": "click      : [('Press', 1, False), ('Release', 1, False)]\npress w    : [('Press', 'w', False), ('Release', 'w', False)]\nSendEvent q: [('Press', 'q', True), ('Release', 'q', True)]\nboth reached the entry: 'wq'\n"
+  },
+  {
+   "order": 4,
+   "id": "pause",
+   "name": "Pauses",
+   "slide": 13,
+   "concepts": [
+    "Pauses and Fail-Safes",
+    "pyautogui.PAUSE",
+    "pyautogui.sleep()",
+    "pyautogui.countdown()"
+   ],
+   "code": "import time, pyautogui\nprint('PAUSE', pyautogui.PAUSE, '| FAILSAFE', pyautogui.FAILSAFE)\npyautogui.PAUSE = 0.3\ndef waits(f, *a):\n    t = time.perf_counter(); f(*a)\n    return time.perf_counter() - t > 0.25\ncalls = [(pyautogui.moveTo, (50, 60)), (pyautogui.click, ()),\n         (pyautogui.press, ('shift',)), (pyautogui.position, ()),\n         (pyautogui.onScreen, (5, 5))]\nfor f, a in calls:\n    print('%-9s waits after the call:' % f.__name__, waits(f, *a))",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=False)",
+   "expected": "PAUSE 0.1 | FAILSAFE True\nmoveTo    waits after the call: True\nclick     waits after the call: True\npress     waits after the call: True\nposition  waits after the call: False\nonScreen  waits after the call: False\n"
+  },
+  {
+   "order": 5,
+   "id": "corners",
+   "name": "The fail-safe corners",
+   "slide": 14,
+   "concepts": [
+    "Pauses and Fail-Safes",
+    "pyautogui.FailSafeException",
+    "pyautogui.size()"
+   ],
+   "code": "import pyautogui; pyautogui.PAUSE = 0\nprint('FAILSAFE_POINTS', sorted(pyautogui.FAILSAFE_POINTS))\ndef fires(x, y):\n    pyautogui.FAILSAFE = False; pyautogui.moveTo(x, y)\n    pyautogui.FAILSAFE = True\n    try: pyautogui.moveTo(500, 500)\n    except pyautogui.FailSafeException: return True\n    return False\nfor xy in ((0, 0), (1919, 1079), (1, 1)):\n    print(xy, 'raises:', fires(*xy))\nd.sh('xrandr', '--fb', '1280x720'); time.sleep(0.3)\nprint('this process:', tuple(pyautogui.size()))\nprint('a new process:', child(CODE, env=d.env)[1][0])",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=False)\nCODE = 'import pyautogui as p; print(tuple(p.size()))'",
+   "expected": "FAILSAFE_POINTS [(0, 0), (0, 1079), (1919, 0), (1919, 1079)]\n(0, 0) raises: True\n(1919, 1079) raises: True\n(1, 1) raises: False\nthis process: (1920, 1080)\na new process: (1280, 720)\n"
+  },
+  {
+   "order": 6,
+   "id": "move",
+   "name": "Moving the mouse",
+   "slide": 19,
+   "concepts": [
+    "Controlling Mouse Movement",
+    "Moving the Mouse",
+    "Getting the Current Position",
+    "pyautogui.moveTo()",
+    "pyautogui.move()",
+    "pyautogui.position()",
+    "duration"
+   ],
+   "code": "import pyautogui\nfor dur in (0, 0.1, 0.25, 0.5, 1.0):\n    pyautogui.moveTo(500, 500); time.sleep(0.3); watch.clear()\n    pyautogui.moveTo(900, 700, duration=dur)\n    n = sum(e['type'] == 'Motion' for e in watch.events())\n    print('moveTo(900, 700, duration=%s): %2d motion events' % (dur, n))\nfor x, y in ((-50, -50), (5000, 5000)):\n    pyautogui.FAILSAFE = False; pyautogui.moveTo(x, y)\n    print('moveTo(%s, %s) ->' % (x, y), tuple(pyautogui.position()))",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=False)\nimport pyautogui; pyautogui.PAUSE = 0\nwatch = d.observer(geometry='1920x1080+0+0', mode='paint', w=1900, h=1000)",
+   "expected": "moveTo(900, 700, duration=0):  1 motion events\nmoveTo(900, 700, duration=0.1):  1 motion events\nmoveTo(900, 700, duration=0.25):  6 motion events\nmoveTo(900, 700, duration=0.5): 11 motion events\nmoveTo(900, 700, duration=1.0): 21 motion events\nmoveTo(-50, -50) -> (0, 0)\nmoveTo(5000, 5000) -> (1919, 1079)\n"
+  },
+  {
+   "order": 7,
+   "id": "click",
+   "name": "Clicking",
+   "slide": 20,
+   "concepts": [
+    "Controlling Mouse Interaction",
+    "Clicking",
+    "pyautogui.click()",
+    "button='left'"
+   ],
+   "code": "import pyautogui\npyautogui.click(); show('click()')\npyautogui.click(button='middle'); show(\"click(button='middle')\")\npyautogui.rightClick(); show('rightClick()')\npyautogui.doubleClick(); show('doubleClick()')\npyautogui.tripleClick(); show('tripleClick()')\npyautogui.click(clicks=2, interval=0.6); show('click(clicks=2, interval=0.6)')",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=False)\nimport pyautogui; pyautogui.PAUSE = 0\nwatch = d.observer(geometry='1920x1080+0+0', mode='paint', w=1900, h=1000)\nimport pyautogui; pyautogui.moveTo(700, 400); time.sleep(0.3)\ndef show(label):\n    print('%-30s' % label, presses(watch)); time.sleep(0.7); watch.clear()",
+   "expected": "click()                        [('Press', 1)]\nclick(button='middle')         [('Press', 2)]\nrightClick()                   [('Press', 3)]\ndoubleClick()                  [('Press', 1), ('DoubleClick', 1)]\ntripleClick()                  [('Press', 1), ('DoubleClick', 1), ('TripleClick', 1)]\nclick(clicks=2, interval=0.6)  [('Press', 1), ('Press', 1)]\n"
+  },
+  {
+   "order": 8,
+   "id": "drag",
+   "name": "Dragging: the spiral",
+   "slide": 21,
+   "concepts": [
+    "Dragging",
+    "pyautogui.dragTo()",
+    "pyautogui.drag()",
+    "spiralDraw.py",
+    "Figure 23-2: the results from the pyautogui.drag() example, drawn with MS Paint brushes"
+   ],
+   "code": "import pyautogui\nn = 0\ndistance, change = 300, 20\nwhile distance > 0:\n    pyautogui.drag(distance, 0, duration=0.05); distance -= change\n    pyautogui.drag(0, distance, duration=0.05)\n    pyautogui.drag(-distance, 0, duration=0.05); distance -= change\n    pyautogui.drag(0, -distance, duration=0.05); n += 4\nim = pyautogui.screenshot().crop((0, 0, 700, 500)).convert('L')\nink = im.point([255] * 128 + [0] * 128)\nprint('spiral:', n, 'drag calls, ink inside the box', ink.getbbox())\nev = [e['type'] for e in watch.events()]\nprint('presses', ev.count('ButtonPress'))\nprint('releases', ev.count('ButtonRelease'))\nim.convert('RGB').save('spiral.png'); done('spiral.png')",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=False)\nimport pyautogui; pyautogui.PAUSE = 0\nwatch = d.observer(geometry='700x500+0+0', mode='paint', w=700, h=500)\nimport pyautogui; pyautogui.moveTo(200, 160); time.sleep(0.3)",
+   "expected": "spiral: 32 drag calls, ink inside the box (200, 159, 501, 441)\npresses 30\nreleases 30\nsaved spiral.png: 2520 bytes, sha256 89420df3b4d7\n"
+  },
+  {
+   "order": 9,
+   "id": "scroll",
+   "name": "Scrolling",
+   "slide": 22,
+   "concepts": [
+    "Scrolling",
+    "pyautogui.scroll()"
+   ],
+   "code": "import pyautogui\ndef lines_moved(py, name):\n    watch = text_window(py); st = watch.state(); row = {}\n    pyautogui.moveTo(st['rootx'] + 100, st['rooty'] + 150)\n    for n in (-1, -2, -3, -10):\n        pyautogui.scroll(60); time.sleep(0.4); before = top(watch)\n        pyautogui.scroll(n); watch.settle(); time.sleep(0.4)\n        row[n] = top(watch) - before\n    print('lines moved, %s %s:' % (name, st['tk']), row)\n    watch.close()\nlines_moved(LATEST, 'Tk 9')\nlines_moved(TK86, 'Tk 8.6')",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=True)\nimport pyautogui; pyautogui.PAUSE = 0\ndef top(w): return int(w.state()['top'].split('.')[0])\ndef text_window(py): return d.observer(mode='text', focus='text', fill=300, lines=12, py=py)",
+   "expected": "lines moved, Tk 9 9.0.3: {-1: 1, -2: 3, -3: 5, -10: 19}\nlines moved, Tk 8.6 8.6.14: {-1: 2, -2: 5, -3: 8, -10: 29}\n"
+  },
+  {
+   "order": 10,
+   "id": "shot",
+   "name": "Screenshots and pixels",
+   "slide": 27,
+   "concepts": [
+    "Taking Screenshots",
+    "pyautogui.screenshot()",
+    "pyautogui.pixel()",
+    "pyautogui.pixelMatchesColor()",
+    "screenshot.png"
+   ],
+   "code": "import pyautogui\nim = pyautogui.screenshot(); inside = (210, 160)\nprint(type(im).__name__, im.size, im.mode)\nprint('pixel(210, 160) ->', pyautogui.pixel(*inside))\nprint('pixel (5, 5) ->', im.getpixel((5, 5)))\ncases = (((176, 176, 175), 0), ((177, 176, 175), 0),\n         ((177, 176, 175), 1))\nfor c, t in cases:\n    ok = pyautogui.pixelMatchesColor(*inside, c, tolerance=t)\n    print(c, t, ok)\ntry: pyautogui.pixel(inside)\nexcept TypeError as e: print('pixel((210, 160)):', e)\nim.resize((480, 270)).save('screen.png'); done('screen.png')",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=False)\nimport pyautogui; pyautogui.PAUSE = 0\nwatch = d.observer(mode='button', geometry='400x300+200+150', bg='#b0b0af', buttons=[[100, 100]]); time.sleep(0.5)",
+   "expected": "PngImageFile (1920, 1080) RGB\npixel(210, 160) -> RGB(red=176, green=176, blue=175)\npixel (5, 5) -> (0, 0, 0)\n(176, 176, 175) 0 True\n(177, 176, 175) 0 False\n(177, 176, 175) 1 True\npixel((210, 160)): pixel() missing 1 required positional argument: 'y'\nsaved screen.png: 1224 bytes, sha256 26b4a0b10893\n"
+  },
+  {
+   "order": 11,
+   "id": "locate",
+   "name": "Finding a button",
+   "slide": 28,
+   "concepts": [
+    "Image Recognition",
+    "pyautogui.locateOnScreen()",
+    "pyautogui.locateAllOnScreen()",
+    "submit.png",
+    "Figure 23-1: the coordinates of a computer screen with 1920x1080 resolution"
+   ],
+   "code": "import pyautogui\nshot = pyautogui.screenshot()\nbx, by, bw, bh = watch.state()['buttons'][0]\nshot.crop((bx, by, bx + bw, by + bh)).save('submit.png')\nbox = pyautogui.locateOnScreen('submit.png')\nboxes = list(pyautogui.locateAllOnScreen('submit.png'))\nprint('found', ints(box))\nprint('locateAll', [ints(b) for b in boxes])\nprint('center', ints(pyautogui.center(box)))\nwatch.clear(); pyautogui.click(boxes[1]); time.sleep(0.4)\nprint('click(boxes[1]) pressed button', cmds(watch))\nmark(shot, box, 'located.png')",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=False)\nimport pyautogui; pyautogui.PAUSE = 0\nwatch = d.observer(mode='button', geometry='400x300+200+150', bg='#00aa00', buttons=[[100, 100], [100, 180]]); time.sleep(0.5)",
+   "expected": "found (300, 250, 84, 35)\nlocateAll [(300, 250, 84, 35), (300, 330, 84, 35)]\ncenter (342, 267)\nclick(boxes[1]) pressed button [1]\nsaved located.png: 1639 bytes, sha256 2cc7919e14a6\n"
+  },
+  {
+   "order": 12,
+   "id": "match",
+   "name": "Exact matches and missing images",
+   "slide": 29,
+   "concepts": [
+    "Image Recognition",
+    "pyautogui.locateOnScreen()",
+    "pyautogui.ImageNotFoundException",
+    "PyAutoGUI",
+    "Selenium"
+   ],
+   "code": "import pyautogui\nbx, by, bw, bh = watch.state()['buttons'][0]\nbtn = pyautogui.screenshot().crop((bx, by, bx + bw, by + bh))\nbtn.save('exact.png'); btn.putpixel((5, 5), (0, 0, 0))\nbtn.save('off.png')\ncalls = [\"'exact.png'\", \"'off.png'\", \"'off.png', confidence=0.9\",\n         \"'off.png', grayscale=True\"]\nfor name, py in ENVS:\n    r = [child(PROBE % c, py=py, env=d.env)[1][0] for c in calls]\n    print('%-17s' % name, [short(x) for x in r])",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=False)\nimport pyautogui; pyautogui.PAUSE = 0\nwatch = d.observer(mode='button', geometry='400x300+200+150', bg='#00aa00', buttons=[[100, 100]]); time.sleep(0.5)\nENVS = (('OpenCV', LATEST), ('no OpenCV', NOCV), ('PyScreeze 0.1.28', OLDSCREEZE))\nPROBE = 'import pyautogui as p\\ntry: print(type(p.locateOnScreen(%s)).__name__)\\nexcept Exception as e: print(type(e).__name__)'",
+   "expected": "OpenCV            ['Box', 'ImageNotFound', 'Box', 'ImageNotFound']\nno OpenCV         ['Box', 'ImageNotFound', 'NotImplemented', 'ImageNotFound']\nPyScreeze 0.1.28  ['Box', 'NoneType', 'Box', 'NoneType']\n"
+  },
+  {
+   "order": 13,
+   "id": "type",
+   "name": "Typing into the right window",
+   "slide": 34,
+   "concepts": [
+    "Controlling the Keyboard",
+    "Sending Key Press Strings",
+    "Pressing and Releasing the Keyboard",
+    "pyautogui.write()",
+    "pyautogui.keyDown()",
+    "Figure 23-6: using PyAutoGUI to click the file editor window and enter Hello, world!"
+   ],
+   "code": "import pyautogui\npyautogui.write('Hello, world!'); print(repr(watch.text()))\npyautogui.write(['a', 'b', 'left', 'left', 'X', 'Y'])\nprint('write([a, b, left, left, X, Y]) ->', repr(watch.text()))\npyautogui.keyDown('shift'); pyautogui.press('4')\npyautogui.keyUp('shift')\nprint('shift down, 4, shift up ->', repr(watch.text()[-3:]))\npyautogui.hotkey('ctrl', 'a'); pyautogui.press('delete')\nprint('hotkey(ctrl, a), delete ->', repr(watch.text()))\npyautogui.write('Hello, world!')\npyautogui.click(1000, 800); time.sleep(0.6)\nshotof(watch, 'typed.png', 120)",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=True)\nimport pyautogui; pyautogui.PAUSE = 0\nwatch = d.observer(mode='text', geometry='600x300+100+100', focus='text')\ntime.sleep(0.5)\nimport pyautogui; pyautogui.click(300, 250); time.sleep(0.3)",
+   "expected": "'Hello, world!'\nwrite([a, b, left, left, X, Y]) -> 'Hello, world!XYab'\nshift down, 4, shift up -> '$ab'\nhotkey(ctrl, a), delete -> ''\nsaved typed.png: 838 bytes, sha256 917697bb1df4\n"
+  },
+  {
+   "order": 14,
+   "id": "keys",
+   "name": "Key names: mistakes are silent",
+   "slide": 35,
+   "concepts": [
+    "Specifying Key Names",
+    "Table 23-1: string values for keyboard keys",
+    "pyautogui.KEYBOARD_KEYS",
+    "pyautogui.press()",
+    "pyautogui.keyDown()"
+   ],
+   "code": "import pyautogui\nprint('KEYBOARD_KEYS:', len(pyautogui.KEYBOARD_KEYS), 'names')\nfor call in ('press', 'keyDown'):\n    try: getattr(pyautogui, call)('nokey'); r = 'raised nothing'\n    except Exception as e: r = type(e).__name__\n    print('%-8s nokey' % call, r, '| typed', repr(watch.text()))\npyautogui.write(['a', 'nokey', 'b']); pyautogui.write('café')\nprint('a, nokey, b, then café typed', repr(watch.text()))\nprint('A in the list:', 'A' in pyautogui.KEYBOARD_KEYS)",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=True)\nimport pyautogui; pyautogui.PAUSE = 0\nwatch = d.observer(mode='text', geometry='600x300+100+100', focus='text')\ntime.sleep(0.5)\nimport pyautogui; pyautogui.click(300, 250); time.sleep(0.3)",
+   "expected": "KEYBOARD_KEYS: 194 names\npress    nokey raised nothing | typed ''\nkeyDown  nokey raised nothing | typed ''\na, nokey, b, then café typed 'abcaf'\nA in the list: False\n"
+  },
+  {
+   "order": 15,
+   "id": "clip",
+   "name": "Hotkeys and the clipboard",
+   "slide": 37,
+   "concepts": [
+    "Running Hotkey Combinations",
+    "Practice Program: Reading Text Fields with the Clipboard",
+    "pyautogui.hotkey()",
+    "pyperclip",
+    "PyMsgBox"
+   ],
+   "code": "import pyautogui, pyperclip\npyautogui.write('Hello, world!\\nsecond line')\nwatch.clear()\npyautogui.hotkey('ctrl', 'alt', 'shift', 's')\nks = [k.split('_')[0] for t, k, s in keys(watch)]\nprint('down, then up:', *ks)\npyautogui.hotkey('ctrl', 'a'); pyautogui.hotkey('ctrl', 'c')\ntime.sleep(1); text = pyperclip.paste()\nprint('paste():', repr(text))\npyautogui.press('end'); pyautogui.hotkey('ctrl', 'v')\nprint('ctrl+v pasted it again:', watch.text() == text * 2)",
+   "setup": "from lab23_v1_0_0 import *\nd = begin(wm=True)\nimport pyautogui; pyautogui.PAUSE = 0\nwatch = d.observer(mode='text', geometry='600x300+100+100', focus='text')\ntime.sleep(0.5)\nimport pyautogui; pyautogui.click(300, 250); time.sleep(0.3)",
+   "expected": "down, then up: Control Alt Shift S S Shift Alt Control\npaste(): 'Hello, world!\\nsecond line'\nctrl+v pasted it again: True\n"
+  }
+ ]
+}
