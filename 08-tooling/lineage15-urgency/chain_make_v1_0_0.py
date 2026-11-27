@@ -88,7 +88,7 @@ ex:Obs0_Obj15_{k} a backlog:MetricObservation ; rdfs:label "Baseline of 2026-11-
     backlog:hasObservedValue "{b}"^^xsd:decimal ; backlog:observedAt "2026-11-27T16:30:00Z"^^xsd:dateTime ; backlog:observedDuringCeremony true ; backlog:hasObservationMethod "{Q(q)}" .
 ''')
 elif stage == "backlog":
-    SID = ["Pages_Ch1_9", "Exam_Open", "Page_Ch25", "Sources_Clean", "Decks_CodeSlides", "Rollout_Reverify"]
+    SID = ["Pages_Ch1_9", "Exam_Open", "Sources_Clean", "Decks_CodeSlides", "Rollout_Reverify"]
     OBJS = {"Pages_Ch1_9": ["PagesLambda", "PagesTab", "PagesOpen"], "Exam_Open": ["PagesOpen"], "Sources_Clean": ["SourcesMeta"],
             "Decks_CodeSlides": ["CodeSlides", "PresenterNotes"], "Rollout_Reverify": ["Reverified"]}
     DEL = {"Pages_Ch1_9": ["Pages_Tab", "Pages_NoLambda", "Pages_NoMeta"], "Exam_Open": ["Pages_Tab"], "Sources_Clean": ["Sources_Clean"],
@@ -97,6 +97,19 @@ elif stage == "backlog":
     w(f'ex:Commit15 a backlog:Commitment ; rdfs:label "This backlog commits to chapters that meet the rulings of 2026-11-27"@en ; backlog:commitsToDefinitionOfDone ex:DoD14 ; backlog:commitsToGoal ex:G15_Mission ; backlog:commitsToObjective ex:Obj15_ChaptersMeeting .\n')
     for s in SID:
         w(f"ex:ST15_{s} backlog:memberOfContainer ex:Backlog15 ; backlog:pursuesObjective {' , '.join('ex:Obj15_' + x for x in OBJS[s])} ; backlog:satisfiesDeliverable {' , '.join('ex:Del15_' + x for x in DEL[s])} .\n")
+    MOVE = {"PagesTab": ["Pages_Ch1_9"], "PagesOpen": ["Pages_Ch1_9", "Exam_Open"], "PagesLambda": ["Pages_Ch1_9"], "CodeSlides": ["Decks_CodeSlides"], "PresenterNotes": ["Decks_CodeSlides"],
+            "SourcesMeta": ["Sources_Clean"], "Reverified": ["Rollout_Reverify"], "ChaptersMeeting": ["Pages_Ch1_9", "Decks_CodeSlides"]}
+    for k, ss in MOVE.items():
+        w(f"ex:Obj15_{k} backlog:metricMovableBy {' , '.join('ex:ST15_' + x for x in ss)} .\n")
+    for k, lab in (("Page", "Page - a chapter's interactive page that runs the slide code"), ("Deck", "Deck - a chapter's slides with code slides and reader notes"), ("Source", "Source - a corpus, generator or A-box a page is built from")):
+        w(f'ex:DE15_{k} a backlog:DomainEntity ; rdfs:label "{lab}"@en ; backlog:belongsToLineage {L} .\n')
+    des = " , ".join(f"ex:DE15_{k}" for k in ("Page", "Deck", "Source"))
+    w(f'ex:Blueprint15 a backlog:Blueprint ; rdfs:label "What the urgent rulings of 2026-11-27 are about"@en ; backlog:belongsToLineage {L} ; backlog:blueprintFor ex:Backlog15 ; backlog:hasDomainEntity {des} .\n')
+    w(f'ex:Session15_Backlog a backlog:RegisterSession ; rdfs:label "The session that wrote the backlog stage of Lineage15"@en ; backlog:sessionConductedBy "claude-session" ;\n    backlog:sessionFor ex:Backlog15 ; backlog:sessionStartedAt "2026-11-27T17:00:00"^^xsd:dateTime ; backlog:sessionEndedAt "2026-11-27T17:30:00"^^xsd:dateTime ; backlog:stateVerifiedAtStart true ;\n    backlog:hasSessionScopeNote "Set out to write the Backlog stage only: Backlog15, the commitment, the links of the stories to their objectives and deliverables, which story can move which metric, a blueprint, and the cancellation of ST15_Page_Ch25. Left alone: planning events, iterations and every work file. Verified first: the objective stage 1.29.0 was committed and the working tree held only the stage files." .\n')
+    for ent, st in (("Page", "Pages_Ch1_9"), ("Deck", "Decks_CodeSlides"), ("Source", "Sources_Clean")):
+        w(f"ex:ST15_{st} backlog:coversEntity ex:DE15_{ent} ; backlog:coversStage backlog:Stage_Creation .\n")
+        for stg in ("ActiveUse", "SuspensionException", "Termination"):
+            w(f'ex:Gap15_{ent}_{stg} a backlog:BlueprintGap ; rdfs:label "Gap: {ent} at {stg}"@en ; backlog:belongsToLineage {L} ; backlog:gapForEntity ex:DE15_{ent} ; backlog:gapForStage backlog:Stage_{stg} ;\n    backlog:hasGapReason "The urgent lineage changes the {ent.lower()} at its creation only (the rulings of 2026-11-27 are changes of form); this stage is not part of the urgent scope and is recorded here, not left silent." .\n')
 else:
     sys.exit(__doc__)
 open(sys.argv[2], "w").write("".join(o))
